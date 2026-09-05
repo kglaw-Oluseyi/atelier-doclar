@@ -2,7 +2,7 @@
 # MD-LV1 deploys this service. Event OS is not authorised from this file.
 [build]
 builder = "nixpacks"
-buildCommand = "pnpm install --frozen-lockfile && pnpm --filter @maison-doclar/control-tower build"
+buildCommand = "pnpm install --frozen-lockfile --config.production=false && pnpm --filter @maison-doclar/control-tower build"
 
 [deploy]
 startCommand = "pnpm --filter @maison-doclar/control-tower start"
