@@ -12,3 +12,5 @@ Open items, decisions, gates, release candidates and append-only audit. Control 
 ## Open items
 
 `CT6-OI-001` — in-process audit log is non-production.
+
+The approve route evaluates authority without reloading the programme snapshot so the first browser attempt cannot hang on corpus compile. Playwright timeout is 90s in CI.
