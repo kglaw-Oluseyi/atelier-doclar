@@ -300,7 +300,7 @@
       "title": "CT7 \u2014 RAG ingestion and grounded programme assistant",
       "phaseId": "PH-FOUNDATION",
       "order": 8,
-      "status": "NOT_STARTED",
+      "status": "IN_REVIEW",
       "dependsOn": [
         "MD-CT6"
       ],

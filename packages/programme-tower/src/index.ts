@@ -2,8 +2,10 @@ export {
   CT4_TRACEABILITY,
   CT5_TRACEABILITY,
   CT6_TRACEABILITY,
+  CT7_TRACEABILITY,
   CT5_SURFACES,
   CT6_SURFACES,
+  CT7_SURFACES,
   LATER_SURFACES,
   TOWER_ROLES,
   SESSION_COOKIE,
@@ -32,3 +34,11 @@ export {
   buildReleaseCandidate,
   type AuditEntry,
 } from "./authority.js";
+export {
+  answerQuestion,
+  buildProgrammeIndex,
+  isPathAllowlisted,
+  requestedPathIsAuthorised,
+  RAG_PROVIDER,
+  type GroundedAnswer,
+} from "./rag.js";

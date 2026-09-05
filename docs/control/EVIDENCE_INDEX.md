@@ -79,3 +79,13 @@ Acceptance of MD-CT4 still requires a named reviewer. Not ACCEPTED.
 | EV-CT6-AUTH | TEST | Protected-gate negative tests | `packages/programme-tower/test/authority.test.ts` |
 | EV-CT6-IMPL | DOCUMENT | Implementation record | `docs/control/CT6_IMPLEMENTATION.md` |
 
+## MD-CT7
+
+**Prompt Control ID:** `MD-PR-0008`
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-CT7-RAG | TEST | Allow-list, citation, abstention and security tests | `packages/programme-tower/test/rag.test.ts` |
+| EV-CT7-E2E | TEST | Ask surface and roadmap isolation | `apps/control-tower/e2e/ask.spec.ts` |
+| EV-CT7-IMPL | DOCUMENT | Implementation record | `docs/control/CT7_IMPLEMENTATION.md` |
+

@@ -1,0 +1,11 @@
+id: CT7-OI-001
+product: FOUNDATION
+sliceId: MD-CT7
+title: Production model and RAG vendor remain unselected
+severity: HIGH
+owner: CEO
+status: OPEN
+decisionAuthority: CEO
+blocker: false
+evidence: []
+notes: CT7 ships a deterministic extractive retriever. No production LLM credentials are configured or required for programme correctness.

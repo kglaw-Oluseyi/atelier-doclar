@@ -1,0 +1,11 @@
+id: CT7-OI-002
+product: FOUNDATION
+sliceId: MD-CT7
+title: Programme index is rebuilt per request and is not a durable search cluster
+severity: MEDIUM
+owner: AI CTO
+status: OPEN
+decisionAuthority: AI CTO
+blocker: false
+evidence: []
+notes: Retrieval reads allow-listed corpus files at request time. A hosted index remains unselected with the production database and hosting decisions.

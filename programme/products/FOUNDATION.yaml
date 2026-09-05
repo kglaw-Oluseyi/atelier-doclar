@@ -11,4 +11,4 @@ statusSource: Evidence-derived SliceRecords; never document presence alone
 externalAuthorityRequirements:
   - Independent and CEO gates remain outside Cursor
 implementationReality: Private Next.js /programme shell present. Production IdP, hosting and database unselected.
-currentProjection: IN_REVIEW for MD-B0 and MD-CT0–CT6; NOT_STARTED for MD-CT7–CT9. No slice ACCEPTED.
+currentProjection: IN_REVIEW for MD-B0 and MD-CT0–CT7; NOT_STARTED for MD-CT8–CT9. No slice ACCEPTED.

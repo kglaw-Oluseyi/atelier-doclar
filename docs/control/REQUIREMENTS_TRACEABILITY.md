@@ -95,3 +95,14 @@
 | No executor default approve | `/api/programme/gates/approve` |
 | Append-only audit | `appendAudit` |
 | Unsigned release | `buildReleaseCandidate.productionAuthorised = false` |
+
+## MD-CT7
+
+| Requirement | Implementation |
+|-------------|----------------|
+| Allow-listed sources | `isPathAllowlisted` / `buildProgrammeIndex` |
+| Citations | `answerQuestion` citations table |
+| Abstention | missing evidence and path probes |
+| Status not RAG-owned | snapshot `authoritativeStatus` |
+| RAG outage isolation | degraded answer; `buildRoadmap` still works |
+| Provider unselected | `RAG_PROVIDER.vendorBound = false` |
