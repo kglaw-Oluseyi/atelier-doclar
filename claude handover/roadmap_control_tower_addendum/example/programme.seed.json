@@ -1,0 +1,16 @@
+{
+  "revision": 0,
+  "generatedAt": "2026-09-05T00:00:00Z",
+  "sourceCommit": "0000000000000000000000000000000000000000",
+  "products": [
+    {"code":"FOUNDATION","name":"Shared Foundation","route":"/programme/foundation","order":0},
+    {"code":"EVENT_OS","name":"Event OS","route":"/programme/event-os","order":1},
+    {"code":"ACADEMY","name":"Academy","route":"/programme/academy","order":2},
+    {"code":"MARKETING","name":"Marketing OS","route":"/programme/marketing","order":3},
+    {"code":"USHERING","name":"Premium Ushering","route":"/programme/ushering","order":4},
+    {"code":"EVENT_DAY","name":"Event-Day Runtime","route":"/programme/event-day","order":5},
+    {"code":"INTEGRATION","name":"Cross-System Integration","route":"/programme/integration","order":6}
+  ],
+  "slices": [], "openItems": [], "gates": []
+}
+

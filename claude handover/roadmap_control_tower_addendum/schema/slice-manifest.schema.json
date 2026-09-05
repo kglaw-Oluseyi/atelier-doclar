@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://maison-doclar.internal/schemas/slice-manifest-v1.json",
+  "type": "object",
+  "required": ["id","product","title","phaseId","order","dependsOn","canonicalRefs","outcome","entryCriteria","exitCriteria","expectedFiles","verification"],
+  "properties": {
+    "id": {"type":"string","pattern":"^[A-Z]+-[A-Z0-9-]+$"},
+    "product": {"enum":["FOUNDATION","EVENT_OS","EVENT_DAY","ACADEMY","MARKETING","USHERING","INTEGRATION"]},
+    "title": {"type":"string","minLength":1},
+    "phaseId": {"type":"string","minLength":1},
+    "order": {"type":"integer","minimum":0},
+    "dependsOn": {"type":"array","items":{"type":"string"},"uniqueItems":true},
+    "canonicalRefs": {"type":"array","minItems":1,"items":{"type":"string"}},
+    "outcome": {"type":"string","minLength":1},
+    "entryCriteria": {"type":"array","items":{"type":"string"}},
+    "exitCriteria": {"type":"array","minItems":1,"items":{"type":"string"}},
+    "expectedFiles": {"type":"array","items":{"type":"string"}},
+    "verification": {"type":"array","minItems":1,"items":{"type":"string"}}
+  },
+  "additionalProperties": false
+}
+
