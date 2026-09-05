@@ -24,6 +24,19 @@ import type {
   GuestIntakeRow,
   OperationalGuest,
 } from "./guest-schemas.js";
+import type {
+  RsvpAssistanceRequest,
+  RsvpEntitlement,
+  RsvpEventProjection,
+  RsvpException,
+  RsvpGuestSession,
+  RsvpInvitation,
+  RsvpKeyRing,
+  RsvpPolicy,
+  RsvpQuestionnaire,
+  RsvpReceipt,
+  RsvpResponse,
+} from "./rsvp-schemas.js";
 
 export interface IdempotencyRecord {
   key: string;
@@ -53,6 +66,17 @@ export interface PlatformSnapshot {
   guestDuplicateCandidates: GuestDuplicateCandidate[];
   guestIntakeBatches: GuestIntakeBatch[];
   guestIntakeRows: GuestIntakeRow[];
+  rsvpPolicies: RsvpPolicy[];
+  rsvpQuestionnaires: RsvpQuestionnaire[];
+  rsvpInvitations: RsvpInvitation[];
+  rsvpGuestSessions: RsvpGuestSession[];
+  rsvpResponses: RsvpResponse[];
+  rsvpReceipts: RsvpReceipt[];
+  rsvpEntitlements: RsvpEntitlement[];
+  rsvpExceptions: RsvpException[];
+  rsvpAssistanceRequests: RsvpAssistanceRequest[];
+  rsvpKeyRings: RsvpKeyRing[];
+  rsvpEventProjections: RsvpEventProjection[];
   policyVersions: PolicyVersionRef[];
   audit: AuditEvent[];
   idempotency: IdempotencyRecord[];
@@ -85,6 +109,17 @@ export function emptySnapshot(): PlatformSnapshot {
     guestDuplicateCandidates: [],
     guestIntakeBatches: [],
     guestIntakeRows: [],
+    rsvpPolicies: [],
+    rsvpQuestionnaires: [],
+    rsvpInvitations: [],
+    rsvpGuestSessions: [],
+    rsvpResponses: [],
+    rsvpReceipts: [],
+    rsvpEntitlements: [],
+    rsvpExceptions: [],
+    rsvpAssistanceRequests: [],
+    rsvpKeyRings: [],
+    rsvpEventProjections: [],
     policyVersions: [],
     audit: [],
     idempotency: [],
@@ -101,5 +136,16 @@ export function normalizeSnapshot(input: PlatformSnapshot): PlatformSnapshot {
     guestDuplicateCandidates: input.guestDuplicateCandidates ?? [],
     guestIntakeBatches: input.guestIntakeBatches ?? [],
     guestIntakeRows: input.guestIntakeRows ?? [],
+    rsvpPolicies: input.rsvpPolicies ?? [],
+    rsvpQuestionnaires: input.rsvpQuestionnaires ?? [],
+    rsvpInvitations: input.rsvpInvitations ?? [],
+    rsvpGuestSessions: input.rsvpGuestSessions ?? [],
+    rsvpResponses: input.rsvpResponses ?? [],
+    rsvpReceipts: input.rsvpReceipts ?? [],
+    rsvpEntitlements: input.rsvpEntitlements ?? [],
+    rsvpExceptions: input.rsvpExceptions ?? [],
+    rsvpAssistanceRequests: input.rsvpAssistanceRequests ?? [],
+    rsvpKeyRings: input.rsvpKeyRings ?? [],
+    rsvpEventProjections: input.rsvpEventProjections ?? [],
   };
 }

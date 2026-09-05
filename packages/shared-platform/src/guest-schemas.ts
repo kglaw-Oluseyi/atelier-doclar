@@ -166,6 +166,8 @@ export const GuestDirectoryQuerySchema = z
     identityResolution: IdentityResolutionSchema.optional(),
     attentionRequired: z.boolean().optional(),
     householdId: UuidSchema.optional(),
+    attendanceIntent: z.enum(["NOT_SUPPLIED", "ATTENDING", "NOT_ATTENDING", "UNCERTAIN"]).optional(),
+    rsvpStatus: z.enum(["NOT_STARTED", "IN_PROGRESS", "SUBMITTED", "AMENDED", "WITHDRAWN"]).optional(),
     sort: z.enum(["FAMILY_NAME", "CREATED_AT"]).default("FAMILY_NAME"),
   })
   .strict();

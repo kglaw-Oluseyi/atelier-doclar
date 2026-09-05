@@ -258,5 +258,24 @@
 | Predecessor law | EOS-S01 already ACCEPTED; default ACCEPTANCE dependency satisfied |
 | Projector derives ACCEPTED | No handwritten status override as source truth |
 | Accepted count exactly 2 | EOS-S01 and EOS-S02 only |
-| EOS-S03 eligibility | Default ACCEPTANCE on EOS-S02; READY after acceptance; not implemented |
+| EOS-S03 eligibility | Default ACCEPTANCE on EOS-S02; READY after acceptance; implemented under MD-PR-S010 |
+
+## EOS-S03
+
+**Prompt Control ID:** `MD-PR-S010`  
+**Slice ID:** `EOS-S03`
+
+| Requirement | Implementation |
+|-------------|----------------|
+| Native prompts S3-01–S3-50 | Executed as one governed slice; titles from prompt register |
+| RSVP not a boolean | `NOT_SUPPLIED` / `ATTENDING` / `NOT_ATTENDING` / `UNCERTAIN` |
+| Guest access | Opaque invitation token + narrow guest session |
+| No parallel guest truth | References operational guest and event ids only |
+| Verified-field conflict | Preserve both values; open exception; no last-write-wins |
+| Household authority | Explicit `HOUSEHOLD_RESPONDENT` entitlement only |
+| Staff visibility | Directory column, filters, RSVP workspace, review queue |
+| Communications | Invitation capability only; delivery deferred |
+| RSVP ≠ admission | Documented and asserted; no check-in records |
+| Do not accept during implementation | No `ACCEPTANCE_RECORDED` for EOS-S03 |
+| Foundation / gates / production | Foundation IN_REVIEW; protected gates unsigned; `productionAuthorised = false` |
 | Foundation / gates / production | Foundation IN_REVIEW; protected gates unsigned; `productionAuthorised = false` |

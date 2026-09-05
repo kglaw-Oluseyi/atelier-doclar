@@ -21,6 +21,17 @@ export const SHARED_PLATFORM_OWNERSHIP = {
   guestHousehold: PLATFORM_PACKAGE,
   guestDuplicateCandidate: PLATFORM_PACKAGE,
   guestIntakeBatch: PLATFORM_PACKAGE,
+  rsvpPolicy: PLATFORM_PACKAGE,
+  rsvpQuestionnaire: PLATFORM_PACKAGE,
+  rsvpInvitation: PLATFORM_PACKAGE,
+  rsvpGuestSession: PLATFORM_PACKAGE,
+  rsvpResponse: PLATFORM_PACKAGE,
+  rsvpReceipt: PLATFORM_PACKAGE,
+  rsvpEntitlement: PLATFORM_PACKAGE,
+  rsvpException: PLATFORM_PACKAGE,
+  rsvpAssistanceRequest: PLATFORM_PACKAGE,
+  rsvpKeyRing: PLATFORM_PACKAGE,
+  rsvpEventProjection: PLATFORM_PACKAGE,
   consent: PLATFORM_PACKAGE,
   policyVersion: PLATFORM_PACKAGE,
   audit: PLATFORM_PACKAGE,
@@ -45,6 +56,9 @@ export const FORBIDDEN_PARALLEL_TRUTH = [
   "EventGuestIdentity",
   "GuestEvent",
   "GuestOrganisation",
+  "GuestAccount",
+  "RsvpUser",
+  "GuestStaffSession",
 ] as const;
 
 export const DEFAULT_TIMEZONE = "Africa/Lagos";
@@ -56,7 +70,7 @@ export const EVENT_PHASES = ["DISCOVER", "DESIGN", "PREPARE", "READY", "LIVE", "
 export const USER_STATUSES = ["INVITED", "ACTIVE", "SUSPENDED", "DEACTIVATED"] as const;
 export const ASSIGNMENT_STATUSES = ["PENDING", "ACTIVE", "SUSPENDED", "REVOKED", "EXPIRED"] as const;
 export const AUDIT_OUTCOMES = ["SUCCESS", "DENIED", "FAILED"] as const;
-export const ACTOR_TYPES = ["USER", "SERVICE", "SYSTEM"] as const;
+export const ACTOR_TYPES = ["USER", "SERVICE", "SYSTEM", "GUEST_CAPABILITY"] as const;
 export const ROLE_EFFECTS = ["ALLOW", "DENY"] as const;
 export const CONSENT_STATUSES = ["RECORDED", "WITHDRAWN", "EXPIRED"] as const;
 export const VERIFICATION_STATES = ["UNVERIFIED", "HUMAN_VERIFIED", "SPECIALIST_REQUIRED"] as const;
@@ -116,6 +130,13 @@ export const PERMISSION_KEYS = [
   "guest.record.amend",
   "guest.duplicate.resolve",
   "guest.person.link",
+  "rsvp.policy.manage",
+  "rsvp.form.manage",
+  "rsvp.invitation.manage",
+  "rsvp.directory.view",
+  "rsvp.response.amend",
+  "rsvp.exception.review",
+  "rsvp.entitlement.manage",
 ] as const;
 
 export const SYSTEM_ROLE_KEYS = [
@@ -177,6 +198,32 @@ export const CEO_RESERVED_ACTIONS: readonly string[] = [
   "approval.commercial",
   "approval.protected_production",
 ];
+
+export const RSVP_ATTENDANCE_INTENTS = ["NOT_SUPPLIED", "ATTENDING", "NOT_ATTENDING", "UNCERTAIN"] as const;
+export const RSVP_RESPONSE_STATUSES = ["NOT_STARTED", "IN_PROGRESS", "SUBMITTED", "AMENDED", "WITHDRAWN"] as const;
+export const RSVP_RESPONSE_PROVENANCE = ["GUEST_SELF_SERVICE", "STAFF_ENTERED", "STAFF_CORRECTED"] as const;
+export const RSVP_INVITATION_STATUSES = ["ISSUED", "ROTATED", "REVOKED", "EXPIRED"] as const;
+export const RSVP_QUESTIONNAIRE_STATUSES = ["DRAFT", "PUBLISHED", "CLOSED", "ARCHIVED"] as const;
+export const RSVP_QUESTION_KEYS = [
+  "ATTENDANCE",
+  "HOUSEHOLD",
+  "COMPANION",
+  "DIETARY",
+  "ACCESSIBILITY",
+  "ASSISTANCE",
+  "SENSITIVE_CONSENT",
+] as const;
+export const RSVP_EXCEPTION_KINDS = [
+  "HEADCOUNT_EXCEEDED",
+  "VERIFIED_FIELD_CONFLICT",
+  "HOUSEHOLD_AUTHORITY",
+  "COMPANION_LIMIT",
+] as const;
+export const RSVP_EXCEPTION_STATUSES = ["OPEN", "REVIEWED", "RESOLVED", "DISMISSED"] as const;
+export const RSVP_ASSISTANCE_STATUSES = ["OPEN", "ACKNOWLEDGED", "CLOSED"] as const;
+export const RSVP_ENTITLEMENT_KINDS = ["COMPANION", "HOUSEHOLD_RESPONDENT"] as const;
+export const RSVP_KEY_STATUSES = ["ACTIVE", "RETIRED"] as const;
+export const RSVP_SESSION_COOKIE = "md_event_os_guest_rsvp";
 
 export const SESSION_COOKIE = "md_event_os_session";
 export const CORRELATION_HEADER = "x-md-correlation-id";

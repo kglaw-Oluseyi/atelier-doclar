@@ -31,6 +31,11 @@ export function guestPermissions(person: Person, actor: ActorContext, organisati
     amend: authorize({ actor: actorSnap, permission: "guest.record.amend", scope }).allow,
     resolveDuplicate: authorize({ actor: actorSnap, permission: "guest.duplicate.resolve", scope }).allow,
     linkPerson: authorize({ actor: actorSnap, permission: "guest.person.link", scope }).allow,
+    rsvpView: authorize({ actor: actorSnap, permission: "rsvp.directory.view", scope }).allow,
+    rsvpManage: authorize({ actor: actorSnap, permission: "rsvp.policy.manage", scope }).allow,
+    rsvpInvite: authorize({ actor: actorSnap, permission: "rsvp.invitation.manage", scope }).allow,
+    rsvpAmend: authorize({ actor: actorSnap, permission: "rsvp.response.amend", scope }).allow,
+    rsvpReview: authorize({ actor: actorSnap, permission: "rsvp.exception.review", scope }).allow,
   };
   void actor;
 }

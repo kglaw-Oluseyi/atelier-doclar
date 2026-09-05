@@ -5,7 +5,7 @@ const PUBLIC = new Set(["/sign-in", "/api/session", "/api/health/live", "/api/he
 
 export function middleware(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
-  if (PUBLIC.has(pathname) || pathname.startsWith("/api/health/")) {
+  if (PUBLIC.has(pathname) || pathname.startsWith("/api/health/") || pathname.startsWith("/rsvp")) {
     return NextResponse.next();
   }
   if (pathname === "/") {
@@ -30,5 +30,5 @@ export function middleware(request: NextRequest): NextResponse {
 }
 
 export const config = {
-  matcher: ["/", "/app/:path*", "/access-:path*", "/api/:path*", "/sign-in"],
+  matcher: ["/", "/app/:path*", "/access-:path*", "/api/:path*", "/sign-in", "/rsvp", "/rsvp/:path*"],
 };

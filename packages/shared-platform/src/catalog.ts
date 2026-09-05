@@ -36,6 +36,13 @@ const PERMISSION_IDS: Record<PermissionKey, string> = {
   "guest.record.amend": "11111111-1111-4111-8111-111111111030",
   "guest.duplicate.resolve": "11111111-1111-4111-8111-111111111031",
   "guest.person.link": "11111111-1111-4111-8111-111111111032",
+  "rsvp.policy.manage": "11111111-1111-4111-8111-111111111033",
+  "rsvp.form.manage": "11111111-1111-4111-8111-111111111034",
+  "rsvp.invitation.manage": "11111111-1111-4111-8111-111111111035",
+  "rsvp.directory.view": "11111111-1111-4111-8111-111111111036",
+  "rsvp.response.amend": "11111111-1111-4111-8111-111111111037",
+  "rsvp.exception.review": "11111111-1111-4111-8111-111111111038",
+  "rsvp.entitlement.manage": "11111111-1111-4111-8111-111111111039",
 };
 
 const ROLE_IDS: Record<(typeof SYSTEM_ROLE_KEYS)[number], string> = {
@@ -76,6 +83,13 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "guest.record.amend",
     "guest.duplicate.resolve",
     "guest.person.link",
+    "rsvp.policy.manage",
+    "rsvp.form.manage",
+    "rsvp.invitation.manage",
+    "rsvp.directory.view",
+    "rsvp.response.amend",
+    "rsvp.exception.review",
+    "rsvp.entitlement.manage",
   ],
   CLIENT_LEAD: [
     "organisation.view",
@@ -89,6 +103,7 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "audit.view",
     "mef.view",
     "guest.directory.view",
+    "rsvp.directory.view",
   ],
   DEPARTMENT_LEAD: [
     "organisation.view",
@@ -98,6 +113,7 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "assignment.view",
     "mef.view",
     "guest.directory.view",
+    "rsvp.directory.view",
   ],
   PLANNER: [
     "organisation.view",
@@ -112,6 +128,9 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "guest.intake.create",
     "guest.record.amend",
     "guest.duplicate.resolve",
+    "rsvp.directory.view",
+    "rsvp.invitation.manage",
+    "rsvp.response.amend",
   ],
   SYSTEM_ADMINISTRATOR: [
     "organisation.view",
@@ -134,6 +153,7 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "mef.view",
     "consent.view",
     "guest.directory.view",
+    "rsvp.directory.view",
   ],
 };
 

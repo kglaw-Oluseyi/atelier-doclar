@@ -23,7 +23,7 @@ test("authorised operator can intake, search and amend a guest", async ({ page }
   await expect(page.getByRole("link", { name: "Kemi Balogun" })).toBeVisible();
   await page.getByRole("link", { name: "Kemi Balogun" }).click();
   await page.getByLabel("Preferred name").fill("Kemi B");
-  await page.getByRole("textbox", { name: "Reason" }).fill("Operator confirmed preferred name");
+  await page.locator("form").filter({ hasText: "Save amendment" }).getByRole("textbox", { name: "Reason" }).fill("Operator confirmed preferred name");
   await page.getByRole("button", { name: "Save amendment" }).click();
   await expect(page.getByRole("heading", { name: "Kemi B" })).toBeVisible();
 });

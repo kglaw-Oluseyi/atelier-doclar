@@ -667,7 +667,7 @@
       "title": "Event OS Slice 3 \u2014 RSVP and guest self-service",
       "phaseId": "PH-EVENT-OS-FOUNDATIONS",
       "order": 3,
-      "status": "READY",
+      "status": "IN_REVIEW",
       "dependsOn": [
         "EOS-S02"
       ],
@@ -686,12 +686,31 @@
         "MDOS/slice3/"
       ],
       "commits": [],
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "EV-EOS-S03-IMPL",
+          "kind": "DOCUMENT",
+          "uri": "docs/control/EOS_S03_IMPLEMENTATION_REPORT.md",
+          "createdAt": "2026-09-06T00:10:00Z",
+          "sourceSystem": "programme-control",
+          "immutable": true,
+          "summary": "EOS-S03 RSVP and guest self-service implementation report"
+        },
+        {
+          "id": "EV-EOS-S03-ARCH",
+          "kind": "DOCUMENT",
+          "uri": "docs/control/EVENT_OS_RSVP_SELF_SERVICE.md",
+          "createdAt": "2026-09-06T00:10:00Z",
+          "sourceSystem": "programme-control",
+          "immutable": true,
+          "summary": "EOS-S03 RSVP and guest self-service boundary"
+        }
+      ],
       "openItems": [],
       "acceptedAt": null,
       "acceptedBy": null,
-      "updatedAt": "2026-09-05T05:10:00Z",
-      "version": "ct0-planning-1"
+      "updatedAt": "2026-09-06T00:10:00Z",
+      "version": "eos-s03-impl-1"
     },
     {
       "id": "EOS-S04",

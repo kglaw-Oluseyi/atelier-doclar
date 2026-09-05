@@ -25,6 +25,17 @@ const COLLECTIONS: Collection[] = [
   "guestDuplicateCandidates",
   "guestIntakeBatches",
   "guestIntakeRows",
+  "rsvpPolicies",
+  "rsvpQuestionnaires",
+  "rsvpInvitations",
+  "rsvpGuestSessions",
+  "rsvpResponses",
+  "rsvpReceipts",
+  "rsvpEntitlements",
+  "rsvpExceptions",
+  "rsvpAssistanceRequests",
+  "rsvpKeyRings",
+  "rsvpEventProjections",
   "policyVersions",
 ];
 

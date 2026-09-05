@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   calculateAllStatuses,
   corpusSeedEvents,
+  corpusSeedEventsThroughS02Acceptance,
   corpusSeedEventsThroughS02Implementation,
   createEngine,
   loadCorpusBaseline,
@@ -218,7 +219,7 @@ describe("EOS-S02 formal technical acceptance", () => {
     assert.equal(beforeStatuses.get("EOS-S02"), "IN_REVIEW");
     assert.equal(beforeStatuses.get("EOS-S03"), "NOT_STARTED");
 
-    const after = engineFrom();
+    const after = engineFrom(corpusSeedEventsThroughS02Acceptance());
     const afterStatuses = calculateAllStatuses(after.engine.projectionAt());
     assert.equal(afterStatuses.get("EOS-S02"), "ACCEPTED");
     assert.equal(afterStatuses.get("EOS-S03"), "READY");

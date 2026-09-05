@@ -27,6 +27,8 @@ export const EOS_S02_COMMIT = "23e8ad98f7a0b8d18ae083f385bfc04cd43ab973";
 export const EOS_S02_FINAL_VERIFIED_HEAD = "927ff92908ea25761933a7b24d37396e5e4e0123";
 export const EOS_S02_COMMIT_EVIDENCE_ID = "EV-EOS-S02-COMMIT";
 export const EOS_S02_ACCEPTANCE_EVENT_ID = "EVT-SEED-EOS-S02-ACCEPT";
+export const EOS_S03_SEED_TIME = "2026-09-06T00:10:00Z";
+export const EOS_S03_COMMIT_EVIDENCE_ID = "EV-EOS-S03-COMMIT";
 export const B0_COMMIT = "f7abb431be9a15ab730b3fdd16baa8e83776c170";
 export const EOS_S01_COMMIT = "b815268e939cfbd0fc33ce10df77f1c8a1374d52";
 export const EOS_S01_ACCEPTANCE_EVENT_ID = "EVT-SEED-EOS-S01-ACCEPT";
@@ -65,7 +67,8 @@ function envelope(
     | "MD-HV1"
     | "MD-GR1"
     | "EOS-S01"
-    | "EOS-S02",
+    | "EOS-S02"
+    | "EOS-S03",
   occurredAt: string,
   payload: ProgrammeEvent["payload"],
   product: "FOUNDATION" | "EVENT_OS" = "FOUNDATION",
@@ -486,6 +489,63 @@ function eosS02AcceptanceEvents(): ProgrammeEvent[] {
   ];
 }
 
+function eosS03ImplementationEvents(): ProgrammeEvent[] {
+  return [
+    envelope(
+      "EVT-SEED-EOS-S03-IMPL",
+      "SLICE_IMPLEMENTATION_OBSERVED",
+      "EOS-S03",
+      EOS_S03_SEED_TIME,
+      { summary: "Event OS RSVP and guest self-service implemented; not accepted; production not authorised" },
+      "EVENT_OS",
+    ),
+    envelope(
+      "EVT-SEED-EOS-S03-REVIEW",
+      "REVIEW_REQUESTED",
+      "EOS-S03",
+      EOS_S03_SEED_TIME,
+      { summary: "EOS-S03 in review; not accepted; production not authorised" },
+      "EVENT_OS",
+    ),
+    envelope(
+      "EVT-SEED-EOS-S03-EV-IMPL",
+      "EVIDENCE_ATTACHED",
+      "EOS-S03",
+      EOS_S03_SEED_TIME,
+      {
+        evidence: {
+          id: "EV-EOS-S03-IMPL",
+          kind: "DOCUMENT",
+          uri: "docs/control/EOS_S03_IMPLEMENTATION_REPORT.md",
+          createdAt: EOS_S03_SEED_TIME,
+          sourceSystem: "programme-control",
+          immutable: true,
+          summary: "EOS-S03 RSVP and guest self-service implementation report",
+        },
+      },
+      "EVENT_OS",
+    ),
+    envelope(
+      "EVT-SEED-EOS-S03-EV-ARCH",
+      "EVIDENCE_ATTACHED",
+      "EOS-S03",
+      EOS_S03_SEED_TIME,
+      {
+        evidence: {
+          id: "EV-EOS-S03-ARCH",
+          kind: "DOCUMENT",
+          uri: "docs/control/EVENT_OS_RSVP_SELF_SERVICE.md",
+          createdAt: EOS_S03_SEED_TIME,
+          sourceSystem: "programme-control",
+          immutable: true,
+          summary: "EOS-S03 RSVP and guest self-service boundary",
+        },
+      },
+      "EVENT_OS",
+    ),
+  ];
+}
+
 /**
  * Corpus through EOS-S02 implementation evidence, before EOS-S02 acceptance.
  * EOS-S01 is ACCEPTED. EOS-S02 remains IN_REVIEW. Foundation remains unaccepted.
@@ -495,11 +555,26 @@ export function corpusSeedEventsThroughS02Implementation(): ProgrammeEvent[] {
 }
 
 /**
- * Full corpus seed, including governed EOS-S01 and EOS-S02 technical acceptance.
- * Does not manufacture ACCEPTED events for Foundation slices.
+ * Corpus through governed EOS-S02 acceptance, before EOS-S03 implementation.
+ */
+export function corpusSeedEventsThroughS02Acceptance(): ProgrammeEvent[] {
+  return [...corpusSeedEventsThroughS02Implementation(), ...eosS02AcceptanceEvents()];
+}
+
+/**
+ * Corpus through EOS-S03 implementation evidence. Does not record EOS-S03 acceptance.
+ */
+export function corpusSeedEventsThroughS03Implementation(): ProgrammeEvent[] {
+  return [...corpusSeedEventsThroughS02Acceptance(), ...eosS03ImplementationEvents()];
+}
+
+/**
+ * Full corpus seed, including governed EOS-S01 and EOS-S02 technical acceptance
+ * and EOS-S03 implementation evidence. Does not manufacture ACCEPTED events for
+ * Foundation slices or EOS-S03.
  */
 export function corpusSeedEvents(): ProgrammeEvent[] {
-  return [...corpusSeedEventsThroughS02Implementation(), ...eosS02AcceptanceEvents()];
+  return corpusSeedEventsThroughS03Implementation();
 }
 
 export function loadCorpusBaseline(root?: string): {

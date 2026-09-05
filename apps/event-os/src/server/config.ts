@@ -1,5 +1,11 @@
 import "server-only";
-import { assertSessionConfig, type SessionConfig } from "@maison-doclar/shared-platform";
+import {
+  assertRsvpAccessConfig,
+  assertSessionConfig,
+  DEFAULT_NON_PRODUCTION_RSVP_ACCESS,
+  type RsvpAccessConfig,
+  type SessionConfig,
+} from "@maison-doclar/shared-platform";
 
 const DEV_TOKEN = "event-os-access-token-not-for-production";
 const DEV_SECRET = "event-os-session-secret-not-for-production-32";
@@ -31,6 +37,24 @@ export function sessionTtlSeconds(): number {
 
 export function productionAuthorised(): false {
   return false;
+}
+
+export function rsvpAccessConfig(): RsvpAccessConfig {
+  const production = runtimeEnv("NODE_ENV") === "production";
+  const config: RsvpAccessConfig = {
+    invitationPepper: runtimeEnv("EVENT_OS_RSVP_PEPPER") ?? DEFAULT_NON_PRODUCTION_RSVP_ACCESS.invitationPepper,
+    sessionSecret: runtimeEnv("EVENT_OS_RSVP_SESSION_SECRET") ?? DEFAULT_NON_PRODUCTION_RSVP_ACCESS.sessionSecret,
+    currentKeyId: runtimeEnv("EVENT_OS_RSVP_KEY_ID") ?? DEFAULT_NON_PRODUCTION_RSVP_ACCESS.currentKeyId,
+    invitationTtlSeconds: DEFAULT_NON_PRODUCTION_RSVP_ACCESS.invitationTtlSeconds,
+    sessionTtlSeconds: DEFAULT_NON_PRODUCTION_RSVP_ACCESS.sessionTtlSeconds,
+    maxExchangeFailures: DEFAULT_NON_PRODUCTION_RSVP_ACCESS.maxExchangeFailures,
+  };
+  assertRsvpAccessConfig(config, production);
+  return config;
+}
+
+export function rsvpSessionTtlSeconds(): number {
+  return rsvpAccessConfig().sessionTtlSeconds ?? 2 * 60 * 60;
 }
 
 export function cookieSecure(requestUrl?: string): boolean {

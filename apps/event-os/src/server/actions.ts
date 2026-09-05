@@ -306,3 +306,222 @@ export async function transitionEventAction(formData: FormData): Promise<void> {
   }
   redirect(`/app/events/${eventId}/settings`);
 }
+
+export async function prepareRsvpAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const runtime = getRuntime();
+  const eventId = String(formData.get("eventId") ?? "");
+  const fail = `/app/events/${encodeURIComponent(eventId)}/rsvp?error=`;
+  const organisation = runtime.service.listOrganisations(actor)[0];
+  if (!organisation) {
+    redirect(`${fail}${encodeURIComponent("No organisation assignment is available.")}`);
+  }
+  try {
+    runtime.service.prepareEventRsvp(actor, {
+      organisationId: organisation.id,
+      eventId,
+      hostDisplayName: String(formData.get("hostDisplayName") ?? "") || undefined,
+      eventDisplayName: String(formData.get("eventDisplayName") ?? "") || undefined,
+      reason: String(formData.get("reason") ?? "Prepare guest RSVP"),
+    });
+  } catch (error) {
+    redirect(`${fail}${encodeURIComponent(actionError(error))}`);
+  }
+  redirect(`/app/events/${eventId}/rsvp`);
+}
+
+export async function upsertRsvpPolicyAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const runtime = getRuntime();
+  const eventId = String(formData.get("eventId") ?? "");
+  const fail = `/app/events/${encodeURIComponent(eventId)}/rsvp/policy?error=`;
+  const organisation = runtime.service.listOrganisations(actor)[0];
+  if (!organisation) {
+    redirect(`${fail}${encodeURIComponent("No organisation assignment is available.")}`);
+  }
+  try {
+    runtime.service.upsertRsvpPolicy(actor, {
+      organisationId: organisation.id,
+      eventId,
+      hostDisplayName: String(formData.get("hostDisplayName") ?? ""),
+      eventDisplayName: String(formData.get("eventDisplayName") ?? ""),
+      privacyNotice: String(formData.get("privacyNotice") ?? ""),
+      amendmentsPermitted: formData.get("amendmentsPermitted") === "1",
+      companionsPermitted: formData.get("companionsPermitted") === "1",
+      defaultCompanionAllowance: Number(formData.get("defaultCompanionAllowance") ?? 0),
+      expectedVersion: Number(formData.get("expectedVersion") || 0) || undefined,
+      reason: String(formData.get("reason") ?? ""),
+    });
+  } catch (error) {
+    redirect(`${fail}${encodeURIComponent(actionError(error))}`);
+  }
+  redirect(`/app/events/${eventId}/rsvp/policy`);
+}
+
+export async function issueRsvpInvitationAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const runtime = getRuntime();
+  const eventId = String(formData.get("eventId") ?? "");
+  const guestId = String(formData.get("guestId") ?? "");
+  const fail = `/app/events/${encodeURIComponent(eventId)}/guests/${encodeURIComponent(guestId)}?error=`;
+  const organisation = runtime.service.listOrganisations(actor)[0];
+  if (!organisation) {
+    redirect(`${fail}${encodeURIComponent("No organisation assignment is available.")}`);
+  }
+  let token = "";
+  try {
+    const issued = runtime.service.issueRsvpInvitation(actor, {
+      organisationId: organisation.id,
+      eventId,
+      guestId,
+      reason: String(formData.get("reason") ?? "Issue guest access"),
+    });
+    token = issued.token;
+  } catch (error) {
+    redirect(`${fail}${encodeURIComponent(actionError(error))}`);
+  }
+  redirect(`/app/events/${eventId}/guests/${guestId}?issued=${encodeURIComponent(token)}`);
+}
+
+export async function staffEnterRsvpAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const runtime = getRuntime();
+  const eventId = String(formData.get("eventId") ?? "");
+  const guestId = String(formData.get("guestId") ?? "");
+  const fail = `/app/events/${encodeURIComponent(eventId)}/guests/${encodeURIComponent(guestId)}?error=`;
+  const organisation = runtime.service.listOrganisations(actor)[0];
+  if (!organisation) {
+    redirect(`${fail}${encodeURIComponent("No organisation assignment is available.")}`);
+  }
+  try {
+    runtime.service.staffEnterRsvp(actor, {
+      organisationId: organisation.id,
+      eventId,
+      guestId,
+      expectedVersion: Number(formData.get("expectedVersion") || 0) || undefined,
+      attendanceIntent: String(formData.get("attendanceIntent") ?? ""),
+      withdraw: formData.get("withdraw") === "1",
+      reason: String(formData.get("reason") ?? ""),
+    });
+  } catch (error) {
+    redirect(`${fail}${encodeURIComponent(actionError(error))}`);
+  }
+  redirect(`/app/events/${eventId}/guests/${guestId}`);
+}
+
+export async function reviewRsvpExceptionAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const runtime = getRuntime();
+  const eventId = String(formData.get("eventId") ?? "");
+  const fail = `/app/events/${encodeURIComponent(eventId)}/rsvp/exceptions?error=`;
+  const organisation = runtime.service.listOrganisations(actor)[0];
+  if (!organisation) {
+    redirect(`${fail}${encodeURIComponent("No organisation assignment is available.")}`);
+  }
+  try {
+    runtime.service.reviewRsvpException(actor, {
+      organisationId: organisation.id,
+      eventId,
+      exceptionId: String(formData.get("exceptionId") ?? ""),
+      expectedVersion: Number(formData.get("expectedVersion")),
+      decision: String(formData.get("decision") ?? ""),
+      reason: String(formData.get("reason") ?? ""),
+    });
+  } catch (error) {
+    redirect(`${fail}${encodeURIComponent(actionError(error))}`);
+  }
+  redirect(`/app/events/${eventId}/rsvp/exceptions`);
+}
+
+export async function acknowledgeAssistanceAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const runtime = getRuntime();
+  const eventId = String(formData.get("eventId") ?? "");
+  const fail = `/app/events/${encodeURIComponent(eventId)}/rsvp/exceptions?error=`;
+  const organisation = runtime.service.listOrganisations(actor)[0];
+  if (!organisation) {
+    redirect(`${fail}${encodeURIComponent("No organisation assignment is available.")}`);
+  }
+  try {
+    runtime.service.acknowledgeAssistance(actor, {
+      organisationId: organisation.id,
+      eventId,
+      assistanceId: String(formData.get("assistanceId") ?? ""),
+      expectedVersion: Number(formData.get("expectedVersion")),
+      status: String(formData.get("status") ?? "ACKNOWLEDGED"),
+      reason: String(formData.get("reason") ?? ""),
+    });
+  } catch (error) {
+    redirect(`${fail}${encodeURIComponent(actionError(error))}`);
+  }
+  redirect(`/app/events/${eventId}/rsvp/exceptions`);
+}
+
+function invitationToken(raw: string): string {
+  let decoded = raw;
+  try {
+    decoded = decodeURIComponent(raw);
+  } catch {
+    decoded = raw;
+  }
+  return decoded.startsWith("/rsvp/") ? decoded.slice("/rsvp/".length) : decoded;
+}
+
+export async function exchangeGuestAccessAction(formData: FormData): Promise<void> {
+  const token = invitationToken(String(formData.get("token") ?? ""));
+  const access = await import("./guest-access");
+  try {
+    const exchanged = getRuntime().service.exchangeGuestAccess(token);
+    await access.setGuestSessionCookie(exchanged.sessionToken);
+  } catch {
+    redirect("/rsvp/unavailable");
+  }
+  redirect("/rsvp");
+}
+
+export async function submitGuestRsvpAction(formData: FormData): Promise<void> {
+  const token = await (await import("./guest-access")).readGuestSessionCookie();
+  if (!token) {
+    redirect("/rsvp/unavailable");
+  }
+  const runtime = getRuntime();
+  try {
+    runtime.service.saveGuestRsvp(token, {
+      expectedVersion: Number(formData.get("expectedVersion") || 0) || undefined,
+      submit: formData.get("submit") === "1",
+      answers: {
+        attendanceIntent: String(formData.get("attendanceIntent") ?? "") || undefined,
+        dietary: String(formData.get("dietary") ?? "") || undefined,
+        accessibility: String(formData.get("accessibility") ?? "") || undefined,
+        assistanceRequested: formData.get("assistanceRequested") === "1",
+        assistanceNote: String(formData.get("assistanceNote") ?? "") || undefined,
+        sensitiveConsent: formData.get("sensitiveConsent") === "1",
+        companionCount: Number(formData.get("companionCount") || 0) || undefined,
+        companionNames: String(formData.get("companionNames") ?? "")
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean),
+      },
+    });
+  } catch (error) {
+    redirect(`/rsvp?error=${encodeURIComponent(actionError(error))}`);
+  }
+  if (formData.get("submit") === "1") {
+    redirect("/rsvp/confirmed");
+  }
+  redirect("/rsvp");
+}
+
+export async function logoutGuestRsvpAction(): Promise<void> {
+  const access = await import("./guest-access");
+  const token = await access.readGuestSessionCookie();
+  if (token) {
+    try {
+      getRuntime().service.logoutGuestSession(token);
+    } catch {
+      // Session may already be unavailable.
+    }
+  }
+  await access.clearGuestSessionCookie();
+  redirect("/rsvp/unavailable");
+}

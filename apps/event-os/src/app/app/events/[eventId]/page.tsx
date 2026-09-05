@@ -32,7 +32,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
     >
       <div className="page-header">
         <h1>{event.name}</h1>
-        <p className="lede">Operational event overview. Guest intake is available for this event. Later Event OS domains remain unbuilt.</p>
+        <p className="lede">Operational event overview. Guest intake and RSVP are available for this event. Later Event OS domains remain unbuilt.</p>
       </div>
       <p>
         <span className="md-status" data-tone="brass">
@@ -43,6 +43,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
         <p className="actions">
         <Link className="button" href={`/app/events/${event.id}/guests`}>
           Guest directory
+        </Link>
+        <Link className="button secondary" href={`/app/events/${event.id}/rsvp`}>
+          RSVP
         </Link>
         <Link className="button secondary" href={`/app/events/${event.id}/settings`}>
           Event settings

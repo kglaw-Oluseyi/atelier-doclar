@@ -7,11 +7,11 @@ import {
   fixtureOrganisations,
   fixturePersons,
 } from "./fixtures.js";
-import { PlatformService } from "./service.js";
+import { PlatformService, type PlatformServiceOptions } from "./service.js";
 import type { PlatformStore } from "./store.js";
 
-export function loadNonProductionFixtures(store: PlatformStore): PlatformService {
-  const service = new PlatformService(store);
+export function loadNonProductionFixtures(store: PlatformStore, options: PlatformServiceOptions = {}): PlatformService {
+  const service = new PlatformService(store, options);
   service.seedCatalogue();
   const snap = store.snapshot();
   snap.organisations = fixtureOrganisations();

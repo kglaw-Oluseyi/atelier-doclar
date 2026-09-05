@@ -8,6 +8,8 @@ export {
   SCHEMA_VERSION,
   DEFAULT_TIMEZONE,
   SESSION_COOKIE,
+  RSVP_SESSION_COOKIE,
+  RSVP_ATTENDANCE_INTENTS,
   CORRELATION_HEADER,
   MEF_COMPOSITION_SLOTS,
   EVENT_PHASES,
@@ -90,5 +92,36 @@ export { emptySnapshot, normalizeSnapshot, type PlatformStore, type PlatformSnap
 export { MemoryPlatformStore } from "./memory-store.js";
 export { PLATFORM_POSTGRES_SCHEMA, type PgQueryable } from "./postgres-schema.js";
 export { PostgresPlatformStore, MemoryPlatformPg } from "./postgres-store.js";
-export { PlatformService, type ActorContext } from "./service.js";
+export {
+  PlatformService,
+  type ActorContext,
+  type GuestSelfServiceView,
+  type IssuedRsvpInvitation,
+  type PlatformServiceOptions,
+  type RsvpGuestDirectoryRow,
+} from "./service.js";
 export { loadNonProductionFixtures } from "./bootstrap.js";
+export {
+  DEFAULT_NON_PRODUCTION_RSVP_ACCESS,
+  assertRsvpAccessConfig,
+  readGuestSession,
+  type RsvpAccessConfig,
+  type GuestSessionActor,
+} from "./rsvp-access.js";
+export {
+  RsvpPolicySchema,
+  RsvpQuestionnaireSchema,
+  RsvpInvitationSchema,
+  RsvpResponseSchema,
+  GuestRsvpSaveInputSchema,
+  type RsvpPolicy,
+  type RsvpQuestionnaire,
+  type RsvpInvitation,
+  type RsvpResponse,
+  type RsvpReceipt,
+  type RsvpEntitlement,
+  type RsvpException,
+  type RsvpAssistanceRequest,
+  type RsvpAttendanceIntent,
+} from "./rsvp-schemas.js";
+export { canonicalQuestionnaireSections, guestVisibleName } from "./rsvp-operations.js";

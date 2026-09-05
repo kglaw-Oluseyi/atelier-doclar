@@ -148,7 +148,8 @@
   margin: 16px 0 24px;
 }
 
-.filter-bar input[type="search"] {
+.filter-bar input[type="search"],
+.filter-bar select {
   display: block;
   min-height: var(--md-touch);
   margin-top: 6px;
@@ -214,4 +215,93 @@
   max-width: 420px;
   margin: 12vh auto;
   padding: 0 16px;
+}
+
+.guest-shell {
+  min-height: 100vh;
+  padding: 32px 20px 64px;
+}
+
+.guest-masthead,
+.guest-main {
+  max-width: 32rem;
+  margin: 0 auto;
+}
+
+.guest-mark {
+  margin: 0;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  color: var(--md-muted);
+}
+
+.guest-host {
+  margin: 8px 0 0;
+  color: var(--md-muted);
+}
+
+.guest-masthead h1 {
+  margin: 8px 0 0;
+  font-size: 2rem;
+  font-weight: 520;
+  line-height: 1.2;
+}
+
+.guest-welcome,
+.guest-privacy {
+  color: var(--md-muted);
+  margin: 24px 0;
+}
+
+.guest-form fieldset {
+  border: 0;
+  margin: 0 0 28px;
+  padding: 0;
+}
+
+.guest-form legend {
+  font-size: 1.15rem;
+  margin-bottom: 12px;
+}
+
+.guest-choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--md-touch);
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border: 1px solid var(--md-line);
+  border-radius: var(--md-radius);
+  background: var(--md-raised);
+}
+
+.guest-choice input {
+  width: auto;
+  min-height: auto;
+  margin: 0;
+}
+
+.guest-form label {
+  display: block;
+  margin-bottom: 16px;
+}
+
+.guest-form input,
+.guest-form textarea {
+  display: block;
+  width: 100%;
+  min-height: var(--md-touch);
+  margin-top: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--md-line);
+  border-radius: 6px;
+  background: var(--md-raised);
+}
+
+.guest-form .check input {
+  width: auto;
+  min-height: auto;
+  margin: 0;
 }

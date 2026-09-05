@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { DEFAULT_TIMEZONE, SCHEMA_VERSION, SYSTEM_ROLE_KEYS } from "./constants.js";
+import { DEFAULT_TIMEZONE, PRODUCTION_STORE_STATUS, SCHEMA_VERSION, SYSTEM_ROLE_KEYS } from "./constants.js";
 import { permissionIdForKey, roleIdForKey, seededPermissions, seededRoles } from "./catalog.js";
 import { PlatformError } from "./errors.js";
 import { assertNamedHuman } from "./identity.js";
@@ -15,6 +15,40 @@ import {
   recordDuplicateCandidates,
   upsertHousehold,
 } from "./guest-operations.js";
+import {
+  DEFAULT_NON_PRODUCTION_RSVP_ACCESS,
+  assertRsvpAccessConfig,
+  generateInvitationToken,
+  guestAccessUnavailable,
+  hashGuestSessionToken,
+  hashInvitationToken,
+  invitationPrefix,
+  issueGuestSession,
+  readGuestSession,
+  type GuestSessionActor,
+  type RsvpAccessConfig,
+} from "./rsvp-access.js";
+import {
+  activeInvitationForGuest,
+  amendmentsAllowed,
+  applyResponseAnswers,
+  canonicalQuestionnaireSections,
+  companionAllowance,
+  compileVisibleQuestions,
+  defaultRsvpPolicy,
+  ensureResponse,
+  ensureRsvpKeyRing,
+  eventPolicy,
+  expireInvitations,
+  guestVisibleName,
+  householdSubjects,
+  policyIsOpen,
+  publishedQuestionnaire,
+  reconcileEventProjection,
+  responseForGuest,
+  rsvpAttention,
+  withdrawResponse,
+} from "./rsvp-operations.js";
 import {
   AmendGuestInputSchema,
   GuestDirectoryQuerySchema,
@@ -35,6 +69,32 @@ import {
   type ResolveDuplicateInput,
   type UnlinkGuestPersonInput,
 } from "./guest-schemas.js";
+import {
+  AcknowledgeAssistanceInputSchema,
+  CloseRsvpQuestionnaireInputSchema,
+  GrantRsvpEntitlementInputSchema,
+  GuestAssistanceInputSchema,
+  GuestRsvpSaveInputSchema,
+  IssueRsvpInvitationInputSchema,
+  PrepareEventRsvpInputSchema,
+  PublishRsvpQuestionnaireInputSchema,
+  ReviewRsvpExceptionInputSchema,
+  RevokeRsvpEntitlementInputSchema,
+  RevokeRsvpInvitationInputSchema,
+  RotateRsvpInvitationInputSchema,
+  RsvpDirectoryQuerySchema,
+  StaffRsvpResponseInputSchema,
+  UpsertRsvpPolicyInputSchema,
+  type RsvpAssistanceRequest,
+  type RsvpDirectoryQuery,
+  type RsvpEntitlement,
+  type RsvpEventProjection,
+  type RsvpException,
+  type RsvpInvitation,
+  type RsvpPolicy,
+  type RsvpQuestionnaire,
+  type RsvpResponse,
+} from "./rsvp-schemas.js";
 import { redactValue, stableHash } from "./redaction.js";
 import {
   CreateClientInputSchema,
@@ -80,6 +140,44 @@ export interface ActorContext {
   allowScaffoldedTransitions?: boolean;
 }
 
+export interface PlatformServiceOptions {
+  rsvpAccess?: RsvpAccessConfig;
+}
+
+export interface IssuedRsvpInvitation {
+  invitation: RsvpInvitation;
+  token: string;
+  guestAccessPath: string;
+}
+
+export interface GuestSelfServiceView {
+  eventDisplayName: string;
+  hostDisplayName: string;
+  privacyNotice: string;
+  guestDisplayName: string;
+  attendanceIntent: RsvpResponse["attendanceIntent"];
+  status: RsvpResponse["status"];
+  respondedAt?: string;
+  amendmentsPermitted: boolean;
+  expectedVersion: number;
+  companionAllowance: number;
+  householdMembers: Array<{ guestId: string; displayName: string }>;
+  sections: RsvpQuestionnaire["sections"];
+  answers: RsvpResponse["answers"];
+  assistanceOpen: boolean;
+  confirmation?: { submittedAt: string; attendanceIntent: RsvpResponse["attendanceIntent"] };
+}
+
+export interface RsvpGuestDirectoryRow {
+  guest: OperationalGuest;
+  attendanceIntent: RsvpResponse["attendanceIntent"];
+  responseStatus: RsvpResponse["status"];
+  provenance?: RsvpResponse["provenance"];
+  respondedAt?: string;
+  invitationStatus?: RsvpInvitation["status"];
+  attentionRequired: boolean;
+}
+
 function parseStrict<T>(schema: { safeParse: (value: unknown) => { success: true; data: T } | { success: false; error: { issues: { path: (string | number)[]; message: string }[] } } }, value: unknown): T {
   const parsed = schema.safeParse(value);
   if (!parsed.success) {
@@ -91,7 +189,17 @@ function parseStrict<T>(schema: { safeParse: (value: unknown) => { success: true
 }
 
 export class PlatformService {
-  constructor(private readonly store: PlatformStore) {}
+  constructor(
+    private readonly store: PlatformStore,
+    private readonly options: PlatformServiceOptions = {},
+  ) {}
+
+  rsvpAccessConfig(): RsvpAccessConfig {
+    const production = this.store.productionStatus === PRODUCTION_STORE_STATUS;
+    const config = this.options.rsvpAccess ?? DEFAULT_NON_PRODUCTION_RSVP_ACCESS;
+    assertRsvpAccessConfig(config, production);
+    return config;
+  }
 
   seedCatalogue(at = "2026-09-05T14:00:00.000Z"): void {
     const snap = this.store.snapshot();
@@ -827,6 +935,15 @@ export class PlatformService {
       .filter((item) => (input.attentionRequired === undefined ? true : item.attentionRequired === input.attentionRequired))
       .filter((item) => (input.householdId ? item.householdId === input.householdId : true))
       .filter((item) => guestMatchesQuery(item, input.query))
+      .filter((item) => {
+        if (!input.attendanceIntent && !input.rsvpStatus) return true;
+        const response = responseForGuest(snap, item.id);
+        if (input.attendanceIntent && (response?.attendanceIntent ?? "NOT_SUPPLIED") !== input.attendanceIntent) {
+          return false;
+        }
+        if (input.rsvpStatus && (response?.status ?? "NOT_STARTED") !== input.rsvpStatus) return false;
+        return true;
+      })
       .sort((left, right) => compareGuests(left, right, input.sort));
   }
 
@@ -862,6 +979,776 @@ export class PlatformService {
 
   guestDisplayName(guest: OperationalGuest): string {
     return operationalDisplayName(guest);
+  }
+
+  prepareEventRsvp(actor: ActorContext, raw: unknown): { policy: RsvpPolicy; questionnaire: RsvpQuestionnaire } {
+    const input = parseStrict(PrepareEventRsvpInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "rsvp.policy.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "rsvp.surface.prepared",
+      resourceType: "rsvp_policy",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const event = this.requireEvent(snap, input.organisationId, input.eventId);
+        ensureRsvpKeyRing(snap, event.organisationId, this.rsvpAccessConfig().currentKeyId, ctx.now);
+        let policy = eventPolicy(snap, event.id);
+        if (!policy) {
+          policy = defaultRsvpPolicy({
+            organisationId: event.organisationId,
+            clientId: event.clientId,
+            eventId: event.id,
+            hostDisplayName: input.hostDisplayName ?? "Maison Doclar",
+            eventDisplayName: input.eventDisplayName ?? event.name,
+            now: ctx.now,
+          });
+          snap.rsvpPolicies.push(policy);
+        }
+        let questionnaire = publishedQuestionnaire(snap, event.id);
+        if (!questionnaire) {
+          questionnaire = {
+            id: randomUUID(),
+            organisationId: event.organisationId,
+            clientId: event.clientId,
+            eventId: event.id,
+            status: "PUBLISHED",
+            versionNumber: 1,
+            sections: canonicalQuestionnaireSections(),
+            publishedAt: ctx.now,
+            schemaVersion: SCHEMA_VERSION,
+            version: 1,
+            createdAt: ctx.now,
+            updatedAt: ctx.now,
+          };
+          snap.rsvpQuestionnaires.push(questionnaire);
+        }
+        reconcileEventProjection(snap, event, ctx.now);
+        return { id: policy.id, policy, questionnaire };
+      },
+    });
+  }
+
+  upsertRsvpPolicy(actor: ActorContext, raw: unknown): RsvpPolicy {
+    const input = parseStrict(UpsertRsvpPolicyInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "rsvp.policy.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "rsvp.policy.upserted",
+      resourceType: "rsvp_policy",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const event = this.requireEvent(snap, input.organisationId, input.eventId);
+        const existing = eventPolicy(snap, event.id);
+        if (existing) {
+          if (input.expectedVersion) this.assertVersion(existing.version, input.expectedVersion);
+          existing.hostDisplayName = input.hostDisplayName;
+          existing.eventDisplayName = input.eventDisplayName;
+          existing.privacyNotice = input.privacyNotice;
+          existing.amendmentsPermitted = input.amendmentsPermitted;
+          existing.companionsPermitted = input.companionsPermitted;
+          existing.defaultCompanionAllowance = input.defaultCompanionAllowance;
+          if (input.amendmentUntil) existing.amendmentUntil = input.amendmentUntil;
+          else delete existing.amendmentUntil;
+          existing.version += 1;
+          existing.updatedAt = ctx.now;
+          return existing;
+        }
+        const created = defaultRsvpPolicy({
+          organisationId: event.organisationId,
+          clientId: event.clientId,
+          eventId: event.id,
+          hostDisplayName: input.hostDisplayName,
+          eventDisplayName: input.eventDisplayName,
+          now: ctx.now,
+        });
+        created.privacyNotice = input.privacyNotice;
+        created.amendmentsPermitted = input.amendmentsPermitted;
+        created.companionsPermitted = input.companionsPermitted;
+        created.defaultCompanionAllowance = input.defaultCompanionAllowance;
+        if (input.amendmentUntil) created.amendmentUntil = input.amendmentUntil;
+        snap.rsvpPolicies.push(created);
+        return created;
+      },
+    });
+  }
+
+  publishRsvpQuestionnaire(actor: ActorContext, raw: unknown): RsvpQuestionnaire {
+    const input = parseStrict(PublishRsvpQuestionnaireInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "rsvp.form.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "rsvp.questionnaire.published",
+      resourceType: "rsvp_questionnaire",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const event = this.requireEvent(snap, input.organisationId, input.eventId);
+        const current = publishedQuestionnaire(snap, event.id);
+        if (current) {
+          current.status = "CLOSED";
+          current.closedAt = ctx.now;
+          current.version += 1;
+          current.updatedAt = ctx.now;
+        }
+        const next: RsvpQuestionnaire = {
+          id: randomUUID(),
+          organisationId: event.organisationId,
+          clientId: event.clientId,
+          eventId: event.id,
+          status: "PUBLISHED",
+          versionNumber: (current?.versionNumber ?? 0) + 1,
+          sections: canonicalQuestionnaireSections(),
+          publishedAt: ctx.now,
+          schemaVersion: SCHEMA_VERSION,
+          version: 1,
+          createdAt: ctx.now,
+          updatedAt: ctx.now,
+        };
+        snap.rsvpQuestionnaires.push(next);
+        return next;
+      },
+    });
+  }
+
+  closeRsvpQuestionnaire(actor: ActorContext, raw: unknown): RsvpQuestionnaire {
+    const input = parseStrict(CloseRsvpQuestionnaireInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "rsvp.form.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "rsvp.questionnaire.closed",
+      resourceType: "rsvp_questionnaire",
+      resourceId: input.questionnaireId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const record = snap.rsvpQuestionnaires.find((item) => item.id === input.questionnaireId);
+        if (!record || record.organisationId !== input.organisationId || record.eventId !== input.eventId) {
+          throw new PlatformError("NOT_FOUND", "questionnaire was not found");
+        }
+        this.assertVersion(record.version, input.expectedVersion);
+        record.status = "CLOSED";
+        record.closedAt = ctx.now;
+        record.version += 1;
+        record.updatedAt = ctx.now;
+        const policy = eventPolicy(snap, record.eventId);
+        if (policy) {
+          policy.closedAt = ctx.now;
+          policy.version += 1;
+          policy.updatedAt = ctx.now;
+        }
+        return record;
+      },
+    });
+  }
+
+  issueRsvpInvitation(actor: ActorContext, raw: unknown): IssuedRsvpInvitation {
+    const input = parseStrict(IssueRsvpInvitationInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "rsvp.invitation.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "rsvp.invitation.issued",
+      resourceType: "rsvp_invitation",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const event = this.requireEvent(snap, input.organisationId, input.eventId);
+        const guest = this.requireOperationalGuest(snap, input.organisationId, input.eventId, input.guestId);
+        if (guest.lifecycle !== "ACTIVE") {
+          throw new PlatformError("VALIDATION_FAILED", "guest is not active");
+        }
+        if (!eventPolicy(snap, event.id) || !publishedQuestionnaire(snap, event.id)) {
+          throw new PlatformError("CAPABILITY_NOT_ENABLED", "RSVP surface is not prepared for this event");
+        }
+        const existing = activeInvitationForGuest(snap, guest.id);
+        if (existing) {
+          existing.status = "ROTATED";
+          existing.updatedAt = ctx.now;
+          existing.version += 1;
+        }
+        const config = this.rsvpAccessConfig();
+        ensureRsvpKeyRing(snap, event.organisationId, config.currentKeyId, ctx.now);
+        const token = generateInvitationToken();
+        const ttl = config.invitationTtlSeconds ?? DEFAULT_NON_PRODUCTION_RSVP_ACCESS.invitationTtlSeconds ?? 2_592_000;
+        const invitation: RsvpInvitation = {
+          id: randomUUID(),
+          organisationId: event.organisationId,
+          clientId: event.clientId,
+          eventId: event.id,
+          guestId: guest.id,
+          tokenHash: hashInvitationToken(token, config),
+          tokenPrefix: invitationPrefix(token),
+          keyId: config.currentKeyId,
+          status: "ISSUED",
+          expiresAt: input.expiresAt ?? new Date(Date.parse(ctx.now) + ttl * 1000).toISOString(),
+          issuedByPersonId: actor.personId,
+          ...(existing ? { rotatedFromId: existing.id } : {}),
+          exchangeCount: 0,
+          failedExchangeCount: 0,
+          schemaVersion: SCHEMA_VERSION,
+          version: 1,
+          createdAt: ctx.now,
+          updatedAt: ctx.now,
+        };
+        snap.rsvpInvitations.push(invitation);
+        return { id: invitation.id, invitation, token, guestAccessPath: `/rsvp/${token}` };
+      },
+    });
+  }
+
+  rotateRsvpInvitation(actor: ActorContext, raw: unknown): IssuedRsvpInvitation {
+    const input = parseStrict(RotateRsvpInvitationInputSchema, raw);
+    const current = this.currentSnapshot().rsvpInvitations.find((item) => item.id === input.invitationId);
+    return this.issueRsvpInvitation(actor, {
+      organisationId: input.organisationId,
+      eventId: input.eventId,
+      guestId: current?.guestId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+    });
+  }
+
+  revokeRsvpInvitation(actor: ActorContext, raw: unknown): RsvpInvitation {
+    const input = parseStrict(RevokeRsvpInvitationInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "rsvp.invitation.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "rsvp.invitation.revoked",
+      resourceType: "rsvp_invitation",
+      resourceId: input.invitationId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const record = snap.rsvpInvitations.find((item) => item.id === input.invitationId);
+        if (!record || record.organisationId !== input.organisationId || record.eventId !== input.eventId) {
+          throw new PlatformError("NOT_FOUND", "invitation was not found");
+        }
+        this.assertVersion(record.version, input.expectedVersion);
+        record.status = "REVOKED";
+        record.revokedAt = ctx.now;
+        record.version += 1;
+        record.updatedAt = ctx.now;
+        for (const session of snap.rsvpGuestSessions.filter((item) => item.invitationId === record.id && !item.revokedAt)) {
+          session.revokedAt = ctx.now;
+          session.version += 1;
+          session.updatedAt = ctx.now;
+        }
+        return record;
+      },
+    });
+  }
+
+  grantRsvpEntitlement(actor: ActorContext, raw: unknown): RsvpEntitlement {
+    const input = parseStrict(GrantRsvpEntitlementInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "rsvp.entitlement.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "rsvp.entitlement.granted",
+      resourceType: "rsvp_entitlement",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const guest = this.requireOperationalGuest(snap, input.organisationId, input.eventId, input.guestId);
+        if (input.kind === "COMPANION" && input.allowance === undefined) {
+          throw new PlatformError("VALIDATION_FAILED", "companion allowance is required", { field: "allowance" });
+        }
+        if (input.kind === "HOUSEHOLD_RESPONDENT") {
+          const subjects = input.subjectGuestIds ?? [];
+          if (subjects.length === 0) {
+            throw new PlatformError("VALIDATION_FAILED", "household subjects are required", { field: "subjectGuestIds" });
+          }
+          for (const subjectId of subjects) {
+            const subject = this.requireOperationalGuest(snap, input.organisationId, input.eventId, subjectId);
+            if (!guest.householdId || subject.householdId !== guest.householdId) {
+              throw new PlatformError("VALIDATION_FAILED", "household respondent authority requires the same household");
+            }
+          }
+        }
+        const record: RsvpEntitlement = {
+          id: randomUUID(),
+          organisationId: guest.organisationId,
+          clientId: guest.clientId,
+          eventId: guest.eventId,
+          guestId: guest.id,
+          kind: input.kind,
+          status: "ACTIVE",
+          reason: input.reason,
+          ...(input.allowance !== undefined ? { allowance: input.allowance } : {}),
+          ...(input.subjectGuestIds ? { subjectGuestIds: input.subjectGuestIds } : {}),
+          schemaVersion: SCHEMA_VERSION,
+          version: 1,
+          createdAt: ctx.now,
+          updatedAt: ctx.now,
+        };
+        snap.rsvpEntitlements.push(record);
+        return record;
+      },
+    });
+  }
+
+  revokeRsvpEntitlement(actor: ActorContext, raw: unknown): RsvpEntitlement {
+    const input = parseStrict(RevokeRsvpEntitlementInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "rsvp.entitlement.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "rsvp.entitlement.revoked",
+      resourceType: "rsvp_entitlement",
+      resourceId: input.entitlementId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const record = snap.rsvpEntitlements.find((item) => item.id === input.entitlementId);
+        if (!record || record.organisationId !== input.organisationId || record.eventId !== input.eventId) {
+          throw new PlatformError("NOT_FOUND", "entitlement was not found");
+        }
+        this.assertVersion(record.version, input.expectedVersion);
+        record.status = "REVOKED";
+        record.version += 1;
+        record.updatedAt = ctx.now;
+        return record;
+      },
+    });
+  }
+
+  staffEnterRsvp(actor: ActorContext, raw: unknown): RsvpResponse {
+    const input = parseStrict(StaffRsvpResponseInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "rsvp.response.amend",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: input.withdraw ? "rsvp.response.withdrawn" : "rsvp.response.staff_amended",
+      resourceType: "rsvp_response",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const event = this.requireEvent(snap, input.organisationId, input.eventId);
+        const guest = this.requireOperationalGuest(snap, input.organisationId, input.eventId, input.guestId);
+        const questionnaire = publishedQuestionnaire(snap, event.id);
+        const policy = eventPolicy(snap, event.id);
+        if (!questionnaire || !policy) {
+          throw new PlatformError("CAPABILITY_NOT_ENABLED", "RSVP surface is not prepared for this event");
+        }
+        const response = ensureResponse({ snap, guest, questionnaireId: questionnaire.id, now: ctx.now });
+        if (input.expectedVersion) this.assertVersion(response.version, input.expectedVersion);
+        if (input.withdraw) {
+          withdrawResponse(response, ctx.now);
+          response.provenance = "STAFF_CORRECTED";
+          response.lastActorPersonId = actor.personId;
+          reconcileEventProjection(snap, event, ctx.now);
+          return response;
+        }
+        applyResponseAnswers({
+          snap,
+          guest,
+          response,
+          answers: { ...(input.answers ?? {}), attendanceIntent: input.attendanceIntent },
+          provenance: input.correction || response.status === "SUBMITTED" || response.status === "AMENDED"
+            ? "STAFF_CORRECTED"
+            : "STAFF_ENTERED",
+          questionnaire,
+          policy,
+          submit: true,
+          now: ctx.now,
+          actorPersonId: actor.personId,
+        });
+        reconcileEventProjection(snap, event, ctx.now);
+        return response;
+      },
+    });
+  }
+
+  reviewRsvpException(actor: ActorContext, raw: unknown): RsvpException {
+    const input = parseStrict(ReviewRsvpExceptionInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "rsvp.exception.review",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "rsvp.exception.reviewed",
+      resourceType: "rsvp_exception",
+      resourceId: input.exceptionId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const record = snap.rsvpExceptions.find((item) => item.id === input.exceptionId);
+        if (!record || record.organisationId !== input.organisationId || record.eventId !== input.eventId) {
+          throw new PlatformError("NOT_FOUND", "exception was not found");
+        }
+        this.assertVersion(record.version, input.expectedVersion);
+        record.status = input.decision;
+        record.resolvedByPersonId = actor.personId;
+        record.resolvedAt = ctx.now;
+        record.reason = input.reason;
+        record.version += 1;
+        record.updatedAt = ctx.now;
+        return record;
+      },
+    });
+  }
+
+  acknowledgeAssistance(actor: ActorContext, raw: unknown): RsvpAssistanceRequest {
+    const input = parseStrict(AcknowledgeAssistanceInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "rsvp.exception.review",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "rsvp.assistance.acknowledged",
+      resourceType: "rsvp_assistance",
+      resourceId: input.assistanceId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const record = snap.rsvpAssistanceRequests.find((item) => item.id === input.assistanceId);
+        if (!record || record.organisationId !== input.organisationId || record.eventId !== input.eventId) {
+          throw new PlatformError("NOT_FOUND", "assistance request was not found");
+        }
+        this.assertVersion(record.version, input.expectedVersion);
+        record.status = input.status;
+        record.acknowledgedByPersonId = actor.personId;
+        record.acknowledgedAt = ctx.now;
+        record.version += 1;
+        record.updatedAt = ctx.now;
+        return record;
+      },
+    });
+  }
+
+  getRsvpPolicy(actor: ActorContext, organisationId: string, eventId: string): RsvpPolicy | undefined {
+    const { snap, ctx } = this.authorizeQuery(actor, "rsvp.directory.view", { organisationId, eventId });
+    const event = this.requireEvent(snap, organisationId, eventId);
+    if (!canSeeEvent(ctx.actor, event, ctx.now)) throw new PlatformError("NOT_FOUND", "event was not found");
+    return eventPolicy(snap, eventId);
+  }
+
+  getPublishedQuestionnaire(actor: ActorContext, organisationId: string, eventId: string): RsvpQuestionnaire | undefined {
+    const { snap, ctx } = this.authorizeQuery(actor, "rsvp.directory.view", { organisationId, eventId });
+    const event = this.requireEvent(snap, organisationId, eventId);
+    if (!canSeeEvent(ctx.actor, event, ctx.now)) throw new PlatformError("NOT_FOUND", "event was not found");
+    return publishedQuestionnaire(snap, eventId);
+  }
+
+  getRsvpOverview(actor: ActorContext, organisationId: string, eventId: string): RsvpEventProjection {
+    const { snap, ctx } = this.authorizeQuery(actor, "rsvp.directory.view", { organisationId, eventId });
+    const event = this.requireEvent(snap, organisationId, eventId);
+    if (!canSeeEvent(ctx.actor, event, ctx.now)) throw new PlatformError("NOT_FOUND", "event was not found");
+    return reconcileEventProjection(snap, event, ctx.now);
+  }
+
+  listRsvpDirectory(actor: ActorContext, raw: unknown): RsvpGuestDirectoryRow[] {
+    const input = parseStrict<RsvpDirectoryQuery>(RsvpDirectoryQuerySchema, raw);
+    const { snap, ctx } = this.authorizeQuery(actor, "rsvp.directory.view", {
+      organisationId: input.organisationId,
+      eventId: input.eventId,
+    });
+    const event = this.requireEvent(snap, input.organisationId, input.eventId);
+    if (!canSeeEvent(ctx.actor, event, ctx.now)) throw new PlatformError("NOT_FOUND", "event was not found");
+    return snap.operationalGuests
+      .filter((item) => item.organisationId === input.organisationId && item.eventId === input.eventId)
+      .filter((item) => guestMatchesQuery(item, input.query))
+      .map((guest) => {
+        const response = responseForGuest(snap, guest.id);
+        const invitation = activeInvitationForGuest(snap, guest.id);
+        const exceptions = snap.rsvpExceptions.filter((item) => item.guestId === guest.id);
+        const assistance = snap.rsvpAssistanceRequests.filter((item) => item.guestId === guest.id);
+        const row: RsvpGuestDirectoryRow = {
+          guest,
+          attendanceIntent: response?.attendanceIntent ?? "NOT_SUPPLIED",
+          responseStatus: response?.status ?? "NOT_STARTED",
+          ...(response?.provenance ? { provenance: response.provenance } : {}),
+          ...(response?.respondedAt ? { respondedAt: response.respondedAt } : {}),
+          ...(invitation ? { invitationStatus: invitation.status } : {}),
+          attentionRequired: rsvpAttention({ response, exceptions, assistance }),
+        };
+        return row;
+      })
+      .filter((row) => (input.attendanceIntent ? row.attendanceIntent === input.attendanceIntent : true))
+      .filter((row) => (input.responseStatus ? row.responseStatus === input.responseStatus : true))
+      .filter((row) => (input.attentionRequired === undefined ? true : row.attentionRequired === input.attentionRequired));
+  }
+
+  listRsvpInvitations(actor: ActorContext, organisationId: string, eventId: string, guestId?: string): RsvpInvitation[] {
+    const { snap, ctx } = this.authorizeQuery(actor, "rsvp.invitation.manage", { organisationId, eventId });
+    const event = this.requireEvent(snap, organisationId, eventId);
+    if (!canSeeEvent(ctx.actor, event, ctx.now)) throw new PlatformError("NOT_FOUND", "event was not found");
+    return snap.rsvpInvitations.filter((item) => {
+      if (item.organisationId !== organisationId || item.eventId !== eventId) return false;
+      return guestId ? item.guestId === guestId : true;
+    });
+  }
+
+  listRsvpExceptions(actor: ActorContext, organisationId: string, eventId: string): RsvpException[] {
+    const { snap, ctx } = this.authorizeQuery(actor, "rsvp.directory.view", { organisationId, eventId });
+    const event = this.requireEvent(snap, organisationId, eventId);
+    if (!canSeeEvent(ctx.actor, event, ctx.now)) throw new PlatformError("NOT_FOUND", "event was not found");
+    return snap.rsvpExceptions.filter((item) => item.organisationId === organisationId && item.eventId === eventId);
+  }
+
+  listRsvpAssistance(actor: ActorContext, organisationId: string, eventId: string): RsvpAssistanceRequest[] {
+    const { snap, ctx } = this.authorizeQuery(actor, "rsvp.directory.view", { organisationId, eventId });
+    const event = this.requireEvent(snap, organisationId, eventId);
+    if (!canSeeEvent(ctx.actor, event, ctx.now)) throw new PlatformError("NOT_FOUND", "event was not found");
+    return snap.rsvpAssistanceRequests.filter((item) => item.organisationId === organisationId && item.eventId === eventId);
+  }
+
+  getGuestRsvp(actor: ActorContext, organisationId: string, eventId: string, guestId: string): {
+    response?: RsvpResponse;
+    invitation?: RsvpInvitation;
+    exceptions: RsvpException[];
+    assistance: RsvpAssistanceRequest[];
+    entitlements: RsvpEntitlement[];
+  } {
+    const { snap, ctx } = this.authorizeQuery(actor, "rsvp.directory.view", { organisationId, eventId });
+    const event = this.requireEvent(snap, organisationId, eventId);
+    if (!canSeeEvent(ctx.actor, event, ctx.now)) throw new PlatformError("NOT_FOUND", "event was not found");
+    this.requireOperationalGuest(snap, organisationId, eventId, guestId);
+    return {
+      response: responseForGuest(snap, guestId),
+      invitation: activeInvitationForGuest(snap, guestId),
+      exceptions: snap.rsvpExceptions.filter((item) => item.guestId === guestId),
+      assistance: snap.rsvpAssistanceRequests.filter((item) => item.guestId === guestId),
+      entitlements: snap.rsvpEntitlements.filter((item) => item.guestId === guestId),
+    };
+  }
+
+  recoverExpiredInvitations(actor: ActorContext, organisationId: string, eventId: string): number {
+    return this.mutate(actor, {
+      permission: "rsvp.invitation.manage",
+      scope: { organisationId, eventId },
+      action: "rsvp.invitation.expired",
+      resourceType: "rsvp_invitation",
+      run: (snap, ctx) => {
+        const event = this.requireEvent(snap, organisationId, eventId);
+        if (!canSeeEvent(ctx.actor, event, ctx.now)) throw new PlatformError("NOT_FOUND", "event was not found");
+        return { id: event.id, count: expireInvitations(snap, ctx.now) };
+      },
+    }).count;
+  }
+
+  exchangeGuestAccess(
+    token: string,
+    now?: string,
+    correlationId = "guest-access",
+  ): { sessionToken: string; view: GuestSelfServiceView } {
+    const config = this.rsvpAccessConfig();
+    const snap = this.store.snapshot();
+    const occurredAt = now ?? new Date().toISOString();
+    expireInvitations(snap, occurredAt);
+    const tokenHash = hashInvitationToken(token, config);
+    const invitation = snap.rsvpInvitations.find((item) => item.tokenHash === tokenHash);
+    if (!invitation || invitation.status !== "ISSUED" || Date.parse(invitation.expiresAt) <= Date.parse(occurredAt)) {
+      this.writeAudit(snap, {
+        action: "rsvp.access.denied",
+        outcome: "DENIED",
+        resourceType: "rsvp_invitation",
+        correlationId,
+        reason: "guest_access_unavailable",
+        occurredAt,
+        actorType: "GUEST_CAPABILITY",
+      });
+      this.store.replace(snap);
+      throw guestAccessUnavailable();
+    }
+    if (invitation.failedExchangeCount >= (config.maxExchangeFailures ?? 8)) {
+      invitation.status = "REVOKED";
+      invitation.revokedAt = occurredAt;
+      invitation.version += 1;
+      invitation.updatedAt = occurredAt;
+      this.writeAudit(snap, {
+        action: "rsvp.access.denied",
+        outcome: "DENIED",
+        organisationId: invitation.organisationId,
+        eventId: invitation.eventId,
+        resourceType: "rsvp_invitation",
+        resourceId: invitation.id,
+        correlationId,
+        reason: "guest_access_unavailable",
+        occurredAt,
+        actorType: "GUEST_CAPABILITY",
+      });
+      this.store.replace(snap);
+      throw guestAccessUnavailable();
+    }
+    const guest = snap.operationalGuests.find((item) => item.id === invitation.guestId);
+    if (!guest || guest.eventId !== invitation.eventId || guest.lifecycle !== "ACTIVE") {
+      this.writeAudit(snap, {
+        action: "rsvp.access.denied",
+        outcome: "DENIED",
+        organisationId: invitation.organisationId,
+        eventId: invitation.eventId,
+        resourceType: "rsvp_invitation",
+        resourceId: invitation.id,
+        correlationId,
+        reason: "guest_access_unavailable",
+        occurredAt,
+        actorType: "GUEST_CAPABILITY",
+      });
+      this.store.replace(snap);
+      throw guestAccessUnavailable();
+    }
+    const sessionId = randomUUID();
+    const issued = issueGuestSession(
+      {
+        sessionId,
+        invitationId: invitation.id,
+        guestId: invitation.guestId,
+        eventId: invitation.eventId,
+        organisationId: invitation.organisationId,
+        now: occurredAt,
+      },
+      config,
+    );
+    snap.rsvpGuestSessions.push({
+      id: sessionId,
+      organisationId: invitation.organisationId,
+      clientId: invitation.clientId,
+      eventId: invitation.eventId,
+      guestId: invitation.guestId,
+      invitationId: invitation.id,
+      sessionHash: hashGuestSessionToken(issued.token, config),
+      keyId: config.currentKeyId,
+      expiresAt: issued.actor.expiresAt,
+      lastSeenAt: occurredAt,
+      schemaVersion: SCHEMA_VERSION,
+      version: 1,
+      createdAt: occurredAt,
+      updatedAt: occurredAt,
+    });
+    invitation.lastExchangedAt = occurredAt;
+    invitation.exchangeCount += 1;
+    invitation.version += 1;
+    invitation.updatedAt = occurredAt;
+    this.writeAudit(snap, {
+      action: "rsvp.access.exchanged",
+      outcome: "SUCCESS",
+      organisationId: invitation.organisationId,
+      clientId: invitation.clientId,
+      eventId: invitation.eventId,
+      resourceType: "rsvp_guest_session",
+      resourceId: sessionId,
+      correlationId,
+      afterHash: stableHash({ sessionId, invitationId: invitation.id, guestId: invitation.guestId }),
+      occurredAt,
+      actorType: "GUEST_CAPABILITY",
+    });
+    this.store.replace(snap);
+    return { sessionToken: issued.token, view: this.guestSelfServiceViewFromSnap(snap, issued.actor, occurredAt) };
+  }
+
+  guestSelfServiceView(sessionToken: string, now?: string): GuestSelfServiceView {
+    const occurredAt = now ?? new Date().toISOString();
+    const capability = this.requireGuestCapability(sessionToken, occurredAt);
+    return this.guestSelfServiceViewFromSnap(this.store.snapshot(), capability, occurredAt);
+  }
+
+  saveGuestRsvp(sessionToken: string, raw: unknown, now?: string, correlationId = "guest-rsvp"): RsvpResponse {
+    const input = parseStrict(GuestRsvpSaveInputSchema, raw);
+    const occurredAt = now ?? new Date().toISOString();
+    const capability = this.requireGuestCapability(sessionToken, occurredAt);
+    return this.capabilityMutate(capability, {
+      action: input.submit ? "rsvp.response.submitted" : "rsvp.response.autosaved",
+      resourceType: "rsvp_response",
+      reason: input.submit ? "guest self-service submission" : "guest self-service draft",
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      correlationId,
+      occurredAt,
+      run: (snap) => {
+        const guest = this.requireOperationalGuest(snap, capability.organisationId, capability.eventId, capability.guestId);
+        const policy = eventPolicy(snap, capability.eventId);
+        const questionnaire = publishedQuestionnaire(snap, capability.eventId);
+        if (!policy || !questionnaire || !policyIsOpen(policy, occurredAt)) {
+          throw guestAccessUnavailable();
+        }
+        const response = ensureResponse({ snap, guest, questionnaireId: questionnaire.id, now: occurredAt });
+        if (input.expectedVersion) this.assertVersion(response.version, input.expectedVersion);
+        if (input.submit && !amendmentsAllowed(policy, occurredAt, response.status) && response.status !== "NOT_STARTED" && response.status !== "IN_PROGRESS") {
+          throw new PlatformError("FORBIDDEN", "amendments are no longer permitted", {
+            publicMessage: "This response can no longer be changed.",
+          });
+        }
+        applyResponseAnswers({
+          snap,
+          guest,
+          response,
+          answers: input.answers,
+          provenance: "GUEST_SELF_SERVICE",
+          questionnaire,
+          policy,
+          submit: Boolean(input.submit),
+          now: occurredAt,
+          invitationId: capability.invitationId,
+        });
+        const event = this.requireEvent(snap, capability.organisationId, capability.eventId);
+        reconcileEventProjection(snap, event, occurredAt);
+        return response;
+      },
+    });
+  }
+
+  requestGuestAssistance(sessionToken: string, raw: unknown, now?: string, correlationId = "guest-assistance"): RsvpAssistanceRequest {
+    const input = parseStrict(GuestAssistanceInputSchema, raw);
+    const occurredAt = now ?? new Date().toISOString();
+    const capability = this.requireGuestCapability(sessionToken, occurredAt);
+    return this.capabilityMutate(capability, {
+      action: "rsvp.assistance.requested",
+      resourceType: "rsvp_assistance",
+      reason: "guest requested assistance",
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      correlationId,
+      occurredAt,
+      run: (snap) => {
+        const guest = this.requireOperationalGuest(snap, capability.organisationId, capability.eventId, capability.guestId);
+        const record: RsvpAssistanceRequest = {
+          id: randomUUID(),
+          organisationId: guest.organisationId,
+          clientId: guest.clientId,
+          eventId: guest.eventId,
+          guestId: guest.id,
+          note: input.note,
+          status: "OPEN",
+          schemaVersion: SCHEMA_VERSION,
+          version: 1,
+          createdAt: occurredAt,
+          updatedAt: occurredAt,
+        };
+        snap.rsvpAssistanceRequests.push(record);
+        guest.attentionRequired = true;
+        return record;
+      },
+    });
+  }
+
+  logoutGuestSession(sessionToken: string, now?: string, correlationId = "guest-logout"): void {
+    const occurredAt = now ?? new Date().toISOString();
+    const capability = this.requireGuestCapability(sessionToken, occurredAt);
+    const snap = this.store.snapshot();
+    const session = snap.rsvpGuestSessions.find((item) => item.id === capability.sessionId);
+    if (session && !session.revokedAt) {
+      session.revokedAt = occurredAt;
+      session.version += 1;
+      session.updatedAt = occurredAt;
+    }
+    this.writeAudit(snap, {
+      action: "rsvp.access.logout",
+      outcome: "SUCCESS",
+      organisationId: capability.organisationId,
+      eventId: capability.eventId,
+      resourceType: "rsvp_guest_session",
+      resourceId: capability.sessionId,
+      correlationId,
+      occurredAt,
+      actorType: "GUEST_CAPABILITY",
+    });
+    this.store.replace(snap);
   }
 
   listClients(actor: ActorContext, organisationId: string): Client[] {
@@ -1092,6 +1979,144 @@ export class PlatformService {
     return resolved;
   }
 
+  private requireGuestCapability(sessionToken: string, now: string): GuestSessionActor {
+    const config = this.rsvpAccessConfig();
+    const actor = readGuestSession(sessionToken, config, now);
+    const snap = this.store.snapshot();
+    const session = snap.rsvpGuestSessions.find((item) => item.id === actor.sessionId);
+    const invitation = snap.rsvpInvitations.find((item) => item.id === actor.invitationId);
+    if (
+      !session ||
+      session.revokedAt ||
+      Date.parse(session.expiresAt) <= Date.parse(now) ||
+      session.guestId !== actor.guestId ||
+      session.eventId !== actor.eventId ||
+      session.organisationId !== actor.organisationId ||
+      !invitation ||
+      invitation.status !== "ISSUED" ||
+      invitation.guestId !== actor.guestId ||
+      invitation.eventId !== actor.eventId
+    ) {
+      throw guestAccessUnavailable();
+    }
+    return actor;
+  }
+
+  private guestSelfServiceViewFromSnap(
+    snap: PlatformSnapshot,
+    capability: GuestSessionActor,
+    now: string,
+  ): GuestSelfServiceView {
+    const guest = this.requireOperationalGuest(snap, capability.organisationId, capability.eventId, capability.guestId);
+    const policy = eventPolicy(snap, capability.eventId);
+    const questionnaire = publishedQuestionnaire(snap, capability.eventId);
+    if (!policy || !questionnaire) throw guestAccessUnavailable();
+    const response = responseForGuest(snap, guest.id);
+    const attendanceIntent = response?.attendanceIntent ?? "NOT_SUPPLIED";
+    const status = response?.status ?? "NOT_STARTED";
+    const allowance = companionAllowance(snap, guest.id, policy);
+    const subjects = householdSubjects(snap, guest.id);
+    return {
+      eventDisplayName: policy.eventDisplayName,
+      hostDisplayName: policy.hostDisplayName,
+      privacyNotice: policy.privacyNotice,
+      guestDisplayName: guestVisibleName(guest),
+      attendanceIntent,
+      status,
+      ...(response?.respondedAt ? { respondedAt: response.respondedAt } : {}),
+      amendmentsPermitted: amendmentsAllowed(policy, now, status),
+      expectedVersion: response?.version ?? 1,
+      companionAllowance: allowance,
+      householdMembers: subjects.map((guestId) => {
+        const member = snap.operationalGuests.find((item) => item.id === guestId);
+        return { guestId, displayName: member ? guestVisibleName(member) : "Household guest" };
+      }),
+      sections: compileVisibleQuestions(questionnaire, attendanceIntent, {
+        household: subjects.length > 0,
+        companion: allowance > 0,
+      }),
+      answers: response?.answers ?? { attendanceIntent: "NOT_SUPPLIED" },
+      assistanceOpen: snap.rsvpAssistanceRequests.some(
+        (item) => item.guestId === guest.id && item.status === "OPEN",
+      ),
+      ...(response?.respondedAt
+        ? { confirmation: { submittedAt: response.respondedAt, attendanceIntent: response.attendanceIntent } }
+        : {}),
+    };
+  }
+
+  private capabilityMutate<T extends { id?: string }>(
+    capability: GuestSessionActor,
+    input: {
+      action: string;
+      resourceType: string;
+      reason?: string;
+      idempotencyKey?: string;
+      payloadHash?: string;
+      correlationId: string;
+      occurredAt: string;
+      run: (snap: PlatformSnapshot) => T;
+    },
+  ): T {
+    const snap = this.store.snapshot();
+    if (input.idempotencyKey) {
+      const existing = snap.idempotency.find((item) => item.key === input.idempotencyKey);
+      if (existing) {
+        if (input.payloadHash && existing.hash !== input.payloadHash) {
+          throw new PlatformError("IDEMPOTENCY_CONFLICT", "idempotency key was reused with a different payload");
+        }
+        const reused = this.lookupByRef(snap, input.resourceType, existing.resultRef);
+        if (reused) return reused as T;
+      }
+    }
+    try {
+      const before = this.lookupByRef(snap, input.resourceType, capability.guestId);
+      const result = input.run(snap);
+      if (input.idempotencyKey && result.id) {
+        snap.idempotency.push({
+          key: input.idempotencyKey,
+          action: input.action,
+          hash: input.payloadHash ?? stableHash(result),
+          resultRef: result.id,
+          createdAt: input.occurredAt,
+        });
+      }
+      this.writeAudit(snap, {
+        action: input.action,
+        outcome: "SUCCESS",
+        organisationId: capability.organisationId,
+        eventId: capability.eventId,
+        resourceType: input.resourceType,
+        resourceId: result.id,
+        correlationId: input.correlationId,
+        idempotencyKey: input.idempotencyKey,
+        reason: input.reason,
+        beforeHash: before ? stableHash(before) : undefined,
+        afterHash: stableHash(result),
+        occurredAt: input.occurredAt,
+        actorType: "GUEST_CAPABILITY",
+      });
+      this.store.replace(snap);
+      return result;
+    } catch (error) {
+      if (error instanceof PlatformError && (error.code === "VERSION_CONFLICT" || error.code === "FORBIDDEN")) {
+        this.writeAudit(snap, {
+          action: input.action,
+          outcome: error.code === "FORBIDDEN" ? "DENIED" : "FAILED",
+          organisationId: capability.organisationId,
+          eventId: capability.eventId,
+          resourceType: input.resourceType,
+          correlationId: input.correlationId,
+          reason: error.code,
+          occurredAt: input.occurredAt,
+          actorType: "GUEST_CAPABILITY",
+        });
+        this.store.replace(snap);
+      }
+      throw error;
+    }
+  }
+
   private requireOrganisation(snap: PlatformSnapshot, organisationId: string) {
     const record = snap.organisations.find((item) => item.id === organisationId);
     if (!record) throw new PlatformError("NOT_FOUND", "organisation was not found");
@@ -1235,6 +2260,26 @@ export class PlatformService {
         eventId: record?.eventId,
       };
     }
+    const rsvpTables = [
+      snap.rsvpPolicies,
+      snap.rsvpQuestionnaires,
+      snap.rsvpInvitations,
+      snap.rsvpResponses,
+      snap.rsvpEntitlements,
+      snap.rsvpExceptions,
+      snap.rsvpAssistanceRequests,
+    ];
+    for (const table of rsvpTables) {
+      const record = table.find((item) => item.id === id);
+      if (record) {
+        return {
+          type,
+          organisationId: record.organisationId,
+          clientId: record.clientId,
+          eventId: record.eventId,
+        };
+      }
+    }
     return { type, organisationId };
   }
 
@@ -1250,6 +2295,15 @@ export class PlatformService {
       snap.guestHouseholds,
       snap.guestDuplicateCandidates,
       snap.guestIntakeBatches,
+      snap.rsvpPolicies,
+      snap.rsvpQuestionnaires,
+      snap.rsvpInvitations,
+      snap.rsvpGuestSessions,
+      snap.rsvpResponses,
+      snap.rsvpReceipts,
+      snap.rsvpEntitlements,
+      snap.rsvpExceptions,
+      snap.rsvpAssistanceRequests,
     ];
     for (const table of tables) {
       const found = table.find((item) => item.id === id);
@@ -1276,12 +2330,13 @@ export class PlatformService {
       beforeHash?: string;
       afterHash?: string;
       occurredAt: string;
+      actorType?: AuditEvent["actorType"];
     },
   ): void {
     const entry: AuditEvent = {
       id: randomUUID(),
       occurredAt: input.occurredAt,
-      actorType: "USER",
+      actorType: input.actorType ?? "USER",
       ...(input.actorPersonId ? { actorPersonId: input.actorPersonId } : {}),
       service: "shared-platform",
       action: input.action,

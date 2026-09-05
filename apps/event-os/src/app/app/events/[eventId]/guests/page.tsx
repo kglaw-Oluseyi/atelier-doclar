@@ -19,7 +19,7 @@ export default async function GuestDirectoryPage({
   searchParams,
 }: {
   params: Promise<{ eventId: string }>;
-  searchParams: Promise<{ q?: string; attention?: string; error?: string; importError?: string }>;
+  searchParams: Promise<{ q?: string; attention?: string; rsvp?: string; error?: string; importError?: string }>;
 }) {
   const { eventId } = await params;
   const query = await searchParams;
@@ -39,8 +39,27 @@ export default async function GuestDirectoryPage({
     eventId: scoped.event.id,
     query: query.q,
     attentionRequired: query.attention === "1" ? true : undefined,
+    attendanceIntent:
+      query.rsvp === "ATTENDING" ||
+      query.rsvp === "NOT_ATTENDING" ||
+      query.rsvp === "UNCERTAIN" ||
+      query.rsvp === "NOT_SUPPLIED"
+        ? query.rsvp
+        : undefined,
   });
   const permissions = guestPermissions(person, actor, scoped.organisation.id, scoped.event.id);
+  let rsvpRows: ReturnType<typeof runtime.service.listRsvpDirectory> = [];
+  if (permissions.rsvpView) {
+    try {
+      rsvpRows = runtime.service.listRsvpDirectory(actor, {
+        organisationId: scoped.organisation.id,
+        eventId: scoped.event.id,
+      });
+    } catch {
+      rsvpRows = [];
+    }
+  }
+  const rsvpByGuest = new Map(rsvpRows.map((row) => [row.guest.id, row]));
   const attentionCount = guests.filter((item) => item.attentionRequired).length;
 
   return (
@@ -79,6 +98,16 @@ export default async function GuestDirectoryPage({
           <input type="checkbox" name="attention" value="1" defaultChecked={query.attention === "1"} />
           Attention only
         </label>
+        <label>
+          RSVP
+          <select name="rsvp" defaultValue={query.rsvp ?? ""}>
+            <option value="">All responses</option>
+            <option value="NOT_SUPPLIED">Not yet supplied</option>
+            <option value="ATTENDING">Attending</option>
+            <option value="NOT_ATTENDING">Not attending</option>
+            <option value="UNCERTAIN">Uncertain</option>
+          </select>
+        </label>
         <button type="submit" className="secondary">
           Apply filters
         </button>
@@ -89,6 +118,9 @@ export default async function GuestDirectoryPage({
             New guest intake
           </Link>
         ) : null}
+        <Link className="button secondary" href={`/app/events/${scoped.event.id}/rsvp`}>
+          RSVP workspace
+        </Link>
         <Link className="button secondary" href={`/app/events/${scoped.event.id}`}>
           Event overview
         </Link>
@@ -104,6 +136,7 @@ export default async function GuestDirectoryPage({
                 <th scope="col">Name</th>
                 <th scope="col">Identity</th>
                 <th scope="col">Email quality</th>
+                <th scope="col">RSVP</th>
                 <th scope="col">Source</th>
                 <th scope="col">State</th>
               </tr>
@@ -124,6 +157,11 @@ export default async function GuestDirectoryPage({
                   <td>
                     <span className="md-status" data-tone={qualityTone(guest.email.quality)}>
                       {guest.email.quality.replaceAll("_", " ")}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="md-status">
+                      {(rsvpByGuest.get(guest.id)?.attendanceIntent ?? "NOT_SUPPLIED").replaceAll("_", " ")}
                     </span>
                   </td>
                   <td>{guest.intakeSource.replaceAll("_", " ")}</td>

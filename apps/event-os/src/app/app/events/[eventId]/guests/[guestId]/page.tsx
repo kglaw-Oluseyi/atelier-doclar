@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { PlatformError, operationalDisplayName } from "@maison-doclar/shared-platform";
 import { DuplicateResolveForm, GuestAmendForm } from "../../../../../../components/guest-amend-form";
+import { GuestAccessLink } from "../../../../../../components/guest-access-link";
+import { IssueInvitationForm, StaffRsvpForm } from "../../../../../../components/staff-rsvp-forms";
 import { AppShell } from "../../../../../../components/shell";
 import { guestPermissions, resolveScopedEvent } from "../../../../../../server/guest-scope";
 import { guardedActor } from "../../../../../../server/guard";
@@ -20,10 +22,12 @@ export default async function GuestDetailPage({
   searchParams,
 }: {
   params: Promise<{ eventId: string; guestId: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; issued?: string }>;
 }) {
   const { eventId, guestId } = await params;
-  const error = (await searchParams).error;
+  const paramsQuery = await searchParams;
+  const error = paramsQuery.error;
+  const issued = paramsQuery.issued;
   const { actor, person } = await guardedActor();
   const scoped = resolveScopedEvent(actor, eventId);
   if (!scoped) {
@@ -51,6 +55,17 @@ export default async function GuestDetailPage({
   }
   const duplicates = runtime.service.listGuestDuplicates(actor, scoped.organisation.id, scoped.event.id, guest.id);
   const permissions = guestPermissions(person, actor, scoped.organisation.id, scoped.event.id);
+  let rsvp;
+  try {
+    rsvp = permissions.rsvpView
+      ? runtime.service.getGuestRsvp(actor, scoped.organisation.id, scoped.event.id, guest.id)
+      : undefined;
+  } catch {
+    rsvp = undefined;
+  }
+  const policy = permissions.rsvpView
+    ? runtime.service.getRsvpPolicy(actor, scoped.organisation.id, scoped.event.id)
+    : undefined;
 
   return (
     <AppShell
@@ -93,6 +108,46 @@ export default async function GuestDetailPage({
           {guest.personId ? "Linked to an authoritative person reference" : "Unresolved — no person created"}
         </p>
       </section>
+      {rsvp ? (
+        <section>
+          <h2>RSVP</h2>
+          <p>
+            <span className="md-status" data-tone="brass">
+              {(rsvp.response?.attendanceIntent ?? "NOT_SUPPLIED").replaceAll("_", " ")}
+            </span>{" "}
+            <span className="md-status">{rsvp.response?.provenance?.replaceAll("_", " ") ?? "No response"}</span>
+          </p>
+          <p>
+            <strong>Recorded</strong> {rsvp.response?.respondedAt ?? "Not yet supplied"} ·{" "}
+            <strong>Guest access</strong> {rsvp.invitation?.status ?? "Not issued"}
+          </p>
+          {rsvp.exceptions.some((item) => item.status === "OPEN") ? (
+            <p>
+              <span className="md-status" data-tone="warn">
+                Guest input conflicts with a verified field
+              </span>
+            </p>
+          ) : null}
+          {issued ? (
+            <p role="status">
+              Synthetic guest access is ready.{" "}
+              <GuestAccessLink href={`/rsvp/${issued}`} />
+            </p>
+          ) : null}
+          {policy && permissions.rsvpInvite ? (
+            <IssueInvitationForm eventId={scoped.event.id} guestId={guest.id} />
+          ) : null}
+          {policy && permissions.rsvpAmend ? (
+            <StaffRsvpForm
+              eventId={scoped.event.id}
+              guestId={guest.id}
+              expectedVersion={rsvp.response?.version}
+              current={rsvp.response?.attendanceIntent}
+              error={error}
+            />
+          ) : null}
+        </section>
+      ) : null}
       {duplicates.length > 0 ? (
         <section>
           <h2>Duplicate and identity review</h2>
