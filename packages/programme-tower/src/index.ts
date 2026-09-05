@@ -3,9 +3,11 @@ export {
   CT5_TRACEABILITY,
   CT6_TRACEABILITY,
   CT7_TRACEABILITY,
+  CT8_TRACEABILITY,
   CT5_SURFACES,
   CT6_SURFACES,
   CT7_SURFACES,
+  CT8_SURFACES,
   LATER_SURFACES,
   TOWER_ROLES,
   SESSION_COOKIE,
@@ -42,3 +44,10 @@ export {
   RAG_PROVIDER,
   type GroundedAnswer,
 } from "./rag.js";
+export {
+  buildCharts,
+  buildNotifications,
+  dedupeNotifications,
+  toneForStatus,
+  type ChartsView,
+} from "./charts.js";

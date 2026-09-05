@@ -335,7 +335,7 @@
       "title": "CT8 \u2014 Charts, notifications and update freshness",
       "phaseId": "PH-FOUNDATION",
       "order": 9,
-      "status": "NOT_STARTED",
+      "status": "IN_REVIEW",
       "dependsOn": [
         "MD-CT7"
       ],

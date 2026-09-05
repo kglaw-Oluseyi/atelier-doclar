@@ -87,6 +87,7 @@ const CONTROL_FILES = [
   "docs/control/CT5_IMPLEMENTATION.md",
   "docs/control/CT6_IMPLEMENTATION.md",
   "docs/control/CT7_IMPLEMENTATION.md",
+  "docs/control/CT8_IMPLEMENTATION.md",
 ] as const;
 
 const RESTRICTED_FILES = ["docs/control/RESTRICTED_OPERATOR_NOTE.md"] as const;

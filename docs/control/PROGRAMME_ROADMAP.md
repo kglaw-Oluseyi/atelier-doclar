@@ -53,14 +53,15 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 | MD-CT5 | IN_REVIEW — roadmap and drill-down implemented; no named acceptance |
 | MD-CT6 | IN_REVIEW — controlled workflows implemented; gates unsigned |
 | MD-CT7 | IN_REVIEW — grounded assistant implemented; no named acceptance |
+| MD-CT8 | IN_REVIEW — charts and freshness implemented; unknown ≠ green |
 | All others | NOT_STARTED |
 
 ## Now / next / later
 
 | Band | Content |
 |------|---------|
-| Now | MD-CT7 — grounded programme assistant in review |
-| Next | MD-CT8 — charts, notifications and freshness |
+| Now | MD-CT8 — charts, notifications and freshness in review |
+| Next | MD-CT9 — operations and release evidence |
 | Later | CT4–CT9; Event OS S01 after stack/module decisions; Runtime after Event OS foundations |
 | Held | All 693 product/recon prompts except CT0/CT1 wrappers |
 | External | Independent, specialist, venue, CEO gates — unsigned |

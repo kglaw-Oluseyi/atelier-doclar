@@ -89,3 +89,13 @@ Acceptance of MD-CT4 still requires a named reviewer. Not ACCEPTED.
 | EV-CT7-E2E | TEST | Ask surface and roadmap isolation | `apps/control-tower/e2e/ask.spec.ts` |
 | EV-CT7-IMPL | DOCUMENT | Implementation record | `docs/control/CT7_IMPLEMENTATION.md` |
 
+## MD-CT8
+
+**Prompt Control ID:** `MD-PR-0009`
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-CT8-CHARTS | TEST | Unknown≠green, dedupe and roadmap isolation | `packages/programme-tower/test/charts.test.ts` |
+| EV-CT8-E2E | TEST | Charts tables and freshness | `apps/control-tower/e2e/charts.spec.ts` |
+| EV-CT8-IMPL | DOCUMENT | Implementation record | `docs/control/CT8_IMPLEMENTATION.md` |
+

@@ -106,3 +106,14 @@
 | Status not RAG-owned | snapshot `authoritativeStatus` |
 | RAG outage isolation | degraded answer; `buildRoadmap` still works |
 | Provider unselected | `RAG_PROVIDER.vendorBound = false` |
+
+## MD-CT8
+
+| Requirement | Implementation |
+|-------------|----------------|
+| Useful charts | `buildCharts` series |
+| Accessible equivalent | table per series |
+| Unknown ≠ green | `toneForStatus("UNKNOWN") === "unknown"` |
+| Freshness | snapshot age, last CI UNKNOWN, healthy=false |
+| Notifications | `buildNotifications` + `dedupeNotifications` |
+| No external provider | in-app only (`CT8-OI-001`) |

@@ -130,6 +130,20 @@ button, input, select {
   outline-offset: 2px;
 }
 
+.bars { list-style: none; padding: 0; margin: 0 0 12px; }
+.bars li { margin: 8px 0; }
+.bar {
+  display: block;
+  background: var(--bg-sunken);
+  height: 8px;
+  border: 1px solid var(--line);
+}
+.bar > span { display: block; height: 100%; background: var(--muted); }
+.bar[data-tone="warn"] > span { background: var(--warn); }
+.bar[data-tone="danger"] > span { background: var(--danger); }
+.bar[data-tone="ok"] > span { background: var(--accent); }
+.bar[data-tone="unknown"] > span { background: var(--muted); }
+
 @media (max-width: 800px) {
   .shell { grid-template-columns: 1fr; }
   .nav { border-right: 0; border-bottom: 1px solid var(--line); }

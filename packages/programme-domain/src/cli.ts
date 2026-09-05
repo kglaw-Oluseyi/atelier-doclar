@@ -127,6 +127,7 @@ function runProject(root: string | undefined, json: boolean): number {
         `MD-CT5=${view.statuses["MD-CT5"] ?? "-"}`,
         `MD-CT6=${view.statuses["MD-CT6"] ?? "-"}`,
         `MD-CT7=${view.statuses["MD-CT7"] ?? "-"}`,
+        `MD-CT8=${view.statuses["MD-CT8"] ?? "-"}`,
         "",
       ].join("\n"),
     );
