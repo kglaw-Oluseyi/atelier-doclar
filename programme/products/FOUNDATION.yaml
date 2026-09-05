@@ -10,5 +10,5 @@ dependencies: []
 statusSource: Evidence-derived SliceRecords; never document presence alone
 externalAuthorityRequirements:
   - Independent and CEO gates remain outside Cursor
-implementationReality: ABSENT application. Programme-domain validator/events plus CT3 ingestion boundary. No Control Tower UI.
-currentProjection: IN_REVIEW for MD-B0, MD-CT0, MD-CT1, MD-CT2 and MD-CT3; NOT_STARTED for MD-CT4–CT9. No slice ACCEPTED.
+implementationReality: Private Next.js /programme shell present. Production IdP, hosting and database unselected.
+currentProjection: IN_REVIEW for MD-B0 and MD-CT0–CT4; NOT_STARTED for MD-CT5–CT9. No slice ACCEPTED.

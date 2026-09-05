@@ -8,6 +8,7 @@ import { validateLoadedProgramme } from "./validate.js";
 export const CORPUS_SEED_TIME = "2026-09-05T05:10:00Z";
 export const CT2_SEED_TIME = "2026-09-05T07:10:00Z";
 export const CT3_SEED_TIME = "2026-09-05T08:10:00Z";
+export const CT4_SEED_TIME = "2026-09-05T10:10:00Z";
 export const B0_COMMIT = "f7abb431be9a15ab730b3fdd16baa8e83776c170";
 
 const B0_EVIDENCE: EvidenceRef = {
@@ -25,7 +26,7 @@ const systemActor = { id: "corpus-seed", role: "SYSTEM" as const };
 function envelope(
   eventId: string,
   eventType: ProgrammeEvent["eventType"],
-  sliceId: "MD-B0" | "MD-CT0" | "MD-CT1" | "MD-CT2" | "MD-CT3",
+  sliceId: "MD-B0" | "MD-CT0" | "MD-CT1" | "MD-CT2" | "MD-CT3" | "MD-CT4",
   occurredAt: string,
   payload: ProgrammeEvent["payload"],
 ): ProgrammeEvent {
@@ -48,7 +49,7 @@ function envelope(
 
 /**
  * Deterministic seed events reflecting documented review state.
- * Does not manufacture ACCEPTED events for B0/CT0/CT1/CT2/CT3.
+ * Does not manufacture ACCEPTED events for B0/CT0–CT4.
  */
 export function corpusSeedEvents(): ProgrammeEvent[] {
   return [
@@ -80,6 +81,12 @@ export function corpusSeedEvents(): ProgrammeEvent[] {
     }),
     envelope("EVT-SEED-CT3-REVIEW", "REVIEW_REQUESTED", "MD-CT3", CT3_SEED_TIME, {
       summary: "CT3 in review; not accepted",
+    }),
+    envelope("EVT-SEED-CT4-IMPL", "SLICE_IMPLEMENTATION_OBSERVED", "MD-CT4", CT4_SEED_TIME, {
+      summary: "CT4 Control Tower shell and executive portfolio implemented",
+    }),
+    envelope("EVT-SEED-CT4-REVIEW", "REVIEW_REQUESTED", "MD-CT4", CT4_SEED_TIME, {
+      summary: "CT4 in review; not accepted",
     }),
   ];
 }

@@ -20,7 +20,7 @@ Private, evidence-derived programme dashboard. Progress is calculated from manif
         ▼
 [Immutable programme snapshot]
         ▼
-[Private /programme UI — CT4+ ; not built]
+[Private /programme UI — CT4 shell/portfolio; CT5+ drill-down not built]
         │
         ├── structured status API (authoritative)
         └── RAG retrieval (citation layer only; CT7 — not built)

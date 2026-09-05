@@ -62,3 +62,18 @@
 | Transient vs permanent failure | `errors.ts` |
 | Status remains CT2-owned | translator emits evidence events only |
 | Acceptance cannot be manufactured | no `ACCEPTANCE_RECORDED` from GitHub |
+
+## MD-CT4
+
+**Prompt Control ID:** `MD-PR-0005`  
+**Native ID:** `CT4`  
+**Slice ID:** `MD-CT4`
+
+| Requirement | Implementation |
+|-------------|----------------|
+| Private `/programme` | Next.js middleware + HMAC session |
+| Executive portfolio | `packages/programme-tower` + `apps/control-tower` |
+| Evidence-derived status | CT2 snapshot via `loadCorpusPortfolio` |
+| UI states | loading/empty/denied/stale/degraded/conflict/error/recovery |
+| Unknown ≠ healthy | `freshness.healthy` requires live GitHub FRESH |
+| No gate approval | `cannotApprove: true`; no approve control |

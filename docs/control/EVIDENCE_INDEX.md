@@ -48,3 +48,18 @@ Acceptance of MD-CT2 still requires a named reviewer. Not ACCEPTED.
 
 Acceptance of MD-CT3 still requires a named reviewer. Not ACCEPTED.
 
+## MD-CT4
+
+**Prompt Control ID:** `MD-PR-0005`  
+**Native ID:** `CT4`  
+**Slice ID:** `MD-CT4`
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-CT4-TYPECHECK | CHECK | Strict TypeScript including control-tower | `pnpm typecheck` |
+| EV-CT4-TESTS | TEST | Session, portfolio and surface-state tests | `pnpm test` |
+| EV-CT4-E2E | TEST | Playwright + axe portfolio checks | `pnpm e2e` |
+| EV-CT4-IMPL | DOCUMENT | Implementation record | `docs/control/CT4_IMPLEMENTATION.md` |
+
+Acceptance of MD-CT4 still requires a named reviewer. Not ACCEPTED.
+

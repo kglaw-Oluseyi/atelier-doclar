@@ -151,6 +151,7 @@ describe("CT2 integration", () => {
     assert.equal(statuses.get("MD-CT1"), "IN_REVIEW");
     assert.equal(statuses.get("MD-CT2"), "IN_REVIEW");
     assert.equal(statuses.get("MD-CT3"), "IN_REVIEW");
-    assert.equal(statuses.get("MD-CT4"), "NOT_STARTED");
+    assert.equal(statuses.get("MD-CT4"), "IN_REVIEW");
+    assert.equal(statuses.get("MD-CT5"), "NOT_STARTED");
   });
 });

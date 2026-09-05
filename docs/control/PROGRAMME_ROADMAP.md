@@ -49,14 +49,15 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 | MD-CT1 | IN_REVIEW — validator implemented; no named acceptance |
 | MD-CT2 | IN_REVIEW — events/snapshots/status implemented; no named acceptance |
 | MD-CT3 | IN_REVIEW — repository/CI ingestion implemented; no named acceptance |
+| MD-CT4 | IN_REVIEW — Control Tower shell and executive portfolio; no named acceptance |
 | All others | NOT_STARTED |
 
 ## Now / next / later
 
 | Band | Content |
 |------|---------|
-| Now | MD-CT3 — repository and CI ingestion in review |
-| Next | MD-CT4 — Control Tower shell and executive portfolio |
+| Now | MD-CT4 — Control Tower shell and executive portfolio in review |
+| Next | MD-CT5 — roadmap, product and slice drill-down |
 | Later | CT4–CT9; Event OS S01 after stack/module decisions; Runtime after Event OS foundations |
 | Held | All 693 product/recon prompts except CT0/CT1 wrappers |
 | External | Independent, specialist, venue, CEO gates — unsigned |

@@ -46,3 +46,12 @@ jobs:
 
       - name: Reconcile synthetic repository evidence
         run: pnpm programme:reconcile
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @maison-doclar/control-tower exec playwright install --with-deps chromium
+
+      - name: Control Tower browser tests
+        run: pnpm e2e
+        env:
+          PROGRAMME_ALLOW_FIXTURES: "1"
+          CI: "1"

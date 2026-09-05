@@ -6,9 +6,9 @@ Controlled corpus baseline for the Maison Doclar programme.
 **Branch:** `main`  
 **Baseline slice:** MD-B0 (`f7abb431be9a15ab730b3fdd16baa8e83776c170`)  
 **Latest planning slice:** MD-CT0  
-**Latest implementation slice:** MD-CT3 (`IN_REVIEW`)
+**Latest implementation slice:** MD-CT4 (`IN_REVIEW`)
 
-This repository holds the programme corpus, Control Tower planning artefacts, the programme-domain validator/engine, and the CT3 GitHub ingestion boundary. It does **not** contain a Control Tower UI or product application.
+This repository holds the programme corpus, Control Tower planning artefacts, the programme engine, GitHub ingestion, and a private `/programme` shell. It does **not** contain product applications or a production identity provider.
 
 ## Start here
 
@@ -40,6 +40,7 @@ pnpm programme:validate
 pnpm programme:project
 pnpm programme:ingest:verify
 pnpm programme:reconcile
+pnpm e2e
 ```
 
 Packages: `@maison-doclar/programme-domain` and `@maison-doclar/programme-ingestion`.
@@ -48,5 +49,5 @@ Packages: `@maison-doclar/programme-domain` and `@maison-doclar/programme-ingest
 
 - Original corpus folders are preserved in place.
 - Historical prompt packs are inventoried, not executed.
-- Do not start CT4 from this baseline without a new instruction.
+- Do not start CT5 from this baseline without a new instruction.
 - The only authorised GitHub destination is `kglaw-Oluseyi/atelier-doclar`.

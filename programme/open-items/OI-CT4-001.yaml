@@ -1,0 +1,11 @@
+id: CT4-OI-001
+product: FOUNDATION
+sliceId: MD-CT4
+title: Production identity provider remains unselected; Control Tower uses a bounded non-production session token
+severity: HIGH
+owner: CEO
+status: OPEN
+decisionAuthority: CEO
+blocker: false
+evidence: []
+notes: /programme is private via HMAC session and a shared access token. This is not a final IdP decision. OIDC/Auth.js product is unselected.

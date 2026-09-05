@@ -1,0 +1,11 @@
+id: CT4-OI-002
+product: FOUNDATION
+sliceId: MD-CT4
+title: Production hosting for /programme remains unselected
+severity: HIGH
+owner: CEO
+status: OPEN
+decisionAuthority: CEO
+blocker: false
+evidence: []
+notes: Next.js Control Tower runs locally and in GitHub Actions. Railway/other hosting is not provisioned.

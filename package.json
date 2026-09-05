@@ -10,7 +10,9 @@
     "programme:project": "pnpm --filter @maison-doclar/programme-domain project",
     "programme:ingest:verify": "pnpm --filter @maison-doclar/programme-ingestion verify",
     "programme:reconcile": "pnpm --filter @maison-doclar/programme-ingestion reconcile",
+    "programme:tower": "pnpm --filter @maison-doclar/control-tower dev",
     "typecheck": "pnpm -r --if-present typecheck",
-    "test": "pnpm -r --if-present test"
+    "test": "pnpm -r --if-present test",
+    "e2e": "pnpm --filter @maison-doclar/control-tower e2e"
   }
 }

@@ -195,7 +195,7 @@
       "title": "CT4 \u2014 Control Tower shell and executive portfolio",
       "phaseId": "PH-FOUNDATION",
       "order": 5,
-      "status": "NOT_STARTED",
+      "status": "IN_REVIEW",
       "dependsOn": [
         "MD-CT3"
       ],

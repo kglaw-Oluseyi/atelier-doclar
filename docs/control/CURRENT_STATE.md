@@ -1,31 +1,19 @@
 # Current State
 
-**Updated:** MD-CT3  
+**Updated:** MD-CT4  
 **Product:** FOUNDATION  
-**Prompt Control ID:** `MD-PR-0004`  
-**Native ID:** `CT3`  
-**Slice ID:** `MD-CT3`
+**Prompt Control ID:** `MD-PR-0005`  
+**Native ID:** `CT4`  
+**Slice ID:** `MD-CT4`
 
 | Item | State |
 |------|-------|
 | Repository | `kglaw-Oluseyi/atelier-doclar` |
 | Branch | `main` |
-| Application / UI | ABSENT |
-| Auth / Railway / production database | ABSENT |
-| Programme-domain package | PRESENT — validation (CT1) + events/snapshots/status (CT2) |
-| Ingestion package | PRESENT — GitHub webhook verification, allow-list, commit/CI ingest, synthetic reconcile (CT3) |
-| Live GitHub HTTP client | ABSENT (`CT3-OI-001`) |
-| HTTP webhook route | ABSENT (`CT3-OI-002`) |
-| Validation command | `pnpm programme:validate` |
-| Projection command | `pnpm programme:project` |
-| Ingest verify | `pnpm programme:ingest:verify` |
-| Reconcile | `pnpm programme:reconcile` (synthetic; `--live` disabled) |
-| Persistence | Domain `ProgrammeStore`. Local adapters `NON_PRODUCTION`. Production DB unselected. |
-| MD-B0 | IN_REVIEW |
-| MD-CT0 | IN_REVIEW |
-| MD-CT1 | IN_REVIEW |
-| MD-CT2 | IN_REVIEW |
-| MD-CT3 | IN_REVIEW |
-| MD-CT4–CT9 and product slices | NOT_STARTED (some BLOCKED by open CT0 items when projected) |
+| Application / UI | PRESENT — Next.js `/programme` shell (`apps/control-tower`) |
+| Auth | Bounded non-production session. Production IdP unselected (`CT4-OI-001`) |
+| Railway / production database | ABSENT |
+| MD-B0–MD-CT4 | IN_REVIEW |
+| MD-CT5–CT9 and product slices | NOT_STARTED (some BLOCKED by open CT0 items when projected) |
 
-No slice is ACCEPTED.
+No slice is ACCEPTED. This UI cannot sign protected gates.
