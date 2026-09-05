@@ -84,12 +84,56 @@ No external communication was sent.
 | Protected gates remain unsigned | PASS |
 | Control Tower `productionAuthorised=false` | PASS |
 
-## Human verification
+## Human verification chronology
 
-**AUTOMATED LIVE VERIFICATION: PASS**  
+This section is chronological. Automated live verification completed first. CEO human verification was PENDING at deployment time and is recorded as complete only after the CEO walkthrough.
+
+### 1. Automated live verification
+
+**AUTOMATED LIVE VERIFICATION: PASS**
+
+Recorded under `MD-PR-S012` / `EOS-LV1` at deployment of `9cee3095-cb37-422a-be9e-ad632fa27a1b`. See the automated checks above. This result is unchanged.
+
+### 2. CEO human verification at deployment time
+
 **CEO HUMAN LIVE VERIFICATION: PENDING**
 
-Do not record CEO PASS until the user personally reports the result.
+At live-deployment closeout, CEO human verification was not yet complete. That PENDING state must remain visible as history. It was not PASS at deployment time.
+
+### 3. CEO walkthrough completed
+
+The CEO / George Lawson completed the human walkthrough against the same live Event OS verification deployment, using only the synthetic Maison Doclar Verification Event and synthetic guests Amina Verification, David Example and Tola Fixture. No live guest or client data was used.
+
+Technical review authority: ChatGPT / AI CTO.
+
+Control artefact: `docs/control/EVENT_OS_S01_S03_HUMAN_VERIFICATION.md`  
+Evidence ID: `EV-EOS-S01-S03-HUMAN-VERIFICATION`  
+Control ID: `MD-PR-S013`  
+Milestone: `EOS-HV1`
+
+### 4. CEO / AI CTO ruling
+
+**CEO HUMAN LIVE VERIFICATION: PASS WITH MINOR REFINEMENTS**
+
+| Journey | Result |
+|---------|--------|
+| Staff experience | PASS |
+| Guest access | PASS |
+| Guest RSVP | PASS |
+| RSVP amendment | PASS |
+| Guest → staff handoff | PASS |
+| RSVP / admission separation | PASS |
+| Mobile human verification | NOT ASSESSED |
+
+Mobile was not assessed because the human-verification browser environment could not reliably resize to a phone viewport. This is not PASS and not FAIL. Automated responsive/accessibility verification remains valid and is distinct.
+
+**BLOCKING DEFECTS: ZERO**  
+**KNOWN TECHNICAL DEBT ARISING FROM WALKTHROUGH: ZERO**  
+**PRODUCT / UX FINDINGS TO CARRY FORWARD: YES** (`HV-EOS-001` … `HV-EOS-005`)  
+**PRODUCTION AUTHORISED: NO**  
+**EOS-S04 IMPLEMENTATION AUTHORISED: NO**
+
+The five findings are recorded in `docs/control/EVENT_OS_S01_S03_HUMAN_VERIFICATION.md`. They are not technical debt, not acceptance failures, not an EOS-S03 reopening, and not automatic EOS-S04 scope.
 
 ## Programme state after deployment
 

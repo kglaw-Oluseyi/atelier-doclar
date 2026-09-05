@@ -1,6 +1,6 @@
 {
   "scheme": "MD-PR-SNNN successor accountability IDs; historical MD-PR-NNNN remain intact",
-  "generated_at": "2026-09-05T19:20:00Z",
+  "generated_at": "2026-09-05T20:50:00Z",
   "notes": "Do not impersonate historical Control Tower prompt IDs. MD-PR-0011 is already used.",
   "entries": [
     {
@@ -90,6 +90,14 @@
       "product": "EVENT_OS",
       "title": "Event OS S01–S03 Controlled Live Deployment and Milestone Verification",
       "authorising_instruction": "Deploy accepted Event OS S01–S03 to Railway project atelier-doclar for controlled non-production live verification; do not implement EOS-S04 or authorise production; CEO human verification remains PENDING until the user reports"
+    },
+    {
+      "prompt_control_id": "MD-PR-S013",
+      "native_id": "EOS-HV1",
+      "slice_id": "EOS-S03",
+      "product": "EVENT_OS",
+      "title": "Event OS S01–S03 CEO Human Live-Verification Closeout",
+      "authorising_instruction": "Record CEO human live verification PASS WITH MINOR REFINEMENTS after the completed walkthrough; do not implement EOS-S04, reopen EOS-S03, mutate Railway, or authorise production"
     }
   ]
 }

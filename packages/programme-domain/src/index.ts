@@ -113,6 +113,7 @@ export {
   corpusSeedEventsThroughS02Acceptance,
   corpusSeedEventsThroughS03Implementation,
   corpusSeedEventsThroughS03Acceptance,
+  corpusSeedEventsThroughHv1,
   loadCorpusBaseline,
   CORPUS_SEED_TIME,
   CT3_SEED_TIME,
@@ -133,6 +134,8 @@ export {
   EOS_S03_ACCEPT_TIME,
   EOS_S03_ACCEPTANCE_EVENT_ID,
   EOS_S03_FINAL_VERIFIED_HEAD,
+  EOS_HV1_TIME,
+  EOS_HV1_EVIDENCE_ID,
 } from "./seed.js";
 export type {
   ControlSnapshot,

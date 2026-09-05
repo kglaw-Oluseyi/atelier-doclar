@@ -246,5 +246,17 @@ ACCEPTED under `MD-PR-S011` by `ChatGPT / AI CTO` at `2026-09-06T01:10:00Z`. Acc
 | EV-EOS-LV1-LIVE | DOCUMENT | Event OS S01–S03 live verification record | `docs/control/EVENT_OS_S01_S03_LIVE_VERIFICATION.md` |
 | EV-EOS-LV1-URL | DOCUMENT | Live Event OS HTTPS origin | `https://event-os-production-bc8d.up.railway.app` |
 
-Automated live verification PASS. CEO human verification PENDING. Production not authorised.
+Automated live verification PASS. At deployment time, CEO human verification was PENDING. Production not authorised.
+
+## EOS-HV1
+
+**Prompt Control ID:** `MD-PR-S013`  
+**Milestone:** `EOS-HV1`
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-EOS-S01-S03-HUMAN-VERIFICATION | DOCUMENT | CEO human live verification PASS WITH MINOR REFINEMENTS | `docs/control/EVENT_OS_S01_S03_HUMAN_VERIFICATION.md` |
+| EV-EOS-LV1-LIVE | DOCUMENT | Prior live-verification record (automated PASS; CEO PENDING then closed) | `docs/control/EVENT_OS_S01_S03_LIVE_VERIFICATION.md` |
+
+CEO / George Lawson completed the walkthrough against deployment `9cee3095-cb37-422a-be9e-ad632fa27a1b`. Blocking defects zero. Technical debt zero. Five findings recorded. Mobile human verification NOT ASSESSED. EOS-S03 acceptance identity unchanged. Production not authorised. EOS-S04 implementation not authorised.
 

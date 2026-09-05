@@ -16,6 +16,7 @@ import {
   EOS_S03_COMMIT,
   EOS_S03_COMMIT_EVIDENCE_ID,
   EOS_S03_FINAL_VERIFIED_HEAD,
+  EOS_HV1_EVIDENCE_ID,
 } from "../src/index.js";
 import { ProgrammeEventError } from "../src/event-errors.js";
 import { MemoryProgrammeStore } from "../src/store.js";
@@ -115,6 +116,28 @@ describe("EOS-S03 formal technical acceptance", () => {
     assert.equal(statuses.get("EOS-S01"), "ACCEPTED");
     assert.equal(statuses.get("EOS-S02"), "ACCEPTED");
     assert.equal(statuses.get("EOS-S03"), "ACCEPTED");
+  });
+
+  it("records S01-S03 human verification evidence without rewriting EOS-S03 acceptance identity", () => {
+    const { engine } = engineFrom();
+    const projection = engine.projectionAt();
+    const facts = projection.slices["EOS-S03"];
+    assert.ok(facts);
+    assert.ok(
+      facts.evidence.some(
+        (item) =>
+          item.id === EOS_HV1_EVIDENCE_ID &&
+          item.kind === "DOCUMENT" &&
+          item.uri === "docs/control/EVENT_OS_S01_S03_HUMAN_VERIFICATION.md",
+      ),
+    );
+    assert.deepEqual(facts.commits, [EOS_S03_COMMIT]);
+    assert.equal(facts.acceptedBy, EOS_S01_REVIEWER);
+    assert.equal(facts.acceptedAt, EOS_S03_ACCEPT_TIME);
+    const statuses = calculateAllStatuses(projection);
+    assert.equal(statuses.get("EOS-S03"), "ACCEPTED");
+    assert.equal(statuses.get("EOS-S04"), "READY");
+    assert.equal([...statuses.values()].filter((status) => status === "ACCEPTED").length, 3);
   });
 
   it("keeps the accepted implementation SHA distinct from the later verified HEAD", () => {

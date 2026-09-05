@@ -34,6 +34,8 @@ export const EOS_S03_COMMIT_EVIDENCE_ID = "EV-EOS-S03-COMMIT";
 export const EOS_S03_ACCEPT_TIME = "2026-09-06T01:10:00Z";
 export const EOS_S03_ACCEPTANCE_EVENT_ID = "EVT-SEED-EOS-S03-ACCEPT";
 export const EOS_S03_FINAL_VERIFIED_HEAD = "e57fe1a275da0f01f2a8b237d1579f54c20f86d5";
+export const EOS_HV1_TIME = "2026-09-06T02:10:00Z";
+export const EOS_HV1_EVIDENCE_ID = "EV-EOS-S01-S03-HUMAN-VERIFICATION";
 export const B0_COMMIT = "f7abb431be9a15ab730b3fdd16baa8e83776c170";
 export const EOS_S01_COMMIT = "b815268e939cfbd0fc33ce10df77f1c8a1374d52";
 export const EOS_S01_ACCEPTANCE_EVENT_ID = "EVT-SEED-EOS-S01-ACCEPT";
@@ -623,6 +625,37 @@ function eosS03AcceptanceEvents(): ProgrammeEvent[] {
   ];
 }
 
+function eosHv1EvidenceEvents(): ProgrammeEvent[] {
+  return [
+    parseProgrammeEvent({
+      eventId: "EVT-SEED-EOS-HV1-EV-HUMAN",
+      eventType: "EVIDENCE_ATTACHED",
+      schemaVersion: 1,
+      aggregateType: "slice",
+      aggregateId: "EOS-S03",
+      product: "EVENT_OS",
+      sliceId: "EOS-S03",
+      occurredAt: EOS_HV1_TIME,
+      recordedAt: EOS_HV1_TIME,
+      actor: { id: "CEO", role: "CEO" },
+      source: "ceo-human-verification",
+      idempotencyKey: "seed:EVT-SEED-EOS-HV1-EV-HUMAN",
+      payload: {
+        evidence: {
+          id: EOS_HV1_EVIDENCE_ID,
+          kind: "DOCUMENT",
+          uri: "docs/control/EVENT_OS_S01_S03_HUMAN_VERIFICATION.md",
+          createdAt: EOS_HV1_TIME,
+          sourceSystem: "programme-control",
+          immutable: true,
+          summary:
+            "CEO human live verification PASS WITH MINOR REFINEMENTS; not acceptance rewrite or production authorisation",
+        },
+      },
+    }),
+  ];
+}
+
 /**
  * Corpus through governed EOS-S03 acceptance. Does not record Foundation acceptance
  * or start EOS-S04 implementation.
@@ -632,11 +665,20 @@ export function corpusSeedEventsThroughS03Acceptance(): ProgrammeEvent[] {
 }
 
 /**
+ * Corpus through EOS-HV1 human-verification evidence. Does not change acceptance
+ * identity or start EOS-S04 implementation.
+ */
+export function corpusSeedEventsThroughHv1(): ProgrammeEvent[] {
+  return [...corpusSeedEventsThroughS03Acceptance(), ...eosHv1EvidenceEvents()];
+}
+
+/**
  * Full corpus seed, including governed EOS-S01, EOS-S02 and EOS-S03 technical
- * acceptance. Does not manufacture ACCEPTED events for Foundation slices.
+ * acceptance and S01–S03 human-verification evidence. Does not manufacture
+ * ACCEPTED events for Foundation slices.
  */
 export function corpusSeedEvents(): ProgrammeEvent[] {
-  return corpusSeedEventsThroughS03Acceptance();
+  return corpusSeedEventsThroughHv1();
 }
 
 export function loadCorpusBaseline(root?: string): {

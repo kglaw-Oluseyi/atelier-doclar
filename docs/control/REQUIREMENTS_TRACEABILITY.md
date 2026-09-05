@@ -286,3 +286,20 @@
 | EOS-S04 eligibility | Default ACCEPTANCE on EOS-S03; READY after acceptance; implementation not started |
 | EOS-S04 implementation | Not authorised; next action is S01–S03 live-verification milestone |
 | Foundation / gates / production | Foundation IN_REVIEW; protected gates unsigned; `productionAuthorised = false` |
+
+## EOS-HV1
+
+**Prompt Control ID:** `MD-PR-S013`  
+**Milestone:** `EOS-HV1`
+
+| Requirement | Record |
+|-------------|---------|
+| CEO human walkthrough completed | `docs/control/EVENT_OS_S01_S03_HUMAN_VERIFICATION.md` |
+| Deployment subject | `9cee3095-cb37-422a-be9e-ad632fa27a1b` / source `2d41a6fdb62f3192d7f27517e5eceb0b8ee96217` |
+| Synthetic data only | Maison Doclar Verification Event; Amina Verification, David Example, Tola Fixture |
+| Integrated journey | Staff, guest access, RSVP, amendment, handoff, RSVP ≠ admission all PASS |
+| Mobile human verification | NOT ASSESSED |
+| Overall ruling | PASS WITH MINOR REFINEMENTS |
+| Findings | HV-EOS-001 … HV-EOS-005; not technical debt; not EOS-S04 scope by default |
+| EOS-S03 acceptance identity | Unchanged: `bed7cebeb14e731c1d0e8a289ceb7cfa21f546fe` |
+| Production / EOS-S04 | Unauthorised |
