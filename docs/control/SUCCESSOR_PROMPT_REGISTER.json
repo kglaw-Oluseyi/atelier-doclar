@@ -10,6 +10,14 @@
       "product": "FOUNDATION",
       "title": "Foundation Closeout — Control Tower Reconciliation",
       "authorising_instruction": "CEO-authorised Foundation closeout following independent AI CTO technical review"
+    },
+    {
+      "prompt_control_id": "MD-PR-S002",
+      "native_id": "LV1",
+      "slice_id": "MD-LV1",
+      "product": "FOUNDATION",
+      "title": "Control Tower Live Deployment and Human Verification",
+      "authorising_instruction": "CEO-authorised live deployment of the completed Control Tower to Railway project atelier-doclar"
     }
   ]
 }

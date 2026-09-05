@@ -5,7 +5,7 @@ import {
   isTowerRole,
   issueSession,
 } from "@maison-doclar/programme-tower";
-import { sessionConfig } from "../../../server/config";
+import { sessionConfig, sessionTtlSeconds } from "../../../server/config";
 
 export async function POST(request: Request): Promise<Response> {
   const body = (await request.json()) as { actorId?: unknown; role?: unknown; accessToken?: unknown };
@@ -25,6 +25,7 @@ export async function POST(request: Request): Promise<Response> {
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       path: "/",
+      maxAge: sessionTtlSeconds(),
     });
     return response;
   } catch (error) {
@@ -37,6 +38,14 @@ export async function POST(request: Request): Promise<Response> {
 
 export async function DELETE(): Promise<Response> {
   const response = NextResponse.json({ ok: true });
-  response.cookies.set({ name: SESSION_COOKIE, value: "", path: "/", maxAge: 0 });
+  response.cookies.set({
+    name: SESSION_COOKIE,
+    value: "",
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0,
+  });
   return response;
 }

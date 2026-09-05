@@ -8,6 +8,10 @@ export const RUNTIME_CONFIG_CONTRACT = {
     "PROGRAMME_SESSION_SECRET",
     "PROGRAMME_ACCESS_TOKEN",
   ],
+  requiredForLiveDeployment: [
+    "DATABASE_URL",
+    "PROGRAMME_LIVE_DEPLOYMENT",
+  ],
   optional: [
     "PORT",
     "PROGRAMME_BASE_URL",
@@ -17,6 +21,8 @@ export const RUNTIME_CONFIG_CONTRACT = {
     "PROGRAMME_GITHUB_WEBHOOK_SECRET",
     "PROGRAMME_RAG_CACHE",
     "PROGRAMME_ALLOW_FIXTURES",
+    "PROGRAMME_AUTH_MODE",
+    "PROGRAMME_SESSION_TTL_SECONDS",
   ],
   failClosed: true,
 } as const;
@@ -31,6 +37,8 @@ export interface RuntimeConfigAssessment {
   githubTokenPresent: boolean;
   webhookConfigured: boolean;
   persistenceConfigured: boolean;
+  liveDeployment: boolean;
+  fixturesEnabled: boolean;
   ragCache: "memory" | "file";
   baseUrl?: string;
   failures: string[];
@@ -62,7 +70,9 @@ export function evaluateRuntimeConfig(env: NodeJS.ProcessEnv = process.env): Run
   const githubLiveEnabled = env.PROGRAMME_GITHUB_LIVE === "1";
   const githubTokenPresent = Boolean(env.PROGRAMME_GITHUB_TOKEN);
   const webhookConfigured = Boolean(webhookSecret) && !isSyntheticSecret(webhookSecret);
-  const persistenceConfigured = Boolean(env.PROGRAMME_DATA_DIR);
+  const persistenceConfigured = Boolean(env.DATABASE_URL || env.PROGRAMME_DATA_DIR);
+  const liveDeployment = env.PROGRAMME_LIVE_DEPLOYMENT === "1";
+  const fixturesEnabled = env.PROGRAMME_ALLOW_FIXTURES === "1";
   const ragCache = env.PROGRAMME_RAG_CACHE === "file" ? "file" : "memory";
 
   if (mode === "production") {
@@ -73,6 +83,12 @@ export function evaluateRuntimeConfig(env: NodeJS.ProcessEnv = process.env): Run
     }
     if (githubLiveEnabled && !githubTokenPresent) {
       failures.push("PROGRAMME_GITHUB_TOKEN is required when PROGRAMME_GITHUB_LIVE=1");
+    }
+    if (liveDeployment && !env.DATABASE_URL) {
+      failures.push("DATABASE_URL is required for live deployment");
+    }
+    if (liveDeployment && fixturesEnabled) {
+      failures.push("PROGRAMME_ALLOW_FIXTURES is forbidden in live deployment");
     }
   }
 
@@ -90,6 +106,8 @@ export function evaluateRuntimeConfig(env: NodeJS.ProcessEnv = process.env): Run
     githubTokenPresent,
     webhookConfigured,
     persistenceConfigured,
+    liveDeployment,
+    fixturesEnabled,
     ragCache,
     ...(env.PROGRAMME_BASE_URL ? { baseUrl: env.PROGRAMME_BASE_URL } : {}),
     failures,

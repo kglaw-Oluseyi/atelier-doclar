@@ -8,4 +8,4 @@ status: OPEN
 decisionAuthority: CEO
 blocker: false
 evidence: []
-notes: "HISTORICAL: Not a CT1 validator blocker. Blocks CT3 ingestion against a live provider and all deploys. MD-FC1: Railway project atelier-doclar is the intended Control Tower target (DEC-FC1-RAILWAY-INTENT) but is not provisioned in this slice. IdP remains unselected (CT4-OI-001). Classification PRODUCTION_DECISION_REQUIRED. Does not block EOS-S01 coding."
+notes: "Hosting part resolved by MD-LV1: Railway project atelier-doclar is the Control Tower host. Permanent production IdP remains unselected (CT4-OI-001). Temporary live-verification auth is in use and is not a final identity decision."

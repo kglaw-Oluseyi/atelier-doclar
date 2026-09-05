@@ -146,3 +146,19 @@
 | Fail-closed production config | `evaluateRuntimeConfig` |
 | Railway prep without deploy | `railway.toml`, `ADR_RAILWAY_DEPLOYMENT.md` |
 | No manufactured acceptance | MD-B0–MD-FC1 remain IN_REVIEW |
+
+## MD-LV1
+
+**Prompt Control ID:** `MD-PR-S002`  
+**Slice ID:** `MD-LV1`
+
+| Requirement | Implementation |
+|-------------|----------------|
+| Dedicated Railway project | `atelier-doclar` / `c1c937b7-2660-4fc2-8257-c08bd6346658` |
+| Durable persistence | `PostgresProgrammeStore` + Railway PostgreSQL |
+| Temporary verification auth | Named actor, httpOnly Secure cookie, 2h TTL |
+| Live GitHub read | `GitHubHttpProvider` with `PROGRAMME_GITHUB_LIVE=1` |
+| Webhook | `POST /api/programme/github/webhook` + remote hook `674900340` |
+| Health | `/api/health/live`, `/api/health/ready` |
+| Human verification remains pending | `OI-FC1-001` OPEN |
+| Production not authorised | Protected gates unsigned |

@@ -10,6 +10,7 @@ import {
 } from "@maison-doclar/programme-tower";
 import { auditRepository } from "./audit";
 import { sessionConfig } from "./config";
+import { getAudit } from "./runtime";
 
 function gateStub(gateId: string) {
   if (!gateId.startsWith("GATE-")) return undefined;
@@ -50,7 +51,9 @@ export async function attemptGateApproval(
       result: decision.allowed ? "accepted" : "rejected",
       reason: decision.allowed ? "allowed" : decision.code,
     };
-    auditRepository().append(entry);
+    const postgresAudit = await getAudit();
+    if (postgresAudit) await postgresAudit.appendAsync(entry);
+    else auditRepository().append(entry);
     return `${gate.id} approval ${decision.allowed ? "accepted" : "rejected"} (${decision.allowed ? "APPROVED" : decision.code})`;
   } catch (error) {
     if (error instanceof SessionError) {

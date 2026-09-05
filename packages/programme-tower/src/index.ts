@@ -6,6 +6,7 @@ export {
   CT8_TRACEABILITY,
   CT9_TRACEABILITY,
   FC1_TRACEABILITY,
+  LV1_TRACEABILITY,
   CT5_SURFACES,
   CT6_SURFACES,
   CT7_SURFACES,
@@ -67,3 +68,11 @@ export {
   type FailureKind,
   type OpsHealth,
 } from "./ops.js";
+export {
+  openLiveRuntime,
+  snapshotFromRuntime,
+  PostgresAuditRepository,
+  PostgresDeliveryJournal,
+  type LiveRuntime,
+} from "./live-runtime.js";
+export type { ControlSnapshot } from "@maison-doclar/programme-domain";

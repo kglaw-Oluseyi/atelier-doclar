@@ -1,8 +1,8 @@
 # ADR — Production persistence for the Control Tower
 
-**Status:** Recommended engineering approach; provider not provisioned  
-**Slice:** MD-FC1  
-**Related:** `CT2-OI-001` — `PRODUCTION_DECISION_REQUIRED`
+**Status:** Selected and deployed in MD-LV1  
+**Slice:** MD-FC1 / MD-LV1  
+**Related:** `CT2-OI-001` — RESOLVED by PostgreSQL on Railway project `atelier-doclar`
 
 ## Context
 

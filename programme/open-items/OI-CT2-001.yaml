@@ -4,8 +4,8 @@ sliceId: MD-CT2
 title: Production database remains unselected; local store adapters are non-production
 severity: HIGH
 owner: CEO
-status: OPEN
+status: RESOLVED
 decisionAuthority: CEO
 blocker: false
 evidence: []
-notes: "Domain persistence contract is ProgrammeStore. Memory and filesystem adapters are NON_PRODUCTION. MD-FC1 recommends PostgreSQL behind ProgrammeStore (docs/control/ADR_PRODUCTION_PERSISTENCE.md) without provisioning. Classification PRODUCTION_DECISION_REQUIRED. Does not block EOS-S01 coding."
+notes: "MD-LV1 selected and deployed PostgreSQL behind ProgrammeStore in Railway project atelier-doclar. See docs/control/ADR_PRODUCTION_PERSISTENCE.md and docs/control/LIVE_RUNTIME_CONFIGURATION.md. Memory/filesystem adapters remain non-production local adapters."

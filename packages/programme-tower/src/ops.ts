@@ -37,7 +37,7 @@ export interface OpsHealth {
   applicationAlive: true;
   eventOsImpliedFailed: false;
   eventDayImpliedFailed: false;
-  github: "UNKNOWN" | "UNAVAILABLE" | "SYNTHETIC";
+  github: "UNKNOWN" | "UNAVAILABLE" | "SYNTHETIC" | "AVAILABLE";
   githubIngestion: "AVAILABLE" | "SYNTHETIC" | "UNAVAILABLE" | "UNCONFIGURED";
   webhook: "CONFIGURED" | "UNCONFIGURED";
   persistence: "AVAILABLE" | "LOCAL_ONLY" | "UNAVAILABLE";
@@ -55,7 +55,7 @@ export interface OpsHealth {
 
 export function assessHealth(input: {
   snapshot: ControlSnapshot;
-  github?: "UNKNOWN" | "UNAVAILABLE" | "SYNTHETIC";
+  github?: "UNKNOWN" | "UNAVAILABLE" | "SYNTHETIC" | "AVAILABLE";
   githubIngestion?: OpsHealth["githubIngestion"];
   webhook?: "CONFIGURED" | "UNCONFIGURED";
   persistence?: OpsHealth["persistence"];

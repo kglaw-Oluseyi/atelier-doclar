@@ -1,6 +1,6 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { LOCAL_STORE_PRODUCTION_STATUS } from "./constants.js";
+import { LOCAL_STORE_PRODUCTION_STATUS, type StoreProductionStatus } from "./constants.js";
 import { ProgrammeEventError } from "./event-errors.js";
 import { eventsEquivalent, parseProgrammeEvent, type ProgrammeEvent } from "./events.js";
 import type { ControlSnapshot, ProgrammeProjection } from "./projection-types.js";
@@ -12,7 +12,7 @@ import type { ControlSnapshot, ProgrammeProjection } from "./projection-types.js
  */
 export const PERSISTENCE_CONTRACT = {
   kind: "domain-repository",
-  productionDatabaseDecision: "UNSELECTED",
+  productionDatabaseDecision: "POSTGRESQL",
   localAdapterStatus: LOCAL_STORE_PRODUCTION_STATUS,
 } as const;
 
@@ -29,7 +29,7 @@ export type AppendResult =
   | { kind: "duplicate"; position: number; revision: number; event: ProgrammeEvent };
 
 export interface ProgrammeStore {
-  readonly productionStatus: typeof LOCAL_STORE_PRODUCTION_STATUS;
+  readonly productionStatus: StoreProductionStatus;
   append(event: ProgrammeEvent): AppendResult;
   getById(eventId: string): ProgrammeEvent | undefined;
   getByIdempotencyKey(key: string): ProgrammeEvent | undefined;

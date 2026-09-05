@@ -5,6 +5,7 @@ const SESSION_COOKIE = "md_programme_session";
 const PUBLIC = new Set([
   "/programme/login",
   "/api/session",
+  "/api/session/logout",
   "/api/programme/github/webhook",
 ]);
 

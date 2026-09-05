@@ -26,7 +26,11 @@ Machine evaluation: `evaluateRuntimeConfig` in `@maison-doclar/programme-tower`.
 | `PROGRAMME_GITHUB_LIVE` | `1` enables the live GitHub read client. Never implied in tests |
 | `PROGRAMME_GITHUB_WEBHOOK_SECRET` | GitHub webhook HMAC secret. Absence means webhook is UNCONFIGURED |
 | `PROGRAMME_RAG_CACHE` | `memory` (default) or `file` |
-| `PROGRAMME_ALLOW_FIXTURES` | View-state fixtures for automated tests. Not an operator tool |
+| `PROGRAMME_ALLOW_FIXTURES` | View-state fixtures for automated tests. Forbidden when `PROGRAMME_LIVE_DEPLOYMENT=1` |
+| `PROGRAMME_LIVE_DEPLOYMENT` | `1` requires `DATABASE_URL` and forbids fixtures |
+| `PROGRAMME_AUTH_MODE` | `TEMPORARY_LIVE_VERIFICATION` until a production IdP is selected |
+| `PROGRAMME_SESSION_TTL_SECONDS` | Production default `7200` |
+| `DATABASE_URL` | PostgreSQL connection for live persistence |
 
 ## Fail-closed rules
 
@@ -37,4 +41,4 @@ Machine evaluation: `evaluateRuntimeConfig` in `@maison-doclar/programme-tower`.
 
 ## Persistent-service dependencies
 
-The Next.js process is stateless except for files under `PROGRAMME_DATA_DIR`. A live Railway deploy needs a volume or the selected production database (`CT2-OI-001`) before treating persistence as AVAILABLE beyond `LOCAL_ONLY`.
+Live MD-LV1 persistence is PostgreSQL via `DATABASE_URL`. Local/CI without `DATABASE_URL` continues to use corpus-seed memory and optional `PROGRAMME_DATA_DIR` files. Fixtures must stay off on the live service.

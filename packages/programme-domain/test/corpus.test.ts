@@ -16,12 +16,12 @@ describe("CT0 programme corpus", () => {
     assert.equal(result.ok, true, result.errors.map((error) => `${error.code}:${error.entityId}:${error.message}`).join("\n"));
     assert.equal(result.stats.products, 7);
     assert.equal(result.stats.phases, 10);
-    assert.equal(result.stats.slices, 81);
-    assert.equal(result.stats.records, 81);
-    assert.equal(result.stats.dependencies, 88);
+    assert.equal(result.stats.slices, 82);
+    assert.equal(result.stats.records, 82);
+    assert.equal(result.stats.dependencies, 89);
     assert.equal(result.stats.cycles, 0);
     assert.equal(result.stats.verdict, "NO_CYCLES");
-    assert.equal(result.stats.yamlManifests, 12);
+    assert.equal(result.stats.yamlManifests, 13);
     assert.equal(result.traceability.promptControlId, "MD-PR-0002");
     assert.equal(result.traceability.nativeId, "CT1");
     assert.equal(result.traceability.sliceId, "MD-CT1");

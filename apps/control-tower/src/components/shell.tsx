@@ -7,6 +7,7 @@ import {
   CT9_SURFACES,
   LATER_SURFACES,
 } from "@maison-doclar/programme-tower";
+import { authMode } from "../server/config";
 
 export function TowerShell({
   children,
@@ -15,6 +16,7 @@ export function TowerShell({
   children: ReactNode;
   actor?: { actorId: string; role: string };
 }) {
+  const temporary = authMode() === "TEMPORARY_LIVE_VERIFICATION";
   return (
     <div className="shell">
       <a className="skip" href="#main">
@@ -35,12 +37,23 @@ export function TowerShell({
           </span>
         ))}
         {actor ? (
-          <p className="meta">
-            {actor.actorId} · {actor.role}
-          </p>
+          <div className="session">
+            <p className="meta">
+              {actor.actorId} · {actor.role}
+            </p>
+            <a className="logout" href="/api/session/logout">
+              Log out
+            </a>
+          </div>
         ) : null}
       </nav>
       <main id="main" className="main">
+        {temporary ? (
+          <p className="banner" data-tone="warn" role="status">
+            TEMPORARY live-verification access. Permanent production identity remains unresolved. Protected gates
+            cannot be signed from this session.
+          </p>
+        ) : null}
         {children}
       </main>
     </div>

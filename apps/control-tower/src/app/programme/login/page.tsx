@@ -5,8 +5,9 @@ export default function LoginPage() {
     <main className="main" id="main">
       <h1>Control Tower access</h1>
       <p className="meta">
-        Production identity-provider is unselected. This bounded shared-token session is non-production
-        and cannot approve protected gates.
+        TEMPORARY live-verification access for a named reviewer. This is not a final production identity provider.
+        Sessions are short-lived, HTTPS-only in production, and cannot sign protected gates. Revoke access by rotating
+        the environment credential in Railway.
       </p>
       <LoginForm />
     </main>

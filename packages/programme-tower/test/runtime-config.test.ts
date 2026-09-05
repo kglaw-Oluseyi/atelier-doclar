@@ -35,4 +35,37 @@ describe("production configuration contract", () => {
     assert.equal(prod.ready, true);
     assert.equal(prod.persistenceConfigured, true);
   });
+
+  it("requires durable persistence and forbids fixtures in live deployment", () => {
+    const missing = evaluateRuntimeConfig({
+      NODE_ENV: "production",
+      PROGRAMME_ACCESS_TOKEN: "named-production-access-token",
+      PROGRAMME_SESSION_SECRET: "named-production-session-secret",
+      PROGRAMME_LIVE_DEPLOYMENT: "1",
+    });
+    assert.equal(missing.ready, false);
+    assert.ok(missing.failures.some((item) => item.includes("DATABASE_URL")));
+
+    const fixtures = evaluateRuntimeConfig({
+      NODE_ENV: "production",
+      PROGRAMME_ACCESS_TOKEN: "named-production-access-token",
+      PROGRAMME_SESSION_SECRET: "named-production-session-secret",
+      PROGRAMME_LIVE_DEPLOYMENT: "1",
+      DATABASE_URL: "postgres://local/programme",
+      PROGRAMME_ALLOW_FIXTURES: "1",
+    });
+    assert.equal(fixtures.ready, false);
+
+    const live = evaluateRuntimeConfig({
+      NODE_ENV: "production",
+      PROGRAMME_ACCESS_TOKEN: "named-production-access-token",
+      PROGRAMME_SESSION_SECRET: "named-production-session-secret",
+      PROGRAMME_LIVE_DEPLOYMENT: "1",
+      DATABASE_URL: "postgres://local/programme",
+    });
+    assert.equal(live.ready, true);
+    assert.equal(live.persistenceConfigured, true);
+    assert.equal(live.liveDeployment, true);
+    assert.equal(live.fixturesEnabled, false);
+  });
 });

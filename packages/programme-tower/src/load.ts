@@ -35,6 +35,7 @@ export function loadCorpusPortfolio(input: {
   now?: string;
   fixture?: ViewFixture;
   allowFixtures?: boolean;
+  snapshot?: ControlSnapshot;
 }): PortfolioView {
   const now = input.now ?? new Date().toISOString();
   if (input.fixture && !input.allowFixtures) {
@@ -51,7 +52,7 @@ export function loadCorpusPortfolio(input: {
     return deniedOrSpecial("error", freshness, input.actor, "programme snapshot could not be loaded");
   }
 
-  const snapshot = loadCurrentSnapshot(now);
+  const snapshot = input.snapshot ?? loadCurrentSnapshot(now);
 
   if (input.fixture === "empty") {
     const emptyFresh = buildFreshness({

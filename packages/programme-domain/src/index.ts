@@ -3,6 +3,8 @@ export {
   CT2_TRACEABILITY,
   CALCULATION_VERSION,
   LOCAL_STORE_PRODUCTION_STATUS,
+  PRODUCTION_STORE_STATUS,
+  type StoreProductionStatus,
   PRODUCT_CODES,
   WORK_STATUSES,
   GATE_STATUSES,
@@ -83,6 +85,8 @@ export {
   type AppendResult,
   type StoredSnapshot,
 } from "./store.js";
+export { PostgresProgrammeStore, MemoryPg } from "./postgres-store.js";
+export { PROGRAMME_POSTGRES_SCHEMA, type PgQueryable } from "./postgres-schema.js";
 export { applyEvent, createInitialProjection, replay, replayFrom } from "./projector.js";
 export {
   calculateAllStatuses,

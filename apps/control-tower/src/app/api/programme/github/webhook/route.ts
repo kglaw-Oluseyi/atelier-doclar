@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { evaluateRuntimeConfig } from "@maison-doclar/programme-tower";
-import { processProgrammeWebhook, webhookSecret } from "../../../../../server/webhook";
+import { handleProgrammeWebhook, webhookSecret } from "../../../../../server/webhook";
 
 export const runtime = "nodejs";
 
@@ -24,7 +24,7 @@ export async function POST(request: Request): Promise<Response> {
   request.headers.forEach((value, key) => {
     headers[key] = value;
   });
-  const result = processProgrammeWebhook({ headers, rawBody }, secret);
+  const result = await handleProgrammeWebhook({ headers, rawBody }, secret);
   const status =
     result.kind === "accepted" || result.kind === "duplicate" || result.kind === "ignored"
       ? 200

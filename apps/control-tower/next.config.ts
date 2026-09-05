@@ -7,7 +7,7 @@ const config: NextConfig = {
     "@maison-doclar/programme-domain",
     "@maison-doclar/programme-ingestion",
   ],
-  serverExternalPackages: ["yaml"],
+  serverExternalPackages: ["yaml", "pg"],
   webpack: (webpackConfig) => {
     webpackConfig.resolve.extensionAlias = {
       ".js": [".ts", ".tsx", ".js"],

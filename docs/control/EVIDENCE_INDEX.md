@@ -129,3 +129,16 @@ Acceptance of MD-CT4 still requires a named reviewer. Not ACCEPTED.
 | EV-FC1-RAILWAY | DOCUMENT | Railway readiness ADR | `docs/control/ADR_RAILWAY_DEPLOYMENT.md` |
 | EV-FC1-EOS | DOCUMENT | Event OS entry gate | `docs/control/EVENT_OS_ENTRY_GATE.md` |
 
+## MD-LV1
+
+**Prompt Control ID:** `MD-PR-S002`  
+**Native ID:** `LV1`  
+**Slice ID:** `MD-LV1`
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-LV1-DEPLOY | DOCUMENT | Live deployment report | `docs/control/LIVE_DEPLOYMENT_REPORT.md` |
+| EV-LV1-VERIFY | DOCUMENT | Automated live verification evidence | `docs/control/LIVE_VERIFICATION_EVIDENCE.md` |
+| EV-LV1-RUNTIME | DOCUMENT | Runtime configuration status | `docs/control/LIVE_RUNTIME_CONFIGURATION.md` |
+| EV-LV1-URL | DOCUMENT | Live Control Tower HTTPS origin | `https://control-tower-production-dbc4.up.railway.app/programme` |
+

@@ -15,6 +15,7 @@ export const CT7_SEED_TIME = "2026-09-05T13:10:00Z";
 export const CT8_SEED_TIME = "2026-09-05T14:10:00Z";
 export const CT9_SEED_TIME = "2026-09-05T15:10:00Z";
 export const FC1_SEED_TIME = "2026-09-05T16:10:00Z";
+export const LV1_SEED_TIME = "2026-09-05T17:10:00Z";
 export const B0_COMMIT = "f7abb431be9a15ab730b3fdd16baa8e83776c170";
 
 const B0_EVIDENCE: EvidenceRef = {
@@ -44,7 +45,8 @@ function envelope(
     | "MD-CT7"
     | "MD-CT8"
     | "MD-CT9"
-    | "MD-FC1",
+    | "MD-FC1"
+    | "MD-LV1",
   occurredAt: string,
   payload: ProgrammeEvent["payload"],
 ): ProgrammeEvent {
@@ -141,6 +143,12 @@ export function corpusSeedEvents(): ProgrammeEvent[] {
     }),
     envelope("EVT-SEED-FC1-REVIEW", "REVIEW_REQUESTED", "MD-FC1", FC1_SEED_TIME, {
       summary: "Foundation closeout in review; not accepted; production not authorised",
+    }),
+    envelope("EVT-SEED-LV1-IMPL", "SLICE_IMPLEMENTATION_OBSERVED", "MD-LV1", LV1_SEED_TIME, {
+      summary: "Control Tower live deployment and automated verification implemented",
+    }),
+    envelope("EVT-SEED-LV1-REVIEW", "REVIEW_REQUESTED", "MD-LV1", LV1_SEED_TIME, {
+      summary: "Live deployment in review; human verification pending; production not authorised",
     }),
   ];
 }

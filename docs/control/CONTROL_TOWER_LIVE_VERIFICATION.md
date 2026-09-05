@@ -5,7 +5,7 @@
 
 Distinguish **AUTOMATED** (Playwright, unit, CI) from **HUMAN LIVE ACCEPTANCE**.
 
-Deployment is not performed here. Record the eventual URL when the Railway project `atelier-doclar` is published.
+MD-LV1 published the Railway project `atelier-doclar` at `https://control-tower-production-dbc4.up.railway.app/programme`. Human live acceptance remains pending.
 
 ## Access
 

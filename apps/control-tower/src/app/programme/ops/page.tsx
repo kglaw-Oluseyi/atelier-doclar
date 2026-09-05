@@ -2,6 +2,7 @@ import { assessHealth, classifyFailure, evaluateRuntimeConfig, type FailureKind 
 import { DeniedPage } from "../../../components/denied";
 import { TowerShell } from "../../../components/shell";
 import { fixturesAllowed } from "../../../server/config";
+import { githubIngestionState, usesProductionPersistence } from "../../../server/runtime";
 import { requireTowerSession } from "../../../server/with-session";
 
 const FAILURES: FailureKind[] = [
@@ -30,10 +31,16 @@ export default async function OpsPage({
     ? classifyFailure(kind, session.snapshot)
     : assessHealth({
         snapshot: session.snapshot,
-        github: runtime.githubLiveEnabled ? "UNKNOWN" : "SYNTHETIC",
-        githubIngestion: runtime.githubLiveEnabled ? "AVAILABLE" : "SYNTHETIC",
+        github: runtime.githubLiveEnabled
+          ? githubIngestionState() === "AVAILABLE"
+            ? "AVAILABLE"
+            : githubIngestionState() === "UNAVAILABLE"
+              ? "UNAVAILABLE"
+              : "UNKNOWN"
+          : "SYNTHETIC",
+        githubIngestion: runtime.githubLiveEnabled ? githubIngestionState() : "SYNTHETIC",
         webhook: runtime.webhookConfigured ? "CONFIGURED" : "UNCONFIGURED",
-        persistence: runtime.persistenceConfigured ? "LOCAL_ONLY" : "LOCAL_ONLY",
+        persistence: usesProductionPersistence() ? "AVAILABLE" : "LOCAL_ONLY",
       });
 
   return (

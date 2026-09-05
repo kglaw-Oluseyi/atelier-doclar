@@ -10,6 +10,7 @@ import {
 import { PortfolioPanel } from "../../components/portfolio-view";
 import { TowerShell } from "../../components/shell";
 import { fixturesAllowed, sessionConfig } from "../../server/config";
+import { loadProgrammeSnapshot } from "../../server/runtime";
 
 export default async function ProgrammePage({
   searchParams,
@@ -21,8 +22,10 @@ export default async function ProgrammePage({
   try {
     const actor = readSession(token, sessionConfig());
     const fixture = fixturesAllowed() && isViewFixture(params.fixture) ? params.fixture : undefined;
+    const snapshot = await loadProgrammeSnapshot();
     const view = loadCorpusPortfolio({
       actor,
+      snapshot,
       ...(fixture ? { fixture, allowFixtures: true } : {}),
     });
     return (

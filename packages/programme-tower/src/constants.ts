@@ -1,3 +1,10 @@
+export const LV1_TRACEABILITY = {
+  product: "FOUNDATION",
+  promptControlId: "MD-PR-S002",
+  nativeId: "LV1",
+  sliceId: "MD-LV1",
+} as const;
+
 export const FC1_TRACEABILITY = {
   product: "FOUNDATION",
   promptControlId: "MD-PR-S001",

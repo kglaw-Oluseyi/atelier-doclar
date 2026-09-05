@@ -10,5 +10,5 @@ dependencies: []
 statusSource: Evidence-derived SliceRecords; never document presence alone
 externalAuthorityRequirements:
   - Independent and CEO gates remain outside Cursor
-implementationReality: Private Next.js /programme shell present. Production IdP, hosting and database unselected.
-currentProjection: IN_REVIEW for MD-B0 and MD-CT0–CT9. No slice ACCEPTED. Production not authorised.
+implementationReality: Private Next.js /programme shell present. PostgreSQL selected behind ProgrammeStore. Temporary live-verification auth is in use. Permanent IdP remains unselected.
+currentProjection: IN_REVIEW for MD-B0, MD-CT0–CT9, MD-FC1 and MD-LV1. No slice ACCEPTED. Production not authorised.

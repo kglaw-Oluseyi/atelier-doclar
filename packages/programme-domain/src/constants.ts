@@ -17,6 +17,10 @@ export const CT2_TRACEABILITY = {
 export const CALCULATION_VERSION = "ct2-1";
 export const SUPPORTED_EVENT_SCHEMA_VERSION = 1;
 export const LOCAL_STORE_PRODUCTION_STATUS = "NON_PRODUCTION" as const;
+export const PRODUCTION_STORE_STATUS = "PRODUCTION" as const;
+export type StoreProductionStatus =
+  | typeof LOCAL_STORE_PRODUCTION_STATUS
+  | typeof PRODUCTION_STORE_STATUS;
 
 export const PRODUCT_CODES = [
   "FOUNDATION",

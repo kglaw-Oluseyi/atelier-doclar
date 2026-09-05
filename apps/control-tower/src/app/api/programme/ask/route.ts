@@ -4,10 +4,10 @@ import {
   SESSION_COOKIE,
   SessionError,
   answerQuestion,
-  loadCurrentSnapshot,
   readSession,
 } from "@maison-doclar/programme-tower";
 import { sessionConfig } from "../../../../server/config";
+import { loadProgrammeSnapshot } from "../../../../server/runtime";
 
 export async function POST(request: Request): Promise<Response> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
@@ -15,7 +15,7 @@ export async function POST(request: Request): Promise<Response> {
     const actor = readSession(token, sessionConfig());
     const body = (await request.json()) as { question?: unknown; unavailable?: unknown };
     const question = typeof body.question === "string" ? body.question : "";
-    const snapshot = loadCurrentSnapshot();
+    const snapshot = await loadProgrammeSnapshot();
     const result = answerQuestion({
       question,
       role: actor.role,

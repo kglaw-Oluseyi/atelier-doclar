@@ -41,7 +41,7 @@ This is technical review evidence. It is not CEO production authorisation, indep
 
 **FOUNDATION IMPLEMENTATION COMPLETE: YES**  
 **KNOWN FOUNDATION TECHNICAL DEBT: ZERO**  
-**CONTROL TOWER LIVE-DEPLOYMENT READY: YES** (application prepared; not deployed; not production authorised)  
+**CONTROL TOWER LIVE-DEPLOYMENT READY: YES** (application prepared in MD-FC1; MD-LV1 deployed to Railway project `atelier-doclar`; not production authorised)  
 **CONTROL TOWER PRODUCTION AUTHORISED: NO**  
 **EOS-S01 TECHNICALLY ELIGIBLE: YES** (do not execute in this slice)
 

@@ -66,6 +66,17 @@ button, input, select {
 
 .nav .later { color: var(--muted); }
 
+.session { margin-top: 20px; }
+.logout {
+  display: inline-block;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  padding: 6px 10px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
 .main { padding: 28px 32px 64px; }
 .banner {
   border: 1px solid var(--line);

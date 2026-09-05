@@ -1,14 +1,14 @@
 # ADR — Railway readiness for the Control Tower
 
-**Status:** Intended target recorded; deployment not performed  
-**Slice:** MD-FC1  
-**Related:** `CT4-OI-002`, `OI-CT0-004`
+**Status:** Target deployed in MD-LV1  
+**Slice:** MD-FC1 / MD-LV1  
+**Related:** `CT4-OI-002` RESOLVED; `OI-CT0-004` hosting resolved, IdP remains open
 
 ## Intended target
 
 CEO-identified Railway project: **`atelier-doclar`**.
 
-This slice does not contact Railway and does not deploy.
+MD-FC1 did not contact Railway. MD-LV1 deployed the Control Tower to this project only. Live URL: `https://control-tower-production-dbc4.up.railway.app/programme`.
 
 ## Application contract
 
