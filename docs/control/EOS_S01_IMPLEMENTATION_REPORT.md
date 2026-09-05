@@ -5,6 +5,7 @@
 **Prompt Control ID:** `MD-PR-S004`  
 **Native ID:** `S01`  
 **Baseline:** `de29a916bab35ba476745a9fe8f52c0b61aa86d9`  
+**Implementation commit:** `b815268e939cfbd0fc33ce10df77f1c8a1374d52`  
 **Status:** `IN_REVIEW` — implemented; not `ACCEPTED`  
 **Railway:** not authorised  
 **Production:** not authorised
