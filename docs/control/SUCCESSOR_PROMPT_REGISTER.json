@@ -1,6 +1,6 @@
 {
   "scheme": "MD-PR-SNNN successor accountability IDs; historical MD-PR-NNNN remain intact",
-  "generated_at": "2026-09-06T00:10:00Z",
+  "generated_at": "2026-09-06T01:10:00Z",
   "notes": "Do not impersonate historical Control Tower prompt IDs. MD-PR-0011 is already used.",
   "entries": [
     {
@@ -74,6 +74,14 @@
       "product": "EVENT_OS",
       "title": "Event OS Slice 3 — RSVP and Guest Self-Service",
       "authorising_instruction": "CEO-authorised EOS-S03 execution wrapper; historical Slice 3 pack executed as one governed RSVP/self-service slice; do not accept EOS-S03 or authorise production"
+    },
+    {
+      "prompt_control_id": "MD-PR-S011",
+      "native_id": "S03-ACCEPT",
+      "slice_id": "EOS-S03",
+      "product": "EVENT_OS",
+      "title": "EOS-S03 Formal Technical Acceptance Record",
+      "authorising_instruction": "Record formal technical acceptance of EOS-S03 after independent AI CTO review; do not start EOS-S04 implementation or authorise production; next action is Event OS S01–S03 live-verification milestone"
     }
   ]
 }

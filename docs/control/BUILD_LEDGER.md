@@ -20,5 +20,5 @@
 | MD-HV1 | MD-PR-S003 | HV1 | FOUNDATION | `de29a916bab35ba476745a9fe8f52c0b61aa86d9` | IN_REVIEW | CEO human live verification PASS; issues NONE. Not ACCEPTED. Production not authorised. |
 | EOS-S01 | MD-PR-S004 / MD-PR-S007 | S01 | EVENT_OS | `b815268e939cfbd0fc33ce10df77f1c8a1374d52` | ACCEPTED | Shared platform and Event OS foundation. Technically accepted by ChatGPT / AI CTO. Production not authorised. No Railway mutation. |
 | EOS-S02 | MD-PR-S008 / MD-PR-S009 | S02 | EVENT_OS | `23e8ad98f7a0b8d18ae083f385bfc04cd43ab973` | ACCEPTED | Guest intake and operational directory. Technically accepted by ChatGPT / AI CTO. Production not authorised. No Railway mutation. |
-| EOS-S03 | MD-PR-S010 | S03 | EVENT_OS | `bed7cebeb14e731c1d0e8a289ceb7cfa21f546fe` | IN_REVIEW | RSVP and guest self-service. Not accepted. Production not authorised. No Railway mutation. |
+| EOS-S03 | MD-PR-S010 / MD-PR-S011 | S03 | EVENT_OS | `bed7cebeb14e731c1d0e8a289ceb7cfa21f546fe` | ACCEPTED | RSVP and guest self-service. Technically accepted by ChatGPT / AI CTO. Production not authorised. No Railway mutation. |
 | MD-GR1 | MD-PR-S006 | GR1 | FOUNDATION | `230b6a71ea254b42435949fcf9623f6c35b158fa` | IN_REVIEW | Dependency semantics reconciled. Foundation remains unaccepted. Production not authorised. |

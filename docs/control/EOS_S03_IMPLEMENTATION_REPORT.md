@@ -7,7 +7,7 @@
 **Predecessor:** `EOS-S02` (`ACCEPTED`)  
 **Baseline:** `96cdd2fbd39d4e7c337eea6f53f6e51e85aaca9a`  
 **Implementation commit:** `bed7cebeb14e731c1d0e8a289ceb7cfa21f546fe`  
-**Status:** `IN_REVIEW` — not accepted  
+**Status:** `ACCEPTED` under `MD-PR-S011` — accepted implementation remains `bed7cebeb14e731c1d0e8a289ceb7cfa21f546fe`  
 **Railway:** not authorised  
 **Production:** not authorised
 
@@ -61,7 +61,7 @@ EOS-S04 guest communications and concierge, seating, travel, accommodation, prot
 
 HUMAN LIVE-VERIFICATION CHECKPOINT RECOMMENDED: YES
 
-The shared event, operational guest directory and guest RSVP now form one coherent journey a CEO can walk: prepare an event, issue guest access, submit a response, and see staff-visible state including conflicts. Automated tests cannot judge whether the guest tone, confirmation language or staff attention cues feel correct in use. This is not production authorisation and must not trigger deployment.
+The shared event, operational guest directory and guest RSVP now form one coherent journey a CEO can walk: prepare an event, issue guest access, submit a response, and see staff-visible state including conflicts. Automated tests cannot judge whether the guest tone, confirmation language or staff attention cues feel correct in use. Formal acceptance is recorded under `MD-PR-S011`. The next controlled action is Event OS S01–S03 live-verification, not EOS-S04 implementation. This is not production authorisation and must not trigger deployment.
 
 ## Production status
 

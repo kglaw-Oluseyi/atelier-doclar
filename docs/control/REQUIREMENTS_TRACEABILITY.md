@@ -276,6 +276,13 @@
 | Staff visibility | Directory column, filters, RSVP workspace, review queue |
 | Communications | Invitation capability only; delivery deferred |
 | RSVP ≠ admission | Documented and asserted; no check-in records |
-| Do not accept during implementation | No `ACCEPTANCE_RECORDED` for EOS-S03 |
-| Foundation / gates / production | Foundation IN_REVIEW; protected gates unsigned; `productionAuthorised = false` |
+| Formal technical acceptance | `MD-PR-S011` / `EVT-SEED-EOS-S03-ACCEPT` |
+| Named reviewer, not Cursor / UNKNOWN | `ChatGPT / AI CTO` via `ACCEPTANCE_RECORDED` |
+| Immutable implementation commit | `bed7cebeb14e731c1d0e8a289ceb7cfa21f546fe` / `EV-EOS-S03-COMMIT` |
+| Final verified HEAD may differ | `e57fe1a275da0f01f2a8b237d1579f54c20f86d5` recorded separately |
+| Predecessor law | EOS-S02 already ACCEPTED; default ACCEPTANCE dependency satisfied |
+| Projector derives ACCEPTED | No handwritten status override as source truth |
+| Accepted count exactly 3 | EOS-S01, EOS-S02 and EOS-S03 only |
+| EOS-S04 eligibility | Default ACCEPTANCE on EOS-S03; READY after acceptance; implementation not started |
+| EOS-S04 implementation | Not authorised; next action is S01–S03 live-verification milestone |
 | Foundation / gates / production | Foundation IN_REVIEW; protected gates unsigned; `productionAuthorised = false` |

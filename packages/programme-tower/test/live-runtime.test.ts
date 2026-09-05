@@ -17,8 +17,9 @@ describe("live postgres runtime", () => {
     assert.equal(view.statuses["MD-HV1"], "IN_REVIEW");
     assert.equal(view.statuses["EOS-S01"], "ACCEPTED");
     assert.equal(view.statuses["EOS-S02"], "ACCEPTED");
-    assert.equal(view.statuses["EOS-S03"], "IN_REVIEW");
-    assert.equal(Object.values(view.statuses).filter((status) => status === "ACCEPTED").length, 2);
+    assert.equal(view.statuses["EOS-S03"], "ACCEPTED");
+    assert.equal(view.statuses["EOS-S04"], "READY");
+    assert.equal(Object.values(view.statuses).filter((status) => status === "ACCEPTED").length, 3);
     assert.equal(view.freshness.source, "postgres");
   });
 

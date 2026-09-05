@@ -667,7 +667,7 @@
       "title": "Event OS Slice 3 \u2014 RSVP and guest self-service",
       "phaseId": "PH-EVENT-OS-FOUNDATIONS",
       "order": 3,
-      "status": "IN_REVIEW",
+      "status": "ACCEPTED",
       "dependsOn": [
         "EOS-S02"
       ],
@@ -718,10 +718,10 @@
         }
       ],
       "openItems": [],
-      "acceptedAt": null,
-      "acceptedBy": null,
-      "updatedAt": "2026-09-06T00:20:00Z",
-      "version": "eos-s03-impl-1"
+      "acceptedAt": "2026-09-06T01:10:00Z",
+      "acceptedBy": "ChatGPT / AI CTO",
+      "updatedAt": "2026-09-06T01:10:00Z",
+      "version": "eos-s03-accept-1"
     },
     {
       "id": "EOS-S04",
@@ -729,7 +729,7 @@
       "title": "Event OS Slice 4 \u2014 Guest communications and concierge",
       "phaseId": "PH-EVENT-OS-FOUNDATIONS",
       "order": 4,
-      "status": "NOT_STARTED",
+      "status": "READY",
       "dependsOn": [
         "EOS-S03"
       ],

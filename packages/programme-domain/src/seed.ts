@@ -31,6 +31,9 @@ export const EOS_S03_SEED_TIME = "2026-09-06T00:10:00Z";
 export const EOS_S03_COMMIT_TIME = "2026-09-06T00:20:00Z";
 export const EOS_S03_COMMIT = "bed7cebeb14e731c1d0e8a289ceb7cfa21f546fe";
 export const EOS_S03_COMMIT_EVIDENCE_ID = "EV-EOS-S03-COMMIT";
+export const EOS_S03_ACCEPT_TIME = "2026-09-06T01:10:00Z";
+export const EOS_S03_ACCEPTANCE_EVENT_ID = "EVT-SEED-EOS-S03-ACCEPT";
+export const EOS_S03_FINAL_VERIFIED_HEAD = "e57fe1a275da0f01f2a8b237d1579f54c20f86d5";
 export const B0_COMMIT = "f7abb431be9a15ab730b3fdd16baa8e83776c170";
 export const EOS_S01_COMMIT = "b815268e939cfbd0fc33ce10df77f1c8a1374d52";
 export const EOS_S01_ACCEPTANCE_EVENT_ID = "EVT-SEED-EOS-S01-ACCEPT";
@@ -596,13 +599,44 @@ export function corpusSeedEventsThroughS03Implementation(): ProgrammeEvent[] {
   return [...corpusSeedEventsThroughS02Acceptance(), ...eosS03ImplementationEvents()];
 }
 
+function eosS03AcceptanceEvents(): ProgrammeEvent[] {
+  return [
+    parseProgrammeEvent({
+      eventId: EOS_S03_ACCEPTANCE_EVENT_ID,
+      eventType: "ACCEPTANCE_RECORDED",
+      schemaVersion: 1,
+      aggregateType: "slice",
+      aggregateId: "EOS-S03",
+      product: "EVENT_OS",
+      sliceId: "EOS-S03",
+      occurredAt: EOS_S03_ACCEPT_TIME,
+      recordedAt: EOS_S03_ACCEPT_TIME,
+      actor: { id: "ai-cto", role: "REVIEWER" },
+      source: "ai-cto-technical-acceptance",
+      idempotencyKey: `seed:${EOS_S03_ACCEPTANCE_EVENT_ID}`,
+      payload: {
+        acceptedAt: EOS_S03_ACCEPT_TIME,
+        acceptedBy: EOS_S01_REVIEWER,
+        authorityRole: "REVIEWER",
+      },
+    }),
+  ];
+}
+
 /**
- * Full corpus seed, including governed EOS-S01 and EOS-S02 technical acceptance
- * and EOS-S03 implementation evidence. Does not manufacture ACCEPTED events for
- * Foundation slices or EOS-S03.
+ * Corpus through governed EOS-S03 acceptance. Does not record Foundation acceptance
+ * or start EOS-S04 implementation.
+ */
+export function corpusSeedEventsThroughS03Acceptance(): ProgrammeEvent[] {
+  return [...corpusSeedEventsThroughS03Implementation(), ...eosS03AcceptanceEvents()];
+}
+
+/**
+ * Full corpus seed, including governed EOS-S01, EOS-S02 and EOS-S03 technical
+ * acceptance. Does not manufacture ACCEPTED events for Foundation slices.
  */
 export function corpusSeedEvents(): ProgrammeEvent[] {
-  return corpusSeedEventsThroughS03Implementation();
+  return corpusSeedEventsThroughS03Acceptance();
 }
 
 export function loadCorpusBaseline(root?: string): {

@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   calculateAllStatuses,
-  corpusSeedEvents,
   corpusSeedEventsThroughS03Implementation,
   createEngine,
   loadCorpusBaseline,
@@ -38,10 +37,6 @@ describe("EOS-S03 implementation recording", () => {
       false,
     );
     assert.equal(
-      corpusSeedEvents().some((event) => event.eventType === "ACCEPTANCE_RECORDED" && event.sliceId === "EOS-S03"),
-      false,
-    );
-    assert.equal(
       corpusSeedEventsThroughS03Implementation().some(
         (event) => event.eventType === "COMMIT_LINKED" && event.sliceId === "EOS-S03",
       ),
@@ -53,7 +48,7 @@ describe("EOS-S03 implementation recording", () => {
     const { baseline } = loadCorpusBaseline();
     const store = new MemoryProgrammeStore();
     const engine = createEngine(store, baseline, CORPUS_SEED_TIME);
-    for (const event of corpusSeedEvents()) engine.append(event);
+    for (const event of corpusSeedEventsThroughS03Implementation()) engine.append(event);
     const view = engine.currentView({ generatedAt: CORPUS_SEED_TIME, snapshotId: "SNAP-EOS-S03-IMPL" });
     assert.equal(view.statuses["EOS-S03"], "IN_REVIEW");
     assert.equal(view.gates.every((gate) => gate.status !== "APPROVED"), true);
