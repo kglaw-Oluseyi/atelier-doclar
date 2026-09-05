@@ -10,5 +10,5 @@ dependencies: []
 statusSource: Evidence-derived SliceRecords; never document presence alone
 externalAuthorityRequirements:
   - Independent and CEO gates remain outside Cursor
-implementationReality: ABSENT application. B0 control registers and CT0 planning artefacts only.
-currentProjection: IN_REVIEW for MD-B0, MD-CT0, MD-CT1 and MD-CT2; NOT_STARTED for MD-CT3–CT9. No slice ACCEPTED.
+implementationReality: ABSENT application. Programme-domain validator/events plus CT3 ingestion boundary. No Control Tower UI.
+currentProjection: IN_REVIEW for MD-B0, MD-CT0, MD-CT1, MD-CT2 and MD-CT3; NOT_STARTED for MD-CT4–CT9. No slice ACCEPTED.

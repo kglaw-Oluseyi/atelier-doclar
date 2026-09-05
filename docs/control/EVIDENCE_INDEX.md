@@ -31,3 +31,20 @@ Acceptance of MD-CT1 still requires a named reviewer. This index is evidence of 
 
 Acceptance of MD-CT2 still requires a named reviewer. Not ACCEPTED.
 
+## MD-CT3
+
+**Prompt Control ID:** `MD-PR-0004`  
+**Native ID:** `CT3`  
+**Slice ID:** `MD-CT3`
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-CT3-TYPECHECK | CHECK | Strict TypeScript compile including programme-ingestion | `pnpm typecheck` |
+| EV-CT3-TESTS | TEST | Webhook, allow-list, ingest, reconcile and CT2 integration tests | `pnpm test` |
+| EV-CT3-VALIDATE | CHECK | Programme corpus still valid | `pnpm programme:validate` |
+| EV-CT3-PROJECT | CHECK | Event projection including CT3 seed review state | `pnpm programme:project` |
+| EV-CT3-INGEST | CHECK | Synthetic webhook and reconcile self-check | `pnpm programme:ingest:verify` / `pnpm programme:reconcile` |
+| EV-CT3-IMPL | DOCUMENT | Implementation record | `docs/control/CT3_IMPLEMENTATION.md` |
+
+Acceptance of MD-CT3 still requires a named reviewer. Not ACCEPTED.
+

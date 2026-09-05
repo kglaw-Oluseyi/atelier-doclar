@@ -6,6 +6,8 @@ export {
   PRODUCT_CODES,
   WORK_STATUSES,
   GATE_STATUSES,
+  SLICE_ID_PATTERN,
+  COMMIT_SHA_PATTERN,
 } from "./constants.js";
 export {
   type EntityType,
@@ -44,6 +46,7 @@ export {
   type OpenItem,
   type Phase,
   type Product,
+  type ProductCode,
   type ProgrammeSnapshot,
   type SliceManifest,
   type SliceRecord,
@@ -89,7 +92,7 @@ export {
 export { calculateOutstandingWork, calculatePercentage } from "./outstanding.js";
 export { generateControlSnapshot, projectSliceRecords } from "./snapshot.js";
 export { ProgrammeEngine, createEngine } from "./engine.js";
-export { corpusSeedEvents, loadCorpusBaseline, CORPUS_SEED_TIME } from "./seed.js";
+export { corpusSeedEvents, loadCorpusBaseline, CORPUS_SEED_TIME, CT3_SEED_TIME } from "./seed.js";
 export type {
   ControlSnapshot,
   DeclarationBaseline,

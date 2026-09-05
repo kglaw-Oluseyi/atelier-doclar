@@ -27,6 +27,25 @@ importers:
         specifier: ^5.8.2
         version: 5.9.3
 
+  packages/programme-ingestion:
+    dependencies:
+      '@maison-doclar/programme-domain':
+        specifier: workspace:*
+        version: link:../programme-domain
+      zod:
+        specifier: ^3.24.2
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^22.13.10
+        version: 22.20.1
+      tsx:
+        specifier: ^4.19.3
+        version: 4.23.13
+      typescript:
+        specifier: ^5.8.2
+        version: 5.9.3
+
 packages:
 
   '@esbuild/aix-ppc64@0.28.2':

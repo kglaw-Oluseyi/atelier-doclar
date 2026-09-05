@@ -39,3 +39,26 @@
 | Outstanding work | `outstanding.ts` |
 | Percentage without invented weights | `calculatePercentage` → `UNAVAILABLE` when weights absent |
 | Protected acceptance | CT1 `SliceRecordSchema` reused; no implementer/system authority |
+
+## MD-CT3
+
+**Prompt Control ID:** `MD-PR-0004`  
+**Native ID:** `CT3`  
+**Slice ID:** `MD-CT3`
+
+| Requirement | Implementation |
+|-------------|----------------|
+| GitHub provider boundary | `RepositoryEvidenceProvider` + `github-adapter.ts` |
+| Repository / ref allow-list | `allowlist.ts` — `kglaw-Oluseyi/atelier-doclar` / `main` |
+| Inbound payload schemas | `inbound.ts` |
+| Webhook HMAC + constant-time compare | `webhook.ts` |
+| Replay protection | `X-GitHub-Delivery` + `MemoryDeliveryStore` |
+| Idempotent ingestion | CT2 `idempotencyKey` / `eventId` |
+| Commit-to-slice linkage | `linkage.ts` + catalogue `prompt_attachments` |
+| Unlinked commits remain visible | `IngestionLedger.unlinkedCommits` |
+| CI success law | `completed` + `success` + trusted workflow + linked commit |
+| Reconciliation | `IngestionService.reconcile` / `pnpm programme:reconcile` |
+| Freshness | `freshness.ts` — unknown ≠ healthy |
+| Transient vs permanent failure | `errors.ts` |
+| Status remains CT2-owned | translator emits evidence events only |
+| Acceptance cannot be manufactured | no `ACCEPTANCE_RECORDED` from GitHub |

@@ -8,7 +8,9 @@
   "scripts": {
     "programme:validate": "pnpm --filter @maison-doclar/programme-domain validate",
     "programme:project": "pnpm --filter @maison-doclar/programme-domain project",
-    "typecheck": "pnpm --filter @maison-doclar/programme-domain typecheck",
-    "test": "pnpm --filter @maison-doclar/programme-domain test"
+    "programme:ingest:verify": "pnpm --filter @maison-doclar/programme-ingestion verify",
+    "programme:reconcile": "pnpm --filter @maison-doclar/programme-ingestion reconcile",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test"
   }
 }

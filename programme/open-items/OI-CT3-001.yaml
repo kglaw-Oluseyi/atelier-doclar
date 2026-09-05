@@ -1,0 +1,11 @@
+id: CT3-OI-001
+product: FOUNDATION
+sliceId: MD-CT3
+title: Live GitHub HTTP client is not implemented; ingestion uses a provider interface and synthetic adapter
+severity: MEDIUM
+owner: AI CTO
+status: OPEN
+decisionAuthority: AI CTO
+blocker: false
+evidence: []
+notes: CT3 implements RepositoryEvidenceProvider, webhook verification and synthetic reconciliation. A live GitHub API client is deferred; --live is disabled.

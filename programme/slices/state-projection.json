@@ -160,7 +160,7 @@
       "title": "CT3 \u2014 Repository and CI ingestion",
       "phaseId": "PH-FOUNDATION",
       "order": 4,
-      "status": "NOT_STARTED",
+      "status": "IN_REVIEW",
       "dependsOn": [
         "MD-CT2"
       ],

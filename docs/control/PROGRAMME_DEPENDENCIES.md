@@ -61,7 +61,7 @@ Identity, organisation, event, guest, staff, consent and doctrine must remain sh
 |---------|--------|
 | Application foundation | All product implementation slices remain NOT_STARTED / blocked |
 | Academy readiness **implementation** of the OS contract | R17 blocked even after Runtime R16 |
-| Hosting/IdP/CI provider choice | CT3 and all deploys blocked; CT1 validator is not |
+| Hosting/IdP/production database | Deploys and `/programme` remain blocked; CT3 uses GitHub as the evidence source only |
 | Event-Day v1 pack | Historical compare unavailable; v2 is the located Runtime authority |
 
 ## Event OS ↔ Runtime boundary

@@ -12,7 +12,7 @@ Private, evidence-derived programme dashboard. Progress is calculated from manif
 
 ```text
 [GitHub repo kglaw-Oluseyi/atelier-doclar]
-        │ signed webhook / scheduled reconcile (CT3 — not built)
+        │ signed webhook / scheduled reconcile (CT3 — ingestion boundary; no HTTP route)
         ▼
 [Ingestion adapters — least privilege, idempotent]
         ▼

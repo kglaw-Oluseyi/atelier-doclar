@@ -40,3 +40,9 @@ jobs:
 
       - name: Project programme events and status
         run: pnpm programme:project
+
+      - name: Verify ingestion boundary
+        run: pnpm programme:ingest:verify
+
+      - name: Reconcile synthetic repository evidence
+        run: pnpm programme:reconcile
