@@ -53,7 +53,7 @@
       "title": "Control Tower preflight and programme reconciliation",
       "phaseId": "PH-FOUNDATION",
       "order": 1,
-      "status": "IN_PROGRESS",
+      "status": "IN_REVIEW",
       "dependsOn": [
         "MD-B0"
       ],
@@ -90,7 +90,7 @@
       "title": "CT1 \u2014 Programme domain and manifest validator",
       "phaseId": "PH-FOUNDATION",
       "order": 2,
-      "status": "NOT_STARTED",
+      "status": "IN_REVIEW",
       "dependsOn": [
         "MD-CT0"
       ],

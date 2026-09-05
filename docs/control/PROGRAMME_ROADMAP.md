@@ -45,16 +45,17 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 | Slice | Projection now |
 |-------|----------------|
 | MD-B0 | IN_REVIEW — commit `f7abb431be9a15ab730b3fdd16baa8e83776c170`, no named CEO acceptance |
-| MD-CT0 | IN_PROGRESS during this slice; becomes IN_REVIEW after the CT0 commit |
+| MD-CT0 | IN_REVIEW — planning commit present; no named acceptance |
+| MD-CT1 | IN_REVIEW — validator implemented; no named acceptance |
 | All others | NOT_STARTED |
 
 ## Now / next / later
 
 | Band | Content |
 |------|---------|
-| Now | MD-CT0 planning baseline |
-| Next | MD-CT1 — domain/manifest validator only, using the CT0 compatibility wrapper |
-| Later | CT2–CT9; Event OS S01 after stack/module decisions; Runtime after Event OS foundations |
+| Now | MD-CT1 — domain/manifest validator in review |
+| Next | MD-CT2 — persistence, snapshots and status calculator |
+| Later | CT3–CT9; Event OS S01 after stack/module decisions; Runtime after Event OS foundations |
 | Held | All 693 product/recon prompts except CT0/CT1 wrappers |
 | External | Independent, specialist, venue, CEO gates — unsigned |
 

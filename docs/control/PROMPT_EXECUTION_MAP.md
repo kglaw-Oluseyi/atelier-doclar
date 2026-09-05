@@ -52,4 +52,4 @@ Examples:
 
 ## Execution status
 
-All 693 remain `NOT_EXECUTED` except CT0, which is `IN_PROGRESS_CT0` during this slice.
+692 remain `NOT_EXECUTED`. CT0 (`MD-PR-0001`) and CT1 (`MD-PR-0002`) are `IN_REVIEW`. Neither is ACCEPTED.

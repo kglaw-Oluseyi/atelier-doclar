@@ -1,0 +1,13 @@
+{
+  "name": "atelier-doclar",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "programme:validate": "pnpm --filter @maison-doclar/programme-domain validate",
+    "typecheck": "pnpm --filter @maison-doclar/programme-domain typecheck",
+    "test": "pnpm --filter @maison-doclar/programme-domain test"
+  }
+}

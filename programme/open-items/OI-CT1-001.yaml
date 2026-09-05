@@ -1,0 +1,11 @@
+id: CT1-OI-001
+product: FOUNDATION
+sliceId: MD-CT1
+title: Phase.slices annotations are incomplete relative to catalog phaseId assignments
+severity: LOW
+owner: AI CTO
+status: OPEN
+decisionAuthority: AI CTO
+blocker: false
+evidence: []
+notes: PH-EVENT-OS-OPERATIONS lists EOS-S09–S11 and EOS-RECON but not EOS-S08. Phase.slices is treated as optional annotation; catalog phaseId remains authoritative.

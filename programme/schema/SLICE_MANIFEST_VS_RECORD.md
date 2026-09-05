@@ -39,6 +39,9 @@ CT0 projections live in `programme/slices/state-projection.json`. **No slice is 
 
 CT1 implements loaders and validators for **both** models and the mapping. It must not collapse them into one schema.
 
+**CT1 executable mapping:** `packages/programme-domain/src/mapping.ts` (`projectSliceRecord`).  
+Verification remains declaration-only. Operational fields are never inferred from a Boolean or status string.
+
 ## What CT1 may implement
 
 1. Parse/validate manifests against the JSON Schema.

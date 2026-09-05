@@ -6,8 +6,9 @@ Controlled corpus baseline for the Maison Doclar programme.
 **Branch:** `main`  
 **Baseline slice:** MD-B0 (`f7abb431be9a15ab730b3fdd16baa8e83776c170`)  
 **Latest planning slice:** MD-CT0  
+**Latest implementation slice:** MD-CT1 (`IN_REVIEW`)
 
-This repository holds the programme corpus and Control Tower **planning** artefacts. It does **not** contain an implemented application.
+This repository holds the programme corpus, Control Tower planning artefacts, and the CT1 programme-domain validator. It does **not** contain a Control Tower UI or product application.
 
 ## Start here
 
@@ -27,10 +28,22 @@ This repository holds the programme corpus and Control Tower **planning** artefa
 | Prompt execution map | [`docs/control/PROMPT_EXECUTION_MAP.md`](docs/control/PROMPT_EXECUTION_MAP.md) |
 | Execution compatibility | [`docs/control/EXECUTION_COMPATIBILITY_REGISTER.md`](docs/control/EXECUTION_COMPATIBILITY_REGISTER.md) |
 | Planning manifests | [`programme/`](programme/) |
+| CT1 implementation | [`docs/control/CT1_IMPLEMENTATION.md`](docs/control/CT1_IMPLEMENTATION.md) |
+
+## Programme validation (CT1)
+
+```text
+pnpm install --frozen-lockfile
+pnpm typecheck
+pnpm test
+pnpm programme:validate
+```
+
+Package: `@maison-doclar/programme-domain` in `packages/programme-domain/`.
 
 ## Rules
 
 - Original corpus folders are preserved in place.
 - Historical prompt packs are inventoried, not executed.
-- Do not start CT1 from this baseline without a new instruction.
+- Do not start CT2 from this baseline without a new instruction.
 - The only authorised GitHub destination is `kglaw-Oluseyi/atelier-doclar`.

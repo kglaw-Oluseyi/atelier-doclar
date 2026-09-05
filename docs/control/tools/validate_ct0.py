@@ -80,8 +80,8 @@ for p in emap["prompts"]:
     if "maison-doclar-optimus" in json.dumps(p).lower():
         err("unrelated repo reference in map record")
 
-# no application scaffold
-for forbidden in ["package.json", "tsconfig.json", "next.config.ts", "Dockerfile"]:
+# CT1 authorised a validator workspace. Still forbid application/runtime scaffold.
+for forbidden in ["next.config.ts", "next.config.js", "Dockerfile"]:
     if (ROOT / forbidden).exists():
         err(f"unexpected application file {forbidden}")
 

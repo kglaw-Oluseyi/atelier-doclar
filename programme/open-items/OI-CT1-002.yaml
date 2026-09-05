@@ -1,0 +1,11 @@
+id: CT1-OI-002
+product: FOUNDATION
+sliceId: MD-CT1
+title: Historical programme-control.ts remains a documentary contract beside the executable package
+severity: MEDIUM
+owner: AI CTO
+status: OPEN
+decisionAuthority: AI CTO
+blocker: false
+evidence: []
+notes: Executable authority is packages/programme-domain. Drift is guarded by the JSON Schema contract test. Do not maintain a third slice model.

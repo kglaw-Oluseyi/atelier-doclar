@@ -1,0 +1,11 @@
+id: CT1-OI-003
+product: FOUNDATION
+sliceId: MD-CT1
+title: Decision, Approval, Check and Timeline schemas have no CT0 YAML corpus
+severity: LOW
+owner: AI CTO
+status: OPEN
+decisionAuthority: AI CTO
+blocker: false
+evidence: []
+notes: Identity schemas exist for future compatibility. CT1 does not invent persistence or approval workflow.

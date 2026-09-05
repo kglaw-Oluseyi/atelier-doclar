@@ -47,7 +47,7 @@
       "adaptation_required": [],
       "blocker_open_item": null,
       "historical_executor_wording": "Cursor standing contract still names Claude handover/manifest",
-      "execution_status": "IN_PROGRESS_CT0",
+      "execution_status": "IN_REVIEW",
       "native_id_located": true,
       "claude_historical_reference": true,
       "prompt_title": "Preflight and Claude-plan adoption"
@@ -85,7 +85,7 @@
       ],
       "blocker_open_item": "CT0-OD / CT1 entry: CT0 commit must exist; implement validator only",
       "historical_executor_wording": "Cursor standing contract still names Claude handover/manifest",
-      "execution_status": "NOT_EXECUTED",
+      "execution_status": "IN_REVIEW",
       "native_id_located": true,
       "claude_historical_reference": true,
       "prompt_title": "Programme domain and manifest validator"

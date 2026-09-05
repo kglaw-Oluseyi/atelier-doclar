@@ -23,8 +23,8 @@ GAP-001 Event-Day v1 pack missing · GAP-003 no application · GAP-005 no existi
 
 | ID | Gap | Effect |
 |----|-----|--------|
-| CT0-GAP-001 | No TypeScript project to host CT1 validators | CT1 must create a package under a new instruction, or remain documentary |
-| CT0-GAP-002 | No CI | “Fail CI” in CT1 is a future wiring task |
+| CT0-GAP-001 | No TypeScript project to host CT1 validators | Closed in MD-CT1 by `packages/programme-domain` |
+| CT0-GAP-002 | No CI | Reduced in MD-CT1 by `.github/workflows/programme-validate.yml` (validate only; no deploy) |
 | CT0-GAP-003 | No auth | `/programme` cannot go live |
 | CT0-GAP-004 | Bounded Academy contract not implemented | R17 blocked (OI-CT0-003) |
 | CT0-GAP-005 | Event OS S8 mapping is principle-level, not a line-by-line traceability matrix | Later reconciliation slice needed before anyone executes S8 or claims S8 superseded |

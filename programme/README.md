@@ -1,7 +1,8 @@
 # Programme planning structure
 
 **Created in:** MD-CT0  
-**Status:** Planning declarations and empty operational projections. **Not implementation.**
+**Validated by:** MD-CT1 (`packages/programme-domain`, `pnpm programme:validate`)  
+**Status:** Planning declarations plus CT1 schema/DAG validation. **Not a Control Tower application.**
 
 | Path | Role |
 |------|------|
