@@ -241,10 +241,11 @@ describe("dependency semantics", () => {
       assert.notEqual(gate.status, "APPROVED", `${gate.id} must remain unsigned`);
     }
     assert.equal(view.gates.some((gate) => gate.status === "APPROVED"), false);
-    assert.equal(Object.values(view.statuses).filter((status) => status === "ACCEPTED").length, 3);
+    assert.equal(Object.values(view.statuses).filter((status) => status === "ACCEPTED").length, 4);
     assert.equal(view.statuses["EOS-S01"], "ACCEPTED");
     assert.equal(view.statuses["EOS-S02"], "ACCEPTED");
     assert.equal(view.statuses["EOS-S03"], "ACCEPTED");
+    assert.equal(view.statuses["EOS-S04"], "ACCEPTED");
   });
 
   it("lets EOS-S01 satisfy its Foundation PROGRESSION prerequisite without mass acceptance", () => {
@@ -263,7 +264,8 @@ describe("dependency semantics", () => {
     }
     assert.equal(statuses.get("EOS-S02"), "ACCEPTED");
     assert.equal(statuses.get("EOS-S03"), "ACCEPTED");
-    assert.equal([...statuses.values()].filter((status) => status === "ACCEPTED").length, 3);
+    assert.equal(statuses.get("EOS-S04"), "ACCEPTED");
+    assert.equal([...statuses.values()].filter((status) => status === "ACCEPTED").length, 4);
   });
 
   it("keeps EOS-S01 IN_REVIEW until its own valid acceptance evidence is recorded", () => {
@@ -400,7 +402,8 @@ describe("dependency semantics", () => {
     assert.equal(view.statuses["EOS-S01"], "ACCEPTED");
     assert.equal(view.statuses["EOS-S02"], "ACCEPTED");
     assert.equal(view.statuses["EOS-S03"], "ACCEPTED");
-    assert.equal(Object.values(view.statuses).filter((status) => status === "ACCEPTED").length, 3);
+    assert.equal(view.statuses["EOS-S04"], "ACCEPTED");
+    assert.equal(Object.values(view.statuses).filter((status) => status === "ACCEPTED").length, 4);
     assert.ok(view.outstanding.unacceptedMandatorySlices.includes("MD-CT2"));
     assert.ok(view.outstanding.blockingOpenItems.includes("OI-CT0-002"));
     assert.equal(view.outstanding.percentage.available, false);

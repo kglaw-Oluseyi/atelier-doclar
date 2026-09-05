@@ -18,7 +18,7 @@ test("wrong token is denied", async ({ page }) => {
 test("authenticated portfolio shows evidence-derived counts and unsigned gates", async ({ page }) => {
   await login(page);
   await expect(page.getByText(/Percentage\s+UNAVAILABLE/)).toBeVisible();
-  await expect(page.getByText(/Accepted 3/)).toBeVisible();
+  await expect(page.getByText(/Accepted 4/)).toBeVisible();
   await expect(page.getByRole("heading", { name: "Products" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Now / next / later" })).toBeVisible();
   await expect(page.getByText("UNKNOWN — this is not healthy")).toBeVisible();

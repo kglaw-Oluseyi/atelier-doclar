@@ -136,7 +136,9 @@ function runProject(root: string | undefined, json: boolean): number {
         `EOS-S01=${view.statuses["EOS-S01"] ?? "-"}`,
         `EOS-S02=${view.statuses["EOS-S02"] ?? "-"}`,
         `EOS-S03=${view.statuses["EOS-S03"] ?? "-"}`,
-        `reviewer=${view.slices.find((slice) => slice.id === "EOS-S02")?.acceptedBy ?? view.slices.find((slice) => slice.id === "EOS-S01")?.acceptedBy ?? "-"}`,
+        `EOS-S04=${view.statuses["EOS-S04"] ?? "-"}`,
+        `EOS-S05=${view.statuses["EOS-S05"] ?? "-"}`,
+        `reviewer=${view.slices.find((slice) => slice.id === "EOS-S04")?.acceptedBy ?? view.slices.find((slice) => slice.id === "EOS-S03")?.acceptedBy ?? view.slices.find((slice) => slice.id === "EOS-S01")?.acceptedBy ?? "-"}`,
         "",
       ].join("\n"),
     );

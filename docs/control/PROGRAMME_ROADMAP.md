@@ -12,7 +12,7 @@ Percent complete is not used. Unknown is not healthy. Documented ≠ implemented
 | Code | Name | Route | Implementation reality |
 |------|------|-------|------------------------|
 | FOUNDATION | Shared Foundation / Control Tower | `/programme` | Control Tower implemented; Foundation closeout IN_REVIEW; production unsigned |
-| EVENT_OS | Event OS | `/programme/event-os` | S01–S03 accepted; S04 communications/concierge IN_REVIEW |
+| EVENT_OS | Event OS | `/programme/event-os` | S01–S04 accepted; S05 not authorised |
 | EVENT_DAY | Event-Day Runtime | `/programme/event-day` | Specs + contracts; no app |
 | ACADEMY | Academy | `/programme/academy` | Specified/prompted; no app |
 | MARKETING | Marketing OS | `/programme/marketing` | Specified/prompted; no app |
@@ -62,14 +62,15 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 | EOS-S01 | ACCEPTED — shared platform foundation; technical acceptance recorded; production unsigned |
 | EOS-S02 | ACCEPTED — guest intake and operational directory; technical acceptance recorded; production unsigned |
 | EOS-S03 | ACCEPTED — RSVP and guest self-service; technical acceptance recorded; production unsigned |
+| EOS-S04 | ACCEPTED — guest communications and concierge; technical acceptance recorded; production unsigned |
 | All others | NOT_STARTED, READY, or BLOCKED only by valid Event OS / Event-Day dependencies |
 
 ## Now / next / later
 
 | Band | Content |
 |------|---------|
-| Now | Event OS S01–S03 accepted; EOS-S04 implemented and IN_REVIEW under MD-PR-S015; production unsigned |
-| Next | Independent ChatGPT / AI CTO technical review of EOS-S04; do not accept, deploy, or start EOS-S05 |
+| Now | Event OS S01–S04 accepted; production unsigned; no real communication provider |
+| Next | Controlled EOS-S04 live/synthetic milestone deployment and human verification planning; do not implement EOS-S05 |
 | Later | Event OS S01 after a new authorised instruction; Runtime after Event OS foundations |
 | Held | All 693 product/recon prompts except CT0/CT1 wrappers |
 | External | Independent, specialist, venue, CEO gates — unsigned |

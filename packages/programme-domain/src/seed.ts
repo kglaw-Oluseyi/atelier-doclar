@@ -40,6 +40,10 @@ export const EOS_S04_SEED_TIME = "2026-09-06T03:10:00Z";
 export const EOS_S04_COMMIT_TIME = "2026-09-06T03:20:00Z";
 export const EOS_S04_COMMIT = "8d87dc13ce87ab1431783d0e6649b34807eeb7ab";
 export const EOS_S04_COMMIT_EVIDENCE_ID = "EV-EOS-S04-COMMIT";
+export const EOS_S04_ACCEPT_TIME = "2026-09-06T04:10:00Z";
+export const EOS_S04_ACCEPTANCE_EVENT_ID = "EVT-SEED-EOS-S04-ACCEPT";
+export const EOS_S04_ACCEPTANCE_EVIDENCE_ID = "EV-EOS-S04-ACCEPT";
+export const EOS_S04_FINAL_VERIFIED_HEAD = "59ba09ed3254c8f0732c617df3f800ba6270ca8d";
 export const B0_COMMIT = "f7abb431be9a15ab730b3fdd16baa8e83776c170";
 export const EOS_S01_COMMIT = "b815268e939cfbd0fc33ce10df77f1c8a1374d52";
 export const EOS_S01_ACCEPTANCE_EVENT_ID = "EVT-SEED-EOS-S01-ACCEPT";
@@ -764,13 +768,64 @@ export function corpusSeedEventsThroughS04Implementation(): ProgrammeEvent[] {
   return [...corpusSeedEventsThroughHv1(), ...eosS04ImplementationEvents()];
 }
 
+function eosS04AcceptanceEvents(): ProgrammeEvent[] {
+  return [
+    envelope(
+      "EVT-SEED-EOS-S04-EV-ACCEPT",
+      "EVIDENCE_ATTACHED",
+      "EOS-S04",
+      EOS_S04_ACCEPT_TIME,
+      {
+        evidence: {
+          id: EOS_S04_ACCEPTANCE_EVIDENCE_ID,
+          kind: "DOCUMENT",
+          uri: "docs/control/EOS_S04_ACCEPTANCE.md",
+          createdAt: EOS_S04_ACCEPT_TIME,
+          sourceSystem: "programme-control",
+          immutable: true,
+          summary:
+            "EOS-S04 formal technical acceptance; S4-61/S4-62 satisfied for technical review/handover only; production not authorised",
+        },
+      },
+      "EVENT_OS",
+    ),
+    parseProgrammeEvent({
+      eventId: EOS_S04_ACCEPTANCE_EVENT_ID,
+      eventType: "ACCEPTANCE_RECORDED",
+      schemaVersion: 1,
+      aggregateType: "slice",
+      aggregateId: "EOS-S04",
+      product: "EVENT_OS",
+      sliceId: "EOS-S04",
+      occurredAt: EOS_S04_ACCEPT_TIME,
+      recordedAt: EOS_S04_ACCEPT_TIME,
+      actor: { id: "ai-cto", role: "REVIEWER" },
+      source: "ai-cto-technical-acceptance",
+      idempotencyKey: `seed:${EOS_S04_ACCEPTANCE_EVENT_ID}`,
+      payload: {
+        acceptedAt: EOS_S04_ACCEPT_TIME,
+        acceptedBy: EOS_S01_REVIEWER,
+        authorityRole: "REVIEWER",
+      },
+    }),
+  ];
+}
+
 /**
- * Full corpus seed, including governed EOS-S01, EOS-S02 and EOS-S03 technical
- * acceptance, S01–S03 human-verification evidence, and EOS-S04 implementation
- * evidence. Does not manufacture ACCEPTED events for Foundation slices or EOS-S04.
+ * Corpus through governed EOS-S04 acceptance. Does not record Foundation
+ * acceptance or start EOS-S05 implementation.
+ */
+export function corpusSeedEventsThroughS04Acceptance(): ProgrammeEvent[] {
+  return [...corpusSeedEventsThroughS04Implementation(), ...eosS04AcceptanceEvents()];
+}
+
+/**
+ * Full corpus seed, including governed EOS-S01–S04 technical acceptance and
+ * S01–S03 human-verification evidence. Does not manufacture ACCEPTED events
+ * for Foundation slices or authorise EOS-S05.
  */
 export function corpusSeedEvents(): ProgrammeEvent[] {
-  return corpusSeedEventsThroughS04Implementation();
+  return corpusSeedEventsThroughS04Acceptance();
 }
 
 export function loadCorpusBaseline(root?: string): {

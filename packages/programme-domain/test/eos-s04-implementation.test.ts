@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   calculateAllStatuses,
-  corpusSeedEvents,
   corpusSeedEventsThroughS04Implementation,
   createEngine,
   loadCorpusBaseline,
@@ -36,7 +35,9 @@ describe("EOS-S04 implementation recording", () => {
     );
     assert.equal(accepted.length, 3);
     assert.equal(
-      corpusSeedEvents().some((event) => event.eventType === "ACCEPTANCE_RECORDED" && event.sliceId === "EOS-S04"),
+      corpusSeedEventsThroughS04Implementation().some(
+        (event) => event.eventType === "ACCEPTANCE_RECORDED" && event.sliceId === "EOS-S04",
+      ),
       false,
     );
     assert.equal(

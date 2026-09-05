@@ -18,7 +18,7 @@ describe("portfolio and surface states", () => {
     assert.equal(view.cannotApprove, true);
     assert.equal(view.percentageAvailable, false);
     assert.ok(view.products.length >= 7);
-    assert.equal(view.acceptedTotal, 3);
+    assert.equal(view.acceptedTotal, 4);
     assert.ok(view.remainingTotal >= 80);
     assert.ok(view.criticalPath.includes("MD-CT4"));
     assert.ok(view.horizon.some((item) => item.sliceId === "MD-CT3" && item.band === "now"));

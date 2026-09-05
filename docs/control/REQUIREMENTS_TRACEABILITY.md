@@ -328,8 +328,9 @@
 |-------------|---------|
 | Native coverage | S4-01–S4-62 / 62/62 |
 | Implementation commit | `8d87dc13ce87ab1431783d0e6649b34807eeb7ab` / `EV-EOS-S04-COMMIT` |
+| Formal technical acceptance | `EV-EOS-S04-ACCEPT` / `EVT-SEED-EOS-S04-ACCEPT` at `2026-09-06T04:10:00Z` by `ChatGPT / AI CTO` |
 | Dispositions | A 42 / C 13 / G 4 / H 1 / F 2 |
-| S4-61 | AWAITING EXTERNAL REVIEW; evidence prepared |
-| S4-62 | AWAITING CEO / CONTROLLED ACCEPTANCE; handover prepared |
+| S4-61 | SATISFIED — independent technical review PASS; GATE-INDEPENDENT remains unsigned |
+| S4-62 | SATISFIED FOR EOS-S04 TECHNICAL ACCEPTANCE / HANDOVER ONLY |
 | Production / Railway / real send | NO |
-| Status | IN_REVIEW; accepted count remains 3 |
+| Status | ACCEPTED; accepted count 4 |

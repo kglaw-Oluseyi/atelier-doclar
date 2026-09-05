@@ -76,7 +76,8 @@ describe("PostgreSQL programme store", () => {
     assert.equal(view.statuses["EOS-S01"], "ACCEPTED");
     assert.equal(view.statuses["EOS-S02"], "ACCEPTED");
     assert.equal(view.statuses["EOS-S03"], "ACCEPTED");
-    assert.equal(Object.values(view.statuses).filter((status) => status === "ACCEPTED").length, 3);
+    assert.equal(view.statuses["EOS-S04"], "ACCEPTED");
+    assert.equal(Object.values(view.statuses).filter((status) => status === "ACCEPTED").length, 4);
     await pg.saveSnapshotAsync({
       snapshotId: "SNAP-PG-1",
       createdAt: CORPUS_SEED_TIME,

@@ -114,6 +114,14 @@
       "product": "EVENT_OS",
       "title": "Event OS Slice 4 — Guest Communications and Concierge",
       "authorising_instruction": "Implement EOS-S04 only; synthetic delivery; no Railway; no real guest contact; do not accept S04, deploy, or start EOS-S05"
+    },
+    {
+      "prompt_control_id": "MD-PR-S016",
+      "native_id": "S04-ACCEPT",
+      "slice_id": "EOS-S04",
+      "product": "EVENT_OS",
+      "title": "EOS-S04 Formal Technical Acceptance Record",
+      "authorising_instruction": "Record formal technical acceptance of EOS-S04 after independent AI CTO review; do not deploy, start EOS-S05, or authorise production"
     }
   ]
 }

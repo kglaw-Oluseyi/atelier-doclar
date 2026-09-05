@@ -146,8 +146,9 @@ describe("CT2 integration", () => {
     assert.equal(statuses.get("EOS-S01"), "ACCEPTED");
     assert.equal(statuses.get("EOS-S02"), "ACCEPTED");
     assert.equal(statuses.get("EOS-S03"), "ACCEPTED");
+    assert.equal(statuses.get("EOS-S04"), "ACCEPTED");
     for (const [id, status] of statuses) {
-      if (id === "EOS-S01" || id === "EOS-S02" || id === "EOS-S03") continue;
+      if (id === "EOS-S01" || id === "EOS-S02" || id === "EOS-S03" || id === "EOS-S04") continue;
       assert.notEqual(status, "ACCEPTED", `${id} must not be ACCEPTED by ingestion`);
     }
     assert.equal(statuses.get("MD-B0"), "IN_REVIEW");

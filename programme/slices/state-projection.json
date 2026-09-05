@@ -738,7 +738,7 @@
       "title": "Event OS Slice 4 \u2014 Guest communications and concierge",
       "phaseId": "PH-EVENT-OS-FOUNDATIONS",
       "order": 4,
-      "status": "IN_REVIEW",
+      "status": "ACCEPTED",
       "dependsOn": [
         "EOS-S03"
       ],
@@ -786,13 +786,22 @@
           "sourceSystem": "github",
           "immutable": true,
           "summary": "EOS-S04 implementation commit 8d87dc13ce87ab1431783d0e6649b34807eeb7ab"
+        },
+        {
+          "id": "EV-EOS-S04-ACCEPT",
+          "kind": "DOCUMENT",
+          "uri": "docs/control/EOS_S04_ACCEPTANCE.md",
+          "createdAt": "2026-09-06T04:10:00Z",
+          "sourceSystem": "programme-control",
+          "immutable": true,
+          "summary": "EOS-S04 formal technical acceptance; S4-61/S4-62 satisfied for technical review/handover only; production not authorised"
         }
       ],
       "openItems": [],
-      "acceptedAt": null,
-      "acceptedBy": null,
-      "updatedAt": "2026-09-06T03:20:00Z",
-      "version": "eos-s04-impl-1"
+      "acceptedAt": "2026-09-06T04:10:00Z",
+      "acceptedBy": "ChatGPT / AI CTO",
+      "updatedAt": "2026-09-06T04:10:00Z",
+      "version": "eos-s04-accept-1"
     },
     {
       "id": "EOS-S05",
@@ -800,7 +809,7 @@
       "title": "Event OS Slice 5 \u2014 Venue registry and spatial layout",
       "phaseId": "PH-EVENT-OS-FOUNDATIONS",
       "order": 5,
-      "status": "NOT_STARTED",
+      "status": "READY",
       "dependsOn": [
         "EOS-S04"
       ],
