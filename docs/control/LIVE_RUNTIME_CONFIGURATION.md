@@ -33,6 +33,10 @@ Revoke live access by rotating `PROGRAMME_ACCESS_TOKEN` or `PROGRAMME_SESSION_SE
 
 Provider: Railway PostgreSQL plugin inside `atelier-doclar` only. Adapter: `PostgresProgrammeStore`. Audit: `PostgresAuditRepository`. Webhook replay: `programme_deliveries`.
 
+## Build
+
+GitHub-sourced deploys use Railpack with the root `package.json` `build` / `start` scripts. `railway.toml` is not used (Config as Code is retired for this new service). `NODE_ENV=production` remains a runtime variable only.
+
 ## GitHub
 
 Live read client enabled for `kglaw-Oluseyi/atelier-doclar` only. Remote webhook hook ID `674900340` points at `/api/programme/github/webhook`.
