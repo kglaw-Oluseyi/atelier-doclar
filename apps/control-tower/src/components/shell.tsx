@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { CT5_SURFACES, LATER_SURFACES } from "@maison-doclar/programme-tower";
+import { CT5_SURFACES, CT6_SURFACES, LATER_SURFACES } from "@maison-doclar/programme-tower";
 
 export function TowerShell({
   children,
@@ -17,7 +17,7 @@ export function TowerShell({
         <h1>Maison Doclar</h1>
         <p>Private Control Tower</p>
         <a href="/programme">Portfolio</a>
-        {CT5_SURFACES.map((item) => (
+        {[...CT5_SURFACES, ...CT6_SURFACES].map((item) => (
           <a href={item.href} key={item.href}>
             {item.label}
           </a>

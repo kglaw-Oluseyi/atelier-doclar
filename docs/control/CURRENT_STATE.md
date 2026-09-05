@@ -1,16 +1,7 @@
 # Current State
 
-**Updated:** MD-CT5  
-**Product:** FOUNDATION  
-**Prompt Control ID:** `MD-PR-0006`  
-**Native ID:** `CT5`  
-**Slice ID:** `MD-CT5`
+**Updated:** MD-CT6  
+**Prompt Control ID:** `MD-PR-0007`  
+**Slice ID:** `MD-CT6`
 
-| Item | State |
-|------|-------|
-| Application / UI | PRESENT — `/programme` portfolio plus roadmap/product/slice drill-down |
-| Auth | Bounded non-production session (`CT4-OI-001`) |
-| MD-B0–MD-CT5 | IN_REVIEW |
-| MD-CT6–CT9 | NOT_STARTED |
-
-No slice is ACCEPTED.
+MD-B0–MD-CT6 are IN_REVIEW. MD-CT7–CT9 are NOT_STARTED. No slice is ACCEPTED. Protected gates remain unsigned.

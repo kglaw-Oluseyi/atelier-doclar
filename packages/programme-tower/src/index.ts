@@ -1,7 +1,9 @@
 export {
   CT4_TRACEABILITY,
   CT5_TRACEABILITY,
+  CT6_TRACEABILITY,
   CT5_SURFACES,
+  CT6_SURFACES,
   LATER_SURFACES,
   TOWER_ROLES,
   SESSION_COOKIE,
@@ -23,3 +25,10 @@ export { buildPortfolio, type PortfolioView, type ProductCard, type HorizonItem 
 export { loadCorpusPortfolio, loadCurrentSnapshot, deniedPortfolio, isViewFixture, VIEW_FIXTURES, type ViewFixture } from "./load.js";
 export { buildRoadmap, productCodeFromRoute, type RoadmapView } from "./roadmap.js";
 export { buildSliceDetail, listEvidence, listCommits } from "./slice-detail.js";
+export {
+  evaluateApproval,
+  appendAudit,
+  approvalStillValid,
+  buildReleaseCandidate,
+  type AuditEntry,
+} from "./authority.js";

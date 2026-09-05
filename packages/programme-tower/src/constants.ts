@@ -5,6 +5,13 @@ export const CT4_TRACEABILITY = {
   sliceId: "MD-CT4",
 } as const;
 
+export const CT6_TRACEABILITY = {
+  product: "FOUNDATION",
+  promptControlId: "MD-PR-0007",
+  nativeId: "CT6",
+  sliceId: "MD-CT6",
+} as const;
+
 export const CT5_TRACEABILITY = {
   product: "FOUNDATION",
   promptControlId: "MD-PR-0006",
@@ -31,8 +38,12 @@ export const CT5_SURFACES = [
   { href: "/programme/evidence", label: "Evidence" },
 ] as const;
 
+export const CT6_SURFACES = [
+  { href: "/programme/open-items", label: "Open items" },
+  { href: "/programme/decisions", label: "Decisions" },
+  { href: "/programme/releases", label: "Releases" },
+] as const;
+
 export const LATER_SURFACES = [
-  { href: "/programme/open-items", label: "Open items", slice: "MD-CT6" },
-  { href: "/programme/decisions", label: "Decisions", slice: "MD-CT6" },
-  { href: "/programme/releases", label: "Releases", slice: "MD-CT6" },
+  { href: "/programme/ask", label: "Ask", slice: "MD-CT7" },
 ] as const;

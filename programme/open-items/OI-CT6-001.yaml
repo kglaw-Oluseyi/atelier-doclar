@@ -1,0 +1,11 @@
+id: CT6-OI-001
+product: FOUNDATION
+sliceId: MD-CT6
+title: Gate-attempt audit log is process-local and non-production
+severity: MEDIUM
+owner: AI CTO
+status: OPEN
+decisionAuthority: AI CTO
+blocker: false
+evidence: []
+notes: Append-only semantics are implemented. Durable production audit storage remains unselected with the production database.

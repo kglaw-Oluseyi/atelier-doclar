@@ -265,7 +265,7 @@
       "title": "CT6 \u2014 Open items, decisions, gates, releases and audit",
       "phaseId": "PH-FOUNDATION",
       "order": 7,
-      "status": "NOT_STARTED",
+      "status": "IN_REVIEW",
       "dependsOn": [
         "MD-CT5"
       ],

@@ -10,4 +10,5 @@
 | MD-CT2 | MD-PR-0003 | CT2 | FOUNDATION | `0f5257636479bf84851cb5b350cf76b1db0d70ab` | IN_REVIEW | Events, snapshots and status calculator. Not ACCEPTED. |
 | MD-CT3 | MD-PR-0004 | CT3 | FOUNDATION | `3164b7d73ebff68c41a7f33944a993ddb4f43906` | IN_REVIEW | Repository and CI ingestion. Not ACCEPTED. |
 | MD-CT4 | MD-PR-0005 | CT4 | FOUNDATION | `8920007ca62442b5fb1eb4b6fece8d1985e06a98` | IN_REVIEW | Control Tower shell and executive portfolio. Not ACCEPTED. |
-| MD-CT5 | MD-PR-0006 | CT5 | FOUNDATION | *(this slice)* | IN_REVIEW | Roadmap, product and slice drill-down. Not ACCEPTED. |
+| MD-CT5 | MD-PR-0006 | CT5 | FOUNDATION | `ef1b6e0041b0e35e34f46953091c232a170c6b6e` | IN_REVIEW | Roadmap, product and slice drill-down. Not ACCEPTED. |
+| MD-CT6 | MD-PR-0007 | CT6 | FOUNDATION | *(this slice)* | IN_REVIEW | Controlled workflows and unsigned gates. Not ACCEPTED. |

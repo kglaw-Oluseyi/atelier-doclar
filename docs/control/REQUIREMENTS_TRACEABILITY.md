@@ -86,3 +86,12 @@
 | Accessible table | Roadmap table equivalent |
 | Product pages | `/programme/event-os` and siblings |
 | Slice / evidence drill-down | `/programme/slices/[id]`, `/programme/evidence`, `/programme/commits` |
+
+## MD-CT6
+
+| Requirement | Implementation |
+|-------------|----------------|
+| Named authority | `evaluateApproval` rejects reserved/missing identities |
+| No executor default approve | `/api/programme/gates/approve` |
+| Append-only audit | `appendAudit` |
+| Unsigned release | `buildReleaseCandidate.productionAuthorised = false` |

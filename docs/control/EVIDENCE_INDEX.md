@@ -72,3 +72,10 @@ Acceptance of MD-CT4 still requires a named reviewer. Not ACCEPTED.
 | EV-CT5-TESTS | TEST | DAG, drill-down and browser tests | `pnpm test` / `pnpm e2e` |
 | EV-CT5-IMPL | DOCUMENT | Implementation record | `docs/control/CT5_IMPLEMENTATION.md` |
 
+## MD-CT6
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-CT6-AUTH | TEST | Protected-gate negative tests | `packages/programme-tower/test/authority.test.ts` |
+| EV-CT6-IMPL | DOCUMENT | Implementation record | `docs/control/CT6_IMPLEMENTATION.md` |
+
