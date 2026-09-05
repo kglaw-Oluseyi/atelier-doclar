@@ -21,6 +21,9 @@ export const EOS_S01_SEED_TIME = "2026-09-05T19:10:00Z";
 export const GR1_SEED_TIME = "2026-09-05T20:10:00Z";
 export const EOS_S01_ACCEPT_TIME = "2026-09-05T21:10:00Z";
 export const EOS_S02_SEED_TIME = "2026-09-05T22:10:00Z";
+export const EOS_S02_COMMIT_TIME = "2026-09-05T22:20:00Z";
+export const EOS_S02_COMMIT = "23e8ad98f7a0b8d18ae083f385bfc04cd43ab973";
+export const EOS_S02_COMMIT_EVIDENCE_ID = "EV-EOS-S02-COMMIT";
 export const B0_COMMIT = "f7abb431be9a15ab730b3fdd16baa8e83776c170";
 export const EOS_S01_COMMIT = "b815268e939cfbd0fc33ce10df77f1c8a1374d52";
 export const EOS_S01_ACCEPTANCE_EVENT_ID = "EVT-SEED-EOS-S01-ACCEPT";
@@ -424,6 +427,32 @@ function eosS02ImplementationEvents(): ProgrammeEvent[] {
           sourceSystem: "programme-control",
           immutable: true,
           summary: "EOS-S02 guest directory boundary and intake model",
+        },
+      },
+      "EVENT_OS",
+    ),
+    envelope(
+      "EVT-SEED-EOS-S02-COMMIT",
+      "COMMIT_LINKED",
+      "EOS-S02",
+      EOS_S02_COMMIT_TIME,
+      { sha: EOS_S02_COMMIT },
+      "EVENT_OS",
+    ),
+    envelope(
+      "EVT-SEED-EOS-S02-EV-COMMIT",
+      "EVIDENCE_ATTACHED",
+      "EOS-S02",
+      EOS_S02_COMMIT_TIME,
+      {
+        evidence: {
+          id: EOS_S02_COMMIT_EVIDENCE_ID,
+          kind: "COMMIT",
+          uri: `git:${EOS_S02_COMMIT}`,
+          createdAt: EOS_S02_COMMIT_TIME,
+          sourceSystem: "github",
+          immutable: true,
+          summary: `EOS-S02 implementation commit ${EOS_S02_COMMIT}`,
         },
       },
       "EVENT_OS",

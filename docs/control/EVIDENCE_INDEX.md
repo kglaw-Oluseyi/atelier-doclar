@@ -210,6 +210,7 @@ Progression authorisation is not formal slice acceptance and not production auth
 
 | ID | Kind | Summary | Location |
 |----|------|---------|----------|
+| EV-EOS-S02-COMMIT | COMMIT | Immutable implementation commit | `git:23e8ad98f7a0b8d18ae083f385bfc04cd43ab973` |
 | EV-EOS-S02-IMPL | DOCUMENT | Implementation report | `docs/control/EOS_S02_IMPLEMENTATION_REPORT.md` |
 | EV-EOS-S02-ARCH | DOCUMENT | Guest directory boundary | `docs/control/EVENT_OS_GUEST_DIRECTORY.md` |
 | EV-EOS-S02-TESTS | TEST | Intake, directory, identity safety and adversarial controls | `packages/shared-platform/test/guest-*.test.ts` |

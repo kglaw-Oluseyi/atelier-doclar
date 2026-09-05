@@ -25,5 +25,9 @@ describe("EOS-S02 implementation recording", () => {
       corpusSeedEvents().some((event) => event.eventType === "ACCEPTANCE_RECORDED" && event.sliceId === "EOS-S02"),
       false,
     );
+    assert.equal(
+      corpusSeedEvents().some((event) => event.eventType === "COMMIT_LINKED" && event.sliceId === "EOS-S02"),
+      true,
+    );
   });
 });

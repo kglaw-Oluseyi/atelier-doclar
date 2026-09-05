@@ -623,8 +623,19 @@
       "expectedFiles": [
         "MDOS/slice2/"
       ],
-      "commits": [],
+      "commits": [
+        "23e8ad98f7a0b8d18ae083f385bfc04cd43ab973"
+      ],
       "evidence": [
+        {
+          "id": "EV-EOS-S02-COMMIT",
+          "kind": "COMMIT",
+          "uri": "git:23e8ad98f7a0b8d18ae083f385bfc04cd43ab973",
+          "createdAt": "2026-09-05T22:20:00Z",
+          "sourceSystem": "github",
+          "immutable": true,
+          "summary": "EOS-S02 implementation commit 23e8ad98f7a0b8d18ae083f385bfc04cd43ab973"
+        },
         {
           "id": "EV-EOS-S02-IMPL",
           "kind": "DOCUMENT",
