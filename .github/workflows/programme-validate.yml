@@ -68,3 +68,5 @@ jobs:
           CI: "1"
           EVENT_OS_ACCESS_TOKEN: ci-event-os-access-token
           EVENT_OS_SESSION_SECRET: ci-event-os-session-secret-32b
+          EVENT_OS_RSVP_PEPPER: ci-event-os-rsvp-pepper-32bytes
+          EVENT_OS_RSVP_SESSION_SECRET: ci-event-os-rsvp-session-secret-32

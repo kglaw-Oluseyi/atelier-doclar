@@ -40,7 +40,6 @@ export function productionAuthorised(): false {
 }
 
 export function rsvpAccessConfig(): RsvpAccessConfig {
-  const production = runtimeEnv("NODE_ENV") === "production";
   const config: RsvpAccessConfig = {
     invitationPepper: runtimeEnv("EVENT_OS_RSVP_PEPPER") ?? DEFAULT_NON_PRODUCTION_RSVP_ACCESS.invitationPepper,
     sessionSecret: runtimeEnv("EVENT_OS_RSVP_SESSION_SECRET") ?? DEFAULT_NON_PRODUCTION_RSVP_ACCESS.sessionSecret,
@@ -49,7 +48,7 @@ export function rsvpAccessConfig(): RsvpAccessConfig {
     sessionTtlSeconds: DEFAULT_NON_PRODUCTION_RSVP_ACCESS.sessionTtlSeconds,
     maxExchangeFailures: DEFAULT_NON_PRODUCTION_RSVP_ACCESS.maxExchangeFailures,
   };
-  assertRsvpAccessConfig(config, production);
+  assertRsvpAccessConfig(config, productionAuthorised());
   return config;
 }
 
