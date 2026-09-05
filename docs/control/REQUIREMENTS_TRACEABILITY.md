@@ -77,3 +77,12 @@
 | UI states | loading/empty/denied/stale/degraded/conflict/error/recovery |
 | Unknown ≠ healthy | `freshness.healthy` requires live GitHub FRESH |
 | No gate approval | `cannotApprove: true`; no approve control |
+
+## MD-CT5
+
+| Requirement | Implementation |
+|-------------|----------------|
+| Data-derived DAG | `buildRoadmap` + `detectCycles` |
+| Accessible table | Roadmap table equivalent |
+| Product pages | `/programme/event-os` and siblings |
+| Slice / evidence drill-down | `/programme/slices/[id]`, `/programme/evidence`, `/programme/commits` |

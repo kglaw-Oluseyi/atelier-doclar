@@ -230,7 +230,7 @@
       "title": "CT5 \u2014 Roadmap, product and slice drill-down",
       "phaseId": "PH-FOUNDATION",
       "order": 6,
-      "status": "NOT_STARTED",
+      "status": "IN_REVIEW",
       "dependsOn": [
         "MD-CT4"
       ],

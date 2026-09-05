@@ -4,6 +4,7 @@ import {
   createEngine,
   loadCorpusBaseline,
   MemoryProgrammeStore,
+  type ControlSnapshot,
 } from "@maison-doclar/programme-domain";
 import { LATER_SURFACES } from "./constants.js";
 import { buildPortfolio, type PortfolioView } from "./portfolio.js";
@@ -15,6 +16,18 @@ export type ViewFixture = (typeof VIEW_FIXTURES)[number];
 
 export function isViewFixture(value: string | undefined): value is ViewFixture {
   return value !== undefined && (VIEW_FIXTURES as readonly string[]).includes(value);
+}
+
+export function loadCurrentSnapshot(now = new Date().toISOString()): ControlSnapshot {
+  const { baseline } = loadCorpusBaseline();
+  const store = new MemoryProgrammeStore();
+  const engine = createEngine(store, baseline, CORPUS_SEED_TIME);
+  for (const event of corpusSeedEvents()) engine.append(event);
+  return engine.currentView({
+    snapshotId: "SNAP-TOWER-CURRENT",
+    generatedAt: now,
+    source: "corpus-seed",
+  });
 }
 
 export function loadCorpusPortfolio(input: {
@@ -38,15 +51,7 @@ export function loadCorpusPortfolio(input: {
     return deniedOrSpecial("error", freshness, input.actor, "programme snapshot could not be loaded");
   }
 
-  const { baseline } = loadCorpusBaseline();
-  const store = new MemoryProgrammeStore();
-  const engine = createEngine(store, baseline, CORPUS_SEED_TIME);
-  for (const event of corpusSeedEvents()) engine.append(event);
-  const snapshot = engine.currentView({
-    snapshotId: "SNAP-TOWER-CURRENT",
-    generatedAt: now,
-    source: "corpus-seed",
-  });
+  const snapshot = loadCurrentSnapshot(now);
 
   if (input.fixture === "empty") {
     const emptyFresh = buildFreshness({

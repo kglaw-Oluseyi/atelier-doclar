@@ -1,0 +1,11 @@
+id: CT5-OI-001
+product: FOUNDATION
+sliceId: MD-CT5
+title: Roadmap SVG is a bounded overview; the accessible table is authoritative
+severity: LOW
+owner: AI CTO
+status: OPEN
+decisionAuthority: AI CTO
+blocker: false
+evidence: []
+notes: Graph is derived from manifests. A richer interactive DAG can wait; cycles and missing deps already surface as text.

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { LATER_SURFACES } from "@maison-doclar/programme-tower";
+import { CT5_SURFACES, LATER_SURFACES } from "@maison-doclar/programme-tower";
 
 export function TowerShell({
   children,
@@ -16,9 +16,12 @@ export function TowerShell({
       <nav className="nav" aria-label="Control Tower">
         <h1>Maison Doclar</h1>
         <p>Private Control Tower</p>
-        <a href="/programme" aria-current="page">
-          Portfolio
-        </a>
+        <a href="/programme">Portfolio</a>
+        {CT5_SURFACES.map((item) => (
+          <a href={item.href} key={item.href}>
+            {item.label}
+          </a>
+        ))}
         {LATER_SURFACES.map((item) => (
           <span className="later" key={item.href}>
             {item.label} · {item.slice}

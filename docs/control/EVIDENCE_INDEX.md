@@ -63,3 +63,12 @@ Acceptance of MD-CT3 still requires a named reviewer. Not ACCEPTED.
 
 Acceptance of MD-CT4 still requires a named reviewer. Not ACCEPTED.
 
+## MD-CT5
+
+**Prompt Control ID:** `MD-PR-0006`
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-CT5-TESTS | TEST | DAG, drill-down and browser tests | `pnpm test` / `pnpm e2e` |
+| EV-CT5-IMPL | DOCUMENT | Implementation record | `docs/control/CT5_IMPLEMENTATION.md` |
+
