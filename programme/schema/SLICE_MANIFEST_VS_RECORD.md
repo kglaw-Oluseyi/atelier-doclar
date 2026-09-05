@@ -52,3 +52,7 @@ Verification remains declaration-only. Operational fields are never inferred fro
 6. Fail CI when referential integrity fails.
 
 CT1 may not invent a third competing slice model.
+
+## MD-GR1 additive note
+
+The historical JSON Schema remains frozen (`additionalProperties: false`). MD-GR1 extends the **executable** Zod `SliceManifest` with optional `dependencyKinds`. That field is declaration-only: it is never copied onto `SliceRecord`, and catalog/YAML parity still applies. Operational progression lives in `PROGRESSION_AUTHORISED` events, not on the record. See `docs/control/DEPENDENCY_SEMANTICS_RECONCILIATION.md`.

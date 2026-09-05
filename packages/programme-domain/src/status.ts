@@ -1,3 +1,8 @@
+import {
+  progressionSatisfied,
+  resolveDependencyKind,
+  type ProgressionAuthorisation,
+} from "./dependencies.js";
 import { projectSliceRecord } from "./mapping.js";
 import type { ProgrammeProjection, SliceFacts } from "./projection-types.js";
 import { SliceRecordSchema, type Gate, type OpenItem, type SliceManifest, type WorkStatus } from "./schemas.js";
@@ -30,22 +35,40 @@ export function acceptanceSatisfied(manifest: SliceManifest, facts: SliceFacts):
   return SliceRecordSchema.safeParse(candidate).success;
 }
 
-export function predecessorSatisfied(
-  dependencyId: string,
-  statuses: ReadonlyMap<string, WorkStatus>,
-  gates: Readonly<Record<string, Gate>>,
-): boolean {
-  const gate = gates[dependencyId];
-  if (gate) return gate.status === "APPROVED";
-  return statuses.get(dependencyId) === "ACCEPTED";
+export function predecessorSatisfied(input: {
+  dependencyId: string;
+  successorId: string;
+  manifest: SliceManifest;
+  statuses: ReadonlyMap<string, WorkStatus>;
+  gates: Readonly<Record<string, Gate>>;
+  progressions: Readonly<Record<string, ProgressionAuthorisation>>;
+}): boolean {
+  const kind = resolveDependencyKind(input.manifest, input.dependencyId, input.gates);
+  if (kind === "GATE") {
+    return input.gates[input.dependencyId]?.status === "APPROVED";
+  }
+  if (kind === "PROGRESSION") {
+    return progressionSatisfied(input.dependencyId, input.successorId, input.progressions);
+  }
+  return input.statuses.get(input.dependencyId) === "ACCEPTED";
 }
 
 export function dependenciesSatisfied(
   manifest: SliceManifest,
   statuses: ReadonlyMap<string, WorkStatus>,
   gates: Readonly<Record<string, Gate>>,
+  progressions: Readonly<Record<string, ProgressionAuthorisation>>,
 ): boolean {
-  return manifest.dependsOn.every((dep) => predecessorSatisfied(dep, statuses, gates));
+  return manifest.dependsOn.every((dep) =>
+    predecessorSatisfied({
+      dependencyId: dep,
+      successorId: manifest.id,
+      manifest,
+      statuses,
+      gates,
+      progressions,
+    }),
+  );
 }
 
 export function calculateSliceStatus(input: {
@@ -54,13 +77,14 @@ export function calculateSliceStatus(input: {
   openItems: OpenItem[];
   predecessorStatuses: ReadonlyMap<string, WorkStatus>;
   gates: Readonly<Record<string, Gate>>;
+  progressions: Readonly<Record<string, ProgressionAuthorisation>>;
 }): WorkStatus {
   if (input.facts.superseded) return "SUPERSEDED";
 
   const sliceItems = input.openItems.filter((item) => input.facts.openItemIds.includes(item.id));
   if (sliceItems.some(isBlockingOpenItem)) return "BLOCKED";
 
-  const depsOk = dependenciesSatisfied(input.manifest, input.predecessorStatuses, input.gates);
+  const depsOk = dependenciesSatisfied(input.manifest, input.predecessorStatuses, input.gates, input.progressions);
   if (acceptanceSatisfied(input.manifest, input.facts) && depsOk) return "ACCEPTED";
   if (input.facts.reviewRequested && hasImplementationEvidence(input.facts)) return "IN_REVIEW";
   if (hasImplementationEvidence(input.facts)) return "IN_PROGRESS";
@@ -89,6 +113,7 @@ export function calculateAllStatuses(projection: ProgrammeProjection): Map<strin
         openItems,
         predecessorStatuses: statuses,
         gates: projection.gates,
+        progressions: projection.progressions,
       });
       if (statuses.get(manifest.id) !== next) {
         statuses.set(manifest.id, next);

@@ -52,4 +52,4 @@ Examples:
 
 ## Execution status
 
-Historical CT0–CT9 plus successor MD-PR-S001–S003 remain `IN_REVIEW`. EOS-S01 was executed as successor `MD-PR-S004` covering the historical Slice 1 pack as one governed foundation slice. None is ACCEPTED.
+Historical CT0–CT9 plus successor MD-PR-S001–S003 remain `IN_REVIEW`. EOS-S01 was executed as successor `MD-PR-S004` covering the historical Slice 1 pack as one governed foundation slice. MD-GR1 (`MD-PR-S006`) reconciled dependency kinds so Foundation → EOS-S01 is a `PROGRESSION` prerequisite. None is ACCEPTED.

@@ -147,6 +147,20 @@ export function assertManifestParity(
     right,
     emptyOperationalState({ updatedAt: "2020-01-01T00:00:00Z", version: "parity" }),
   );
+  const kindsLeft = JSON.stringify(left.dependencyKinds ?? {});
+  const kindsRight = JSON.stringify(right.dependencyKinds ?? {});
+  if (kindsLeft !== kindsRight) {
+    return [
+      validationError({
+        code: "MAPPING_INCONSISTENT",
+        entityType: "slice_manifest",
+        entityId: left.id,
+        field: "dependencyKinds",
+        message: "YAML/catalog declaration mismatch: dependencyKinds must be identical",
+        sourceFile: `${leftSource} ↔ ${rightSource}`,
+      }),
+    ];
+  }
   const base = assertMappingConsistency(left, projected, rightSource);
   return base.map((error) =>
     validationError({

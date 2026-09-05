@@ -6,6 +6,8 @@ phaseId: PH-EVENT-OS-FOUNDATIONS
 order: 1
 dependsOn:
   - MD-CT0
+dependencyKinds:
+  MD-CT0: PROGRESSION
 canonicalRefs:
   - MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx
   - MDOS/slice1/

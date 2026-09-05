@@ -1,7 +1,7 @@
 {
   "slice_id": "MD-CT0",
   "model": "SliceManifest (declaration) \u2014 see programme/schema/SLICE_MANIFEST_VS_RECORD.md",
-  "count": 83,
+  "count": 84,
   "slices": [
     {
       "id": "MD-B0",
@@ -434,6 +434,40 @@
       ]
     },
     {
+      "id": "MD-GR1",
+      "product": "FOUNDATION",
+      "title": "Dependency Semantics Reconciliation",
+      "phaseId": "PH-FOUNDATION",
+      "order": 14,
+      "dependsOn": [
+        "MD-HV1"
+      ],
+      "canonicalRefs": [
+        "docs/control/DEPENDENCY_SEMANTICS_RECONCILIATION.md"
+      ],
+      "outcome": "Programme dependency kinds distinguish ACCEPTANCE, PROGRESSION and GATE; Foundation remains unaccepted; EOS-S01 progression authorised; production not authorised",
+      "entryCriteria": [
+        "EOS-S01 implemented and IN_REVIEW",
+        "Foundation slices remain IN_REVIEW",
+        "Acceptance blocked only by coarse ACCEPTED-predecessor rule"
+      ],
+      "exitCriteria": [
+        "Explicit dependencyKinds on SliceManifest",
+        "PROGRESSION_AUTHORISED is an immutable governed event",
+        "EOS-S01 Foundation edge classified PROGRESSION without deleting lineage",
+        "EOS-S02 remains gated on EOS-S01 ACCEPTANCE",
+        "No Foundation slice marked ACCEPTED",
+        "Protected production gates remain unsigned"
+      ],
+      "expectedFiles": [
+        "docs/control/DEPENDENCY_SEMANTICS_RECONCILIATION.md",
+        "programme/decisions/DEC-MD-GR1-DEPENDENCY-SEMANTICS.yaml"
+      ],
+      "verification": [
+        "Cursor cannot authorise progression; UNKNOWN cannot authorise progression; production remains unauthorised"
+      ]
+    },
+    {
       "id": "EOS-S01",
       "product": "EVENT_OS",
       "title": "Event OS Slice 1 \u2014 Platform foundation (identity, clients, events, design system, staging-only)",
@@ -442,6 +476,9 @@
       "dependsOn": [
         "MD-CT0"
       ],
+      "dependencyKinds": {
+        "MD-CT0": "PROGRESSION"
+      },
       "canonicalRefs": [
         "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
         "MDOS/slice1/"
@@ -3453,6 +3490,12 @@
         "MD-PR-S003"
       ],
       "notes": "Successor human-verification closeout. Not a historical CT native ID."
+    },
+    "MD-GR1": {
+      "prompt_control_ids": [
+        "MD-PR-S006"
+      ],
+      "notes": "Successor dependency-semantics reconciliation. Not a historical CT native ID."
     }
   }
 }

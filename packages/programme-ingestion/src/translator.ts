@@ -189,4 +189,7 @@ export function assertsNoAcceptance(events: ProgrammeEvent[]): void {
   if (events.some((event) => event.eventType === "ACCEPTANCE_RECORDED")) {
     throw new Error("ingestion must never emit ACCEPTANCE_RECORDED");
   }
+  if (events.some((event) => event.eventType === "PROGRESSION_AUTHORISED")) {
+    throw new Error("ingestion must never emit PROGRESSION_AUTHORISED");
+  }
 }

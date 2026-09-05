@@ -104,6 +104,7 @@ describe("programme store", () => {
         openItems: {},
         gates: {},
         decisions: {},
+        progressions: {},
       },
       view: {
         snapshotId: "SNAP-1",
@@ -147,6 +148,7 @@ describe("programme store", () => {
             openItems: {},
             gates: {},
             decisions: {},
+            progressions: {},
           },
           view: store.getSnapshot("SNAP-1")!.view,
         }),

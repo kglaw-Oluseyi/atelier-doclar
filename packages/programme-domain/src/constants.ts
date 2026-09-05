@@ -85,8 +85,10 @@ export const SLICE_ID_PATTERN = /^[A-Z]+-[A-Z0-9-]+$/;
 export const COMMIT_SHA_PATTERN = /^[a-f0-9]{40}$/;
 export const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 
-/** Acceptance authority values that must never be treated as a named reviewer. */
+/** Acceptance and progression authority values that must never be treated as a named reviewer. */
 export const RESERVED_ACCEPTANCE_AUTHORITIES = ["UNKNOWN", "Cursor", "cursor"] as const;
+
+export const DEPENDENCY_KINDS = ["ACCEPTANCE", "PROGRESSION", "GATE"] as const;
 
 export const PRODUCT_ORDER = new Map<string, number>(
   PRODUCT_CODES.map((code, index) => [code, index]),

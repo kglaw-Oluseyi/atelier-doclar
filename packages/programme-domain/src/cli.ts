@@ -132,7 +132,9 @@ function runProject(root: string | undefined, json: boolean): number {
         `MD-FC1=${view.statuses["MD-FC1"] ?? "-"}`,
         `MD-LV1=${view.statuses["MD-LV1"] ?? "-"}`,
         `MD-HV1=${view.statuses["MD-HV1"] ?? "-"}`,
+        `MD-GR1=${view.statuses["MD-GR1"] ?? "-"}`,
         `EOS-S01=${view.statuses["EOS-S01"] ?? "-"}`,
+        `EOS-S02=${view.statuses["EOS-S02"] ?? "-"}`,
         "",
       ].join("\n"),
     );

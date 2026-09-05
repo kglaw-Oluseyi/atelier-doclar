@@ -1,3 +1,4 @@
+import type { ProgressionAuthorisation } from "./dependencies.js";
 import type { Check, Decision, EvidenceRef, Gate, OpenItem, Phase, Product, SliceManifest, SliceRecord, WorkStatus } from "./schemas.js";
 
 export interface SliceFacts {
@@ -27,6 +28,7 @@ export interface ProgrammeProjection {
   openItems: Record<string, OpenItem>;
   gates: Record<string, Gate>;
   decisions: Record<string, Decision>;
+  progressions: Record<string, ProgressionAuthorisation>;
 }
 
 export interface DeclarationBaseline {

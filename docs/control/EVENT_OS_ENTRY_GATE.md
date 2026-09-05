@@ -51,3 +51,7 @@ These remain OPEN. They are genuine later-DAG constraints. They do **not** keep 
 - Begin Event OS product code.
 - Manufacture `ACCEPTED` for MD-B0–MD-CT9, MD-FC1, MD-LV1 or MD-HV1.
 - Treat technical review, live deployment, or CEO human inspection as production authorisation.
+
+## MD-GR1 additive note
+
+The Foundation → EOS-S01 relationship is now an explicit `PROGRESSION` prerequisite, not an `ACCEPTANCE` prerequisite. That does not accept EOS-S01. EOS-S01 still lacks seed `COMMIT_LINKED` / immutable COMMIT evidence; the successor acceptance step must record that evidence normally. EOS-S02 remains gated on formal EOS-S01 acceptance.

@@ -51,7 +51,7 @@ export function sortOpenItems(items: OpenItem[]): OpenItem[] {
 }
 
 export function normalizeManifest(manifest: SliceManifest): SliceManifest {
-  return {
+  const normalized: SliceManifest = {
     ...manifest,
     dependsOn: [...manifest.dependsOn].sort(compareIds),
     canonicalRefs: [...manifest.canonicalRefs],
@@ -60,6 +60,12 @@ export function normalizeManifest(manifest: SliceManifest): SliceManifest {
     expectedFiles: [...manifest.expectedFiles],
     verification: [...manifest.verification],
   };
+  if (manifest.dependencyKinds) {
+    normalized.dependencyKinds = Object.fromEntries(
+      Object.entries(manifest.dependencyKinds).sort(([left], [right]) => compareIds(left, right)),
+    );
+  }
+  return normalized;
 }
 
 export function normalizeRecord(record: SliceRecord): SliceRecord {

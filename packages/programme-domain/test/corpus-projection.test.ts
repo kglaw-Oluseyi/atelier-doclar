@@ -18,7 +18,7 @@ describe("CT0/CT1 corpus projection", () => {
       engine.append(event);
     }
     const statuses = calculateAllStatuses(engine.projectionAt());
-    assert.equal(baseline.manifests.length, 83);
+    assert.equal(baseline.manifests.length, 84);
     assert.equal(baseline.decisions.length > 0, true);
     assert.equal(statuses.get("MD-B0"), "IN_REVIEW");
     assert.equal(statuses.get("MD-CT0"), "IN_REVIEW");
@@ -34,7 +34,9 @@ describe("CT0/CT1 corpus projection", () => {
     assert.equal(statuses.get("MD-FC1"), "IN_REVIEW");
     assert.equal(statuses.get("MD-LV1"), "IN_REVIEW");
     assert.equal(statuses.get("MD-HV1"), "IN_REVIEW");
+    assert.equal(statuses.get("MD-GR1"), "IN_REVIEW");
     assert.equal(statuses.get("EOS-S01"), "IN_REVIEW");
+    assert.equal(statuses.get("EOS-S02"), "NOT_STARTED");
     for (const [id, status] of statuses) {
       assert.notEqual(status, "ACCEPTED", `${id} must not be ACCEPTED`);
     }

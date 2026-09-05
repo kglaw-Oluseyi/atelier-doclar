@@ -42,7 +42,7 @@ export function calculateOutstandingWork(
     const facts = projection.slices[manifest.id];
     if (status !== "ACCEPTED" && status !== "SUPERSEDED") {
       unacceptedMandatorySlices.push(manifest.id);
-      if (dependenciesSatisfied(manifest, statuses, projection.gates)) {
+      if (dependenciesSatisfied(manifest, statuses, projection.gates, projection.progressions)) {
         unlockedUnacceptedSlices.push(manifest.id);
       }
     }

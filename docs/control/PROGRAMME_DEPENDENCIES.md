@@ -9,11 +9,25 @@
 
 | Measure | Value |
 |---------|-------|
-| Nodes (planning slices) | 80 |
-| Edges | 87 |
+| Nodes (planning slices) | 84 |
+| Edges | 91 |
 | Unknown dependencies | 0 |
 | Cycles | **0** |
 | Verdict | **NO_CYCLES** |
+
+Current counts are the executable `pnpm programme:validate` result after MD-GR1. Historical CT0 figures of 80/87 are superseded by later Foundation closeout and Event OS planning slices; they were not rewritten in ratified handover files.
+
+## Dependency kinds (MD-GR1)
+
+`dependsOn` remains the DAG. An optional `dependencyKinds` map declares how each edge is satisfied:
+
+| Kind | Default? | Satisfied by |
+|------|----------|--------------|
+| `ACCEPTANCE` | Yes, for undeclared slice edges | Predecessor `ACCEPTED` |
+| `PROGRESSION` | Only when declared | `PROGRESSION_AUTHORISED` for that exact pair |
+| `GATE` | Undeclared gate IDs | Named gate `APPROVED` |
+
+EOS-S01 → MD-CT0 is the first declared `PROGRESSION` edge. EOS-S02 → EOS-S01 remains `ACCEPTANCE`. See `docs/control/DEPENDENCY_SEMANTICS_RECONCILIATION.md`.
 
 If a future slice adds a mutual edge (for example Event OS Slice 8 ↔ Runtime R-series as required predecessors of each other), that is a blocker, not a display issue.
 

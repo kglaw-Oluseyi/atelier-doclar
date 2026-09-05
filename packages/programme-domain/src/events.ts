@@ -23,6 +23,7 @@ export const PROGRAMME_EVENT_TYPES = [
   "OPEN_ITEM_STATUS_CHANGED",
   "REVIEW_REQUESTED",
   "ACCEPTANCE_RECORDED",
+  "PROGRESSION_AUTHORISED",
   "GATE_STATUS_CHANGED",
   "DECISION_RECORDED",
   "SNAPSHOT_PRODUCED",
@@ -99,6 +100,20 @@ export const ProgrammeEventSchema = z.discriminatedUnion("eventType", [
       .strict(),
   ),
   eventObject("REVIEW_REQUESTED", z.object({ summary: z.string().min(1) }).strict()),
+  eventObject(
+    "PROGRESSION_AUTHORISED",
+    z
+      .object({
+        predecessorId: z.string().min(1),
+        successorId: z.string().min(1),
+        authorisedAt: IsoDatetimeSchema,
+        authorisedBy: z.string().min(1),
+        authorityRole: z.enum(ACCEPTANCE_AUTHORITY_ROLES),
+        evidenceIds: z.array(z.string().min(1)).min(1),
+        reason: z.string().min(1),
+      })
+      .strict(),
+  ),
   eventObject(
     "ACCEPTANCE_RECORDED",
     z
@@ -192,6 +207,24 @@ export function parseProgrammeEvent(input: unknown): ProgrammeEvent {
   }
 
   const event = parsed.data;
+  if (event.eventType === "PROGRESSION_AUTHORISED") {
+    if (reserved.has(event.payload.authorisedBy) || reserved.has(event.actor.id)) {
+      throw new ProgrammeEventError(
+        "SCHEMA_INVALID",
+        "authorisedBy must be a named authority; UNKNOWN/Cursor are forbidden",
+        reserved.has(event.actor.id) ? "actor.id" : "payload.authorisedBy",
+        reserved.has(event.actor.id) ? event.actor.id : event.payload.authorisedBy,
+      );
+    }
+    if (event.actor.role === "IMPLEMENTER" || event.actor.role === "SYSTEM") {
+      throw new ProgrammeEventError(
+        "SCHEMA_INVALID",
+        "progression cannot be authorised by an implementer or system actor",
+        "actor.role",
+        event.actor.role,
+      );
+    }
+  }
   if (event.eventType === "ACCEPTANCE_RECORDED") {
     if (reserved.has(event.payload.acceptedBy)) {
       throw new ProgrammeEventError(

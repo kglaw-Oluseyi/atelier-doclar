@@ -1,0 +1,27 @@
+# Slice manifest (declaration). Successor dependency-semantics reconciliation — not a historical CT native ID.
+id: MD-GR1
+product: FOUNDATION
+title: Dependency Semantics Reconciliation
+phaseId: PH-FOUNDATION
+order: 14
+dependsOn:
+  - MD-HV1
+canonicalRefs:
+  - docs/control/DEPENDENCY_SEMANTICS_RECONCILIATION.md
+outcome: Programme dependency kinds distinguish ACCEPTANCE, PROGRESSION and GATE; Foundation remains unaccepted; EOS-S01 progression authorised; production not authorised
+entryCriteria:
+  - EOS-S01 implemented and IN_REVIEW
+  - Foundation slices remain IN_REVIEW
+  - Acceptance blocked only by coarse ACCEPTED-predecessor rule
+exitCriteria:
+  - Explicit dependencyKinds on SliceManifest
+  - PROGRESSION_AUTHORISED is an immutable governed event
+  - EOS-S01 Foundation edge classified PROGRESSION without deleting lineage
+  - EOS-S02 remains gated on EOS-S01 ACCEPTANCE
+  - No Foundation slice marked ACCEPTED
+  - Protected production gates remain unsigned
+expectedFiles:
+  - docs/control/DEPENDENCY_SEMANTICS_RECONCILIATION.md
+  - programme/decisions/DEC-MD-GR1-DEPENDENCY-SEMANTICS.yaml
+verification:
+  - Cursor cannot authorise progression; UNKNOWN cannot authorise progression; production remains unauthorised

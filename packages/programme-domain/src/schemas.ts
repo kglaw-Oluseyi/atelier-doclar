@@ -7,6 +7,7 @@ import {
   GATE_STATUSES,
   OPEN_ITEM_STATUSES,
   PRODUCT_CODES,
+  DEPENDENCY_KINDS,
   RESERVED_ACCEPTANCE_AUTHORITIES,
   SEVERITIES,
   SHA256_PATTERN,
@@ -24,6 +25,7 @@ export const OpenItemStatusSchema = z.enum(OPEN_ITEM_STATUSES);
 export const CheckResultSchema = z.enum(CHECK_RESULTS);
 export const DecisionDispositionSchema = z.enum(DECISION_DISPOSITIONS);
 export const TimelineEventKindSchema = z.enum(TIMELINE_EVENT_KINDS);
+export const DependencyKindSchema = z.enum(DEPENDENCY_KINDS);
 
 export const SliceIdSchema = z.string().regex(SLICE_ID_PATTERN, {
   message: "Slice ID must match ^[A-Z]+-[A-Z0-9-]+$",
@@ -98,7 +100,9 @@ export const PhaseSchema = z
 
 /**
  * Declarative slice work contract.
- * Authoritative shape: slice-manifest.schema.json (additionalProperties: false).
+ * Historical JSON Schema (slice-manifest.schema.json) remains frozen with
+ * additionalProperties: false. The executable Zod schema may carry optional
+ * dependencyKinds; that field is declaration-only and is not copied onto SliceRecord.
  */
 export const SliceManifestSchema = z
   .object({
@@ -114,6 +118,7 @@ export const SliceManifestSchema = z
     exitCriteria: z.array(z.string()).min(1),
     expectedFiles: z.array(z.string()),
     verification: z.array(z.string()).min(1),
+    dependencyKinds: z.record(z.string(), DependencyKindSchema).optional(),
   })
   .strict()
   .superRefine((value, ctx) => {
@@ -125,6 +130,17 @@ export const SliceManifestSchema = z
           path: ["dependsOn", index],
           message: `dependency ID is syntactically invalid: ${dep}`,
         });
+      }
+    }
+    if (value.dependencyKinds) {
+      for (const key of Object.keys(value.dependencyKinds)) {
+        if (!value.dependsOn.includes(key)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["dependencyKinds", key],
+            message: `dependencyKinds key ${key} is not declared in dependsOn`,
+          });
+        }
       }
     }
   });
@@ -430,6 +446,7 @@ export type Severity = z.infer<typeof SeveritySchema>;
 export type EvidenceKind = z.infer<typeof EvidenceKindSchema>;
 export type Product = z.infer<typeof ProductSchema>;
 export type Phase = z.infer<typeof PhaseSchema>;
+export type DependencyKind = z.infer<typeof DependencyKindSchema>;
 export type SliceManifest = z.infer<typeof SliceManifestSchema>;
 export type EvidenceRef = z.infer<typeof EvidenceRefSchema>;
 export type CommitRef = z.infer<typeof CommitRefSchema>;

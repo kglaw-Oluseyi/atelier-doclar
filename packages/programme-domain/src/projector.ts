@@ -1,3 +1,4 @@
+import { progressionKey } from "./dependencies.js";
 import type { ProgrammeEvent } from "./events.js";
 import type { DeclarationBaseline, ProgrammeProjection, SliceFacts } from "./projection-types.js";
 import type { OpenItem } from "./schemas.js";
@@ -49,6 +50,7 @@ export function createInitialProjection(baseline: DeclarationBaseline, updatedAt
     openItems,
     gates,
     decisions,
+    progressions: {},
   };
 }
 
@@ -128,6 +130,18 @@ export function applyEvent(current: ProgrammeProjection, event: ProgrammeEvent):
         touch(facts, event.occurredAt, revision);
       }
       break;
+    case "PROGRESSION_AUTHORISED": {
+      next.progressions[progressionKey(event.payload.predecessorId, event.payload.successorId)] = {
+        predecessorId: event.payload.predecessorId,
+        successorId: event.payload.successorId,
+        authorisedAt: event.payload.authorisedAt,
+        authorisedBy: event.payload.authorisedBy,
+        authorityRole: event.payload.authorityRole,
+        evidenceIds: [...event.payload.evidenceIds],
+        reason: event.payload.reason,
+      };
+      break;
+    }
     case "GATE_STATUS_CHANGED": {
       const gate = next.gates[event.payload.gateId];
       if (gate) {

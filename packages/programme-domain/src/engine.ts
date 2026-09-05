@@ -1,3 +1,4 @@
+import { resolveDependencyKind } from "./dependencies.js";
 import { ProgrammeEventError } from "./event-errors.js";
 import { parseProgrammeEvent } from "./events.js";
 import { replay, replayFrom } from "./projector.js";
@@ -33,6 +34,34 @@ export class ProgrammeEngine {
         "causationId",
         event.causationId,
       );
+    }
+    if (event.eventType === "PROGRESSION_AUTHORISED") {
+      const successor = this.baseline.manifests.find((item) => item.id === event.payload.successorId);
+      const gates = Object.fromEntries(this.baseline.gates.map((gate) => [gate.id, gate]));
+      if (!successor) {
+        throw new ProgrammeEventError(
+          "SCHEMA_INVALID",
+          `progression successor ${event.payload.successorId} is not a declared slice`,
+          "payload.successorId",
+          event.payload.successorId,
+        );
+      }
+      if (!successor.dependsOn.includes(event.payload.predecessorId)) {
+        throw new ProgrammeEventError(
+          "SCHEMA_INVALID",
+          `progression predecessor ${event.payload.predecessorId} is not a dependsOn edge of ${event.payload.successorId}`,
+          "payload.predecessorId",
+          event.payload.predecessorId,
+        );
+      }
+      if (resolveDependencyKind(successor, event.payload.predecessorId, gates) !== "PROGRESSION") {
+        throw new ProgrammeEventError(
+          "SCHEMA_INVALID",
+          "progression authorisation cannot satisfy an ACCEPTANCE or GATE dependency",
+          "payload.predecessorId",
+          event.payload.predecessorId,
+        );
+      }
     }
     if (event.eventType === "CORRECTION_APPENDED" && !this.store.getById(event.payload.correctsEventId)) {
       throw new ProgrammeEventError(

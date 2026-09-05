@@ -8,6 +8,7 @@ export {
   PRODUCT_CODES,
   WORK_STATUSES,
   GATE_STATUSES,
+  DEPENDENCY_KINDS,
   SLICE_ID_PATTERN,
   COMMIT_SHA_PATTERN,
 } from "./constants.js";
@@ -50,11 +51,18 @@ export {
   type Product,
   type ProductCode,
   type ProgrammeSnapshot,
+  type DependencyKind,
   type SliceManifest,
   type SliceRecord,
   type TimelineEvent,
   type WorkStatus,
 } from "./schemas.js";
+export {
+  progressionKey,
+  progressionSatisfied,
+  resolveDependencyKind,
+  type ProgressionAuthorisation,
+} from "./dependencies.js";
 export {
   assertMappingConsistency,
   emptyOperationalState,
@@ -92,11 +100,13 @@ export {
   calculateAllStatuses,
   calculateSliceStatus,
   acceptanceSatisfied,
+  predecessorSatisfied,
+  dependenciesSatisfied,
 } from "./status.js";
 export { calculateOutstandingWork, calculatePercentage } from "./outstanding.js";
 export { generateControlSnapshot, projectSliceRecords } from "./snapshot.js";
 export { ProgrammeEngine, createEngine } from "./engine.js";
-export { corpusSeedEvents, loadCorpusBaseline, CORPUS_SEED_TIME, CT3_SEED_TIME } from "./seed.js";
+export { corpusSeedEvents, loadCorpusBaseline, CORPUS_SEED_TIME, CT3_SEED_TIME, GR1_SEED_TIME } from "./seed.js";
 export type {
   ControlSnapshot,
   DeclarationBaseline,

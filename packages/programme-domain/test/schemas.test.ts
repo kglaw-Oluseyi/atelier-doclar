@@ -92,6 +92,29 @@ describe("SliceManifest schema", () => {
         parsed.error.issues.some((issue) => issue.code === "unrecognized_keys" && issue.keys.includes("status")),
     );
   });
+
+  it("accepts an explicit dependencyKinds declaration for a dependsOn edge", () => {
+    const parsed = SliceManifestSchema.safeParse(
+      smallestManifest({
+        dependsOn: ["MD-CT0"],
+        dependencyKinds: { "MD-CT0": "PROGRESSION" },
+      }),
+    );
+    assert.equal(parsed.success, true);
+  });
+
+  it("rejects a dependencyKinds key that is not in dependsOn", () => {
+    const parsed = SliceManifestSchema.safeParse(
+      smallestManifest({
+        dependsOn: ["MD-CT0"],
+        dependencyKinds: { "MD-MISSING": "PROGRESSION" },
+      }),
+    );
+    assert.equal(parsed.success, false);
+    assert.ok(
+      parsed.success === false && parsed.error.issues.some((issue) => issue.path.includes("dependencyKinds")),
+    );
+  });
 });
 
 describe("SliceRecord schema", () => {

@@ -170,3 +170,20 @@ This is live-browser verification evidence. It is not formal slice acceptance, i
 
 Acceptance of EOS-S01 still requires a named reviewer. Not ACCEPTED. Production not authorised.
 
+## MD-GR1
+
+**Prompt Control ID:** `MD-PR-S006`  
+**Native ID:** `GR1`  
+**Slice ID:** `MD-GR1`
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-GR1-RECONCILIATION | DOCUMENT | Dependency semantics reconciliation | `docs/control/DEPENDENCY_SEMANTICS_RECONCILIATION.md` |
+| EV-GR1-DECISION | DECISION | Controlling semantic decision | `programme/decisions/DEC-MD-GR1-DEPENDENCY-SEMANTICS.yaml` |
+| EV-GR1-ADR | DOCUMENT | ADR for progression semantics | `docs/control/ADR_DEPENDENCY_SEMANTICS.md` |
+| EV-GR1-ENTRY-GATE | DOCUMENT | Event OS entry / progression authority | `docs/control/EVENT_OS_ENTRY_GATE.md` |
+| EV-GR1-HUMAN-VERIFY | DOCUMENT | CEO human live verification PASS | `docs/control/HUMAN_LIVE_VERIFICATION.md` |
+| EV-GR1-TESTS | TEST | Dependency-semantics unit and corpus tests | `packages/programme-domain/test/dependency-semantics.test.ts` |
+
+Progression authorisation is not formal slice acceptance and not production authorisation. EOS-S01 still lacks seed `COMMIT_LINKED` / immutable COMMIT evidence.
+

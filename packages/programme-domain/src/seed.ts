@@ -18,6 +18,7 @@ export const FC1_SEED_TIME = "2026-09-05T16:10:00Z";
 export const LV1_SEED_TIME = "2026-09-05T17:10:00Z";
 export const HV1_SEED_TIME = "2026-09-05T18:10:00Z";
 export const EOS_S01_SEED_TIME = "2026-09-05T19:10:00Z";
+export const GR1_SEED_TIME = "2026-09-05T20:10:00Z";
 export const B0_COMMIT = "f7abb431be9a15ab730b3fdd16baa8e83776c170";
 
 const B0_EVIDENCE: EvidenceRef = {
@@ -50,6 +51,7 @@ function envelope(
     | "MD-FC1"
     | "MD-LV1"
     | "MD-HV1"
+    | "MD-GR1"
     | "EOS-S01",
   occurredAt: string,
   payload: ProgrammeEvent["payload"],
@@ -213,6 +215,99 @@ export function corpusSeedEvents(): ProgrammeEvent[] {
         openItemId: "OI-FC1-004",
         status: "RESOLVED",
         blocker: false,
+      },
+    }),
+    envelope("EVT-SEED-GR1-IMPL", "SLICE_IMPLEMENTATION_OBSERVED", "MD-GR1", GR1_SEED_TIME, {
+      summary: "Dependency semantics reconciled; Foundation slices remain unaccepted; production not authorised",
+    }),
+    envelope("EVT-SEED-GR1-REVIEW", "REVIEW_REQUESTED", "MD-GR1", GR1_SEED_TIME, {
+      summary: "MD-GR1 in review; not accepted; production not authorised",
+    }),
+    envelope("EVT-SEED-GR1-EV-RECON", "EVIDENCE_ATTACHED", "MD-GR1", GR1_SEED_TIME, {
+      evidence: {
+        id: "EV-GR1-RECONCILIATION",
+        kind: "DOCUMENT",
+        uri: "docs/control/DEPENDENCY_SEMANTICS_RECONCILIATION.md",
+        createdAt: GR1_SEED_TIME,
+        sourceSystem: "programme-control",
+        immutable: true,
+        summary: "MD-GR1 dependency semantics reconciliation record",
+      },
+    }),
+    envelope("EVT-SEED-GR1-EV-DEC", "EVIDENCE_ATTACHED", "MD-GR1", GR1_SEED_TIME, {
+      evidence: {
+        id: "EV-GR1-DECISION",
+        kind: "DECISION",
+        uri: "programme/decisions/DEC-MD-GR1-DEPENDENCY-SEMANTICS.yaml",
+        createdAt: GR1_SEED_TIME,
+        sourceSystem: "programme-control",
+        immutable: true,
+        summary: "DEC-MD-GR1-DEPENDENCY-SEMANTICS controlling decision",
+      },
+    }),
+    envelope(
+      "EVT-SEED-EOS-S01-EV-ENTRY",
+      "EVIDENCE_ATTACHED",
+      "EOS-S01",
+      GR1_SEED_TIME,
+      {
+        evidence: {
+          id: "EV-GR1-ENTRY-GATE",
+          kind: "DOCUMENT",
+          uri: "docs/control/EVENT_OS_ENTRY_GATE.md",
+          createdAt: GR1_SEED_TIME,
+          sourceSystem: "programme-control",
+          immutable: true,
+          summary: "Event OS entry gate: Foundation progression authorised; slices not accepted",
+        },
+      },
+      "EVENT_OS",
+    ),
+    envelope(
+      "EVT-SEED-EOS-S01-EV-HV1",
+      "EVIDENCE_ATTACHED",
+      "EOS-S01",
+      GR1_SEED_TIME,
+      {
+        evidence: {
+          id: "EV-GR1-HUMAN-VERIFY",
+          kind: "DOCUMENT",
+          uri: "docs/control/HUMAN_LIVE_VERIFICATION.md",
+          createdAt: GR1_SEED_TIME,
+          sourceSystem: "programme-control",
+          immutable: true,
+          summary: "CEO human live verification PASS; not formal acceptance or production authorisation",
+        },
+      },
+      "EVENT_OS",
+    ),
+    parseProgrammeEvent({
+      eventId: "EVT-SEED-GR1-PROGRESSION-CT0-EOS-S01",
+      eventType: "PROGRESSION_AUTHORISED",
+      schemaVersion: 1,
+      aggregateType: "programme",
+      aggregateId: "MD-CT0->EOS-S01",
+      product: "EVENT_OS",
+      sliceId: "EOS-S01",
+      occurredAt: GR1_SEED_TIME,
+      recordedAt: GR1_SEED_TIME,
+      actor: { id: "CEO", role: "CEO" },
+      source: "ceo-progression-authorisation",
+      idempotencyKey: "seed:EVT-SEED-GR1-PROGRESSION-CT0-EOS-S01",
+      payload: {
+        predecessorId: "MD-CT0",
+        successorId: "EOS-S01",
+        authorisedAt: GR1_SEED_TIME,
+        authorisedBy: "CEO",
+        authorityRole: "CEO",
+        evidenceIds: [
+          "EV-GR1-RECONCILIATION",
+          "EV-GR1-DECISION",
+          "EV-GR1-ENTRY-GATE",
+          "EV-GR1-HUMAN-VERIFY",
+        ],
+        reason:
+          "Foundation technically reviewed, closed out, live-deployed and CEO-verified; Event OS entry was authorised without formal Foundation acceptance; production remains unauthorised",
       },
     }),
   ];

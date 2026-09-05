@@ -193,3 +193,21 @@
 | No Railway | No Event OS deploy; Control Tower live deployment unchanged |
 | UI foundation | `apps/event-os` shell, clients, events, audit, access, health |
 | Do not accept | EOS-S01 is IN_REVIEW only |
+
+## MD-GR1
+
+**Prompt Control ID:** `MD-PR-S006`  
+**Slice ID:** `MD-GR1`
+
+| Requirement | Implementation |
+|-------------|----------------|
+| First-class dependency kinds | `SliceManifest.dependencyKinds` + `resolveDependencyKind` |
+| Legacy default remains ACCEPTANCE | Undeclared slice edges still require `ACCEPTED` |
+| PROGRESSION is not IN_REVIEW | `progressionSatisfied` requires `PROGRESSION_AUTHORISED` |
+| Named authority only | Cursor / UNKNOWN / IMPLEMENTER / SYSTEM rejected |
+| Do not special-case EOS-S01 | No EOS-S01 or MD-CT0 branch in `calculateSliceStatus` |
+| Keep the DAG edge | `EOS-S01.dependsOn` remains `[MD-CT0]` |
+| Do not accept Foundation | Foundation slices remain `IN_REVIEW`; accepted = 0 |
+| Do not loosen EOS-S02 | Default ACCEPTANCE on EOS-S01; remains `NOT_STARTED` |
+| Do not authorise production | Protected gates unsigned; `productionAuthorised` false |
+| Document EOS-S01 COMMIT gap | `docs/control/DEPENDENCY_SEMANTICS_RECONCILIATION.md` |
