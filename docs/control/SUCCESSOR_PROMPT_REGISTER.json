@@ -1,6 +1,6 @@
 {
   "scheme": "MD-PR-SNNN successor accountability IDs; historical MD-PR-NNNN remain intact",
-  "generated_at": "2026-09-06T01:10:00Z",
+  "generated_at": "2026-09-05T19:20:00Z",
   "notes": "Do not impersonate historical Control Tower prompt IDs. MD-PR-0011 is already used.",
   "entries": [
     {
@@ -82,6 +82,14 @@
       "product": "EVENT_OS",
       "title": "EOS-S03 Formal Technical Acceptance Record",
       "authorising_instruction": "Record formal technical acceptance of EOS-S03 after independent AI CTO review; do not start EOS-S04 implementation or authorise production; next action is Event OS S01–S03 live-verification milestone"
+    },
+    {
+      "prompt_control_id": "MD-PR-S012",
+      "native_id": "EOS-LV1",
+      "slice_id": "EOS-S03",
+      "product": "EVENT_OS",
+      "title": "Event OS S01–S03 Controlled Live Deployment and Milestone Verification",
+      "authorising_instruction": "Deploy accepted Event OS S01–S03 to Railway project atelier-doclar for controlled non-production live verification; do not implement EOS-S04 or authorise production; CEO human verification remains PENDING until the user reports"
     }
   ]
 }

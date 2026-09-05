@@ -1,8 +1,8 @@
 # Current State
 
-**Updated:** EOS-S03 formal technical acceptance  
-**Prompt Control ID:** `MD-PR-S011`  
-**Slice ID:** `EOS-S03`
+**Updated:** Event OS S01–S03 controlled live verification  
+**Prompt Control ID:** `MD-PR-S012`  
+**Milestone:** `EOS-LV1`
 
 MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is ACCEPTED. EOS-S02 is ACCEPTED. EOS-S03 is ACCEPTED. Accepted count is 3. EOS-S04 is READY / technically eligible and is not authorised for implementation. Independent, specialist and CEO production gates remain unsigned.
 
@@ -30,11 +30,14 @@ MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is A
 **EOS-S03 ACCEPTED: YES**  
 **EOS-S04 TECHNICALLY ELIGIBLE: YES**  
 **EOS-S04 IMPLEMENTATION AUTHORISED: NO**  
-**HUMAN LIVE-VERIFICATION CHECKPOINT RECOMMENDED: YES**
+**EVENT OS S01-S03 LIVE DEPLOYED: YES**  
+**EVENT OS AUTOMATED LIVE VERIFICATION: PASS**  
+**EVENT OS CEO HUMAN LIVE VERIFICATION: PENDING**
 
 Live Control Tower URL: `https://control-tower-production-dbc4.up.railway.app/programme`  
-Railway project: `atelier-doclar` only. This slice did not deploy.
+Live Event OS URL: `https://event-os-production-bc8d.up.railway.app`  
+Railway project: `atelier-doclar` only.
 
 `OI-FC1-004` is `RESOLVED_BY_EVENT_OS_ARCHITECTURE`. This is not production authorisation and does not accept any Foundation slice.
 
-EOS-S03 RSVP and guest self-service are formally accepted. The next controlled action is Event OS S01–S03 controlled live deployment and milestone verification. EOS-S04 is not authorised for implementation. Production is not authorised.
+Event OS S01–S03 are formally accepted and deployed for controlled live verification. CEO human verification is PENDING. EOS-S04 is not authorised for implementation. Production is not authorised.

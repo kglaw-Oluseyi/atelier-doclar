@@ -236,3 +236,15 @@ ACCEPTED under `MD-PR-S009` by `ChatGPT / AI CTO` at `2026-09-05T23:10:00Z`. Acc
 
 ACCEPTED under `MD-PR-S011` by `ChatGPT / AI CTO` at `2026-09-06T01:10:00Z`. Accepted implementation remains `bed7cebeb14e731c1d0e8a289ceb7cfa21f546fe`. Production not authorised. EOS-S04 is not authorised for implementation.
 
+## EOS-LV1
+
+**Prompt Control ID:** `MD-PR-S012`  
+**Milestone:** `EOS-LV1`
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-EOS-LV1-LIVE | DOCUMENT | Event OS S01–S03 live verification record | `docs/control/EVENT_OS_S01_S03_LIVE_VERIFICATION.md` |
+| EV-EOS-LV1-URL | DOCUMENT | Live Event OS HTTPS origin | `https://event-os-production-bc8d.up.railway.app` |
+
+Automated live verification PASS. CEO human verification PENDING. Production not authorised.
+

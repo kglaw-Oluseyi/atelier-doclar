@@ -68,8 +68,8 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 
 | Band | Content |
 |------|---------|
-| Now | EOS-S03 ACCEPTED; Event OS S01–S03 live-verification milestone is the next controlled action |
-| Next | Event OS S01–S03 controlled live deployment and milestone verification; do not start EOS-S04 |
+| Now | Event OS S01–S03 live-deployed; automated verification PASS; CEO human verification PENDING |
+| Next | CEO human milestone verification of Event OS S01–S03; do not start EOS-S04 |
 | Later | Event OS S01 after a new authorised instruction; Runtime after Event OS foundations |
 | Held | All 693 product/recon prompts except CT0/CT1 wrappers |
 | External | Independent, specialist, venue, CEO gates — unsigned |
