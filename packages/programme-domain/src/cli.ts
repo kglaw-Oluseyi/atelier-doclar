@@ -135,6 +135,7 @@ function runProject(root: string | undefined, json: boolean): number {
         `MD-GR1=${view.statuses["MD-GR1"] ?? "-"}`,
         `EOS-S01=${view.statuses["EOS-S01"] ?? "-"}`,
         `EOS-S02=${view.statuses["EOS-S02"] ?? "-"}`,
+        `reviewer=${view.slices.find((slice) => slice.id === "EOS-S01")?.acceptedBy ?? "-"}`,
         "",
       ].join("\n"),
     );

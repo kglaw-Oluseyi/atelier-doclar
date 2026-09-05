@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   calculateAllStatuses,
   corpusSeedEvents,
+  corpusSeedEventsThroughProgression,
   createEngine,
   loadCorpusBaseline,
   parseProgrammeEvent,
@@ -50,11 +51,11 @@ function progressionEvent(input: {
   });
 }
 
-function seededCorpusEngine() {
+function seededCorpusEngine(events = corpusSeedEvents()) {
   const { baseline } = loadCorpusBaseline();
   const store = new MemoryProgrammeStore();
   const engine = createEngine(store, baseline, CORPUS_SEED_TIME);
-  for (const event of corpusSeedEvents()) engine.append(event);
+  for (const event of events) engine.append(event);
   return { engine, baseline };
 }
 
@@ -240,7 +241,8 @@ describe("dependency semantics", () => {
       assert.notEqual(gate.status, "APPROVED", `${gate.id} must remain unsigned`);
     }
     assert.equal(view.gates.some((gate) => gate.status === "APPROVED"), false);
-    assert.equal(Object.values(view.statuses).filter((status) => status === "ACCEPTED").length, 0);
+    assert.equal(Object.values(view.statuses).filter((status) => status === "ACCEPTED").length, 1);
+    assert.equal(view.statuses["EOS-S01"], "ACCEPTED");
   });
 
   it("lets EOS-S01 satisfy its Foundation PROGRESSION prerequisite without mass acceptance", () => {
@@ -252,16 +254,16 @@ describe("dependency semantics", () => {
     const projection = engine.projectionAt();
     const statuses = calculateAllStatuses(projection);
     assert.equal(statuses.get("MD-CT0"), "IN_REVIEW");
-    assert.equal(statuses.get("EOS-S01"), "IN_REVIEW");
+    assert.equal(statuses.get("EOS-S01"), "ACCEPTED");
     assert.ok(projection.progressions[progressionKey("MD-CT0", "EOS-S01")]);
     for (const id of ["MD-B0", "MD-CT0", "MD-CT1", "MD-CT9", "MD-FC1", "MD-LV1", "MD-HV1", "MD-GR1"]) {
       assert.equal(statuses.get(id), "IN_REVIEW", `${id} must remain unaccepted`);
     }
-    assert.equal(Object.values(statuses).filter((status) => status === "ACCEPTED").length, 0);
+    assert.equal([...statuses.values()].filter((status) => status === "ACCEPTED").length, 1);
   });
 
   it("keeps EOS-S01 IN_REVIEW until its own valid acceptance evidence is recorded", () => {
-    const { engine } = seededCorpusEngine();
+    const { engine } = seededCorpusEngine(corpusSeedEventsThroughProgression());
     const before = calculateAllStatuses(engine.projectionAt());
     assert.equal(before.get("EOS-S01"), "IN_REVIEW");
     engine.append(
@@ -283,7 +285,7 @@ describe("dependency semantics", () => {
   });
 
   it("can accept EOS-S01 after COMMIT evidence without accepting Foundation; EOS-S02 then becomes READY", () => {
-    const { engine } = seededCorpusEngine();
+    const { engine } = seededCorpusEngine(corpusSeedEventsThroughProgression());
     engine.append(commit("EOS-S01", EOS_S01_COMMIT));
     engine.append(
       makeEvent({
@@ -322,7 +324,7 @@ describe("dependency semantics", () => {
   });
 
   it("keeps EOS-S02 ineligible until EOS-S01 is ACCEPTED", () => {
-    const { engine, baseline } = seededCorpusEngine();
+    const { engine, baseline } = seededCorpusEngine(corpusSeedEventsThroughProgression());
     const s02 = baseline.manifests.find((item) => item.id === "EOS-S02");
     assert.ok(s02);
     assert.deepEqual(s02.dependsOn, ["EOS-S01"]);
@@ -391,9 +393,9 @@ describe("dependency semantics", () => {
     ]) {
       assert.equal(view.statuses[id], "IN_REVIEW");
     }
-    assert.equal(view.statuses["EOS-S01"], "IN_REVIEW");
-    assert.equal(view.statuses["EOS-S02"], "NOT_STARTED");
-    assert.equal(Object.values(view.statuses).filter((status) => status === "ACCEPTED").length, 0);
+    assert.equal(view.statuses["EOS-S01"], "ACCEPTED");
+    assert.equal(view.statuses["EOS-S02"], "READY");
+    assert.equal(Object.values(view.statuses).filter((status) => status === "ACCEPTED").length, 1);
     assert.ok(view.outstanding.unacceptedMandatorySlices.includes("MD-CT2"));
     assert.ok(view.outstanding.blockingOpenItems.includes("OI-CT0-002"));
     assert.equal(view.outstanding.percentage.available, false);

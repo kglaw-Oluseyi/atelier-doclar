@@ -106,7 +106,19 @@ export {
 export { calculateOutstandingWork, calculatePercentage } from "./outstanding.js";
 export { generateControlSnapshot, projectSliceRecords } from "./snapshot.js";
 export { ProgrammeEngine, createEngine } from "./engine.js";
-export { corpusSeedEvents, loadCorpusBaseline, CORPUS_SEED_TIME, CT3_SEED_TIME, GR1_SEED_TIME } from "./seed.js";
+export {
+  corpusSeedEvents,
+  corpusSeedEventsThroughProgression,
+  loadCorpusBaseline,
+  CORPUS_SEED_TIME,
+  CT3_SEED_TIME,
+  GR1_SEED_TIME,
+  EOS_S01_ACCEPT_TIME,
+  EOS_S01_COMMIT,
+  EOS_S01_ACCEPTANCE_EVENT_ID,
+  EOS_S01_COMMIT_EVIDENCE_ID,
+  EOS_S01_REVIEWER,
+} from "./seed.js";
 export type {
   ControlSnapshot,
   DeclarationBaseline,

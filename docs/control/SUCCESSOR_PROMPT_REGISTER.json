@@ -1,6 +1,6 @@
 {
   "scheme": "MD-PR-SNNN successor accountability IDs; historical MD-PR-NNNN remain intact",
-  "generated_at": "2026-09-05T20:10:00Z",
+  "generated_at": "2026-09-05T21:10:00Z",
   "notes": "Do not impersonate historical Control Tower prompt IDs. MD-PR-0011 is already used.",
   "entries": [
     {
@@ -42,6 +42,14 @@
       "product": "FOUNDATION",
       "title": "Dependency Semantics Reconciliation",
       "authorising_instruction": "CEO-authorised correction of programme dependency kinds after EOS-S01 acceptance was blocked by the coarse ACCEPTED-predecessor rule"
+    },
+    {
+      "prompt_control_id": "MD-PR-S007",
+      "native_id": "S01-ACCEPT",
+      "slice_id": "EOS-S01",
+      "product": "EVENT_OS",
+      "title": "EOS-S01 Formal Technical Acceptance Record",
+      "authorising_instruction": "Record formal technical acceptance of EOS-S01 after MD-GR1 made the Foundation progression prerequisite valid; do not start EOS-S02 or authorise production"
     }
   ]
 }

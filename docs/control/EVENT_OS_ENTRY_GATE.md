@@ -6,7 +6,7 @@
 
 **EOS-S01 TECHNICALLY ELIGIBLE: YES**  
 **EOS-S01 EXECUTED: YES**  
-**EOS-S01 ACCEPTED: NO**
+**EOS-S01 ACCEPTED: YES** — formal technical acceptance recorded under `MD-PR-S007`. Production remains unauthorised.
 
 ## Required before EOS-S01 coding may be declared technically eligible
 

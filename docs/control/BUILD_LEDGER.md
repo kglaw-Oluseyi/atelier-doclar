@@ -18,5 +18,5 @@
 | MD-FC1 | MD-PR-S001 | FC1 | FOUNDATION | `e337eba83cfc41590f226f980772f848d827b6e3` | IN_REVIEW | Foundation closeout. Technically reviewed; not ACCEPTED. Production not authorised. |
 | MD-LV1 | MD-PR-S002 | LV1 | FOUNDATION | `b554da4f00cf7911bbccb8cac09a7a2ada7141d5` | IN_REVIEW | Live Railway deployment and automated verification. Human verification recorded in MD-HV1. Production not authorised. |
 | MD-HV1 | MD-PR-S003 | HV1 | FOUNDATION | `de29a916bab35ba476745a9fe8f52c0b61aa86d9` | IN_REVIEW | CEO human live verification PASS; issues NONE. Not ACCEPTED. Production not authorised. |
-| EOS-S01 | MD-PR-S004 | S01 | EVENT_OS | `b815268e939cfbd0fc33ce10df77f1c8a1374d52` | IN_REVIEW | Shared platform and Event OS foundation. Not ACCEPTED. Production not authorised. No Railway mutation. Foundation progression authorised in MD-GR1. COMMIT evidence still required before acceptance. |
-| MD-GR1 | MD-PR-S006 | GR1 | FOUNDATION | see git HEAD after MD-GR1 | IN_REVIEW | Dependency semantics reconciled. Foundation remains unaccepted. EOS-S02 remains ineligible. Production not authorised. |
+| EOS-S01 | MD-PR-S004 / MD-PR-S007 | S01 | EVENT_OS | `b815268e939cfbd0fc33ce10df77f1c8a1374d52` | ACCEPTED | Shared platform and Event OS foundation. Technically accepted by ChatGPT / AI CTO. Production not authorised. No Railway mutation. |
+| MD-GR1 | MD-PR-S006 | GR1 | FOUNDATION | `230b6a71ea254b42435949fcf9623f6c35b158fa` | IN_REVIEW | Dependency semantics reconciled. Foundation remains unaccepted. Production not authorised. |

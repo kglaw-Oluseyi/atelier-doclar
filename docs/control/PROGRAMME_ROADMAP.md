@@ -59,15 +59,15 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 | MD-LV1 | IN_REVIEW — live deployment; production unsigned |
 | MD-HV1 | IN_REVIEW — CEO human live verification PASS; not accepted |
 | MD-GR1 | IN_REVIEW — dependency semantics reconciled; Foundation unaccepted |
-| EOS-S01 | IN_REVIEW — shared platform foundation implemented; Foundation progression authorised; not accepted |
+| EOS-S01 | ACCEPTED — shared platform foundation; technical acceptance recorded; production unsigned |
 | All others | NOT_STARTED or BLOCKED only by valid Event OS / Event-Day dependencies |
 
 ## Now / next / later
 
 | Band | Content |
 |------|---------|
-| Now | MD-GR1 reconciled; EOS-S01 acceptance record is the next controlled action |
-| Next | EOS-S02 after EOS-S01 acceptance; Event-Day remains a separate product |
+| Now | EOS-S01 accepted; EOS-S02 is technically eligible and not started |
+| Next | EOS-S02 guest intake after a new authorised instruction; Event-Day remains a separate product |
 | Later | Event OS S01 after a new authorised instruction; Runtime after Event OS foundations |
 | Held | All 693 product/recon prompts except CT0/CT1 wrappers |
 | External | Independent, specialist, venue, CEO gates — unsigned |

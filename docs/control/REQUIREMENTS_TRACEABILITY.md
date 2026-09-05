@@ -192,7 +192,22 @@
 | No production IdP | Non-production adapter; `CT4-OI-001` remains OPEN |
 | No Railway | No Event OS deploy; Control Tower live deployment unchanged |
 | UI foundation | `apps/event-os` shell, clients, events, audit, access, health |
-| Do not accept | EOS-S01 is IN_REVIEW only |
+| Do not accept during implementation | Historical at MD-PR-S004; later accepted under MD-PR-S007 |
+
+## EOS-S01-ACCEPT
+
+**Prompt Control ID:** `MD-PR-S007`  
+**Slice ID:** `EOS-S01`
+
+| Requirement | Implementation |
+|-------------|----------------|
+| Link immutable implementation commit | `COMMIT_LINKED` `EVT-SEED-EOS-S01-COMMIT` → `b815268e939cfbd0fc33ce10df77f1c8a1374d52` |
+| Immutable COMMIT evidence | `EV-EOS-S01-COMMIT` |
+| Named reviewer | `ChatGPT / AI CTO` via `ACCEPTANCE_RECORDED` |
+| Projector derives ACCEPTED | No handwritten status override |
+| Progression without Foundation acceptance | Existing MD-GR1 `PROGRESSION_AUTHORISED` |
+| Do not loosen EOS-S02 | Default ACCEPTANCE; becomes READY only after EOS-S01 ACCEPTED |
+| Do not authorise production | Protected gates unsigned; `productionAuthorised` false |
 
 ## MD-GR1
 
@@ -207,7 +222,7 @@
 | Named authority only | Cursor / UNKNOWN / IMPLEMENTER / SYSTEM rejected |
 | Do not special-case EOS-S01 | No EOS-S01 or MD-CT0 branch in `calculateSliceStatus` |
 | Keep the DAG edge | `EOS-S01.dependsOn` remains `[MD-CT0]` |
-| Do not accept Foundation | Foundation slices remain `IN_REVIEW`; accepted = 0 |
-| Do not loosen EOS-S02 | Default ACCEPTANCE on EOS-S01; remains `NOT_STARTED` |
+| Do not accept Foundation | Foundation slices remain `IN_REVIEW` |
+| Do not loosen EOS-S02 | Default ACCEPTANCE on EOS-S01; eligibility follows EOS-S01 ACCEPTED |
 | Do not authorise production | Protected gates unsigned; `productionAuthorised` false |
 | Document EOS-S01 COMMIT gap | `docs/control/DEPENDENCY_SEMANTICS_RECONCILIATION.md` |

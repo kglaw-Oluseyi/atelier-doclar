@@ -168,7 +168,22 @@ This is live-browser verification evidence. It is not formal slice acceptance, i
 | EV-EOS-S01-ARCH | DOCUMENT | Foundation architecture | `docs/control/EVENT_OS_FOUNDATION_ARCHITECTURE.md` |
 | EV-EOS-S01-TESTS | TEST | Shared-platform isolation, concurrency, idempotency, audit | `packages/shared-platform/test/` |
 
-Acceptance of EOS-S01 still requires a named reviewer. Not ACCEPTED. Production not authorised.
+Formal technical acceptance is recorded in `docs/control/EOS_S01_ACCEPTANCE.md`. Production not authorised.
+
+## EOS-S01-ACCEPT
+
+**Prompt Control ID:** `MD-PR-S007`  
+**Native ID:** `S01-ACCEPT`  
+**Slice ID:** `EOS-S01`
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-EOS-S01-COMMIT | COMMIT | Immutable implementation commit | `git:b815268e939cfbd0fc33ce10df77f1c8a1374d52` |
+| EVT-SEED-EOS-S01-COMMIT | EVENT | COMMIT_LINKED | programme-domain seed |
+| EVT-SEED-EOS-S01-ACCEPT | EVENT | ACCEPTANCE_RECORDED by ChatGPT / AI CTO | programme-domain seed |
+| EV-EOS-S01-ACCEPT-DOC | DOCUMENT | Acceptance record | `docs/control/EOS_S01_ACCEPTANCE.md` |
+| EV-EOS-S01-CI | CHECK | EOS-S01 implementation CI SUCCESS | GitHub Actions `33971129315` |
+| EV-GR1-CI | CHECK | MD-GR1 CI SUCCESS | GitHub Actions `33972619457` |
 
 ## MD-GR1
 
@@ -185,5 +200,5 @@ Acceptance of EOS-S01 still requires a named reviewer. Not ACCEPTED. Production 
 | EV-GR1-HUMAN-VERIFY | DOCUMENT | CEO human live verification PASS | `docs/control/HUMAN_LIVE_VERIFICATION.md` |
 | EV-GR1-TESTS | TEST | Dependency-semantics unit and corpus tests | `packages/programme-domain/test/dependency-semantics.test.ts` |
 
-Progression authorisation is not formal slice acceptance and not production authorisation. EOS-S01 still lacks seed `COMMIT_LINKED` / immutable COMMIT evidence.
+Progression authorisation is not formal slice acceptance and not production authorisation. EOS-S01 COMMIT evidence and technical acceptance were later recorded under `MD-PR-S007`.
 

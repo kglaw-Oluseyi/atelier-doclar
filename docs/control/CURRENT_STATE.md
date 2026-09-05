@@ -1,14 +1,15 @@
 # Current State
 
-**Updated:** MD-GR1  
-**Prompt Control ID:** `MD-PR-S006`  
-**Slice ID:** `MD-GR1`
+**Updated:** EOS-S01-ACCEPT  
+**Prompt Control ID:** `MD-PR-S007`  
+**Slice ID:** `EOS-S01`
 
-MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1, MD-GR1 and EOS-S01 are IN_REVIEW. No slice is ACCEPTED. Independent, specialist and CEO production gates remain unsigned.
+MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is ACCEPTED. EOS-S02 is READY and not started. Accepted count is 1. Independent, specialist and CEO production gates remain unsigned.
 
 **FOUNDATION IMPLEMENTATION COMPLETE: YES**  
 **KNOWN FOUNDATION TECHNICAL DEBT: ZERO**  
 **KNOWN MD-GR1 TECHNICAL DEBT: ZERO**  
+**KNOWN EOS-S01 TECHNICAL DEBT: ZERO**  
 **CONTROL TOWER DEPLOYED LIVE: YES**  
 **AUTOMATED LIVE VERIFICATION: PASS**  
 **CEO HUMAN LIVE VERIFICATION: PASS**  
@@ -18,13 +19,13 @@ MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1, MD-GR1 and EOS-S01 are IN_REVIEW. No sli
 **FOUNDATION → EOS-S01 PROGRESSION: AUTHORISED**  
 **EOS-S01 TECHNICALLY ELIGIBLE: YES**  
 **EOS-S01 EXECUTED: YES**  
-**EOS-S01 ACCEPTANCE PATH VALID: YES**  
-**EOS-S01 ACCEPTED: NO**  
-**EOS-S02 ELIGIBLE: NO**
+**EOS-S01 ACCEPTED: YES**  
+**EOS-S02 TECHNICALLY ELIGIBLE: YES**  
+**EOS-S02 STARTED: NO**
 
 Live Control Tower URL: `https://control-tower-production-dbc4.up.railway.app/programme`  
-Railway project: `atelier-doclar` only. EOS-S01 did not deploy.
+Railway project: `atelier-doclar` only. This acceptance record did not deploy.
 
-`OI-FC1-004` is `RESOLVED_BY_EVENT_OS_ARCHITECTURE`. This is not production authorisation and does not accept any slice.
+`OI-FC1-004` is `RESOLVED_BY_EVENT_OS_ARCHITECTURE`. This is not production authorisation and does not accept any Foundation slice.
 
-EOS-S01 still lacks `COMMIT_LINKED` / immutable COMMIT evidence in seed facts. That gap is documented; it is not manufactured here. The next controlled action is the EOS-S01 acceptance record.
+The next controlled slice is EOS-S02. It has not been executed.

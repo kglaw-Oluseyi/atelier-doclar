@@ -19,7 +19,12 @@ export const LV1_SEED_TIME = "2026-09-05T17:10:00Z";
 export const HV1_SEED_TIME = "2026-09-05T18:10:00Z";
 export const EOS_S01_SEED_TIME = "2026-09-05T19:10:00Z";
 export const GR1_SEED_TIME = "2026-09-05T20:10:00Z";
+export const EOS_S01_ACCEPT_TIME = "2026-09-05T21:10:00Z";
 export const B0_COMMIT = "f7abb431be9a15ab730b3fdd16baa8e83776c170";
+export const EOS_S01_COMMIT = "b815268e939cfbd0fc33ce10df77f1c8a1374d52";
+export const EOS_S01_ACCEPTANCE_EVENT_ID = "EVT-SEED-EOS-S01-ACCEPT";
+export const EOS_S01_COMMIT_EVIDENCE_ID = "EV-EOS-S01-COMMIT";
+export const EOS_S01_REVIEWER = "ChatGPT / AI CTO";
 
 const B0_EVIDENCE: EvidenceRef = {
   id: "EV-B0-001",
@@ -75,10 +80,10 @@ function envelope(
 }
 
 /**
- * Deterministic seed events reflecting documented review state.
- * Does not manufacture ACCEPTED events for B0/CT0–CT9.
+ * Deterministic seed events through Foundation progression, before EOS-S01
+ * commit/acceptance facts. Does not manufacture ACCEPTED events for B0/CT0–CT9.
  */
-export function corpusSeedEvents(): ProgrammeEvent[] {
+export function corpusSeedEventsThroughProgression(): ProgrammeEvent[] {
   return [
     envelope("EVT-SEED-B0-COMMIT", "COMMIT_LINKED", "MD-B0", CORPUS_SEED_TIME, { sha: B0_COMMIT }),
     envelope("EVT-SEED-B0-EVIDENCE", "EVIDENCE_ATTACHED", "MD-B0", CORPUS_SEED_TIME, { evidence: B0_EVIDENCE }),
@@ -311,6 +316,64 @@ export function corpusSeedEvents(): ProgrammeEvent[] {
       },
     }),
   ];
+}
+
+function eosS01AcceptanceEvents(): ProgrammeEvent[] {
+  return [
+    envelope(
+      "EVT-SEED-EOS-S01-COMMIT",
+      "COMMIT_LINKED",
+      "EOS-S01",
+      EOS_S01_ACCEPT_TIME,
+      { sha: EOS_S01_COMMIT },
+      "EVENT_OS",
+    ),
+    envelope(
+      "EVT-SEED-EOS-S01-EV-COMMIT",
+      "EVIDENCE_ATTACHED",
+      "EOS-S01",
+      EOS_S01_ACCEPT_TIME,
+      {
+        evidence: {
+          id: EOS_S01_COMMIT_EVIDENCE_ID,
+          kind: "COMMIT",
+          uri: `git:${EOS_S01_COMMIT}`,
+          createdAt: EOS_S01_ACCEPT_TIME,
+          sourceSystem: "github",
+          immutable: true,
+          summary: `EOS-S01 implementation commit ${EOS_S01_COMMIT}`,
+        },
+      },
+      "EVENT_OS",
+    ),
+    parseProgrammeEvent({
+      eventId: EOS_S01_ACCEPTANCE_EVENT_ID,
+      eventType: "ACCEPTANCE_RECORDED",
+      schemaVersion: 1,
+      aggregateType: "slice",
+      aggregateId: "EOS-S01",
+      product: "EVENT_OS",
+      sliceId: "EOS-S01",
+      occurredAt: EOS_S01_ACCEPT_TIME,
+      recordedAt: EOS_S01_ACCEPT_TIME,
+      actor: { id: "ai-cto", role: "REVIEWER" },
+      source: "ai-cto-technical-acceptance",
+      idempotencyKey: `seed:${EOS_S01_ACCEPTANCE_EVENT_ID}`,
+      payload: {
+        acceptedAt: EOS_S01_ACCEPT_TIME,
+        acceptedBy: EOS_S01_REVIEWER,
+        authorityRole: "REVIEWER",
+      },
+    }),
+  ];
+}
+
+/**
+ * Full corpus seed, including governed EOS-S01 technical acceptance.
+ * Does not manufacture ACCEPTED events for Foundation slices.
+ */
+export function corpusSeedEvents(): ProgrammeEvent[] {
+  return [...corpusSeedEventsThroughProgression(), ...eosS01AcceptanceEvents()];
 }
 
 export function loadCorpusBaseline(root?: string): {

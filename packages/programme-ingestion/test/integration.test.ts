@@ -143,8 +143,10 @@ describe("CT2 integration", () => {
       }),
     );
     const statuses = calculateAllStatuses(engine.projectionAt());
+    assert.equal(statuses.get("EOS-S01"), "ACCEPTED");
     for (const [id, status] of statuses) {
-      assert.notEqual(status, "ACCEPTED", `${id} must not be ACCEPTED`);
+      if (id === "EOS-S01") continue;
+      assert.notEqual(status, "ACCEPTED", `${id} must not be ACCEPTED by ingestion`);
     }
     assert.equal(statuses.get("MD-B0"), "IN_REVIEW");
     assert.equal(statuses.get("MD-CT0"), "IN_REVIEW");

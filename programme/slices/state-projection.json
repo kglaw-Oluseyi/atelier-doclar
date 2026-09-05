@@ -559,7 +559,7 @@
       "title": "Event OS Slice 1 \u2014 Platform foundation (identity, clients, events, design system, staging-only)",
       "phaseId": "PH-EVENT-OS-FOUNDATIONS",
       "order": 1,
-      "status": "NOT_STARTED",
+      "status": "ACCEPTED",
       "dependsOn": [
         "MD-CT0"
       ],
@@ -577,13 +577,27 @@
       "expectedFiles": [
         "MDOS/slice1/"
       ],
-      "commits": [],
-      "evidence": [],
-      "openItems": [],
-      "acceptedAt": null,
-      "acceptedBy": null,
-      "updatedAt": "2026-09-05T05:10:00Z",
-      "version": "ct0-planning-1"
+      "commits": [
+        "b815268e939cfbd0fc33ce10df77f1c8a1374d52"
+      ],
+      "evidence": [
+        {
+          "id": "EV-EOS-S01-COMMIT",
+          "kind": "COMMIT",
+          "uri": "git:b815268e939cfbd0fc33ce10df77f1c8a1374d52",
+          "createdAt": "2026-09-05T21:10:00Z",
+          "sourceSystem": "github",
+          "immutable": true,
+          "summary": "EOS-S01 implementation commit b815268e939cfbd0fc33ce10df77f1c8a1374d52"
+        }
+      ],
+      "openItems": [
+        "OI-FC1-004"
+      ],
+      "acceptedAt": "2026-09-05T21:10:00Z",
+      "acceptedBy": "ChatGPT / AI CTO",
+      "updatedAt": "2026-09-05T21:10:00Z",
+      "version": "eos-s01-accept-1"
     },
     {
       "id": "EOS-S02",
@@ -591,7 +605,7 @@
       "title": "Event OS Slice 2 \u2014 Guest intake and operational guest directory",
       "phaseId": "PH-EVENT-OS-FOUNDATIONS",
       "order": 2,
-      "status": "NOT_STARTED",
+      "status": "READY",
       "dependsOn": [
         "EOS-S01"
       ],

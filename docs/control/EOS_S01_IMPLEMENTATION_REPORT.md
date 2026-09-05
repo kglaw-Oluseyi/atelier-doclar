@@ -6,7 +6,7 @@
 **Native ID:** `S01`  
 **Baseline:** `de29a916bab35ba476745a9fe8f52c0b61aa86d9`  
 **Implementation commit:** `b815268e939cfbd0fc33ce10df77f1c8a1374d52`  
-**Status:** `IN_REVIEW` — implemented; not `ACCEPTED`  
+**Status:** `ACCEPTED` — formal technical acceptance recorded under `MD-PR-S007`  
 **Railway:** not authorised  
 **Production:** not authorised
 
@@ -35,4 +35,4 @@ Resolved as `RESOLVED_BY_EVENT_OS_ARCHITECTURE`. Evidence: `@maison-doclar/share
 
 ## Not done, correctly
 
-EOS-S02 guest directory, Event-Day runtime, Academy, Marketing, Ushering, production migration, production IdP, slice acceptance.
+EOS-S02 guest directory, Event-Day runtime, Academy, Marketing, Ushering, production migration, production IdP. Formal technical acceptance is recorded in `docs/control/EOS_S01_ACCEPTANCE.md`.
