@@ -17,6 +17,8 @@ describe("shared platform ownership", () => {
     assert.equal(PLATFORM_PERSISTENCE_CONTRACT.productionMigrationAuthorised, false);
     assert.ok(FORBIDDEN_PARALLEL_TRUTH.includes("EventOSUser"));
     assert.ok(FORBIDDEN_PARALLEL_TRUTH.includes("EventDayUser"));
+    assert.ok(FORBIDDEN_PARALLEL_TRUTH.includes("EventOSGuest"));
+    assert.ok(FORBIDDEN_PARALLEL_TRUTH.includes("GuestPerson"));
   });
 
   it("uses the same person and event identifiers for consent and guest references", () => {

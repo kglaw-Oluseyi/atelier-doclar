@@ -20,6 +20,7 @@ export const HV1_SEED_TIME = "2026-09-05T18:10:00Z";
 export const EOS_S01_SEED_TIME = "2026-09-05T19:10:00Z";
 export const GR1_SEED_TIME = "2026-09-05T20:10:00Z";
 export const EOS_S01_ACCEPT_TIME = "2026-09-05T21:10:00Z";
+export const EOS_S02_SEED_TIME = "2026-09-05T22:10:00Z";
 export const B0_COMMIT = "f7abb431be9a15ab730b3fdd16baa8e83776c170";
 export const EOS_S01_COMMIT = "b815268e939cfbd0fc33ce10df77f1c8a1374d52";
 export const EOS_S01_ACCEPTANCE_EVENT_ID = "EVT-SEED-EOS-S01-ACCEPT";
@@ -57,7 +58,8 @@ function envelope(
     | "MD-LV1"
     | "MD-HV1"
     | "MD-GR1"
-    | "EOS-S01",
+    | "EOS-S01"
+    | "EOS-S02",
   occurredAt: string,
   payload: ProgrammeEvent["payload"],
   product: "FOUNDATION" | "EVENT_OS" = "FOUNDATION",
@@ -372,8 +374,65 @@ function eosS01AcceptanceEvents(): ProgrammeEvent[] {
  * Full corpus seed, including governed EOS-S01 technical acceptance.
  * Does not manufacture ACCEPTED events for Foundation slices.
  */
+function eosS02ImplementationEvents(): ProgrammeEvent[] {
+  return [
+    envelope(
+      "EVT-SEED-EOS-S02-IMPL",
+      "SLICE_IMPLEMENTATION_OBSERVED",
+      "EOS-S02",
+      EOS_S02_SEED_TIME,
+      { summary: "Event OS guest intake and operational directory implemented; not accepted; production not authorised" },
+      "EVENT_OS",
+    ),
+    envelope(
+      "EVT-SEED-EOS-S02-REVIEW",
+      "REVIEW_REQUESTED",
+      "EOS-S02",
+      EOS_S02_SEED_TIME,
+      { summary: "EOS-S02 in review; not accepted; production not authorised" },
+      "EVENT_OS",
+    ),
+    envelope(
+      "EVT-SEED-EOS-S02-EV-IMPL",
+      "EVIDENCE_ATTACHED",
+      "EOS-S02",
+      EOS_S02_SEED_TIME,
+      {
+        evidence: {
+          id: "EV-EOS-S02-IMPL",
+          kind: "DOCUMENT",
+          uri: "docs/control/EOS_S02_IMPLEMENTATION_REPORT.md",
+          createdAt: EOS_S02_SEED_TIME,
+          sourceSystem: "programme-control",
+          immutable: true,
+          summary: "EOS-S02 guest intake and operational directory implementation report",
+        },
+      },
+      "EVENT_OS",
+    ),
+    envelope(
+      "EVT-SEED-EOS-S02-EV-ARCH",
+      "EVIDENCE_ATTACHED",
+      "EOS-S02",
+      EOS_S02_SEED_TIME,
+      {
+        evidence: {
+          id: "EV-EOS-S02-ARCH",
+          kind: "DOCUMENT",
+          uri: "docs/control/EVENT_OS_GUEST_DIRECTORY.md",
+          createdAt: EOS_S02_SEED_TIME,
+          sourceSystem: "programme-control",
+          immutable: true,
+          summary: "EOS-S02 guest directory boundary and intake model",
+        },
+      },
+      "EVENT_OS",
+    ),
+  ];
+}
+
 export function corpusSeedEvents(): ProgrammeEvent[] {
-  return [...corpusSeedEventsThroughProgression(), ...eosS01AcceptanceEvents()];
+  return [...corpusSeedEventsThroughProgression(), ...eosS01AcceptanceEvents(), ...eosS02ImplementationEvents()];
 }
 
 export function loadCorpusBaseline(root?: string): {

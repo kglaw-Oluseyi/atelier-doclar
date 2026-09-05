@@ -17,6 +17,13 @@ import type {
   Role,
   RolePermission,
 } from "./schemas.js";
+import type {
+  GuestDuplicateCandidate,
+  GuestHousehold,
+  GuestIntakeBatch,
+  GuestIntakeRow,
+  OperationalGuest,
+} from "./guest-schemas.js";
 
 export interface IdempotencyRecord {
   key: string;
@@ -41,6 +48,11 @@ export interface PlatformSnapshot {
   masterEventFiles: MasterEventFile[];
   consents: ConsentRecord[];
   guestReferences: GuestReference[];
+  operationalGuests: OperationalGuest[];
+  guestHouseholds: GuestHousehold[];
+  guestDuplicateCandidates: GuestDuplicateCandidate[];
+  guestIntakeBatches: GuestIntakeBatch[];
+  guestIntakeRows: GuestIntakeRow[];
   policyVersions: PolicyVersionRef[];
   audit: AuditEvent[];
   idempotency: IdempotencyRecord[];
@@ -68,8 +80,26 @@ export function emptySnapshot(): PlatformSnapshot {
     masterEventFiles: [],
     consents: [],
     guestReferences: [],
+    operationalGuests: [],
+    guestHouseholds: [],
+    guestDuplicateCandidates: [],
+    guestIntakeBatches: [],
+    guestIntakeRows: [],
     policyVersions: [],
     audit: [],
     idempotency: [],
+  };
+}
+
+export function normalizeSnapshot(input: PlatformSnapshot): PlatformSnapshot {
+  const empty = emptySnapshot();
+  return {
+    ...empty,
+    ...input,
+    operationalGuests: input.operationalGuests ?? [],
+    guestHouseholds: input.guestHouseholds ?? [],
+    guestDuplicateCandidates: input.guestDuplicateCandidates ?? [],
+    guestIntakeBatches: input.guestIntakeBatches ?? [],
+    guestIntakeRows: input.guestIntakeRows ?? [],
   };
 }

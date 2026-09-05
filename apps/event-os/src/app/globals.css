@@ -140,6 +140,41 @@
 
 .user-menu { margin-top: 28px; }
 
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+  margin: 16px 0 24px;
+}
+
+.filter-bar input[type="search"] {
+  display: block;
+  min-height: var(--md-touch);
+  margin-top: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--md-line);
+  border-radius: 6px;
+  background: var(--md-paper);
+}
+
+.filter-bar label {
+  margin: 0;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--md-touch);
+}
+
+.check input {
+  width: auto;
+  min-height: auto;
+  margin: 0;
+}
+
 @media (max-width: 860px) {
   .shell {
     grid-template-columns: 1fr;

@@ -394,7 +394,7 @@ describe("dependency semantics", () => {
       assert.equal(view.statuses[id], "IN_REVIEW");
     }
     assert.equal(view.statuses["EOS-S01"], "ACCEPTED");
-    assert.equal(view.statuses["EOS-S02"], "READY");
+    assert.equal(view.statuses["EOS-S02"], "IN_REVIEW");
     assert.equal(Object.values(view.statuses).filter((status) => status === "ACCEPTED").length, 1);
     assert.ok(view.outstanding.unacceptedMandatorySlices.includes("MD-CT2"));
     assert.ok(view.outstanding.blockingOpenItems.includes("OI-CT0-002"));

@@ -52,4 +52,4 @@ Examples:
 
 ## Execution status
 
-Historical CT0–CT9 plus successor MD-PR-S001–S003 and MD-GR1 remain `IN_REVIEW`. EOS-S01 was executed as successor `MD-PR-S004` and formally accepted under `MD-PR-S007`. MD-GR1 (`MD-PR-S006`) reconciled dependency kinds so Foundation → EOS-S01 is a `PROGRESSION` prerequisite. Accepted count is 1. Production is not authorised.
+Historical CT0–CT9 plus successor MD-PR-S001–S003 and MD-GR1 remain `IN_REVIEW`. EOS-S01 was executed as successor `MD-PR-S004` and formally accepted under `MD-PR-S007`. EOS-S02 was executed as successor `MD-PR-S008` and is `IN_REVIEW`, not accepted. MD-GR1 (`MD-PR-S006`) reconciled dependency kinds so Foundation → EOS-S01 is a `PROGRESSION` prerequisite. Accepted count is 1. Production is not authorised.

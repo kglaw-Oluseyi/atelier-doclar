@@ -31,6 +31,11 @@ const PERMISSION_IDS: Record<PermissionKey, string> = {
   "consent.record": "11111111-1111-4111-8111-111111111025",
   "guest.reference.view": "11111111-1111-4111-8111-111111111026",
   "guest.reference.register": "11111111-1111-4111-8111-111111111027",
+  "guest.directory.view": "11111111-1111-4111-8111-111111111028",
+  "guest.intake.create": "11111111-1111-4111-8111-111111111029",
+  "guest.record.amend": "11111111-1111-4111-8111-111111111030",
+  "guest.duplicate.resolve": "11111111-1111-4111-8111-111111111031",
+  "guest.person.link": "11111111-1111-4111-8111-111111111032",
 };
 
 const ROLE_IDS: Record<(typeof SYSTEM_ROLE_KEYS)[number], string> = {
@@ -66,6 +71,11 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "consent.record",
     "guest.reference.view",
     "guest.reference.register",
+    "guest.directory.view",
+    "guest.intake.create",
+    "guest.record.amend",
+    "guest.duplicate.resolve",
+    "guest.person.link",
   ],
   CLIENT_LEAD: [
     "organisation.view",
@@ -78,8 +88,17 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "assignment.view",
     "audit.view",
     "mef.view",
+    "guest.directory.view",
   ],
-  DEPARTMENT_LEAD: ["organisation.view", "client.view", "event.list", "event.view", "assignment.view", "mef.view"],
+  DEPARTMENT_LEAD: [
+    "organisation.view",
+    "client.view",
+    "event.list",
+    "event.view",
+    "assignment.view",
+    "mef.view",
+    "guest.directory.view",
+  ],
   PLANNER: [
     "organisation.view",
     "client.list",
@@ -89,6 +108,10 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "event.update",
     "assignment.view",
     "mef.view",
+    "guest.directory.view",
+    "guest.intake.create",
+    "guest.record.amend",
+    "guest.duplicate.resolve",
   ],
   SYSTEM_ADMINISTRATOR: [
     "organisation.view",
@@ -110,6 +133,7 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "audit.view",
     "mef.view",
     "consent.view",
+    "guest.directory.view",
   ],
 };
 

@@ -66,8 +66,8 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 
 | Band | Content |
 |------|---------|
-| Now | EOS-S01 accepted; EOS-S02 is technically eligible and not started |
-| Next | EOS-S02 guest intake after a new authorised instruction; Event-Day remains a separate product |
+| Now | EOS-S02 implemented and IN_REVIEW; not accepted |
+| Next | Independent AI CTO technical review of EOS-S02; do not start EOS-S03 |
 | Later | Event OS S01 after a new authorised instruction; Runtime after Event OS foundations |
 | Held | All 693 product/recon prompts except CT0/CT1 wrappers |
 | External | Independent, specialist, venue, CEO gates — unsigned |

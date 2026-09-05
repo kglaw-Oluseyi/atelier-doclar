@@ -15,7 +15,7 @@ export default async function HomeAppPage() {
     <AppShell person={person} organisationName={organisation?.displayName} current="/app">
       <div className="page-header">
         <h1>Home</h1>
-        <p className="lede">Assigned work only. Guest and later operational domains are not available in this foundation.</p>
+        <p className="lede">Assigned work only. Open an event to use the operational guest directory.</p>
       </div>
       {events.length === 0 ? (
         <p className="empty">No assigned events yet. Create a client or event if you are authorised.</p>

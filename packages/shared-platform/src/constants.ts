@@ -17,6 +17,10 @@ export const SHARED_PLATFORM_OWNERSHIP = {
   assignment: PLATFORM_PACKAGE,
   approvalAuthority: PLATFORM_PACKAGE,
   guestReference: PLATFORM_PACKAGE,
+  operationalGuest: PLATFORM_PACKAGE,
+  guestHousehold: PLATFORM_PACKAGE,
+  guestDuplicateCandidate: PLATFORM_PACKAGE,
+  guestIntakeBatch: PLATFORM_PACKAGE,
   consent: PLATFORM_PACKAGE,
   policyVersion: PLATFORM_PACKAGE,
   audit: PLATFORM_PACKAGE,
@@ -35,6 +39,12 @@ export const FORBIDDEN_PARALLEL_TRUTH = [
   "AcademyPerson",
   "MarketingPerson",
   "UsheringPerson",
+  "EventOSGuest",
+  "GuestUser",
+  "GuestPerson",
+  "EventGuestIdentity",
+  "GuestEvent",
+  "GuestOrganisation",
 ] as const;
 
 export const DEFAULT_TIMEZONE = "Africa/Lagos";
@@ -101,6 +111,11 @@ export const PERMISSION_KEYS = [
   "consent.record",
   "guest.reference.view",
   "guest.reference.register",
+  "guest.directory.view",
+  "guest.intake.create",
+  "guest.record.amend",
+  "guest.duplicate.resolve",
+  "guest.person.link",
 ] as const;
 
 export const SYSTEM_ROLE_KEYS = [
@@ -124,6 +139,31 @@ export const BUSINESS_PERMISSIONS: readonly string[] = [
   "event.archive",
   "mef.update",
 ];
+
+export const FIELD_QUALITY_STATES = [
+  "MISSING",
+  "NOT_SUPPLIED",
+  "NOT_APPLICABLE",
+  "UNVERIFIED",
+  "PENDING_VERIFICATION",
+  "CONFLICTING",
+  "VERIFIED",
+] as const;
+
+export const GUEST_LIFECYCLE_STATES = ["ACTIVE", "WITHDRAWN", "ARCHIVED"] as const;
+export const IDENTITY_RESOLUTION_STATES = [
+  "UNRESOLVED",
+  "LINKED",
+  "DUPLICATE_RISK",
+  "CONFLICTING",
+  "KEEP_SEPARATE",
+] as const;
+export const GUEST_INTAKE_SOURCES = ["MANUAL_STAFF", "CSV_IMPORT"] as const;
+export const DUPLICATE_MATCH_KINDS = ["EXACT_EMAIL", "EXACT_PHONE", "FUZZY_NAME", "PERSON_EMAIL"] as const;
+export const DUPLICATE_DECISIONS = ["KEEP_SEPARATE", "DISMISS", "LINK_PERSON"] as const;
+export const INTAKE_BATCH_STATUSES = ["RECEIVED", "VALIDATED", "PROMOTED", "FAILED"] as const;
+export const INTAKE_ROW_STATUSES = ["RAW", "INVALID", "PROMOTED", "SKIPPED"] as const;
+export const CANONICAL_INTAKE_MAPPING_VERSION = "canonical-v1" as const;
 
 export const CEO_RESERVED_ACTIONS: readonly string[] = [
   "organisation.manage",

@@ -5,6 +5,36 @@ import { PlatformError } from "./errors.js";
 import { assertNamedHuman } from "./identity.js";
 import { emptyMasterEventFile } from "./mef.js";
 import { authorize, canSeeClient, canSeeEvent, type ActorSnapshot, type PolicyDecision } from "./policy.js";
+import { parseCanonicalCsv, rowToIntakeFields } from "./guest-intake.js";
+import { operationalDisplayName } from "./guest-matching.js";
+import {
+  applyGuestAmendment,
+  buildOperationalGuest,
+  compareGuests,
+  guestMatchesQuery,
+  recordDuplicateCandidates,
+  upsertHousehold,
+} from "./guest-operations.js";
+import {
+  AmendGuestInputSchema,
+  GuestDirectoryQuerySchema,
+  ImportGuestsInputSchema,
+  IntakeGuestInputSchema,
+  LinkGuestPersonInputSchema,
+  ResolveDuplicateInputSchema,
+  UnlinkGuestPersonInputSchema,
+  type AmendGuestInput,
+  type GuestDirectoryQuery,
+  type GuestDuplicateCandidate,
+  type GuestHousehold,
+  type GuestIntakeBatch,
+  type ImportGuestsInput,
+  type IntakeGuestInput,
+  type LinkGuestPersonInput,
+  type OperationalGuest,
+  type ResolveDuplicateInput,
+  type UnlinkGuestPersonInput,
+} from "./guest-schemas.js";
 import { redactValue, stableHash } from "./redaction.js";
 import {
   CreateClientInputSchema,
@@ -530,6 +560,310 @@ export class PlatformService {
     });
   }
 
+  intakeGuest(actor: ActorContext, raw: unknown): OperationalGuest {
+    const input = parseStrict<IntakeGuestInput>(IntakeGuestInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "guest.intake.create",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "guest.intake.created",
+      resourceType: "operational_guest",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const event = this.requireEvent(snap, input.organisationId, input.eventId);
+        if (input.personId && !snap.persons.some((item) => item.id === input.personId)) {
+          throw new PlatformError("NOT_FOUND", "person is not provisioned");
+        }
+        const household = input.householdKey
+          ? upsertHousehold(snap, {
+              organisationId: event.organisationId,
+              clientId: event.clientId,
+              eventId: event.id,
+              key: input.householdKey,
+              now: ctx.now,
+            })
+          : undefined;
+        const record = buildOperationalGuest({
+          organisationId: event.organisationId,
+          clientId: event.clientId,
+          eventId: event.id,
+          fields: input,
+          source: "MANUAL_STAFF",
+          actorPersonId: actor.personId,
+          correlationId: actor.correlationId,
+          now: ctx.now,
+          ...(household ? { householdId: household.id } : {}),
+        });
+        snap.operationalGuests.push(record);
+        const resolved = recordDuplicateCandidates(snap, record, snap.persons, ctx.now);
+        if (input.personId) {
+          this.linkGuestInSnapshot(snap, resolved, input.personId, actor, ctx.now);
+        }
+        return resolved;
+      },
+    });
+  }
+
+  amendGuest(actor: ActorContext, raw: unknown): OperationalGuest {
+    const input = parseStrict<AmendGuestInput>(AmendGuestInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "guest.record.amend",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "guest.record.amended",
+      resourceType: "operational_guest",
+      resourceId: input.guestId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const record = this.requireOperationalGuest(snap, input.organisationId, input.eventId, input.guestId);
+        this.assertVersion(record.version, input.expectedVersion);
+        applyGuestAmendment(record, input, ctx.now);
+        return recordDuplicateCandidates(snap, record, snap.persons, ctx.now);
+      },
+    });
+  }
+
+  resolveGuestDuplicate(actor: ActorContext, raw: unknown): GuestDuplicateCandidate {
+    const input = parseStrict<ResolveDuplicateInput>(ResolveDuplicateInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "guest.duplicate.resolve",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "guest.duplicate.resolved",
+      resourceType: "guest_duplicate_candidate",
+      resourceId: input.candidateId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const record = snap.guestDuplicateCandidates.find((item) => item.id === input.candidateId);
+        if (!record || record.organisationId !== input.organisationId || record.eventId !== input.eventId) {
+          throw new PlatformError("NOT_FOUND", "duplicate candidate was not found");
+        }
+        this.assertVersion(record.version, input.expectedVersion);
+        if (record.status === "RESOLVED") {
+          throw new PlatformError("VERSION_CONFLICT", "duplicate candidate is already resolved");
+        }
+        if (input.decision === "LINK_PERSON") {
+          if (!input.personId) {
+            throw new PlatformError("VALIDATION_FAILED", "personId is required to link", { field: "personId" });
+          }
+          const guest = this.requireOperationalGuest(snap, input.organisationId, input.eventId, record.subjectGuestId);
+          this.linkGuestInSnapshot(snap, guest, input.personId, actor, ctx.now);
+        }
+        if (input.decision === "KEEP_SEPARATE") {
+          const subject = this.requireOperationalGuest(snap, input.organisationId, input.eventId, record.subjectGuestId);
+          subject.identityResolution = "KEEP_SEPARATE";
+          subject.version += 1;
+          subject.updatedAt = ctx.now;
+          if (record.otherGuestId) {
+            const other = snap.operationalGuests.find((item) => item.id === record.otherGuestId);
+            if (other && other.identityResolution === "DUPLICATE_RISK") {
+              other.identityResolution = "KEEP_SEPARATE";
+              other.version += 1;
+              other.updatedAt = ctx.now;
+            }
+          }
+        }
+        record.status = "RESOLVED";
+        record.decision = input.decision;
+        record.decidedByPersonId = actor.personId;
+        record.decidedAt = ctx.now;
+        record.reason = input.reason;
+        record.version += 1;
+        record.updatedAt = ctx.now;
+        return record;
+      },
+    });
+  }
+
+  linkGuestPerson(actor: ActorContext, raw: unknown): OperationalGuest {
+    const input = parseStrict<LinkGuestPersonInput>(LinkGuestPersonInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "guest.person.link",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "guest.person.linked",
+      resourceType: "operational_guest",
+      resourceId: input.guestId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const record = this.requireOperationalGuest(snap, input.organisationId, input.eventId, input.guestId);
+        this.assertVersion(record.version, input.expectedVersion);
+        this.linkGuestInSnapshot(snap, record, input.personId, actor, ctx.now);
+        return record;
+      },
+    });
+  }
+
+  unlinkGuestPerson(actor: ActorContext, raw: unknown): OperationalGuest {
+    const input = parseStrict<UnlinkGuestPersonInput>(UnlinkGuestPersonInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "guest.person.link",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "guest.person.unlinked",
+      resourceType: "operational_guest",
+      resourceId: input.guestId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const record = this.requireOperationalGuest(snap, input.organisationId, input.eventId, input.guestId);
+        this.assertVersion(record.version, input.expectedVersion);
+        delete record.personId;
+        delete record.guestReferenceId;
+        record.identityResolution = "UNRESOLVED";
+        record.version += 1;
+        record.updatedAt = ctx.now;
+        return record;
+      },
+    });
+  }
+
+  importGuests(actor: ActorContext, raw: unknown): GuestIntakeBatch {
+    const input = parseStrict<ImportGuestsInput>(ImportGuestsInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "guest.intake.create",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "guest.intake.imported",
+      resourceType: "guest_intake_batch",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash({ organisationId: input.organisationId, eventId: input.eventId, filename: input.filename, csv: input.csv }),
+      run: (snap, ctx) => {
+        const event = this.requireEvent(snap, input.organisationId, input.eventId);
+        const parsed = parseCanonicalCsv(input.csv);
+        const batch: GuestIntakeBatch = {
+          id: randomUUID(),
+          organisationId: event.organisationId,
+          clientId: event.clientId,
+          eventId: event.id,
+          filename: input.filename,
+          mappingVersion: parsed.mappingVersion,
+          status: parsed.rows.length === 0 ? "FAILED" : "RECEIVED",
+          rowCount: parsed.rows.length,
+          promotedCount: 0,
+          invalidCount: 0,
+          schemaVersion: SCHEMA_VERSION,
+          version: 1,
+          createdAt: ctx.now,
+          updatedAt: ctx.now,
+        };
+        snap.guestIntakeBatches.push(batch);
+        for (const row of parsed.rows) {
+          const rowId = randomUUID();
+          const invalid = row.issues.some((issue) => issue.severity === "ERROR");
+          let promotedGuestId: string | undefined;
+          if (!invalid) {
+            const household = row.raw.householdKey
+              ? upsertHousehold(snap, {
+                  organisationId: event.organisationId,
+                  clientId: event.clientId,
+                  eventId: event.id,
+                  key: row.raw.householdKey,
+                  now: ctx.now,
+                })
+              : undefined;
+            const guest = buildOperationalGuest({
+              organisationId: event.organisationId,
+              clientId: event.clientId,
+              eventId: event.id,
+              fields: {
+                organisationId: event.organisationId,
+                eventId: event.id,
+                ...rowToIntakeFields(row.raw),
+                reason: input.reason,
+              },
+              source: "CSV_IMPORT",
+              actorPersonId: actor.personId,
+              correlationId: actor.correlationId,
+              now: ctx.now,
+              ...(household ? { householdId: household.id } : {}),
+            });
+            snap.operationalGuests.push(guest);
+            recordDuplicateCandidates(snap, guest, snap.persons, ctx.now);
+            promotedGuestId = guest.id;
+            batch.promotedCount += 1;
+          } else {
+            batch.invalidCount += 1;
+          }
+          snap.guestIntakeRows.push({
+            id: rowId,
+            batchId: batch.id,
+            organisationId: event.organisationId,
+            eventId: event.id,
+            rowNumber: row.rowNumber,
+            raw: row.raw,
+            issues: row.issues,
+            status: invalid ? "INVALID" : "PROMOTED",
+            ...(promotedGuestId ? { promotedGuestId } : {}),
+            schemaVersion: SCHEMA_VERSION,
+            createdAt: ctx.now,
+          });
+        }
+        batch.status = batch.rowCount === 0 ? "FAILED" : batch.invalidCount === batch.rowCount ? "FAILED" : "PROMOTED";
+        batch.updatedAt = ctx.now;
+        return batch;
+      },
+    });
+  }
+
+  listGuests(actor: ActorContext, raw: unknown): OperationalGuest[] {
+    const input = parseStrict<GuestDirectoryQuery>(GuestDirectoryQuerySchema, raw);
+    const { snap, ctx } = this.authorizeQuery(actor, "guest.directory.view", {
+      organisationId: input.organisationId,
+      eventId: input.eventId,
+    });
+    const event = this.requireEvent(snap, input.organisationId, input.eventId);
+    if (!canSeeEvent(ctx.actor, event, ctx.now)) {
+      throw new PlatformError("NOT_FOUND", "event was not found");
+    }
+    return snap.operationalGuests
+      .filter((item) => item.organisationId === input.organisationId && item.eventId === input.eventId)
+      .filter((item) => (input.lifecycle ? item.lifecycle === input.lifecycle : true))
+      .filter((item) => (input.identityResolution ? item.identityResolution === input.identityResolution : true))
+      .filter((item) => (input.attentionRequired === undefined ? true : item.attentionRequired === input.attentionRequired))
+      .filter((item) => (input.householdId ? item.householdId === input.householdId : true))
+      .filter((item) => guestMatchesQuery(item, input.query))
+      .sort((left, right) => compareGuests(left, right, input.sort));
+  }
+
+  getGuest(actor: ActorContext, organisationId: string, eventId: string, guestId: string): OperationalGuest {
+    const { snap, ctx } = this.authorizeQuery(actor, "guest.directory.view", { organisationId, eventId });
+    const event = this.requireEvent(snap, organisationId, eventId);
+    if (!canSeeEvent(ctx.actor, event, ctx.now)) {
+      throw new PlatformError("NOT_FOUND", "event was not found");
+    }
+    return this.requireOperationalGuest(snap, organisationId, eventId, guestId);
+  }
+
+  listGuestHouseholds(actor: ActorContext, organisationId: string, eventId: string): GuestHousehold[] {
+    const { snap, ctx } = this.authorizeQuery(actor, "guest.directory.view", { organisationId, eventId });
+    const event = this.requireEvent(snap, organisationId, eventId);
+    if (!canSeeEvent(ctx.actor, event, ctx.now)) {
+      throw new PlatformError("NOT_FOUND", "event was not found");
+    }
+    return snap.guestHouseholds.filter((item) => item.organisationId === organisationId && item.eventId === eventId);
+  }
+
+  listGuestDuplicates(actor: ActorContext, organisationId: string, eventId: string, guestId?: string): GuestDuplicateCandidate[] {
+    const { snap, ctx } = this.authorizeQuery(actor, "guest.directory.view", { organisationId, eventId });
+    const event = this.requireEvent(snap, organisationId, eventId);
+    if (!canSeeEvent(ctx.actor, event, ctx.now)) {
+      throw new PlatformError("NOT_FOUND", "event was not found");
+    }
+    return snap.guestDuplicateCandidates.filter((item) => {
+      if (item.organisationId !== organisationId || item.eventId !== eventId) return false;
+      return guestId ? item.subjectGuestId === guestId || item.otherGuestId === guestId : true;
+    });
+  }
+
+  guestDisplayName(guest: OperationalGuest): string {
+    return operationalDisplayName(guest);
+  }
+
   listClients(actor: ActorContext, organisationId: string): Client[] {
     const { snap, ctx } = this.authorizeQuery(actor, "client.list", { organisationId });
     return snap.clients.filter((item) => item.organisationId === organisationId && canSeeClient(ctx.actor, organisationId, item.id, ctx.now));
@@ -772,6 +1106,53 @@ export class PlatformService {
     return record;
   }
 
+  private requireOperationalGuest(
+    snap: PlatformSnapshot,
+    organisationId: string,
+    eventId: string,
+    guestId: string,
+  ): OperationalGuest {
+    const record = snap.operationalGuests.find((item) => item.id === guestId);
+    if (!record || record.organisationId !== organisationId || record.eventId !== eventId) {
+      throw new PlatformError("NOT_FOUND", "guest record was not found");
+    }
+    return record;
+  }
+
+  private linkGuestInSnapshot(
+    snap: PlatformSnapshot,
+    guest: OperationalGuest,
+    personId: string,
+    actor: ActorContext,
+    now: string,
+  ): void {
+    const person = snap.persons.find((item) => item.id === personId);
+    if (!person) throw new PlatformError("NOT_FOUND", "person is not provisioned");
+    let reference = snap.guestReferences.find(
+      (item) => item.personId === personId && item.eventId === guest.eventId && item.organisationId === guest.organisationId,
+    );
+    if (!reference) {
+      reference = {
+        id: randomUUID(),
+        organisationId: guest.organisationId,
+        personId,
+        eventId: guest.eventId,
+        status: "REFERENCE_ONLY",
+        schemaVersion: SCHEMA_VERSION,
+        version: 1,
+        createdAt: now,
+        updatedAt: now,
+      };
+      snap.guestReferences.push(reference);
+    }
+    guest.personId = personId;
+    guest.guestReferenceId = reference.id;
+    guest.identityResolution = "LINKED";
+    guest.version += 1;
+    guest.updatedAt = now;
+    void actor;
+  }
+
   private requireEvent(snap: PlatformSnapshot, organisationId: string, eventId: string): EventRecord {
     const record = snap.events.find((item) => item.id === eventId);
     if (!record || record.organisationId !== organisationId) {
@@ -827,6 +1208,33 @@ export class PlatformService {
         eventId: record?.eventId,
       };
     }
+    if (type === "operational_guest") {
+      const record = snap.operationalGuests.find((item) => item.id === id);
+      return {
+        type,
+        organisationId: record?.organisationId ?? organisationId,
+        clientId: record?.clientId,
+        eventId: record?.eventId,
+      };
+    }
+    if (type === "guest_duplicate_candidate") {
+      const record = snap.guestDuplicateCandidates.find((item) => item.id === id);
+      return {
+        type,
+        organisationId: record?.organisationId ?? organisationId,
+        clientId: record?.clientId,
+        eventId: record?.eventId,
+      };
+    }
+    if (type === "guest_intake_batch") {
+      const record = snap.guestIntakeBatches.find((item) => item.id === id);
+      return {
+        type,
+        organisationId: record?.organisationId ?? organisationId,
+        clientId: record?.clientId,
+        eventId: record?.eventId,
+      };
+    }
     return { type, organisationId };
   }
 
@@ -838,6 +1246,10 @@ export class PlatformService {
       snap.masterEventFiles,
       snap.consents,
       snap.guestReferences,
+      snap.operationalGuests,
+      snap.guestHouseholds,
+      snap.guestDuplicateCandidates,
+      snap.guestIntakeBatches,
     ];
     for (const table of tables) {
       const found = table.find((item) => item.id === id);

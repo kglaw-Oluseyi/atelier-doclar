@@ -202,3 +202,18 @@ Formal technical acceptance is recorded in `docs/control/EOS_S01_ACCEPTANCE.md`.
 
 Progression authorisation is not formal slice acceptance and not production authorisation. EOS-S01 COMMIT evidence and technical acceptance were later recorded under `MD-PR-S007`.
 
+## EOS-S02
+
+**Prompt Control ID:** `MD-PR-S008`  
+**Native ID:** `S02`  
+**Slice ID:** `EOS-S02`
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-EOS-S02-IMPL | DOCUMENT | Implementation report | `docs/control/EOS_S02_IMPLEMENTATION_REPORT.md` |
+| EV-EOS-S02-ARCH | DOCUMENT | Guest directory boundary | `docs/control/EVENT_OS_GUEST_DIRECTORY.md` |
+| EV-EOS-S02-TESTS | TEST | Intake, directory, identity safety and adversarial controls | `packages/shared-platform/test/guest-*.test.ts` |
+| EV-EOS-S02-E2E | TEST | Event OS guest directory Playwright | `apps/event-os/e2e/guests.spec.ts` |
+
+Not ACCEPTED. Production not authorised.
+

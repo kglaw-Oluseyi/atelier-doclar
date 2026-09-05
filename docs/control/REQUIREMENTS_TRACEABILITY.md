@@ -226,3 +226,21 @@
 | Do not loosen EOS-S02 | Default ACCEPTANCE on EOS-S01; eligibility follows EOS-S01 ACCEPTED |
 | Do not authorise production | Protected gates unsigned; `productionAuthorised` false |
 | Document EOS-S01 COMMIT gap | `docs/control/DEPENDENCY_SEMANTICS_RECONCILIATION.md` |
+
+## EOS-S02
+
+**Prompt Control ID:** `MD-PR-S008`  
+**Slice ID:** `EOS-S02`
+
+| Requirement | Implementation |
+|-------------|----------------|
+| Extend shared-platform, no parallel guest truth | Operational guest / household / duplicate / intake collections on `@maison-doclar/shared-platform` |
+| Person ≠ guest | Intake does not create Person; optional governed GuestReference link |
+| Server-authoritative tenancy | Assignment + stored lineage; cross-org/event concealed as `NOT_FOUND` |
+| Manual intake with provenance | `intakeGuest`; actor, reason, timestamps, correlation, idempotency |
+| Operational directory | Event-scoped search, filter, sort, detail, amendment |
+| Distinct unknown states | Qualified fields; verified overwrite requires explicit replace |
+| Duplicate safety | Exact email/phone candidates; name-only suggestions; no auto-merge |
+| Existing RBAC only | New guest.* permissions on the EOS-S01 catalogue |
+| No production / Railway | Non-production fixtures; no deployment |
+| Do not accept during implementation | `IN_REVIEW` only; no `ACCEPTANCE_RECORDED` |

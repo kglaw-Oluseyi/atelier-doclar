@@ -1,5 +1,5 @@
 import { LOCAL_STORE_PRODUCTION_STATUS, type StoreProductionStatus } from "./constants.js";
-import { emptySnapshot, type PlatformSnapshot, type PlatformStore } from "./store.js";
+import { emptySnapshot, normalizeSnapshot, type PlatformSnapshot, type PlatformStore } from "./store.js";
 
 function clone<T>(value: T): T {
   return structuredClone(value);
@@ -14,7 +14,7 @@ export class MemoryPlatformStore implements PlatformStore {
   }
 
   replace(next: PlatformSnapshot): void {
-    this.state = clone(next);
+    this.state = clone(normalizeSnapshot(next));
     Object.freeze(this.state.audit);
   }
 }

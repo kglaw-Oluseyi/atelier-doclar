@@ -20,6 +20,11 @@ const COLLECTIONS: Collection[] = [
   "masterEventFiles",
   "consents",
   "guestReferences",
+  "operationalGuests",
+  "guestHouseholds",
+  "guestDuplicateCandidates",
+  "guestIntakeBatches",
+  "guestIntakeRows",
   "policyVersions",
 ];
 

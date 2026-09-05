@@ -187,7 +187,7 @@ describe("EOS-S01 formal technical acceptance", () => {
     }
   });
 
-  it("makes accepted count exactly 1 and EOS-S02 READY only after EOS-S01 acceptance", () => {
+  it("makes accepted count exactly 1 after EOS-S01 acceptance; EOS-S02 is not accepted", () => {
     const before = engineFrom(corpusSeedEventsThroughProgression());
     const beforeStatuses = calculateAllStatuses(before.engine.projectionAt());
     assert.equal(beforeStatuses.get("EOS-S01"), "IN_REVIEW");
@@ -197,7 +197,8 @@ describe("EOS-S01 formal technical acceptance", () => {
     const after = engineFrom();
     const afterStatuses = calculateAllStatuses(after.engine.projectionAt());
     assert.equal(afterStatuses.get("EOS-S01"), "ACCEPTED");
-    assert.equal(afterStatuses.get("EOS-S02"), "READY");
+    assert.equal(afterStatuses.get("EOS-S02"), "IN_REVIEW");
+    assert.notEqual(afterStatuses.get("EOS-S02"), "ACCEPTED");
     assert.equal([...afterStatuses.values()].filter((status) => status === "ACCEPTED").length, 1);
   });
 

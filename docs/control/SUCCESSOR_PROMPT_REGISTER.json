@@ -1,6 +1,6 @@
 {
   "scheme": "MD-PR-SNNN successor accountability IDs; historical MD-PR-NNNN remain intact",
-  "generated_at": "2026-09-05T21:10:00Z",
+  "generated_at": "2026-09-05T22:10:00Z",
   "notes": "Do not impersonate historical Control Tower prompt IDs. MD-PR-0011 is already used.",
   "entries": [
     {
@@ -50,6 +50,14 @@
       "product": "EVENT_OS",
       "title": "EOS-S01 Formal Technical Acceptance Record",
       "authorising_instruction": "Record formal technical acceptance of EOS-S01 after MD-GR1 made the Foundation progression prerequisite valid; do not start EOS-S02 or authorise production"
+    },
+    {
+      "prompt_control_id": "MD-PR-S008",
+      "native_id": "S02",
+      "slice_id": "EOS-S02",
+      "product": "EVENT_OS",
+      "title": "Guest Intake and Operational Guest Directory",
+      "authorising_instruction": "CEO-authorised EOS-S02 execution wrapper; historical Slice 2 pack executed as one governed guest-directory slice; do not accept EOS-S02 or authorise production"
     }
   ]
 }

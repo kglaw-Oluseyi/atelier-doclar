@@ -14,6 +14,10 @@ export {
   PERMISSION_KEYS,
   SYSTEM_ROLE_KEYS,
   CEO_RESERVED_ACTIONS,
+  FIELD_QUALITY_STATES,
+  GUEST_LIFECYCLE_STATES,
+  IDENTITY_RESOLUTION_STATES,
+  CANONICAL_INTAKE_MAPPING_VERSION,
   type StoreProductionStatus,
 } from "./constants.js";
 export { PlatformError, PLATFORM_ERROR_CODES, publicMessageFor, type PlatformErrorCode } from "./errors.js";
@@ -53,6 +57,22 @@ export {
   type EventPhase,
   type ScopeInput,
 } from "./schemas.js";
+export {
+  OperationalGuestSchema,
+  GuestHouseholdSchema,
+  GuestDuplicateCandidateSchema,
+  IntakeGuestInputSchema,
+  AmendGuestInputSchema,
+  GuestDirectoryQuerySchema,
+  type OperationalGuest,
+  type GuestHousehold,
+  type GuestDuplicateCandidate,
+  type GuestIntakeBatch,
+  type QualifiedField,
+  type FieldQuality,
+} from "./guest-schemas.js";
+export { operationalDisplayName, normalizeEmail, normalizePhone, findDuplicateMatches } from "./guest-matching.js";
+export { parseCanonicalCsv, CANONICAL_CSV_COLUMNS } from "./guest-intake.js";
 export { seededPermissions, seededRoles, permissionsForRole, roleIdForKey } from "./catalog.js";
 export { authorize, assignmentIsActive, canSeeClient, canSeeEvent, type ActorSnapshot, type PolicyDecision } from "./policy.js";
 export { allowedNextPhases, assertPhaseTransition } from "./transitions.js";
@@ -66,7 +86,7 @@ export {
 export { issueSession, readSession, assertSessionConfig, type SessionActor, type SessionConfig } from "./session.js";
 export { FIXTURE_IDS, fixturePersons, isFixtureId } from "./fixtures.js";
 export { emptyMasterEventFile } from "./mef.js";
-export { emptySnapshot, type PlatformStore, type PlatformSnapshot } from "./store.js";
+export { emptySnapshot, normalizeSnapshot, type PlatformStore, type PlatformSnapshot } from "./store.js";
 export { MemoryPlatformStore } from "./memory-store.js";
 export { PLATFORM_POSTGRES_SCHEMA, type PgQueryable } from "./postgres-schema.js";
 export { PostgresPlatformStore, MemoryPlatformPg } from "./postgres-store.js";

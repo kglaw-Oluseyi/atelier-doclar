@@ -172,6 +172,118 @@ export async function grantAssignmentAction(formData: FormData): Promise<void> {
   redirect("/app/admin/access");
 }
 
+export async function intakeGuestAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const runtime = getRuntime();
+  const eventId = String(formData.get("eventId") ?? "");
+  const fail = `/app/events/${encodeURIComponent(eventId)}/guests/new?error=`;
+  const organisation = runtime.service.listOrganisations(actor)[0];
+  if (!organisation) {
+    redirect(`${fail}${encodeURIComponent("No organisation assignment is available.")}`);
+  }
+  let guest;
+  try {
+    guest = runtime.service.intakeGuest(actor, {
+      organisationId: organisation.id,
+      eventId,
+      givenName: String(formData.get("givenName") ?? "") || undefined,
+      familyName: String(formData.get("familyName") ?? "") || undefined,
+      preferredName: String(formData.get("preferredName") ?? "") || undefined,
+      email: String(formData.get("email") ?? "") || undefined,
+      phone: String(formData.get("phone") ?? "") || undefined,
+      dietaryRequirement: String(formData.get("dietaryRequirement") ?? "") || undefined,
+      accessibilityRequirement: String(formData.get("accessibilityRequirement") ?? "") || undefined,
+      operationalNote: String(formData.get("operationalNote") ?? "") || undefined,
+      householdKey: String(formData.get("householdKey") ?? "") || undefined,
+      reason: String(formData.get("reason") ?? ""),
+    });
+  } catch (error) {
+    redirect(`${fail}${encodeURIComponent(actionError(error))}`);
+  }
+  redirect(`/app/events/${eventId}/guests/${guest.id}`);
+}
+
+export async function amendGuestAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const runtime = getRuntime();
+  const eventId = String(formData.get("eventId") ?? "");
+  const guestId = String(formData.get("guestId") ?? "");
+  const fail = `/app/events/${encodeURIComponent(eventId)}/guests/${encodeURIComponent(guestId)}?error=`;
+  const organisation = runtime.service.listOrganisations(actor)[0];
+  if (!organisation) {
+    redirect(`${fail}${encodeURIComponent("No organisation assignment is available.")}`);
+  }
+  try {
+    runtime.service.amendGuest(actor, {
+      organisationId: organisation.id,
+      eventId,
+      guestId,
+      expectedVersion: Number(formData.get("expectedVersion")),
+      givenName: String(formData.get("givenName") ?? "") || undefined,
+      familyName: String(formData.get("familyName") ?? "") || undefined,
+      preferredName: String(formData.get("preferredName") ?? "") || undefined,
+      email: String(formData.get("email") ?? "") || undefined,
+      phone: String(formData.get("phone") ?? "") || undefined,
+      dietaryRequirement: String(formData.get("dietaryRequirement") ?? "") || undefined,
+      accessibilityRequirement: String(formData.get("accessibilityRequirement") ?? "") || undefined,
+      operationalNote: String(formData.get("operationalNote") ?? "") || undefined,
+      lifecycle: String(formData.get("lifecycle") ?? "") || undefined,
+      replaceVerifiedField: formData.get("replaceVerifiedField") === "true",
+      reason: String(formData.get("reason") ?? ""),
+    });
+  } catch (error) {
+    redirect(`${fail}${encodeURIComponent(actionError(error))}`);
+  }
+  redirect(`/app/events/${eventId}/guests/${guestId}`);
+}
+
+export async function resolveDuplicateAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const runtime = getRuntime();
+  const eventId = String(formData.get("eventId") ?? "");
+  const organisation = runtime.service.listOrganisations(actor)[0];
+  const fail = `/app/events/${encodeURIComponent(eventId)}/guests?error=`;
+  if (!organisation) {
+    redirect(`${fail}${encodeURIComponent("No organisation assignment is available.")}`);
+  }
+  try {
+    runtime.service.resolveGuestDuplicate(actor, {
+      organisationId: organisation.id,
+      eventId,
+      candidateId: String(formData.get("candidateId") ?? ""),
+      expectedVersion: Number(formData.get("expectedVersion")),
+      decision: String(formData.get("decision") ?? ""),
+      reason: String(formData.get("reason") ?? ""),
+    });
+  } catch (error) {
+    redirect(`${fail}${encodeURIComponent(actionError(error))}`);
+  }
+  redirect(`/app/events/${eventId}/guests`);
+}
+
+export async function importGuestsAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const runtime = getRuntime();
+  const eventId = String(formData.get("eventId") ?? "");
+  const fail = `/app/events/${encodeURIComponent(eventId)}/guests?importError=`;
+  const organisation = runtime.service.listOrganisations(actor)[0];
+  if (!organisation) {
+    redirect(`${fail}${encodeURIComponent("No organisation assignment is available.")}`);
+  }
+  try {
+    runtime.service.importGuests(actor, {
+      organisationId: organisation.id,
+      eventId,
+      filename: String(formData.get("filename") ?? ""),
+      csv: String(formData.get("csv") ?? ""),
+      reason: String(formData.get("reason") ?? ""),
+    });
+  } catch (error) {
+    redirect(`${fail}${encodeURIComponent(actionError(error))}`);
+  }
+  redirect(`/app/events/${eventId}/guests`);
+}
+
 export async function transitionEventAction(formData: FormData): Promise<void> {
   const { actor } = await requireActor();
   const runtime = getRuntime();

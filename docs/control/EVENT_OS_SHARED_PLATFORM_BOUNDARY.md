@@ -37,3 +37,7 @@ Control Tower continues to use `ProgrammeStore` for programme governance events.
 ## Extension path
 
 Later products add adapters or projections that import `@maison-doclar/shared-platform`. They must not copy Organisation, Person, Event, Consent or Audit schemas into product-owned packages.
+
+## EOS-S02 extension
+
+EOS-S02 added operational guest, household, duplicate-candidate and intake-batch collections to the same store. Those records consume organisation, event, person and guest-reference identifiers. They do not replace Person or GuestReference. See `docs/control/EVENT_OS_GUEST_DIRECTORY.md`.
