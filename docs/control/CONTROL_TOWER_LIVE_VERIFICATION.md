@@ -5,7 +5,7 @@
 
 Distinguish **AUTOMATED** (Playwright, unit, CI) from **HUMAN LIVE ACCEPTANCE**.
 
-MD-LV1 published the Railway project `atelier-doclar` at `https://control-tower-production-dbc4.up.railway.app/programme`. Human live acceptance remains pending.
+MD-LV1 published the Railway project `atelier-doclar` at `https://control-tower-production-dbc4.up.railway.app/programme`. MD-HV1 recorded CEO human live verification as PASS with no issues noted. That is not production authorisation.
 
 ## Access
 
@@ -95,4 +95,4 @@ MD-LV1 published the Railway project `atelier-doclar` at `https://control-tower-
 | axe | AUTOMATED on portfolio, roadmap, ask, charts, ops |
 | Screen-reader semantics | HUMAN LIVE ACCEPTANCE |
 
-Automated totals are recorded in the MD-FC1 closeout report after the suite runs. Human live acceptance remains `OI-FC1-001`.
+Automated totals are recorded in the MD-FC1 closeout report and MD-LV1 live evidence. CEO human live verification is recorded in `docs/control/HUMAN_LIVE_VERIFICATION.md`. `OI-FC1-001` is `RESOLVED_BY_HUMAN_VERIFICATION`. Independent acceptance and CEO production authorisation remain OPEN.

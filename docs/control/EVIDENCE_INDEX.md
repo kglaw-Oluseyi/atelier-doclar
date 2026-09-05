@@ -142,3 +142,16 @@ Acceptance of MD-CT4 still requires a named reviewer. Not ACCEPTED.
 | EV-LV1-RUNTIME | DOCUMENT | Runtime configuration status | `docs/control/LIVE_RUNTIME_CONFIGURATION.md` |
 | EV-LV1-URL | DOCUMENT | Live Control Tower HTTPS origin | `https://control-tower-production-dbc4.up.railway.app/programme` |
 
+## MD-HV1
+
+**Prompt Control ID:** `MD-PR-S003`  
+**Native ID:** `HV1`  
+**Slice ID:** `MD-HV1`
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-HV1-HUMAN | DOCUMENT | CEO human live verification | `docs/control/HUMAN_LIVE_VERIFICATION.md` |
+| EV-HV1-URL | DOCUMENT | Live Control Tower reviewed by the CEO | `https://control-tower-production-dbc4.up.railway.app/programme` |
+
+This is live-browser verification evidence. It is not formal slice acceptance, independent acceptance, or CEO production authorisation.
+

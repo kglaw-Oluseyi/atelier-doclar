@@ -478,6 +478,43 @@
       "version": "lv1-deploy-1"
     },
     {
+      "id": "MD-HV1",
+      "product": "FOUNDATION",
+      "title": "Control Tower Human Verification Closeout",
+      "phaseId": "PH-FOUNDATION",
+      "order": 13,
+      "status": "IN_REVIEW",
+      "dependsOn": [
+        "MD-LV1"
+      ],
+      "canonicalRefs": [
+        "docs/control/HUMAN_LIVE_VERIFICATION.md"
+      ],
+      "outcome": "CEO human live verification of the deployed Control Tower recorded as PASS with no issues noted; production not authorised",
+      "entryCriteria": [
+        "MD-LV1 in review",
+        "Control Tower deployed live",
+        "Automated live verification PASS"
+      ],
+      "exitCriteria": [
+        "CEO human live verification recorded PASS",
+        "OI-FC1-001 resolved by human verification",
+        "Protected production gates remain unsigned",
+        "Completed slices remain IN_REVIEW",
+        "Event OS not started"
+      ],
+      "expectedFiles": [
+        "docs/control/HUMAN_LIVE_VERIFICATION.md"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T18:10:00Z",
+      "version": "hv1-human-verify-1"
+    },
+    {
       "id": "EOS-S01",
       "product": "EVENT_OS",
       "title": "Event OS Slice 1 \u2014 Platform foundation (identity, clients, events, design system, staging-only)",

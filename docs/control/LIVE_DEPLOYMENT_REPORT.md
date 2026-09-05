@@ -72,7 +72,12 @@ Chromium desktop and Chromium mobile 390×844: 14/14 live smoke tests passed. We
 
 ## J. Human verification
 
-Pending. See `docs/control/LIVE_VERIFICATION_EVIDENCE.md`. `OI-FC1-001` remains OPEN.
+Recorded in MD-HV1. See `docs/control/HUMAN_LIVE_VERIFICATION.md`.
+
+**CEO HUMAN LIVE VERIFICATION: PASS**  
+**ISSUES NOTED: NONE**
+
+`OI-FC1-001` is `RESOLVED_BY_HUMAN_VERIFICATION`. This is not production authorisation.
 
 ## K. Security
 
@@ -86,7 +91,8 @@ Resolved by this slice where actually deployed: `CT2-OI-001`, `CT4-OI-002`. Host
 
 **CONTROL TOWER DEPLOYED LIVE: YES**  
 **AUTOMATED LIVE VERIFICATION: PASS**  
-**HUMAN LIVE VERIFICATION: PENDING**  
+**CEO HUMAN LIVE VERIFICATION: PASS**  
+**HUMAN LIVE VERIFICATION ISSUES: NONE**  
 **KNOWN FOUNDATION TECHNICAL DEBT: ZERO**  
 **CONTROL TOWER PRODUCTION AUTHORISED: NO**  
 **EOS-S01 TECHNICALLY ELIGIBLE: YES** — not executed.

@@ -1,0 +1,12 @@
+id: DEC-HV1-HUMAN-VERIFY
+title: CEO human live verification of the Control Tower passed with no issues noted
+severity: HIGH
+owner: CEO
+authority: MD-HV1 records CEO live-browser verification; it is not production authorisation or slice acceptance
+disposition: CONTROLLING
+affectedIds:
+  - OI-FC1-001
+  - OI-FC1-002
+  - OI-FC1-003
+  - CT4-OI-001
+blocker: false

@@ -160,5 +160,19 @@
 | Live GitHub read | `GitHubHttpProvider` with `PROGRAMME_GITHUB_LIVE=1` |
 | Webhook | `POST /api/programme/github/webhook` + remote hook `674900340` |
 | Health | `/api/health/live`, `/api/health/ready` |
-| Human verification remains pending | `OI-FC1-001` OPEN |
+| Human verification remains pending | Recorded later in MD-HV1; `OI-FC1-001` was OPEN at LV1 |
 | Production not authorised | Protected gates unsigned |
+
+## MD-HV1
+
+**Prompt Control ID:** `MD-PR-S003`  
+**Slice ID:** `MD-HV1`
+
+| Requirement | Implementation |
+|-------------|----------------|
+| CEO human live verification | `docs/control/HUMAN_LIVE_VERIFICATION.md` — PASS, issues NONE |
+| Live Control Tower reviewed | `https://control-tower-production-dbc4.up.railway.app/programme` |
+| Resolve OI-FC1-001 only | `RESOLVED_BY_HUMAN_VERIFICATION`; historical YAML retained |
+| Do not infer production authorisation | `OI-FC1-002`, `OI-FC1-003`, `CT4-OI-001` remain OPEN |
+| Preserve IN_REVIEW | MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 remain IN_REVIEW; accepted = 0 |
+| Event OS unstarted | EOS-S01 technically eligible, not executed |

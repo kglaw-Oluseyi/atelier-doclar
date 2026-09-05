@@ -16,7 +16,14 @@
     "operations": 0
   },
   "productionDecisionPending": ["CT2-OI-001", "CT4-OI-001", "CT4-OI-002", "OI-CT0-004"],
-  "protectedApprovalPending": ["OI-FC1-001", "OI-FC1-002", "OI-FC1-003"],
+  "protectedApprovalPending": ["OI-FC1-002", "OI-FC1-003"],
+  "humanLiveVerification": {
+    "sliceId": "MD-HV1",
+    "result": "PASS",
+    "issuesNoted": "NONE",
+    "oiFc1001": "RESOLVED_BY_HUMAN_VERIFICATION",
+    "controlTowerProductionAuthorised": false
+  },
   "eventOsDependencyPending": ["OI-CT0-002", "OI-CT0-003", "OI-FC1-004"],
   "optionalFutureEnhancement": ["CT5-OI-001", "CT7-OI-001", "CT8-OI-001"],
   "foundationImplementationComplete": true,

@@ -25,7 +25,7 @@
 | CT7-OI-002 | Index rebuilt per request | MEDIUM | AI CTO | no | Fingerprint cache + optional file | Latency debt removed | RESOLVED_BY_IMPLEMENTATION | No search cluster | RESOLVED |
 | CT8-OI-001 | External messaging unselected | MEDIUM | CEO | no | In-app notices exist | Optional | OPTIONAL_FUTURE_ENHANCEMENT | Do not select Twilio/email | OPEN |
 | CT9-OI-001 | Hosting + database + live validation umbrella | HIGH | CEO | no | Split into precise items | Umbrella retired | RESOLVED_BY_RECONCILIATION | Use split items | RESOLVED |
-| OI-FC1-001 | Live browser verification | HIGH | Independent | no | Checklist written; human pass pending | Protected/human | PROTECTED_APPROVAL_REQUIRED | Later deploy slice | OPEN |
+| OI-FC1-001 | Live browser verification | HIGH | CEO | no | CEO accessed live Control Tower 2026-09-05; issues NONE | Human verification complete | RESOLVED_BY_HUMAN_VERIFICATION | Keep historical record | RESOLVED |
 | OI-FC1-002 | Independent acceptance | CRITICAL | Independent | no | GATE-INDEPENDENT unsigned | Protected | PROTECTED_APPROVAL_REQUIRED | Named reviewer | OPEN |
 | OI-FC1-003 | CEO production authorisation | CRITICAL | CEO | no | GATE-CEO-PRODUCTION unsigned | Protected | PROTECTED_APPROVAL_REQUIRED | CEO only | OPEN |
 | OI-FC1-004 | Shared platform store must not fork | HIGH | AI CTO | no | Successor of misused OI-CT0-005 note | Valid EOS constraint | VALID_EVENT_OS_BLOCKER | Design in EOS-S01 | OPEN |

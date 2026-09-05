@@ -71,6 +71,7 @@ describe("PostgreSQL programme store", () => {
     const view = engine.currentView({ generatedAt: CORPUS_SEED_TIME, snapshotId: "SNAP-PG" });
     assert.equal(view.statuses["MD-FC1"], "IN_REVIEW");
     assert.equal(view.statuses["MD-LV1"], "IN_REVIEW");
+    assert.equal(view.statuses["MD-HV1"], "IN_REVIEW");
     assert.equal(view.statuses["EOS-S01"], "NOT_STARTED");
     assert.equal(Object.values(view.statuses).filter((status) => status === "ACCEPTED").length, 0);
     await pg.saveSnapshotAsync({

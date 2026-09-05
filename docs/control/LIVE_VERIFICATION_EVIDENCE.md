@@ -12,7 +12,7 @@
 |---------|----------|--------|
 | Chromium | desktop | PASS (7/7) |
 | Chromium | 390×844 | PASS (7/7) |
-| WebKit / Safari | — | NOT RUN — human verification required |
+| WebKit / Safari | — | NOT RUN automatically; CEO human live verification PASS (MD-HV1) |
 
 Totals: **14 passed**, 0 failed. axe: no serious/critical violations on the live portfolio.
 
@@ -44,16 +44,15 @@ Recorded after deployment `e2fa65d2-d6a9-4ea9-ae62-ce57b290b686`:
 - Unauthenticated `/programme` → 307 `/programme/login`
 - Fixtures not enabled on the live service
 
-## CEO / human remaining steps
+## CEO human live verification (MD-HV1)
 
-`OI-FC1-001` can be completed only by a named human reviewer. Do not treat this file as human acceptance.
+Recorded 2026-09-05. Evidence: `docs/control/HUMAN_LIVE_VERIFICATION.md`.
 
-1. Open `https://control-tower-production-dbc4.up.railway.app/programme`.
-2. Confirm HTTPS and the temporary-verification login copy.
-3. In Railway project `atelier-doclar` → service `control-tower` → Variables, copy `PROGRAMME_ACCESS_TOKEN`. Do not commit it.
-4. Sign in with your real name, an appropriate role, and that token.
-5. Confirm logout returns to login and a new visit to `/programme` requires sign-in again.
-6. Inspect the routes listed in `docs/control/CONTROL_TOWER_LIVE_VERIFICATION.md`.
-7. Confirm MD-B0–MD-CT9, MD-FC1 and MD-LV1 are IN_REVIEW, accepted = 0, EOS-S01 is not started, and production authorised is false.
-8. Check desktop, mobile, and Safari. Use keyboard only for one pass.
-9. Record human acceptance separately. Do not mark production approved from the Control Tower.
+**CEO HUMAN LIVE VERIFICATION: PASS**  
+**ISSUES NOTED: NONE**
+
+The CEO personally accessed `https://control-tower-production-dbc4.up.railway.app/programme` on Railway project `atelier-doclar` and completed a visual/functional review. Completed slices displaying `IN_REVIEW` were observed and understood. `OI-FC1-001` is `RESOLVED_BY_HUMAN_VERIFICATION`.
+
+This file remains automated live-test evidence plus that human result. It is not formal slice acceptance, independent acceptance, CEO production authorisation, specialist approval, or live-event approval.
+
+**CONTROL TOWER PRODUCTION AUTHORISED: NO**

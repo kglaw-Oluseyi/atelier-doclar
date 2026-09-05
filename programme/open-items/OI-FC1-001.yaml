@@ -3,9 +3,9 @@ product: FOUNDATION
 sliceId: MD-FC1
 title: Human live-browser verification of the deployed Control Tower has not been performed
 severity: HIGH
-owner: Named independent reviewer
-status: OPEN
-decisionAuthority: Independent reviewer
+owner: CEO
+status: RESOLVED
+decisionAuthority: CEO
 blocker: false
 evidence: []
-notes: "Checklist: docs/control/CONTROL_TOWER_LIVE_VERIFICATION.md. Automated Playwright is not a substitute for HUMAN LIVE ACCEPTANCE. Classification PROTECTED_APPROVAL_REQUIRED. Does not block EOS-S01 coding."
+notes: "HISTORICAL: Checklist docs/control/CONTROL_TOWER_LIVE_VERIFICATION.md. Automated Playwright is not a substitute for HUMAN LIVE ACCEPTANCE. RESOLUTION MD-HV1 2026-09-05: CEO personally accessed and visually/functionally reviewed the live Control Tower at https://control-tower-production-dbc4.up.railway.app/programme on Railway project atelier-doclar. Successful access. No issues noted. Evidence source = CEO human verification. Classification RESOLVED_BY_HUMAN_VERIFICATION. This is not formal slice acceptance, independent acceptance (OI-FC1-002 remains OPEN), CEO production authorisation (OI-FC1-003 remains OPEN), specialist approval, or live-event approval. See docs/control/HUMAN_LIVE_VERIFICATION.md."

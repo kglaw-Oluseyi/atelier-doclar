@@ -35,7 +35,7 @@ This is technical review evidence. It is not CEO production authorisation, indep
 | Unresolved Foundation data-integrity defect | 0 |
 | Unresolved Foundation operational defect | 0 |
 | Production decision pending | 4 (`CT2-OI-001`, `CT4-OI-001`, `CT4-OI-002`, `OI-CT0-004`) |
-| Protected approval pending | 3 (`OI-FC1-001`, `OI-FC1-002`, `OI-FC1-003`) |
+| Protected approval pending | 2 (`OI-FC1-002`, `OI-FC1-003`; `OI-FC1-001` resolved in MD-HV1) |
 | Event OS-specific dependency pending | 3 (`OI-CT0-002`, `OI-CT0-003`, `OI-FC1-004`) |
 | Optional future enhancement | 3 (`CT5-OI-001` richer DAG, `CT7-OI-001`, `CT8-OI-001`) |
 
@@ -47,4 +47,12 @@ This is technical review evidence. It is not CEO production authorisation, indep
 
 ## Next authorised product work
 
-A dedicated Control Tower live-deployment/verification slice — not Event OS — should follow if the CEO authorises it. EOS-S01 remains unexecuted.
+Foundation technical closeout, live deployment, automated live verification and CEO human live verification are recorded. The next authorised programme execution may be `EVENT_OS — EOS-S01`. EOS-S01 remains unexecuted.
+
+## MD-HV1 addendum — human live verification
+
+**CEO HUMAN LIVE VERIFICATION: PASS**  
+**ISSUES NOTED: NONE**  
+**CONTROL TOWER PRODUCTION AUTHORISED: NO**
+
+`OI-FC1-001` is `RESOLVED_BY_HUMAN_VERIFICATION`. Independent acceptance and CEO production authorisation remain OPEN. Completed slices remain `IN_REVIEW`.

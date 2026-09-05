@@ -14,6 +14,7 @@ describe("live postgres runtime", () => {
     const view = snapshotFromRuntime(first, "2026-09-05T17:10:00.000Z");
     assert.equal(view.statuses["MD-FC1"], "IN_REVIEW");
     assert.equal(view.statuses["MD-LV1"], "IN_REVIEW");
+    assert.equal(view.statuses["MD-HV1"], "IN_REVIEW");
     assert.equal(view.statuses["EOS-S01"], "NOT_STARTED");
     assert.equal(Object.values(view.statuses).filter((status) => status === "ACCEPTED").length, 0);
     assert.equal(view.freshness.source, "postgres");

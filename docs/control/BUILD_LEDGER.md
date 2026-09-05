@@ -16,4 +16,5 @@
 | MD-CT8 | MD-PR-0009 | CT8 | FOUNDATION | `bf5214483e238c19ca04908016eff71a19a3ffd0` | IN_REVIEW | Charts, freshness and in-app notices. Not ACCEPTED. |
 | MD-CT9 | MD-PR-0010 | CT9 | FOUNDATION | `28958e31778e92c3354e72447150353939ed4596` | IN_REVIEW | Operations evidence pack. Not ACCEPTED. Not production authorised. |
 | MD-FC1 | MD-PR-S001 | FC1 | FOUNDATION | `e337eba83cfc41590f226f980772f848d827b6e3` | IN_REVIEW | Foundation closeout. Technically reviewed; not ACCEPTED. Production not authorised. |
-| MD-LV1 | MD-PR-S002 | LV1 | FOUNDATION | *(this slice)* | IN_REVIEW | Live Railway deployment and automated verification. Human verification pending. Production not authorised. |
+| MD-LV1 | MD-PR-S002 | LV1 | FOUNDATION | `b554da4f00cf7911bbccb8cac09a7a2ada7141d5` | IN_REVIEW | Live Railway deployment and automated verification. Human verification recorded in MD-HV1. Production not authorised. |
+| MD-HV1 | MD-PR-S003 | HV1 | FOUNDATION | *(this slice)* | IN_REVIEW | CEO human live verification PASS; issues NONE. Not ACCEPTED. Production not authorised. |
