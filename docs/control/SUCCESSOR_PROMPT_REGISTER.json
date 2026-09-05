@@ -106,6 +106,14 @@
       "product": "EVENT_OS",
       "title": "Event OS S04 Canonical Scope Reconciliation",
       "authorising_instruction": "Reconcile native S4-01–S4-62 against accepted S01–S03 and HV-EOS-001–005; do not implement EOS-S04, change S04 from READY, mutate Railway, or authorise production"
+    },
+    {
+      "prompt_control_id": "MD-PR-S015",
+      "native_id": "S4-01-S4-62",
+      "slice_id": "EOS-S04",
+      "product": "EVENT_OS",
+      "title": "Event OS Slice 4 — Guest Communications and Concierge",
+      "authorising_instruction": "Implement EOS-S04 only; synthetic delivery; no Railway; no real guest contact; do not accept S04, deploy, or start EOS-S05"
     }
   ]
 }

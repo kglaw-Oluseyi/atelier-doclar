@@ -283,8 +283,8 @@
 | Predecessor law | EOS-S02 already ACCEPTED; default ACCEPTANCE dependency satisfied |
 | Projector derives ACCEPTED | No handwritten status override as source truth |
 | Accepted count exactly 3 | EOS-S01, EOS-S02 and EOS-S03 only |
-| EOS-S04 eligibility | Default ACCEPTANCE on EOS-S03; READY after acceptance; implementation not started |
-| EOS-S04 implementation | Not authorised; canonical scope reconciled under MD-PR-S014; separate authorisation required |
+| EOS-S04 eligibility | Default ACCEPTANCE on EOS-S03; READY after acceptance; implementation authorised under MD-PR-S015 |
+| EOS-S04 implementation | Complete and IN_REVIEW; native coverage 62/62; not accepted |
 | Foundation / gates / production | Foundation IN_REVIEW; protected gates unsigned; `productionAuthorised = false` |
 
 ## EOS-HV1
@@ -317,4 +317,18 @@
 | HV map | HV-EOS-001 NO; 002–004 PARTIAL; 005 POLICY-ONLY |
 | Architecture | Extend shared-platform / Event OS; no parallel domain |
 | Provider / production | Neutral adapters; no real guest contact; no Railway |
-| EOS-S04 status | READY; implementation not authorised |
+| EOS-S04 status | READY at reconciliation; implementation executed under MD-PR-S015 |
+
+## EOS-S04 implementation
+
+**Prompt Control ID:** `MD-PR-S015`  
+**Slice ID:** `EOS-S04`
+
+| Requirement | Record |
+|-------------|---------|
+| Native coverage | S4-01–S4-62 / 62/62 |
+| Dispositions | A 42 / C 13 / G 4 / H 1 / F 2 |
+| S4-61 | AWAITING EXTERNAL REVIEW; evidence prepared |
+| S4-62 | AWAITING CEO / CONTROLLED ACCEPTANCE; handover prepared |
+| Production / Railway / real send | NO |
+| Status | IN_REVIEW; accepted count remains 3 |

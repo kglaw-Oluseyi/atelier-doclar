@@ -84,6 +84,9 @@ function actionError(error: unknown): string {
   if (error instanceof PlatformError) {
     return [error.publicMessage, ...(error.details ?? [])].filter(Boolean).join(" ");
   }
+  if (error instanceof Error && error.message && !error.message.includes("NEXT_REDIRECT")) {
+    return error.message;
+  }
   return "The request could not be completed.";
 }
 
@@ -524,4 +527,355 @@ export async function logoutGuestRsvpAction(): Promise<void> {
   }
   await access.clearGuestSessionCookie();
   redirect("/rsvp/unavailable");
+}
+
+function commsFail(eventId: string, path: string, error: unknown): never {
+  redirect(`/app/events/${encodeURIComponent(eventId)}/communications/${path}?error=${encodeURIComponent(actionError(error))}`);
+}
+
+function commsOrg(actor: Awaited<ReturnType<typeof requireActor>>["actor"], eventId: string, path: string) {
+  const organisation = getRuntime().service.listOrganisations(actor)[0];
+  if (!organisation) commsFail(eventId, path, new Error("No organisation assignment is available."));
+  return organisation;
+}
+
+export async function prepareCommunicationsAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const eventId = String(formData.get("eventId") ?? "");
+  try {
+    const organisation = commsOrg(actor, eventId, "");
+    getRuntime().service.prepareCommunications(actor, {
+      organisationId: organisation.id,
+      eventId,
+      reason: String(formData.get("reason") ?? "Prepare guest communications"),
+    });
+  } catch (error) {
+    commsFail(eventId, "", error);
+  }
+  redirect(`/app/events/${eventId}/communications`);
+}
+
+export async function publishChannelPolicyAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const eventId = String(formData.get("eventId") ?? "");
+  try {
+    const organisation = commsOrg(actor, eventId, "policy");
+    getRuntime().service.publishChannelPolicy(actor, {
+      organisationId: organisation.id,
+      eventId,
+      expectedVersion: Number(formData.get("expectedVersion")),
+      quietHoursStart: String(formData.get("quietHoursStart") ?? "") || undefined,
+      quietHoursEnd: String(formData.get("quietHoursEnd") ?? "") || undefined,
+      frequencyCapPerDay: Number(formData.get("frequencyCapPerDay") || 0) || undefined,
+      acknowledgementMinutes: Number(formData.get("acknowledgementMinutes") || 0) || undefined,
+      sandboxDispatchEnabled: formData.get("sandboxDispatchEnabled") === "1",
+      reason: String(formData.get("reason") ?? "Publish channel policy"),
+    });
+  } catch (error) {
+    commsFail(eventId, "policy", error);
+  }
+  redirect(`/app/events/${eventId}/communications/policy?status=published`);
+}
+
+export async function publishOccasionAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const eventId = String(formData.get("eventId") ?? "");
+  try {
+    const organisation = commsOrg(actor, eventId, "policy");
+    getRuntime().service.publishGuestSafeOccasion(actor, {
+      organisationId: organisation.id,
+      eventId,
+      expectedVersion: Number(formData.get("expectedVersion")),
+      verifyWhen: formData.get("verifyWhen") === "1",
+      verifyVenue: formData.get("verifyVenue") === "1",
+      arrival: String(formData.get("arrival") ?? "") || undefined,
+      dress: String(formData.get("dress") ?? "") || undefined,
+      context: String(formData.get("context") ?? "") || undefined,
+      reason: String(formData.get("reason") ?? "Publish guest-safe occasion"),
+    });
+  } catch (error) {
+    commsFail(eventId, "policy", error);
+  }
+  redirect(`/app/events/${eventId}/communications/policy?status=occasion-published`);
+}
+
+export async function createTemplateVersionAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const eventId = String(formData.get("eventId") ?? "");
+  const templateId = String(formData.get("templateId") ?? "");
+  try {
+    const organisation = commsOrg(actor, eventId, `templates/${templateId}`);
+    getRuntime().service.createTemplateVersion(actor, {
+      organisationId: organisation.id,
+      eventId,
+      templateId,
+      subject: String(formData.get("subject") ?? "") || undefined,
+      body: String(formData.get("body") ?? ""),
+      reason: String(formData.get("reason") ?? "Create template version"),
+    });
+  } catch (error) {
+    commsFail(eventId, `templates/${templateId}`, error);
+  }
+  redirect(`/app/events/${eventId}/communications/templates/${templateId}`);
+}
+
+export async function approveTemplateAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const eventId = String(formData.get("eventId") ?? "");
+  const templateId = String(formData.get("templateId") ?? "");
+  try {
+    const organisation = commsOrg(actor, eventId, `templates/${templateId}`);
+    getRuntime().service.approveTemplate(actor, {
+      organisationId: organisation.id,
+      eventId,
+      templateVersionId: String(formData.get("templateVersionId") ?? ""),
+      expectedVersion: Number(formData.get("expectedVersion")),
+      reason: String(formData.get("reason") ?? "Approve template"),
+    });
+  } catch (error) {
+    commsFail(eventId, `templates/${templateId}`, error);
+  }
+  redirect(`/app/events/${eventId}/communications/templates/${templateId}?status=approved`);
+}
+
+export async function upsertAudienceAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const eventId = String(formData.get("eventId") ?? "");
+  let audienceId: string;
+  try {
+    const organisation = commsOrg(actor, eventId, "audiences");
+    const audience = getRuntime().service.upsertAudience(actor, {
+      organisationId: organisation.id,
+      eventId,
+      audienceId: String(formData.get("audienceId") ?? "") || undefined,
+      expectedVersion: Number(formData.get("expectedVersion") || 0) || undefined,
+      name: String(formData.get("name") ?? ""),
+      filters: [
+        { predicate: "LIFECYCLE", value: "ACTIVE" },
+        { predicate: "HAS_EMAIL", value: "YES" },
+      ],
+      reason: String(formData.get("reason") ?? "Save audience"),
+    });
+    audienceId = audience.id;
+  } catch (error) {
+    commsFail(eventId, "audiences", error);
+  }
+  redirect(`/app/events/${eventId}/communications/audiences/${audienceId}`);
+}
+
+export async function createCampaignAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const eventId = String(formData.get("eventId") ?? "");
+  let campaignId: string;
+  try {
+    const organisation = commsOrg(actor, eventId, "campaigns/new");
+    const campaign = getRuntime().service.createCampaign(actor, {
+      organisationId: organisation.id,
+      eventId,
+      name: String(formData.get("name") ?? ""),
+      purpose: String(formData.get("purpose") ?? "INVITATION"),
+      channel: String(formData.get("channel") ?? "EMAIL"),
+      templateId: String(formData.get("templateId") ?? ""),
+      audienceDefinitionId: String(formData.get("audienceDefinitionId") ?? ""),
+      linkedInvitationId: String(formData.get("linkedInvitationId") ?? "") || undefined,
+      testOnly: formData.get("testOnly") === "1",
+      reason: String(formData.get("reason") ?? "Create campaign"),
+    });
+    campaignId = campaign.id;
+  } catch (error) {
+    commsFail(eventId, "campaigns/new", error);
+  }
+  redirect(`/app/events/${eventId}/communications/campaigns/${campaignId}`);
+}
+
+export async function requestCampaignApprovalAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const eventId = String(formData.get("eventId") ?? "");
+  const campaignId = String(formData.get("campaignId") ?? "");
+  try {
+    const organisation = commsOrg(actor, eventId, `campaigns/${campaignId}`);
+    getRuntime().service.requestCampaignApproval(actor, {
+      organisationId: organisation.id,
+      eventId,
+      campaignId,
+      expectedVersion: Number(formData.get("expectedVersion")),
+      reason: String(formData.get("reason") ?? "Request approval"),
+    });
+  } catch (error) {
+    commsFail(eventId, `campaigns/${campaignId}`, error);
+  }
+  redirect(`/app/events/${eventId}/communications/campaigns/${campaignId}`);
+}
+
+export async function decideCampaignAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const eventId = String(formData.get("eventId") ?? "");
+  const campaignId = String(formData.get("campaignId") ?? "");
+  try {
+    const organisation = commsOrg(actor, eventId, `campaigns/${campaignId}`);
+    getRuntime().service.decideCampaign(actor, {
+      organisationId: organisation.id,
+      eventId,
+      campaignId,
+      expectedVersion: Number(formData.get("expectedVersion")),
+      decision: String(formData.get("decision") ?? "APPROVED"),
+      comment: String(formData.get("comment") ?? "") || undefined,
+      reason: String(formData.get("reason") ?? "Decide campaign"),
+    });
+  } catch (error) {
+    commsFail(eventId, `campaigns/${campaignId}`, error);
+  }
+  redirect(`/app/events/${eventId}/communications/campaigns/${campaignId}`);
+}
+
+export async function actOnCampaignAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const eventId = String(formData.get("eventId") ?? "");
+  const campaignId = String(formData.get("campaignId") ?? "");
+  try {
+    const organisation = commsOrg(actor, eventId, `campaigns/${campaignId}`);
+    const action = String(formData.get("action") ?? "RUN");
+    getRuntime().service.actOnCampaign(actor, {
+      organisationId: organisation.id,
+      eventId,
+      campaignId,
+      expectedVersion: Number(formData.get("expectedVersion")),
+      action,
+      failMode: String(formData.get("failMode") ?? "") || undefined,
+      reason: String(formData.get("reason") ?? "Campaign action"),
+    });
+  } catch (error) {
+    commsFail(eventId, `campaigns/${campaignId}`, error);
+  }
+  redirect(`/app/events/${eventId}/communications/campaigns/${campaignId}?act=${encodeURIComponent(String(formData.get("action") ?? "RUN"))}`);
+}
+
+export async function ingestInboundAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const eventId = String(formData.get("eventId") ?? "");
+  try {
+    const organisation = commsOrg(actor, eventId, "inbox");
+    const sender = String(formData.get("sender") ?? "");
+    const body = String(formData.get("body") ?? "");
+    const providerMessageId = String(formData.get("providerMessageId") ?? `in-${crypto.randomUUID()}`);
+    const signature = getRuntime().service.signSynthetic(`${providerMessageId}:${sender}:${body}`);
+    getRuntime().service.ingestInbound(actor, {
+      organisationId: organisation.id,
+      eventId,
+      channel: String(formData.get("channel") ?? "EMAIL"),
+      providerMessageId,
+      sender,
+      body,
+      attachmentFileName: String(formData.get("attachmentFileName") ?? "") || undefined,
+      signature,
+      reason: String(formData.get("reason") ?? "Inject synthetic inbound"),
+    });
+  } catch (error) {
+    commsFail(eventId, "inbox", error);
+  }
+  redirect(`/app/events/${eventId}/communications/inbox`);
+}
+
+export async function resolveUnmatchedAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const eventId = String(formData.get("eventId") ?? "");
+  try {
+    const organisation = commsOrg(actor, eventId, "unmatched");
+    getRuntime().service.resolveUnmatchedInbound(actor, {
+      organisationId: organisation.id,
+      eventId,
+      inboundId: String(formData.get("inboundId") ?? ""),
+      expectedVersion: Number(formData.get("expectedVersion")),
+      guestId: String(formData.get("guestId") ?? "") || undefined,
+      action: String(formData.get("action") ?? "LINK"),
+      reason: String(formData.get("reason") ?? "Resolve unmatched inbound"),
+    });
+  } catch (error) {
+    commsFail(eventId, "unmatched", error);
+  }
+  redirect(`/app/events/${eventId}/communications/unmatched`);
+}
+
+export async function replyOnThreadAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const eventId = String(formData.get("eventId") ?? "");
+  const threadId = String(formData.get("threadId") ?? "");
+  try {
+    const organisation = commsOrg(actor, eventId, `inbox/${threadId}`);
+    getRuntime().service.replyOnThread(actor, {
+      organisationId: organisation.id,
+      eventId,
+      threadId,
+      body: String(formData.get("body") ?? ""),
+      privateNote: String(formData.get("privateNote") ?? "") || undefined,
+      reason: String(formData.get("reason") ?? "Concierge reply"),
+    });
+  } catch (error) {
+    commsFail(eventId, `inbox/${threadId}`, error);
+  }
+  redirect(`/app/events/${eventId}/communications/inbox/${threadId}`);
+}
+
+export async function actOnTaskAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const eventId = String(formData.get("eventId") ?? "");
+  try {
+    const organisation = commsOrg(actor, eventId, "tasks");
+    getRuntime().service.actOnTask(actor, {
+      organisationId: organisation.id,
+      eventId,
+      taskId: String(formData.get("taskId") ?? ""),
+      expectedVersion: Number(formData.get("expectedVersion")),
+      action: String(formData.get("action") ?? "ACKNOWLEDGE"),
+      ownerPersonId: String(formData.get("ownerPersonId") ?? "") || undefined,
+      resolution: String(formData.get("resolution") ?? "") || undefined,
+      reason: String(formData.get("reason") ?? "Task action"),
+    });
+  } catch (error) {
+    commsFail(eventId, "tasks", error);
+  }
+  redirect(`/app/events/${eventId}/communications/tasks`);
+}
+
+export async function decideCorrectionAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const eventId = String(formData.get("eventId") ?? "");
+  try {
+    const organisation = commsOrg(actor, eventId, "corrections");
+    getRuntime().service.decideContactCorrection(actor, {
+      organisationId: organisation.id,
+      eventId,
+      correctionId: String(formData.get("correctionId") ?? ""),
+      expectedVersion: Number(formData.get("expectedVersion")),
+      decision: String(formData.get("decision") ?? "REJECTED"),
+      reason: String(formData.get("reason") ?? "Decide contact correction"),
+    });
+  } catch (error) {
+    commsFail(eventId, "corrections", error);
+  }
+  redirect(`/app/events/${eventId}/communications/corrections`);
+}
+
+export async function applySyntheticCallbackAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const eventId = String(formData.get("eventId") ?? "");
+  const campaignId = String(formData.get("campaignId") ?? "");
+  try {
+    const organisation = commsOrg(actor, eventId, `campaigns/${campaignId}`);
+    const providerRequestKey = String(formData.get("providerRequestKey") ?? "");
+    const type = String(formData.get("type") ?? "DELIVERED");
+    const providerEventId = String(formData.get("providerEventId") ?? `cb-${crypto.randomUUID()}`);
+    const signature = getRuntime().service.signSynthetic(`${providerRequestKey}:${type}:${providerEventId}`);
+    getRuntime().service.applySyntheticCallback(actor, {
+      organisationId: organisation.id,
+      eventId,
+      providerRequestKey,
+      providerEventId,
+      type,
+      signature,
+    });
+  } catch (error) {
+    commsFail(eventId, `campaigns/${campaignId}`, error);
+  }
+  redirect(`/app/events/${eventId}/communications/campaigns/${campaignId}`);
 }

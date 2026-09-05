@@ -20,6 +20,10 @@ export {
   GUEST_LIFECYCLE_STATES,
   IDENTITY_RESOLUTION_STATES,
   CANONICAL_INTAKE_MAPPING_VERSION,
+  MSG_CHANNELS,
+  MSG_PURPOSES,
+  MSG_CAMPAIGN_STATUSES,
+  MSG_MESSAGE_STATUSES,
   type StoreProductionStatus,
 } from "./constants.js";
 export { PlatformError, PLATFORM_ERROR_CODES, publicMessageFor, type PlatformErrorCode } from "./errors.js";
@@ -125,3 +129,29 @@ export {
   type RsvpAttendanceIntent,
 } from "./rsvp-schemas.js";
 export { canonicalQuestionnaireSections, guestVisibleName } from "./rsvp-operations.js";
+export {
+  ALLOWED_TEMPLATE_VARIABLES,
+  presentationLabel,
+  signSyntheticPayload,
+  projectGuestSafeOccasion,
+} from "./communications-operations.js";
+export {
+  PrepareCommunicationsInputSchema,
+  PublishOccasionInputSchema,
+  PublishChannelPolicyInputSchema,
+  CreateCampaignInputSchema,
+  type ChannelPolicy,
+  type GuestSafeOccasion,
+  type GuestSafeOccasionView,
+  type Campaign,
+  type MessageTemplate,
+  type MessageTemplateVersion,
+  type AudienceDefinition,
+  type ConversationThread,
+  type InboundMessage,
+  type FollowUpTask,
+  type ContactCorrection,
+  type CommsMessage,
+  type MsgChannel,
+  type MsgPurpose,
+} from "./communications-schemas.js";

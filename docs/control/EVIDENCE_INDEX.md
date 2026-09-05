@@ -273,5 +273,19 @@ CEO / George Lawson completed the walkthrough against deployment `9cee3095-cb37-
 | EV-EOS-S04-HV-MAP | DOCUMENT | HV-EOS-001–005 alignment | `docs/control/EOS_S04_HV_FINDING_MAP.md` |
 | EV-EOS-S04-PLAN | DOCUMENT | Implementation plan (not executed) | `docs/control/EOS_S04_IMPLEMENTATION_PLAN.md` |
 
-Native pack extracted from `MDOS/slice4/Maison_Doclar_Slice_4_Cursor_Prompt_Pack_v1.0.docx`. EOS-S04 remains READY. Implementation not authorised. Production not authorised. No Railway mutation.
+Native pack extracted from `MDOS/slice4/Maison_Doclar_Slice_4_Cursor_Prompt_Pack_v1.0.docx`. Reconciliation remains READY evidence. Implementation authorised and executed under MD-PR-S015.
+
+## EOS-S04
+
+**Prompt Control ID:** `MD-PR-S015`  
+**Slice ID:** `EOS-S04`  
+**Status:** `IN_REVIEW` (not accepted)
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-EOS-S04-IMPL | DOCUMENT | Implementation report | `docs/control/EOS_S04_IMPLEMENTATION_REPORT.md` |
+| EV-EOS-S04-ARCH | DOCUMENT | Communications / concierge boundary | `docs/control/EVENT_OS_COMMUNICATIONS_CONCIERGE.md` |
+| EV-EOS-S04-COMMIT | COMMIT | Implementation commit (updated after git) | `packages/programme-domain/src/seed.ts` `EOS_S04_COMMIT` |
+
+S4-61 awaiting independent review. S4-62 awaiting CEO / controlled acceptance. Production not authorised. No Railway mutation.
 

@@ -36,6 +36,10 @@ export const EOS_S03_ACCEPTANCE_EVENT_ID = "EVT-SEED-EOS-S03-ACCEPT";
 export const EOS_S03_FINAL_VERIFIED_HEAD = "e57fe1a275da0f01f2a8b237d1579f54c20f86d5";
 export const EOS_HV1_TIME = "2026-09-06T02:10:00Z";
 export const EOS_HV1_EVIDENCE_ID = "EV-EOS-S01-S03-HUMAN-VERIFICATION";
+export const EOS_S04_SEED_TIME = "2026-09-06T03:10:00Z";
+export const EOS_S04_COMMIT_TIME = "2026-09-06T03:20:00Z";
+export const EOS_S04_COMMIT = "d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4";
+export const EOS_S04_COMMIT_EVIDENCE_ID = "EV-EOS-S04-COMMIT";
 export const B0_COMMIT = "f7abb431be9a15ab730b3fdd16baa8e83776c170";
 export const EOS_S01_COMMIT = "b815268e939cfbd0fc33ce10df77f1c8a1374d52";
 export const EOS_S01_ACCEPTANCE_EVENT_ID = "EVT-SEED-EOS-S01-ACCEPT";
@@ -75,7 +79,8 @@ function envelope(
     | "MD-GR1"
     | "EOS-S01"
     | "EOS-S02"
-    | "EOS-S03",
+    | "EOS-S03"
+    | "EOS-S04",
   occurredAt: string,
   payload: ProgrammeEvent["payload"],
   product: "FOUNDATION" | "EVENT_OS" = "FOUNDATION",
@@ -672,13 +677,100 @@ export function corpusSeedEventsThroughHv1(): ProgrammeEvent[] {
   return [...corpusSeedEventsThroughS03Acceptance(), ...eosHv1EvidenceEvents()];
 }
 
+function eosS04ImplementationEvents(): ProgrammeEvent[] {
+  return [
+    envelope(
+      "EVT-SEED-EOS-S04-IMPL",
+      "SLICE_IMPLEMENTATION_OBSERVED",
+      "EOS-S04",
+      EOS_S04_SEED_TIME,
+      { summary: "Event OS guest communications and concierge implemented; not accepted; production not authorised" },
+      "EVENT_OS",
+    ),
+    envelope(
+      "EVT-SEED-EOS-S04-REVIEW",
+      "REVIEW_REQUESTED",
+      "EOS-S04",
+      EOS_S04_SEED_TIME,
+      { summary: "EOS-S04 in review; not accepted; production not authorised; S4-61 and S4-62 remain external" },
+      "EVENT_OS",
+    ),
+    envelope(
+      "EVT-SEED-EOS-S04-EV-IMPL",
+      "EVIDENCE_ATTACHED",
+      "EOS-S04",
+      EOS_S04_SEED_TIME,
+      {
+        evidence: {
+          id: "EV-EOS-S04-IMPL",
+          kind: "DOCUMENT",
+          uri: "docs/control/EOS_S04_IMPLEMENTATION_REPORT.md",
+          createdAt: EOS_S04_SEED_TIME,
+          sourceSystem: "programme-control",
+          immutable: true,
+          summary: "EOS-S04 guest communications and concierge implementation report",
+        },
+      },
+      "EVENT_OS",
+    ),
+    envelope(
+      "EVT-SEED-EOS-S04-EV-ARCH",
+      "EVIDENCE_ATTACHED",
+      "EOS-S04",
+      EOS_S04_SEED_TIME,
+      {
+        evidence: {
+          id: "EV-EOS-S04-ARCH",
+          kind: "DOCUMENT",
+          uri: "docs/control/EVENT_OS_COMMUNICATIONS_CONCIERGE.md",
+          createdAt: EOS_S04_SEED_TIME,
+          sourceSystem: "programme-control",
+          immutable: true,
+          summary: "EOS-S04 communications and concierge boundary",
+        },
+      },
+      "EVENT_OS",
+    ),
+    envelope(
+      "EVT-SEED-EOS-S04-COMMIT",
+      "COMMIT_LINKED",
+      "EOS-S04",
+      EOS_S04_COMMIT_TIME,
+      { sha: EOS_S04_COMMIT },
+      "EVENT_OS",
+    ),
+    envelope(
+      "EVT-SEED-EOS-S04-EV-COMMIT",
+      "EVIDENCE_ATTACHED",
+      "EOS-S04",
+      EOS_S04_COMMIT_TIME,
+      {
+        evidence: {
+          id: EOS_S04_COMMIT_EVIDENCE_ID,
+          kind: "COMMIT",
+          uri: `git:${EOS_S04_COMMIT}`,
+          createdAt: EOS_S04_COMMIT_TIME,
+          sourceSystem: "github",
+          immutable: true,
+          summary: `EOS-S04 implementation commit ${EOS_S04_COMMIT}`,
+        },
+      },
+      "EVENT_OS",
+    ),
+  ];
+}
+
+export function corpusSeedEventsThroughS04Implementation(): ProgrammeEvent[] {
+  return [...corpusSeedEventsThroughHv1(), ...eosS04ImplementationEvents()];
+}
+
 /**
  * Full corpus seed, including governed EOS-S01, EOS-S02 and EOS-S03 technical
- * acceptance and S01–S03 human-verification evidence. Does not manufacture
- * ACCEPTED events for Foundation slices.
+ * acceptance, S01–S03 human-verification evidence, and EOS-S04 implementation
+ * evidence. Does not manufacture ACCEPTED events for Foundation slices or EOS-S04.
  */
 export function corpusSeedEvents(): ProgrammeEvent[] {
-  return corpusSeedEventsThroughHv1();
+  return corpusSeedEventsThroughS04Implementation();
 }
 
 export function loadCorpusBaseline(root?: string): {

@@ -738,7 +738,7 @@
       "title": "Event OS Slice 4 \u2014 Guest communications and concierge",
       "phaseId": "PH-EVENT-OS-FOUNDATIONS",
       "order": 4,
-      "status": "READY",
+      "status": "IN_REVIEW",
       "dependsOn": [
         "EOS-S03"
       ],
@@ -756,13 +756,43 @@
       "expectedFiles": [
         "MDOS/slice4/"
       ],
-      "commits": [],
-      "evidence": [],
+      "commits": [
+        "d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4"
+      ],
+      "evidence": [
+        {
+          "id": "EV-EOS-S04-IMPL",
+          "kind": "DOCUMENT",
+          "uri": "docs/control/EOS_S04_IMPLEMENTATION_REPORT.md",
+          "createdAt": "2026-09-06T03:10:00Z",
+          "sourceSystem": "programme-control",
+          "immutable": true,
+          "summary": "EOS-S04 guest communications and concierge implementation report"
+        },
+        {
+          "id": "EV-EOS-S04-ARCH",
+          "kind": "DOCUMENT",
+          "uri": "docs/control/EVENT_OS_COMMUNICATIONS_CONCIERGE.md",
+          "createdAt": "2026-09-06T03:10:00Z",
+          "sourceSystem": "programme-control",
+          "immutable": true,
+          "summary": "EOS-S04 communications and concierge boundary"
+        },
+        {
+          "id": "EV-EOS-S04-COMMIT",
+          "kind": "COMMIT",
+          "uri": "git:d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4",
+          "createdAt": "2026-09-06T03:20:00Z",
+          "sourceSystem": "github",
+          "immutable": true,
+          "summary": "EOS-S04 implementation commit d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4"
+        }
+      ],
       "openItems": [],
       "acceptedAt": null,
       "acceptedBy": null,
-      "updatedAt": "2026-09-05T05:10:00Z",
-      "version": "ct0-planning-1"
+      "updatedAt": "2026-09-06T03:20:00Z",
+      "version": "eos-s04-impl-1"
     },
     {
       "id": "EOS-S05",

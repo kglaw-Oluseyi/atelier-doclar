@@ -12,7 +12,7 @@ Percent complete is not used. Unknown is not healthy. Documented ≠ implemented
 | Code | Name | Route | Implementation reality |
 |------|------|-------|------------------------|
 | FOUNDATION | Shared Foundation / Control Tower | `/programme` | Control Tower implemented; Foundation closeout IN_REVIEW; production unsigned |
-| EVENT_OS | Event OS | `/programme/event-os` | Specified/prompted; no app |
+| EVENT_OS | Event OS | `/programme/event-os` | S01–S03 accepted; S04 communications/concierge IN_REVIEW |
 | EVENT_DAY | Event-Day Runtime | `/programme/event-day` | Specs + contracts; no app |
 | ACADEMY | Academy | `/programme/academy` | Specified/prompted; no app |
 | MARKETING | Marketing OS | `/programme/marketing` | Specified/prompted; no app |
@@ -68,8 +68,8 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 
 | Band | Content |
 |------|---------|
-| Now | Event OS S01–S03 live-verified; CEO human verification PASS WITH MINOR REFINEMENTS; EOS-S04 canonical scope reconciled under MD-PR-S014 (62/62); implementation unauthorised |
-| Next | Separate ChatGPT / AI CTO implementation-authorisation decision for EOS-S04; do not start EOS-S04 until that decision |
+| Now | Event OS S01–S03 accepted; EOS-S04 implemented and IN_REVIEW under MD-PR-S015; production unsigned |
+| Next | Independent ChatGPT / AI CTO technical review of EOS-S04; do not accept, deploy, or start EOS-S05 |
 | Later | Event OS S01 after a new authorised instruction; Runtime after Event OS foundations |
 | Held | All 693 product/recon prompts except CT0/CT1 wrappers |
 | External | Independent, specialist, venue, CEO gates — unsigned |

@@ -17,6 +17,14 @@ export default async function GuestRsvpPage({ searchParams }: { searchParams: Pr
           {view.guestDisplayName}, you are invited to respond for this occasion. This is not an admission or
           check-in.
         </p>
+        {view.occasion?.published ? (
+          <section className="guest-occasion" aria-label="Occasion">
+            {view.occasion.when ? <p>{view.occasion.when}</p> : null}
+            {view.occasion.venue ? <p>{view.occasion.venue}</p> : null}
+            {view.occasion.arrival ? <p>{view.occasion.arrival}</p> : null}
+            {view.occasion.dress ? <p>{view.occasion.dress}</p> : null}
+          </section>
+        ) : null}
         {view.confirmation ? (
           <p className="md-status" data-tone="ok" role="status">
             A response is already recorded. You may update it if the host still permits changes.

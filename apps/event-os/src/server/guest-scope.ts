@@ -36,6 +36,20 @@ export function guestPermissions(person: Person, actor: ActorContext, organisati
     rsvpInvite: authorize({ actor: actorSnap, permission: "rsvp.invitation.manage", scope }).allow,
     rsvpAmend: authorize({ actor: actorSnap, permission: "rsvp.response.amend", scope }).allow,
     rsvpReview: authorize({ actor: actorSnap, permission: "rsvp.exception.review", scope }).allow,
+    msgView: authorize({ actor: actorSnap, permission: "msg.inbox.view", scope }).allow,
+    msgPolicy: authorize({ actor: actorSnap, permission: "msg.policy.manage", scope }).allow,
+    msgTemplate: authorize({ actor: actorSnap, permission: "msg.template.manage", scope }).allow,
+    msgTemplatePublish: authorize({ actor: actorSnap, permission: "msg.template.publish", scope }).allow,
+    msgAudience: authorize({ actor: actorSnap, permission: "msg.audience.manage", scope }).allow,
+    msgCampaign: authorize({ actor: actorSnap, permission: "msg.campaign.manage", scope }).allow,
+    msgApprove: authorize({ actor: actorSnap, permission: "msg.campaign.approve", scope }).allow,
+    msgRun: authorize({ actor: actorSnap, permission: "msg.campaign.run", scope }).allow,
+    msgRespond: authorize({ actor: actorSnap, permission: "msg.inbox.respond", scope }).allow,
+    msgAssign: authorize({ actor: actorSnap, permission: "msg.inbox.assign", scope }).allow,
+    msgUnmatched: authorize({ actor: actorSnap, permission: "msg.inbound.unmatched.resolve", scope }).allow,
+    msgTask: authorize({ actor: actorSnap, permission: "msg.task.manage", scope }).allow,
+    msgCorrection: authorize({ actor: actorSnap, permission: "msg.contactCorrection.review", scope }).allow,
+    msgAnalytics: authorize({ actor: actorSnap, permission: "msg.analytics.view", scope }).allow,
   };
   void actor;
 }

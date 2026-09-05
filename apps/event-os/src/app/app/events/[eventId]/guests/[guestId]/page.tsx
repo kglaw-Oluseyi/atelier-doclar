@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PlatformError, operationalDisplayName } from "@maison-doclar/shared-platform";
+import { PlatformError, operationalDisplayName, type ActorContext } from "@maison-doclar/shared-platform";
 import { DuplicateResolveForm, GuestAmendForm } from "../../../../../../components/guest-amend-form";
 import { GuestAccessLink } from "../../../../../../components/guest-access-link";
 import { IssueInvitationForm, StaffRsvpForm } from "../../../../../../components/staff-rsvp-forms";
@@ -7,6 +7,41 @@ import { AppShell } from "../../../../../../components/shell";
 import { guestPermissions, resolveScopedEvent } from "../../../../../../server/guest-scope";
 import { guardedActor } from "../../../../../../server/guard";
 import { getRuntime } from "../../../../../../server/runtime";
+
+function GuestCommunicationsTimeline({
+  actor,
+  organisationId,
+  eventId,
+  guestId,
+}: {
+  actor: ActorContext;
+  organisationId: string;
+  eventId: string;
+  guestId: string;
+}) {
+  const timeline = getRuntime().service.listGuestCommunications(actor, organisationId, eventId, guestId);
+  return (
+    <section>
+      <h2>Communications</h2>
+      <p>
+        <Link href={`/app/events/${eventId}/communications`}>Open communications centre</Link>
+      </p>
+      {timeline.messages.length === 0 && timeline.inbound.length === 0 ? (
+        <p className="empty">No guest communications recorded for this event.</p>
+      ) : null}
+      {timeline.messages.map((item) => (
+        <p key={item.id}>
+          {item.direction} · {item.channel} · {item.status}
+        </p>
+      ))}
+      {timeline.inbound.map((item) => (
+        <p key={item.id}>
+          Inbound · {item.matchStatus} · {item.channel}
+        </p>
+      ))}
+    </section>
+  );
+}
 
 function fieldLine(label: string, quality: string, value?: string) {
   return (
@@ -147,6 +182,14 @@ export default async function GuestDetailPage({
             />
           ) : null}
         </section>
+      ) : null}
+      {permissions.msgView ? (
+        <GuestCommunicationsTimeline
+          actor={actor}
+          organisationId={scoped.organisation.id}
+          eventId={scoped.event.id}
+          guestId={guest.id}
+        />
       ) : null}
       {duplicates.length > 0 ? (
         <section>

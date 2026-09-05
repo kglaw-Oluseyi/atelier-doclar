@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   calculateAllStatuses,
-  corpusSeedEvents,
+  corpusSeedEventsThroughHv1,
   corpusSeedEventsThroughS03Acceptance,
   corpusSeedEventsThroughS03Implementation,
   createEngine,
@@ -23,7 +23,7 @@ import { MemoryProgrammeStore } from "../src/store.js";
 import { VALID_TIME } from "./helpers.js";
 import { makeEvent } from "./event-helpers.js";
 
-function engineFrom(events = corpusSeedEvents()) {
+function engineFrom(events = corpusSeedEventsThroughHv1()) {
   const { baseline } = loadCorpusBaseline();
   const store = new MemoryProgrammeStore();
   const engine = createEngine(store, baseline, CORPUS_SEED_TIME);
@@ -256,7 +256,7 @@ describe("EOS-S03 formal technical acceptance", () => {
     assert.deepEqual(afterProjection.slices["EOS-S04"]?.commits, []);
     assert.deepEqual(afterProjection.slices["EOS-S04"]?.evidence, []);
     assert.equal(
-      corpusSeedEvents().some((event) => event.sliceId === "EOS-S04" && event.eventType !== "SLICE_DECLARED"),
+      corpusSeedEventsThroughHv1().some((event) => event.sliceId === "EOS-S04" && event.eventType !== "SLICE_DECLARED"),
       false,
     );
   });

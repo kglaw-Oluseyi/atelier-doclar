@@ -1,10 +1,10 @@
 # Current State
 
-**Updated:** Event OS S04 canonical scope reconciliation  
-**Prompt Control ID:** `MD-PR-S014`  
-**Milestone:** `EOS-S04-RECON`
+**Updated:** Event OS S04 implementation  
+**Prompt Control ID:** `MD-PR-S015`  
+**Milestone:** `EOS-S04`
 
-MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is ACCEPTED. EOS-S02 is ACCEPTED. EOS-S03 is ACCEPTED. Accepted count is 3. EOS-S04 is READY / technically eligible. Canonical S04 prompts are reconciled (S4-01–S4-62). EOS-S04 is not authorised for implementation. Independent, specialist and CEO production gates remain unsigned.
+MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is ACCEPTED. EOS-S02 is ACCEPTED. EOS-S03 is ACCEPTED. Accepted count is 3. EOS-S04 is implemented and IN_REVIEW. Native coverage is 62/62. S4-61 and S4-62 remain external. Independent, specialist and CEO production gates remain unsigned.
 
 **FOUNDATION IMPLEMENTATION COMPLETE: YES**  
 **KNOWN FOUNDATION TECHNICAL DEBT: ZERO**  
@@ -29,7 +29,9 @@ MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is A
 **EOS-S03 STARTED: YES**  
 **EOS-S03 ACCEPTED: YES**  
 **EOS-S04 TECHNICALLY ELIGIBLE: YES**  
-**EOS-S04 IMPLEMENTATION AUTHORISED: NO**  
+**EOS-S04 IMPLEMENTATION AUTHORISED: YES**  
+**EOS-S04 IMPLEMENTATION COMPLETE: YES**  
+**EOS-S04 STATUS: IN_REVIEW**  
 **EVENT OS S01-S03 LIVE DEPLOYED: YES**  
 **EVENT OS AUTOMATED LIVE VERIFICATION: PASS**  
 **EVENT OS CEO HUMAN LIVE VERIFICATION: PASS WITH MINOR REFINEMENTS**  
@@ -46,4 +48,4 @@ Railway project: `atelier-doclar` only.
 
 `OI-FC1-004` is `RESOLVED_BY_EVENT_OS_ARCHITECTURE`. This is not production authorisation and does not accept any Foundation slice.
 
-Event OS S01–S03 are formally accepted, live-deployed, and CEO-verified as PASS WITH MINOR REFINEMENTS. The five findings were mapped against native S04 under MD-PR-S014; they are not acceptance failures and not automatic EOS-S04 scope. EOS-S04 canonical scope is reconciled and remains READY. EOS-S04 is not authorised for implementation. Production is not authorised.
+Event OS S01–S03 remain formally accepted. EOS-S04 guest communications and concierge are implemented under MD-PR-S015 and are IN_REVIEW. Cursor did not accept S04, deploy, or start EOS-S05. Production is not authorised.

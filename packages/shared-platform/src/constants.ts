@@ -32,6 +32,27 @@ export const SHARED_PLATFORM_OWNERSHIP = {
   rsvpAssistanceRequest: PLATFORM_PACKAGE,
   rsvpKeyRing: PLATFORM_PACKAGE,
   rsvpEventProjection: PLATFORM_PACKAGE,
+  channelPolicy: PLATFORM_PACKAGE,
+  guestSafeOccasion: PLATFORM_PACKAGE,
+  contactProjection: PLATFORM_PACKAGE,
+  suppressionEntry: PLATFORM_PACKAGE,
+  messageTemplate: PLATFORM_PACKAGE,
+  messageTemplateVersion: PLATFORM_PACKAGE,
+  audienceDefinition: PLATFORM_PACKAGE,
+  audienceSnapshot: PLATFORM_PACKAGE,
+  campaign: PLATFORM_PACKAGE,
+  campaignApproval: PLATFORM_PACKAGE,
+  commsMessage: PLATFORM_PACKAGE,
+  messageContentSnapshot: PLATFORM_PACKAGE,
+  messageAttempt: PLATFORM_PACKAGE,
+  deliveryEvent: PLATFORM_PACKAGE,
+  commsOutbox: PLATFORM_PACKAGE,
+  conversationThread: PLATFORM_PACKAGE,
+  inboundMessage: PLATFORM_PACKAGE,
+  followUpTask: PLATFORM_PACKAGE,
+  contactCorrection: PLATFORM_PACKAGE,
+  commsNotification: PLATFORM_PACKAGE,
+  commsIntelligenceAlert: PLATFORM_PACKAGE,
   consent: PLATFORM_PACKAGE,
   policyVersion: PLATFORM_PACKAGE,
   audit: PLATFORM_PACKAGE,
@@ -59,6 +80,10 @@ export const FORBIDDEN_PARALLEL_TRUTH = [
   "GuestAccount",
   "RsvpUser",
   "GuestStaffSession",
+  "EventGuest",
+  "EventOSGuest",
+  "CommunicationsGuest",
+  "ConciergeGuest",
 ] as const;
 
 export const DEFAULT_TIMEZONE = "Africa/Lagos";
@@ -137,6 +162,20 @@ export const PERMISSION_KEYS = [
   "rsvp.response.amend",
   "rsvp.exception.review",
   "rsvp.entitlement.manage",
+  "msg.policy.manage",
+  "msg.template.manage",
+  "msg.template.publish",
+  "msg.audience.manage",
+  "msg.campaign.manage",
+  "msg.campaign.approve",
+  "msg.campaign.run",
+  "msg.inbox.view",
+  "msg.inbox.respond",
+  "msg.inbox.assign",
+  "msg.inbound.unmatched.resolve",
+  "msg.task.manage",
+  "msg.contactCorrection.review",
+  "msg.analytics.view",
 ] as const;
 
 export const SYSTEM_ROLE_KEYS = [
@@ -224,6 +263,82 @@ export const RSVP_ASSISTANCE_STATUSES = ["OPEN", "ACKNOWLEDGED", "CLOSED"] as co
 export const RSVP_ENTITLEMENT_KINDS = ["COMPANION", "HOUSEHOLD_RESPONDENT"] as const;
 export const RSVP_KEY_STATUSES = ["ACTIVE", "RETIRED"] as const;
 export const RSVP_SESSION_COOKIE = "md_event_os_guest_rsvp";
+
+export const MSG_CHANNELS = ["EMAIL", "WHATSAPP", "SMS"] as const;
+export const MSG_PURPOSES = [
+  "INVITATION",
+  "RSVP_ACKNOWLEDGEMENT",
+  "CONFIRMATION",
+  "PRE_EVENT_INFO",
+  "REMINDER",
+  "ARRIVAL_SUPPORT",
+  "CONCIERGE",
+  "SERVICE_RECOVERY",
+  "DEPARTURE",
+  "FOLLOW_UP",
+] as const;
+export const MSG_ELIGIBILITY = ["ALLOW", "DENY", "UNKNOWN"] as const;
+export const MSG_TEMPLATE_STATUSES = ["DRAFT", "IN_REVIEW", "APPROVED", "WITHDRAWN", "ARCHIVED"] as const;
+export const MSG_CAMPAIGN_STATUSES = [
+  "DRAFT",
+  "AWAITING_APPROVAL",
+  "APPROVED",
+  "SCHEDULED",
+  "DISPATCHING",
+  "PAUSED",
+  "COMPLETED",
+  "CANCELLED",
+  "FAILED",
+] as const;
+export const MSG_MESSAGE_STATUSES = [
+  "PLANNED",
+  "BLOCKED",
+  "QUEUED",
+  "SUBMITTED",
+  "ACCEPTED",
+  "DELIVERED",
+  "FAILED",
+  "RETRYING",
+  "DEAD_LETTER",
+  "CANCELLED",
+] as const;
+export const MSG_THREAD_STATUSES = [
+  "OPEN",
+  "WAITING_ON_GUEST",
+  "WAITING_ON_TEAM",
+  "ESCALATED",
+  "RESOLVED",
+  "CLOSED",
+] as const;
+export const MSG_TASK_STATUSES = [
+  "OPEN",
+  "ACKNOWLEDGED",
+  "IN_PROGRESS",
+  "WAITING",
+  "RESOLVED",
+  "CLOSED",
+  "CANCELLED",
+] as const;
+export const MSG_CORRECTION_STATUSES = [
+  "PROPOSED",
+  "APPROVED",
+  "REJECTED",
+  "APPLIED",
+  "SUPERSEDED",
+] as const;
+export const MSG_INBOUND_MATCH = ["MATCHED", "AMBIGUOUS", "UNMATCHED", "QUARANTINED"] as const;
+export const MSG_OCCASION_STATUSES = ["DRAFT", "PUBLISHED"] as const;
+export const MSG_RETRY_CLASSES = ["TRANSIENT", "PERMANENT", "POLICY"] as const;
+export const MSG_DIRECTIONS = ["OUTBOUND", "INBOUND"] as const;
+export const MSG_AUDIENCE_PREDICATES = [
+  "LIFECYCLE",
+  "ATTENDANCE",
+  "RSVP_STATUS",
+  "HAS_EMAIL",
+  "HAS_PHONE",
+  "IDENTITY",
+  "SEATING",
+] as const;
 
 export const SESSION_COOKIE = "md_event_os_session";
 export const CORRELATION_HEADER = "x-md-correlation-id";

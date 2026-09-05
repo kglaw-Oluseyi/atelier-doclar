@@ -37,6 +37,29 @@ import type {
   RsvpReceipt,
   RsvpResponse,
 } from "./rsvp-schemas.js";
+import type {
+  AudienceDefinition,
+  AudienceSnapshot,
+  Campaign,
+  CampaignApproval,
+  ChannelPolicy,
+  CommsIntelligenceAlert,
+  CommsMessage,
+  CommsNotification,
+  CommsOutbox,
+  ContactCorrection,
+  ContactProjection,
+  ConversationThread,
+  DeliveryEvent,
+  FollowUpTask,
+  GuestSafeOccasion,
+  InboundMessage,
+  MessageAttempt,
+  MessageContentSnapshot,
+  MessageTemplate,
+  MessageTemplateVersion,
+  SuppressionEntry,
+} from "./communications-schemas.js";
 
 export interface IdempotencyRecord {
   key: string;
@@ -77,6 +100,27 @@ export interface PlatformSnapshot {
   rsvpAssistanceRequests: RsvpAssistanceRequest[];
   rsvpKeyRings: RsvpKeyRing[];
   rsvpEventProjections: RsvpEventProjection[];
+  channelPolicies: ChannelPolicy[];
+  guestSafeOccasions: GuestSafeOccasion[];
+  contactProjections: ContactProjection[];
+  suppressionEntries: SuppressionEntry[];
+  messageTemplates: MessageTemplate[];
+  messageTemplateVersions: MessageTemplateVersion[];
+  audienceDefinitions: AudienceDefinition[];
+  audienceSnapshots: AudienceSnapshot[];
+  campaigns: Campaign[];
+  campaignApprovals: CampaignApproval[];
+  commsMessages: CommsMessage[];
+  messageContentSnapshots: MessageContentSnapshot[];
+  messageAttempts: MessageAttempt[];
+  deliveryEvents: DeliveryEvent[];
+  commsOutbox: CommsOutbox[];
+  conversationThreads: ConversationThread[];
+  inboundMessages: InboundMessage[];
+  followUpTasks: FollowUpTask[];
+  contactCorrections: ContactCorrection[];
+  commsNotifications: CommsNotification[];
+  commsIntelligenceAlerts: CommsIntelligenceAlert[];
   policyVersions: PolicyVersionRef[];
   audit: AuditEvent[];
   idempotency: IdempotencyRecord[];
@@ -120,6 +164,27 @@ export function emptySnapshot(): PlatformSnapshot {
     rsvpAssistanceRequests: [],
     rsvpKeyRings: [],
     rsvpEventProjections: [],
+    channelPolicies: [],
+    guestSafeOccasions: [],
+    contactProjections: [],
+    suppressionEntries: [],
+    messageTemplates: [],
+    messageTemplateVersions: [],
+    audienceDefinitions: [],
+    audienceSnapshots: [],
+    campaigns: [],
+    campaignApprovals: [],
+    commsMessages: [],
+    messageContentSnapshots: [],
+    messageAttempts: [],
+    deliveryEvents: [],
+    commsOutbox: [],
+    conversationThreads: [],
+    inboundMessages: [],
+    followUpTasks: [],
+    contactCorrections: [],
+    commsNotifications: [],
+    commsIntelligenceAlerts: [],
     policyVersions: [],
     audit: [],
     idempotency: [],
@@ -147,5 +212,26 @@ export function normalizeSnapshot(input: PlatformSnapshot): PlatformSnapshot {
     rsvpAssistanceRequests: input.rsvpAssistanceRequests ?? [],
     rsvpKeyRings: input.rsvpKeyRings ?? [],
     rsvpEventProjections: input.rsvpEventProjections ?? [],
+    channelPolicies: input.channelPolicies ?? [],
+    guestSafeOccasions: input.guestSafeOccasions ?? [],
+    contactProjections: input.contactProjections ?? [],
+    suppressionEntries: input.suppressionEntries ?? [],
+    messageTemplates: input.messageTemplates ?? [],
+    messageTemplateVersions: input.messageTemplateVersions ?? [],
+    audienceDefinitions: input.audienceDefinitions ?? [],
+    audienceSnapshots: input.audienceSnapshots ?? [],
+    campaigns: input.campaigns ?? [],
+    campaignApprovals: input.campaignApprovals ?? [],
+    commsMessages: input.commsMessages ?? [],
+    messageContentSnapshots: input.messageContentSnapshots ?? [],
+    messageAttempts: input.messageAttempts ?? [],
+    deliveryEvents: input.deliveryEvents ?? [],
+    commsOutbox: input.commsOutbox ?? [],
+    conversationThreads: input.conversationThreads ?? [],
+    inboundMessages: input.inboundMessages ?? [],
+    followUpTasks: input.followUpTasks ?? [],
+    contactCorrections: input.contactCorrections ?? [],
+    commsNotifications: input.commsNotifications ?? [],
+    commsIntelligenceAlerts: input.commsIntelligenceAlerts ?? [],
   };
 }

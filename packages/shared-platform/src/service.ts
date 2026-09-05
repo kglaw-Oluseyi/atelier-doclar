@@ -131,6 +131,62 @@ import {
 } from "./schemas.js";
 import type { PlatformSnapshot, PlatformStore } from "./store.js";
 import { eventStatusAfterPhase, assertPhaseTransition } from "./transitions.js";
+import {
+  applySyntheticCallbackOnSnap,
+  communicationsOverview,
+  decideCampaignOnSnap,
+  dispatchOutboxOnSnap,
+  expandCampaignOnSnap,
+  guestEligibility,
+  ingestInboundOnSnap,
+  legalCampaignTransition,
+  openAssistanceTask,
+  prepareCommunicationsOnSnap,
+  previewAudienceOnSnap,
+  requestCampaignApprovalOnSnap,
+  signSyntheticPayload,
+  syncContactProjections,
+} from "./communications-api.js";
+import {
+  ALLOWED_TEMPLATE_VARIABLES,
+  contentHash,
+  eventChannelPolicy,
+  eventOccasion,
+  extractVariables,
+  projectGuestSafeOccasion,
+} from "./communications-operations.js";
+import {
+  ApproveTemplateInputSchema,
+  CampaignActionInputSchema,
+  CampaignDecisionInputSchema,
+  ConciergeReplyInputSchema,
+  CreateCampaignInputSchema,
+  CreateTemplateVersionInputSchema,
+  DecideCorrectionInputSchema,
+  IngestInboundInputSchema,
+  PrepareCommunicationsInputSchema,
+  PreviewAudienceInputSchema,
+  ProposeCorrectionInputSchema,
+  PublishChannelPolicyInputSchema,
+  PublishOccasionInputSchema,
+  RequestCampaignApprovalInputSchema,
+  ResolveUnmatchedInputSchema,
+  SuppressContactInputSchema,
+  SyntheticCallbackInputSchema,
+  TaskActionInputSchema,
+  UpsertAudienceInputSchema,
+  type Campaign,
+  type ChannelPolicy,
+  type ContactCorrection,
+  type FollowUpTask,
+  type GuestSafeOccasion,
+  type GuestSafeOccasionView,
+  type InboundMessage,
+  type MessageTemplate,
+  type MessageTemplateVersion,
+  type MsgChannel,
+  type MsgPurpose,
+} from "./communications-schemas.js";
 
 export interface ActorContext {
   personId: string;
@@ -166,6 +222,7 @@ export interface GuestSelfServiceView {
   answers: RsvpResponse["answers"];
   assistanceOpen: boolean;
   confirmation?: { submittedAt: string; attendanceIntent: RsvpResponse["attendanceIntent"] };
+  occasion?: GuestSafeOccasionView;
 }
 
 export interface RsvpGuestDirectoryRow {
@@ -708,6 +765,9 @@ export class PlatformService {
         if (input.personId) {
           this.linkGuestInSnapshot(snap, resolved, input.personId, actor, ctx.now);
         }
+        if (eventChannelPolicy(snap, event.id)) {
+          syncContactProjections(snap, event.id, ctx.now);
+        }
         return resolved;
       },
     });
@@ -728,6 +788,9 @@ export class PlatformService {
         const record = this.requireOperationalGuest(snap, input.organisationId, input.eventId, input.guestId);
         this.assertVersion(record.version, input.expectedVersion);
         applyGuestAmendment(record, input, ctx.now);
+        if (eventChannelPolicy(snap, record.eventId)) {
+          syncContactProjections(snap, record.eventId, ctx.now);
+        }
         return recordDuplicateCandidates(snap, record, snap.persons, ctx.now);
       },
     });
@@ -1722,6 +1785,14 @@ export class PlatformService {
         };
         snap.rsvpAssistanceRequests.push(record);
         guest.attentionRequired = true;
+        openAssistanceTask(snap, {
+          organisationId: guest.organisationId,
+          clientId: guest.clientId,
+          eventId: guest.eventId,
+          guestId: guest.id,
+          note: input.note,
+          now: occurredAt,
+        });
         return record;
       },
     });
@@ -1825,6 +1896,853 @@ export class PlatformService {
     const ctx = this.actorSnapshot(actor);
     const orgIds = new Set(ctx.assignments.filter((item) => item.status === "ACTIVE").map((item) => item.organisationId));
     return snap.organisations.filter((item) => orgIds.has(item.id));
+  }
+
+  prepareCommunications(actor: ActorContext, raw: unknown): { policy: ChannelPolicy; occasion: GuestSafeOccasion } {
+    const input = parseStrict(PrepareCommunicationsInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "msg.policy.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "msg.surface.prepared",
+      resourceType: "channel_policy",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const event = this.requireEvent(snap, input.organisationId, input.eventId);
+        const prepared = prepareCommunicationsOnSnap(snap, event, ctx.now);
+        return { id: prepared.policy.id, ...prepared };
+      },
+    });
+  }
+
+  publishChannelPolicy(actor: ActorContext, raw: unknown): ChannelPolicy {
+    const input = parseStrict(PublishChannelPolicyInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "msg.policy.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "msg.policy.published",
+      resourceType: "channel_policy",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        this.requireEvent(snap, input.organisationId, input.eventId);
+        const policy = eventChannelPolicy(snap, input.eventId);
+        if (!policy) throw new PlatformError("NOT_FOUND", "communications have not been prepared for this event");
+        this.assertVersion(policy.version, input.expectedVersion);
+        if (input.enabledChannels) policy.enabledChannels = input.enabledChannels;
+        if (input.quietHoursStart) policy.quietHoursStart = input.quietHoursStart;
+        if (input.quietHoursEnd) policy.quietHoursEnd = input.quietHoursEnd;
+        if (input.frequencyCapPerDay) policy.frequencyCapPerDay = input.frequencyCapPerDay;
+        if (input.acknowledgementMinutes) policy.acknowledgementMinutes = input.acknowledgementMinutes;
+        if (input.resolutionMinutes) policy.resolutionMinutes = input.resolutionMinutes;
+        if (input.sandboxDispatchEnabled !== undefined) policy.sandboxDispatchEnabled = input.sandboxDispatchEnabled;
+        policy.status = "PUBLISHED";
+        policy.publishedAt = ctx.now;
+        policy.version += 1;
+        policy.updatedAt = ctx.now;
+        syncContactProjections(snap, input.eventId, ctx.now);
+        return policy;
+      },
+    });
+  }
+
+  publishGuestSafeOccasion(actor: ActorContext, raw: unknown): GuestSafeOccasion {
+    const input = parseStrict(PublishOccasionInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "msg.policy.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "msg.occasion.published",
+      resourceType: "guest_safe_occasion",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        this.requireEvent(snap, input.organisationId, input.eventId);
+        const occasion = eventOccasion(snap, input.eventId);
+        if (!occasion) throw new PlatformError("NOT_FOUND", "guest-safe occasion is not prepared");
+        this.assertVersion(occasion.version, input.expectedVersion);
+        if (input.verifyWhen && occasion.when) occasion.when = { ...occasion.when, quality: "VERIFIED" };
+        if (input.verifyVenue && occasion.venue) occasion.venue = { ...occasion.venue, quality: "VERIFIED" };
+        if (input.arrival) occasion.arrival = { value: input.arrival, quality: "VERIFIED" };
+        if (input.dress) occasion.dress = { value: input.dress, quality: "VERIFIED" };
+        if (input.context) occasion.context = { value: input.context, quality: "VERIFIED" };
+        occasion.status = "PUBLISHED";
+        occasion.publishedAt = ctx.now;
+        occasion.publishedByPersonId = actor.personId;
+        occasion.version += 1;
+        occasion.updatedAt = ctx.now;
+        return occasion;
+      },
+    });
+  }
+
+  suppressContact(actor: ActorContext, raw: unknown) {
+    const input = parseStrict(SuppressContactInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "msg.policy.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "msg.suppression.recorded",
+      resourceType: "suppression_entry",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        this.requireEvent(snap, input.organisationId, input.eventId);
+        if (input.guestId) this.requireOperationalGuest(snap, input.organisationId, input.eventId, input.guestId);
+        const record = {
+          id: randomUUID(),
+          organisationId: input.organisationId,
+          eventId: input.eventId,
+          ...(input.guestId ? { guestId: input.guestId } : {}),
+          ...(input.channel ? { channel: input.channel } : {}),
+          ...(input.purpose ? { purpose: input.purpose } : {}),
+          reason: input.reason,
+          source: "STAFF" as const,
+          effectiveAt: ctx.now,
+          schemaVersion: SCHEMA_VERSION,
+          version: 1,
+          createdAt: ctx.now,
+          updatedAt: ctx.now,
+        };
+        snap.suppressionEntries.push(record);
+        return record;
+      },
+    });
+  }
+
+  createTemplateVersion(actor: ActorContext, raw: unknown): MessageTemplateVersion {
+    const input = parseStrict(CreateTemplateVersionInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "msg.template.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "msg.template.version.created",
+      resourceType: "message_template_version",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        this.requireEvent(snap, input.organisationId, input.eventId);
+        const template = snap.messageTemplates.find((item) => item.id === input.templateId && item.organisationId === input.organisationId);
+        if (!template) throw new PlatformError("NOT_FOUND", "template was not found");
+        const unknown = extractVariables(`${input.subject ?? ""}\n${input.body}`).filter(
+          (name) => !ALLOWED_TEMPLATE_VARIABLES.includes(name as (typeof ALLOWED_TEMPLATE_VARIABLES)[number]),
+        );
+        if (unknown.length > 0) {
+          throw new PlatformError("VALIDATION_FAILED", `unknown template variables: ${unknown.join(", ")}`);
+        }
+        const versionNumber = snap.messageTemplateVersions.filter((item) => item.templateId === template.id).length + 1;
+        const version: MessageTemplateVersion = {
+          id: randomUUID(),
+          templateId: template.id,
+          organisationId: template.organisationId,
+          versionNumber,
+          locale: "en",
+          ...(input.subject ? { subject: input.subject } : {}),
+          body: input.body,
+          requiredVariables: input.requiredVariables ?? extractVariables(input.body),
+          contentHash: contentHash(input.body),
+          status: "DRAFT",
+          schemaVersion: SCHEMA_VERSION,
+          version: 1,
+          createdAt: ctx.now,
+          updatedAt: ctx.now,
+        };
+        snap.messageTemplateVersions.push(version);
+        template.activeVersionId = version.id;
+        template.status = "DRAFT";
+        template.version += 1;
+        template.updatedAt = ctx.now;
+        return version;
+      },
+    });
+  }
+
+  approveTemplate(actor: ActorContext, raw: unknown): MessageTemplateVersion {
+    const input = parseStrict(ApproveTemplateInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "msg.template.publish",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "msg.template.approved",
+      resourceType: "message_template_version",
+      resourceId: input.templateVersionId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const version = snap.messageTemplateVersions.find((item) => item.id === input.templateVersionId);
+        if (!version || version.organisationId !== input.organisationId) {
+          throw new PlatformError("NOT_FOUND", "template version was not found");
+        }
+        this.assertVersion(version.version, input.expectedVersion);
+        version.status = "APPROVED";
+        version.approvedByPersonId = actor.personId;
+        version.approvedAt = ctx.now;
+        version.version += 1;
+        version.updatedAt = ctx.now;
+        const template = snap.messageTemplates.find((item) => item.id === version.templateId);
+        if (template) {
+          template.status = "APPROVED";
+          template.activeVersionId = version.id;
+          template.version += 1;
+          template.updatedAt = ctx.now;
+        }
+        return version;
+      },
+    });
+  }
+
+  upsertAudience(actor: ActorContext, raw: unknown) {
+    const input = parseStrict(UpsertAudienceInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "msg.audience.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "msg.audience.upserted",
+      resourceType: "audience_definition",
+      resourceId: input.audienceId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const event = this.requireEvent(snap, input.organisationId, input.eventId);
+        if (input.filters.some((item) => item.predicate === "SEATING")) {
+          throw new PlatformError("VALIDATION_FAILED", "seating predicates are unavailable until seating truth exists");
+        }
+        if (input.audienceId) {
+          const existing = snap.audienceDefinitions.find((item) => item.id === input.audienceId);
+          if (!existing || existing.organisationId !== input.organisationId || existing.eventId !== input.eventId) {
+            throw new PlatformError("NOT_FOUND", "audience was not found");
+          }
+          if (input.expectedVersion) this.assertVersion(existing.version, input.expectedVersion);
+          existing.name = input.name;
+          existing.filters = input.filters;
+          existing.status = "ACTIVE";
+          existing.version += 1;
+          existing.updatedAt = ctx.now;
+          return existing;
+        }
+        const created = {
+          id: randomUUID(),
+          organisationId: event.organisationId,
+          clientId: event.clientId,
+          eventId: event.id,
+          name: input.name,
+          filters: input.filters,
+          status: "ACTIVE" as const,
+          schemaVersion: SCHEMA_VERSION,
+          version: 1,
+          createdAt: ctx.now,
+          updatedAt: ctx.now,
+        };
+        snap.audienceDefinitions.push(created);
+        return created;
+      },
+    });
+  }
+
+  createCampaign(actor: ActorContext, raw: unknown): Campaign {
+    const input = parseStrict(CreateCampaignInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "msg.campaign.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "msg.campaign.created",
+      resourceType: "campaign",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const event = this.requireEvent(snap, input.organisationId, input.eventId);
+        const template = snap.messageTemplates.find((item) => item.id === input.templateId);
+        const version = template?.activeVersionId
+          ? snap.messageTemplateVersions.find((item) => item.id === template.activeVersionId)
+          : undefined;
+        const audience = snap.audienceDefinitions.find((item) => item.id === input.audienceDefinitionId);
+        if (!template || !version || !audience || audience.eventId !== event.id) {
+          throw new PlatformError("NOT_FOUND", "campaign references are missing");
+        }
+        if (version.status !== "APPROVED") {
+          throw new PlatformError("VALIDATION_FAILED", "template version is not approved");
+        }
+        if (input.linkedInvitationId) {
+          const invitation = snap.rsvpInvitations.find((item) => item.id === input.linkedInvitationId);
+          if (!invitation || invitation.eventId !== event.id || invitation.status !== "ISSUED") {
+            throw new PlatformError("VALIDATION_FAILED", "S04 may only deliver an already issued S03 invitation");
+          }
+        }
+        const campaign: Campaign = {
+          id: randomUUID(),
+          organisationId: event.organisationId,
+          clientId: event.clientId,
+          eventId: event.id,
+          name: input.name,
+          purpose: input.purpose,
+          channel: input.channel,
+          status: "DRAFT",
+          templateId: template.id,
+          templateVersionId: version.id,
+          audienceDefinitionId: audience.id,
+          testOnly: input.testOnly === true,
+          createdByPersonId: actor.personId,
+          ...(input.scheduledAt ? { scheduledAt: input.scheduledAt } : {}),
+          ...(input.linkedInvitationId ? { linkedInvitationId: input.linkedInvitationId } : {}),
+          schemaVersion: SCHEMA_VERSION,
+          version: 1,
+          createdAt: ctx.now,
+          updatedAt: ctx.now,
+        };
+        snap.campaigns.push(campaign);
+        return campaign;
+      },
+    });
+  }
+
+  requestCampaignApproval(actor: ActorContext, raw: unknown): Campaign {
+    const input = parseStrict(RequestCampaignApprovalInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "msg.campaign.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "msg.campaign.approval.requested",
+      resourceType: "campaign",
+      resourceId: input.campaignId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const campaign = this.requireCampaign(snap, input.organisationId, input.eventId, input.campaignId);
+        this.assertVersion(campaign.version, input.expectedVersion);
+        return requestCampaignApprovalOnSnap(snap, campaign, actor.personId, ctx.now);
+      },
+    });
+  }
+
+  decideCampaign(actor: ActorContext, raw: unknown) {
+    const input = parseStrict(CampaignDecisionInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "msg.campaign.approve",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "msg.campaign.decided",
+      resourceType: "campaign_approval",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const campaign = this.requireCampaign(snap, input.organisationId, input.eventId, input.campaignId);
+        this.assertVersion(campaign.version, input.expectedVersion);
+        if (campaign.createdByPersonId && campaign.createdByPersonId === actor.personId) {
+          throw new PlatformError("FORBIDDEN", "approval requires a different named human");
+        }
+        return decideCampaignOnSnap(snap, campaign, {
+          decision: input.decision,
+          ...(input.comment ? { comment: input.comment } : {}),
+          personId: actor.personId,
+          now: ctx.now,
+        });
+      },
+    });
+  }
+
+  actOnCampaign(actor: ActorContext, raw: unknown): Campaign {
+    const input = parseStrict(CampaignActionInputSchema, raw);
+    const permission = input.action === "CANCEL" ? "msg.campaign.manage" : "msg.campaign.run";
+    return this.mutate(actor, {
+      permission,
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: `msg.campaign.${input.action.toLowerCase()}`,
+      resourceType: "campaign",
+      resourceId: input.campaignId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const campaign = this.requireCampaign(snap, input.organisationId, input.eventId, input.campaignId);
+        this.assertVersion(campaign.version, input.expectedVersion);
+        if (input.action === "SCHEDULE") {
+          if (!legalCampaignTransition(campaign.status, "SCHEDULED")) {
+            throw new PlatformError("TRANSITION_INVALID", `campaign cannot be scheduled from ${campaign.status}`);
+          }
+          campaign.scheduledAt = input.scheduledAt ?? campaign.scheduledAt ?? ctx.now;
+          campaign.status = "SCHEDULED";
+        } else if (input.action === "PAUSE") {
+          if (!legalCampaignTransition(campaign.status, "PAUSED")) {
+            throw new PlatformError("TRANSITION_INVALID", `campaign cannot be paused from ${campaign.status}`);
+          }
+          campaign.status = "PAUSED";
+        } else if (input.action === "CANCEL") {
+          if (!legalCampaignTransition(campaign.status, "CANCELLED")) {
+            throw new PlatformError("TRANSITION_INVALID", `campaign cannot be cancelled from ${campaign.status}`);
+          }
+          campaign.status = "CANCELLED";
+          for (const message of snap.commsMessages.filter((item) => item.campaignId === campaign.id && (item.status === "QUEUED" || item.status === "PLANNED" || item.status === "RETRYING"))) {
+            message.status = "CANCELLED";
+            message.updatedAt = ctx.now;
+          }
+        } else if (input.action === "TEST_SEND" || input.action === "RUN" || input.action === "DISPATCH") {
+          if (input.action !== "DISPATCH" && campaign.status !== "DISPATCHING") {
+            if (!legalCampaignTransition(campaign.status, "DISPATCHING")) {
+              throw new PlatformError("TRANSITION_INVALID", `campaign cannot dispatch from ${campaign.status}`);
+            }
+            expandCampaignOnSnap(snap, campaign, ctx.now);
+          }
+          dispatchOutboxOnSnap(snap, campaign.eventId, ctx.now, input.failMode);
+        }
+        campaign.updatedAt = ctx.now;
+        campaign.version += 1;
+        return campaign;
+      },
+    });
+  }
+
+  applySyntheticCallback(actor: ActorContext, raw: unknown) {
+    const input = parseStrict(SyntheticCallbackInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "msg.campaign.run",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "msg.delivery.callback",
+      resourceType: "delivery_event",
+      reason: "synthetic provider callback",
+      idempotencyKey: input.idempotencyKey ?? input.providerEventId,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const event = applySyntheticCallbackOnSnap(snap, {
+          providerRequestKey: input.providerRequestKey,
+          providerEventId: input.providerEventId,
+          type: input.type,
+          signature: input.signature,
+          now: input.occurredAt ?? ctx.now,
+        });
+        if (!event) throw new PlatformError("NOT_FOUND", "callback could not be applied");
+        return event;
+      },
+    });
+  }
+
+  ingestInbound(actor: ActorContext, raw: unknown): InboundMessage {
+    const input = parseStrict(IngestInboundInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "msg.inbox.respond",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "msg.inbound.ingested",
+      resourceType: "inbound_message",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey ?? input.providerMessageId,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) =>
+        ingestInboundOnSnap(snap, {
+          organisationId: input.organisationId,
+          ...(input.eventId ? { eventId: input.eventId } : {}),
+          channel: input.channel,
+          providerMessageId: input.providerMessageId,
+          sender: input.sender,
+          body: input.body,
+          ...(input.attachmentFileName ? { attachmentFileName: input.attachmentFileName } : {}),
+          signature: input.signature,
+          now: ctx.now,
+        }),
+    });
+  }
+
+  resolveUnmatchedInbound(actor: ActorContext, raw: unknown): InboundMessage {
+    const input = parseStrict(ResolveUnmatchedInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "msg.inbound.unmatched.resolve",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "msg.inbound.resolved",
+      resourceType: "inbound_message",
+      resourceId: input.inboundId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const inbound = snap.inboundMessages.find((item) => item.id === input.inboundId);
+        if (!inbound || inbound.organisationId !== input.organisationId) {
+          throw new PlatformError("NOT_FOUND", "inbound message was not found");
+        }
+        this.assertVersion(inbound.version, input.expectedVersion);
+        if (inbound.matchStatus === "MATCHED") {
+          throw new PlatformError("TRANSITION_INVALID", "matched inbound cannot be reassigned silently");
+        }
+        if (input.action === "DISMISS") {
+          inbound.matchStatus = "QUARANTINED";
+        } else if (input.action === "ESCALATE") {
+          const event = this.requireEvent(snap, input.organisationId, input.eventId);
+          snap.followUpTasks.push({
+            id: randomUUID(),
+            organisationId: event.organisationId,
+            clientId: event.clientId,
+            eventId: event.id,
+            threadId: inbound.threadId ?? randomUUID(),
+            inboundMessageId: inbound.id,
+            category: "UNMATCHED",
+            status: "OPEN",
+            escalationLevel: 1,
+            schemaVersion: SCHEMA_VERSION,
+            version: 1,
+            createdAt: ctx.now,
+            updatedAt: ctx.now,
+          });
+        } else {
+          if (!input.guestId) throw new PlatformError("VALIDATION_FAILED", "a guest is required to link unmatched inbound");
+          const guest = this.requireOperationalGuest(snap, input.organisationId, input.eventId, input.guestId);
+          inbound.guestId = guest.id;
+          inbound.eventId = guest.eventId;
+          inbound.clientId = guest.clientId;
+          inbound.matchStatus = "MATCHED";
+          inbound.matchConfidence = "HIGH";
+        }
+        inbound.version += 1;
+        inbound.updatedAt = ctx.now;
+        return inbound;
+      },
+    });
+  }
+
+  replyOnThread(actor: ActorContext, raw: unknown) {
+    const input = parseStrict(ConciergeReplyInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "msg.inbox.respond",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "msg.concierge.replied",
+      resourceType: "comms_message",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const thread = snap.conversationThreads.find((item) => item.id === input.threadId);
+        if (!thread || thread.organisationId !== input.organisationId || thread.eventId !== input.eventId) {
+          throw new PlatformError("NOT_FOUND", "conversation was not found");
+        }
+        if (thread.guestId) {
+          const eligibility = guestEligibility(snap, thread.guestId, thread.channel, "CONCIERGE", ctx.now);
+          if (eligibility.status !== "ALLOW") {
+            throw new PlatformError("FORBIDDEN", `reply is not eligible: ${eligibility.reasons.join(",")}`);
+          }
+        }
+        const message = {
+          id: randomUUID(),
+          organisationId: thread.organisationId,
+          clientId: thread.clientId,
+          eventId: thread.eventId,
+          ...(thread.guestId ? { guestId: thread.guestId } : {}),
+          threadId: thread.id,
+          purpose: "CONCIERGE" as const,
+          channel: thread.channel,
+          direction: "OUTBOUND" as const,
+          status: "QUEUED" as const,
+          idempotencyKey: input.idempotencyKey ?? `reply:${thread.id}:${ctx.now}`,
+          testWatermark: true,
+          schemaVersion: SCHEMA_VERSION,
+          version: 1,
+          createdAt: ctx.now,
+          updatedAt: ctx.now,
+        };
+        snap.commsMessages.push(message);
+        snap.messageContentSnapshots.push({
+          id: randomUUID(),
+          messageId: message.id,
+          body: input.body,
+          variablesHash: contentHash(input.body),
+          contentHash: contentHash(input.body),
+          createdAt: ctx.now,
+          schemaVersion: SCHEMA_VERSION,
+        });
+        if (input.privateNote) {
+          const task = snap.followUpTasks.find((item) => item.threadId === thread.id && item.status !== "CLOSED");
+          if (task) task.privateNote = input.privateNote;
+        }
+        thread.lastMessageAt = ctx.now;
+        thread.status = "WAITING_ON_GUEST";
+        thread.updatedAt = ctx.now;
+        snap.commsOutbox.push({
+          id: randomUUID(),
+          organisationId: thread.organisationId,
+          clientId: thread.clientId,
+          eventId: thread.eventId,
+          messageId: message.id,
+          status: "PENDING",
+          nextAttemptAt: ctx.now,
+          schemaVersion: SCHEMA_VERSION,
+          version: 1,
+          createdAt: ctx.now,
+          updatedAt: ctx.now,
+        });
+        dispatchOutboxOnSnap(snap, thread.eventId, ctx.now);
+        return message;
+      },
+    });
+  }
+
+  actOnTask(actor: ActorContext, raw: unknown): FollowUpTask {
+    const input = parseStrict(TaskActionInputSchema, raw);
+    const permission = input.action === "ASSIGN" || input.action === "ESCALATE" ? "msg.inbox.assign" : "msg.task.manage";
+    return this.mutate(actor, {
+      permission,
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: `msg.task.${input.action.toLowerCase()}`,
+      resourceType: "follow_up_task",
+      resourceId: input.taskId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const task = snap.followUpTasks.find((item) => item.id === input.taskId);
+        if (!task || task.organisationId !== input.organisationId || task.eventId !== input.eventId) {
+          throw new PlatformError("NOT_FOUND", "follow-up task was not found");
+        }
+        this.assertVersion(task.version, input.expectedVersion);
+        if (input.action === "ACKNOWLEDGE") task.status = "ACKNOWLEDGED";
+        if (input.action === "ASSIGN") {
+          if (!input.ownerPersonId) throw new PlatformError("VALIDATION_FAILED", "an owner is required");
+          task.ownerPersonId = input.ownerPersonId;
+          task.status = "IN_PROGRESS";
+        }
+        if (input.action === "ESCALATE") {
+          task.escalationLevel = Math.min(3, task.escalationLevel + 1);
+          task.status = "IN_PROGRESS";
+          const thread = snap.conversationThreads.find((item) => item.id === task.threadId);
+          if (thread) thread.status = "ESCALATED";
+        }
+        if (input.action === "RESOLVE") {
+          task.status = "RESOLVED";
+          if (input.resolution) task.resolution = input.resolution;
+          const thread = snap.conversationThreads.find((item) => item.id === task.threadId);
+          if (thread) thread.status = "RESOLVED";
+        }
+        task.version += 1;
+        task.updatedAt = ctx.now;
+        return task;
+      },
+    });
+  }
+
+  proposeContactCorrection(actor: ActorContext, raw: unknown): ContactCorrection {
+    const input = parseStrict(ProposeCorrectionInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "msg.inbox.respond",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "msg.correction.proposed",
+      resourceType: "contact_correction",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const guest = this.requireOperationalGuest(snap, input.organisationId, input.eventId, input.guestId);
+        const existing = snap.contactProjections.find((item) => item.guestId === guest.id && item.channel === input.channel);
+        const record: ContactCorrection = {
+          id: randomUUID(),
+          organisationId: guest.organisationId,
+          clientId: guest.clientId,
+          eventId: guest.eventId,
+          guestId: guest.id,
+          channel: input.channel,
+          ...(existing ? { existingValue: existing.displayValue } : {}),
+          proposedValue: input.proposedValue,
+          status: "PROPOSED",
+          ...(input.sourceMessageId ? { sourceMessageId: input.sourceMessageId } : {}),
+          reason: input.reason,
+          schemaVersion: SCHEMA_VERSION,
+          version: 1,
+          createdAt: ctx.now,
+          updatedAt: ctx.now,
+        };
+        snap.contactCorrections.push(record);
+        return record;
+      },
+    });
+  }
+
+  decideContactCorrection(actor: ActorContext, raw: unknown): ContactCorrection {
+    const input = parseStrict(DecideCorrectionInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "msg.contactCorrection.review",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "msg.correction.decided",
+      resourceType: "contact_correction",
+      resourceId: input.correctionId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const correction = snap.contactCorrections.find((item) => item.id === input.correctionId);
+        if (!correction || correction.organisationId !== input.organisationId || correction.eventId !== input.eventId) {
+          throw new PlatformError("NOT_FOUND", "contact correction was not found");
+        }
+        this.assertVersion(correction.version, input.expectedVersion);
+        correction.decidedByPersonId = actor.personId;
+        correction.decidedAt = ctx.now;
+        if (input.decision === "REJECTED") {
+          correction.status = "REJECTED";
+        } else {
+          const guest = this.requireOperationalGuest(snap, input.organisationId, input.eventId, correction.guestId);
+          applyGuestAmendment(
+            guest,
+            {
+              organisationId: guest.organisationId,
+              eventId: guest.eventId,
+              guestId: guest.id,
+              expectedVersion: guest.version,
+              ...(correction.channel === "EMAIL" ? { email: correction.proposedValue } : { phone: correction.proposedValue }),
+              replaceVerifiedField: true,
+              reason: input.reason,
+            },
+            ctx.now,
+          );
+          syncContactProjections(snap, guest.eventId, ctx.now);
+          correction.status = "APPLIED";
+        }
+        correction.version += 1;
+        correction.updatedAt = ctx.now;
+        return correction;
+      },
+    });
+  }
+
+  getCommunicationsOverview(actor: ActorContext, organisationId: string, eventId: string) {
+    const { snap, ctx } = this.authorizeQuery(actor, "msg.analytics.view", { organisationId, eventId });
+    this.requireEvent(snap, organisationId, eventId);
+    return communicationsOverview(snap, eventId, ctx.now);
+  }
+
+  getChannelPolicy(actor: ActorContext, organisationId: string, eventId: string): ChannelPolicy | undefined {
+    const { snap } = this.authorizeQuery(actor, "event.view", { organisationId, eventId });
+    return eventChannelPolicy(snap, eventId);
+  }
+
+  getGuestSafeOccasion(actor: ActorContext, organisationId: string, eventId: string): GuestSafeOccasion | undefined {
+    const { snap } = this.authorizeQuery(actor, "event.view", { organisationId, eventId });
+    return eventOccasion(snap, eventId);
+  }
+
+  getPublishedOccasion(actor: ActorContext, organisationId: string, eventId: string): GuestSafeOccasionView {
+    const { snap } = this.authorizeQuery(actor, "event.view", { organisationId, eventId });
+    this.requireEvent(snap, organisationId, eventId);
+    return projectGuestSafeOccasion(eventOccasion(snap, eventId));
+  }
+
+  listTemplates(actor: ActorContext, organisationId: string, eventId: string): MessageTemplate[] {
+    const { snap } = this.authorizeQuery(actor, "msg.template.manage", { organisationId, eventId });
+    return snap.messageTemplates.filter((item) => item.organisationId === organisationId && (!item.eventId || item.eventId === eventId));
+  }
+
+  listTemplateVersions(actor: ActorContext, organisationId: string, eventId: string, templateId: string): MessageTemplateVersion[] {
+    const { snap } = this.authorizeQuery(actor, "msg.template.manage", { organisationId, eventId });
+    return snap.messageTemplateVersions.filter((item) => item.templateId === templateId && item.organisationId === organisationId);
+  }
+
+  previewAudience(actor: ActorContext, raw: unknown) {
+    const input = parseStrict(PreviewAudienceInputSchema, raw);
+    const { snap, ctx } = this.authorizeQuery(actor, "msg.audience.manage", {
+      organisationId: input.organisationId,
+      eventId: input.eventId,
+    });
+    const definition = snap.audienceDefinitions.find((item) => item.id === input.audienceId);
+    if (!definition || definition.organisationId !== input.organisationId || definition.eventId !== input.eventId) {
+      throw new PlatformError("NOT_FOUND", "audience was not found");
+    }
+    return previewAudienceOnSnap(snap, definition, input.channel, input.purpose, ctx.now);
+  }
+
+  listAudiences(actor: ActorContext, organisationId: string, eventId: string) {
+    const { snap } = this.authorizeQuery(actor, "msg.audience.manage", { organisationId, eventId });
+    return snap.audienceDefinitions.filter((item) => item.organisationId === organisationId && item.eventId === eventId);
+  }
+
+  listCampaigns(actor: ActorContext, organisationId: string, eventId: string): Campaign[] {
+    const { snap } = this.authorizeQuery(actor, "msg.campaign.manage", { organisationId, eventId });
+    return snap.campaigns.filter((item) => item.organisationId === organisationId && item.eventId === eventId);
+  }
+
+  getCampaign(actor: ActorContext, organisationId: string, eventId: string, campaignId: string): Campaign {
+    const { snap } = this.authorizeQuery(actor, "msg.campaign.manage", { organisationId, eventId });
+    return this.requireCampaign(snap, organisationId, eventId, campaignId);
+  }
+
+  listInbox(actor: ActorContext, organisationId: string, eventId: string) {
+    const { snap } = this.authorizeQuery(actor, "msg.inbox.view", { organisationId, eventId });
+    return snap.conversationThreads.filter((item) => item.organisationId === organisationId && item.eventId === eventId);
+  }
+
+  getThread(actor: ActorContext, organisationId: string, eventId: string, threadId: string) {
+    const { snap } = this.authorizeQuery(actor, "msg.inbox.view", { organisationId, eventId });
+    const thread = snap.conversationThreads.find((item) => item.id === threadId);
+    if (!thread || thread.organisationId !== organisationId || thread.eventId !== eventId) {
+      throw new PlatformError("NOT_FOUND", "conversation was not found");
+    }
+    return {
+      thread,
+      inbound: snap.inboundMessages.filter((item) => item.threadId === threadId),
+      outbound: snap.commsMessages.filter((item) => item.threadId === threadId),
+      tasks: snap.followUpTasks.filter((item) => item.threadId === threadId),
+    };
+  }
+
+  listUnmatchedInbound(actor: ActorContext, organisationId: string, eventId: string) {
+    const { snap } = this.authorizeQuery(actor, "msg.inbox.view", { organisationId, eventId });
+    return snap.inboundMessages.filter(
+      (item) =>
+        item.organisationId === organisationId &&
+        item.eventId === eventId &&
+        (item.matchStatus === "UNMATCHED" || item.matchStatus === "AMBIGUOUS"),
+    );
+  }
+
+  listFailures(actor: ActorContext, organisationId: string, eventId: string) {
+    const { snap } = this.authorizeQuery(actor, "msg.campaign.manage", { organisationId, eventId });
+    return snap.commsMessages.filter(
+      (item) => item.organisationId === organisationId && item.eventId === eventId && (item.status === "FAILED" || item.status === "DEAD_LETTER"),
+    );
+  }
+
+  listFollowUpTasks(actor: ActorContext, organisationId: string, eventId: string) {
+    const { snap } = this.authorizeQuery(actor, "msg.inbox.view", { organisationId, eventId });
+    return snap.followUpTasks.filter((item) => item.organisationId === organisationId && item.eventId === eventId);
+  }
+
+  listContactCorrections(actor: ActorContext, organisationId: string, eventId: string) {
+    const { snap } = this.authorizeQuery(actor, "msg.contactCorrection.review", { organisationId, eventId });
+    return snap.contactCorrections.filter((item) => item.organisationId === organisationId && item.eventId === eventId);
+  }
+
+  listGuestCommunications(actor: ActorContext, organisationId: string, eventId: string, guestId: string) {
+    const { snap } = this.authorizeQuery(actor, "msg.inbox.view", { organisationId, eventId });
+    this.requireOperationalGuest(snap, organisationId, eventId, guestId);
+    return {
+      messages: snap.commsMessages.filter((item) => item.guestId === guestId && item.eventId === eventId),
+      inbound: snap.inboundMessages.filter((item) => item.guestId === guestId && item.eventId === eventId),
+      tasks: snap.followUpTasks.filter((item) => {
+        const thread = snap.conversationThreads.find((row) => row.id === item.threadId);
+        return thread?.guestId === guestId && item.eventId === eventId;
+      }),
+    };
+  }
+
+  listCommsNotifications(actor: ActorContext, organisationId: string, eventId: string) {
+    const { snap } = this.authorizeQuery(actor, "msg.analytics.view", { organisationId, eventId });
+    return snap.commsNotifications.filter((item) => item.organisationId === organisationId && item.eventId === eventId);
+  }
+
+  listCommsIntelligence(actor: ActorContext, organisationId: string, eventId: string) {
+    const { snap, ctx } = this.authorizeQuery(actor, "msg.analytics.view", { organisationId, eventId });
+    this.requireEvent(snap, organisationId, eventId);
+    return communicationsOverview(snap, eventId, ctx.now).alerts;
+  }
+
+  evaluateGuestEligibility(actor: ActorContext, organisationId: string, eventId: string, guestId: string, channel: MsgChannel, purpose: MsgPurpose) {
+    const { snap, ctx } = this.authorizeQuery(actor, "msg.campaign.manage", { organisationId, eventId });
+    this.requireOperationalGuest(snap, organisationId, eventId, guestId);
+    return guestEligibility(snap, guestId, channel, purpose, ctx.now);
+  }
+
+  signSynthetic(payload: string): string {
+    return signSyntheticPayload(payload);
+  }
+
+  private requireCampaign(snap: PlatformSnapshot, organisationId: string, eventId: string, campaignId: string): Campaign {
+    const campaign = snap.campaigns.find((item) => item.id === campaignId);
+    if (!campaign || campaign.organisationId !== organisationId || campaign.eventId !== eventId) {
+      throw new PlatformError("NOT_FOUND", "campaign was not found");
+    }
+    return campaign;
   }
 
   private mutate<T extends { id?: string }>(
@@ -2042,6 +2960,7 @@ export class PlatformService {
       ...(response?.respondedAt
         ? { confirmation: { submittedAt: response.respondedAt, attendanceIntent: response.attendanceIntent } }
         : {}),
+      occasion: projectGuestSafeOccasion(eventOccasion(snap, capability.eventId)),
     };
   }
 
@@ -2268,6 +3187,15 @@ export class PlatformService {
       snap.rsvpEntitlements,
       snap.rsvpExceptions,
       snap.rsvpAssistanceRequests,
+      snap.channelPolicies,
+      snap.guestSafeOccasions,
+      snap.audienceDefinitions,
+      snap.campaigns,
+      snap.campaignApprovals,
+      snap.commsMessages,
+      snap.conversationThreads,
+      snap.followUpTasks,
+      snap.contactCorrections,
     ];
     for (const table of rsvpTables) {
       const record = table.find((item) => item.id === id);
@@ -2279,6 +3207,38 @@ export class PlatformService {
           eventId: record.eventId,
         };
       }
+    }
+    const template = snap.messageTemplates.find((item) => item.id === id);
+    if (template) {
+      return {
+        type,
+        organisationId: template.organisationId,
+        clientId: template.clientId,
+        eventId: template.eventId,
+      };
+    }
+    const templateVersion = snap.messageTemplateVersions.find((item) => item.id === id);
+    if (templateVersion) {
+      const parent = snap.messageTemplates.find((item) => item.id === templateVersion.templateId);
+      return {
+        type,
+        organisationId: templateVersion.organisationId,
+        clientId: parent?.clientId,
+        eventId: parent?.eventId,
+      };
+    }
+    const inbound = snap.inboundMessages.find((item) => item.id === id);
+    if (inbound) {
+      return {
+        type,
+        organisationId: inbound.organisationId ?? organisationId,
+        clientId: inbound.clientId,
+        eventId: inbound.eventId,
+      };
+    }
+    const suppression = snap.suppressionEntries.find((item) => item.id === id);
+    if (suppression) {
+      return { type, organisationId: suppression.organisationId, eventId: suppression.eventId };
     }
     return { type, organisationId };
   }
@@ -2304,6 +3264,27 @@ export class PlatformService {
       snap.rsvpEntitlements,
       snap.rsvpExceptions,
       snap.rsvpAssistanceRequests,
+      snap.channelPolicies,
+      snap.guestSafeOccasions,
+      snap.contactProjections,
+      snap.suppressionEntries,
+      snap.messageTemplates,
+      snap.messageTemplateVersions,
+      snap.audienceDefinitions,
+      snap.audienceSnapshots,
+      snap.campaigns,
+      snap.campaignApprovals,
+      snap.commsMessages,
+      snap.messageContentSnapshots,
+      snap.messageAttempts,
+      snap.deliveryEvents,
+      snap.commsOutbox,
+      snap.conversationThreads,
+      snap.inboundMessages,
+      snap.followUpTasks,
+      snap.contactCorrections,
+      snap.commsNotifications,
+      snap.commsIntelligenceAlerts,
     ];
     for (const table of tables) {
       const found = table.find((item) => item.id === id);
