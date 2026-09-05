@@ -6,6 +6,7 @@
 **Native IDs:** `S4-01`–`S4-62`  
 **Predecessor:** `EOS-S03` (`ACCEPTED`)  
 **Baseline:** `30c75f17495ed7bdcf2330296b4e792673310874`  
+**Implementation commit:** `8d87dc13ce87ab1431783d0e6649b34807eeb7ab`  
 **Status:** `IN_REVIEW` — implementation complete; not accepted  
 **Railway:** not authorised  
 **Production:** not authorised  

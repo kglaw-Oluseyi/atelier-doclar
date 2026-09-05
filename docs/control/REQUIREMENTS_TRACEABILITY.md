@@ -327,6 +327,7 @@
 | Requirement | Record |
 |-------------|---------|
 | Native coverage | S4-01–S4-62 / 62/62 |
+| Implementation commit | `8d87dc13ce87ab1431783d0e6649b34807eeb7ab` / `EV-EOS-S04-COMMIT` |
 | Dispositions | A 42 / C 13 / G 4 / H 1 / F 2 |
 | S4-61 | AWAITING EXTERNAL REVIEW; evidence prepared |
 | S4-62 | AWAITING CEO / CONTROLLED ACCEPTANCE; handover prepared |

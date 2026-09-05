@@ -285,7 +285,7 @@ Native pack extracted from `MDOS/slice4/Maison_Doclar_Slice_4_Cursor_Prompt_Pack
 |----|------|---------|----------|
 | EV-EOS-S04-IMPL | DOCUMENT | Implementation report | `docs/control/EOS_S04_IMPLEMENTATION_REPORT.md` |
 | EV-EOS-S04-ARCH | DOCUMENT | Communications / concierge boundary | `docs/control/EVENT_OS_COMMUNICATIONS_CONCIERGE.md` |
-| EV-EOS-S04-COMMIT | COMMIT | Implementation commit (updated after git) | `packages/programme-domain/src/seed.ts` `EOS_S04_COMMIT` |
+| EV-EOS-S04-COMMIT | COMMIT | Implementation commit | `git:8d87dc13ce87ab1431783d0e6649b34807eeb7ab` |
 
 S4-61 awaiting independent review. S4-62 awaiting CEO / controlled acceptance. Production not authorised. No Railway mutation.
 

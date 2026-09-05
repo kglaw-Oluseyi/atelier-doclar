@@ -757,7 +757,7 @@
         "MDOS/slice4/"
       ],
       "commits": [
-        "d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4"
+        "8d87dc13ce87ab1431783d0e6649b34807eeb7ab"
       ],
       "evidence": [
         {
@@ -781,11 +781,11 @@
         {
           "id": "EV-EOS-S04-COMMIT",
           "kind": "COMMIT",
-          "uri": "git:d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4",
+          "uri": "git:8d87dc13ce87ab1431783d0e6649b34807eeb7ab",
           "createdAt": "2026-09-06T03:20:00Z",
           "sourceSystem": "github",
           "immutable": true,
-          "summary": "EOS-S04 implementation commit d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4"
+          "summary": "EOS-S04 implementation commit 8d87dc13ce87ab1431783d0e6649b34807eeb7ab"
         }
       ],
       "openItems": [],
