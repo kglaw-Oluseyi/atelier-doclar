@@ -127,3 +127,22 @@
 | Unsigned gates | `assessHealth.productionAuthorised = false` |
 | Event OS isolation | `eventOsImpliedFailed = false` |
 | Runbook / backup | `docs/control/CT9_RUNBOOK.md`, `BACKUP_RESTORE.md` |
+
+## MD-FC1
+
+**Prompt Control ID:** `MD-PR-S001`  
+**Slice ID:** `MD-FC1`
+
+| Requirement | Implementation |
+|-------------|----------------|
+| Debt inventory vs repository | `docs/control/FOUNDATION_DEBT_RECONCILIATION.md` |
+| Stale CT0 framework/app items | OI-CT0-001 / OI-CT0-005 RESOLVED |
+| Phase.slices completeness | `referential.ts` + PH-EVENT-OS-OPERATIONS |
+| GitHub live read client | `packages/programme-ingestion/src/github-http.ts` |
+| Webhook HTTP route | `apps/control-tower/src/app/api/programme/github/webhook/route.ts` |
+| Durable audit | `FileAuditRepository` / `MemoryAuditRepository` |
+| RAG index cache | `resolveProgrammeIndex` / `ProgrammeIndexCache` |
+| Health / readiness | `/api/health/live`, `/api/health/ready`, `/programme/ops` |
+| Fail-closed production config | `evaluateRuntimeConfig` |
+| Railway prep without deploy | `railway.toml`, `ADR_RAILWAY_DEPLOYMENT.md` |
+| No manufactured acceptance | MD-B0–MD-FC1 remain IN_REVIEW |

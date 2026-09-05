@@ -8,4 +8,4 @@ status: OPEN
 decisionAuthority: CEO
 blocker: false
 evidence: []
-notes: Next.js Control Tower runs locally and in GitHub Actions. Railway/other hosting is not provisioned.
+notes: "HISTORICAL: Railway/other hosting is not provisioned. MD-FC1: intended target is Railway project atelier-doclar. Application prepared (build/start/health/env) but not deployed. Classification PRODUCTION_DECISION_REQUIRED. Does not block EOS-S01 coding."

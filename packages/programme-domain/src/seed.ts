@@ -14,6 +14,7 @@ export const CT6_SEED_TIME = "2026-09-05T12:10:00Z";
 export const CT7_SEED_TIME = "2026-09-05T13:10:00Z";
 export const CT8_SEED_TIME = "2026-09-05T14:10:00Z";
 export const CT9_SEED_TIME = "2026-09-05T15:10:00Z";
+export const FC1_SEED_TIME = "2026-09-05T16:10:00Z";
 export const B0_COMMIT = "f7abb431be9a15ab730b3fdd16baa8e83776c170";
 
 const B0_EVIDENCE: EvidenceRef = {
@@ -42,7 +43,8 @@ function envelope(
     | "MD-CT6"
     | "MD-CT7"
     | "MD-CT8"
-    | "MD-CT9",
+    | "MD-CT9"
+    | "MD-FC1",
   occurredAt: string,
   payload: ProgrammeEvent["payload"],
 ): ProgrammeEvent {
@@ -134,6 +136,12 @@ export function corpusSeedEvents(): ProgrammeEvent[] {
     envelope("EVT-SEED-CT9-REVIEW", "REVIEW_REQUESTED", "MD-CT9", CT9_SEED_TIME, {
       summary: "CT9 in review; not accepted; production not authorised",
     }),
+    envelope("EVT-SEED-FC1-IMPL", "SLICE_IMPLEMENTATION_OBSERVED", "MD-FC1", FC1_SEED_TIME, {
+      summary: "Foundation closeout reconciled Control Tower technical debt",
+    }),
+    envelope("EVT-SEED-FC1-REVIEW", "REVIEW_REQUESTED", "MD-FC1", FC1_SEED_TIME, {
+      summary: "Foundation closeout in review; not accepted; production not authorised",
+    }),
   ];
 }
 
@@ -154,6 +162,7 @@ export function loadCorpusBaseline(root?: string): {
       manifests: loaded.catalogManifests,
       gates: loaded.gates,
       openItems: loaded.openItems,
+      decisions: loaded.decisions,
     },
   };
 }

@@ -36,6 +36,8 @@ export function createInitialProjection(baseline: DeclarationBaseline, updatedAt
   }
   const gates: ProgrammeProjection["gates"] = {};
   for (const gate of baseline.gates) gates[gate.id] = clone(gate);
+  const decisions: ProgrammeProjection["decisions"] = {};
+  for (const decision of baseline.decisions) decisions[decision.id] = clone(decision);
 
   return {
     eventPosition: 0,
@@ -46,7 +48,7 @@ export function createInitialProjection(baseline: DeclarationBaseline, updatedAt
     slices,
     openItems,
     gates,
-    decisions: {},
+    decisions,
   };
 }
 

@@ -4,8 +4,8 @@ sliceId: MD-CT0
 title: Application framework for later UI slices not implemented and not CEO-signed
 severity: HIGH
 owner: AI CTO
-status: OPEN
+status: RESOLVED
 decisionAuthority: CEO if production frontend is locked
 blocker: false
 evidence: []
-notes: CT1 may proceed as a validator package without Next.js. CT4 requires a framework decision.
+notes: "HISTORICAL: CT1 may proceed as a validator package without Next.js. CT4 requires a framework decision. RESOLUTION MD-FC1: Next.js App Router Control Tower exists at apps/control-tower (CT4–CT9). Decision DEC-CT0-NEXT. Classification RESOLVED_BY_IMPLEMENTATION."

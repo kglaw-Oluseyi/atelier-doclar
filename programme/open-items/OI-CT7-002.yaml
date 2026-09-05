@@ -4,8 +4,8 @@ sliceId: MD-CT7
 title: Programme index is rebuilt per request and is not a durable search cluster
 severity: MEDIUM
 owner: AI CTO
-status: OPEN
+status: RESOLVED
 decisionAuthority: AI CTO
 blocker: false
 evidence: []
-notes: Retrieval reads allow-listed corpus files at request time. A hosted index remains unselected with the production database and hosting decisions.
+notes: "HISTORICAL: retrieval rebuilt the index per request. RESOLUTION MD-FC1: fingerprint-keyed in-process cache with optional file persistence; stale detection via source probe; access filtering unchanged. No search cluster. Classification RESOLVED_BY_IMPLEMENTATION."

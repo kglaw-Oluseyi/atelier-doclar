@@ -10,6 +10,12 @@ importers:
 
   apps/control-tower:
     dependencies:
+      '@maison-doclar/programme-domain':
+        specifier: workspace:*
+        version: link:../../packages/programme-domain
+      '@maison-doclar/programme-ingestion':
+        specifier: workspace:*
+        version: link:../../packages/programme-ingestion
       '@maison-doclar/programme-tower':
         specifier: workspace:*
         version: link:../../packages/programme-tower

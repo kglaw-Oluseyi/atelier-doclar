@@ -70,6 +70,24 @@ describe("referential integrity", () => {
     assert.equal(error?.value, "MD-ORPHAN");
   });
 
+  it("fails when phase.slices omits a catalog assignment", () => {
+    const result = validateProgramme(
+      foundationProgramme({
+        phases: [
+          validPhase({
+            slices: ["MD-AA"],
+          }),
+        ],
+        manifests: [
+          smallestManifest({ id: "MD-AA", dependsOn: [], order: 0 }),
+          smallestManifest({ id: "MD-BB", dependsOn: ["MD-AA"], title: "B", order: 1 }),
+        ],
+      }),
+    );
+    assert.equal(result.ok, false);
+    assert.ok(result.errors.some((item) => item.code === "MAPPING_INCONSISTENT" && item.value === "MD-BB"));
+  });
+
   it("fails when a gate product does not resolve", () => {
     const result = validateProgramme(
       foundationProgramme({

@@ -4,14 +4,12 @@ import { cookies } from "next/headers";
 import {
   SESSION_COOKIE,
   SessionError,
-  appendAudit,
   evaluateApproval,
   readSession,
   type AuditEntry,
 } from "@maison-doclar/programme-tower";
+import { auditRepository } from "./audit";
 import { sessionConfig } from "./config";
-
-const audit: AuditEntry[] = [];
 
 function gateStub(gateId: string) {
   if (!gateId.startsWith("GATE-")) return undefined;
@@ -44,7 +42,7 @@ export async function attemptGateApproval(
       now: new Date().toISOString(),
     });
     const entry: AuditEntry = {
-      id: `AUD-${String(audit.length + 1).padStart(3, "0")}`,
+      id: `AUD-${Date.now()}-${gate.id}`,
       at: new Date().toISOString(),
       actorId: actor.actorId,
       action: "GATE_APPROVAL_ATTEMPT",
@@ -52,8 +50,7 @@ export async function attemptGateApproval(
       result: decision.allowed ? "accepted" : "rejected",
       reason: decision.allowed ? "allowed" : decision.code,
     };
-    const next = appendAudit(audit, entry);
-    audit.splice(0, audit.length, ...next);
+    auditRepository().append(entry);
     return `${gate.id} approval ${decision.allowed ? "accepted" : "rejected"} (${decision.allowed ? "APPROVED" : decision.code})`;
   } catch (error) {
     if (error instanceof SessionError) {

@@ -16,7 +16,9 @@ import { answerQuestion } from "./rag.js";
 export const OPS_PROVIDER = {
   monitoring: "in-process",
   backup: "verified-snapshot-restore",
-  productionHosting: "UNSELECTED",
+  productionHosting: "INTENDED_RAILWAY",
+  railwayProject: "atelier-doclar",
+  productionAuthorised: false,
 } as const;
 
 export type FailureKind =
@@ -32,32 +34,47 @@ export type FailureKind =
 
 export interface OpsHealth {
   controlTower: "OK" | "DEGRADED" | "ERROR";
+  applicationAlive: true;
   eventOsImpliedFailed: false;
   eventDayImpliedFailed: false;
-  github: "UNKNOWN" | "UNAVAILABLE";
-  ci: "UNKNOWN" | "UNAVAILABLE";
-  rag: "AVAILABLE" | "UNAVAILABLE";
+  github: "UNKNOWN" | "UNAVAILABLE" | "SYNTHETIC";
+  githubIngestion: "AVAILABLE" | "SYNTHETIC" | "UNAVAILABLE" | "UNCONFIGURED";
+  webhook: "CONFIGURED" | "UNCONFIGURED";
+  persistence: "AVAILABLE" | "LOCAL_ONLY" | "UNAVAILABLE";
+  programmeData: "AVAILABLE" | "UNAVAILABLE";
+  ci: "UNKNOWN" | "UNAVAILABLE" | "FRESH" | "STALE";
+  rag: "AVAILABLE" | "UNAVAILABLE" | "DEGRADED";
   snapshot: "PRESENT" | "STALE" | "INVALID";
   productionAuthorised: false;
   implementationComplete: true;
   productionApproved: false;
   unsignedProtectedGates: string[];
   recovery: string;
+  ready: boolean;
 }
 
 export function assessHealth(input: {
   snapshot: ControlSnapshot;
-  github?: "UNKNOWN" | "UNAVAILABLE";
-  ci?: "UNKNOWN" | "UNAVAILABLE";
+  github?: "UNKNOWN" | "UNAVAILABLE" | "SYNTHETIC";
+  githubIngestion?: OpsHealth["githubIngestion"];
+  webhook?: "CONFIGURED" | "UNCONFIGURED";
+  persistence?: OpsHealth["persistence"];
+  programmeData?: "AVAILABLE" | "UNAVAILABLE";
+  ci?: "UNKNOWN" | "UNAVAILABLE" | "FRESH" | "STALE";
   ragUnavailable?: boolean;
   stale?: boolean;
   invalid?: boolean;
   partial?: boolean;
+  productionReady?: boolean;
 }): OpsHealth {
   const github = input.github ?? "UNKNOWN";
   const ci = input.ci ?? "UNKNOWN";
   const rag = input.ragUnavailable ? "UNAVAILABLE" : "AVAILABLE";
   const snapshot = input.invalid ? "INVALID" : input.stale ? "STALE" : "PRESENT";
+  const programmeData = input.programmeData ?? (input.snapshot.slices.length > 0 ? "AVAILABLE" : "UNAVAILABLE");
+  const persistence = input.persistence ?? "LOCAL_ONLY";
+  const webhook = input.webhook ?? "UNCONFIGURED";
+  const githubIngestion = input.githubIngestion ?? (github === "UNAVAILABLE" ? "UNAVAILABLE" : "SYNTHETIC");
   const unsigned = input.snapshot.gates.filter((gate) => gate.status !== "APPROVED").map((gate) => gate.id);
   const candidate = buildReleaseCandidate({
     accepted: Object.values(input.snapshot.statuses).filter((status) => status === "ACCEPTED").length,
@@ -65,17 +82,24 @@ export function assessHealth(input: {
     blockingItems: input.snapshot.openItems.filter((item) => item.blocker && item.status === "OPEN").length,
   });
   const degraded =
-    github !== "UNKNOWN" ||
+    github === "UNAVAILABLE" ||
     ci === "UNAVAILABLE" ||
     rag === "UNAVAILABLE" ||
     snapshot !== "PRESENT" ||
+    programmeData === "UNAVAILABLE" ||
     input.partial === true ||
     !candidate.productionAuthorised;
+  const ready = input.productionReady === true && !input.invalid && programmeData === "AVAILABLE" && persistence !== "UNAVAILABLE";
   return {
     controlTower: input.invalid ? "ERROR" : degraded ? "DEGRADED" : "OK",
+    applicationAlive: true,
     eventOsImpliedFailed: false,
     eventDayImpliedFailed: false,
     github,
+    githubIngestion,
+    webhook,
+    persistence,
+    programmeData,
     ci,
     rag,
     snapshot,
@@ -84,6 +108,7 @@ export function assessHealth(input: {
     productionApproved: false,
     unsignedProtectedGates: unsigned,
     recovery: "Restore the last verified snapshot with reconstructFromSnapshot and re-run programme:project.",
+    ready,
   };
 }
 

@@ -55,27 +55,4 @@ export class SyntheticEvidenceProvider implements RepositoryEvidenceProvider {
   }
 }
 
-export class LiveGitHubProvider implements RepositoryEvidenceProvider {
-  constructor() {
-    throw new IngestionError(
-      "LIVE_MODE_DISABLED",
-      "live GitHub HTTP client is not implemented in CT3; use SyntheticEvidenceProvider or an explicit future adapter",
-    );
-  }
-
-  async getCommit(): Promise<CommitEvidence | undefined> {
-    throw new IngestionError("LIVE_MODE_DISABLED", "live GitHub HTTP client is not implemented");
-  }
-  async listCommits(): Promise<CommitEvidence[]> {
-    throw new IngestionError("LIVE_MODE_DISABLED", "live GitHub HTTP client is not implemented");
-  }
-  async getWorkflowRun(): Promise<WorkflowRunEvidence | undefined> {
-    throw new IngestionError("LIVE_MODE_DISABLED", "live GitHub HTTP client is not implemented");
-  }
-  async listWorkflowRuns(): Promise<WorkflowRunEvidence[]> {
-    throw new IngestionError("LIVE_MODE_DISABLED", "live GitHub HTTP client is not implemented");
-  }
-  freshness(): SourceFreshness {
-    throw new IngestionError("LIVE_MODE_DISABLED", "live GitHub HTTP client is not implemented");
-  }
-}
+export { GitHubHttpProvider as LiveGitHubProvider } from "./github-http.js";

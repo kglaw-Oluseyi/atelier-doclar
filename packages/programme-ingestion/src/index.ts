@@ -1,4 +1,10 @@
-export { CT3_TRACEABILITY, AUTHORISED_REPOSITORY, AUTHORISED_BRANCH, TRUSTED_WORKFLOWS } from "./constants.js";
+export {
+  CT3_TRACEABILITY,
+  AUTHORISED_REPOSITORY,
+  AUTHORISED_BRANCH,
+  TRUSTED_WORKFLOWS,
+  SYNTHETIC_WEBHOOK_SECRET,
+} from "./constants.js";
 export {
   IngestionError,
   INGESTION_FAILURE_CODES,
@@ -7,7 +13,7 @@ export {
 } from "./errors.js";
 export { assertAuthorisedRepository, assertAuthorisedRef } from "./allowlist.js";
 export { verifyGitHubSignature, computeGitHubSignature, assertSecretNotLeaked } from "./webhook.js";
-export { MemoryDeliveryStore, type DeliveryStore } from "./replay.js";
+export { MemoryDeliveryStore, FileDeliveryStore, type DeliveryStore } from "./replay.js";
 export { parseCommitMetadata, resolveCommitLinkage, type LinkageCatalog } from "./linkage.js";
 export { loadLinkageCatalog } from "./catalog.js";
 export {
@@ -17,6 +23,7 @@ export {
   type SourceFreshness,
 } from "./provider.js";
 export { SyntheticEvidenceProvider, LiveGitHubProvider } from "./synthetic-provider.js";
+export { GitHubHttpProvider, createLiveGitHubProvider } from "./github-http.js";
 export { commitsFromPush, workflowFromPayload } from "./github-adapter.js";
 export { IngestionService, type WebhookRequest, type IngestionResult } from "./ingest.js";
 export { IngestionLedger } from "./ledger.js";

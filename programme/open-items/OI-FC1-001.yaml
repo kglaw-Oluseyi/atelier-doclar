@@ -1,0 +1,11 @@
+id: OI-FC1-001
+product: FOUNDATION
+sliceId: MD-FC1
+title: Human live-browser verification of the deployed Control Tower has not been performed
+severity: HIGH
+owner: Named independent reviewer
+status: OPEN
+decisionAuthority: Independent reviewer
+blocker: false
+evidence: []
+notes: "Checklist: docs/control/CONTROL_TOWER_LIVE_VERIFICATION.md. Automated Playwright is not a substitute for HUMAN LIVE ACCEPTANCE. Classification PROTECTED_APPROVAL_REQUIRED. Does not block EOS-S01 coding."

@@ -5,6 +5,7 @@ export {
   CT7_TRACEABILITY,
   CT8_TRACEABILITY,
   CT9_TRACEABILITY,
+  FC1_TRACEABILITY,
   CT5_SURFACES,
   CT6_SURFACES,
   CT7_SURFACES,
@@ -41,11 +42,15 @@ export {
 export {
   answerQuestion,
   buildProgrammeIndex,
+  resolveProgrammeIndex,
   isPathAllowlisted,
   requestedPathIsAuthorised,
   RAG_PROVIDER,
   type GroundedAnswer,
 } from "./rag.js";
+export { ProgrammeIndexCache, programmeSourceFingerprint, getCachedProgrammeIndex } from "./rag-cache.js";
+export { MemoryAuditRepository, FileAuditRepository, type AuditRepository } from "./audit-store.js";
+export { evaluateRuntimeConfig, RUNTIME_CONFIG_CONTRACT } from "./runtime-config.js";
 export {
   buildCharts,
   buildNotifications,

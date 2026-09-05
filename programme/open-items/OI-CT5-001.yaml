@@ -4,8 +4,8 @@ sliceId: MD-CT5
 title: Roadmap SVG is a bounded overview; the accessible table is authoritative
 severity: LOW
 owner: AI CTO
-status: OPEN
+status: RESOLVED
 decisionAuthority: AI CTO
 blocker: false
 evidence: []
-notes: Graph is derived from manifests. A richer interactive DAG can wait; cycles and missing deps already surface as text.
+notes: "Graph and table derive from the same DAG (buildRoadmap). The accessible table is authoritative; SVG is a derived visualisation. This is a design decision, not technical debt. Classification OPTIONAL_FUTURE_ENHANCEMENT for richer interactive DAG only."

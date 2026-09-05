@@ -1,0 +1,30 @@
+{
+  "sliceId": "MD-FC1",
+  "promptControlId": "MD-PR-S001",
+  "technicalReview": {
+    "controlTowerTechnicalImplementationReview": "PASSED",
+    "ct0ToCt9AuthorisedForProgrammeProgression": true,
+    "controlTowerProductionAuthorised": false
+  },
+  "unresolvedFoundationDefects": {
+    "code": 0,
+    "architecture": 0,
+    "tests": 0,
+    "security": 0,
+    "accessibility": 0,
+    "dataIntegrity": 0,
+    "operations": 0
+  },
+  "productionDecisionPending": ["CT2-OI-001", "CT4-OI-001", "CT4-OI-002", "OI-CT0-004"],
+  "protectedApprovalPending": ["OI-FC1-001", "OI-FC1-002", "OI-FC1-003"],
+  "eventOsDependencyPending": ["OI-CT0-002", "OI-CT0-003", "OI-FC1-004"],
+  "optionalFutureEnhancement": ["CT5-OI-001", "CT7-OI-001", "CT8-OI-001"],
+  "foundationImplementationComplete": true,
+  "knownFoundationTechnicalDebt": "ZERO",
+  "controlTowerLiveDeploymentReady": true,
+  "controlTowerProductionAuthorised": false,
+  "eosS01TechnicallyEligible": true,
+  "acceptedSlices": 0,
+  "deploymentPerformed": false,
+  "eventOsStarted": false
+}

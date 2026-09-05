@@ -1,6 +1,6 @@
 {
   "slice_id": "MD-CT0",
-  "model": "SliceRecord projection \u2014 evidence-derived; ACCEPTED forbidden without named reviewer",
+  "model": "SliceRecord projection — evidence-derived; ACCEPTED forbidden without named reviewer",
   "generatedAt": "2026-09-05T05:10:00Z",
   "sourceCommit": "f7abb431be9a15ab730b3fdd16baa8e83776c170",
   "records": [
@@ -87,7 +87,7 @@
     {
       "id": "MD-CT1",
       "product": "FOUNDATION",
-      "title": "CT1 \u2014 Programme domain and manifest validator",
+      "title": "CT1 — Programme domain and manifest validator",
       "phaseId": "PH-FOUNDATION",
       "order": 2,
       "status": "IN_REVIEW",
@@ -122,7 +122,7 @@
     {
       "id": "MD-CT2",
       "product": "FOUNDATION",
-      "title": "CT2 \u2014 Persistence, snapshots and status calculator",
+      "title": "CT2 — Persistence, snapshots and status calculator",
       "phaseId": "PH-FOUNDATION",
       "order": 3,
       "status": "IN_REVIEW",
@@ -157,7 +157,7 @@
     {
       "id": "MD-CT3",
       "product": "FOUNDATION",
-      "title": "CT3 \u2014 Repository and CI ingestion",
+      "title": "CT3 — Repository and CI ingestion",
       "phaseId": "PH-FOUNDATION",
       "order": 4,
       "status": "IN_REVIEW",
@@ -192,7 +192,7 @@
     {
       "id": "MD-CT4",
       "product": "FOUNDATION",
-      "title": "CT4 \u2014 Control Tower shell and executive portfolio",
+      "title": "CT4 — Control Tower shell and executive portfolio",
       "phaseId": "PH-FOUNDATION",
       "order": 5,
       "status": "IN_REVIEW",
@@ -227,7 +227,7 @@
     {
       "id": "MD-CT5",
       "product": "FOUNDATION",
-      "title": "CT5 \u2014 Roadmap, product and slice drill-down",
+      "title": "CT5 — Roadmap, product and slice drill-down",
       "phaseId": "PH-FOUNDATION",
       "order": 6,
       "status": "IN_REVIEW",
@@ -262,7 +262,7 @@
     {
       "id": "MD-CT6",
       "product": "FOUNDATION",
-      "title": "CT6 \u2014 Open items, decisions, gates, releases and audit",
+      "title": "CT6 — Open items, decisions, gates, releases and audit",
       "phaseId": "PH-FOUNDATION",
       "order": 7,
       "status": "IN_REVIEW",
@@ -297,7 +297,7 @@
     {
       "id": "MD-CT7",
       "product": "FOUNDATION",
-      "title": "CT7 \u2014 RAG ingestion and grounded programme assistant",
+      "title": "CT7 — RAG ingestion and grounded programme assistant",
       "phaseId": "PH-FOUNDATION",
       "order": 8,
       "status": "IN_REVIEW",
@@ -332,7 +332,7 @@
     {
       "id": "MD-CT8",
       "product": "FOUNDATION",
-      "title": "CT8 \u2014 Charts, notifications and update freshness",
+      "title": "CT8 — Charts, notifications and update freshness",
       "phaseId": "PH-FOUNDATION",
       "order": 9,
       "status": "IN_REVIEW",
@@ -343,7 +343,7 @@
         "claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Control_Tower_TypeScript_Cursor_Prompt_Programme_CT0-CT9_v1.0_DRAFT.md",
         "docs/control/EXECUTION_COMPATIBILITY_REGISTER.md"
       ],
-      "outcome": "Useful charts; unknown \u2260 green",
+      "outcome": "Useful charts; unknown ≠ green",
       "entryCriteria": [
         "Previous CT slice authorised and reviewed",
         "Use compatibility register not Claude-role standing contract"
@@ -367,7 +367,7 @@
     {
       "id": "MD-CT9",
       "product": "FOUNDATION",
-      "title": "CT9 \u2014 Operations, full acceptance and release evidence",
+      "title": "CT9 — Operations, full acceptance and release evidence",
       "phaseId": "PH-FOUNDATION",
       "order": 10,
       "status": "IN_REVIEW",
@@ -400,9 +400,46 @@
       "version": "ct0-planning-1"
     },
     {
+      "id": "MD-FC1",
+      "product": "FOUNDATION",
+      "title": "Foundation Closeout — Control Tower Reconciliation",
+      "phaseId": "PH-FOUNDATION",
+      "order": 11,
+      "status": "IN_REVIEW",
+      "dependsOn": [
+        "MD-CT9"
+      ],
+      "canonicalRefs": [
+        "docs/control/FOUNDATION_CLOSEOUT.md",
+        "docs/control/FOUNDATION_DEBT_RECONCILIATION.md",
+        "docs/control/EVENT_OS_ENTRY_GATE.md"
+      ],
+      "outcome": "Control Tower Foundation technically closed; production decisions and protected approvals remain explicit",
+      "entryCriteria": [
+        "CT0–CT9 technically reviewed",
+        "HEAD at or descending from MD-CT9 evidence commit"
+      ],
+      "exitCriteria": [
+        "Known Foundation technical-debt categories are zero",
+        "Production decisions and protected approvals remain unsigned and explicit",
+        "Event OS not started"
+      ],
+      "expectedFiles": [
+        "docs/control/FOUNDATION_CLOSEOUT.md",
+        "docs/control/PRODUCTION_CONFIGURATION.md"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T16:10:00Z",
+      "version": "fc1-closeout-1"
+    },
+    {
       "id": "EOS-S01",
       "product": "EVENT_OS",
-      "title": "Event OS Slice 1 \u2014 Platform foundation (identity, clients, events, design system, staging-only)",
+      "title": "Event OS Slice 1 — Platform foundation (identity, clients, events, design system, staging-only)",
       "phaseId": "PH-EVENT-OS-FOUNDATIONS",
       "order": 1,
       "status": "NOT_STARTED",
@@ -434,7 +471,7 @@
     {
       "id": "EOS-S02",
       "product": "EVENT_OS",
-      "title": "Event OS Slice 2 \u2014 Guest intake and operational guest directory",
+      "title": "Event OS Slice 2 — Guest intake and operational guest directory",
       "phaseId": "PH-EVENT-OS-FOUNDATIONS",
       "order": 2,
       "status": "NOT_STARTED",
@@ -466,7 +503,7 @@
     {
       "id": "EOS-S03",
       "product": "EVENT_OS",
-      "title": "Event OS Slice 3 \u2014 RSVP and guest self-service",
+      "title": "Event OS Slice 3 — RSVP and guest self-service",
       "phaseId": "PH-EVENT-OS-FOUNDATIONS",
       "order": 3,
       "status": "NOT_STARTED",
@@ -498,7 +535,7 @@
     {
       "id": "EOS-S04",
       "product": "EVENT_OS",
-      "title": "Event OS Slice 4 \u2014 Guest communications and concierge",
+      "title": "Event OS Slice 4 — Guest communications and concierge",
       "phaseId": "PH-EVENT-OS-FOUNDATIONS",
       "order": 4,
       "status": "NOT_STARTED",
@@ -530,7 +567,7 @@
     {
       "id": "EOS-S05",
       "product": "EVENT_OS",
-      "title": "Event OS Slice 5 \u2014 Venue registry and spatial layout",
+      "title": "Event OS Slice 5 — Venue registry and spatial layout",
       "phaseId": "PH-EVENT-OS-FOUNDATIONS",
       "order": 5,
       "status": "NOT_STARTED",
@@ -562,7 +599,7 @@
     {
       "id": "EOS-S06",
       "product": "EVENT_OS",
-      "title": "Event OS Slice 6 \u2014 Seating allocation",
+      "title": "Event OS Slice 6 — Seating allocation",
       "phaseId": "PH-EVENT-OS-FOUNDATIONS",
       "order": 6,
       "status": "NOT_STARTED",
@@ -594,7 +631,7 @@
     {
       "id": "EOS-S07",
       "product": "EVENT_OS",
-      "title": "Event OS Slice 7 \u2014 Credentials and QR",
+      "title": "Event OS Slice 7 — Credentials and QR",
       "phaseId": "PH-EVENT-OS-FOUNDATIONS",
       "order": 7,
       "status": "NOT_STARTED",
@@ -626,7 +663,7 @@
     {
       "id": "EOS-S08",
       "product": "EVENT_OS",
-      "title": "Event OS Slice 8 \u2014 Historical Event-Day Runtime inside Event OS \u2014 MAP ONLY, do not double-build",
+      "title": "Event OS Slice 8 — Historical Event-Day Runtime inside Event OS — MAP ONLY, do not double-build",
       "phaseId": "PH-EVENT-OS-OPERATIONS",
       "order": 8,
       "status": "NOT_STARTED",
@@ -637,7 +674,7 @@
         "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
         "MDOS/slice8/"
       ],
-      "outcome": "Historical Event-Day Runtime inside Event OS \u2014 MAP ONLY, do not double-build",
+      "outcome": "Historical Event-Day Runtime inside Event OS — MAP ONLY, do not double-build",
       "entryCriteria": [
         "Prior Event OS slice accepted"
       ],
@@ -658,7 +695,7 @@
     {
       "id": "EOS-S09",
       "product": "EVENT_OS",
-      "title": "Event OS Slice 9 \u2014 Standards, readiness and operational intelligence",
+      "title": "Event OS Slice 9 — Standards, readiness and operational intelligence",
       "phaseId": "PH-EVENT-OS-OPERATIONS",
       "order": 9,
       "status": "NOT_STARTED",
@@ -690,7 +727,7 @@
     {
       "id": "EOS-S10",
       "product": "EVENT_OS",
-      "title": "Event OS Slice 10 \u2014 FaceGate gated integration",
+      "title": "Event OS Slice 10 — FaceGate gated integration",
       "phaseId": "PH-EVENT-OS-OPERATIONS",
       "order": 10,
       "status": "NOT_STARTED",
@@ -722,7 +759,7 @@
     {
       "id": "EOS-S11",
       "product": "EVENT_OS",
-      "title": "Event OS Slice 11 \u2014 Cross-event knowledge and learning",
+      "title": "Event OS Slice 11 — Cross-event knowledge and learning",
       "phaseId": "PH-EVENT-OS-OPERATIONS",
       "order": 11,
       "status": "NOT_STARTED",
@@ -754,7 +791,7 @@
     {
       "id": "EOS-S12",
       "product": "EVENT_OS",
-      "title": "Event OS Slice 12 \u2014 Whole-system validation and release",
+      "title": "Event OS Slice 12 — Whole-system validation and release",
       "phaseId": "PH-VALIDATION",
       "order": 12,
       "status": "NOT_STARTED",
@@ -786,7 +823,7 @@
     {
       "id": "EOS-RECON",
       "product": "EVENT_OS",
-      "title": "Event OS reconciliation prompt bundle OS-R00\u2013OS-R12",
+      "title": "Event OS reconciliation prompt bundle OS-R00–OS-R12",
       "phaseId": "PH-EVENT-OS-OPERATIONS",
       "order": 13,
       "status": "NOT_STARTED",
@@ -798,7 +835,7 @@
       ],
       "outcome": "Apply ratified CEO doctrine to an existing Event OS implementation",
       "entryCriteria": [
-        "Existing Event OS implementation present \u2014 currently ABSENT"
+        "Existing Event OS implementation present — currently ABSENT"
       ],
       "exitCriteria": [
         "OS-R12 evidence; no invented CEO/external authority"
@@ -817,7 +854,7 @@
     {
       "id": "EDR-R00",
       "product": "EVENT_DAY",
-      "title": "R0 \u2014 Repository preflight and supersession",
+      "title": "R0 — Repository preflight and supersession",
       "phaseId": "PH-EVENT-DAY-FOUNDATIONS",
       "order": 0,
       "status": "NOT_STARTED",
@@ -850,7 +887,7 @@
     {
       "id": "EDR-R01",
       "product": "EVENT_DAY",
-      "title": "R1 \u2014 Domain kernel and runtime state machine",
+      "title": "R1 — Domain kernel and runtime state machine",
       "phaseId": "PH-EVENT-DAY-FOUNDATIONS",
       "order": 1,
       "status": "NOT_STARTED",
@@ -883,7 +920,7 @@
     {
       "id": "EDR-R02",
       "product": "EVENT_DAY",
-      "title": "R2 \u2014 Departmental projection registry",
+      "title": "R2 — Departmental projection registry",
       "phaseId": "PH-EVENT-DAY-FOUNDATIONS",
       "order": 2,
       "status": "NOT_STARTED",
@@ -916,7 +953,7 @@
     {
       "id": "EDR-R03",
       "product": "EVENT_DAY",
-      "title": "R3 \u2014 Package builder and minimisation",
+      "title": "R3 — Package builder and minimisation",
       "phaseId": "PH-EVENT-DAY-FOUNDATIONS",
       "order": 3,
       "status": "NOT_STARTED",
@@ -949,7 +986,7 @@
     {
       "id": "EDR-R04",
       "product": "EVENT_DAY",
-      "title": "R4 \u2014 Package freeze, manifest, signature and import",
+      "title": "R4 — Package freeze, manifest, signature and import",
       "phaseId": "PH-EVENT-DAY-FOUNDATIONS",
       "order": 4,
       "status": "NOT_STARTED",
@@ -982,7 +1019,7 @@
     {
       "id": "EDR-R05",
       "product": "EVENT_DAY",
-      "title": "R5 \u2014 Local persistence and immutable ledger",
+      "title": "R5 — Local persistence and immutable ledger",
       "phaseId": "PH-EVENT-DAY-FOUNDATIONS",
       "order": 5,
       "status": "NOT_STARTED",
@@ -1015,7 +1052,7 @@
     {
       "id": "EDR-R06",
       "product": "EVENT_DAY",
-      "title": "R6 \u2014 Local identity, device registry and certificate enrolment",
+      "title": "R6 — Local identity, device registry and certificate enrolment",
       "phaseId": "PH-EVENT-DAY-FOUNDATIONS",
       "order": 6,
       "status": "NOT_STARTED",
@@ -1048,7 +1085,7 @@
     {
       "id": "EDR-R07",
       "product": "EVENT_DAY",
-      "title": "R7 \u2014 PWA shell and pinned local assets",
+      "title": "R7 — PWA shell and pinned local assets",
       "phaseId": "PH-EVENT-DAY-FOUNDATIONS",
       "order": 7,
       "status": "NOT_STARTED",
@@ -1081,7 +1118,7 @@
     {
       "id": "EDR-R08",
       "product": "EVENT_DAY",
-      "title": "R8 \u2014 Scan and lookup platform",
+      "title": "R8 — Scan and lookup platform",
       "phaseId": "PH-EVENT-DAY-OPERATIONS",
       "order": 8,
       "status": "NOT_STARTED",
@@ -1114,7 +1151,7 @@
     {
       "id": "EDR-R09",
       "product": "EVENT_DAY",
-      "title": "R9 \u2014 Initial human check-in surface",
+      "title": "R9 — Initial human check-in surface",
       "phaseId": "PH-EVENT-DAY-OPERATIONS",
       "order": 9,
       "status": "NOT_STARTED",
@@ -1147,7 +1184,7 @@
     {
       "id": "EDR-R10",
       "product": "EVENT_DAY",
-      "title": "R10 \u2014 Greeter, protocol and guest-relations surfaces",
+      "title": "R10 — Greeter, protocol and guest-relations surfaces",
       "phaseId": "PH-EVENT-DAY-OPERATIONS",
       "order": 10,
       "status": "NOT_STARTED",
@@ -1180,7 +1217,7 @@
     {
       "id": "EDR-R11",
       "product": "EVENT_DAY",
-      "title": "R11 \u2014 Seating, ushering and guest service surfaces",
+      "title": "R11 — Seating, ushering and guest service surfaces",
       "phaseId": "PH-EVENT-DAY-OPERATIONS",
       "order": 11,
       "status": "NOT_STARTED",
@@ -1213,7 +1250,7 @@
     {
       "id": "EDR-R12",
       "product": "EVENT_DAY",
-      "title": "R12 \u2014 Department lead workspaces",
+      "title": "R12 — Department lead workspaces",
       "phaseId": "PH-EVENT-DAY-OPERATIONS",
       "order": 12,
       "status": "NOT_STARTED",
@@ -1246,7 +1283,7 @@
     {
       "id": "EDR-R13",
       "product": "EVENT_DAY",
-      "title": "R13 \u2014 Self-scan kiosk",
+      "title": "R13 — Self-scan kiosk",
       "phaseId": "PH-EVENT-DAY-OPERATIONS",
       "order": 13,
       "status": "NOT_STARTED",
@@ -1279,7 +1316,7 @@
     {
       "id": "EDR-R14",
       "product": "EVENT_DAY",
-      "title": "R14 \u2014 Client emergency outbox",
+      "title": "R14 — Client emergency outbox",
       "phaseId": "PH-EVENT-DAY-OPERATIONS",
       "order": 14,
       "status": "NOT_STARTED",
@@ -1312,7 +1349,7 @@
     {
       "id": "EDR-R15",
       "product": "EVENT_DAY",
-      "title": "R15 \u2014 FaceGate consented enrolment and return-only gateway",
+      "title": "R15 — FaceGate consented enrolment and return-only gateway",
       "phaseId": "PH-EVENT-DAY-OPERATIONS",
       "order": 15,
       "status": "NOT_STARTED",
@@ -1345,7 +1382,7 @@
     {
       "id": "EDR-R16",
       "product": "EVENT_DAY",
-      "title": "R16 \u2014 Command console, health and degradation",
+      "title": "R16 — Command console, health and degradation",
       "phaseId": "PH-EVENT-DAY-OPERATIONS",
       "order": 16,
       "status": "NOT_STARTED",
@@ -1378,7 +1415,7 @@
     {
       "id": "EDR-R17",
       "product": "EVENT_DAY",
-      "title": "R17 \u2014 Staff deployment, shifts and Academy gates",
+      "title": "R17 — Staff deployment, shifts and Academy gates",
       "phaseId": "PH-EVENT-DAY-OPERATIONS",
       "order": 17,
       "status": "NOT_STARTED",
@@ -1411,7 +1448,7 @@
     {
       "id": "EDR-R18",
       "product": "EVENT_DAY",
-      "title": "R18 \u2014 Incidents, safety, service recovery and fallback",
+      "title": "R18 — Incidents, safety, service recovery and fallback",
       "phaseId": "PH-EVENT-DAY-OPERATIONS",
       "order": 18,
       "status": "NOT_STARTED",
@@ -1444,7 +1481,7 @@
     {
       "id": "EDR-R19",
       "product": "EVENT_DAY",
-      "title": "R19 \u2014 Close, drain, seal and encrypted export",
+      "title": "R19 — Close, drain, seal and encrypted export",
       "phaseId": "PH-EVENT-DAY-OPERATIONS",
       "order": 19,
       "status": "NOT_STARTED",
@@ -1477,7 +1514,7 @@
     {
       "id": "EDR-R20",
       "product": "EVENT_DAY",
-      "title": "R20 \u2014 Deterministic cloud reconciliation",
+      "title": "R20 — Deterministic cloud reconciliation",
       "phaseId": "PH-EVENT-DAY-OPERATIONS",
       "order": 20,
       "status": "NOT_STARTED",
@@ -1510,7 +1547,7 @@
     {
       "id": "EDR-R21",
       "product": "EVENT_DAY",
-      "title": "R21 \u2014 Deployment, configuration, backup and recovery",
+      "title": "R21 — Deployment, configuration, backup and recovery",
       "phaseId": "PH-EVENT-DAY-OPERATIONS",
       "order": 21,
       "status": "NOT_STARTED",
@@ -1543,7 +1580,7 @@
     {
       "id": "EDR-R22",
       "product": "EVENT_DAY",
-      "title": "R22 \u2014 Full automated and browser acceptance",
+      "title": "R22 — Full automated and browser acceptance",
       "phaseId": "PH-VALIDATION",
       "order": 22,
       "status": "NOT_STARTED",
@@ -1576,7 +1613,7 @@
     {
       "id": "EDR-R23",
       "product": "EVENT_DAY",
-      "title": "R23 \u2014 Evidence pack and release locks",
+      "title": "R23 — Evidence pack and release locks",
       "phaseId": "PH-VALIDATION",
       "order": 23,
       "status": "NOT_STARTED",
@@ -2170,7 +2207,7 @@
     {
       "id": "ACA-RECON",
       "product": "ACADEMY",
-      "title": "Academy reconciliation AC-R00\u2013AC-R13",
+      "title": "Academy reconciliation AC-R00–AC-R13",
       "phaseId": "PH-ACADEMY",
       "order": 18,
       "status": "NOT_STARTED",
@@ -2182,7 +2219,7 @@
       ],
       "outcome": "Reconcile doctrine onto an existing Academy implementation",
       "entryCriteria": [
-        "Existing Academy implementation \u2014 currently ABSENT"
+        "Existing Academy implementation — currently ABSENT"
       ],
       "exitCriteria": [
         "AC-R13 evidence; no invented external authority"
@@ -2201,7 +2238,7 @@
     {
       "id": "MKT-M00",
       "product": "MARKETING",
-      "title": "M0 \u2014 Repository constitution and verified decisions",
+      "title": "M0 — Repository constitution and verified decisions",
       "phaseId": "PH-MARKETING",
       "order": 0,
       "status": "NOT_STARTED",
@@ -2218,7 +2255,7 @@
         "Consent/CRM boundaries approved; single-repo Marketing module"
       ],
       "exitCriteria": [
-        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+        "Four lettered sub-prompts M{i}A–D complete with evidence"
       ],
       "expectedFiles": [
         "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
@@ -2234,7 +2271,7 @@
     {
       "id": "MKT-M01",
       "product": "MARKETING",
-      "title": "M1 \u2014 Business diagnosis and commercial foundation",
+      "title": "M1 — Business diagnosis and commercial foundation",
       "phaseId": "PH-MARKETING",
       "order": 1,
       "status": "NOT_STARTED",
@@ -2250,7 +2287,7 @@
         "Consent/CRM boundaries approved; single-repo Marketing module"
       ],
       "exitCriteria": [
-        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+        "Four lettered sub-prompts M{i}A–D complete with evidence"
       ],
       "expectedFiles": [
         "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
@@ -2266,7 +2303,7 @@
     {
       "id": "MKT-M02",
       "product": "MARKETING",
-      "title": "M2 \u2014 Doctrine, knowledge, evidence and novice guidance",
+      "title": "M2 — Doctrine, knowledge, evidence and novice guidance",
       "phaseId": "PH-MARKETING",
       "order": 2,
       "status": "NOT_STARTED",
@@ -2282,7 +2319,7 @@
         "Consent/CRM boundaries approved; single-repo Marketing module"
       ],
       "exitCriteria": [
-        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+        "Four lettered sub-prompts M{i}A–D complete with evidence"
       ],
       "expectedFiles": [
         "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
@@ -2298,7 +2335,7 @@
     {
       "id": "MKT-M03",
       "product": "MARKETING",
-      "title": "M3 \u2014 Strategy, scenarios, campaigns and command centre",
+      "title": "M3 — Strategy, scenarios, campaigns and command centre",
       "phaseId": "PH-MARKETING",
       "order": 3,
       "status": "NOT_STARTED",
@@ -2314,7 +2351,7 @@
         "Consent/CRM boundaries approved; single-repo Marketing module"
       ],
       "exitCriteria": [
-        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+        "Four lettered sub-prompts M{i}A–D complete with evidence"
       ],
       "expectedFiles": [
         "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
@@ -2330,7 +2367,7 @@
     {
       "id": "MKT-M04",
       "product": "MARKETING",
-      "title": "M4 \u2014 Content, brand, SEO, website and assets",
+      "title": "M4 — Content, brand, SEO, website and assets",
       "phaseId": "PH-MARKETING",
       "order": 4,
       "status": "NOT_STARTED",
@@ -2346,7 +2383,7 @@
         "Consent/CRM boundaries approved; single-repo Marketing module"
       ],
       "exitCriteria": [
-        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+        "Four lettered sub-prompts M{i}A–D complete with evidence"
       ],
       "expectedFiles": [
         "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
@@ -2362,7 +2399,7 @@
     {
       "id": "MKT-M05",
       "product": "MARKETING",
-      "title": "M5 \u2014 Consent, identity, pipeline and lifecycle",
+      "title": "M5 — Consent, identity, pipeline and lifecycle",
       "phaseId": "PH-MARKETING",
       "order": 5,
       "status": "NOT_STARTED",
@@ -2378,7 +2415,7 @@
         "Consent/CRM boundaries approved; single-repo Marketing module"
       ],
       "exitCriteria": [
-        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+        "Four lettered sub-prompts M{i}A–D complete with evidence"
       ],
       "expectedFiles": [
         "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
@@ -2394,7 +2431,7 @@
     {
       "id": "MKT-M06",
       "product": "MARKETING",
-      "title": "M6 \u2014 Social operations, reviews and reputation",
+      "title": "M6 — Social operations, reviews and reputation",
       "phaseId": "PH-MARKETING",
       "order": 6,
       "status": "NOT_STARTED",
@@ -2410,7 +2447,7 @@
         "Consent/CRM boundaries approved; single-repo Marketing module"
       ],
       "exitCriteria": [
-        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+        "Four lettered sub-prompts M{i}A–D complete with evidence"
       ],
       "expectedFiles": [
         "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
@@ -2426,7 +2463,7 @@
     {
       "id": "MKT-M07",
       "product": "MARKETING",
-      "title": "M7 \u2014 Measurement, attribution, experiments and executive intelligence",
+      "title": "M7 — Measurement, attribution, experiments and executive intelligence",
       "phaseId": "PH-MARKETING",
       "order": 7,
       "status": "NOT_STARTED",
@@ -2442,7 +2479,7 @@
         "Consent/CRM boundaries approved; single-repo Marketing module"
       ],
       "exitCriteria": [
-        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+        "Four lettered sub-prompts M{i}A–D complete with evidence"
       ],
       "expectedFiles": [
         "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
@@ -2458,7 +2495,7 @@
     {
       "id": "MKT-M08",
       "product": "MARKETING",
-      "title": "M8 \u2014 Paid media, landing pages and conversion",
+      "title": "M8 — Paid media, landing pages and conversion",
       "phaseId": "PH-MARKETING",
       "order": 8,
       "status": "NOT_STARTED",
@@ -2474,7 +2511,7 @@
         "Consent/CRM boundaries approved; single-repo Marketing module"
       ],
       "exitCriteria": [
-        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+        "Four lettered sub-prompts M{i}A–D complete with evidence"
       ],
       "expectedFiles": [
         "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
@@ -2490,7 +2527,7 @@
     {
       "id": "MKT-M09",
       "product": "MARKETING",
-      "title": "M9 \u2014 Events-as-marketing, PR, partners, creators and advocacy",
+      "title": "M9 — Events-as-marketing, PR, partners, creators and advocacy",
       "phaseId": "PH-MARKETING",
       "order": 9,
       "status": "NOT_STARTED",
@@ -2506,7 +2543,7 @@
         "Consent/CRM boundaries approved; single-repo Marketing module"
       ],
       "exitCriteria": [
-        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+        "Four lettered sub-prompts M{i}A–D complete with evidence"
       ],
       "expectedFiles": [
         "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
@@ -2522,7 +2559,7 @@
     {
       "id": "MKT-M10",
       "product": "MARKETING",
-      "title": "M10 \u2014 Estate integration: Event OS, Academy and finance/control",
+      "title": "M10 — Estate integration: Event OS, Academy and finance/control",
       "phaseId": "PH-MARKETING",
       "order": 10,
       "status": "NOT_STARTED",
@@ -2538,7 +2575,7 @@
         "Consent/CRM boundaries approved; single-repo Marketing module"
       ],
       "exitCriteria": [
-        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+        "Four lettered sub-prompts M{i}A–D complete with evidence"
       ],
       "expectedFiles": [
         "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
@@ -2554,7 +2591,7 @@
     {
       "id": "MKT-M11",
       "product": "MARKETING",
-      "title": "M11 \u2014 AI evaluation, bounded autonomy and production certification",
+      "title": "M11 — AI evaluation, bounded autonomy and production certification",
       "phaseId": "PH-MARKETING",
       "order": 11,
       "status": "NOT_STARTED",
@@ -2570,7 +2607,7 @@
         "Consent/CRM boundaries approved; single-repo Marketing module"
       ],
       "exitCriteria": [
-        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+        "Four lettered sub-prompts M{i}A–D complete with evidence"
       ],
       "expectedFiles": [
         "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
@@ -2605,7 +2642,7 @@
         "Event OS seating and Runtime usher surfaces specified"
       ],
       "exitCriteria": [
-        "Single authorised prompt complete; U01\u2013U14 remain curriculum IDs"
+        "Single authorised prompt complete; U01–U14 remain curriculum IDs"
       ],
       "expectedFiles": [
         "MD-Premium Usher system/10_Maison_Doclar_Academy_Premium_Ushering_Cursor_Reconciliation_Prompt_v1.0_DRAFT.docx"
@@ -2641,7 +2678,7 @@
         "Product mandatory slices implemented; integration contracts identified"
       ],
       "exitCriteria": [
-        "Evidence pack ready for independent and CEO gates \u2014 gates remain unsigned"
+        "Evidence pack ready for independent and CEO gates — gates remain unsigned"
       ],
       "expectedFiles": [
         "docs/control/POST_BUILD_VERIFICATION.md"

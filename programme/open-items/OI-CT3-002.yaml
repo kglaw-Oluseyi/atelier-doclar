@@ -4,8 +4,8 @@ sliceId: MD-CT3
 title: HTTP webhook route is deferred; verification is a pure module for CT4 to wire
 severity: MEDIUM
 owner: AI CTO
-status: OPEN
+status: RESOLVED
 decisionAuthority: AI CTO
 blocker: false
 evidence: []
-notes: CT3 provides handleGitHubWebhook(headers, rawBody, secret) without a Next.js or HTTP server. CT4 may attach this to an application route.
+notes: "HISTORICAL: CT3 provided handleWebhook without an HTTP route. RESOLUTION MD-FC1: POST /api/programme/github/webhook with raw-body HMAC, delivery ID, replay store, repository allow-list, main-branch restriction, idempotent event append. Remote GitHub webhook not created. Classification RESOLVED_BY_IMPLEMENTATION."

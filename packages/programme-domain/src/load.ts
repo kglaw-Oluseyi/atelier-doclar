@@ -9,7 +9,9 @@ import {
   ProductSchema,
   SliceManifestSchema,
   SliceRecordSchema,
+  DecisionSchema,
   StateProjectionFileSchema,
+  type Decision,
   type Gate,
   type OpenItem,
   type Phase,
@@ -29,6 +31,7 @@ export interface LoadedProgramme {
   records: SliceRecord[];
   gates: Gate[];
   openItems: OpenItem[];
+  decisions: Decision[];
   yamlById: Map<string, { manifest: SliceManifest; sourceFile: string }>;
   catalogSourceFile: string;
   projectionSourceFile: string;
@@ -91,6 +94,7 @@ export function loadProgrammeCorpus(rootInput?: string): LoadedProgramme {
   const yamlManifestFiles = listFilesRecursive(join(root, "programme", "slices"), ".yaml");
   const gateFiles = listFilesRecursive(join(root, "programme", "gates"), ".yaml");
   const openItemFiles = listFilesRecursive(join(root, "programme", "open-items"), ".yaml");
+  const decisionFiles = listFilesRecursive(join(root, "programme", "decisions"), ".yaml");
   const catalogPath = join(root, "programme", "slices", "catalog.json");
   const projectionPath = join(root, "programme", "slices", "state-projection.json");
 
@@ -100,6 +104,7 @@ export function loadProgrammeCorpus(rootInput?: string): LoadedProgramme {
     ...yamlManifestFiles,
     ...gateFiles,
     ...openItemFiles,
+    ...decisionFiles,
     catalogPath,
     projectionPath,
   );
@@ -232,6 +237,18 @@ export function loadProgrammeCorpus(rootInput?: string): LoadedProgramme {
     sourceByKey.set(`open_item:${parsed.data.id}`, rel(file));
   }
 
+  const decisions: Decision[] = [];
+  for (const file of decisionFiles) {
+    const raw = parseYamlFile(file);
+    const parsed = DecisionSchema.safeParse(raw);
+    if (!parsed.success) {
+      errors.push(...zodIssuesToErrors(parsed.error.issues, "decision", entityIdFromUnknown(raw), rel(file)));
+      continue;
+    }
+    decisions.push(parsed.data);
+    sourceByKey.set(`decision:${parsed.data.id}`, rel(file));
+  }
+
   errors.sort(compareErrors);
 
   return {
@@ -243,6 +260,7 @@ export function loadProgrammeCorpus(rootInput?: string): LoadedProgramme {
     records,
     gates,
     openItems,
+    decisions,
     yamlById,
     catalogSourceFile: rel(catalogPath),
     projectionSourceFile: rel(projectionPath),

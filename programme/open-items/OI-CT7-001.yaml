@@ -8,4 +8,4 @@ status: OPEN
 decisionAuthority: CEO
 blocker: false
 evidence: []
-notes: CT7 ships a deterministic extractive retriever. No production LLM credentials are configured or required for programme correctness.
+notes: "CT7 ships a deterministic extractive retriever. No production LLM credentials are configured or required for programme correctness. MD-FC1: vendor selection is not required for EOS entry. Classification OPTIONAL_FUTURE_ENHANCEMENT."

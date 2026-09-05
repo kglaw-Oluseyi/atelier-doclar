@@ -154,6 +154,24 @@ export function referentialErrors(input: ReferentialInput): ProgrammeValidationE
         );
       }
     }
+    if (phase.slices) {
+      const assigned = input.manifests.filter((item) => item.phaseId === phase.id).map((item) => item.id);
+      for (const id of assigned) {
+        if (!phase.slices.includes(id)) {
+          errors.push(
+            validationError({
+              code: "MAPPING_INCONSISTENT",
+              entityType: "phase",
+              entityId: phase.id,
+              field: "slices",
+              value: id,
+              message: `phase.slices omits catalog slice ${id}`,
+              sourceFile: source(input, "phase", phase.id),
+            }),
+          );
+        }
+      }
+    }
   }
 
   for (const manifest of input.manifests) {

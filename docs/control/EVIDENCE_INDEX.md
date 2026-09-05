@@ -110,4 +110,22 @@ Acceptance of MD-CT4 still requires a named reviewer. Not ACCEPTED.
 | EV-CT9-RUNBOOK | DOCUMENT | Operational runbook | `docs/control/CT9_RUNBOOK.md` |
 | EV-CT9-BACKUP | DOCUMENT | Snapshot restore strategy | `docs/control/BACKUP_RESTORE.md` |
 | EV-CT9-IMPL | DOCUMENT | Implementation record | `docs/control/CT9_IMPLEMENTATION.md` |
+| EV-CT9-SHA | COMMIT | CT9 operations evidence | `28958e31778e92c3354e72447150353939ed4596` |
+
+## MD-FC1
+
+**Prompt Control ID:** `MD-PR-S001`  
+**Native ID:** `FC1`  
+**Slice ID:** `MD-FC1`
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-FC1-CLOSEOUT | DOCUMENT | Foundation closeout record | `docs/control/FOUNDATION_CLOSEOUT.md` |
+| EV-FC1-DEBT | DOCUMENT | Reconciliation matrix | `docs/control/FOUNDATION_DEBT_RECONCILIATION.md` |
+| EV-FC1-LIVE | DOCUMENT | Live-verification pack | `docs/control/CONTROL_TOWER_LIVE_VERIFICATION.md` |
+| EV-FC1-CONFIG | DOCUMENT | Production configuration contract | `docs/control/PRODUCTION_CONFIGURATION.md` |
+| EV-FC1-PERSIST | DOCUMENT | Persistence ADR | `docs/control/ADR_PRODUCTION_PERSISTENCE.md` |
+| EV-FC1-AUTH | DOCUMENT | Authentication ADR | `docs/control/ADR_PRODUCTION_AUTHENTICATION.md` |
+| EV-FC1-RAILWAY | DOCUMENT | Railway readiness ADR | `docs/control/ADR_RAILWAY_DEPLOYMENT.md` |
+| EV-FC1-EOS | DOCUMENT | Event OS entry gate | `docs/control/EVENT_OS_ENTRY_GATE.md` |
 

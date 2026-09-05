@@ -1,4 +1,4 @@
-import { assessHealth, classifyFailure, type FailureKind } from "@maison-doclar/programme-tower";
+import { assessHealth, classifyFailure, evaluateRuntimeConfig, type FailureKind } from "@maison-doclar/programme-tower";
 import { DeniedPage } from "../../../components/denied";
 import { TowerShell } from "../../../components/shell";
 import { fixturesAllowed } from "../../../server/config";
@@ -25,7 +25,16 @@ export default async function OpsPage({
   if ("denied" in session) return <DeniedPage />;
   const fail = fixturesAllowed() ? (await searchParams).fail : undefined;
   const kind = FAILURES.find((item) => item === fail);
-  const health = kind ? classifyFailure(kind, session.snapshot) : assessHealth({ snapshot: session.snapshot });
+  const runtime = evaluateRuntimeConfig();
+  const health = kind
+    ? classifyFailure(kind, session.snapshot)
+    : assessHealth({
+        snapshot: session.snapshot,
+        github: runtime.githubLiveEnabled ? "UNKNOWN" : "SYNTHETIC",
+        githubIngestion: runtime.githubLiveEnabled ? "AVAILABLE" : "SYNTHETIC",
+        webhook: runtime.webhookConfigured ? "CONFIGURED" : "UNCONFIGURED",
+        persistence: runtime.persistenceConfigured ? "LOCAL_ONLY" : "LOCAL_ONLY",
+      });
 
   return (
     <TowerShell actor={session.actor}>
@@ -44,13 +53,37 @@ export default async function OpsPage({
         </thead>
         <tbody>
           <tr>
-            <td>GitHub</td>
+            <td>Application alive</td>
             <td>
-              <span className="status">{health.github}</span>
+              <span className="status">{String(health.applicationAlive)}</span>
             </td>
           </tr>
           <tr>
-            <td>CI</td>
+            <td>Programme data</td>
+            <td>
+              <span className="status">{health.programmeData}</span>
+            </td>
+          </tr>
+          <tr>
+            <td>Persistence</td>
+            <td>
+              <span className="status">{health.persistence}</span>
+            </td>
+          </tr>
+          <tr>
+            <td>GitHub ingestion</td>
+            <td>
+              <span className="status">{health.githubIngestion}</span>
+            </td>
+          </tr>
+          <tr>
+            <td>Webhook</td>
+            <td>
+              <span className="status">{health.webhook}</span>
+            </td>
+          </tr>
+          <tr>
+            <td>CI freshness</td>
             <td>
               <span className="status">{health.ci}</span>
             </td>
@@ -65,6 +98,12 @@ export default async function OpsPage({
             <td>Snapshot</td>
             <td>
               <span className="status">{health.snapshot}</span>
+            </td>
+          </tr>
+          <tr>
+            <td>Protected gates</td>
+            <td>
+              <span className="status">UNSIGNED</span>
             </td>
           </tr>
           <tr>

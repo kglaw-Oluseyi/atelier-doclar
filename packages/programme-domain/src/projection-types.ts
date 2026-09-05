@@ -35,6 +35,7 @@ export interface DeclarationBaseline {
   manifests: SliceManifest[];
   gates: Gate[];
   openItems: OpenItem[];
+  decisions: Decision[];
 }
 
 export interface PercentageUnavailable {

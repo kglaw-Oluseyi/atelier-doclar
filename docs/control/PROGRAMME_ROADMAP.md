@@ -11,7 +11,7 @@ Percent complete is not used. Unknown is not healthy. Documented ≠ implemented
 
 | Code | Name | Route | Implementation reality |
 |------|------|-------|------------------------|
-| FOUNDATION | Shared Foundation / Control Tower | `/programme` | Planning artefacts only |
+| FOUNDATION | Shared Foundation / Control Tower | `/programme` | Control Tower implemented; Foundation closeout IN_REVIEW; production unsigned |
 | EVENT_OS | Event OS | `/programme/event-os` | Specified/prompted; no app |
 | EVENT_DAY | Event-Day Runtime | `/programme/event-day` | Specs + contracts; no app |
 | ACADEMY | Academy | `/programme/academy` | Specified/prompted; no app |
@@ -36,9 +36,9 @@ Seed JSON product **order** (Academy before Event-Day) is a historical display v
 | PH-EVENT-DAY-OPERATIONS | Runtime operations (R8–R21) | Supporting |
 | PH-EVENT-OS-OPERATIONS | Later Event OS (S09–S12, recon) | Supporting |
 
-## Planning slices (80)
+## Planning slices (81)
 
-Foundation 11 (MD-B0, MD-CT0–CT9) · Event OS 13 (S01–S12 + recon) · Event-Day 24 (R00–R23) · Academy 18 (G0 + S01–S16 + recon) · Marketing 12 (M00–M11) · Ushering 1 · Integration 1.
+Foundation 12 (MD-B0, MD-CT0–CT9, MD-FC1) · Event OS 13 (S01–S12 + recon) · Event-Day 24 (R00–R23) · Academy 18 (G0 + S01–S16 + recon) · Marketing 12 (M00–M11) · Ushering 1 · Integration 1.
 
 Each slice has canonical references. No slice is `ACCEPTED`.
 
@@ -55,15 +55,17 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 | MD-CT7 | IN_REVIEW — grounded assistant implemented; no named acceptance |
 | MD-CT8 | IN_REVIEW — charts and freshness implemented; unknown ≠ green |
 | MD-CT9 | IN_REVIEW — operations evidence pack; production unsigned |
-| All others | NOT_STARTED |
+| MD-FC1 | IN_REVIEW — Foundation closeout; production unsigned |
+| EOS-S01 | NOT_STARTED — technically eligible; not executed |
+| All others | NOT_STARTED or BLOCKED only by valid Event OS / Event-Day dependencies |
 
 ## Now / next / later
 
 | Band | Content |
 |------|---------|
-| Now | MD-CT9 — operations evidence pack in review |
-| Next | First Event OS slice after stack/module decisions (`EOS-S01` remains BLOCKED) |
-| Later | CT4–CT9; Event OS S01 after stack/module decisions; Runtime after Event OS foundations |
+| Now | MD-FC1 Foundation closeout in review |
+| Next | Dedicated Control Tower live-deployment/verification slice (not started). EOS-S01 technically eligible and not executed |
+| Later | Event OS S01 after a new authorised instruction; Runtime after Event OS foundations |
 | Held | All 693 product/recon prompts except CT0/CT1 wrappers |
 | External | Independent, specialist, venue, CEO gates — unsigned |
 

@@ -1,0 +1,11 @@
+id: DEC-FC1-RAILWAY-INTENT
+title: Intended Control Tower deployment target is Railway project atelier-doclar
+severity: HIGH
+owner: CEO
+authority: CEO identified intended project; deployment is not performed in MD-FC1
+disposition: PROPOSED
+affectedIds:
+  - CT4-OI-002
+  - CT2-OI-001
+  - OI-FC1-003
+blocker: false

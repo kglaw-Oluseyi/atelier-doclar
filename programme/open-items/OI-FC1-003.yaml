@@ -1,0 +1,11 @@
+id: OI-FC1-003
+product: FOUNDATION
+sliceId: MD-FC1
+title: CEO production authorisation remains unsigned
+severity: CRITICAL
+owner: CEO
+status: OPEN
+decisionAuthority: CEO
+blocker: false
+evidence: []
+notes: "GATE-CEO-PRODUCTION remains unsigned. Technical review is not production authorisation. Classification PROTECTED_APPROVAL_REQUIRED. CONTROL TOWER PRODUCTION AUTHORISED: NO. Does not block EOS-S01 coding."

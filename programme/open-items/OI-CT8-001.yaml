@@ -8,4 +8,4 @@ status: OPEN
 decisionAuthority: CEO
 blocker: false
 evidence: []
-notes: CT8 delivers in-app notices with duplicate suppression. No email, Slack or other delivery provider is authorised.
+notes: "CT8 delivers in-app notices with duplicate suppression. No email, Slack or other delivery provider is authorised. MD-FC1: external messaging is not mandatory for Foundation. Classification OPTIONAL_FUTURE_ENHANCEMENT. Does not block EOS."

@@ -53,7 +53,7 @@ Event OS Slice 8 (`EOS-S08`) depends on `EOS-S07` for historical sequence only. 
 
 ## Shared models (must not fork)
 
-Identity, organisation, event, guest, staff, consent and doctrine must remain shared. No product may quietly create a competing store. This is a dependency **constraint**, recorded as open item OI-CT0-005 until an implementation exists to enforce it.
+Identity, organisation, event, guest, staff, consent and doctrine must remain shared. No product may quietly create a competing store. This Event OS constraint is `OI-FC1-004`. Historical `OI-CT0-005` (“no application foundation”) was resolved by Control Tower implementation and must not be reused as that constraint.
 
 ## Missing dependencies
 

@@ -4,8 +4,8 @@ sliceId: MD-CT1
 title: Phase.slices annotations are incomplete relative to catalog phaseId assignments
 severity: LOW
 owner: AI CTO
-status: OPEN
+status: RESOLVED
 decisionAuthority: AI CTO
 blocker: false
 evidence: []
-notes: PH-EVENT-OS-OPERATIONS lists EOS-S09–S11 and EOS-RECON but not EOS-S08. Phase.slices is treated as optional annotation; catalog phaseId remains authoritative.
+notes: "HISTORICAL: PH-EVENT-OS-OPERATIONS listed EOS-S09–S11 and EOS-RECON but not EOS-S08. RESOLUTION MD-FC1: phase YAML corrected; validator now fails if phase.slices omits a catalog assignment. Classification RESOLVED_BY_IMPLEMENTATION."

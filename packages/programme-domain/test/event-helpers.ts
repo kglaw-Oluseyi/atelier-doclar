@@ -39,6 +39,7 @@ export function testBaseline(extra?: Partial<DeclarationBaseline>): DeclarationB
     manifests,
     gates: extra?.gates ?? [validGate()],
     openItems: extra?.openItems ?? [],
+    decisions: extra?.decisions ?? [],
   };
 }
 

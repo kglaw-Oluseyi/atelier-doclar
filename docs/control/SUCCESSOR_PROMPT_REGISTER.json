@@ -1,0 +1,15 @@
+{
+  "scheme": "MD-PR-SNNN successor accountability IDs; historical MD-PR-NNNN remain intact",
+  "generated_at": "2026-09-05T16:10:00Z",
+  "notes": "Do not impersonate historical Control Tower prompt IDs. MD-PR-0011 is already used.",
+  "entries": [
+    {
+      "prompt_control_id": "MD-PR-S001",
+      "native_id": "FC1",
+      "slice_id": "MD-FC1",
+      "product": "FOUNDATION",
+      "title": "Foundation Closeout — Control Tower Reconciliation",
+      "authorising_instruction": "CEO-authorised Foundation closeout following independent AI CTO technical review"
+    }
+  ]
+}

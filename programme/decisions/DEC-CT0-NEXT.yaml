@@ -1,0 +1,11 @@
+id: DEC-CT0-NEXT
+title: Control Tower application framework is Next.js App Router
+severity: HIGH
+owner: AI CTO
+authority: CEO-authorised CT0 planning plus CT4–CT9 implementation
+disposition: CONTROLLING
+affectedIds:
+  - OI-CT0-001
+  - MD-CT4
+  - apps/control-tower
+blocker: false

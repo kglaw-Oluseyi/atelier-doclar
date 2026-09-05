@@ -8,4 +8,4 @@ status: OPEN
 decisionAuthority: AI CTO
 blocker: true
 evidence: []
-notes: Source contract document exists at MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx. No implementation slice invented.
+notes: "Source contract document exists at MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx. No implementation slice invented. MD-FC1 re-evaluation: VALID_EVENT_OS_BLOCKER for Event-Day R17. Does not block Foundation closeout or EOS-S01."

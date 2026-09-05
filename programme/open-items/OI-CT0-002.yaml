@@ -8,4 +8,4 @@ status: OPEN
 decisionAuthority: CEO / AI CTO
 blocker: true
 evidence: []
-notes: Mapped to EVENT_DAY R-series. Historical pack retained.
+notes: "Mapped to EVENT_DAY R-series. Historical pack retained. MD-FC1 re-evaluation: VALID_EVENT_OS_BLOCKER. Remains an Event OS architectural dependency. Does not block Foundation closeout. Does not block EOS-S01 coding."

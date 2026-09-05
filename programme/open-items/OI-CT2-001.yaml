@@ -8,4 +8,4 @@ status: OPEN
 decisionAuthority: CEO
 blocker: false
 evidence: []
-notes: Domain persistence contract is ProgrammeStore. Memory and filesystem adapters are NON_PRODUCTION. PostgreSQL/Prisma are not adopted.
+notes: "Domain persistence contract is ProgrammeStore. Memory and filesystem adapters are NON_PRODUCTION. MD-FC1 recommends PostgreSQL behind ProgrammeStore (docs/control/ADR_PRODUCTION_PERSISTENCE.md) without provisioning. Classification PRODUCTION_DECISION_REQUIRED. Does not block EOS-S01 coding."

@@ -1,0 +1,11 @@
+id: OI-FC1-004
+product: EVENT_OS
+sliceId: EOS-S01
+title: Shared identity, organisation, event and consent store must not be forked by a product
+severity: HIGH
+owner: AI CTO
+status: OPEN
+decisionAuthority: AI CTO
+blocker: false
+evidence: []
+notes: "Successor of the misused OI-CT0-005 shared-store note in PROGRAMME_DEPENDENCIES.md. Valid Event OS architectural dependency. Not a Foundation code defect. Not a stale 'no application exists' blocker. Classification VALID_EVENT_OS_BLOCKER. Does not force EOS-S01 status BLOCKED."

@@ -4,8 +4,8 @@ sliceId: MD-CT6
 title: Gate-attempt audit log is process-local and non-production
 severity: MEDIUM
 owner: AI CTO
-status: OPEN
+status: RESOLVED
 decisionAuthority: AI CTO
 blocker: false
 evidence: []
-notes: Append-only semantics are implemented. Durable production audit storage remains unselected with the production database.
+notes: "HISTORICAL: process-local audit array. RESOLUTION MD-FC1: FileAuditRepository / MemoryAuditRepository append-only JSONL; no destructive overwrite; idempotent; reconstructable. Production durability remains the unselected ProgrammeStore database (CT2-OI-001). CT6 history: feature commit a9c263a failed E2E; corrective b087c20 passed; both preserved. Classification RESOLVED_BY_IMPLEMENTATION for Foundation process-local debt."

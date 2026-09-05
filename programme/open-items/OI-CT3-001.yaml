@@ -4,8 +4,8 @@ sliceId: MD-CT3
 title: Live GitHub HTTP client is not implemented; ingestion uses a provider interface and synthetic adapter
 severity: MEDIUM
 owner: AI CTO
-status: OPEN
+status: RESOLVED
 decisionAuthority: AI CTO
 blocker: false
 evidence: []
-notes: CT3 implements RepositoryEvidenceProvider, webhook verification and synthetic reconciliation. A live GitHub API client is deferred; --live is disabled.
+notes: "HISTORICAL: live GitHub API client deferred; --live disabled. RESOLUTION MD-FC1: GitHubHttpProvider implemented, hard-bound to kglaw-Oluseyi/atelier-doclar, env token, retries, timeouts, rate-limit handling. Tests use fetch doubles. Live mode requires PROGRAMME_GITHUB_LIVE=1. Classification RESOLVED_BY_IMPLEMENTATION."

@@ -38,6 +38,7 @@ export interface ProgrammeIndex {
   builtAt: string;
   provider: typeof RAG_PROVIDER;
   chunks: GroundedChunk[];
+  sourceFingerprint?: string;
 }
 
 export interface Citation {
@@ -91,6 +92,14 @@ const CONTROL_FILES = [
   "docs/control/CT9_IMPLEMENTATION.md",
   "docs/control/CT9_RUNBOOK.md",
   "docs/control/BACKUP_RESTORE.md",
+  "docs/control/FOUNDATION_CLOSEOUT.md",
+  "docs/control/FOUNDATION_DEBT_RECONCILIATION.md",
+  "docs/control/CONTROL_TOWER_LIVE_VERIFICATION.md",
+  "docs/control/PRODUCTION_CONFIGURATION.md",
+  "docs/control/EVENT_OS_ENTRY_GATE.md",
+  "docs/control/ADR_PRODUCTION_PERSISTENCE.md",
+  "docs/control/ADR_PRODUCTION_AUTHENTICATION.md",
+  "docs/control/ADR_RAILWAY_DEPLOYMENT.md",
 ] as const;
 
 const RESTRICTED_FILES = ["docs/control/RESTRICTED_OPERATOR_NOTE.md"] as const;
@@ -99,6 +108,7 @@ const PROGRAMME_DIRS: ReadonlyArray<{ dir: string; category: SourceCategory }> =
   { dir: "programme/slices", category: "manifest" },
   { dir: "programme/open-items", category: "open-item" },
   { dir: "programme/gates", category: "decision" },
+  { dir: "programme/decisions", category: "decision" },
   { dir: "programme/products", category: "canonical" },
 ];
 
@@ -232,11 +242,42 @@ export function buildProgrammeIndex(input?: {
     });
   }
 
+  const sourceFingerprint = fileHash(files.map((file) => `${file.rel}:${fileHash(readFileSync(file.abs, "utf8"))}`).join("\n"));
   return {
     builtAt: input?.now ?? new Date().toISOString(),
     provider: RAG_PROVIDER,
     chunks,
+    sourceFingerprint,
   };
+}
+
+let cachedIndex: ProgrammeIndex | undefined;
+let cachedProbe: string | undefined;
+
+function probeSources(root: string): string {
+  const parts: string[] = [];
+  const stack = [join(root, "docs/control"), join(root, "programme")];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (!current || !existsSync(current)) continue;
+    const stat = statSync(current);
+    if (stat.isDirectory()) {
+      for (const entry of readdirSync(current).sort()) stack.push(join(current, entry));
+      continue;
+    }
+    parts.push(`${current}:${stat.size}:${Math.trunc(stat.mtimeMs)}`);
+  }
+  return fileHash(parts.join("\n"));
+}
+
+export function resolveProgrammeIndex(input?: { root?: string; now?: string }): ProgrammeIndex {
+  const root = resolveProgrammeRoot(input?.root);
+  const probe = probeSources(root);
+  if (cachedIndex && cachedProbe === probe) return cachedIndex;
+  const built = buildProgrammeIndex({ root: input?.root, now: input?.now });
+  cachedIndex = built;
+  cachedProbe = probe;
+  return built;
 }
 
 const STOP = new Set([
@@ -324,7 +365,7 @@ export function answerQuestion(input: {
     };
   }
 
-  const index = input.index ?? buildProgrammeIndex({ root: input.root, now });
+  const index = input.index ?? resolveProgrammeIndex({ root: input.root, now });
   const staleAfter = input.staleAfterMs ?? 24 * 60 * 60 * 1000;
   const stale = Date.parse(now) - Date.parse(index.builtAt) > staleAfter;
   const question = input.question.trim();

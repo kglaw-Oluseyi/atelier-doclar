@@ -8,4 +8,4 @@ status: OPEN
 decisionAuthority: CEO
 blocker: false
 evidence: []
-notes: /programme is private via HMAC session and a shared access token. This is not a final IdP decision. OIDC/Auth.js product is unselected.
+notes: "/programme is private via HMAC session and a shared access token. This is not a final IdP decision. MD-FC1 records docs/control/ADR_PRODUCTION_AUTHENTICATION.md. Classification PRODUCTION_DECISION_REQUIRED. Does not block EOS-S01 coding."

@@ -83,6 +83,7 @@ export function testBaseline(): DeclarationBaseline {
     ],
     gates: [],
     openItems: [],
+    decisions: [],
   };
 }
 

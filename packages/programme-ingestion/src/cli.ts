@@ -11,6 +11,7 @@ import { IngestionError } from "./errors.js";
 import { IngestionService } from "./ingest.js";
 import { IngestionLedger } from "./ledger.js";
 import { MemoryDeliveryStore } from "./replay.js";
+import { createLiveGitHubProvider } from "./github-http.js";
 import { SyntheticEvidenceProvider } from "./synthetic-provider.js";
 import { assertSecretNotLeaked, computeGitHubSignature } from "./webhook.js";
 
@@ -80,19 +81,20 @@ async function runVerify(): Promise<number> {
 }
 
 async function runReconcile(live: boolean): Promise<number> {
-  if (live) {
-    process.stderr.write("LIVE_MODE_DISABLED: live GitHub reconciliation is not implemented in CT3\n");
+  if (live && process.env.PROGRAMME_GITHUB_LIVE !== "1") {
+    process.stderr.write("LIVE_MODE_DISABLED: live GitHub reconciliation requires PROGRAMME_GITHUB_LIVE=1\n");
     return 1;
   }
   const { service } = createService();
-  return service.reconcile(new SyntheticEvidenceProvider()).then((outcome) => {
+  const provider = live ? createLiveGitHubProvider() : new SyntheticEvidenceProvider();
+  return service.reconcile(provider).then((outcome) => {
     const lines = [
       outcome.ok ? "PROGRAMME RECONCILE PASS" : "PROGRAMME RECONCILE FAIL",
       `product=${CT3_TRACEABILITY.product}`,
       `prompt_control_id=${CT3_TRACEABILITY.promptControlId}`,
       `native_id=${CT3_TRACEABILITY.nativeId}`,
       `slice_id=${CT3_TRACEABILITY.sliceId}`,
-      "mode=synthetic",
+      `mode=${live ? "live" : "synthetic"}`,
       `kind=${outcome.kind}`,
       `events_appended=${outcome.eventsAppended}`,
       `duplicates=${outcome.duplicates}`,

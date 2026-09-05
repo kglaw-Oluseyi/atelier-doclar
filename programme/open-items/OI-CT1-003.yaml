@@ -4,8 +4,8 @@ sliceId: MD-CT1
 title: Decision, Approval, Check and Timeline schemas have no CT0 YAML corpus
 severity: LOW
 owner: AI CTO
-status: OPEN
+status: RESOLVED
 decisionAuthority: AI CTO
 blocker: false
 evidence: []
-notes: Identity schemas exist for future compatibility. CT1 does not invent persistence or approval workflow.
+notes: "HISTORICAL: Identity schemas existed for future compatibility. RESOLUTION MD-FC1: programme/decisions YAML now loads into DeclarationBaseline. Gates and open items already YAML. Approvals remain event-gated and never pre-APPROVED. Checks and timeline remain event-sourced. Classification RESOLVED_BY_IMPLEMENTATION."

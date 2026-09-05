@@ -1,0 +1,10 @@
+# Intended Control Tower deployment target: Railway project `atelier-doclar`.
+# MD-FC1 prepares the application. Deployment is not performed in this slice.
+[build]
+builder = "nixpacks"
+buildCommand = "pnpm install --frozen-lockfile && pnpm --filter @maison-doclar/control-tower build"
+
+[deploy]
+startCommand = "pnpm --filter @maison-doclar/control-tower start"
+healthcheckPath = "/api/health/live"
+restartPolicyType = "ON_FAILURE"

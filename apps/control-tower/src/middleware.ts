@@ -5,6 +5,7 @@ const SESSION_COOKIE = "md_programme_session";
 const PUBLIC = new Set([
   "/programme/login",
   "/api/session",
+  "/api/programme/github/webhook",
 ]);
 
 export function middleware(request: NextRequest): NextResponse {

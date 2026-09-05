@@ -21,6 +21,9 @@ describe("CT9 operations and failure modes", () => {
     assert.equal(health.eventDayImpliedFailed, false);
     assert.ok(health.unsignedProtectedGates.includes("GATE-INDEPENDENT"));
     assert.ok(health.unsignedProtectedGates.includes("GATE-CEO-PRODUCTION"));
+    assert.equal(health.applicationAlive, true);
+    assert.equal(health.ready, false);
+    assert.equal(health.productionAuthorised, false);
   });
 
   it("classifies GitHub, CI, RAG, stale, permission and partial failures without implying Event OS failure", () => {

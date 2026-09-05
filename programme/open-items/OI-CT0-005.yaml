@@ -4,8 +4,8 @@ sliceId: EOS-S01
 title: No executable application foundation exists
 severity: CRITICAL
 owner: AI CTO
-status: OPEN
+status: RESOLVED
 decisionAuthority: CEO / AI CTO
-blocker: true
+blocker: false
 evidence: []
-notes: Blocks all product implementation prompts. Specified ≠ implemented.
+notes: "HISTORICAL: Blocks all product implementation prompts. Specified ≠ implemented. RESOLUTION MD-FC1: apps/control-tower and CT4–CT9 exist. This historical condition is not a current EOS-S01 blocker. Shared platform-store constraint transferred to OI-FC1-004. Classification RESOLVED_BY_IMPLEMENTATION."

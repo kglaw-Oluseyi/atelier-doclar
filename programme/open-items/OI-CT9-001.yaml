@@ -4,8 +4,8 @@ sliceId: MD-CT9
 title: Production hosting, database and live validation remain unselected
 severity: HIGH
 owner: CEO
-status: OPEN
+status: RESOLVED
 decisionAuthority: CEO
 blocker: false
 evidence: []
-notes: CT9 completes Control Tower implementation evidence. It does not authorise production, Railway, a production database, or live-event validation.
+notes: "HISTORICAL umbrella. MD-FC1 split: hosting CT4-OI-002; database CT2-OI-001; identity CT4-OI-001; live browser verification OI-FC1-001; independent acceptance OI-FC1-002; CEO production authorisation OI-FC1-003. Umbrella closed by reconciliation so distinct authorities are not collapsed. Classification RESOLVED_BY_RECONCILIATION."

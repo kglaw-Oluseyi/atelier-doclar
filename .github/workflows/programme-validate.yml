@@ -47,6 +47,9 @@ jobs:
       - name: Reconcile synthetic repository evidence
         run: pnpm programme:reconcile
 
+      - name: Production build
+        run: pnpm --filter @maison-doclar/control-tower build
+
       - name: Install Playwright Chromium
         run: pnpm --filter @maison-doclar/control-tower exec playwright install --with-deps chromium
 
@@ -55,3 +58,5 @@ jobs:
         env:
           PROGRAMME_ALLOW_FIXTURES: "1"
           CI: "1"
+          PROGRAMME_ACCESS_TOKEN: ci-control-tower-access-token
+          PROGRAMME_SESSION_SECRET: ci-control-tower-session-secret-32b
