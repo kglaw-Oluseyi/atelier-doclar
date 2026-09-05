@@ -28,6 +28,8 @@ export const EOS_S02_FINAL_VERIFIED_HEAD = "927ff92908ea25761933a7b24d37396e5e4e
 export const EOS_S02_COMMIT_EVIDENCE_ID = "EV-EOS-S02-COMMIT";
 export const EOS_S02_ACCEPTANCE_EVENT_ID = "EVT-SEED-EOS-S02-ACCEPT";
 export const EOS_S03_SEED_TIME = "2026-09-06T00:10:00Z";
+export const EOS_S03_COMMIT_TIME = "2026-09-06T00:20:00Z";
+export const EOS_S03_COMMIT = "bed7cebeb14e731c1d0e8a289ceb7cfa21f546fe";
 export const EOS_S03_COMMIT_EVIDENCE_ID = "EV-EOS-S03-COMMIT";
 export const B0_COMMIT = "f7abb431be9a15ab730b3fdd16baa8e83776c170";
 export const EOS_S01_COMMIT = "b815268e939cfbd0fc33ce10df77f1c8a1374d52";
@@ -539,6 +541,32 @@ function eosS03ImplementationEvents(): ProgrammeEvent[] {
           sourceSystem: "programme-control",
           immutable: true,
           summary: "EOS-S03 RSVP and guest self-service boundary",
+        },
+      },
+      "EVENT_OS",
+    ),
+    envelope(
+      "EVT-SEED-EOS-S03-COMMIT",
+      "COMMIT_LINKED",
+      "EOS-S03",
+      EOS_S03_COMMIT_TIME,
+      { sha: EOS_S03_COMMIT },
+      "EVENT_OS",
+    ),
+    envelope(
+      "EVT-SEED-EOS-S03-EV-COMMIT",
+      "EVIDENCE_ATTACHED",
+      "EOS-S03",
+      EOS_S03_COMMIT_TIME,
+      {
+        evidence: {
+          id: EOS_S03_COMMIT_EVIDENCE_ID,
+          kind: "COMMIT",
+          uri: `git:${EOS_S03_COMMIT}`,
+          createdAt: EOS_S03_COMMIT_TIME,
+          sourceSystem: "github",
+          immutable: true,
+          summary: `EOS-S03 implementation commit ${EOS_S03_COMMIT}`,
         },
       },
       "EVENT_OS",

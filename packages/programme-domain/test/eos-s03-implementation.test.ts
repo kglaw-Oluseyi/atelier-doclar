@@ -41,6 +41,12 @@ describe("EOS-S03 implementation recording", () => {
       corpusSeedEvents().some((event) => event.eventType === "ACCEPTANCE_RECORDED" && event.sliceId === "EOS-S03"),
       false,
     );
+    assert.equal(
+      corpusSeedEventsThroughS03Implementation().some(
+        (event) => event.eventType === "COMMIT_LINKED" && event.sliceId === "EOS-S03",
+      ),
+      true,
+    );
   });
 
   it("does not authorise production or change protected gates", () => {

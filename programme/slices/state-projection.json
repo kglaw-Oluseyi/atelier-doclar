@@ -685,8 +685,19 @@
       "expectedFiles": [
         "MDOS/slice3/"
       ],
-      "commits": [],
+      "commits": [
+        "bed7cebeb14e731c1d0e8a289ceb7cfa21f546fe"
+      ],
       "evidence": [
+        {
+          "id": "EV-EOS-S03-COMMIT",
+          "kind": "COMMIT",
+          "uri": "git:bed7cebeb14e731c1d0e8a289ceb7cfa21f546fe",
+          "createdAt": "2026-09-06T00:20:00Z",
+          "sourceSystem": "github",
+          "immutable": true,
+          "summary": "EOS-S03 implementation commit bed7cebeb14e731c1d0e8a289ceb7cfa21f546fe"
+        },
         {
           "id": "EV-EOS-S03-IMPL",
           "kind": "DOCUMENT",
@@ -709,7 +720,7 @@
       "openItems": [],
       "acceptedAt": null,
       "acceptedBy": null,
-      "updatedAt": "2026-09-06T00:10:00Z",
+      "updatedAt": "2026-09-06T00:20:00Z",
       "version": "eos-s03-impl-1"
     },
     {

@@ -227,10 +227,11 @@ ACCEPTED under `MD-PR-S009` by `ChatGPT / AI CTO` at `2026-09-05T23:10:00Z`. Acc
 
 | ID | Kind | Summary | Location |
 |----|------|---------|----------|
+| EV-EOS-S03-COMMIT | COMMIT | Implementation commit | `git:bed7cebeb14e731c1d0e8a289ceb7cfa21f546fe` |
 | EV-EOS-S03-IMPL | DOCUMENT | Implementation report | `docs/control/EOS_S03_IMPLEMENTATION_REPORT.md` |
 | EV-EOS-S03-ARCH | DOCUMENT | RSVP and guest self-service boundary | `docs/control/EVENT_OS_RSVP_SELF_SERVICE.md` |
 | EV-EOS-S03-TESTS | TEST | RSVP domain, conflict and adversarial controls | `packages/shared-platform/test/rsvp-*.test.ts` |
 | EV-EOS-S03-E2E | TEST | Event OS guest and staff RSVP Playwright | `apps/event-os/e2e/rsvp.spec.ts` |
 
-IN_REVIEW. Not ACCEPTED. Implementation commit will be pinned after the SHA exists. Production not authorised.
+IN_REVIEW. Not ACCEPTED. Implementation commit `bed7cebeb14e731c1d0e8a289ceb7cfa21f546fe`. Production not authorised.
 

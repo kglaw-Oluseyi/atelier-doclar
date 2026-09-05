@@ -6,6 +6,7 @@
 **Native IDs:** `S3-01`–`S3-50` (`MD-PR-0120`–`MD-PR-0169`)  
 **Predecessor:** `EOS-S02` (`ACCEPTED`)  
 **Baseline:** `96cdd2fbd39d4e7c337eea6f53f6e51e85aaca9a`  
+**Implementation commit:** `bed7cebeb14e731c1d0e8a289ceb7cfa21f546fe`  
 **Status:** `IN_REVIEW` — not accepted  
 **Railway:** not authorised  
 **Production:** not authorised
