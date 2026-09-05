@@ -36,9 +36,10 @@ describe("CT0/CT1 corpus projection", () => {
     assert.equal(statuses.get("MD-HV1"), "IN_REVIEW");
     assert.equal(statuses.get("MD-GR1"), "IN_REVIEW");
     assert.equal(statuses.get("EOS-S01"), "ACCEPTED");
-    assert.equal(statuses.get("EOS-S02"), "IN_REVIEW");
+    assert.equal(statuses.get("EOS-S02"), "ACCEPTED");
+    assert.equal(statuses.get("EOS-S03"), "READY");
     const accepted = [...statuses.entries()].filter(([, status]) => status === "ACCEPTED");
-    assert.deepEqual(accepted.map(([id]) => id), ["EOS-S01"]);
+    assert.deepEqual(accepted.map(([id]) => id), ["EOS-S01", "EOS-S02"]);
     const view = engine.currentView({ generatedAt: CORPUS_SEED_TIME, snapshotId: "SNAP-CORPUS" });
     assert.equal(view.outstanding.percentage.available, false);
     assert.ok(view.outstanding.unacceptedMandatorySlices.includes("MD-CT2"));

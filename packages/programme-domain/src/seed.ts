@@ -22,8 +22,11 @@ export const GR1_SEED_TIME = "2026-09-05T20:10:00Z";
 export const EOS_S01_ACCEPT_TIME = "2026-09-05T21:10:00Z";
 export const EOS_S02_SEED_TIME = "2026-09-05T22:10:00Z";
 export const EOS_S02_COMMIT_TIME = "2026-09-05T22:20:00Z";
+export const EOS_S02_ACCEPT_TIME = "2026-09-05T23:10:00Z";
 export const EOS_S02_COMMIT = "23e8ad98f7a0b8d18ae083f385bfc04cd43ab973";
+export const EOS_S02_FINAL_VERIFIED_HEAD = "927ff92908ea25761933a7b24d37396e5e4e0123";
 export const EOS_S02_COMMIT_EVIDENCE_ID = "EV-EOS-S02-COMMIT";
+export const EOS_S02_ACCEPTANCE_EVENT_ID = "EVT-SEED-EOS-S02-ACCEPT";
 export const B0_COMMIT = "f7abb431be9a15ab730b3fdd16baa8e83776c170";
 export const EOS_S01_COMMIT = "b815268e939cfbd0fc33ce10df77f1c8a1374d52";
 export const EOS_S01_ACCEPTANCE_EVENT_ID = "EVT-SEED-EOS-S01-ACCEPT";
@@ -374,8 +377,7 @@ function eosS01AcceptanceEvents(): ProgrammeEvent[] {
 }
 
 /**
- * Full corpus seed, including governed EOS-S01 technical acceptance.
- * Does not manufacture ACCEPTED events for Foundation slices.
+ * EOS-S02 implementation evidence only. Does not record acceptance.
  */
 function eosS02ImplementationEvents(): ProgrammeEvent[] {
   return [
@@ -460,8 +462,44 @@ function eosS02ImplementationEvents(): ProgrammeEvent[] {
   ];
 }
 
-export function corpusSeedEvents(): ProgrammeEvent[] {
+function eosS02AcceptanceEvents(): ProgrammeEvent[] {
+  return [
+    parseProgrammeEvent({
+      eventId: EOS_S02_ACCEPTANCE_EVENT_ID,
+      eventType: "ACCEPTANCE_RECORDED",
+      schemaVersion: 1,
+      aggregateType: "slice",
+      aggregateId: "EOS-S02",
+      product: "EVENT_OS",
+      sliceId: "EOS-S02",
+      occurredAt: EOS_S02_ACCEPT_TIME,
+      recordedAt: EOS_S02_ACCEPT_TIME,
+      actor: { id: "ai-cto", role: "REVIEWER" },
+      source: "ai-cto-technical-acceptance",
+      idempotencyKey: `seed:${EOS_S02_ACCEPTANCE_EVENT_ID}`,
+      payload: {
+        acceptedAt: EOS_S02_ACCEPT_TIME,
+        acceptedBy: EOS_S01_REVIEWER,
+        authorityRole: "REVIEWER",
+      },
+    }),
+  ];
+}
+
+/**
+ * Corpus through EOS-S02 implementation evidence, before EOS-S02 acceptance.
+ * EOS-S01 is ACCEPTED. EOS-S02 remains IN_REVIEW. Foundation remains unaccepted.
+ */
+export function corpusSeedEventsThroughS02Implementation(): ProgrammeEvent[] {
   return [...corpusSeedEventsThroughProgression(), ...eosS01AcceptanceEvents(), ...eosS02ImplementationEvents()];
+}
+
+/**
+ * Full corpus seed, including governed EOS-S01 and EOS-S02 technical acceptance.
+ * Does not manufacture ACCEPTED events for Foundation slices.
+ */
+export function corpusSeedEvents(): ProgrammeEvent[] {
+  return [...corpusSeedEventsThroughS02Implementation(), ...eosS02AcceptanceEvents()];
 }
 
 export function loadCorpusBaseline(root?: string): {

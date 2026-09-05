@@ -215,6 +215,7 @@ Progression authorisation is not formal slice acceptance and not production auth
 | EV-EOS-S02-ARCH | DOCUMENT | Guest directory boundary | `docs/control/EVENT_OS_GUEST_DIRECTORY.md` |
 | EV-EOS-S02-TESTS | TEST | Intake, directory, identity safety and adversarial controls | `packages/shared-platform/test/guest-*.test.ts` |
 | EV-EOS-S02-E2E | TEST | Event OS guest directory Playwright | `apps/event-os/e2e/guests.spec.ts` |
+| EV-EOS-S02-ACCEPT | DOCUMENT | Formal technical acceptance record | `docs/control/EOS_S02_ACCEPTANCE.md` |
 
-Not ACCEPTED. Production not authorised.
+ACCEPTED under `MD-PR-S009` by `ChatGPT / AI CTO` at `2026-09-05T23:10:00Z`. Accepted implementation remains `23e8ad98f7a0b8d18ae083f385bfc04cd43ab973`. Production not authorised.
 

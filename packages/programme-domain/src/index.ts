@@ -109,6 +109,7 @@ export { ProgrammeEngine, createEngine } from "./engine.js";
 export {
   corpusSeedEvents,
   corpusSeedEventsThroughProgression,
+  corpusSeedEventsThroughS02Implementation,
   loadCorpusBaseline,
   CORPUS_SEED_TIME,
   CT3_SEED_TIME,
@@ -118,6 +119,11 @@ export {
   EOS_S01_ACCEPTANCE_EVENT_ID,
   EOS_S01_COMMIT_EVIDENCE_ID,
   EOS_S01_REVIEWER,
+  EOS_S02_ACCEPT_TIME,
+  EOS_S02_ACCEPTANCE_EVENT_ID,
+  EOS_S02_COMMIT,
+  EOS_S02_COMMIT_EVIDENCE_ID,
+  EOS_S02_FINAL_VERIFIED_HEAD,
 } from "./seed.js";
 export type {
   ControlSnapshot,

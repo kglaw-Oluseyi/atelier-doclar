@@ -243,4 +243,20 @@
 | Duplicate safety | Exact email/phone candidates; name-only suggestions; no auto-merge |
 | Existing RBAC only | New guest.* permissions on the EOS-S01 catalogue |
 | No production / Railway | Non-production fixtures; no deployment |
-| Do not accept during implementation | `IN_REVIEW` only; no `ACCEPTANCE_RECORDED` |
+| Do not accept during implementation | Historical at MD-PR-S008; later accepted under MD-PR-S009 |
+
+## EOS-S02 acceptance
+
+**Prompt Control ID:** `MD-PR-S009`  
+**Slice ID:** `EOS-S02`
+
+| Requirement | Implementation |
+|-------------|----------------|
+| Named reviewer, not Cursor / UNKNOWN | `ChatGPT / AI CTO` via `ACCEPTANCE_RECORDED` |
+| Immutable implementation commit | `23e8ad98f7a0b8d18ae083f385bfc04cd43ab973` / `EV-EOS-S02-COMMIT` |
+| Final verified HEAD may differ | `927ff92908ea25761933a7b24d37396e5e4e0123` recorded separately |
+| Predecessor law | EOS-S01 already ACCEPTED; default ACCEPTANCE dependency satisfied |
+| Projector derives ACCEPTED | No handwritten status override as source truth |
+| Accepted count exactly 2 | EOS-S01 and EOS-S02 only |
+| EOS-S03 eligibility | Default ACCEPTANCE on EOS-S02; READY after acceptance; not implemented |
+| Foundation / gates / production | Foundation IN_REVIEW; protected gates unsigned; `productionAuthorised = false` |

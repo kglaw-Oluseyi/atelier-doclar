@@ -17,7 +17,7 @@ describe("CT8 charts, freshness and notifications", () => {
     const gates = view.series.find((series) => series.id === "gate-matrix");
     assert.ok(gates);
     assert.ok(gates.rows.every((row) => row.tone !== "ok"));
-    assert.equal(view.series.find((series) => series.id === "accepted-work")?.rows.find((row) => row.label === "ACCEPTED")?.value, 1);
+    assert.equal(view.series.find((series) => series.id === "accepted-work")?.rows.find((row) => row.label === "ACCEPTED")?.value, 2);
   });
 
   it("deduplicates notifications and surfaces blocker, review and gate changes", () => {

@@ -4,6 +4,7 @@ import {
   calculateAllStatuses,
   corpusSeedEvents,
   corpusSeedEventsThroughProgression,
+  corpusSeedEventsThroughS02Implementation,
   createEngine,
   loadCorpusBaseline,
   parseProgrammeEvent,
@@ -71,7 +72,7 @@ describe("EOS-S01 formal technical acceptance", () => {
   });
 
   it("derives EOS-S01 ACCEPTED from COMMIT evidence, named reviewer and satisfied PROGRESSION", () => {
-    const { engine } = engineFrom();
+    const { engine } = engineFrom(corpusSeedEventsThroughS02Implementation());
     const projection = engine.projectionAt();
     const statuses = calculateAllStatuses(projection);
     assert.ok(projection.progressions[progressionKey("MD-CT0", "EOS-S01")]);
@@ -194,7 +195,7 @@ describe("EOS-S01 formal technical acceptance", () => {
     assert.equal(beforeStatuses.get("EOS-S02"), "NOT_STARTED");
     assert.equal([...beforeStatuses.values()].filter((status) => status === "ACCEPTED").length, 0);
 
-    const after = engineFrom();
+    const after = engineFrom(corpusSeedEventsThroughS02Implementation());
     const afterStatuses = calculateAllStatuses(after.engine.projectionAt());
     assert.equal(afterStatuses.get("EOS-S01"), "ACCEPTED");
     assert.equal(afterStatuses.get("EOS-S02"), "IN_REVIEW");

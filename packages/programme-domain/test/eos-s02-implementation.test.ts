@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   calculateAllStatuses,
-  corpusSeedEvents,
+  corpusSeedEventsThroughS02Implementation,
   createEngine,
   loadCorpusBaseline,
   CORPUS_SEED_TIME,
@@ -14,7 +14,7 @@ describe("EOS-S02 implementation recording", () => {
     const { baseline } = loadCorpusBaseline();
     const store = new MemoryProgrammeStore();
     const engine = createEngine(store, baseline, CORPUS_SEED_TIME);
-    for (const event of corpusSeedEvents()) engine.append(event);
+    for (const event of corpusSeedEventsThroughS02Implementation()) engine.append(event);
     const statuses = calculateAllStatuses(engine.projectionAt());
     assert.equal(statuses.get("EOS-S01"), "ACCEPTED");
     assert.equal(statuses.get("EOS-S02"), "IN_REVIEW");
@@ -22,11 +22,15 @@ describe("EOS-S02 implementation recording", () => {
     const accepted = [...statuses.entries()].filter(([, status]) => status === "ACCEPTED");
     assert.deepEqual(accepted.map(([id]) => id), ["EOS-S01"]);
     assert.equal(
-      corpusSeedEvents().some((event) => event.eventType === "ACCEPTANCE_RECORDED" && event.sliceId === "EOS-S02"),
+      corpusSeedEventsThroughS02Implementation().some(
+        (event) => event.eventType === "ACCEPTANCE_RECORDED" && event.sliceId === "EOS-S02",
+      ),
       false,
     );
     assert.equal(
-      corpusSeedEvents().some((event) => event.eventType === "COMMIT_LINKED" && event.sliceId === "EOS-S02"),
+      corpusSeedEventsThroughS02Implementation().some(
+        (event) => event.eventType === "COMMIT_LINKED" && event.sliceId === "EOS-S02",
+      ),
       true,
     );
   });
