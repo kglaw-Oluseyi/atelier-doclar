@@ -175,4 +175,21 @@
 | Resolve OI-FC1-001 only | `RESOLVED_BY_HUMAN_VERIFICATION`; historical YAML retained |
 | Do not infer production authorisation | `OI-FC1-002`, `OI-FC1-003`, `CT4-OI-001` remain OPEN |
 | Preserve IN_REVIEW | MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 remain IN_REVIEW; accepted = 0 |
-| Event OS unstarted | EOS-S01 technically eligible, not executed |
+| Event OS unstarted | Historical at MD-HV1; EOS-S01 now executed and IN_REVIEW |
+
+## EOS-S01
+
+**Prompt Control ID:** `MD-PR-S004`  
+**Slice ID:** `EOS-S01`
+
+| Requirement | Implementation |
+|-------------|----------------|
+| Shared platform must not fork | `@maison-doclar/shared-platform` owns org/client/event/person/consent/audit IDs |
+| Organisation and event scope | Server policy + store lineage; isolation tests |
+| Authority separation | Person, session, membership, role, permission, assignment, approval scaffold |
+| Master Event File foundation | Versioned slots for the doctrine lifecycle; later modules not built |
+| Change control | expectedVersion, idempotency, append-only audit |
+| No production IdP | Non-production adapter; `CT4-OI-001` remains OPEN |
+| No Railway | No Event OS deploy; Control Tower live deployment unchanged |
+| UI foundation | `apps/event-os` shell, clients, events, audit, access, health |
+| Do not accept | EOS-S01 is IN_REVIEW only |

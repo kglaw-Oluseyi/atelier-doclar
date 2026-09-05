@@ -1,0 +1,182 @@
+@import "@maison-doclar/design-system/tokens.css";
+
+.shell {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+}
+
+.nav {
+  background: var(--md-raised);
+  border-right: 1px solid var(--md-line);
+  padding: 24px 18px 48px;
+}
+
+.brand {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.brand-note {
+  margin: 0 0 24px;
+  color: var(--md-muted);
+  font-size: 0.875rem;
+}
+
+.nav a {
+  display: flex;
+  align-items: center;
+  min-height: var(--md-touch);
+  text-decoration: none;
+}
+
+.nav a[aria-current="page"] {
+  color: var(--md-ink);
+  box-shadow: inset 3px 0 0 var(--md-brass);
+  padding-left: 8px;
+}
+
+.main {
+  padding: 28px 32px 64px;
+}
+
+.context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--md-line);
+  color: var(--md-muted);
+  font-size: 0.875rem;
+}
+
+.page-header h1 {
+  margin: 0 0 8px;
+  font-size: 1.6rem;
+  font-weight: 560;
+}
+
+.lede {
+  margin: 0 0 24px;
+  color: var(--md-muted);
+  max-width: 42rem;
+}
+
+.card-list, .form, .table-wrap {
+  background: var(--md-raised);
+  border: 1px solid var(--md-line);
+  border-radius: var(--md-radius);
+  padding: 16px;
+}
+
+.card-list article + article, .stack > * + * {
+  margin-top: 12px;
+}
+
+.form label, .field {
+  display: block;
+  margin-bottom: 16px;
+}
+
+.form input, .form select, .form textarea {
+  display: block;
+  width: 100%;
+  min-height: var(--md-touch);
+  margin-top: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--md-line);
+  border-radius: 6px;
+  background: var(--md-paper);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.button, button[type="submit"] {
+  min-height: var(--md-touch);
+  min-width: var(--md-touch);
+  padding: 0 16px;
+  border: 1px solid var(--md-ink);
+  background: var(--md-ink);
+  color: var(--md-paper);
+  cursor: pointer;
+}
+
+.button.secondary, button.secondary {
+  background: transparent;
+  color: var(--md-ink);
+}
+
+.alert {
+  padding: 12px 14px;
+  border: 1px solid var(--md-line);
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.alert[data-tone="danger"] { border-color: var(--md-danger); }
+.empty { color: var(--md-muted); }
+
+.mobile-nav {
+  display: none;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th, .data-table td {
+  text-align: left;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--md-line);
+}
+
+.user-menu { margin-top: 28px; }
+
+@media (max-width: 860px) {
+  .shell {
+    grid-template-columns: 1fr;
+    padding-bottom: 72px;
+  }
+  .nav { display: none; }
+  .main { padding: 20px 16px 32px; }
+  .mobile-nav {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--md-raised);
+    border-top: 1px solid var(--md-line);
+    justify-content: space-around;
+  }
+  .mobile-nav a {
+    min-height: var(--md-touch);
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    font-size: 0.875rem;
+  }
+  .data-table, .data-table tbody, .data-table tr, .data-table td, .data-table th {
+    display: block;
+    width: 100%;
+  }
+  .data-table thead { display: none; }
+  .data-table tr {
+    border-bottom: 1px solid var(--md-line);
+    padding: 8px 0;
+  }
+}
+
+.sign-in {
+  max-width: 420px;
+  margin: 12vh auto;
+  padding: 0 16px;
+}

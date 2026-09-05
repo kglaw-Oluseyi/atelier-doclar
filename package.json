@@ -11,8 +11,9 @@
     "programme:ingest:verify": "pnpm --filter @maison-doclar/programme-ingestion verify",
     "programme:reconcile": "pnpm --filter @maison-doclar/programme-ingestion reconcile",
     "programme:tower": "pnpm --filter @maison-doclar/control-tower dev",
-    "build": "pnpm --filter @maison-doclar/control-tower build",
+    "build": "pnpm --filter @maison-doclar/control-tower build && pnpm --filter @maison-doclar/event-os build",
     "start": "pnpm --filter @maison-doclar/control-tower start",
+    "event-os": "pnpm --filter @maison-doclar/event-os dev",
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
     "e2e": "pnpm --filter @maison-doclar/control-tower e2e"

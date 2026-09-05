@@ -155,3 +155,18 @@ Acceptance of MD-CT4 still requires a named reviewer. Not ACCEPTED.
 
 This is live-browser verification evidence. It is not formal slice acceptance, independent acceptance, or CEO production authorisation.
 
+## EOS-S01
+
+**Prompt Control ID:** `MD-PR-S004`  
+**Native ID:** `S01`  
+**Slice ID:** `EOS-S01`
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-EOS-S01-IMPL | DOCUMENT | Implementation report | `docs/control/EOS_S01_IMPLEMENTATION_REPORT.md` |
+| EV-EOS-S01-BOUNDARY | DOCUMENT | Shared platform ownership | `docs/control/EVENT_OS_SHARED_PLATFORM_BOUNDARY.md` |
+| EV-EOS-S01-ARCH | DOCUMENT | Foundation architecture | `docs/control/EVENT_OS_FOUNDATION_ARCHITECTURE.md` |
+| EV-EOS-S01-TESTS | TEST | Shared-platform isolation, concurrency, idempotency, audit | `packages/shared-platform/test/` |
+
+Acceptance of EOS-S01 still requires a named reviewer. Not ACCEPTED. Production not authorised.
+

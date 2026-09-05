@@ -52,4 +52,4 @@ Examples:
 
 ## Execution status
 
-691 remain `NOT_EXECUTED`. CT0 (`MD-PR-0001`), CT1 (`MD-PR-0002`) and CT2 (`MD-PR-0003`) are `IN_REVIEW`. None is ACCEPTED.
+Historical CT0–CT9 plus successor MD-PR-S001–S003 remain `IN_REVIEW`. EOS-S01 was executed as successor `MD-PR-S004` covering the historical Slice 1 pack as one governed foundation slice. None is ACCEPTED.

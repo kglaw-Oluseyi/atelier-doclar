@@ -28,4 +28,4 @@
 | OI-FC1-001 | Live browser verification | HIGH | CEO | no | CEO accessed live Control Tower 2026-09-05; issues NONE | Human verification complete | RESOLVED_BY_HUMAN_VERIFICATION | Keep historical record | RESOLVED |
 | OI-FC1-002 | Independent acceptance | CRITICAL | Independent | no | GATE-INDEPENDENT unsigned | Protected | PROTECTED_APPROVAL_REQUIRED | Named reviewer | OPEN |
 | OI-FC1-003 | CEO production authorisation | CRITICAL | CEO | no | GATE-CEO-PRODUCTION unsigned | Protected | PROTECTED_APPROVAL_REQUIRED | CEO only | OPEN |
-| OI-FC1-004 | Shared platform store must not fork | HIGH | AI CTO | no | Successor of misused OI-CT0-005 note | Valid EOS constraint | VALID_EVENT_OS_BLOCKER | Design in EOS-S01 | OPEN |
+| OI-FC1-004 | Shared platform store must not fork | HIGH | AI CTO | no | `@maison-doclar/shared-platform` plus isolation tests | Shared ownership executable | RESOLVED_BY_EVENT_OS_ARCHITECTURE | Keep historical record | RESOLVED |

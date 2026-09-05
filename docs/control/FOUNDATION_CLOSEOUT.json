@@ -24,7 +24,7 @@
     "oiFc1001": "RESOLVED_BY_HUMAN_VERIFICATION",
     "controlTowerProductionAuthorised": false
   },
-  "eventOsDependencyPending": ["OI-CT0-002", "OI-CT0-003", "OI-FC1-004"],
+  "eventOsDependencyPending": ["OI-CT0-002", "OI-CT0-003"],
   "optionalFutureEnhancement": ["CT5-OI-001", "CT7-OI-001", "CT8-OI-001"],
   "foundationImplementationComplete": true,
   "knownFoundationTechnicalDebt": "ZERO",

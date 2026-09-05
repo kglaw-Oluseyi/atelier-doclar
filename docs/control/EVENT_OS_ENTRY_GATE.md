@@ -2,10 +2,11 @@
 
 **Slice:** MD-FC1, re-evaluated in MD-HV1  
 **Product:** EVENT_OS  
-**Authority:** Foundation closeout reconciliation plus recorded CEO human live verification. This document does not authorise EOS-S01 execution.
+**Authority:** Foundation closeout reconciliation plus recorded CEO human live verification. EOS-S01 was later executed under `MD-PR-S004`.
 
 **EOS-S01 TECHNICALLY ELIGIBLE: YES**  
-**EOS-S01 EXECUTED: NO**
+**EOS-S01 EXECUTED: YES**  
+**EOS-S01 ACCEPTED: NO**
 
 ## Required before EOS-S01 coding may be declared technically eligible
 

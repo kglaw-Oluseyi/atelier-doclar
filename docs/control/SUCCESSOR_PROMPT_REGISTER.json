@@ -26,6 +26,14 @@
       "product": "FOUNDATION",
       "title": "Control Tower Human Verification Closeout",
       "authorising_instruction": "CEO human live verification of the deployed Control Tower; not production authorisation"
+    },
+    {
+      "prompt_control_id": "MD-PR-S004",
+      "native_id": "S01",
+      "slice_id": "EOS-S01",
+      "product": "EVENT_OS",
+      "title": "Event OS Foundation and Shared Platform Boundary",
+      "authorising_instruction": "CEO-authorised EOS-S01 execution wrapper; historical Slice 1 pack executed as one governed foundation slice"
     }
   ]
 }

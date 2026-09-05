@@ -56,7 +56,7 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 | MD-CT8 | IN_REVIEW — charts and freshness implemented; unknown ≠ green |
 | MD-CT9 | IN_REVIEW — operations evidence pack; production unsigned |
 | MD-FC1 | IN_REVIEW — Foundation closeout; production unsigned |
-| EOS-S01 | NOT_STARTED — technically eligible; not executed |
+| EOS-S01 | IN_REVIEW — shared platform foundation implemented; not accepted |
 | All others | NOT_STARTED or BLOCKED only by valid Event OS / Event-Day dependencies |
 
 ## Now / next / later
@@ -64,7 +64,7 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 | Band | Content |
 |------|---------|
 | Now | MD-FC1 Foundation closeout in review |
-| Next | Dedicated Control Tower live-deployment/verification slice (not started). EOS-S01 technically eligible and not executed |
+| Next | EOS-S02 after EOS-S01 acceptance; Event-Day remains a separate product |
 | Later | Event OS S01 after a new authorised instruction; Runtime after Event OS foundations |
 | Held | All 693 product/recon prompts except CT0/CT1 wrappers |
 | External | Independent, specialist, venue, CEO gates — unsigned |

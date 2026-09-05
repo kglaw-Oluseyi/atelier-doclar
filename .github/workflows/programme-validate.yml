@@ -48,7 +48,7 @@ jobs:
         run: pnpm programme:reconcile
 
       - name: Production build
-        run: pnpm --filter @maison-doclar/control-tower build
+        run: pnpm --filter @maison-doclar/control-tower build && pnpm --filter @maison-doclar/event-os build
 
       - name: Install Playwright Chromium
         run: pnpm --filter @maison-doclar/control-tower exec playwright install --with-deps chromium
@@ -60,3 +60,11 @@ jobs:
           CI: "1"
           PROGRAMME_ACCESS_TOKEN: ci-control-tower-access-token
           PROGRAMME_SESSION_SECRET: ci-control-tower-session-secret-32b
+
+      - name: Event OS browser tests
+        run: pnpm --filter @maison-doclar/event-os e2e
+        env:
+          EVENT_OS_ALLOW_FIXTURES: "1"
+          CI: "1"
+          EVENT_OS_ACCESS_TOKEN: ci-event-os-access-token
+          EVENT_OS_SESSION_SECRET: ci-event-os-session-secret-32b

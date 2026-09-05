@@ -34,7 +34,7 @@ describe("CT0/CT1 corpus projection", () => {
     assert.equal(statuses.get("MD-FC1"), "IN_REVIEW");
     assert.equal(statuses.get("MD-LV1"), "IN_REVIEW");
     assert.equal(statuses.get("MD-HV1"), "IN_REVIEW");
-    assert.equal(statuses.get("EOS-S01"), "NOT_STARTED");
+    assert.equal(statuses.get("EOS-S01"), "IN_REVIEW");
     for (const [id, status] of statuses) {
       assert.notEqual(status, "ACCEPTED", `${id} must not be ACCEPTED`);
     }

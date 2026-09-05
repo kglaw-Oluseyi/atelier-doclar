@@ -1,0 +1,11 @@
+id: DEC-EOS-S01-PLATFORM
+title: Shared platform boundary uses existing PostgreSQL ports, non-production identity adapter, and no Railway mutation
+severity: HIGH
+owner: AI CTO
+authority: EOS-S01 execution wrapper controls execution boundaries over historical Slice 1 Neon/OIDC/Railway staging assumptions
+disposition: CONTROLLING
+affectedIds:
+  - OI-FC1-004
+  - CT4-OI-001
+  - CT2-OI-001
+blocker: false

@@ -17,6 +17,7 @@ export const CT9_SEED_TIME = "2026-09-05T15:10:00Z";
 export const FC1_SEED_TIME = "2026-09-05T16:10:00Z";
 export const LV1_SEED_TIME = "2026-09-05T17:10:00Z";
 export const HV1_SEED_TIME = "2026-09-05T18:10:00Z";
+export const EOS_S01_SEED_TIME = "2026-09-05T19:10:00Z";
 export const B0_COMMIT = "f7abb431be9a15ab730b3fdd16baa8e83776c170";
 
 const B0_EVIDENCE: EvidenceRef = {
@@ -48,9 +49,11 @@ function envelope(
     | "MD-CT9"
     | "MD-FC1"
     | "MD-LV1"
-    | "MD-HV1",
+    | "MD-HV1"
+    | "EOS-S01",
   occurredAt: string,
   payload: ProgrammeEvent["payload"],
+  product: "FOUNDATION" | "EVENT_OS" = "FOUNDATION",
 ): ProgrammeEvent {
   return parseProgrammeEvent({
     eventId,
@@ -58,7 +61,7 @@ function envelope(
     schemaVersion: 1,
     aggregateType: "slice",
     aggregateId: sliceId,
-    product: "FOUNDATION",
+    product,
     sliceId,
     occurredAt,
     recordedAt: occurredAt,
@@ -173,6 +176,41 @@ export function corpusSeedEvents(): ProgrammeEvent[] {
       idempotencyKey: "seed:EVT-SEED-HV1-OI-FC1-001",
       payload: {
         openItemId: "OI-FC1-001",
+        status: "RESOLVED",
+        blocker: false,
+      },
+    }),
+    envelope(
+      "EVT-SEED-EOS-S01-IMPL",
+      "SLICE_IMPLEMENTATION_OBSERVED",
+      "EOS-S01",
+      EOS_S01_SEED_TIME,
+      { summary: "Event OS shared platform foundation implemented; production not authorised" },
+      "EVENT_OS",
+    ),
+    envelope(
+      "EVT-SEED-EOS-S01-REVIEW",
+      "REVIEW_REQUESTED",
+      "EOS-S01",
+      EOS_S01_SEED_TIME,
+      { summary: "EOS-S01 in review; not accepted; production not authorised" },
+      "EVENT_OS",
+    ),
+    parseProgrammeEvent({
+      eventId: "EVT-SEED-EOS-S01-OI-FC1-004",
+      eventType: "OPEN_ITEM_STATUS_CHANGED",
+      schemaVersion: 1,
+      aggregateType: "open_item",
+      aggregateId: "OI-FC1-004",
+      product: "EVENT_OS",
+      sliceId: "EOS-S01",
+      occurredAt: EOS_S01_SEED_TIME,
+      recordedAt: EOS_S01_SEED_TIME,
+      actor: { id: "corpus-seed", role: "SYSTEM" },
+      source: "corpus-seed",
+      idempotencyKey: "seed:EVT-SEED-EOS-S01-OI-FC1-004",
+      payload: {
+        openItemId: "OI-FC1-004",
         status: "RESOLVED",
         blocker: false,
       },
