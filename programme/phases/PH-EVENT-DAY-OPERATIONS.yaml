@@ -1,0 +1,7 @@
+id: PH-EVENT-DAY-OPERATIONS
+order: 3
+title: Event-Day Runtime operations
+products: [EVENT_DAY]
+intent: Check-in, ushering, departments, FaceGate return-only, close and reconcile.
+executiveCriticalPath: false
+notes: R17 requires a bounded Academy readiness contract, not the whole Academy product.

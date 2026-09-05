@@ -1,0 +1,6 @@
+id: PH-VALIDATION
+order: 9
+title: Validation and release hardening
+products: [EVENT_OS, EVENT_DAY, FOUNDATION, INTEGRATION]
+intent: Whole-system validation, Runtime R22–R23, Event OS Slice 12, CT9 evidence. Gates remain unsigned.
+executiveCriticalPath: true

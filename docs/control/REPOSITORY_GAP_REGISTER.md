@@ -68,3 +68,9 @@ See GAP-002, GAP-008, GAP-009, GAP-001.
 ## What B0 did not fill
 
 B0 did not write product YAML, did not extract prompt bodies into `prompts/`, did not start CT0, and did not create application scaffolding.
+
+---
+
+## CT0 addendum (2026-09-05)
+
+GAP-002 planning outputs were created in CT0 (`docs/control/PROGRAMME_*.md`, `programme/`). See `CT0_GAP_REGISTER.md` for remaining and newly identified gaps. Historical originals were not rewritten.

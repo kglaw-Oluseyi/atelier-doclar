@@ -1,0 +1,7 @@
+id: PH-EVENT-OS-FOUNDATIONS
+order: 1
+title: Event OS foundations / control plane
+products: [EVENT_OS]
+intent: Identity, tenancy, clients, events, guests, venues, seating and credentials. Not the event-day runtime product.
+executiveCriticalPath: true
+slices: [EOS-S01, EOS-S02, EOS-S03, EOS-S04, EOS-S05, EOS-S06, EOS-S07]

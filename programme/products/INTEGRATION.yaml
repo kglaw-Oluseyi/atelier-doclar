@@ -1,0 +1,18 @@
+code: INTEGRATION
+name: Cross-System Integration
+route: /programme/integration
+programmePurpose: Shared identity/event/guest/staff/consent contracts, change propagation and end-to-end release hardening.
+canonicalSources:
+  - claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Claude_Master_Roadmap_and_Control_Tower_Instruction_v1.0_DRAFT.md
+  - MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx
+  - MD Marketing/04_Maison_Doclar_Event_OS_Academy_Marketing_OS_Integration_Contract_v1.0_DRAFT.docx
+dependencies:
+  - EVENT_OS
+  - EVENT_DAY
+  - ACADEMY
+  - MARKETING
+  - USHERING
+statusSource: Evidence-derived SliceRecords
+externalAuthorityRequirements:
+  - Independent and CEO programme release
+implementationReality: Contracts exist as documents. No executable integration tests.

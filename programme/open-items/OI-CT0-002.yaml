@@ -1,0 +1,11 @@
+id: OI-CT0-002
+product: EVENT_OS
+sliceId: EOS-S08
+title: Event OS Slice 8 must not be executed as a parallel Event-Day Runtime
+severity: CRITICAL
+owner: AI CTO
+status: OPEN
+decisionAuthority: CEO / AI CTO
+blocker: true
+evidence: []
+notes: Mapped to EVENT_DAY R-series. Historical pack retained.

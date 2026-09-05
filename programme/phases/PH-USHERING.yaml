@@ -1,0 +1,6 @@
+id: PH-USHERING
+order: 4
+title: Premium Ushering
+products: [USHERING]
+intent: Field operating system after Event OS seating and Runtime usher surfaces. Academy recon is a later/parallel dependency.
+executiveCriticalPath: true

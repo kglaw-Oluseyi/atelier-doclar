@@ -1,0 +1,15 @@
+code: MARKETING
+name: Marketing OS
+route: /programme/marketing
+programmePurpose: Commercial/marketing domain on approved CRM and consent boundaries.
+canonicalSources:
+  - MD Marketing/01_Maison_Doclar_Canonical_Marketing_and_Growth_Doctrine_v1.0_DRAFT.docx
+  - MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx
+dependencies:
+  - EVENT_OS
+  - ACADEMY
+statusSource: Evidence-derived SliceRecords
+externalAuthorityRequirements:
+  - Consent/lawful-basis authority
+  - CEO release
+implementationReality: Specified and prompted. No Marketing application. Separate-repo language is logical-module only.

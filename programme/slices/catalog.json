@@ -1,0 +1,3340 @@
+{
+  "slice_id": "MD-CT0",
+  "model": "SliceManifest (declaration) \u2014 see programme/schema/SLICE_MANIFEST_VS_RECORD.md",
+  "count": 80,
+  "slices": [
+    {
+      "id": "MD-B0",
+      "product": "FOUNDATION",
+      "title": "Controlled corpus baseline and prompt accountability",
+      "phaseId": "PH-FOUNDATION",
+      "order": 0,
+      "dependsOn": [],
+      "canonicalRefs": [
+        "docs/control/REPOSITORY_INVENTORY.json",
+        "docs/control/PROMPT_REGISTER.md"
+      ],
+      "outcome": "Every file and execution prompt accounted; auditable Git baseline",
+      "entryCriteria": [
+        "Local corpus present"
+      ],
+      "exitCriteria": [
+        "Control registers committed to authorised main"
+      ],
+      "expectedFiles": [
+        "docs/control/REPOSITORY_INVENTORY.json",
+        "docs/control/PROMPT_REGISTER.json"
+      ],
+      "verification": [
+        "File-count and 693-prompt reconciliation"
+      ]
+    },
+    {
+      "id": "MD-CT0",
+      "product": "FOUNDATION",
+      "title": "Control Tower preflight and programme reconciliation",
+      "phaseId": "PH-FOUNDATION",
+      "order": 1,
+      "dependsOn": [
+        "MD-B0"
+      ],
+      "canonicalRefs": [
+        "claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Programme_Control_Tower_and_Living_Roadmap_Addendum_v1.0_DRAFT.md",
+        "claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Control_Tower_TypeScript_Cursor_Prompt_Programme_CT0-CT9_v1.0_DRAFT.md",
+        "docs/control/PROMPT_REGISTER.json"
+      ],
+      "outcome": "Planning baseline for CT1: DAG, schema responsibility, single-repo interpretation, prompt map, architecture decisions",
+      "entryCriteria": [
+        "B0 commit f7abb431be9a15ab730b3fdd16baa8e83776c170 present",
+        "Working tree inspectable"
+      ],
+      "exitCriteria": [
+        "CT0 control artefacts committed; no application scaffold; STOP before CT1"
+      ],
+      "expectedFiles": [
+        "docs/control/CT0_PREFLIGHT_REPORT.md",
+        "docs/control/PROGRAMME_ROADMAP.md",
+        "docs/control/PROMPT_EXECUTION_MAP.json",
+        "programme/products/"
+      ],
+      "verification": [
+        "693-prompt map reconciles",
+        "YAML/JSON valid",
+        "cycle report produced"
+      ]
+    },
+    {
+      "id": "MD-CT1",
+      "product": "FOUNDATION",
+      "title": "CT1 \u2014 Programme domain and manifest validator",
+      "phaseId": "PH-FOUNDATION",
+      "order": 2,
+      "dependsOn": [
+        "MD-CT0"
+      ],
+      "canonicalRefs": [
+        "claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Control_Tower_TypeScript_Cursor_Prompt_Programme_CT0-CT9_v1.0_DRAFT.md",
+        "docs/control/EXECUTION_COMPATIBILITY_REGISTER.md"
+      ],
+      "outcome": "Zod/JSON loaders, referential validation, DAG cycle detection",
+      "entryCriteria": [
+        "Previous CT slice authorised and reviewed",
+        "Use compatibility register not Claude-role standing contract"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing CT1",
+        "STOP; do not start next CT"
+      ],
+      "expectedFiles": [
+        "programme/schema/",
+        "docs/control/"
+      ],
+      "verification": [
+        "Tests and evidence per CT standing technical contract; Cursor cannot approve protected gates"
+      ]
+    },
+    {
+      "id": "MD-CT2",
+      "product": "FOUNDATION",
+      "title": "CT2 \u2014 Persistence, snapshots and status calculator",
+      "phaseId": "PH-FOUNDATION",
+      "order": 3,
+      "dependsOn": [
+        "MD-CT1"
+      ],
+      "canonicalRefs": [
+        "claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Control_Tower_TypeScript_Cursor_Prompt_Programme_CT0-CT9_v1.0_DRAFT.md",
+        "docs/control/EXECUTION_COMPATIBILITY_REGISTER.md"
+      ],
+      "outcome": "Events, projections, evidence-derived status; no manual percent override",
+      "entryCriteria": [
+        "Previous CT slice authorised and reviewed",
+        "Use compatibility register not Claude-role standing contract"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing CT2",
+        "STOP; do not start next CT"
+      ],
+      "expectedFiles": [
+        "programme/schema/",
+        "docs/control/"
+      ],
+      "verification": [
+        "Tests and evidence per CT standing technical contract; Cursor cannot approve protected gates"
+      ]
+    },
+    {
+      "id": "MD-CT3",
+      "product": "FOUNDATION",
+      "title": "CT3 \u2014 Repository and CI ingestion",
+      "phaseId": "PH-FOUNDATION",
+      "order": 4,
+      "dependsOn": [
+        "MD-CT2"
+      ],
+      "canonicalRefs": [
+        "claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Control_Tower_TypeScript_Cursor_Prompt_Programme_CT0-CT9_v1.0_DRAFT.md",
+        "docs/control/EXECUTION_COMPATIBILITY_REGISTER.md"
+      ],
+      "outcome": "Signed webhook/scheduled reconciliation for the selected Git/CI provider",
+      "entryCriteria": [
+        "Previous CT slice authorised and reviewed",
+        "Use compatibility register not Claude-role standing contract"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing CT3",
+        "STOP; do not start next CT"
+      ],
+      "expectedFiles": [
+        "programme/schema/",
+        "docs/control/"
+      ],
+      "verification": [
+        "Tests and evidence per CT standing technical contract; Cursor cannot approve protected gates"
+      ]
+    },
+    {
+      "id": "MD-CT4",
+      "product": "FOUNDATION",
+      "title": "CT4 \u2014 Control Tower shell and executive portfolio",
+      "phaseId": "PH-FOUNDATION",
+      "order": 5,
+      "dependsOn": [
+        "MD-CT3"
+      ],
+      "canonicalRefs": [
+        "claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Control_Tower_TypeScript_Cursor_Prompt_Programme_CT0-CT9_v1.0_DRAFT.md",
+        "docs/control/EXECUTION_COMPATIBILITY_REGISTER.md"
+      ],
+      "outcome": "Private /programme navigation and portfolio views",
+      "entryCriteria": [
+        "Previous CT slice authorised and reviewed",
+        "Use compatibility register not Claude-role standing contract"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing CT4",
+        "STOP; do not start next CT"
+      ],
+      "expectedFiles": [
+        "programme/schema/",
+        "docs/control/"
+      ],
+      "verification": [
+        "Tests and evidence per CT standing technical contract; Cursor cannot approve protected gates"
+      ]
+    },
+    {
+      "id": "MD-CT5",
+      "product": "FOUNDATION",
+      "title": "CT5 \u2014 Roadmap, product and slice drill-down",
+      "phaseId": "PH-FOUNDATION",
+      "order": 6,
+      "dependsOn": [
+        "MD-CT4"
+      ],
+      "canonicalRefs": [
+        "claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Control_Tower_TypeScript_Cursor_Prompt_Programme_CT0-CT9_v1.0_DRAFT.md",
+        "docs/control/EXECUTION_COMPATIBILITY_REGISTER.md"
+      ],
+      "outcome": "DAG plus accessible tables and evidence drill-down",
+      "entryCriteria": [
+        "Previous CT slice authorised and reviewed",
+        "Use compatibility register not Claude-role standing contract"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing CT5",
+        "STOP; do not start next CT"
+      ],
+      "expectedFiles": [
+        "programme/schema/",
+        "docs/control/"
+      ],
+      "verification": [
+        "Tests and evidence per CT standing technical contract; Cursor cannot approve protected gates"
+      ]
+    },
+    {
+      "id": "MD-CT6",
+      "product": "FOUNDATION",
+      "title": "CT6 \u2014 Open items, decisions, gates, releases and audit",
+      "phaseId": "PH-FOUNDATION",
+      "order": 7,
+      "dependsOn": [
+        "MD-CT5"
+      ],
+      "canonicalRefs": [
+        "claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Control_Tower_TypeScript_Cursor_Prompt_Programme_CT0-CT9_v1.0_DRAFT.md",
+        "docs/control/EXECUTION_COMPATIBILITY_REGISTER.md"
+      ],
+      "outcome": "Controlled workflows; Cursor cannot approve protected gates",
+      "entryCriteria": [
+        "Previous CT slice authorised and reviewed",
+        "Use compatibility register not Claude-role standing contract"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing CT6",
+        "STOP; do not start next CT"
+      ],
+      "expectedFiles": [
+        "programme/schema/",
+        "docs/control/"
+      ],
+      "verification": [
+        "Tests and evidence per CT standing technical contract; Cursor cannot approve protected gates"
+      ]
+    },
+    {
+      "id": "MD-CT7",
+      "product": "FOUNDATION",
+      "title": "CT7 \u2014 RAG ingestion and grounded programme assistant",
+      "phaseId": "PH-FOUNDATION",
+      "order": 8,
+      "dependsOn": [
+        "MD-CT6"
+      ],
+      "canonicalRefs": [
+        "claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Control_Tower_TypeScript_Cursor_Prompt_Programme_CT0-CT9_v1.0_DRAFT.md",
+        "docs/control/EXECUTION_COMPATIBILITY_REGISTER.md"
+      ],
+      "outcome": "Allow-listed sources; citations; abstention",
+      "entryCriteria": [
+        "Previous CT slice authorised and reviewed",
+        "Use compatibility register not Claude-role standing contract"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing CT7",
+        "STOP; do not start next CT"
+      ],
+      "expectedFiles": [
+        "programme/schema/",
+        "docs/control/"
+      ],
+      "verification": [
+        "Tests and evidence per CT standing technical contract; Cursor cannot approve protected gates"
+      ]
+    },
+    {
+      "id": "MD-CT8",
+      "product": "FOUNDATION",
+      "title": "CT8 \u2014 Charts, notifications and update freshness",
+      "phaseId": "PH-FOUNDATION",
+      "order": 9,
+      "dependsOn": [
+        "MD-CT7"
+      ],
+      "canonicalRefs": [
+        "claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Control_Tower_TypeScript_Cursor_Prompt_Programme_CT0-CT9_v1.0_DRAFT.md",
+        "docs/control/EXECUTION_COMPATIBILITY_REGISTER.md"
+      ],
+      "outcome": "Useful charts; unknown \u2260 green",
+      "entryCriteria": [
+        "Previous CT slice authorised and reviewed",
+        "Use compatibility register not Claude-role standing contract"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing CT8",
+        "STOP; do not start next CT"
+      ],
+      "expectedFiles": [
+        "programme/schema/",
+        "docs/control/"
+      ],
+      "verification": [
+        "Tests and evidence per CT standing technical contract; Cursor cannot approve protected gates"
+      ]
+    },
+    {
+      "id": "MD-CT9",
+      "product": "FOUNDATION",
+      "title": "CT9 \u2014 Operations, full acceptance and release evidence",
+      "phaseId": "PH-FOUNDATION",
+      "order": 10,
+      "dependsOn": [
+        "MD-CT8"
+      ],
+      "canonicalRefs": [
+        "claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Control_Tower_TypeScript_Cursor_Prompt_Programme_CT0-CT9_v1.0_DRAFT.md",
+        "docs/control/EXECUTION_COMPATIBILITY_REGISTER.md"
+      ],
+      "outcome": "Evidence pack; independent and CEO gates remain unsigned",
+      "entryCriteria": [
+        "Previous CT slice authorised and reviewed",
+        "Use compatibility register not Claude-role standing contract"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing CT9",
+        "STOP; do not start next CT"
+      ],
+      "expectedFiles": [
+        "programme/schema/",
+        "docs/control/"
+      ],
+      "verification": [
+        "Tests and evidence per CT standing technical contract; Cursor cannot approve protected gates"
+      ]
+    },
+    {
+      "id": "EOS-S01",
+      "product": "EVENT_OS",
+      "title": "Event OS Slice 1 \u2014 Platform foundation (identity, clients, events, design system, staging-only)",
+      "phaseId": "PH-EVENT-OS-FOUNDATIONS",
+      "order": 1,
+      "dependsOn": [
+        "MD-CT0"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
+        "MDOS/slice1/"
+      ],
+      "outcome": "Platform foundation (identity, clients, events, design system, staging-only)",
+      "entryCriteria": [
+        "Architecture wrapper from CT0; single authorised repo"
+      ],
+      "exitCriteria": [
+        "Slice acceptance commit and evidence; production remains unauthorised until CEO/independent gates"
+      ],
+      "expectedFiles": [
+        "MDOS/slice1/"
+      ],
+      "verification": [
+        "Independent verification of each native prompt; do not paste whole pack"
+      ]
+    },
+    {
+      "id": "EOS-S02",
+      "product": "EVENT_OS",
+      "title": "Event OS Slice 2 \u2014 Guest intake and operational guest directory",
+      "phaseId": "PH-EVENT-OS-FOUNDATIONS",
+      "order": 2,
+      "dependsOn": [
+        "EOS-S01"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
+        "MDOS/slice2/"
+      ],
+      "outcome": "Guest intake and operational guest directory",
+      "entryCriteria": [
+        "Prior Event OS slice accepted"
+      ],
+      "exitCriteria": [
+        "Slice acceptance commit and evidence; production remains unauthorised until CEO/independent gates"
+      ],
+      "expectedFiles": [
+        "MDOS/slice2/"
+      ],
+      "verification": [
+        "Independent verification of each native prompt; do not paste whole pack"
+      ]
+    },
+    {
+      "id": "EOS-S03",
+      "product": "EVENT_OS",
+      "title": "Event OS Slice 3 \u2014 RSVP and guest self-service",
+      "phaseId": "PH-EVENT-OS-FOUNDATIONS",
+      "order": 3,
+      "dependsOn": [
+        "EOS-S02"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
+        "MDOS/slice3/"
+      ],
+      "outcome": "RSVP and guest self-service",
+      "entryCriteria": [
+        "Prior Event OS slice accepted"
+      ],
+      "exitCriteria": [
+        "Slice acceptance commit and evidence; production remains unauthorised until CEO/independent gates"
+      ],
+      "expectedFiles": [
+        "MDOS/slice3/"
+      ],
+      "verification": [
+        "Independent verification of each native prompt; do not paste whole pack"
+      ]
+    },
+    {
+      "id": "EOS-S04",
+      "product": "EVENT_OS",
+      "title": "Event OS Slice 4 \u2014 Guest communications and concierge",
+      "phaseId": "PH-EVENT-OS-FOUNDATIONS",
+      "order": 4,
+      "dependsOn": [
+        "EOS-S03"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
+        "MDOS/slice4/"
+      ],
+      "outcome": "Guest communications and concierge",
+      "entryCriteria": [
+        "Prior Event OS slice accepted"
+      ],
+      "exitCriteria": [
+        "Slice acceptance commit and evidence; production remains unauthorised until CEO/independent gates"
+      ],
+      "expectedFiles": [
+        "MDOS/slice4/"
+      ],
+      "verification": [
+        "Independent verification of each native prompt; do not paste whole pack"
+      ]
+    },
+    {
+      "id": "EOS-S05",
+      "product": "EVENT_OS",
+      "title": "Event OS Slice 5 \u2014 Venue registry and spatial layout",
+      "phaseId": "PH-EVENT-OS-FOUNDATIONS",
+      "order": 5,
+      "dependsOn": [
+        "EOS-S04"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
+        "MDOS/slice5/"
+      ],
+      "outcome": "Venue registry and spatial layout",
+      "entryCriteria": [
+        "Prior Event OS slice accepted"
+      ],
+      "exitCriteria": [
+        "Slice acceptance commit and evidence; production remains unauthorised until CEO/independent gates"
+      ],
+      "expectedFiles": [
+        "MDOS/slice5/"
+      ],
+      "verification": [
+        "Independent verification of each native prompt; do not paste whole pack"
+      ]
+    },
+    {
+      "id": "EOS-S06",
+      "product": "EVENT_OS",
+      "title": "Event OS Slice 6 \u2014 Seating allocation",
+      "phaseId": "PH-EVENT-OS-FOUNDATIONS",
+      "order": 6,
+      "dependsOn": [
+        "EOS-S05"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
+        "MDOS/slice6/"
+      ],
+      "outcome": "Seating allocation",
+      "entryCriteria": [
+        "Prior Event OS slice accepted"
+      ],
+      "exitCriteria": [
+        "Slice acceptance commit and evidence; production remains unauthorised until CEO/independent gates"
+      ],
+      "expectedFiles": [
+        "MDOS/slice6/"
+      ],
+      "verification": [
+        "Independent verification of each native prompt; do not paste whole pack"
+      ]
+    },
+    {
+      "id": "EOS-S07",
+      "product": "EVENT_OS",
+      "title": "Event OS Slice 7 \u2014 Credentials and QR",
+      "phaseId": "PH-EVENT-OS-FOUNDATIONS",
+      "order": 7,
+      "dependsOn": [
+        "EOS-S06"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
+        "MDOS/slice7/"
+      ],
+      "outcome": "Credentials and QR",
+      "entryCriteria": [
+        "Prior Event OS slice accepted"
+      ],
+      "exitCriteria": [
+        "Slice acceptance commit and evidence; production remains unauthorised until CEO/independent gates"
+      ],
+      "expectedFiles": [
+        "MDOS/slice7/"
+      ],
+      "verification": [
+        "Independent verification of each native prompt; do not paste whole pack"
+      ]
+    },
+    {
+      "id": "EOS-S08",
+      "product": "EVENT_OS",
+      "title": "Event OS Slice 8 \u2014 Historical Event-Day Runtime inside Event OS \u2014 MAP ONLY, do not double-build",
+      "phaseId": "PH-EVENT-OS-OPERATIONS",
+      "order": 8,
+      "dependsOn": [
+        "EOS-S07"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
+        "MDOS/slice8/"
+      ],
+      "outcome": "Historical Event-Day Runtime inside Event OS \u2014 MAP ONLY, do not double-build",
+      "entryCriteria": [
+        "Prior Event OS slice accepted"
+      ],
+      "exitCriteria": [
+        "Slice acceptance commit and evidence; production remains unauthorised until CEO/independent gates"
+      ],
+      "expectedFiles": [
+        "MDOS/slice8/"
+      ],
+      "verification": [
+        "Independent verification of each native prompt; do not paste whole pack"
+      ]
+    },
+    {
+      "id": "EOS-S09",
+      "product": "EVENT_OS",
+      "title": "Event OS Slice 9 \u2014 Standards, readiness and operational intelligence",
+      "phaseId": "PH-EVENT-OS-OPERATIONS",
+      "order": 9,
+      "dependsOn": [
+        "EOS-S07"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
+        "MDOS/slice9/"
+      ],
+      "outcome": "Standards, readiness and operational intelligence",
+      "entryCriteria": [
+        "Prior Event OS slice accepted"
+      ],
+      "exitCriteria": [
+        "Slice acceptance commit and evidence; production remains unauthorised until CEO/independent gates"
+      ],
+      "expectedFiles": [
+        "MDOS/slice9/"
+      ],
+      "verification": [
+        "Independent verification of each native prompt; do not paste whole pack"
+      ]
+    },
+    {
+      "id": "EOS-S10",
+      "product": "EVENT_OS",
+      "title": "Event OS Slice 10 \u2014 FaceGate gated integration",
+      "phaseId": "PH-EVENT-OS-OPERATIONS",
+      "order": 10,
+      "dependsOn": [
+        "EOS-S09"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
+        "MDOS/slice10/"
+      ],
+      "outcome": "FaceGate gated integration",
+      "entryCriteria": [
+        "Prior Event OS slice accepted"
+      ],
+      "exitCriteria": [
+        "Slice acceptance commit and evidence; production remains unauthorised until CEO/independent gates"
+      ],
+      "expectedFiles": [
+        "MDOS/slice10/"
+      ],
+      "verification": [
+        "Independent verification of each native prompt; do not paste whole pack"
+      ]
+    },
+    {
+      "id": "EOS-S11",
+      "product": "EVENT_OS",
+      "title": "Event OS Slice 11 \u2014 Cross-event knowledge and learning",
+      "phaseId": "PH-EVENT-OS-OPERATIONS",
+      "order": 11,
+      "dependsOn": [
+        "EOS-S10"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
+        "MDOS/slice11/"
+      ],
+      "outcome": "Cross-event knowledge and learning",
+      "entryCriteria": [
+        "Prior Event OS slice accepted"
+      ],
+      "exitCriteria": [
+        "Slice acceptance commit and evidence; production remains unauthorised until CEO/independent gates"
+      ],
+      "expectedFiles": [
+        "MDOS/slice11/"
+      ],
+      "verification": [
+        "Independent verification of each native prompt; do not paste whole pack"
+      ]
+    },
+    {
+      "id": "EOS-S12",
+      "product": "EVENT_OS",
+      "title": "Event OS Slice 12 \u2014 Whole-system validation and release",
+      "phaseId": "PH-VALIDATION",
+      "order": 12,
+      "dependsOn": [
+        "EOS-S11"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
+        "MDOS/slice12/"
+      ],
+      "outcome": "Whole-system validation and release",
+      "entryCriteria": [
+        "Prior Event OS slice accepted"
+      ],
+      "exitCriteria": [
+        "Slice acceptance commit and evidence; production remains unauthorised until CEO/independent gates"
+      ],
+      "expectedFiles": [
+        "MDOS/slice12/"
+      ],
+      "verification": [
+        "Independent verification of each native prompt; do not paste whole pack"
+      ]
+    },
+    {
+      "id": "EOS-RECON",
+      "product": "EVENT_OS",
+      "title": "Event OS reconciliation prompt bundle OS-R00\u2013OS-R12",
+      "phaseId": "PH-EVENT-OS-OPERATIONS",
+      "order": 13,
+      "dependsOn": [
+        "EOS-S12"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Event_OS_Reconciliation_Cursor_Prompt_Bundle_v1.0.docx"
+      ],
+      "outcome": "Apply ratified CEO doctrine to an existing Event OS implementation",
+      "entryCriteria": [
+        "Existing Event OS implementation present \u2014 currently ABSENT"
+      ],
+      "exitCriteria": [
+        "OS-R12 evidence; no invented CEO/external authority"
+      ],
+      "expectedFiles": [
+        "MDOS/Maison_Doclar_Event_OS_Reconciliation_Cursor_Prompt_Bundle_v1.0.docx"
+      ],
+      "verification": [
+        "One prompt at a time; clean tree"
+      ]
+    },
+    {
+      "id": "EDR-R00",
+      "product": "EVENT_DAY",
+      "title": "R0 \u2014 Repository preflight and supersession",
+      "phaseId": "PH-EVENT-DAY-FOUNDATIONS",
+      "order": 0,
+      "dependsOn": [
+        "EOS-S07"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Repository preflight and supersession",
+      "entryCriteria": [
+        "Event OS control-plane foundations sufficient for package/identity contracts"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R0",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "verification": [
+        "Offline/failure/security tests as specified"
+      ]
+    },
+    {
+      "id": "EDR-R01",
+      "product": "EVENT_DAY",
+      "title": "R1 \u2014 Domain kernel and runtime state machine",
+      "phaseId": "PH-EVENT-DAY-FOUNDATIONS",
+      "order": 1,
+      "dependsOn": [
+        "EDR-R00"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Domain kernel and runtime state machine",
+      "entryCriteria": [
+        "R0 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R1",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "verification": [
+        "Offline/failure/security tests as specified"
+      ]
+    },
+    {
+      "id": "EDR-R02",
+      "product": "EVENT_DAY",
+      "title": "R2 \u2014 Departmental projection registry",
+      "phaseId": "PH-EVENT-DAY-FOUNDATIONS",
+      "order": 2,
+      "dependsOn": [
+        "EDR-R01"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Departmental projection registry",
+      "entryCriteria": [
+        "R1 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R2",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "verification": [
+        "Offline/failure/security tests as specified"
+      ]
+    },
+    {
+      "id": "EDR-R03",
+      "product": "EVENT_DAY",
+      "title": "R3 \u2014 Package builder and minimisation",
+      "phaseId": "PH-EVENT-DAY-FOUNDATIONS",
+      "order": 3,
+      "dependsOn": [
+        "EDR-R02"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Package builder and minimisation",
+      "entryCriteria": [
+        "R2 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R3",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "verification": [
+        "Offline/failure/security tests as specified"
+      ]
+    },
+    {
+      "id": "EDR-R04",
+      "product": "EVENT_DAY",
+      "title": "R4 \u2014 Package freeze, manifest, signature and import",
+      "phaseId": "PH-EVENT-DAY-FOUNDATIONS",
+      "order": 4,
+      "dependsOn": [
+        "EDR-R03"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Package freeze, manifest, signature and import",
+      "entryCriteria": [
+        "R3 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R4",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "verification": [
+        "Offline/failure/security tests as specified"
+      ]
+    },
+    {
+      "id": "EDR-R05",
+      "product": "EVENT_DAY",
+      "title": "R5 \u2014 Local persistence and immutable ledger",
+      "phaseId": "PH-EVENT-DAY-FOUNDATIONS",
+      "order": 5,
+      "dependsOn": [
+        "EDR-R04"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Local persistence and immutable ledger",
+      "entryCriteria": [
+        "R4 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R5",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "verification": [
+        "Offline/failure/security tests as specified"
+      ]
+    },
+    {
+      "id": "EDR-R06",
+      "product": "EVENT_DAY",
+      "title": "R6 \u2014 Local identity, device registry and certificate enrolment",
+      "phaseId": "PH-EVENT-DAY-FOUNDATIONS",
+      "order": 6,
+      "dependsOn": [
+        "EDR-R05"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Local identity, device registry and certificate enrolment",
+      "entryCriteria": [
+        "R5 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R6",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "verification": [
+        "Offline/failure/security tests as specified"
+      ]
+    },
+    {
+      "id": "EDR-R07",
+      "product": "EVENT_DAY",
+      "title": "R7 \u2014 PWA shell and pinned local assets",
+      "phaseId": "PH-EVENT-DAY-FOUNDATIONS",
+      "order": 7,
+      "dependsOn": [
+        "EDR-R06"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "PWA shell and pinned local assets",
+      "entryCriteria": [
+        "R6 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R7",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "verification": [
+        "Offline/failure/security tests as specified"
+      ]
+    },
+    {
+      "id": "EDR-R08",
+      "product": "EVENT_DAY",
+      "title": "R8 \u2014 Scan and lookup platform",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 8,
+      "dependsOn": [
+        "EDR-R07"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Scan and lookup platform",
+      "entryCriteria": [
+        "R7 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R8",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "verification": [
+        "Offline/failure/security tests as specified"
+      ]
+    },
+    {
+      "id": "EDR-R09",
+      "product": "EVENT_DAY",
+      "title": "R9 \u2014 Initial human check-in surface",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 9,
+      "dependsOn": [
+        "EDR-R08"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Initial human check-in surface",
+      "entryCriteria": [
+        "R8 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R9",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "verification": [
+        "Offline/failure/security tests as specified"
+      ]
+    },
+    {
+      "id": "EDR-R10",
+      "product": "EVENT_DAY",
+      "title": "R10 \u2014 Greeter, protocol and guest-relations surfaces",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 10,
+      "dependsOn": [
+        "EDR-R09"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Greeter, protocol and guest-relations surfaces",
+      "entryCriteria": [
+        "R9 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R10",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "verification": [
+        "Offline/failure/security tests as specified"
+      ]
+    },
+    {
+      "id": "EDR-R11",
+      "product": "EVENT_DAY",
+      "title": "R11 \u2014 Seating, ushering and guest service surfaces",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 11,
+      "dependsOn": [
+        "EDR-R10"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Seating, ushering and guest service surfaces",
+      "entryCriteria": [
+        "R10 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R11",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "verification": [
+        "Offline/failure/security tests as specified"
+      ]
+    },
+    {
+      "id": "EDR-R12",
+      "product": "EVENT_DAY",
+      "title": "R12 \u2014 Department lead workspaces",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 12,
+      "dependsOn": [
+        "EDR-R11"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Department lead workspaces",
+      "entryCriteria": [
+        "R11 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R12",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "verification": [
+        "Offline/failure/security tests as specified"
+      ]
+    },
+    {
+      "id": "EDR-R13",
+      "product": "EVENT_DAY",
+      "title": "R13 \u2014 Self-scan kiosk",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 13,
+      "dependsOn": [
+        "EDR-R12"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Self-scan kiosk",
+      "entryCriteria": [
+        "R12 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R13",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "verification": [
+        "Offline/failure/security tests as specified"
+      ]
+    },
+    {
+      "id": "EDR-R14",
+      "product": "EVENT_DAY",
+      "title": "R14 \u2014 Client emergency outbox",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 14,
+      "dependsOn": [
+        "EDR-R13"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Client emergency outbox",
+      "entryCriteria": [
+        "R13 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R14",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "verification": [
+        "Offline/failure/security tests as specified"
+      ]
+    },
+    {
+      "id": "EDR-R15",
+      "product": "EVENT_DAY",
+      "title": "R15 \u2014 FaceGate consented enrolment and return-only gateway",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 15,
+      "dependsOn": [
+        "EDR-R14"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "FaceGate consented enrolment and return-only gateway",
+      "entryCriteria": [
+        "R14 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R15",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "verification": [
+        "Offline/failure/security tests as specified"
+      ]
+    },
+    {
+      "id": "EDR-R16",
+      "product": "EVENT_DAY",
+      "title": "R16 \u2014 Command console, health and degradation",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 16,
+      "dependsOn": [
+        "EDR-R15"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Command console, health and degradation",
+      "entryCriteria": [
+        "R15 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R16",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "verification": [
+        "Offline/failure/security tests as specified"
+      ]
+    },
+    {
+      "id": "EDR-R17",
+      "product": "EVENT_DAY",
+      "title": "R17 \u2014 Staff deployment, shifts and Academy gates",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 17,
+      "dependsOn": [
+        "EDR-R16"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Staff deployment, shifts and Academy gates",
+      "entryCriteria": [
+        "R16 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R17",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "verification": [
+        "Offline/failure/security tests as specified"
+      ]
+    },
+    {
+      "id": "EDR-R18",
+      "product": "EVENT_DAY",
+      "title": "R18 \u2014 Incidents, safety, service recovery and fallback",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 18,
+      "dependsOn": [
+        "EDR-R17"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Incidents, safety, service recovery and fallback",
+      "entryCriteria": [
+        "R17 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R18",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "verification": [
+        "Offline/failure/security tests as specified"
+      ]
+    },
+    {
+      "id": "EDR-R19",
+      "product": "EVENT_DAY",
+      "title": "R19 \u2014 Close, drain, seal and encrypted export",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 19,
+      "dependsOn": [
+        "EDR-R18"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Close, drain, seal and encrypted export",
+      "entryCriteria": [
+        "R18 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R19",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "verification": [
+        "Offline/failure/security tests as specified"
+      ]
+    },
+    {
+      "id": "EDR-R20",
+      "product": "EVENT_DAY",
+      "title": "R20 \u2014 Deterministic cloud reconciliation",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 20,
+      "dependsOn": [
+        "EDR-R19"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Deterministic cloud reconciliation",
+      "entryCriteria": [
+        "R19 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R20",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "verification": [
+        "Offline/failure/security tests as specified"
+      ]
+    },
+    {
+      "id": "EDR-R21",
+      "product": "EVENT_DAY",
+      "title": "R21 \u2014 Deployment, configuration, backup and recovery",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 21,
+      "dependsOn": [
+        "EDR-R20"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Deployment, configuration, backup and recovery",
+      "entryCriteria": [
+        "R20 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R21",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "verification": [
+        "Offline/failure/security tests as specified"
+      ]
+    },
+    {
+      "id": "EDR-R22",
+      "product": "EVENT_DAY",
+      "title": "R22 \u2014 Full automated and browser acceptance",
+      "phaseId": "PH-VALIDATION",
+      "order": 22,
+      "dependsOn": [
+        "EDR-R21"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Full automated and browser acceptance",
+      "entryCriteria": [
+        "R21 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R22",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "verification": [
+        "Offline/failure/security tests as specified"
+      ]
+    },
+    {
+      "id": "EDR-R23",
+      "product": "EVENT_DAY",
+      "title": "R23 \u2014 Evidence pack and release locks",
+      "phaseId": "PH-VALIDATION",
+      "order": 23,
+      "dependsOn": [
+        "EDR-R22"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Evidence pack and release locks",
+      "entryCriteria": [
+        "R22 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R23",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "verification": [
+        "Offline/failure/security tests as specified"
+      ]
+    },
+    {
+      "id": "ACA-G0",
+      "product": "ACADEMY",
+      "title": "Academy Gate 0",
+      "phaseId": "PH-ACADEMY",
+      "order": 0,
+      "dependsOn": [
+        "EOS-S02"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Gate 0 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "verification": [
+        "All 12 positional prompts executed in order; identify 09\u201312 by Prompt Control ID"
+      ]
+    },
+    {
+      "id": "ACA-S01",
+      "product": "ACADEMY",
+      "title": "Academy Slice 01",
+      "phaseId": "PH-ACADEMY",
+      "order": 1,
+      "dependsOn": [
+        "ACA-G0"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 01 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "verification": [
+        "All 12 positional prompts executed in order; identify 09\u201312 by Prompt Control ID"
+      ]
+    },
+    {
+      "id": "ACA-S02",
+      "product": "ACADEMY",
+      "title": "Academy Slice 02",
+      "phaseId": "PH-ACADEMY",
+      "order": 2,
+      "dependsOn": [
+        "ACA-S01"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 02 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "verification": [
+        "All 12 positional prompts executed in order; identify 09\u201312 by Prompt Control ID"
+      ]
+    },
+    {
+      "id": "ACA-S03",
+      "product": "ACADEMY",
+      "title": "Academy Slice 03",
+      "phaseId": "PH-ACADEMY",
+      "order": 3,
+      "dependsOn": [
+        "ACA-S02"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 03 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "verification": [
+        "All 12 positional prompts executed in order; identify 09\u201312 by Prompt Control ID"
+      ]
+    },
+    {
+      "id": "ACA-S04",
+      "product": "ACADEMY",
+      "title": "Academy Slice 04",
+      "phaseId": "PH-ACADEMY",
+      "order": 4,
+      "dependsOn": [
+        "ACA-S03"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 04 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "verification": [
+        "All 12 positional prompts executed in order; identify 09\u201312 by Prompt Control ID"
+      ]
+    },
+    {
+      "id": "ACA-S05",
+      "product": "ACADEMY",
+      "title": "Academy Slice 05",
+      "phaseId": "PH-ACADEMY",
+      "order": 5,
+      "dependsOn": [
+        "ACA-S04"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 05 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "verification": [
+        "All 12 positional prompts executed in order; identify 09\u201312 by Prompt Control ID"
+      ]
+    },
+    {
+      "id": "ACA-S06",
+      "product": "ACADEMY",
+      "title": "Academy Slice 06",
+      "phaseId": "PH-ACADEMY",
+      "order": 6,
+      "dependsOn": [
+        "ACA-S05"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 06 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "verification": [
+        "All 12 positional prompts executed in order; identify 09\u201312 by Prompt Control ID"
+      ]
+    },
+    {
+      "id": "ACA-S07",
+      "product": "ACADEMY",
+      "title": "Academy Slice 07",
+      "phaseId": "PH-ACADEMY",
+      "order": 7,
+      "dependsOn": [
+        "ACA-S06"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 07 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "verification": [
+        "All 12 positional prompts executed in order; identify 09\u201312 by Prompt Control ID"
+      ]
+    },
+    {
+      "id": "ACA-S08",
+      "product": "ACADEMY",
+      "title": "Academy Slice 08",
+      "phaseId": "PH-ACADEMY",
+      "order": 8,
+      "dependsOn": [
+        "ACA-S07"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 08 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "verification": [
+        "All 12 positional prompts executed in order; identify 09\u201312 by Prompt Control ID"
+      ]
+    },
+    {
+      "id": "ACA-S09",
+      "product": "ACADEMY",
+      "title": "Academy Slice 09",
+      "phaseId": "PH-ACADEMY",
+      "order": 9,
+      "dependsOn": [
+        "ACA-S08"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 09 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "verification": [
+        "All 12 positional prompts executed in order; identify 09\u201312 by Prompt Control ID"
+      ]
+    },
+    {
+      "id": "ACA-S10",
+      "product": "ACADEMY",
+      "title": "Academy Slice 10",
+      "phaseId": "PH-ACADEMY",
+      "order": 10,
+      "dependsOn": [
+        "ACA-S09"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 10 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "verification": [
+        "All 12 positional prompts executed in order; identify 09\u201312 by Prompt Control ID"
+      ]
+    },
+    {
+      "id": "ACA-S11",
+      "product": "ACADEMY",
+      "title": "Academy Slice 11",
+      "phaseId": "PH-ACADEMY",
+      "order": 11,
+      "dependsOn": [
+        "ACA-S10"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 11 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "verification": [
+        "All 12 positional prompts executed in order; identify 09\u201312 by Prompt Control ID"
+      ]
+    },
+    {
+      "id": "ACA-S12",
+      "product": "ACADEMY",
+      "title": "Academy Slice 12",
+      "phaseId": "PH-ACADEMY",
+      "order": 12,
+      "dependsOn": [
+        "ACA-S11"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 12 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "verification": [
+        "All 12 positional prompts executed in order; identify 09\u201312 by Prompt Control ID"
+      ]
+    },
+    {
+      "id": "ACA-S13",
+      "product": "ACADEMY",
+      "title": "Academy Slice 13",
+      "phaseId": "PH-ACADEMY",
+      "order": 13,
+      "dependsOn": [
+        "ACA-S12"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 13 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "verification": [
+        "All 12 positional prompts executed in order; identify 09\u201312 by Prompt Control ID"
+      ]
+    },
+    {
+      "id": "ACA-S14",
+      "product": "ACADEMY",
+      "title": "Academy Slice 14",
+      "phaseId": "PH-ACADEMY",
+      "order": 14,
+      "dependsOn": [
+        "ACA-S13"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 14 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "verification": [
+        "All 12 positional prompts executed in order; identify 09\u201312 by Prompt Control ID"
+      ]
+    },
+    {
+      "id": "ACA-S15",
+      "product": "ACADEMY",
+      "title": "Academy Slice 15",
+      "phaseId": "PH-ACADEMY",
+      "order": 15,
+      "dependsOn": [
+        "ACA-S14"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 15 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "verification": [
+        "All 12 positional prompts executed in order; identify 09\u201312 by Prompt Control ID"
+      ]
+    },
+    {
+      "id": "ACA-S16",
+      "product": "ACADEMY",
+      "title": "Academy Slice 16",
+      "phaseId": "PH-ACADEMY",
+      "order": 16,
+      "dependsOn": [
+        "ACA-S15"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 16 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "verification": [
+        "All 12 positional prompts executed in order; identify 09\u201312 by Prompt Control ID"
+      ]
+    },
+    {
+      "id": "ACA-RECON",
+      "product": "ACADEMY",
+      "title": "Academy reconciliation AC-R00\u2013AC-R13",
+      "phaseId": "PH-ACADEMY",
+      "order": 18,
+      "dependsOn": [
+        "ACA-S16"
+      ],
+      "canonicalRefs": [
+        "MD Academy/Maison_Doclar_Academy_Reconciliation_Cursor_Prompt_Bundle_v1.0.docx"
+      ],
+      "outcome": "Reconcile doctrine onto an existing Academy implementation",
+      "entryCriteria": [
+        "Existing Academy implementation \u2014 currently ABSENT"
+      ],
+      "exitCriteria": [
+        "AC-R13 evidence; no invented external authority"
+      ],
+      "expectedFiles": [
+        "MD Academy/Maison_Doclar_Academy_Reconciliation_Cursor_Prompt_Bundle_v1.0.docx"
+      ],
+      "verification": [
+        "One BEGIN/END block at a time"
+      ]
+    },
+    {
+      "id": "MKT-M00",
+      "product": "MARKETING",
+      "title": "M0 \u2014 Repository constitution and verified decisions",
+      "phaseId": "PH-MARKETING",
+      "order": 0,
+      "dependsOn": [
+        "EOS-S02",
+        "ACA-G0"
+      ],
+      "canonicalRefs": [
+        "MD Marketing/01_Maison_Doclar_Canonical_Marketing_and_Growth_Doctrine_v1.0_DRAFT.docx",
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "outcome": "Repository constitution and verified decisions",
+      "entryCriteria": [
+        "Consent/CRM boundaries approved; single-repo Marketing module"
+      ],
+      "exitCriteria": [
+        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+      ],
+      "expectedFiles": [
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "verification": [
+        "Execution unit is one lettered sub-prompt only"
+      ]
+    },
+    {
+      "id": "MKT-M01",
+      "product": "MARKETING",
+      "title": "M1 \u2014 Business diagnosis and commercial foundation",
+      "phaseId": "PH-MARKETING",
+      "order": 1,
+      "dependsOn": [
+        "MKT-M00"
+      ],
+      "canonicalRefs": [
+        "MD Marketing/01_Maison_Doclar_Canonical_Marketing_and_Growth_Doctrine_v1.0_DRAFT.docx",
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "outcome": "Business diagnosis and commercial foundation",
+      "entryCriteria": [
+        "Consent/CRM boundaries approved; single-repo Marketing module"
+      ],
+      "exitCriteria": [
+        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+      ],
+      "expectedFiles": [
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "verification": [
+        "Execution unit is one lettered sub-prompt only"
+      ]
+    },
+    {
+      "id": "MKT-M02",
+      "product": "MARKETING",
+      "title": "M2 \u2014 Doctrine, knowledge, evidence and novice guidance",
+      "phaseId": "PH-MARKETING",
+      "order": 2,
+      "dependsOn": [
+        "MKT-M01"
+      ],
+      "canonicalRefs": [
+        "MD Marketing/01_Maison_Doclar_Canonical_Marketing_and_Growth_Doctrine_v1.0_DRAFT.docx",
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "outcome": "Doctrine, knowledge, evidence and novice guidance",
+      "entryCriteria": [
+        "Consent/CRM boundaries approved; single-repo Marketing module"
+      ],
+      "exitCriteria": [
+        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+      ],
+      "expectedFiles": [
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "verification": [
+        "Execution unit is one lettered sub-prompt only"
+      ]
+    },
+    {
+      "id": "MKT-M03",
+      "product": "MARKETING",
+      "title": "M3 \u2014 Strategy, scenarios, campaigns and command centre",
+      "phaseId": "PH-MARKETING",
+      "order": 3,
+      "dependsOn": [
+        "MKT-M02"
+      ],
+      "canonicalRefs": [
+        "MD Marketing/01_Maison_Doclar_Canonical_Marketing_and_Growth_Doctrine_v1.0_DRAFT.docx",
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "outcome": "Strategy, scenarios, campaigns and command centre",
+      "entryCriteria": [
+        "Consent/CRM boundaries approved; single-repo Marketing module"
+      ],
+      "exitCriteria": [
+        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+      ],
+      "expectedFiles": [
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "verification": [
+        "Execution unit is one lettered sub-prompt only"
+      ]
+    },
+    {
+      "id": "MKT-M04",
+      "product": "MARKETING",
+      "title": "M4 \u2014 Content, brand, SEO, website and assets",
+      "phaseId": "PH-MARKETING",
+      "order": 4,
+      "dependsOn": [
+        "MKT-M03"
+      ],
+      "canonicalRefs": [
+        "MD Marketing/01_Maison_Doclar_Canonical_Marketing_and_Growth_Doctrine_v1.0_DRAFT.docx",
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "outcome": "Content, brand, SEO, website and assets",
+      "entryCriteria": [
+        "Consent/CRM boundaries approved; single-repo Marketing module"
+      ],
+      "exitCriteria": [
+        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+      ],
+      "expectedFiles": [
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "verification": [
+        "Execution unit is one lettered sub-prompt only"
+      ]
+    },
+    {
+      "id": "MKT-M05",
+      "product": "MARKETING",
+      "title": "M5 \u2014 Consent, identity, pipeline and lifecycle",
+      "phaseId": "PH-MARKETING",
+      "order": 5,
+      "dependsOn": [
+        "MKT-M04"
+      ],
+      "canonicalRefs": [
+        "MD Marketing/01_Maison_Doclar_Canonical_Marketing_and_Growth_Doctrine_v1.0_DRAFT.docx",
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "outcome": "Consent, identity, pipeline and lifecycle",
+      "entryCriteria": [
+        "Consent/CRM boundaries approved; single-repo Marketing module"
+      ],
+      "exitCriteria": [
+        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+      ],
+      "expectedFiles": [
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "verification": [
+        "Execution unit is one lettered sub-prompt only"
+      ]
+    },
+    {
+      "id": "MKT-M06",
+      "product": "MARKETING",
+      "title": "M6 \u2014 Social operations, reviews and reputation",
+      "phaseId": "PH-MARKETING",
+      "order": 6,
+      "dependsOn": [
+        "MKT-M05"
+      ],
+      "canonicalRefs": [
+        "MD Marketing/01_Maison_Doclar_Canonical_Marketing_and_Growth_Doctrine_v1.0_DRAFT.docx",
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "outcome": "Social operations, reviews and reputation",
+      "entryCriteria": [
+        "Consent/CRM boundaries approved; single-repo Marketing module"
+      ],
+      "exitCriteria": [
+        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+      ],
+      "expectedFiles": [
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "verification": [
+        "Execution unit is one lettered sub-prompt only"
+      ]
+    },
+    {
+      "id": "MKT-M07",
+      "product": "MARKETING",
+      "title": "M7 \u2014 Measurement, attribution, experiments and executive intelligence",
+      "phaseId": "PH-MARKETING",
+      "order": 7,
+      "dependsOn": [
+        "MKT-M06"
+      ],
+      "canonicalRefs": [
+        "MD Marketing/01_Maison_Doclar_Canonical_Marketing_and_Growth_Doctrine_v1.0_DRAFT.docx",
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "outcome": "Measurement, attribution, experiments and executive intelligence",
+      "entryCriteria": [
+        "Consent/CRM boundaries approved; single-repo Marketing module"
+      ],
+      "exitCriteria": [
+        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+      ],
+      "expectedFiles": [
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "verification": [
+        "Execution unit is one lettered sub-prompt only"
+      ]
+    },
+    {
+      "id": "MKT-M08",
+      "product": "MARKETING",
+      "title": "M8 \u2014 Paid media, landing pages and conversion",
+      "phaseId": "PH-MARKETING",
+      "order": 8,
+      "dependsOn": [
+        "MKT-M07"
+      ],
+      "canonicalRefs": [
+        "MD Marketing/01_Maison_Doclar_Canonical_Marketing_and_Growth_Doctrine_v1.0_DRAFT.docx",
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "outcome": "Paid media, landing pages and conversion",
+      "entryCriteria": [
+        "Consent/CRM boundaries approved; single-repo Marketing module"
+      ],
+      "exitCriteria": [
+        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+      ],
+      "expectedFiles": [
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "verification": [
+        "Execution unit is one lettered sub-prompt only"
+      ]
+    },
+    {
+      "id": "MKT-M09",
+      "product": "MARKETING",
+      "title": "M9 \u2014 Events-as-marketing, PR, partners, creators and advocacy",
+      "phaseId": "PH-MARKETING",
+      "order": 9,
+      "dependsOn": [
+        "MKT-M08"
+      ],
+      "canonicalRefs": [
+        "MD Marketing/01_Maison_Doclar_Canonical_Marketing_and_Growth_Doctrine_v1.0_DRAFT.docx",
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "outcome": "Events-as-marketing, PR, partners, creators and advocacy",
+      "entryCriteria": [
+        "Consent/CRM boundaries approved; single-repo Marketing module"
+      ],
+      "exitCriteria": [
+        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+      ],
+      "expectedFiles": [
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "verification": [
+        "Execution unit is one lettered sub-prompt only"
+      ]
+    },
+    {
+      "id": "MKT-M10",
+      "product": "MARKETING",
+      "title": "M10 \u2014 Estate integration: Event OS, Academy and finance/control",
+      "phaseId": "PH-MARKETING",
+      "order": 10,
+      "dependsOn": [
+        "MKT-M09"
+      ],
+      "canonicalRefs": [
+        "MD Marketing/01_Maison_Doclar_Canonical_Marketing_and_Growth_Doctrine_v1.0_DRAFT.docx",
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "outcome": "Estate integration: Event OS, Academy and finance/control",
+      "entryCriteria": [
+        "Consent/CRM boundaries approved; single-repo Marketing module"
+      ],
+      "exitCriteria": [
+        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+      ],
+      "expectedFiles": [
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "verification": [
+        "Execution unit is one lettered sub-prompt only"
+      ]
+    },
+    {
+      "id": "MKT-M11",
+      "product": "MARKETING",
+      "title": "M11 \u2014 AI evaluation, bounded autonomy and production certification",
+      "phaseId": "PH-MARKETING",
+      "order": 11,
+      "dependsOn": [
+        "MKT-M10"
+      ],
+      "canonicalRefs": [
+        "MD Marketing/01_Maison_Doclar_Canonical_Marketing_and_Growth_Doctrine_v1.0_DRAFT.docx",
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "outcome": "AI evaluation, bounded autonomy and production certification",
+      "entryCriteria": [
+        "Consent/CRM boundaries approved; single-repo Marketing module"
+      ],
+      "exitCriteria": [
+        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+      ],
+      "expectedFiles": [
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "verification": [
+        "Execution unit is one lettered sub-prompt only"
+      ]
+    },
+    {
+      "id": "USH-RECON",
+      "product": "USHERING",
+      "title": "Academy Premium Ushering reconciliation (single prompt)",
+      "phaseId": "PH-USHERING",
+      "order": 0,
+      "dependsOn": [
+        "ACA-G0",
+        "EOS-S06",
+        "EDR-R11"
+      ],
+      "canonicalRefs": [
+        "MD-Premium Usher system/01_Maison_Doclar_Canonical_Premium_Ushering_Operating_System_v1.0_DRAFT.docx",
+        "MD-Premium Usher system/10_Maison_Doclar_Academy_Premium_Ushering_Cursor_Reconciliation_Prompt_v1.0_DRAFT.docx"
+      ],
+      "outcome": "Extend ratified Academy architecture for Premium Ushering course/assessment/authorisation; no parallel LMS",
+      "entryCriteria": [
+        "Academy architecture inspectable",
+        "Event OS seating and Runtime usher surfaces specified"
+      ],
+      "exitCriteria": [
+        "Single authorised prompt complete; U01\u2013U14 remain curriculum IDs"
+      ],
+      "expectedFiles": [
+        "MD-Premium Usher system/10_Maison_Doclar_Academy_Premium_Ushering_Cursor_Reconciliation_Prompt_v1.0_DRAFT.docx"
+      ],
+      "verification": [
+        "Stop on conflict with ratified Academy facts"
+      ]
+    },
+    {
+      "id": "INT-CLOSE",
+      "product": "INTEGRATION",
+      "title": "Cross-system contract tests and release hardening",
+      "phaseId": "PH-INTEGRATION",
+      "order": 0,
+      "dependsOn": [
+        "EOS-S12",
+        "EDR-R23",
+        "ACA-S16",
+        "MKT-M11",
+        "USH-RECON",
+        "MD-CT9"
+      ],
+      "canonicalRefs": [
+        "claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Claude_Master_Roadmap_and_Control_Tower_Instruction_v1.0_DRAFT.md"
+      ],
+      "outcome": "Contract tests, change propagation, end-to-end security/accessibility/performance and release evidence",
+      "entryCriteria": [
+        "Product mandatory slices implemented; integration contracts identified"
+      ],
+      "exitCriteria": [
+        "Evidence pack ready for independent and CEO gates \u2014 gates remain unsigned"
+      ],
+      "expectedFiles": [
+        "docs/control/POST_BUILD_VERIFICATION.md"
+      ],
+      "verification": [
+        "No implied production authority"
+      ]
+    }
+  ],
+  "prompt_attachments": {
+    "MD-B0": {
+      "prompt_control_ids": [],
+      "notes": "Implemented with commit; status projection IN_REVIEW not ACCEPTED."
+    },
+    "MD-CT0": {
+      "prompt_control_ids": [
+        "MD-PR-0001"
+      ],
+      "notes": ""
+    },
+    "MD-CT1": {
+      "prompt_control_ids": [
+        "MD-PR-0002"
+      ],
+      "notes": ""
+    },
+    "MD-CT2": {
+      "prompt_control_ids": [
+        "MD-PR-0003"
+      ],
+      "notes": ""
+    },
+    "MD-CT3": {
+      "prompt_control_ids": [
+        "MD-PR-0004"
+      ],
+      "notes": ""
+    },
+    "MD-CT4": {
+      "prompt_control_ids": [
+        "MD-PR-0005"
+      ],
+      "notes": ""
+    },
+    "MD-CT5": {
+      "prompt_control_ids": [
+        "MD-PR-0006"
+      ],
+      "notes": ""
+    },
+    "MD-CT6": {
+      "prompt_control_ids": [
+        "MD-PR-0007"
+      ],
+      "notes": ""
+    },
+    "MD-CT7": {
+      "prompt_control_ids": [
+        "MD-PR-0008"
+      ],
+      "notes": ""
+    },
+    "MD-CT8": {
+      "prompt_control_ids": [
+        "MD-PR-0009"
+      ],
+      "notes": ""
+    },
+    "MD-CT9": {
+      "prompt_control_ids": [
+        "MD-PR-0010"
+      ],
+      "notes": ""
+    },
+    "EOS-S01": {
+      "prompt_control_ids": [
+        "MD-PR-0035",
+        "MD-PR-0036",
+        "MD-PR-0037",
+        "MD-PR-0038",
+        "MD-PR-0039",
+        "MD-PR-0040",
+        "MD-PR-0041",
+        "MD-PR-0042",
+        "MD-PR-0043",
+        "MD-PR-0044",
+        "MD-PR-0045",
+        "MD-PR-0046",
+        "MD-PR-0047",
+        "MD-PR-0048",
+        "MD-PR-0049",
+        "MD-PR-0050",
+        "MD-PR-0051",
+        "MD-PR-0052",
+        "MD-PR-0053",
+        "MD-PR-0054",
+        "MD-PR-0055",
+        "MD-PR-0056",
+        "MD-PR-0057",
+        "MD-PR-0058",
+        "MD-PR-0059",
+        "MD-PR-0060",
+        "MD-PR-0061",
+        "MD-PR-0062",
+        "MD-PR-0063",
+        "MD-PR-0064",
+        "MD-PR-0065",
+        "MD-PR-0066",
+        "MD-PR-0067",
+        "MD-PR-0068",
+        "MD-PR-0069",
+        "MD-PR-0070",
+        "MD-PR-0071",
+        "MD-PR-0072",
+        "MD-PR-0073"
+      ],
+      "notes": ""
+    },
+    "EOS-S02": {
+      "prompt_control_ids": [
+        "MD-PR-0074",
+        "MD-PR-0075",
+        "MD-PR-0076",
+        "MD-PR-0077",
+        "MD-PR-0078",
+        "MD-PR-0079",
+        "MD-PR-0080",
+        "MD-PR-0081",
+        "MD-PR-0082",
+        "MD-PR-0083",
+        "MD-PR-0084",
+        "MD-PR-0085",
+        "MD-PR-0086",
+        "MD-PR-0087",
+        "MD-PR-0088",
+        "MD-PR-0089",
+        "MD-PR-0090",
+        "MD-PR-0091",
+        "MD-PR-0092",
+        "MD-PR-0093",
+        "MD-PR-0094",
+        "MD-PR-0095",
+        "MD-PR-0096",
+        "MD-PR-0097",
+        "MD-PR-0098",
+        "MD-PR-0099",
+        "MD-PR-0100",
+        "MD-PR-0101",
+        "MD-PR-0102",
+        "MD-PR-0103",
+        "MD-PR-0104",
+        "MD-PR-0105",
+        "MD-PR-0106",
+        "MD-PR-0107",
+        "MD-PR-0108",
+        "MD-PR-0109",
+        "MD-PR-0110",
+        "MD-PR-0111",
+        "MD-PR-0112",
+        "MD-PR-0113",
+        "MD-PR-0114",
+        "MD-PR-0115",
+        "MD-PR-0116",
+        "MD-PR-0117",
+        "MD-PR-0118",
+        "MD-PR-0119"
+      ],
+      "notes": ""
+    },
+    "EOS-S03": {
+      "prompt_control_ids": [
+        "MD-PR-0120",
+        "MD-PR-0121",
+        "MD-PR-0122",
+        "MD-PR-0123",
+        "MD-PR-0124",
+        "MD-PR-0125",
+        "MD-PR-0126",
+        "MD-PR-0127",
+        "MD-PR-0128",
+        "MD-PR-0129",
+        "MD-PR-0130",
+        "MD-PR-0131",
+        "MD-PR-0132",
+        "MD-PR-0133",
+        "MD-PR-0134",
+        "MD-PR-0135",
+        "MD-PR-0136",
+        "MD-PR-0137",
+        "MD-PR-0138",
+        "MD-PR-0139",
+        "MD-PR-0140",
+        "MD-PR-0141",
+        "MD-PR-0142",
+        "MD-PR-0143",
+        "MD-PR-0144",
+        "MD-PR-0145",
+        "MD-PR-0146",
+        "MD-PR-0147",
+        "MD-PR-0148",
+        "MD-PR-0149",
+        "MD-PR-0150",
+        "MD-PR-0151",
+        "MD-PR-0152",
+        "MD-PR-0153",
+        "MD-PR-0154",
+        "MD-PR-0155",
+        "MD-PR-0156",
+        "MD-PR-0157",
+        "MD-PR-0158",
+        "MD-PR-0159",
+        "MD-PR-0160",
+        "MD-PR-0161",
+        "MD-PR-0162",
+        "MD-PR-0163",
+        "MD-PR-0164",
+        "MD-PR-0165",
+        "MD-PR-0166",
+        "MD-PR-0167",
+        "MD-PR-0168",
+        "MD-PR-0169"
+      ],
+      "notes": ""
+    },
+    "EOS-S04": {
+      "prompt_control_ids": [
+        "MD-PR-0170",
+        "MD-PR-0171",
+        "MD-PR-0172",
+        "MD-PR-0173",
+        "MD-PR-0174",
+        "MD-PR-0175",
+        "MD-PR-0176",
+        "MD-PR-0177",
+        "MD-PR-0178",
+        "MD-PR-0179",
+        "MD-PR-0180",
+        "MD-PR-0181",
+        "MD-PR-0182",
+        "MD-PR-0183",
+        "MD-PR-0184",
+        "MD-PR-0185",
+        "MD-PR-0186",
+        "MD-PR-0187",
+        "MD-PR-0188",
+        "MD-PR-0189",
+        "MD-PR-0190",
+        "MD-PR-0191",
+        "MD-PR-0192",
+        "MD-PR-0193",
+        "MD-PR-0194",
+        "MD-PR-0195",
+        "MD-PR-0196",
+        "MD-PR-0197",
+        "MD-PR-0198",
+        "MD-PR-0199",
+        "MD-PR-0200",
+        "MD-PR-0201",
+        "MD-PR-0202",
+        "MD-PR-0203",
+        "MD-PR-0204",
+        "MD-PR-0205",
+        "MD-PR-0206",
+        "MD-PR-0207",
+        "MD-PR-0208",
+        "MD-PR-0209",
+        "MD-PR-0210",
+        "MD-PR-0211",
+        "MD-PR-0212",
+        "MD-PR-0213",
+        "MD-PR-0214",
+        "MD-PR-0215",
+        "MD-PR-0216",
+        "MD-PR-0217",
+        "MD-PR-0218",
+        "MD-PR-0219",
+        "MD-PR-0220",
+        "MD-PR-0221",
+        "MD-PR-0222",
+        "MD-PR-0223",
+        "MD-PR-0224",
+        "MD-PR-0225",
+        "MD-PR-0226",
+        "MD-PR-0227",
+        "MD-PR-0228",
+        "MD-PR-0229",
+        "MD-PR-0230",
+        "MD-PR-0231"
+      ],
+      "notes": ""
+    },
+    "EOS-S05": {
+      "prompt_control_ids": [
+        "MD-PR-0232",
+        "MD-PR-0233",
+        "MD-PR-0234",
+        "MD-PR-0235",
+        "MD-PR-0236",
+        "MD-PR-0237",
+        "MD-PR-0238",
+        "MD-PR-0239",
+        "MD-PR-0240",
+        "MD-PR-0241",
+        "MD-PR-0242",
+        "MD-PR-0243",
+        "MD-PR-0244",
+        "MD-PR-0245",
+        "MD-PR-0246",
+        "MD-PR-0247",
+        "MD-PR-0248",
+        "MD-PR-0249",
+        "MD-PR-0250",
+        "MD-PR-0251",
+        "MD-PR-0252",
+        "MD-PR-0253",
+        "MD-PR-0254",
+        "MD-PR-0255",
+        "MD-PR-0256",
+        "MD-PR-0257",
+        "MD-PR-0258",
+        "MD-PR-0259",
+        "MD-PR-0260",
+        "MD-PR-0261",
+        "MD-PR-0262",
+        "MD-PR-0263",
+        "MD-PR-0264",
+        "MD-PR-0265",
+        "MD-PR-0266",
+        "MD-PR-0267",
+        "MD-PR-0268",
+        "MD-PR-0269",
+        "MD-PR-0270",
+        "MD-PR-0271",
+        "MD-PR-0272",
+        "MD-PR-0273",
+        "MD-PR-0274",
+        "MD-PR-0275",
+        "MD-PR-0276",
+        "MD-PR-0277",
+        "MD-PR-0278",
+        "MD-PR-0279",
+        "MD-PR-0280",
+        "MD-PR-0281",
+        "MD-PR-0282",
+        "MD-PR-0283",
+        "MD-PR-0284",
+        "MD-PR-0285",
+        "MD-PR-0286",
+        "MD-PR-0287",
+        "MD-PR-0288",
+        "MD-PR-0289",
+        "MD-PR-0290",
+        "MD-PR-0291"
+      ],
+      "notes": ""
+    },
+    "EOS-S06": {
+      "prompt_control_ids": [
+        "MD-PR-0292",
+        "MD-PR-0293",
+        "MD-PR-0294",
+        "MD-PR-0295",
+        "MD-PR-0296",
+        "MD-PR-0297",
+        "MD-PR-0298",
+        "MD-PR-0299",
+        "MD-PR-0300",
+        "MD-PR-0301",
+        "MD-PR-0302",
+        "MD-PR-0303",
+        "MD-PR-0304",
+        "MD-PR-0305",
+        "MD-PR-0306",
+        "MD-PR-0307",
+        "MD-PR-0308"
+      ],
+      "notes": ""
+    },
+    "EOS-S07": {
+      "prompt_control_ids": [
+        "MD-PR-0309",
+        "MD-PR-0310",
+        "MD-PR-0311",
+        "MD-PR-0312",
+        "MD-PR-0313",
+        "MD-PR-0314",
+        "MD-PR-0315",
+        "MD-PR-0316",
+        "MD-PR-0317",
+        "MD-PR-0318",
+        "MD-PR-0319",
+        "MD-PR-0320",
+        "MD-PR-0321",
+        "MD-PR-0322",
+        "MD-PR-0323",
+        "MD-PR-0324",
+        "MD-PR-0325"
+      ],
+      "notes": ""
+    },
+    "EOS-S08": {
+      "prompt_control_ids": [
+        "MD-PR-0326",
+        "MD-PR-0327",
+        "MD-PR-0328",
+        "MD-PR-0329",
+        "MD-PR-0330",
+        "MD-PR-0331",
+        "MD-PR-0332",
+        "MD-PR-0333",
+        "MD-PR-0334",
+        "MD-PR-0335",
+        "MD-PR-0336",
+        "MD-PR-0337",
+        "MD-PR-0338",
+        "MD-PR-0339",
+        "MD-PR-0340",
+        "MD-PR-0341",
+        "MD-PR-0342"
+      ],
+      "notes": "Slice 8 is REQUIRES_RECONCILIATION against EVENT_DAY."
+    },
+    "EOS-S09": {
+      "prompt_control_ids": [
+        "MD-PR-0343",
+        "MD-PR-0344",
+        "MD-PR-0345",
+        "MD-PR-0346",
+        "MD-PR-0347",
+        "MD-PR-0348",
+        "MD-PR-0349",
+        "MD-PR-0350",
+        "MD-PR-0351",
+        "MD-PR-0352",
+        "MD-PR-0353",
+        "MD-PR-0354",
+        "MD-PR-0355",
+        "MD-PR-0356",
+        "MD-PR-0357",
+        "MD-PR-0358",
+        "MD-PR-0359"
+      ],
+      "notes": ""
+    },
+    "EOS-S10": {
+      "prompt_control_ids": [
+        "MD-PR-0360",
+        "MD-PR-0361",
+        "MD-PR-0362",
+        "MD-PR-0363",
+        "MD-PR-0364",
+        "MD-PR-0365",
+        "MD-PR-0366",
+        "MD-PR-0367",
+        "MD-PR-0368",
+        "MD-PR-0369",
+        "MD-PR-0370",
+        "MD-PR-0371",
+        "MD-PR-0372",
+        "MD-PR-0373",
+        "MD-PR-0374",
+        "MD-PR-0375",
+        "MD-PR-0376",
+        "MD-PR-0377"
+      ],
+      "notes": ""
+    },
+    "EOS-S11": {
+      "prompt_control_ids": [
+        "MD-PR-0378",
+        "MD-PR-0379",
+        "MD-PR-0380",
+        "MD-PR-0381",
+        "MD-PR-0382",
+        "MD-PR-0383",
+        "MD-PR-0384",
+        "MD-PR-0385",
+        "MD-PR-0386",
+        "MD-PR-0387",
+        "MD-PR-0388",
+        "MD-PR-0389",
+        "MD-PR-0390",
+        "MD-PR-0391",
+        "MD-PR-0392",
+        "MD-PR-0393",
+        "MD-PR-0394",
+        "MD-PR-0395"
+      ],
+      "notes": ""
+    },
+    "EOS-S12": {
+      "prompt_control_ids": [
+        "MD-PR-0396",
+        "MD-PR-0397",
+        "MD-PR-0398",
+        "MD-PR-0399",
+        "MD-PR-0400",
+        "MD-PR-0401",
+        "MD-PR-0402",
+        "MD-PR-0403",
+        "MD-PR-0404",
+        "MD-PR-0405",
+        "MD-PR-0406",
+        "MD-PR-0407",
+        "MD-PR-0408",
+        "MD-PR-0409",
+        "MD-PR-0410",
+        "MD-PR-0411",
+        "MD-PR-0412",
+        "MD-PR-0413"
+      ],
+      "notes": ""
+    },
+    "EOS-RECON": {
+      "prompt_control_ids": [
+        "MD-PR-0666",
+        "MD-PR-0667",
+        "MD-PR-0668",
+        "MD-PR-0669",
+        "MD-PR-0670",
+        "MD-PR-0671",
+        "MD-PR-0672",
+        "MD-PR-0673",
+        "MD-PR-0674",
+        "MD-PR-0675",
+        "MD-PR-0676",
+        "MD-PR-0677",
+        "MD-PR-0678"
+      ],
+      "notes": ""
+    },
+    "EDR-R00": {
+      "prompt_control_ids": [
+        "MD-PR-0011"
+      ],
+      "notes": ""
+    },
+    "EDR-R01": {
+      "prompt_control_ids": [
+        "MD-PR-0012"
+      ],
+      "notes": ""
+    },
+    "EDR-R02": {
+      "prompt_control_ids": [
+        "MD-PR-0013"
+      ],
+      "notes": ""
+    },
+    "EDR-R03": {
+      "prompt_control_ids": [
+        "MD-PR-0014"
+      ],
+      "notes": ""
+    },
+    "EDR-R04": {
+      "prompt_control_ids": [
+        "MD-PR-0015"
+      ],
+      "notes": ""
+    },
+    "EDR-R05": {
+      "prompt_control_ids": [
+        "MD-PR-0016"
+      ],
+      "notes": ""
+    },
+    "EDR-R06": {
+      "prompt_control_ids": [
+        "MD-PR-0017"
+      ],
+      "notes": ""
+    },
+    "EDR-R07": {
+      "prompt_control_ids": [
+        "MD-PR-0018"
+      ],
+      "notes": ""
+    },
+    "EDR-R08": {
+      "prompt_control_ids": [
+        "MD-PR-0019"
+      ],
+      "notes": ""
+    },
+    "EDR-R09": {
+      "prompt_control_ids": [
+        "MD-PR-0020"
+      ],
+      "notes": ""
+    },
+    "EDR-R10": {
+      "prompt_control_ids": [
+        "MD-PR-0021"
+      ],
+      "notes": ""
+    },
+    "EDR-R11": {
+      "prompt_control_ids": [
+        "MD-PR-0022"
+      ],
+      "notes": ""
+    },
+    "EDR-R12": {
+      "prompt_control_ids": [
+        "MD-PR-0023"
+      ],
+      "notes": ""
+    },
+    "EDR-R13": {
+      "prompt_control_ids": [
+        "MD-PR-0024"
+      ],
+      "notes": ""
+    },
+    "EDR-R14": {
+      "prompt_control_ids": [
+        "MD-PR-0025"
+      ],
+      "notes": ""
+    },
+    "EDR-R15": {
+      "prompt_control_ids": [
+        "MD-PR-0026"
+      ],
+      "notes": ""
+    },
+    "EDR-R16": {
+      "prompt_control_ids": [
+        "MD-PR-0027"
+      ],
+      "notes": ""
+    },
+    "EDR-R17": {
+      "prompt_control_ids": [
+        "MD-PR-0028"
+      ],
+      "notes": ""
+    },
+    "EDR-R18": {
+      "prompt_control_ids": [
+        "MD-PR-0029"
+      ],
+      "notes": ""
+    },
+    "EDR-R19": {
+      "prompt_control_ids": [
+        "MD-PR-0030"
+      ],
+      "notes": ""
+    },
+    "EDR-R20": {
+      "prompt_control_ids": [
+        "MD-PR-0031"
+      ],
+      "notes": ""
+    },
+    "EDR-R21": {
+      "prompt_control_ids": [
+        "MD-PR-0032"
+      ],
+      "notes": ""
+    },
+    "EDR-R22": {
+      "prompt_control_ids": [
+        "MD-PR-0033"
+      ],
+      "notes": ""
+    },
+    "EDR-R23": {
+      "prompt_control_ids": [
+        "MD-PR-0034"
+      ],
+      "notes": ""
+    },
+    "ACA-G0": {
+      "prompt_control_ids": [
+        "MD-PR-0414",
+        "MD-PR-0415",
+        "MD-PR-0416",
+        "MD-PR-0417",
+        "MD-PR-0418",
+        "MD-PR-0419",
+        "MD-PR-0420",
+        "MD-PR-0421",
+        "MD-PR-0422",
+        "MD-PR-0423",
+        "MD-PR-0424",
+        "MD-PR-0425"
+      ],
+      "notes": ""
+    },
+    "ACA-S01": {
+      "prompt_control_ids": [
+        "MD-PR-0426",
+        "MD-PR-0427",
+        "MD-PR-0428",
+        "MD-PR-0429",
+        "MD-PR-0430",
+        "MD-PR-0431",
+        "MD-PR-0432",
+        "MD-PR-0433",
+        "MD-PR-0434",
+        "MD-PR-0435",
+        "MD-PR-0436",
+        "MD-PR-0437"
+      ],
+      "notes": ""
+    },
+    "ACA-S02": {
+      "prompt_control_ids": [
+        "MD-PR-0438",
+        "MD-PR-0439",
+        "MD-PR-0440",
+        "MD-PR-0441",
+        "MD-PR-0442",
+        "MD-PR-0443",
+        "MD-PR-0444",
+        "MD-PR-0445",
+        "MD-PR-0446",
+        "MD-PR-0447",
+        "MD-PR-0448",
+        "MD-PR-0449"
+      ],
+      "notes": ""
+    },
+    "ACA-S03": {
+      "prompt_control_ids": [
+        "MD-PR-0450",
+        "MD-PR-0451",
+        "MD-PR-0452",
+        "MD-PR-0453",
+        "MD-PR-0454",
+        "MD-PR-0455",
+        "MD-PR-0456",
+        "MD-PR-0457",
+        "MD-PR-0458",
+        "MD-PR-0459",
+        "MD-PR-0460",
+        "MD-PR-0461"
+      ],
+      "notes": ""
+    },
+    "ACA-S04": {
+      "prompt_control_ids": [
+        "MD-PR-0462",
+        "MD-PR-0463",
+        "MD-PR-0464",
+        "MD-PR-0465",
+        "MD-PR-0466",
+        "MD-PR-0467",
+        "MD-PR-0468",
+        "MD-PR-0469",
+        "MD-PR-0470",
+        "MD-PR-0471",
+        "MD-PR-0472",
+        "MD-PR-0473"
+      ],
+      "notes": ""
+    },
+    "ACA-S05": {
+      "prompt_control_ids": [
+        "MD-PR-0474",
+        "MD-PR-0475",
+        "MD-PR-0476",
+        "MD-PR-0477",
+        "MD-PR-0478",
+        "MD-PR-0479",
+        "MD-PR-0480",
+        "MD-PR-0481",
+        "MD-PR-0482",
+        "MD-PR-0483",
+        "MD-PR-0484",
+        "MD-PR-0485"
+      ],
+      "notes": ""
+    },
+    "ACA-S06": {
+      "prompt_control_ids": [
+        "MD-PR-0486",
+        "MD-PR-0487",
+        "MD-PR-0488",
+        "MD-PR-0489",
+        "MD-PR-0490",
+        "MD-PR-0491",
+        "MD-PR-0492",
+        "MD-PR-0493",
+        "MD-PR-0494",
+        "MD-PR-0495",
+        "MD-PR-0496",
+        "MD-PR-0497"
+      ],
+      "notes": ""
+    },
+    "ACA-S07": {
+      "prompt_control_ids": [
+        "MD-PR-0498",
+        "MD-PR-0499",
+        "MD-PR-0500",
+        "MD-PR-0501",
+        "MD-PR-0502",
+        "MD-PR-0503",
+        "MD-PR-0504",
+        "MD-PR-0505",
+        "MD-PR-0506",
+        "MD-PR-0507",
+        "MD-PR-0508",
+        "MD-PR-0509"
+      ],
+      "notes": ""
+    },
+    "ACA-S08": {
+      "prompt_control_ids": [
+        "MD-PR-0510",
+        "MD-PR-0511",
+        "MD-PR-0512",
+        "MD-PR-0513",
+        "MD-PR-0514",
+        "MD-PR-0515",
+        "MD-PR-0516",
+        "MD-PR-0517",
+        "MD-PR-0518",
+        "MD-PR-0519",
+        "MD-PR-0520",
+        "MD-PR-0521"
+      ],
+      "notes": ""
+    },
+    "ACA-S09": {
+      "prompt_control_ids": [
+        "MD-PR-0522",
+        "MD-PR-0523",
+        "MD-PR-0524",
+        "MD-PR-0525",
+        "MD-PR-0526",
+        "MD-PR-0527",
+        "MD-PR-0528",
+        "MD-PR-0529",
+        "MD-PR-0530",
+        "MD-PR-0531",
+        "MD-PR-0532",
+        "MD-PR-0533"
+      ],
+      "notes": ""
+    },
+    "ACA-S10": {
+      "prompt_control_ids": [
+        "MD-PR-0534",
+        "MD-PR-0535",
+        "MD-PR-0536",
+        "MD-PR-0537",
+        "MD-PR-0538",
+        "MD-PR-0539",
+        "MD-PR-0540",
+        "MD-PR-0541",
+        "MD-PR-0542",
+        "MD-PR-0543",
+        "MD-PR-0544",
+        "MD-PR-0545"
+      ],
+      "notes": ""
+    },
+    "ACA-S11": {
+      "prompt_control_ids": [
+        "MD-PR-0546",
+        "MD-PR-0547",
+        "MD-PR-0548",
+        "MD-PR-0549",
+        "MD-PR-0550",
+        "MD-PR-0551",
+        "MD-PR-0552",
+        "MD-PR-0553",
+        "MD-PR-0554",
+        "MD-PR-0555",
+        "MD-PR-0556",
+        "MD-PR-0557"
+      ],
+      "notes": ""
+    },
+    "ACA-S12": {
+      "prompt_control_ids": [
+        "MD-PR-0558",
+        "MD-PR-0559",
+        "MD-PR-0560",
+        "MD-PR-0561",
+        "MD-PR-0562",
+        "MD-PR-0563",
+        "MD-PR-0564",
+        "MD-PR-0565",
+        "MD-PR-0566",
+        "MD-PR-0567",
+        "MD-PR-0568",
+        "MD-PR-0569"
+      ],
+      "notes": ""
+    },
+    "ACA-S13": {
+      "prompt_control_ids": [
+        "MD-PR-0570",
+        "MD-PR-0571",
+        "MD-PR-0572",
+        "MD-PR-0573",
+        "MD-PR-0574",
+        "MD-PR-0575",
+        "MD-PR-0576",
+        "MD-PR-0577",
+        "MD-PR-0578",
+        "MD-PR-0579",
+        "MD-PR-0580",
+        "MD-PR-0581"
+      ],
+      "notes": ""
+    },
+    "ACA-S14": {
+      "prompt_control_ids": [
+        "MD-PR-0582",
+        "MD-PR-0583",
+        "MD-PR-0584",
+        "MD-PR-0585",
+        "MD-PR-0586",
+        "MD-PR-0587",
+        "MD-PR-0588",
+        "MD-PR-0589",
+        "MD-PR-0590",
+        "MD-PR-0591",
+        "MD-PR-0592",
+        "MD-PR-0593"
+      ],
+      "notes": ""
+    },
+    "ACA-S15": {
+      "prompt_control_ids": [
+        "MD-PR-0594",
+        "MD-PR-0595",
+        "MD-PR-0596",
+        "MD-PR-0597",
+        "MD-PR-0598",
+        "MD-PR-0599",
+        "MD-PR-0600",
+        "MD-PR-0601",
+        "MD-PR-0602",
+        "MD-PR-0603",
+        "MD-PR-0604",
+        "MD-PR-0605"
+      ],
+      "notes": ""
+    },
+    "ACA-S16": {
+      "prompt_control_ids": [
+        "MD-PR-0606",
+        "MD-PR-0607",
+        "MD-PR-0608",
+        "MD-PR-0609",
+        "MD-PR-0610",
+        "MD-PR-0611",
+        "MD-PR-0612",
+        "MD-PR-0613",
+        "MD-PR-0614",
+        "MD-PR-0615",
+        "MD-PR-0616",
+        "MD-PR-0617"
+      ],
+      "notes": ""
+    },
+    "ACA-RECON": {
+      "prompt_control_ids": [
+        "MD-PR-0679",
+        "MD-PR-0680",
+        "MD-PR-0681",
+        "MD-PR-0682",
+        "MD-PR-0683",
+        "MD-PR-0684",
+        "MD-PR-0685",
+        "MD-PR-0686",
+        "MD-PR-0687",
+        "MD-PR-0688",
+        "MD-PR-0689",
+        "MD-PR-0690",
+        "MD-PR-0691",
+        "MD-PR-0692"
+      ],
+      "notes": ""
+    },
+    "MKT-M00": {
+      "prompt_control_ids": [
+        "MD-PR-0618",
+        "MD-PR-0619",
+        "MD-PR-0620",
+        "MD-PR-0621"
+      ],
+      "notes": ""
+    },
+    "MKT-M01": {
+      "prompt_control_ids": [
+        "MD-PR-0622",
+        "MD-PR-0623",
+        "MD-PR-0624",
+        "MD-PR-0625"
+      ],
+      "notes": ""
+    },
+    "MKT-M02": {
+      "prompt_control_ids": [
+        "MD-PR-0626",
+        "MD-PR-0627",
+        "MD-PR-0628",
+        "MD-PR-0629"
+      ],
+      "notes": ""
+    },
+    "MKT-M03": {
+      "prompt_control_ids": [
+        "MD-PR-0630",
+        "MD-PR-0631",
+        "MD-PR-0632",
+        "MD-PR-0633"
+      ],
+      "notes": ""
+    },
+    "MKT-M04": {
+      "prompt_control_ids": [
+        "MD-PR-0634",
+        "MD-PR-0635",
+        "MD-PR-0636",
+        "MD-PR-0637"
+      ],
+      "notes": ""
+    },
+    "MKT-M05": {
+      "prompt_control_ids": [
+        "MD-PR-0638",
+        "MD-PR-0639",
+        "MD-PR-0640",
+        "MD-PR-0641"
+      ],
+      "notes": ""
+    },
+    "MKT-M06": {
+      "prompt_control_ids": [
+        "MD-PR-0642",
+        "MD-PR-0643",
+        "MD-PR-0644",
+        "MD-PR-0645"
+      ],
+      "notes": ""
+    },
+    "MKT-M07": {
+      "prompt_control_ids": [
+        "MD-PR-0646",
+        "MD-PR-0647",
+        "MD-PR-0648",
+        "MD-PR-0649"
+      ],
+      "notes": ""
+    },
+    "MKT-M08": {
+      "prompt_control_ids": [
+        "MD-PR-0650",
+        "MD-PR-0651",
+        "MD-PR-0652",
+        "MD-PR-0653"
+      ],
+      "notes": ""
+    },
+    "MKT-M09": {
+      "prompt_control_ids": [
+        "MD-PR-0654",
+        "MD-PR-0655",
+        "MD-PR-0656",
+        "MD-PR-0657"
+      ],
+      "notes": ""
+    },
+    "MKT-M10": {
+      "prompt_control_ids": [
+        "MD-PR-0658",
+        "MD-PR-0659",
+        "MD-PR-0660",
+        "MD-PR-0661"
+      ],
+      "notes": ""
+    },
+    "MKT-M11": {
+      "prompt_control_ids": [
+        "MD-PR-0662",
+        "MD-PR-0663",
+        "MD-PR-0664",
+        "MD-PR-0665"
+      ],
+      "notes": ""
+    },
+    "USH-RECON": {
+      "prompt_control_ids": [
+        "MD-PR-0693"
+      ],
+      "notes": ""
+    },
+    "INT-CLOSE": {
+      "prompt_control_ids": [],
+      "notes": "Planning slice derived from Control Tower product-ordering instruction; no dedicated prompt pack in corpus."
+    }
+  }
+}

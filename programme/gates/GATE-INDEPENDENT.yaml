@@ -1,0 +1,7 @@
+id: GATE-INDEPENDENT
+product: INTEGRATION
+title: Independent acceptance
+status: NOT_READY
+authority: Named independent reviewer — not Cursor, not AI CTO self-approval
+requiredEvidenceIds: []
+notes: Cursor cannot mark this gate approved.

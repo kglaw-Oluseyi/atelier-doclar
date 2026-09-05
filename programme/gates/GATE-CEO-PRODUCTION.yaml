@@ -1,0 +1,7 @@
+id: GATE-CEO-PRODUCTION
+product: INTEGRATION
+title: CEO production release
+status: NOT_READY
+authority: CEO
+requiredEvidenceIds: []
+notes: Unsigned. Completion of CT9/R23/EOS-S12 is evidence readiness, not production authority.

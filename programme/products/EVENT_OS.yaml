@@ -1,0 +1,16 @@
+code: EVENT_OS
+name: Event OS
+route: /programme/event-os
+programmePurpose: Operational/control plane for clients, events, guests, venues, staffing, credentials and later intelligence.
+canonicalSources:
+  - MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx
+  - MDOS/Maison_Doclar_Master_Build_Control_Index_v1.0.docx
+dependencies:
+  - FOUNDATION
+statusSource: Evidence-derived SliceRecords
+externalAuthorityRequirements:
+  - Independent acceptance pack
+  - CEO production authorisation
+  - Specialist gates for FaceGate/biometrics
+implementationReality: Specified and prompted. No application code.
+notes: Historical Slice 8 runtime capability is mapped to EVENT_DAY. Event OS remains the control plane.

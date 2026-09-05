@@ -1,0 +1,18 @@
+code: EVENT_DAY
+name: Event-Day Runtime
+route: /programme/event-day
+programmePurpose: Signed event package, devices/PWA/scanning, local ledger, LAN operation and deterministic reconciliation.
+canonicalSources:
+  - event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx
+  - event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md
+  - event_day_runtime_complete_v2/README.md
+dependencies:
+  - EVENT_OS
+statusSource: Evidence-derived SliceRecords
+externalAuthorityRequirements:
+  - Venue rehearsal
+  - Independent acceptance
+  - Event Director activation
+  - CEO production release
+implementationReality: Contracts, reference SQL and specifications only. v2 supersedes missing v1 pack.
+notes: Distinct runtime product/domain. Do not double-build Event OS Slice 8.

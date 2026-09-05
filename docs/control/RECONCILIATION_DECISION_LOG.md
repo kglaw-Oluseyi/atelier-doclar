@@ -111,3 +111,83 @@ Only decisions actually made during B0 are recorded. No CEO decisions were inven
 | PEND-004 | CT standing-contract adaptation after Claude removal | CEO / AI CTO |
 | PEND-005 | Canonical home for recovered copies | later control slice |
 | PEND-006 | Express list of any non-ratified items | CEO |
+
+---
+
+# CT0 decisions (appended 2026-09-05)
+
+B0 entries above are historical and unchanged.
+
+## RD-CT0-001 — Adopt successor operating authority without rewriting sources
+
+- **Date/time:** 2026-09-05
+- **Issue:** CRQ-012 / PEND-004 — CT standing contract names Claude; successor handover removes Claude.
+- **Evidence considered:** Successor handover; CT0–CT9 MD; B0 RD-B0-007; this MD-CT0 instruction §4.
+- **Decision:** Create `EXECUTION_COMPATIBILITY_REGISTER.md`. Do not edit historical Claude wording.
+- **Authority:** MD-CT0 §4 and §7.
+- **Affected files:** New compatibility register only.
+- **Consequences:** CT1+ must use the wrapper.
+- **Reversibility:** Yes.
+- **Unresolved follow-up:** CRQ-013 vendor assumption.
+
+## RD-CT0-002 — Dependency DAG and executive critical path
+
+- **Date/time:** 2026-09-05
+- **Issue:** CRQ-007 / PEND-001 / RD-B0-003.
+- **Evidence considered:** MD-CT0 §7.1–7.2; Control Tower instruction variants; Event-Day v2 README.
+- **Decision:** DAG authoritative. Executive progression Foundation → Event OS foundations → Event-Day foundations → Ushering → Academy → Marketing → Integration → Validation. Runtime distinct from Event OS. Slice 8 mapped not double-built.
+- **Authority:** MD-CT0 §7.1–7.2.
+- **Affected files:** Roadmap, dependencies, slice catalog.
+- **Consequences:** Display order in `programme.seed.json` is historical, not controlling.
+- **Reversibility:** Yes, with a recorded amendment.
+- **Unresolved follow-up:** CT0-GAP-005 line-by-line S8 map.
+
+## RD-CT0-003 — Manifest vs SliceRecord remain distinct
+
+- **Date/time:** 2026-09-05
+- **Issue:** CRQ-008 / PEND-002 / RD-B0-004.
+- **Evidence considered:** JSON Schema; Zod SliceRecord; MD-CT0 §7.3.
+- **Decision:** Declaration vs projection. CT1 implements both and the mapping. No field deletion.
+- **Authority:** MD-CT0 §7.3.
+- **Affected files:** `programme/schema/SLICE_MANIFEST_VS_RECORD.md`.
+- **Consequences:** CT1 scope is defined.
+- **Reversibility:** n/a (boundary record).
+- **Unresolved follow-up:** CT1 implementation.
+
+## RD-CT0-004 — Single repository; logical modules
+
+- **Date/time:** 2026-09-05
+- **Issue:** CRQ-009 / PEND-005-adjacent.
+- **Evidence considered:** MD-CT0 §7.4; B0 RD-B0-005.
+- **Decision:** No other GitHub repository. Historical product-repo language = module.
+- **Authority:** MD-CT0 §7.4.
+- **Affected files:** Compatibility register; product YAML notes.
+- **Consequences:** No `apps/` scaffold created in CT0.
+- **Reversibility:** Creating extra remotes would violate current authority.
+- **Unresolved follow-up:** Package path names.
+
+## RD-CT0-005 — Prompt map uses MD-PR IDs; no renumbering
+
+- **Date/time:** 2026-09-05
+- **Issue:** CRQ-002, CRQ-003, 693-prompt estate.
+- **Evidence considered:** Prompt Register; MD-CT0 §6, §7.5, §7.6.
+- **Decision:** Map 693 prompts. Qualify IDs by product. Do not invent Academy native IDs. Do not mark SUPERSEDED without explicit evidence.
+- **Authority:** MD-CT0.
+- **Affected files:** `PROMPT_EXECUTION_MAP.json`.
+- **Consequences:** 0 READY_AS_WRITTEN; 2 wrappers; 85 reconciliation; 606 blocked.
+- **Reversibility:** Status can change when dependencies land; IDs never recycle.
+- **Unresolved follow-up:** None for identity.
+
+## Pending after CT0
+
+| ID | Issue | Waiting on |
+|----|-------|------------|
+| CT0-OD-001 | Estate-wide UI framework lock (Next.js proposed for CT4+) | CEO before production UI |
+| CT0-OD-002 | Identity provider product | CEO |
+| CT0-OD-003 | Hosting / Railway | CEO; no Railway work in CT0 |
+| CT0-OD-004 | Line-by-line Event OS S8 ↔ Runtime map | Later reconciliation slice |
+| CT0-OD-005 | Whether to mint official Academy G0-09… native IDs | CEO |
+| CT0-OD-006 | Intelligence / Anthropic vendor (CRQ-013) | CEO |
+| CT0-OD-007 | Package manager confirmation (pnpm proposed) | AI CTO at CT1 start |
+| PEND-006 | Express non-ratified list | CEO |
+

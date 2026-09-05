@@ -1,0 +1,27 @@
+# Slice manifest (declaration). Source: CT0 from ratified CT programme + B0 registers.
+id: MD-CT0
+product: FOUNDATION
+title: Control Tower preflight and programme reconciliation
+phaseId: PH-FOUNDATION
+order: 1
+dependsOn:
+  - MD-B0
+canonicalRefs:
+  - claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Programme_Control_Tower_and_Living_Roadmap_Addendum_v1.0_DRAFT.md
+  - claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Control_Tower_TypeScript_Cursor_Prompt_Programme_CT0-CT9_v1.0_DRAFT.md
+  - docs/control/PROMPT_REGISTER.json
+outcome: "Planning baseline for CT1: DAG, schema responsibility, single-repo interpretation, prompt map, architecture decisions"
+entryCriteria:
+  - B0 commit f7abb431be9a15ab730b3fdd16baa8e83776c170 present
+  - Working tree inspectable
+exitCriteria:
+  - CT0 control artefacts committed; no application scaffold; STOP before CT1
+expectedFiles:
+  - docs/control/CT0_PREFLIGHT_REPORT.md
+  - docs/control/PROGRAMME_ROADMAP.md
+  - docs/control/PROMPT_EXECUTION_MAP.json
+  - programme/products/
+verification:
+  - 693-prompt map reconciles
+  - YAML/JSON valid
+  - cycle report produced

@@ -1,0 +1,20 @@
+# Slice manifest (declaration). Source: CT0 from ratified CT programme + B0 registers.
+id: MD-B0
+product: FOUNDATION
+title: Controlled corpus baseline and prompt accountability
+phaseId: PH-FOUNDATION
+order: 0
+dependsOn: []
+canonicalRefs:
+  - docs/control/REPOSITORY_INVENTORY.json
+  - docs/control/PROMPT_REGISTER.md
+outcome: Every file and execution prompt accounted; auditable Git baseline
+entryCriteria:
+  - Local corpus present
+exitCriteria:
+  - Control registers committed to authorised main
+expectedFiles:
+  - docs/control/REPOSITORY_INVENTORY.json
+  - docs/control/PROMPT_REGISTER.json
+verification:
+  - File-count and 693-prompt reconciliation

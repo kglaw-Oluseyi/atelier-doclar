@@ -1,0 +1,7 @@
+id: PH-EVENT-OS-OPERATIONS
+order: 7
+title: Event OS later operations
+products: [EVENT_OS]
+intent: Intelligence, FaceGate gated integration, cross-event knowledge. Interleaves after Runtime foundations where evidence supports it.
+executiveCriticalPath: false
+slices: [EOS-S09, EOS-S10, EOS-S11, EOS-RECON]

@@ -1,0 +1,7 @@
+id: PH-EVENT-DAY-FOUNDATIONS
+order: 2
+title: Event-Day Runtime foundations
+products: [EVENT_DAY]
+intent: Domain kernel, package, local ledger, devices and PWA. Depends on Event OS control-plane contracts.
+executiveCriticalPath: true
+slices: [EDR-R00, EDR-R01, EDR-R02, EDR-R03, EDR-R04, EDR-R05, EDR-R06, EDR-R07]

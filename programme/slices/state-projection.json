@@ -1,0 +1,2658 @@
+{
+  "slice_id": "MD-CT0",
+  "model": "SliceRecord projection \u2014 evidence-derived; ACCEPTED forbidden without named reviewer",
+  "generatedAt": "2026-09-05T05:10:00Z",
+  "sourceCommit": "f7abb431be9a15ab730b3fdd16baa8e83776c170",
+  "records": [
+    {
+      "id": "MD-B0",
+      "product": "FOUNDATION",
+      "title": "Controlled corpus baseline and prompt accountability",
+      "phaseId": "PH-FOUNDATION",
+      "order": 0,
+      "status": "IN_REVIEW",
+      "dependsOn": [],
+      "canonicalRefs": [
+        "docs/control/REPOSITORY_INVENTORY.json",
+        "docs/control/PROMPT_REGISTER.md"
+      ],
+      "outcome": "Every file and execution prompt accounted; auditable Git baseline",
+      "entryCriteria": [
+        "Local corpus present"
+      ],
+      "exitCriteria": [
+        "Control registers committed to authorised main"
+      ],
+      "expectedFiles": [
+        "docs/control/REPOSITORY_INVENTORY.json",
+        "docs/control/PROMPT_REGISTER.json"
+      ],
+      "commits": [
+        "f7abb431be9a15ab730b3fdd16baa8e83776c170"
+      ],
+      "evidence": [
+        {
+          "id": "EV-B0-001",
+          "kind": "COMMIT",
+          "uri": "git:f7abb431be9a15ab730b3fdd16baa8e83776c170",
+          "createdAt": "2026-09-05T04:37:00Z",
+          "sourceSystem": "github",
+          "immutable": true,
+          "summary": "B0 baseline commit"
+        }
+      ],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "MD-CT0",
+      "product": "FOUNDATION",
+      "title": "Control Tower preflight and programme reconciliation",
+      "phaseId": "PH-FOUNDATION",
+      "order": 1,
+      "status": "IN_PROGRESS",
+      "dependsOn": [
+        "MD-B0"
+      ],
+      "canonicalRefs": [
+        "claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Programme_Control_Tower_and_Living_Roadmap_Addendum_v1.0_DRAFT.md",
+        "claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Control_Tower_TypeScript_Cursor_Prompt_Programme_CT0-CT9_v1.0_DRAFT.md",
+        "docs/control/PROMPT_REGISTER.json"
+      ],
+      "outcome": "Planning baseline for CT1: DAG, schema responsibility, single-repo interpretation, prompt map, architecture decisions",
+      "entryCriteria": [
+        "B0 commit f7abb431be9a15ab730b3fdd16baa8e83776c170 present",
+        "Working tree inspectable"
+      ],
+      "exitCriteria": [
+        "CT0 control artefacts committed; no application scaffold; STOP before CT1"
+      ],
+      "expectedFiles": [
+        "docs/control/CT0_PREFLIGHT_REPORT.md",
+        "docs/control/PROGRAMME_ROADMAP.md",
+        "docs/control/PROMPT_EXECUTION_MAP.json",
+        "programme/products/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "MD-CT1",
+      "product": "FOUNDATION",
+      "title": "CT1 \u2014 Programme domain and manifest validator",
+      "phaseId": "PH-FOUNDATION",
+      "order": 2,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "MD-CT0"
+      ],
+      "canonicalRefs": [
+        "claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Control_Tower_TypeScript_Cursor_Prompt_Programme_CT0-CT9_v1.0_DRAFT.md",
+        "docs/control/EXECUTION_COMPATIBILITY_REGISTER.md"
+      ],
+      "outcome": "Zod/JSON loaders, referential validation, DAG cycle detection",
+      "entryCriteria": [
+        "Previous CT slice authorised and reviewed",
+        "Use compatibility register not Claude-role standing contract"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing CT1",
+        "STOP; do not start next CT"
+      ],
+      "expectedFiles": [
+        "programme/schema/",
+        "docs/control/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "MD-CT2",
+      "product": "FOUNDATION",
+      "title": "CT2 \u2014 Persistence, snapshots and status calculator",
+      "phaseId": "PH-FOUNDATION",
+      "order": 3,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "MD-CT1"
+      ],
+      "canonicalRefs": [
+        "claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Control_Tower_TypeScript_Cursor_Prompt_Programme_CT0-CT9_v1.0_DRAFT.md",
+        "docs/control/EXECUTION_COMPATIBILITY_REGISTER.md"
+      ],
+      "outcome": "Events, projections, evidence-derived status; no manual percent override",
+      "entryCriteria": [
+        "Previous CT slice authorised and reviewed",
+        "Use compatibility register not Claude-role standing contract"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing CT2",
+        "STOP; do not start next CT"
+      ],
+      "expectedFiles": [
+        "programme/schema/",
+        "docs/control/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "MD-CT3",
+      "product": "FOUNDATION",
+      "title": "CT3 \u2014 Repository and CI ingestion",
+      "phaseId": "PH-FOUNDATION",
+      "order": 4,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "MD-CT2"
+      ],
+      "canonicalRefs": [
+        "claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Control_Tower_TypeScript_Cursor_Prompt_Programme_CT0-CT9_v1.0_DRAFT.md",
+        "docs/control/EXECUTION_COMPATIBILITY_REGISTER.md"
+      ],
+      "outcome": "Signed webhook/scheduled reconciliation for the selected Git/CI provider",
+      "entryCriteria": [
+        "Previous CT slice authorised and reviewed",
+        "Use compatibility register not Claude-role standing contract"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing CT3",
+        "STOP; do not start next CT"
+      ],
+      "expectedFiles": [
+        "programme/schema/",
+        "docs/control/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "MD-CT4",
+      "product": "FOUNDATION",
+      "title": "CT4 \u2014 Control Tower shell and executive portfolio",
+      "phaseId": "PH-FOUNDATION",
+      "order": 5,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "MD-CT3"
+      ],
+      "canonicalRefs": [
+        "claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Control_Tower_TypeScript_Cursor_Prompt_Programme_CT0-CT9_v1.0_DRAFT.md",
+        "docs/control/EXECUTION_COMPATIBILITY_REGISTER.md"
+      ],
+      "outcome": "Private /programme navigation and portfolio views",
+      "entryCriteria": [
+        "Previous CT slice authorised and reviewed",
+        "Use compatibility register not Claude-role standing contract"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing CT4",
+        "STOP; do not start next CT"
+      ],
+      "expectedFiles": [
+        "programme/schema/",
+        "docs/control/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "MD-CT5",
+      "product": "FOUNDATION",
+      "title": "CT5 \u2014 Roadmap, product and slice drill-down",
+      "phaseId": "PH-FOUNDATION",
+      "order": 6,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "MD-CT4"
+      ],
+      "canonicalRefs": [
+        "claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Control_Tower_TypeScript_Cursor_Prompt_Programme_CT0-CT9_v1.0_DRAFT.md",
+        "docs/control/EXECUTION_COMPATIBILITY_REGISTER.md"
+      ],
+      "outcome": "DAG plus accessible tables and evidence drill-down",
+      "entryCriteria": [
+        "Previous CT slice authorised and reviewed",
+        "Use compatibility register not Claude-role standing contract"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing CT5",
+        "STOP; do not start next CT"
+      ],
+      "expectedFiles": [
+        "programme/schema/",
+        "docs/control/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "MD-CT6",
+      "product": "FOUNDATION",
+      "title": "CT6 \u2014 Open items, decisions, gates, releases and audit",
+      "phaseId": "PH-FOUNDATION",
+      "order": 7,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "MD-CT5"
+      ],
+      "canonicalRefs": [
+        "claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Control_Tower_TypeScript_Cursor_Prompt_Programme_CT0-CT9_v1.0_DRAFT.md",
+        "docs/control/EXECUTION_COMPATIBILITY_REGISTER.md"
+      ],
+      "outcome": "Controlled workflows; Cursor cannot approve protected gates",
+      "entryCriteria": [
+        "Previous CT slice authorised and reviewed",
+        "Use compatibility register not Claude-role standing contract"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing CT6",
+        "STOP; do not start next CT"
+      ],
+      "expectedFiles": [
+        "programme/schema/",
+        "docs/control/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "MD-CT7",
+      "product": "FOUNDATION",
+      "title": "CT7 \u2014 RAG ingestion and grounded programme assistant",
+      "phaseId": "PH-FOUNDATION",
+      "order": 8,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "MD-CT6"
+      ],
+      "canonicalRefs": [
+        "claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Control_Tower_TypeScript_Cursor_Prompt_Programme_CT0-CT9_v1.0_DRAFT.md",
+        "docs/control/EXECUTION_COMPATIBILITY_REGISTER.md"
+      ],
+      "outcome": "Allow-listed sources; citations; abstention",
+      "entryCriteria": [
+        "Previous CT slice authorised and reviewed",
+        "Use compatibility register not Claude-role standing contract"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing CT7",
+        "STOP; do not start next CT"
+      ],
+      "expectedFiles": [
+        "programme/schema/",
+        "docs/control/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "MD-CT8",
+      "product": "FOUNDATION",
+      "title": "CT8 \u2014 Charts, notifications and update freshness",
+      "phaseId": "PH-FOUNDATION",
+      "order": 9,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "MD-CT7"
+      ],
+      "canonicalRefs": [
+        "claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Control_Tower_TypeScript_Cursor_Prompt_Programme_CT0-CT9_v1.0_DRAFT.md",
+        "docs/control/EXECUTION_COMPATIBILITY_REGISTER.md"
+      ],
+      "outcome": "Useful charts; unknown \u2260 green",
+      "entryCriteria": [
+        "Previous CT slice authorised and reviewed",
+        "Use compatibility register not Claude-role standing contract"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing CT8",
+        "STOP; do not start next CT"
+      ],
+      "expectedFiles": [
+        "programme/schema/",
+        "docs/control/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "MD-CT9",
+      "product": "FOUNDATION",
+      "title": "CT9 \u2014 Operations, full acceptance and release evidence",
+      "phaseId": "PH-FOUNDATION",
+      "order": 10,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "MD-CT8"
+      ],
+      "canonicalRefs": [
+        "claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Control_Tower_TypeScript_Cursor_Prompt_Programme_CT0-CT9_v1.0_DRAFT.md",
+        "docs/control/EXECUTION_COMPATIBILITY_REGISTER.md"
+      ],
+      "outcome": "Evidence pack; independent and CEO gates remain unsigned",
+      "entryCriteria": [
+        "Previous CT slice authorised and reviewed",
+        "Use compatibility register not Claude-role standing contract"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing CT9",
+        "STOP; do not start next CT"
+      ],
+      "expectedFiles": [
+        "programme/schema/",
+        "docs/control/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EOS-S01",
+      "product": "EVENT_OS",
+      "title": "Event OS Slice 1 \u2014 Platform foundation (identity, clients, events, design system, staging-only)",
+      "phaseId": "PH-EVENT-OS-FOUNDATIONS",
+      "order": 1,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "MD-CT0"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
+        "MDOS/slice1/"
+      ],
+      "outcome": "Platform foundation (identity, clients, events, design system, staging-only)",
+      "entryCriteria": [
+        "Architecture wrapper from CT0; single authorised repo"
+      ],
+      "exitCriteria": [
+        "Slice acceptance commit and evidence; production remains unauthorised until CEO/independent gates"
+      ],
+      "expectedFiles": [
+        "MDOS/slice1/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EOS-S02",
+      "product": "EVENT_OS",
+      "title": "Event OS Slice 2 \u2014 Guest intake and operational guest directory",
+      "phaseId": "PH-EVENT-OS-FOUNDATIONS",
+      "order": 2,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EOS-S01"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
+        "MDOS/slice2/"
+      ],
+      "outcome": "Guest intake and operational guest directory",
+      "entryCriteria": [
+        "Prior Event OS slice accepted"
+      ],
+      "exitCriteria": [
+        "Slice acceptance commit and evidence; production remains unauthorised until CEO/independent gates"
+      ],
+      "expectedFiles": [
+        "MDOS/slice2/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EOS-S03",
+      "product": "EVENT_OS",
+      "title": "Event OS Slice 3 \u2014 RSVP and guest self-service",
+      "phaseId": "PH-EVENT-OS-FOUNDATIONS",
+      "order": 3,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EOS-S02"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
+        "MDOS/slice3/"
+      ],
+      "outcome": "RSVP and guest self-service",
+      "entryCriteria": [
+        "Prior Event OS slice accepted"
+      ],
+      "exitCriteria": [
+        "Slice acceptance commit and evidence; production remains unauthorised until CEO/independent gates"
+      ],
+      "expectedFiles": [
+        "MDOS/slice3/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EOS-S04",
+      "product": "EVENT_OS",
+      "title": "Event OS Slice 4 \u2014 Guest communications and concierge",
+      "phaseId": "PH-EVENT-OS-FOUNDATIONS",
+      "order": 4,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EOS-S03"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
+        "MDOS/slice4/"
+      ],
+      "outcome": "Guest communications and concierge",
+      "entryCriteria": [
+        "Prior Event OS slice accepted"
+      ],
+      "exitCriteria": [
+        "Slice acceptance commit and evidence; production remains unauthorised until CEO/independent gates"
+      ],
+      "expectedFiles": [
+        "MDOS/slice4/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EOS-S05",
+      "product": "EVENT_OS",
+      "title": "Event OS Slice 5 \u2014 Venue registry and spatial layout",
+      "phaseId": "PH-EVENT-OS-FOUNDATIONS",
+      "order": 5,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EOS-S04"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
+        "MDOS/slice5/"
+      ],
+      "outcome": "Venue registry and spatial layout",
+      "entryCriteria": [
+        "Prior Event OS slice accepted"
+      ],
+      "exitCriteria": [
+        "Slice acceptance commit and evidence; production remains unauthorised until CEO/independent gates"
+      ],
+      "expectedFiles": [
+        "MDOS/slice5/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EOS-S06",
+      "product": "EVENT_OS",
+      "title": "Event OS Slice 6 \u2014 Seating allocation",
+      "phaseId": "PH-EVENT-OS-FOUNDATIONS",
+      "order": 6,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EOS-S05"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
+        "MDOS/slice6/"
+      ],
+      "outcome": "Seating allocation",
+      "entryCriteria": [
+        "Prior Event OS slice accepted"
+      ],
+      "exitCriteria": [
+        "Slice acceptance commit and evidence; production remains unauthorised until CEO/independent gates"
+      ],
+      "expectedFiles": [
+        "MDOS/slice6/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EOS-S07",
+      "product": "EVENT_OS",
+      "title": "Event OS Slice 7 \u2014 Credentials and QR",
+      "phaseId": "PH-EVENT-OS-FOUNDATIONS",
+      "order": 7,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EOS-S06"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
+        "MDOS/slice7/"
+      ],
+      "outcome": "Credentials and QR",
+      "entryCriteria": [
+        "Prior Event OS slice accepted"
+      ],
+      "exitCriteria": [
+        "Slice acceptance commit and evidence; production remains unauthorised until CEO/independent gates"
+      ],
+      "expectedFiles": [
+        "MDOS/slice7/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EOS-S08",
+      "product": "EVENT_OS",
+      "title": "Event OS Slice 8 \u2014 Historical Event-Day Runtime inside Event OS \u2014 MAP ONLY, do not double-build",
+      "phaseId": "PH-EVENT-OS-OPERATIONS",
+      "order": 8,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EOS-S07"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
+        "MDOS/slice8/"
+      ],
+      "outcome": "Historical Event-Day Runtime inside Event OS \u2014 MAP ONLY, do not double-build",
+      "entryCriteria": [
+        "Prior Event OS slice accepted"
+      ],
+      "exitCriteria": [
+        "Slice acceptance commit and evidence; production remains unauthorised until CEO/independent gates"
+      ],
+      "expectedFiles": [
+        "MDOS/slice8/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EOS-S09",
+      "product": "EVENT_OS",
+      "title": "Event OS Slice 9 \u2014 Standards, readiness and operational intelligence",
+      "phaseId": "PH-EVENT-OS-OPERATIONS",
+      "order": 9,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EOS-S07"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
+        "MDOS/slice9/"
+      ],
+      "outcome": "Standards, readiness and operational intelligence",
+      "entryCriteria": [
+        "Prior Event OS slice accepted"
+      ],
+      "exitCriteria": [
+        "Slice acceptance commit and evidence; production remains unauthorised until CEO/independent gates"
+      ],
+      "expectedFiles": [
+        "MDOS/slice9/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EOS-S10",
+      "product": "EVENT_OS",
+      "title": "Event OS Slice 10 \u2014 FaceGate gated integration",
+      "phaseId": "PH-EVENT-OS-OPERATIONS",
+      "order": 10,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EOS-S09"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
+        "MDOS/slice10/"
+      ],
+      "outcome": "FaceGate gated integration",
+      "entryCriteria": [
+        "Prior Event OS slice accepted"
+      ],
+      "exitCriteria": [
+        "Slice acceptance commit and evidence; production remains unauthorised until CEO/independent gates"
+      ],
+      "expectedFiles": [
+        "MDOS/slice10/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EOS-S11",
+      "product": "EVENT_OS",
+      "title": "Event OS Slice 11 \u2014 Cross-event knowledge and learning",
+      "phaseId": "PH-EVENT-OS-OPERATIONS",
+      "order": 11,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EOS-S10"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
+        "MDOS/slice11/"
+      ],
+      "outcome": "Cross-event knowledge and learning",
+      "entryCriteria": [
+        "Prior Event OS slice accepted"
+      ],
+      "exitCriteria": [
+        "Slice acceptance commit and evidence; production remains unauthorised until CEO/independent gates"
+      ],
+      "expectedFiles": [
+        "MDOS/slice11/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EOS-S12",
+      "product": "EVENT_OS",
+      "title": "Event OS Slice 12 \u2014 Whole-system validation and release",
+      "phaseId": "PH-VALIDATION",
+      "order": 12,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EOS-S11"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Canonical_Build_Blueprint_v1.0.docx",
+        "MDOS/slice12/"
+      ],
+      "outcome": "Whole-system validation and release",
+      "entryCriteria": [
+        "Prior Event OS slice accepted"
+      ],
+      "exitCriteria": [
+        "Slice acceptance commit and evidence; production remains unauthorised until CEO/independent gates"
+      ],
+      "expectedFiles": [
+        "MDOS/slice12/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EOS-RECON",
+      "product": "EVENT_OS",
+      "title": "Event OS reconciliation prompt bundle OS-R00\u2013OS-R12",
+      "phaseId": "PH-EVENT-OS-OPERATIONS",
+      "order": 13,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EOS-S12"
+      ],
+      "canonicalRefs": [
+        "MDOS/Maison_Doclar_Event_OS_Reconciliation_Cursor_Prompt_Bundle_v1.0.docx"
+      ],
+      "outcome": "Apply ratified CEO doctrine to an existing Event OS implementation",
+      "entryCriteria": [
+        "Existing Event OS implementation present \u2014 currently ABSENT"
+      ],
+      "exitCriteria": [
+        "OS-R12 evidence; no invented CEO/external authority"
+      ],
+      "expectedFiles": [
+        "MDOS/Maison_Doclar_Event_OS_Reconciliation_Cursor_Prompt_Bundle_v1.0.docx"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EDR-R00",
+      "product": "EVENT_DAY",
+      "title": "R0 \u2014 Repository preflight and supersession",
+      "phaseId": "PH-EVENT-DAY-FOUNDATIONS",
+      "order": 0,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EOS-S07"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Repository preflight and supersession",
+      "entryCriteria": [
+        "Event OS control-plane foundations sufficient for package/identity contracts"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R0",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EDR-R01",
+      "product": "EVENT_DAY",
+      "title": "R1 \u2014 Domain kernel and runtime state machine",
+      "phaseId": "PH-EVENT-DAY-FOUNDATIONS",
+      "order": 1,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EDR-R00"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Domain kernel and runtime state machine",
+      "entryCriteria": [
+        "R0 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R1",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EDR-R02",
+      "product": "EVENT_DAY",
+      "title": "R2 \u2014 Departmental projection registry",
+      "phaseId": "PH-EVENT-DAY-FOUNDATIONS",
+      "order": 2,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EDR-R01"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Departmental projection registry",
+      "entryCriteria": [
+        "R1 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R2",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EDR-R03",
+      "product": "EVENT_DAY",
+      "title": "R3 \u2014 Package builder and minimisation",
+      "phaseId": "PH-EVENT-DAY-FOUNDATIONS",
+      "order": 3,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EDR-R02"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Package builder and minimisation",
+      "entryCriteria": [
+        "R2 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R3",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EDR-R04",
+      "product": "EVENT_DAY",
+      "title": "R4 \u2014 Package freeze, manifest, signature and import",
+      "phaseId": "PH-EVENT-DAY-FOUNDATIONS",
+      "order": 4,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EDR-R03"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Package freeze, manifest, signature and import",
+      "entryCriteria": [
+        "R3 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R4",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EDR-R05",
+      "product": "EVENT_DAY",
+      "title": "R5 \u2014 Local persistence and immutable ledger",
+      "phaseId": "PH-EVENT-DAY-FOUNDATIONS",
+      "order": 5,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EDR-R04"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Local persistence and immutable ledger",
+      "entryCriteria": [
+        "R4 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R5",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EDR-R06",
+      "product": "EVENT_DAY",
+      "title": "R6 \u2014 Local identity, device registry and certificate enrolment",
+      "phaseId": "PH-EVENT-DAY-FOUNDATIONS",
+      "order": 6,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EDR-R05"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Local identity, device registry and certificate enrolment",
+      "entryCriteria": [
+        "R5 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R6",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EDR-R07",
+      "product": "EVENT_DAY",
+      "title": "R7 \u2014 PWA shell and pinned local assets",
+      "phaseId": "PH-EVENT-DAY-FOUNDATIONS",
+      "order": 7,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EDR-R06"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "PWA shell and pinned local assets",
+      "entryCriteria": [
+        "R6 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R7",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EDR-R08",
+      "product": "EVENT_DAY",
+      "title": "R8 \u2014 Scan and lookup platform",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 8,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EDR-R07"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Scan and lookup platform",
+      "entryCriteria": [
+        "R7 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R8",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EDR-R09",
+      "product": "EVENT_DAY",
+      "title": "R9 \u2014 Initial human check-in surface",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 9,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EDR-R08"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Initial human check-in surface",
+      "entryCriteria": [
+        "R8 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R9",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EDR-R10",
+      "product": "EVENT_DAY",
+      "title": "R10 \u2014 Greeter, protocol and guest-relations surfaces",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 10,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EDR-R09"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Greeter, protocol and guest-relations surfaces",
+      "entryCriteria": [
+        "R9 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R10",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EDR-R11",
+      "product": "EVENT_DAY",
+      "title": "R11 \u2014 Seating, ushering and guest service surfaces",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 11,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EDR-R10"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Seating, ushering and guest service surfaces",
+      "entryCriteria": [
+        "R10 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R11",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EDR-R12",
+      "product": "EVENT_DAY",
+      "title": "R12 \u2014 Department lead workspaces",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 12,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EDR-R11"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Department lead workspaces",
+      "entryCriteria": [
+        "R11 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R12",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EDR-R13",
+      "product": "EVENT_DAY",
+      "title": "R13 \u2014 Self-scan kiosk",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 13,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EDR-R12"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Self-scan kiosk",
+      "entryCriteria": [
+        "R12 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R13",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EDR-R14",
+      "product": "EVENT_DAY",
+      "title": "R14 \u2014 Client emergency outbox",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 14,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EDR-R13"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Client emergency outbox",
+      "entryCriteria": [
+        "R13 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R14",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EDR-R15",
+      "product": "EVENT_DAY",
+      "title": "R15 \u2014 FaceGate consented enrolment and return-only gateway",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 15,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EDR-R14"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "FaceGate consented enrolment and return-only gateway",
+      "entryCriteria": [
+        "R14 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R15",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EDR-R16",
+      "product": "EVENT_DAY",
+      "title": "R16 \u2014 Command console, health and degradation",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 16,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EDR-R15"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Command console, health and degradation",
+      "entryCriteria": [
+        "R15 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R16",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EDR-R17",
+      "product": "EVENT_DAY",
+      "title": "R17 \u2014 Staff deployment, shifts and Academy gates",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 17,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EDR-R16"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Staff deployment, shifts and Academy gates",
+      "entryCriteria": [
+        "R16 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R17",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EDR-R18",
+      "product": "EVENT_DAY",
+      "title": "R18 \u2014 Incidents, safety, service recovery and fallback",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 18,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EDR-R17"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Incidents, safety, service recovery and fallback",
+      "entryCriteria": [
+        "R17 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R18",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EDR-R19",
+      "product": "EVENT_DAY",
+      "title": "R19 \u2014 Close, drain, seal and encrypted export",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 19,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EDR-R18"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Close, drain, seal and encrypted export",
+      "entryCriteria": [
+        "R18 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R19",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EDR-R20",
+      "product": "EVENT_DAY",
+      "title": "R20 \u2014 Deterministic cloud reconciliation",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 20,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EDR-R19"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Deterministic cloud reconciliation",
+      "entryCriteria": [
+        "R19 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R20",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EDR-R21",
+      "product": "EVENT_DAY",
+      "title": "R21 \u2014 Deployment, configuration, backup and recovery",
+      "phaseId": "PH-EVENT-DAY-OPERATIONS",
+      "order": 21,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EDR-R20"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Deployment, configuration, backup and recovery",
+      "entryCriteria": [
+        "R20 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R21",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EDR-R22",
+      "product": "EVENT_DAY",
+      "title": "R22 \u2014 Full automated and browser acceptance",
+      "phaseId": "PH-VALIDATION",
+      "order": 22,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EDR-R21"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Full automated and browser acceptance",
+      "entryCriteria": [
+        "R21 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R22",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "EDR-R23",
+      "product": "EVENT_DAY",
+      "title": "R23 \u2014 Evidence pack and release locks",
+      "phaseId": "PH-VALIDATION",
+      "order": 23,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EDR-R22"
+      ],
+      "canonicalRefs": [
+        "event_day_runtime_complete_v2/repository-specifications/Maison_Doclar_TypeScript_Rich_Cursor_Event_Day_Runtime_Programme_R0-R23_v2.0_DRAFT.md",
+        "event_day_runtime_complete_v2/controlled-documents/Maison_Doclar_Canonical_Event_Day_Runtime_Blueprint_v2.0_DRAFT.docx"
+      ],
+      "outcome": "Evidence pack and release locks",
+      "entryCriteria": [
+        "R22 accepted"
+      ],
+      "exitCriteria": [
+        "One coherent commit containing R23",
+        "Appendix B report; STOP"
+      ],
+      "expectedFiles": [
+        "event_day_runtime_complete_v2/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "ACA-G0",
+      "product": "ACADEMY",
+      "title": "Academy Gate 0",
+      "phaseId": "PH-ACADEMY",
+      "order": 0,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EOS-S02"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Gate 0 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "ACA-S01",
+      "product": "ACADEMY",
+      "title": "Academy Slice 01",
+      "phaseId": "PH-ACADEMY",
+      "order": 1,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "ACA-G0"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 01 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "ACA-S02",
+      "product": "ACADEMY",
+      "title": "Academy Slice 02",
+      "phaseId": "PH-ACADEMY",
+      "order": 2,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "ACA-S01"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 02 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "ACA-S03",
+      "product": "ACADEMY",
+      "title": "Academy Slice 03",
+      "phaseId": "PH-ACADEMY",
+      "order": 3,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "ACA-S02"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 03 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "ACA-S04",
+      "product": "ACADEMY",
+      "title": "Academy Slice 04",
+      "phaseId": "PH-ACADEMY",
+      "order": 4,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "ACA-S03"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 04 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "ACA-S05",
+      "product": "ACADEMY",
+      "title": "Academy Slice 05",
+      "phaseId": "PH-ACADEMY",
+      "order": 5,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "ACA-S04"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 05 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "ACA-S06",
+      "product": "ACADEMY",
+      "title": "Academy Slice 06",
+      "phaseId": "PH-ACADEMY",
+      "order": 6,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "ACA-S05"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 06 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "ACA-S07",
+      "product": "ACADEMY",
+      "title": "Academy Slice 07",
+      "phaseId": "PH-ACADEMY",
+      "order": 7,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "ACA-S06"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 07 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "ACA-S08",
+      "product": "ACADEMY",
+      "title": "Academy Slice 08",
+      "phaseId": "PH-ACADEMY",
+      "order": 8,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "ACA-S07"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 08 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "ACA-S09",
+      "product": "ACADEMY",
+      "title": "Academy Slice 09",
+      "phaseId": "PH-ACADEMY",
+      "order": 9,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "ACA-S08"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 09 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "ACA-S10",
+      "product": "ACADEMY",
+      "title": "Academy Slice 10",
+      "phaseId": "PH-ACADEMY",
+      "order": 10,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "ACA-S09"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 10 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "ACA-S11",
+      "product": "ACADEMY",
+      "title": "Academy Slice 11",
+      "phaseId": "PH-ACADEMY",
+      "order": 11,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "ACA-S10"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 11 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "ACA-S12",
+      "product": "ACADEMY",
+      "title": "Academy Slice 12",
+      "phaseId": "PH-ACADEMY",
+      "order": 12,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "ACA-S11"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 12 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "ACA-S13",
+      "product": "ACADEMY",
+      "title": "Academy Slice 13",
+      "phaseId": "PH-ACADEMY",
+      "order": 13,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "ACA-S12"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 13 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "ACA-S14",
+      "product": "ACADEMY",
+      "title": "Academy Slice 14",
+      "phaseId": "PH-ACADEMY",
+      "order": 14,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "ACA-S13"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 14 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "ACA-S15",
+      "product": "ACADEMY",
+      "title": "Academy Slice 15",
+      "phaseId": "PH-ACADEMY",
+      "order": 15,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "ACA-S14"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 15 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "ACA-S16",
+      "product": "ACADEMY",
+      "title": "Academy Slice 16",
+      "phaseId": "PH-ACADEMY",
+      "order": 16,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "ACA-S15"
+      ],
+      "canonicalRefs": [
+        "MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx",
+        "MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx"
+      ],
+      "outcome": "Academy Slice 16 production implementation sequence (12 prompts)",
+      "entryCriteria": [
+        "Single-repo module layout agreed",
+        "Event OS identity/event contracts available"
+      ],
+      "exitCriteria": [
+        "Handover contract before next Academy slice"
+      ],
+      "expectedFiles": [
+        "MD Academy/16-cursor slice pack/"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "ACA-RECON",
+      "product": "ACADEMY",
+      "title": "Academy reconciliation AC-R00\u2013AC-R13",
+      "phaseId": "PH-ACADEMY",
+      "order": 18,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "ACA-S16"
+      ],
+      "canonicalRefs": [
+        "MD Academy/Maison_Doclar_Academy_Reconciliation_Cursor_Prompt_Bundle_v1.0.docx"
+      ],
+      "outcome": "Reconcile doctrine onto an existing Academy implementation",
+      "entryCriteria": [
+        "Existing Academy implementation \u2014 currently ABSENT"
+      ],
+      "exitCriteria": [
+        "AC-R13 evidence; no invented external authority"
+      ],
+      "expectedFiles": [
+        "MD Academy/Maison_Doclar_Academy_Reconciliation_Cursor_Prompt_Bundle_v1.0.docx"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "MKT-M00",
+      "product": "MARKETING",
+      "title": "M0 \u2014 Repository constitution and verified decisions",
+      "phaseId": "PH-MARKETING",
+      "order": 0,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EOS-S02",
+        "ACA-G0"
+      ],
+      "canonicalRefs": [
+        "MD Marketing/01_Maison_Doclar_Canonical_Marketing_and_Growth_Doctrine_v1.0_DRAFT.docx",
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "outcome": "Repository constitution and verified decisions",
+      "entryCriteria": [
+        "Consent/CRM boundaries approved; single-repo Marketing module"
+      ],
+      "exitCriteria": [
+        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+      ],
+      "expectedFiles": [
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "MKT-M01",
+      "product": "MARKETING",
+      "title": "M1 \u2014 Business diagnosis and commercial foundation",
+      "phaseId": "PH-MARKETING",
+      "order": 1,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "MKT-M00"
+      ],
+      "canonicalRefs": [
+        "MD Marketing/01_Maison_Doclar_Canonical_Marketing_and_Growth_Doctrine_v1.0_DRAFT.docx",
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "outcome": "Business diagnosis and commercial foundation",
+      "entryCriteria": [
+        "Consent/CRM boundaries approved; single-repo Marketing module"
+      ],
+      "exitCriteria": [
+        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+      ],
+      "expectedFiles": [
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "MKT-M02",
+      "product": "MARKETING",
+      "title": "M2 \u2014 Doctrine, knowledge, evidence and novice guidance",
+      "phaseId": "PH-MARKETING",
+      "order": 2,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "MKT-M01"
+      ],
+      "canonicalRefs": [
+        "MD Marketing/01_Maison_Doclar_Canonical_Marketing_and_Growth_Doctrine_v1.0_DRAFT.docx",
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "outcome": "Doctrine, knowledge, evidence and novice guidance",
+      "entryCriteria": [
+        "Consent/CRM boundaries approved; single-repo Marketing module"
+      ],
+      "exitCriteria": [
+        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+      ],
+      "expectedFiles": [
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "MKT-M03",
+      "product": "MARKETING",
+      "title": "M3 \u2014 Strategy, scenarios, campaigns and command centre",
+      "phaseId": "PH-MARKETING",
+      "order": 3,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "MKT-M02"
+      ],
+      "canonicalRefs": [
+        "MD Marketing/01_Maison_Doclar_Canonical_Marketing_and_Growth_Doctrine_v1.0_DRAFT.docx",
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "outcome": "Strategy, scenarios, campaigns and command centre",
+      "entryCriteria": [
+        "Consent/CRM boundaries approved; single-repo Marketing module"
+      ],
+      "exitCriteria": [
+        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+      ],
+      "expectedFiles": [
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "MKT-M04",
+      "product": "MARKETING",
+      "title": "M4 \u2014 Content, brand, SEO, website and assets",
+      "phaseId": "PH-MARKETING",
+      "order": 4,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "MKT-M03"
+      ],
+      "canonicalRefs": [
+        "MD Marketing/01_Maison_Doclar_Canonical_Marketing_and_Growth_Doctrine_v1.0_DRAFT.docx",
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "outcome": "Content, brand, SEO, website and assets",
+      "entryCriteria": [
+        "Consent/CRM boundaries approved; single-repo Marketing module"
+      ],
+      "exitCriteria": [
+        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+      ],
+      "expectedFiles": [
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "MKT-M05",
+      "product": "MARKETING",
+      "title": "M5 \u2014 Consent, identity, pipeline and lifecycle",
+      "phaseId": "PH-MARKETING",
+      "order": 5,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "MKT-M04"
+      ],
+      "canonicalRefs": [
+        "MD Marketing/01_Maison_Doclar_Canonical_Marketing_and_Growth_Doctrine_v1.0_DRAFT.docx",
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "outcome": "Consent, identity, pipeline and lifecycle",
+      "entryCriteria": [
+        "Consent/CRM boundaries approved; single-repo Marketing module"
+      ],
+      "exitCriteria": [
+        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+      ],
+      "expectedFiles": [
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "MKT-M06",
+      "product": "MARKETING",
+      "title": "M6 \u2014 Social operations, reviews and reputation",
+      "phaseId": "PH-MARKETING",
+      "order": 6,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "MKT-M05"
+      ],
+      "canonicalRefs": [
+        "MD Marketing/01_Maison_Doclar_Canonical_Marketing_and_Growth_Doctrine_v1.0_DRAFT.docx",
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "outcome": "Social operations, reviews and reputation",
+      "entryCriteria": [
+        "Consent/CRM boundaries approved; single-repo Marketing module"
+      ],
+      "exitCriteria": [
+        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+      ],
+      "expectedFiles": [
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "MKT-M07",
+      "product": "MARKETING",
+      "title": "M7 \u2014 Measurement, attribution, experiments and executive intelligence",
+      "phaseId": "PH-MARKETING",
+      "order": 7,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "MKT-M06"
+      ],
+      "canonicalRefs": [
+        "MD Marketing/01_Maison_Doclar_Canonical_Marketing_and_Growth_Doctrine_v1.0_DRAFT.docx",
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "outcome": "Measurement, attribution, experiments and executive intelligence",
+      "entryCriteria": [
+        "Consent/CRM boundaries approved; single-repo Marketing module"
+      ],
+      "exitCriteria": [
+        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+      ],
+      "expectedFiles": [
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "MKT-M08",
+      "product": "MARKETING",
+      "title": "M8 \u2014 Paid media, landing pages and conversion",
+      "phaseId": "PH-MARKETING",
+      "order": 8,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "MKT-M07"
+      ],
+      "canonicalRefs": [
+        "MD Marketing/01_Maison_Doclar_Canonical_Marketing_and_Growth_Doctrine_v1.0_DRAFT.docx",
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "outcome": "Paid media, landing pages and conversion",
+      "entryCriteria": [
+        "Consent/CRM boundaries approved; single-repo Marketing module"
+      ],
+      "exitCriteria": [
+        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+      ],
+      "expectedFiles": [
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "MKT-M09",
+      "product": "MARKETING",
+      "title": "M9 \u2014 Events-as-marketing, PR, partners, creators and advocacy",
+      "phaseId": "PH-MARKETING",
+      "order": 9,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "MKT-M08"
+      ],
+      "canonicalRefs": [
+        "MD Marketing/01_Maison_Doclar_Canonical_Marketing_and_Growth_Doctrine_v1.0_DRAFT.docx",
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "outcome": "Events-as-marketing, PR, partners, creators and advocacy",
+      "entryCriteria": [
+        "Consent/CRM boundaries approved; single-repo Marketing module"
+      ],
+      "exitCriteria": [
+        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+      ],
+      "expectedFiles": [
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "MKT-M10",
+      "product": "MARKETING",
+      "title": "M10 \u2014 Estate integration: Event OS, Academy and finance/control",
+      "phaseId": "PH-MARKETING",
+      "order": 10,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "MKT-M09"
+      ],
+      "canonicalRefs": [
+        "MD Marketing/01_Maison_Doclar_Canonical_Marketing_and_Growth_Doctrine_v1.0_DRAFT.docx",
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "outcome": "Estate integration: Event OS, Academy and finance/control",
+      "entryCriteria": [
+        "Consent/CRM boundaries approved; single-repo Marketing module"
+      ],
+      "exitCriteria": [
+        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+      ],
+      "expectedFiles": [
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "MKT-M11",
+      "product": "MARKETING",
+      "title": "M11 \u2014 AI evaluation, bounded autonomy and production certification",
+      "phaseId": "PH-MARKETING",
+      "order": 11,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "MKT-M10"
+      ],
+      "canonicalRefs": [
+        "MD Marketing/01_Maison_Doclar_Canonical_Marketing_and_Growth_Doctrine_v1.0_DRAFT.docx",
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "outcome": "AI evaluation, bounded autonomy and production certification",
+      "entryCriteria": [
+        "Consent/CRM boundaries approved; single-repo Marketing module"
+      ],
+      "exitCriteria": [
+        "Four lettered sub-prompts M{i}A\u2013D complete with evidence"
+      ],
+      "expectedFiles": [
+        "MD Marketing/06_Maison_Doclar_Marketing_OS_TypeScript_Cursor_Prompt_Programme_M0-M11_v1.0.docx"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "USH-RECON",
+      "product": "USHERING",
+      "title": "Academy Premium Ushering reconciliation (single prompt)",
+      "phaseId": "PH-USHERING",
+      "order": 0,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "ACA-G0",
+        "EOS-S06",
+        "EDR-R11"
+      ],
+      "canonicalRefs": [
+        "MD-Premium Usher system/01_Maison_Doclar_Canonical_Premium_Ushering_Operating_System_v1.0_DRAFT.docx",
+        "MD-Premium Usher system/10_Maison_Doclar_Academy_Premium_Ushering_Cursor_Reconciliation_Prompt_v1.0_DRAFT.docx"
+      ],
+      "outcome": "Extend ratified Academy architecture for Premium Ushering course/assessment/authorisation; no parallel LMS",
+      "entryCriteria": [
+        "Academy architecture inspectable",
+        "Event OS seating and Runtime usher surfaces specified"
+      ],
+      "exitCriteria": [
+        "Single authorised prompt complete; U01\u2013U14 remain curriculum IDs"
+      ],
+      "expectedFiles": [
+        "MD-Premium Usher system/10_Maison_Doclar_Academy_Premium_Ushering_Cursor_Reconciliation_Prompt_v1.0_DRAFT.docx"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    },
+    {
+      "id": "INT-CLOSE",
+      "product": "INTEGRATION",
+      "title": "Cross-system contract tests and release hardening",
+      "phaseId": "PH-INTEGRATION",
+      "order": 0,
+      "status": "NOT_STARTED",
+      "dependsOn": [
+        "EOS-S12",
+        "EDR-R23",
+        "ACA-S16",
+        "MKT-M11",
+        "USH-RECON",
+        "MD-CT9"
+      ],
+      "canonicalRefs": [
+        "claude handover/roadmap_control_tower_addendum/repository-specifications/Maison_Doclar_Claude_Master_Roadmap_and_Control_Tower_Instruction_v1.0_DRAFT.md"
+      ],
+      "outcome": "Contract tests, change propagation, end-to-end security/accessibility/performance and release evidence",
+      "entryCriteria": [
+        "Product mandatory slices implemented; integration contracts identified"
+      ],
+      "exitCriteria": [
+        "Evidence pack ready for independent and CEO gates \u2014 gates remain unsigned"
+      ],
+      "expectedFiles": [
+        "docs/control/POST_BUILD_VERIFICATION.md"
+      ],
+      "commits": [],
+      "evidence": [],
+      "openItems": [],
+      "acceptedAt": null,
+      "acceptedBy": null,
+      "updatedAt": "2026-09-05T05:10:00Z",
+      "version": "ct0-planning-1"
+    }
+  ]
+}

@@ -68,3 +68,11 @@ The local folder was **not** a Git repository. The authorised remote `kglaw-Olus
 **Executable tests: none.**  
 **Deployable services: none.**  
 **Production authorisation: none.**
+
+---
+
+## CT0 addendum (2026-09-05)
+
+CT0 added planning/control artefacts under `docs/control/` and `programme/`, plus a validator script at `docs/control/tools/validate_ct0.py`. That script validates control JSON only. It is not a product test suite and does not create an application.
+
+Implementation reality is unchanged: **no executable product.**

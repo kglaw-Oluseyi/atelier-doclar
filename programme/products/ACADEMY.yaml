@@ -1,0 +1,15 @@
+code: ACADEMY
+name: Academy
+route: /programme/academy
+programmePurpose: Learners, roles, competency, content governance, assessment, certification and operational authorisation.
+canonicalSources:
+  - MD Academy/1-Maison_Doclar_Academy_Canonical_Blueprint_v1.0.docx
+  - MD Academy/2-Maison_Doclar_OS_Academy_Integration_Contract_v1.0.docx
+dependencies:
+  - EVENT_OS
+statusSource: Evidence-derived SliceRecords
+externalAuthorityRequirements:
+  - Independent Academy acceptance
+  - CEO release
+implementationReality: Specified and prompted. No Academy application. Historical separate-repository language is logical-module only.
+notes: Prompts 09–12 have Prompt Control IDs but no located historical native IDs.

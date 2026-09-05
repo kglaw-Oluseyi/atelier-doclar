@@ -231,3 +231,65 @@ Items that cannot be classified or resolved from evidence alone. Uncertainties w
 - **Blocks repository organisation:** NO
 - **Blocks future implementation:** YES
 
+---
+
+# CT0 treatment (appended 2026-09-05)
+
+B0 CRQ history above is unchanged. CT0 records interpretation; it does not delete items.
+
+## CRQ-002 — CT0
+
+- **Prior issue:** Academy prompts 09–12 lack located native IDs.
+- **CT0 interpretation:** Permanent identity is the existing `MD-PR-xxxx`. Descriptive aliases such as `G0-P09[NO_NATIVE_ID]` are allowed. Historical native IDs were not invented (CT0-D-ACA-ID).
+- **Remaining unresolved:** Whether a later CEO decision should mint official `G0-09`… IDs. Not done in CT0.
+- **Blocking status:** Does not block CT1. Blocks clean native-ID-only Academy execution until wrappers use MD-PR IDs.
+- **Affected future slices:** All Academy packs; ACA-G0 / ACA-S01–S16.
+
+## CRQ-003 — CT0
+
+- **Prior issue:** Cross-product S-series collision.
+- **CT0 interpretation:** Qualify every execution as `PRODUCT | MD-PR-xxxx | native`. Do not rename historical IDs (CT0-D-QUALIFY).
+- **Remaining unresolved:** None for the qualification rule.
+- **Blocking status:** Non-blocking if qualification is used.
+- **Affected future slices:** Event OS S10–S12 and Academy S10–S12.
+
+## CRQ-007 — CT0
+
+- **Prior issue:** Competing product/phase orderings; Event OS Slice 8 vs Event-Day v2.
+- **CT0 interpretation:** DAG is authoritative. Executive critical path is Foundation → Event OS foundations → Event-Day foundations → Ushering → Academy → Marketing → Integration → Validation. Event OS is control plane; Runtime is distinct. Slice 8 is mapped, not double-built (CT0-D-DAG, CT0-D-RUNTIME).
+- **Remaining unresolved:** Line-by-line S8↔R-series traceability matrix (CT0-GAP-005); CEO may still reject the executive progression.
+- **Blocking status:** Unblocks CT0/CT1 planning. Still blocks executing EOS-S08 or claiming it superseded.
+- **Affected future slices:** EOS-S08, EDR-R00–R23, roadmap display.
+
+## CRQ-008 — CT0
+
+- **Prior issue:** JSON slice-manifest vs Zod SliceRecord.
+- **CT0 interpretation:** Related but distinct. Manifest = declaration. SliceRecord = projection. Mapping documented; fields not deleted (CT0-D-SCHEMA).
+- **Remaining unresolved:** CT1 must implement both validators.
+- **Blocking status:** CT1 is the implementation slice; models are no longer an undefined choice.
+- **Affected future slices:** MD-CT1+.
+
+## CRQ-009 — CT0
+
+- **Prior issue:** Separate Academy/Marketing/Ushering repositories.
+- **CT0 interpretation:** Logical modules inside `kglaw-Oluseyi/atelier-doclar` only (CT0-D-MONOREPO).
+- **Remaining unresolved:** Exact package/folder names for those modules (proposal, not created).
+- **Blocking status:** Unblocks planning. Product prompts still blocked by missing application.
+- **Affected future slices:** All Academy/Marketing/Ushering execution.
+
+## CRQ-012 — CT0
+
+- **Prior issue:** Claude-role standing contract vs successor handover.
+- **CT0 interpretation:** Sources not rewritten. `EXECUTION_COMPATIBILITY_REGISTER.md` is the wrapper. This MD-CT0 instruction is the authorised successor preflight (CT0-D-CLAUDE).
+- **Remaining unresolved:** None for role mapping. Claude-as-API vendor (CRQ-013) remains separate.
+- **Blocking status:** CT1 may proceed with the wrapper. CT0–CT9 source text still contains Claude wording.
+- **Affected future slices:** MD-CT1–CT9.
+
+## CRQ-016 — CT0
+
+- **Prior issue:** Control Tower planning artefacts absent after B0.
+- **CT0 interpretation:** Created under `docs/control/` and `programme/`. Prompt bodies were not extracted into `prompts/control-tower/` (CT0-GAP-006) to avoid rewriting the prompt estate.
+- **Remaining unresolved:** Whether a later slice should add thin pointer files under `prompts/control-tower/`.
+- **Blocking status:** No longer blocks CT1 planning inputs.
+- **Affected future slices:** MD-CT1.
+

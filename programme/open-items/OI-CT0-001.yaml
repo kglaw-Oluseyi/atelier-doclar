@@ -1,0 +1,11 @@
+id: OI-CT0-001
+product: FOUNDATION
+sliceId: MD-CT0
+title: Application framework for later UI slices not implemented and not CEO-signed
+severity: HIGH
+owner: AI CTO
+status: OPEN
+decisionAuthority: CEO if production frontend is locked
+blocker: false
+evidence: []
+notes: CT1 may proceed as a validator package without Next.js. CT4 requires a framework decision.

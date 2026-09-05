@@ -1,0 +1,16 @@
+code: USHERING
+name: Premium Ushering
+route: /programme/ushering
+programmePurpose: Field service, zoning, offline packs, hardware discipline and Academy-authorised usher deployment.
+canonicalSources:
+  - MD-Premium Usher system/01_Maison_Doclar_Canonical_Premium_Ushering_Operating_System_v1.0_DRAFT.docx
+  - MD-Premium Usher system/10_Maison_Doclar_Academy_Premium_Ushering_Cursor_Reconciliation_Prompt_v1.0_DRAFT.docx
+dependencies:
+  - EVENT_OS
+  - EVENT_DAY
+  - ACADEMY
+statusSource: Evidence-derived SliceRecords
+externalAuthorityRequirements:
+  - Event Director / field authority
+  - Hardware/radio type-approval where applicable
+implementationReality: Operating doctrine specified. One reconciliation prompt registered. U01–U14 are curriculum modules, not execution prompts.

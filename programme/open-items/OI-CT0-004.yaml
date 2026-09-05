@@ -1,0 +1,11 @@
+id: OI-CT0-004
+product: FOUNDATION
+sliceId: MD-CT1
+title: Hosting, identity provider and Railway remain unchosen
+severity: HIGH
+owner: CEO
+status: OPEN
+decisionAuthority: CEO
+blocker: false
+evidence: []
+notes: Not a CT1 validator blocker. Blocks CT3 ingestion against a live provider and all deploys.
