@@ -1,4 +1,12 @@
-export { CT1_TRACEABILITY, PRODUCT_CODES, WORK_STATUSES, GATE_STATUSES } from "./constants.js";
+export {
+  CT1_TRACEABILITY,
+  CT2_TRACEABILITY,
+  CALCULATION_VERSION,
+  LOCAL_STORE_PRODUCTION_STATUS,
+  PRODUCT_CODES,
+  WORK_STATUSES,
+  GATE_STATUSES,
+} from "./constants.js";
 export {
   type EntityType,
   type ProgrammeValidationError,
@@ -57,3 +65,36 @@ export {
   validateProgrammeCorpus,
   type ProgrammeValidationResult,
 } from "./validate.js";
+export { ProgrammeEventError } from "./event-errors.js";
+export {
+  PROGRAMME_EVENT_TYPES,
+  parseProgrammeEvent,
+  eventsEquivalent,
+  type ProgrammeEvent,
+} from "./events.js";
+export {
+  MemoryProgrammeStore,
+  FilesystemProgrammeStore,
+  PERSISTENCE_CONTRACT,
+  type ProgrammeStore,
+  type AppendResult,
+  type StoredSnapshot,
+} from "./store.js";
+export { applyEvent, createInitialProjection, replay, replayFrom } from "./projector.js";
+export {
+  calculateAllStatuses,
+  calculateSliceStatus,
+  acceptanceSatisfied,
+} from "./status.js";
+export { calculateOutstandingWork, calculatePercentage } from "./outstanding.js";
+export { generateControlSnapshot, projectSliceRecords } from "./snapshot.js";
+export { ProgrammeEngine, createEngine } from "./engine.js";
+export { corpusSeedEvents, loadCorpusBaseline, CORPUS_SEED_TIME } from "./seed.js";
+export type {
+  ControlSnapshot,
+  DeclarationBaseline,
+  OutstandingWork,
+  ProgrammeProjection,
+  SliceFacts,
+  SliceWeights,
+} from "./projection-types.js";

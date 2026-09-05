@@ -1,0 +1,11 @@
+id: CT2-OI-001
+product: FOUNDATION
+sliceId: MD-CT2
+title: Production database remains unselected; local store adapters are non-production
+severity: HIGH
+owner: CEO
+status: OPEN
+decisionAuthority: CEO
+blocker: false
+evidence: []
+notes: Domain persistence contract is ProgrammeStore. Memory and filesystem adapters are NON_PRODUCTION. PostgreSQL/Prisma are not adopted.

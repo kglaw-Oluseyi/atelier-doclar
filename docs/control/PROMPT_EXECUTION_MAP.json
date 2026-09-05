@@ -122,7 +122,7 @@
       ],
       "blocker_open_item": "Previous CT slice (CT1) not implemented",
       "historical_executor_wording": "Cursor standing contract still names Claude handover/manifest",
-      "execution_status": "NOT_EXECUTED",
+      "execution_status": "IN_REVIEW",
       "native_id_located": true,
       "claude_historical_reference": true,
       "prompt_title": "Persistence, snapshots and status calculator"

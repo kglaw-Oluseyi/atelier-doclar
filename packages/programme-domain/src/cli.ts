@@ -1,27 +1,40 @@
-import { CT1_TRACEABILITY } from "./constants.js";
+import { CT1_TRACEABILITY, CT2_TRACEABILITY } from "./constants.js";
+import { createEngine } from "./engine.js";
 import { formatError } from "./errors.js";
 import { stableJson } from "./normalize.js";
+import { CORPUS_SEED_TIME, corpusSeedEvents, loadCorpusBaseline } from "./seed.js";
+import { MemoryProgrammeStore, PERSISTENCE_CONTRACT } from "./store.js";
 import { validateProgrammeCorpus } from "./validate.js";
 
-function parseArgs(argv: string[]): { root?: string; json: boolean } {
+function parseArgs(argv: string[]): {
+  command: "validate" | "project";
+  root?: string;
+  json: boolean;
+} {
+  let command: "validate" | "project" = "validate";
   let root: string | undefined;
   let json = false;
-  for (let i = 0; i < argv.length; i += 1) {
-    const arg = argv[i];
-    if (arg === "--json") {
-      json = true;
-    } else if (arg === "--root") {
-      root = argv[i + 1];
+  const rest: string[] = [];
+  for (const arg of argv) {
+    if (arg === "validate" || arg === "project") {
+      command = arg;
+    } else {
+      rest.push(arg);
+    }
+  }
+  for (let i = 0; i < rest.length; i += 1) {
+    const arg = rest[i];
+    if (arg === "--json") json = true;
+    else if (arg === "--root") {
+      root = rest[i + 1];
       i += 1;
     }
   }
-  return { root, json };
+  return { command, root, json };
 }
 
-export function runCli(argv = process.argv.slice(2)): number {
-  const { root, json } = parseArgs(argv);
+function runValidate(root: string | undefined, json: boolean): number {
   const result = validateProgrammeCorpus(root);
-
   if (json) {
     process.stdout.write(
       stableJson({
@@ -60,8 +73,66 @@ export function runCli(argv = process.argv.slice(2)): number {
       process.stderr.write(`${formatError(error)}\n`);
     }
   }
-
   return result.ok ? 0 : 1;
+}
+
+function runProject(root: string | undefined, json: boolean): number {
+  const { baseline } = loadCorpusBaseline(root);
+  const store = new MemoryProgrammeStore();
+  const engine = createEngine(store, baseline, CORPUS_SEED_TIME);
+  for (const event of corpusSeedEvents()) {
+    engine.append(event);
+  }
+  const view = engine.currentView({
+    snapshotId: "SNAP-CT2-CORPUS",
+    generatedAt: CORPUS_SEED_TIME,
+    source: "corpus-seed",
+  });
+  const accepted = Object.values(view.statuses).filter((status) => status === "ACCEPTED").length;
+  if (json) {
+    process.stdout.write(
+      stableJson({
+        ok: true,
+        traceability: CT2_TRACEABILITY,
+        persistence: PERSISTENCE_CONTRACT,
+        eventCount: store.eventCount(),
+        statuses: view.statuses,
+        outstanding: view.outstanding,
+        snapshot: view,
+      }),
+    );
+  } else {
+    process.stdout.write(
+      [
+        "PROGRAMME PROJECTION PASS",
+        `product=${CT2_TRACEABILITY.product}`,
+        `prompt_control_id=${CT2_TRACEABILITY.promptControlId}`,
+        `native_id=${CT2_TRACEABILITY.nativeId}`,
+        `slice_id=${CT2_TRACEABILITY.sliceId}`,
+        `events=${store.eventCount()}`,
+        `slices=${view.slices.length}`,
+        `accepted=${accepted}`,
+        `outstanding_unaccepted=${view.outstanding.unacceptedMandatorySlices.length}`,
+        `unlocked_unaccepted=${view.outstanding.unlockedUnacceptedSlices.length}`,
+        `blocked=${view.outstanding.blockedSlices.length}`,
+        `percentage=${view.outstanding.percentage.available ? String(view.outstanding.percentage.value) : "UNAVAILABLE"}`,
+        `store=${PERSISTENCE_CONTRACT.localAdapterStatus}`,
+        `production_db=${PERSISTENCE_CONTRACT.productionDatabaseDecision}`,
+        `MD-B0=${view.statuses["MD-B0"] ?? "-"}`,
+        `MD-CT0=${view.statuses["MD-CT0"] ?? "-"}`,
+        `MD-CT1=${view.statuses["MD-CT1"] ?? "-"}`,
+        `MD-CT2=${view.statuses["MD-CT2"] ?? "-"}`,
+        "",
+      ].join("\n"),
+    );
+  }
+  return 0;
+}
+
+export function runCli(argv = process.argv.slice(2)): number {
+  const { command, root, json } = parseArgs(argv);
+  if (command === "project") return runProject(root, json);
+  return runValidate(root, json);
 }
 
 const invokedDirectly = process.argv[1]?.endsWith("cli.ts") || process.argv[1]?.endsWith("cli.js");

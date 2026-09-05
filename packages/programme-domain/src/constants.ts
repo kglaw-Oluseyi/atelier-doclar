@@ -1,10 +1,22 @@
-/** Prompt identity for this CT1 implementation. */
+/** Prompt identity for the CT1 validator slice. */
 export const CT1_TRACEABILITY = {
   product: "FOUNDATION",
   promptControlId: "MD-PR-0002",
   nativeId: "CT1",
   sliceId: "MD-CT1",
 } as const;
+
+/** Prompt identity for this CT2 implementation. Verified against PROMPT_REGISTER.json. */
+export const CT2_TRACEABILITY = {
+  product: "FOUNDATION",
+  promptControlId: "MD-PR-0003",
+  nativeId: "CT2",
+  sliceId: "MD-CT2",
+} as const;
+
+export const CALCULATION_VERSION = "ct2-1";
+export const SUPPORTED_EVENT_SCHEMA_VERSION = 1;
+export const LOCAL_STORE_PRODUCTION_STATUS = "NON_PRODUCTION" as const;
 
 export const PRODUCT_CODES = [
   "FOUNDATION",

@@ -125,7 +125,7 @@
       "title": "CT2 \u2014 Persistence, snapshots and status calculator",
       "phaseId": "PH-FOUNDATION",
       "order": 3,
-      "status": "NOT_STARTED",
+      "status": "IN_REVIEW",
       "dependsOn": [
         "MD-CT1"
       ],

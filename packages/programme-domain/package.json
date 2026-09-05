@@ -10,7 +10,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "tsx --test test/*.test.ts",
-    "validate": "tsx src/cli.ts"
+    "validate": "tsx src/cli.ts validate",
+    "project": "tsx src/cli.ts project"
   },
   "engines": {
     "node": ">=20"

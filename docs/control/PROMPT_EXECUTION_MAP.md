@@ -52,4 +52,4 @@ Examples:
 
 ## Execution status
 
-692 remain `NOT_EXECUTED`. CT0 (`MD-PR-0001`) and CT1 (`MD-PR-0002`) are `IN_REVIEW`. Neither is ACCEPTED.
+691 remain `NOT_EXECUTED`. CT0 (`MD-PR-0001`), CT1 (`MD-PR-0002`) and CT2 (`MD-PR-0003`) are `IN_REVIEW`. None is ACCEPTED.

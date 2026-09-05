@@ -37,3 +37,6 @@ jobs:
 
       - name: Validate programme corpus
         run: pnpm programme:validate
+
+      - name: Project programme events and status
+        run: pnpm programme:project
