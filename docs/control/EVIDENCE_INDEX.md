@@ -99,3 +99,15 @@ Acceptance of MD-CT4 still requires a named reviewer. Not ACCEPTED.
 | EV-CT8-E2E | TEST | Charts tables and freshness | `apps/control-tower/e2e/charts.spec.ts` |
 | EV-CT8-IMPL | DOCUMENT | Implementation record | `docs/control/CT8_IMPLEMENTATION.md` |
 
+## MD-CT9
+
+**Prompt Control ID:** `MD-PR-0010`
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-CT9-OPS | TEST | Failure modes, restore, unsigned gates | `packages/programme-tower/test/ops.test.ts` |
+| EV-CT9-E2E | TEST | Operations surface | `apps/control-tower/e2e/ops.spec.ts` |
+| EV-CT9-RUNBOOK | DOCUMENT | Operational runbook | `docs/control/CT9_RUNBOOK.md` |
+| EV-CT9-BACKUP | DOCUMENT | Snapshot restore strategy | `docs/control/BACKUP_RESTORE.md` |
+| EV-CT9-IMPL | DOCUMENT | Implementation record | `docs/control/CT9_IMPLEMENTATION.md` |
+

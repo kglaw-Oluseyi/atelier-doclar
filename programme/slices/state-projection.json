@@ -370,7 +370,7 @@
       "title": "CT9 \u2014 Operations, full acceptance and release evidence",
       "phaseId": "PH-FOUNDATION",
       "order": 10,
-      "status": "NOT_STARTED",
+      "status": "IN_REVIEW",
       "dependsOn": [
         "MD-CT8"
       ],

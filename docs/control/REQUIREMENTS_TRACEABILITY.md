@@ -117,3 +117,13 @@
 | Freshness | snapshot age, last CI UNKNOWN, healthy=false |
 | Notifications | `buildNotifications` + `dedupeNotifications` |
 | No external provider | in-app only (`CT8-OI-001`) |
+
+## MD-CT9
+
+| Requirement | Implementation |
+|-------------|----------------|
+| Failure modes | `classifyFailure` + `ops.test.ts` |
+| Snapshot restore | `restoreVerifiedSnapshot` |
+| Unsigned gates | `assessHealth.productionAuthorised = false` |
+| Event OS isolation | `eventOsImpliedFailed = false` |
+| Runbook / backup | `docs/control/CT9_RUNBOOK.md`, `BACKUP_RESTORE.md` |

@@ -54,14 +54,15 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 | MD-CT6 | IN_REVIEW — controlled workflows implemented; gates unsigned |
 | MD-CT7 | IN_REVIEW — grounded assistant implemented; no named acceptance |
 | MD-CT8 | IN_REVIEW — charts and freshness implemented; unknown ≠ green |
+| MD-CT9 | IN_REVIEW — operations evidence pack; production unsigned |
 | All others | NOT_STARTED |
 
 ## Now / next / later
 
 | Band | Content |
 |------|---------|
-| Now | MD-CT8 — charts, notifications and freshness in review |
-| Next | MD-CT9 — operations and release evidence |
+| Now | MD-CT9 — operations evidence pack in review |
+| Next | First Event OS slice after stack/module decisions (`EOS-S01` remains BLOCKED) |
 | Later | CT4–CT9; Event OS S01 after stack/module decisions; Runtime after Event OS foundations |
 | Held | All 693 product/recon prompts except CT0/CT1 wrappers |
 | External | Independent, specialist, venue, CEO gates — unsigned |

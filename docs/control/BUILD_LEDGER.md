@@ -13,4 +13,5 @@
 | MD-CT5 | MD-PR-0006 | CT5 | FOUNDATION | `ef1b6e0041b0e35e34f46953091c232a170c6b6e` | IN_REVIEW | Roadmap, product and slice drill-down. Not ACCEPTED. |
 | MD-CT6 | MD-PR-0007 | CT6 | FOUNDATION | `a9c263a59b561b81d5a5d822c1698b59815134d6` | IN_REVIEW | Controlled workflows and unsigned gates. Not ACCEPTED. |
 | MD-CT7 | MD-PR-0008 | CT7 | FOUNDATION | `64854a70ec5efa9a5c9e91c6d4c3833cc7be7b47` | IN_REVIEW | Grounded assistant; citations and abstention. Not ACCEPTED. |
-| MD-CT8 | MD-PR-0009 | CT8 | FOUNDATION | *(this slice)* | IN_REVIEW | Charts, freshness and in-app notices. Not ACCEPTED. |
+| MD-CT8 | MD-PR-0009 | CT8 | FOUNDATION | `bf5214483e238c19ca04908016eff71a19a3ffd0` | IN_REVIEW | Charts, freshness and in-app notices. Not ACCEPTED. |
+| MD-CT9 | MD-PR-0010 | CT9 | FOUNDATION | *(this slice)* | IN_REVIEW | Operations evidence pack. Not ACCEPTED. Not production authorised. |

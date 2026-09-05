@@ -1,7 +1,7 @@
 # Current State
 
-**Updated:** MD-CT8  
-**Prompt Control ID:** `MD-PR-0009`  
-**Slice ID:** `MD-CT8`
+**Updated:** MD-CT9  
+**Prompt Control ID:** `MD-PR-0010`  
+**Slice ID:** `MD-CT9`
 
-MD-B0–MD-CT8 are IN_REVIEW. MD-CT9 is NOT_STARTED. No slice is ACCEPTED. Protected gates remain unsigned.
+MD-B0–MD-CT9 are IN_REVIEW. No slice is ACCEPTED. Independent, specialist and CEO production gates remain unsigned. CT9 IMPLEMENTATION COMPLETE is not PRODUCTION APPROVED.

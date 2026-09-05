@@ -4,10 +4,12 @@ export {
   CT6_TRACEABILITY,
   CT7_TRACEABILITY,
   CT8_TRACEABILITY,
+  CT9_TRACEABILITY,
   CT5_SURFACES,
   CT6_SURFACES,
   CT7_SURFACES,
   CT8_SURFACES,
+  CT9_SURFACES,
   LATER_SURFACES,
   TOWER_ROLES,
   SESSION_COOKIE,
@@ -51,3 +53,12 @@ export {
   toneForStatus,
   type ChartsView,
 } from "./charts.js";
+export {
+  assessHealth,
+  classifyFailure,
+  rejectCorruptEvent,
+  restoreVerifiedSnapshot,
+  roadmapSurvivesOpsFailure,
+  type FailureKind,
+  type OpsHealth,
+} from "./ops.js";
