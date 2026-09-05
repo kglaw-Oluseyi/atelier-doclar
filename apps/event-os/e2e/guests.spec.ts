@@ -4,8 +4,8 @@ import { login } from "./login";
 
 test("authorised operator can intake, search and amend a guest", async ({ page }) => {
   await login(page);
-  await page.getByRole("link", { name: "Events" }).first().click();
-  await page.getByRole("link", { name: "Alpha One" }).click();
+  await page.goto("/app/events/00000000-0000-4000-8000-000000000021");
+  await expect(page.getByRole("heading", { name: "Alpha One" })).toBeVisible();
   await page.getByRole("link", { name: "Guest directory" }).click();
   await expect(page.getByRole("heading", { name: "Guest directory" })).toBeVisible();
   await expect(page.getByText("Event: Alpha One")).toBeVisible();
