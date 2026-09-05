@@ -284,7 +284,7 @@
 | Projector derives ACCEPTED | No handwritten status override as source truth |
 | Accepted count exactly 3 | EOS-S01, EOS-S02 and EOS-S03 only |
 | EOS-S04 eligibility | Default ACCEPTANCE on EOS-S03; READY after acceptance; implementation not started |
-| EOS-S04 implementation | Not authorised; next action is S01–S03 live-verification milestone |
+| EOS-S04 implementation | Not authorised; canonical scope reconciled under MD-PR-S014; separate authorisation required |
 | Foundation / gates / production | Foundation IN_REVIEW; protected gates unsigned; `productionAuthorised = false` |
 
 ## EOS-HV1
@@ -303,3 +303,18 @@
 | Findings | HV-EOS-001 … HV-EOS-005; not technical debt; not EOS-S04 scope by default |
 | EOS-S03 acceptance identity | Unchanged: `bed7cebeb14e731c1d0e8a289ceb7cfa21f546fe` |
 | Production / EOS-S04 | Unauthorised |
+
+## EOS-S04-RECON
+
+**Prompt Control ID:** `MD-PR-S014`  
+**Milestone:** `EOS-S04-RECON`
+
+| Requirement | Record |
+|-------------|---------|
+| Native pack | `MDOS/slice4/Maison_Doclar_Slice_4_Cursor_Prompt_Pack_v1.0.docx` |
+| Native IDs | S4-01–S4-62 / MD-PR-0170–MD-PR-0231 |
+| Coverage | 62/62 in `docs/control/EOS_S04_PROMPT_COVERAGE.md` |
+| HV map | HV-EOS-001 NO; 002–004 PARTIAL; 005 POLICY-ONLY |
+| Architecture | Extend shared-platform / Event OS; no parallel domain |
+| Provider / production | Neutral adapters; no real guest contact; no Railway |
+| EOS-S04 status | READY; implementation not authorised |

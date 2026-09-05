@@ -260,3 +260,18 @@ Automated live verification PASS. At deployment time, CEO human verification was
 
 CEO / George Lawson completed the walkthrough against deployment `9cee3095-cb37-422a-be9e-ad632fa27a1b`. Blocking defects zero. Technical debt zero. Five findings recorded. Mobile human verification NOT ASSESSED. EOS-S03 acceptance identity unchanged. Production not authorised. EOS-S04 implementation not authorised.
 
+## EOS-S04-RECON
+
+**Prompt Control ID:** `MD-PR-S014`  
+**Milestone:** `EOS-S04-RECON`  
+**Slice ID:** `EOS-S04` (status remains `READY`; not started)
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-EOS-S04-RECON | DOCUMENT | Canonical S04 scope reconciliation | `docs/control/EOS_S04_CANONICAL_RECONCILIATION.md` |
+| EV-EOS-S04-COVERAGE | DOCUMENT | Native S4-01–S4-62 coverage (62/62) | `docs/control/EOS_S04_PROMPT_COVERAGE.md` |
+| EV-EOS-S04-HV-MAP | DOCUMENT | HV-EOS-001–005 alignment | `docs/control/EOS_S04_HV_FINDING_MAP.md` |
+| EV-EOS-S04-PLAN | DOCUMENT | Implementation plan (not executed) | `docs/control/EOS_S04_IMPLEMENTATION_PLAN.md` |
+
+Native pack extracted from `MDOS/slice4/Maison_Doclar_Slice_4_Cursor_Prompt_Pack_v1.0.docx`. EOS-S04 remains READY. Implementation not authorised. Production not authorised. No Railway mutation.
+

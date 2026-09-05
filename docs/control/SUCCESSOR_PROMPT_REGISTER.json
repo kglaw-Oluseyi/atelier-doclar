@@ -1,6 +1,6 @@
 {
   "scheme": "MD-PR-SNNN successor accountability IDs; historical MD-PR-NNNN remain intact",
-  "generated_at": "2026-09-05T20:50:00Z",
+  "generated_at": "2026-09-05T21:20:00Z",
   "notes": "Do not impersonate historical Control Tower prompt IDs. MD-PR-0011 is already used.",
   "entries": [
     {
@@ -98,6 +98,14 @@
       "product": "EVENT_OS",
       "title": "Event OS S01–S03 CEO Human Live-Verification Closeout",
       "authorising_instruction": "Record CEO human live verification PASS WITH MINOR REFINEMENTS after the completed walkthrough; do not implement EOS-S04, reopen EOS-S03, mutate Railway, or authorise production"
+    },
+    {
+      "prompt_control_id": "MD-PR-S014",
+      "native_id": "S04-RECON",
+      "slice_id": "EOS-S04",
+      "product": "EVENT_OS",
+      "title": "Event OS S04 Canonical Scope Reconciliation",
+      "authorising_instruction": "Reconcile native S4-01–S4-62 against accepted S01–S03 and HV-EOS-001–005; do not implement EOS-S04, change S04 from READY, mutate Railway, or authorise production"
     }
   ]
 }

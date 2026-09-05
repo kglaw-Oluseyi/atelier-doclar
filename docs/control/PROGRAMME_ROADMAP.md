@@ -68,8 +68,8 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 
 | Band | Content |
 |------|---------|
-| Now | Event OS S01–S03 live-verified; automated PASS; CEO human verification PASS WITH MINOR REFINEMENTS; five findings recorded; EOS-S04 implementation unauthorised |
-| Next | AI CTO assessment of canonical EOS-S04 scope against HV-EOS-001–005, then a separate implementation-authorisation decision; do not start EOS-S04 |
+| Now | Event OS S01–S03 live-verified; CEO human verification PASS WITH MINOR REFINEMENTS; EOS-S04 canonical scope reconciled under MD-PR-S014 (62/62); implementation unauthorised |
+| Next | Separate ChatGPT / AI CTO implementation-authorisation decision for EOS-S04; do not start EOS-S04 until that decision |
 | Later | Event OS S01 after a new authorised instruction; Runtime after Event OS foundations |
 | Held | All 693 product/recon prompts except CT0/CT1 wrappers |
 | External | Independent, specialist, venue, CEO gates — unsigned |
