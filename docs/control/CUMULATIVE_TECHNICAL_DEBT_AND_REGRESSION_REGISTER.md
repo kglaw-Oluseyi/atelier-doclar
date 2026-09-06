@@ -1,9 +1,9 @@
 # Cumulative Technical Debt and Regression Register
 
-**Authority:** EOS-S04A implementation authority (George Lawson, CEO)  
-**Created:** EOS-S04A-P00  
-**Status:** OPEN — controlled register; not a reopen of EOS-S04  
-**Production:** `productionAuthorised=false`; protected gates remain UNSIGNED / `NOT_READY`  
+**Authority:** EOS-S04A implementation authority (George Lawson, CEO)
+**Created:** EOS-S04A-P00
+**Status:** OPEN — controlled register; not a reopen of EOS-S04
+**Production:** `productionAuthorised=false`; protected gates remain UNSIGNED / `NOT_READY`
 **Railway / providers / later slices:** untouched
 
 This register is the authorised EOS-S04A control-document addition. It records inherited EOS-S04 observations and later non-blocking related debt. It does not reopen EOS-S04, increment accepted-slice count, sign a protected gate, or authorise production.
@@ -271,11 +271,71 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 | Current status | OPEN |
 | Resolution evidence | |
 
+### TDR-S04A-007 — Collection-clearing S04A rollback is unsafe
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04A-007` |
+| Source slice | EOS-S04A-P02 / Milestone 1 review |
+| Description | P02 `rollbackEosS04A` cleared all nine S04A collections. That can delete pre-existing and legitimate post-migration records and is not reversible in the sense previously claimed. |
+| Classification | In-slice debt |
+| Severity | CRITICAL |
+| Evidence | Independent Milestone 1 review of `69a6897486101adaf34d9966b2417c47ca5ddd90`; `packages/shared-platform/src/addressing-migration.ts` as shipped in P02 |
+| Affected surface or contract | S04A migration rollback |
+| Reason for deferral | Not deferred. Blocking Milestone 1 remediation. |
+| Blocking | BLOCKING |
+| Current owner | EOS-S04A Milestone 1 remediation |
+| Required regression coverage | Migrate-then-rollback restores legacy business data; rollback preserves pre-existing and later legitimate S04A records; modified or dependent created records refuse without partial deletion; collections are never wiped wholesale |
+| Latest safe remediation milestone | EOS-S04A Milestone 1 remediation |
+| Current status | CLOSED |
+| Resolution evidence | Typed `s04aMigrationReceipts` journal and scoped rollback in `e1a610b09b4d5f5cc3c3e60845444fae55d9bb85`. Tests in `packages/shared-platform/test/addressing-persistence.test.ts`. |
+
+### TDR-S04A-008 — S04A collections accepted invalid persisted JSON
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04A-008` |
+| Source slice | EOS-S04A-P02 / Milestone 1 review |
+| Description | Memory and Postgres stores rehydrated the nine new S04A collections as raw JSON without applying the shared runtime schemas. Invalid enums, missing event scope, bad versions and prohibited identity fields could enter canonical state. |
+| Classification | In-slice debt |
+| Severity | CRITICAL |
+| Evidence | Independent Milestone 1 review of `69a6897486101adaf34d9966b2417c47ca5ddd90`; `MemoryPlatformStore.replace` and `PostgresPlatformStore.hydrate` as shipped in P02 |
+| Affected surface or contract | S04A persist/hydrate boundary |
+| Reason for deferral | Not deferred. Blocking Milestone 1 remediation. |
+| Blocking | BLOCKING |
+| Current owner | EOS-S04A Milestone 1 remediation |
+| Required regression coverage | Valid S04A records round-trip; invalid enum, missing eventId, bad schemaVersion, bad version, malformed membership, unnamed nominatedGuestId, materialised nomination without guestId, and extra identity fields fail with `VALIDATION_FAILED` and no partial snapshot |
+| Latest safe remediation milestone | EOS-S04A Milestone 1 remediation |
+| Current status | CLOSED |
+| Resolution evidence | `validateS04APersistedCollections` at memory replace and Postgres replace/hydrate in `e1a610b09b4d5f5cc3c3e60845444fae55d9bb85`. Unknown fields are rejected. |
+
+### TDR-S04A-009 — Server-side S04A permission and projection enforcement is not yet implemented
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04A-009` |
+| Source slice | EOS-S04A Milestone 1 remediation |
+| Description | Catalogue grants and denials for EOS-S04A are contract-only. `PlatformService` does not yet enforce S04A permissions or minimum-necessary child/protocol projections. Planner `guest.entitlement.manage` must never authorise entitlement expansion; P03/P04 must enforce EOS-S03 quantity authority server-side. |
+| Classification | Related observation |
+| Severity | HIGH |
+| Evidence | `packages/shared-platform/src/catalog.ts` role matrix; no S04A service mutations exist yet |
+| Affected surface or contract | Future S04A services, projections and UI |
+| Reason for deferral | No live S04A service path exists. Enforcement belongs in P03/P04/P06, not as a silent catalogue claim of runtime control. |
+| Blocking | NON_BLOCKING |
+| Current owner | EOS-S04A-P03 / P04 / P06 |
+| Required regression coverage | Server-side grant and denial tests; auditor child access is a minimum-necessary projection only; entitlement expansion is rejected even when the catalogue grant is present |
+| Latest safe remediation milestone | EOS-S04A-P06 |
+| Current status | OPEN |
+| Resolution evidence | |
+
 ---
 
 ## Closed items
 
-None.
+- `TDR-S04A-007` — unsafe collection-clearing rollback. Closed by Milestone 1 scoped-receipt rollback.
+- `TDR-S04A-008` — invalid S04A persistence. Closed by Milestone 1 persist/hydrate schema validation.
+
+EOS-S04 remains CLOSED / ACCEPTED and is not reopened.
 
 ## Change log
 
@@ -283,3 +343,4 @@ None.
 |------|--------|
 | EOS-S04A-P00 | Register established. Entered TDR-S04-001–006 and TDR-S04A-001–006. EOS-S04 not reopened. |
 | EOS-S04A-P02 | TDR-S04-003 and TDR-S04A-004 moved to IN_COVERAGE after Yorùbá fixtures and dedicated-household backfill. |
+| EOS-S04A Milestone 1 remediation | Entered blocking TDR-S04A-007 and TDR-S04A-008 from independent review and closed them after scoped rollback and persist validation. Entered TDR-S04A-009 for server-side permission and projection enforcement (P03/P04/P06). TDR-S04A-005 retained for P03/P05 companion materialisation. EOS-S04 not reopened. |
