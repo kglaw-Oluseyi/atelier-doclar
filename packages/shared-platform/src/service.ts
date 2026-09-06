@@ -390,6 +390,7 @@ export class PlatformService {
     if (person && outcome === "SUCCESS") {
       person.lastAuthenticatedAt = now;
       person.updatedAt = now;
+      person.version += 1;
     }
     this.writeAudit(snap, {
       action: "auth.session",
@@ -476,6 +477,7 @@ export class PlatformService {
     snap.staffSessions.push(record);
     person.lastAuthenticatedAt = now;
     person.updatedAt = now;
+    person.version += 1;
     this.writeAudit(snap, {
       action: "auth.session.issued",
       outcome: "SUCCESS",
