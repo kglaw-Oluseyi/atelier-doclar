@@ -389,6 +389,18 @@ export const CreateRelationshipInputSchema = z
   .strict()
   .refine((value) => value.fromGuestId !== value.toGuestId, "a relationship requires two distinct guest identities");
 
+export const AdministerRelationshipInputSchema = z
+  .object({
+    ...mutationBase,
+    relationshipId: RelationshipIdSchema,
+    expectedVersion: z.number().int().positive(),
+    type: RelationshipTypeSchema.optional(),
+    source: AddressingSourceSchema.optional(),
+    visibility: RelationshipVisibilitySchema.optional(),
+    status: RelationshipStatusSchema.optional(),
+  })
+  .strict();
+
 export const AdministerCompanionEntitlementInputSchema = z
   .object({
     ...mutationBase,
@@ -459,6 +471,7 @@ export type CreatePartyInput = z.infer<typeof CreatePartyInputSchema>;
 export type AddPartyMemberInput = z.infer<typeof AddPartyMemberInputSchema>;
 export type RemovePartyMemberInput = z.infer<typeof RemovePartyMemberInputSchema>;
 export type CreateRelationshipInput = z.infer<typeof CreateRelationshipInputSchema>;
+export type AdministerRelationshipInput = z.infer<typeof AdministerRelationshipInputSchema>;
 export type AdministerCompanionEntitlementInput = z.infer<typeof AdministerCompanionEntitlementInputSchema>;
 export type NominateCompanionInput = z.infer<typeof NominateCompanionInputSchema>;
 export type CreateResponsibleAdultLinkInput = z.infer<typeof CreateResponsibleAdultLinkInputSchema>;

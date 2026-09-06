@@ -18,6 +18,7 @@ import { operationalDisplayName } from "./guest-matching.js";
 import {
   addPartyMemberOnSnap,
   administerCompanionEntitlementOnSnap,
+  administerRelationshipOnSnap,
   amendHasAddressingFields,
   applyGuestAddressing,
   createPartyOnSnap,
@@ -40,6 +41,7 @@ import {
 import {
   AddPartyMemberInputSchema,
   AdministerCompanionEntitlementInputSchema,
+  AdministerRelationshipInputSchema,
   CreatePartyInputSchema,
   CreateRelationshipInputSchema,
   CreateResponsibleAdultLinkInputSchema,
@@ -50,6 +52,7 @@ import {
   UpdateGuestAddressingInputSchema,
   type AddPartyMemberInput,
   type AdministerCompanionEntitlementInput,
+  type AdministerRelationshipInput,
   type CompanionEntitlement,
   type CreatePartyInput,
   type CreateRelationshipInput,
@@ -1418,6 +1421,24 @@ export class PlatformService {
       run: (snap, ctx) => {
         this.requireEvent(snap, input.organisationId, input.eventId);
         return createRelationshipOnSnap(snap, input, ctx.now);
+      },
+    });
+  }
+
+  administerGuestRelationship(actor: ActorContext, raw: unknown): GuestRelationship {
+    const input = parseStrict<AdministerRelationshipInput>(AdministerRelationshipInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "guest.relationship.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "guest.relationship.amended",
+      resourceType: "guest_relationship",
+      resourceId: input.relationshipId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        this.requireEvent(snap, input.organisationId, input.eventId);
+        return administerRelationshipOnSnap(snap, input, ctx.now);
       },
     });
   }

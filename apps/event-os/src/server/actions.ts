@@ -1295,3 +1295,56 @@ export async function administerCompanionEntitlementAction(formData: FormData): 
   redirect(`/app/events/${eventId}/guests/${guestId}?ok=entitlement`);
   });
 }
+
+export async function createGuestRelationshipAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const guestId = String(formData.get("guestId") ?? "");
+    const { actor } = await requireActor().catch((error) => guestFail(eventId, guestId, error));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) guestFail(eventId, guestId, new Error("No organisation assignment is available."));
+    try {
+      getRuntime().service.createGuestRelationship(actor, {
+        organisationId: organisation.id,
+        eventId,
+        fromGuestId: guestId,
+        toGuestId: String(formData.get("toGuestId") ?? ""),
+        type: String(formData.get("type") ?? ""),
+        direction: String(formData.get("direction") ?? "FORWARD"),
+        source: String(formData.get("source") ?? "STAFF"),
+        visibility: String(formData.get("visibility") ?? "STAFF"),
+        reason: String(formData.get("reason") ?? "Declare relationship"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      guestFail(eventId, guestId, error);
+    }
+    redirect(`/app/events/${eventId}/guests/${guestId}?ok=relationship`);
+  });
+}
+
+export async function administerGuestRelationshipAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const guestId = String(formData.get("guestId") ?? "");
+    const { actor } = await requireActor().catch((error) => guestFail(eventId, guestId, error));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) guestFail(eventId, guestId, new Error("No organisation assignment is available."));
+    try {
+      getRuntime().service.administerGuestRelationship(actor, {
+        organisationId: organisation.id,
+        eventId,
+        relationshipId: String(formData.get("relationshipId") ?? ""),
+        expectedVersion: Number(formData.get("expectedVersion")),
+        type: optionalFormValue(formData, "type"),
+        status: optionalFormValue(formData, "status"),
+        source: optionalFormValue(formData, "source"),
+        reason: String(formData.get("reason") ?? "Amend declared relationship"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      guestFail(eventId, guestId, error);
+    }
+    redirect(`/app/events/${eventId}/guests/${guestId}?ok=relationship`);
+  });
+}

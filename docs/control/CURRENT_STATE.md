@@ -1,8 +1,8 @@
 # Current State
 
-**Updated:** EOS-S04A P10 Academy delta and operator handover (not accepted)
-**Prompt Control ID:** EOS-S04A-P10
-**Milestone:** `EOS-S04A` IN_REVIEW / not accepted
+**Updated:** EOS-S04A P11 whole-slice hardening and independent-review package (not accepted)
+**Prompt Control ID:** EOS-S04A-P11
+**Milestone:** `EOS-S04A` IN_REVIEW / whole-slice-review-ready / not accepted
 
 MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is ACCEPTED. EOS-S02 is ACCEPTED. EOS-S03 is ACCEPTED. EOS-S04 is CLOSED / ACCEPTED (`PASS WITH OBSERVATIONS`). Accepted count remains 4. Native coverage is 62/62. S4-61 is satisfied for technical review only. S4-62 is satisfied for controlled technical acceptance/handover only. Independent, specialist and CEO production gates remain unsigned.
 
@@ -63,7 +63,7 @@ Railway project: `atelier-doclar` only.
 
 Event OS S01–S03 remain formally accepted. EOS-S04 is CLOSED / ACCEPTED after hosted verification `MD-EOS-S04-R3-05` (`PASS WITH OBSERVATIONS`). Accepted-slice count remains 4. S4-61 and S4-62 are satisfied only for technical review and controlled handover.
 
-**EOS-S04A:** Implemented through P00–P10 (P11 hardening follows). Status is **IN_REVIEW / whole-slice-review-ready pending P11**. It is **not ACCEPTED**. Independent, specialist and CEO production gates remain unsigned. Academy delta ACA-S04A is training evidence only and does not grant operational authority.
+**EOS-S04A:** Implemented through P00–P11. Status is **IN_REVIEW / whole-slice-review-ready**. It is **not ACCEPTED**. Independent, specialist and CEO production gates remain unsigned. Academy delta ACA-S04A is training evidence only and does not grant operational authority. Review record: `docs/control/EOS_S04A_WHOLE_SLICE_REVIEW.md`.
 
 **EOS-S04B, EOS-S04F, EOS-S05:** Not started. EOS-S04F remains RATIFIED / NOT_STARTED and HELD. Production operations are not authorised (`productionAuthorised=false`).
 

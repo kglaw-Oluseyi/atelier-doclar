@@ -153,8 +153,10 @@ test("P09 unauthenticated and validation evidence", async ({ page }) => {
   await shot(page, "p09-validation-error.png");
 
   await page.goto(`/app/events/${EVENT}/guests/${EBUN}`);
-  await page.locator("#structured-addressing-form").locator('input[name="expectedVersion"]').evaluate((el: HTMLInputElement) => {
-    el.value = String(Number(el.value) + 9);
+  await page.locator("#structured-addressing-form input[name='expectedVersion']").evaluate((el: HTMLInputElement) => {
+    const next = String(Number(el.value) + 9);
+    el.setAttribute("value", next);
+    el.value = next;
   });
   await page.getByRole("button", { name: "Save addressing" }).click();
   await expect(page.locator(".atelier-state[data-kind='conflict']")).toBeVisible();

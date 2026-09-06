@@ -566,4 +566,86 @@ describe("EOS-S04A guest services", () => {
     assert.equal(entitlement.authorisedAllowance, 1);
     assert.ok(entitlement.allowedTransitions.includes("NOMINATED"));
   });
+
+  it("declines, expires and revokes an unnamed entitlement without creating a guest", () => {
+    const { store, service } = s04aService();
+    const authority = { kind: "RSVP_ENTITLEMENT" as const, rsvpEntitlementId: S04A_FIXTURE_IDS.rsvpEntitlementPlusOne };
+    const declined = service.administerCompanionEntitlement(director(), {
+      ...ALPHA,
+      principalGuestId: S04A_FIXTURE_IDS.guestEbunoluwa,
+      allowance: 1,
+      authority,
+      status: "DECLINED",
+      reason: "P11 decline unnamed plus-one",
+    });
+    assert.equal(declined.status, "DECLINED");
+    assert.equal(declined.nominatedGuestId, undefined);
+    const restored = service.administerCompanionEntitlement(director(), {
+      ...ALPHA,
+      principalGuestId: S04A_FIXTURE_IDS.guestEbunoluwa,
+      allowance: 1,
+      authority,
+      status: "AVAILABLE",
+      reason: "P11 restore after decline",
+    });
+    const expired = service.administerCompanionEntitlement(director(), {
+      ...ALPHA,
+      principalGuestId: S04A_FIXTURE_IDS.guestEbunoluwa,
+      allowance: 1,
+      authority,
+      status: "EXPIRED",
+      reason: "P11 expire unnamed plus-one",
+    });
+    assert.equal(expired.status, "EXPIRED");
+    const availableAgain = service.administerCompanionEntitlement(director(), {
+      ...ALPHA,
+      principalGuestId: S04A_FIXTURE_IDS.guestEbunoluwa,
+      allowance: 1,
+      authority,
+      status: "AVAILABLE",
+      reason: "P11 restore after expire",
+    });
+    const revoked = service.administerCompanionEntitlement(director(), {
+      ...ALPHA,
+      principalGuestId: S04A_FIXTURE_IDS.guestEbunoluwa,
+      allowance: 1,
+      authority,
+      status: "REVOKED",
+      reason: "P11 revoke unnamed plus-one",
+    });
+    assert.equal(restored.status, "AVAILABLE");
+    assert.equal(availableAgain.status, "AVAILABLE");
+    assert.equal(revoked.status, "REVOKED");
+    assert.equal(revoked.nominatedGuestId, undefined);
+    assert.equal(
+      store.snapshot().operationalGuests.filter((item) => item.id === S04A_FIXTURE_IDS.guestEbunoluwa).length,
+      1,
+    );
+    assert.ok(auditFor(store, "guest.entitlement.administered").some((item) => item.outcome === "SUCCESS"));
+  });
+
+  it("creates and amends a declared relationship without inferring a household", () => {
+    const { store, service } = s04aService();
+    const created = service.createGuestRelationship(director(), {
+      ...ALPHA,
+      fromGuestId: S04A_FIXTURE_IDS.guestEbunoluwa,
+      toGuestId: S04A_FIXTURE_IDS.guestAdesina,
+      type: "COMPANION_OF",
+      direction: "FORWARD",
+      source: "STAFF",
+      visibility: "STAFF",
+      reason: "P11 declared companion relationship",
+    });
+    assert.equal(created.type, "COMPANION_OF");
+    const amended = service.administerGuestRelationship(director(), {
+      ...ALPHA,
+      relationshipId: created.id,
+      expectedVersion: created.version,
+      type: "OTHER_DECLARED",
+      reason: "P11 governed relationship correction",
+    });
+    assert.equal(amended.type, "OTHER_DECLARED");
+    assert.equal(amended.version, created.version + 1);
+    assert.ok(auditFor(store, "guest.relationship.amended").some((item) => item.outcome === "SUCCESS"));
+  });
 });

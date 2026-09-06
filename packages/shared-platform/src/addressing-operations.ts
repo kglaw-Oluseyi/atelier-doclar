@@ -19,6 +19,7 @@ import {
   type AddPartyMemberInput,
   type AddressingReconciliationItem,
   type AdministerCompanionEntitlementInput,
+  type AdministerRelationshipInput,
   type CompanionAuthority,
   type CompanionEntitlement,
   type CompanionNomination,
@@ -253,6 +254,28 @@ export function createRelationshipOnSnap(
     ...versioned(now),
   });
   snap.guestRelationships.push(record);
+  return record;
+}
+
+export function administerRelationshipOnSnap(
+  snap: PlatformSnapshot,
+  input: AdministerRelationshipInput,
+  now: string,
+): GuestRelationship {
+  const record = snap.guestRelationships.find((item) => item.id === input.relationshipId);
+  if (!record || record.organisationId !== input.organisationId || record.eventId !== input.eventId) {
+    throw new PlatformError("NOT_FOUND", "relationship was not found");
+  }
+  if (record.version !== input.expectedVersion) {
+    throw new PlatformError("VERSION_CONFLICT", `expected version ${input.expectedVersion} but found ${record.version}`);
+  }
+  if (input.type) record.type = input.type;
+  if (input.source) record.source = input.source;
+  if (input.visibility) record.visibility = input.visibility;
+  if (input.status) record.status = input.status;
+  record.reason = input.reason;
+  record.version += 1;
+  record.updatedAt = now;
   return record;
 }
 

@@ -408,3 +408,23 @@ EOS-S04A Milestone 1 work-state at the time this policy was established:
 | Residual limitations | TDR-S04A-011, TDR-S04A-012, TDR-S04A-015; permanent IdP unselected; synthetic data present; providers disabled. |
 | Brought forward | P11 whole-slice hardening and independent-review package. |
 | Railway / production / providers / later slices | Event OS may be deployed after P11. Control Tower is not deployed for documentation-only shared files. Production remains unauthorised. EOS-S04B / S04F / S05 not started. |
+
+---
+
+## EOS-S04A-P11 — Whole-slice hardening and independent-review package
+
+| Field | Value |
+|-------|-------|
+| Starting HEAD | `750f068fa7c8c8d17aaa7c9a3c25993964406740` |
+| Ending HEAD | this P11 commit |
+| Commit | this P11 commit `chore(event-os): complete EOS-S04A slice hardening` |
+| Files changed | Governed relationship create/amend; final journey spec; whole-slice review record; Claude-in-Chrome prompt; current-state IN_REVIEW |
+| Schema / migration | Additive `AdministerRelationshipInputSchema` only. `SCHEMA_VERSION` remains `1`. |
+| API / permission / transaction / audit | `administerGuestRelationship` is `guest.relationship.manage`, versioned, audited as `guest.relationship.amended`. |
+| Frontend | Declared-relationship workspace on the dossier. |
+| Verification | `pnpm typecheck` PASS. `pnpm test` PASS: academy 7, design-system 3, shared-platform 168, programme-domain 155, programme-ingestion 46, event-os 39, programme-tower 42, control-tower 3. `pnpm programme:validate` PASS. Event OS build PASS. `git diff --check` clean. First full E2E: 32 passed / 4 failed (3 fixture-coupling, 1 HV memory-restart). Focused S04A/Academy re-run 10 passed. Second full E2E: 34 passed / 2 failed (`ENOSPC` on local store; HV after memory restart). Isolated integration and HV retries PASS. |
+| Failures found | P11 journeys must not mutate fixture Adéṣínà or cycle Ebun entitlement in the shared e2e store. Isolated synthetic guests used instead. Entitlement decline/expire/revoke proven in shared-platform tests. |
+| Browser evidence | `apps/event-os/e2e/s04a-final-journeys.spec.ts`; P08/P09 specs remain the visual matrix. |
+| Status | IN_REVIEW / not ACCEPTED |
+| Residual limitations | TDR-S04A-011, 012, 015; IdP unselected; synthetic data; providers off. |
+| Railway / production / providers / later slices | Event OS deployed after this commit is pushed. Control Tower not deployed (runtime unchanged). EOS-S04B / S04F / S05 not started. |

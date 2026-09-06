@@ -12,6 +12,7 @@ import { IdempotencyField, PendingSubmit } from "./atelier-pending-submit";
 import { GuestChildWorkspace } from "./guest-child-workspace";
 import { GuestEntitlementWorkspace } from "./guest-entitlement-workspace";
 import { GuestPartyWorkspace } from "./guest-party-workspace";
+import { GuestRelationshipWorkspace } from "./guest-relationship-workspace";
 
 export function GuestAddressingWorkspace({
   workspace,
@@ -205,18 +206,7 @@ export function GuestAddressingWorkspace({
       ) : (
         <p className="empty">Your assignment can view addressing but cannot change it.</p>
       )}
-      {workspace.relationships.length > 0 ? (
-        <section>
-          <h3>Declared relationships</h3>
-          <p className="lede">Relationship provenance is shown only as declared. Household records are not exposed.</p>
-          {workspace.relationships.map((item) => (
-            <p key={item.id}>
-              <span className="guest-name">{item.fromDisplayName}</span> · {item.type.replaceAll("_", " ")} ·{" "}
-              <span className="guest-name">{item.toDisplayName}</span> · source {item.source.replaceAll("_", " ")}
-            </p>
-          ))}
-        </section>
-      ) : null}
+      <GuestRelationshipWorkspace workspace={workspace} eventId={eventId} guestChoices={guestChoices} />
       <GuestChildWorkspace workspace={workspace} eventId={eventId} adultChoices={adultChoices} />
       <GuestPartyWorkspace workspace={workspace} eventId={eventId} guestChoices={guestChoices} />
       <GuestEntitlementWorkspace workspace={workspace} eventId={eventId} guestChoices={guestChoices} />

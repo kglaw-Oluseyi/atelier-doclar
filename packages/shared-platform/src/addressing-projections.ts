@@ -105,6 +105,7 @@ export interface GuestRelationshipProjection {
   visibility: string;
   status: string;
   source: string;
+  version: number;
 }
 
 export interface CompanionEntitlementProjection {
@@ -334,6 +335,7 @@ export function projectGuestRelationships(
       visibility: item.visibility,
       status: item.status,
       source: item.source,
+      version: item.version,
     }));
 }
 
