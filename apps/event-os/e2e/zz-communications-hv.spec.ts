@@ -28,7 +28,33 @@ async function ingestUnmatched(page: import("@playwright/test").Page, sender: st
   await page.getByRole("button", { name: "Receive synthetic inbound" }).click();
 }
 
+/** Africa/Lagos 15:00 when EVENT_OS_TEST_NOW is 2026-09-05T14:00:00.000Z (see playwright.config.ts). */
+const CANONICAL_QUIET_START = "22:00";
+const CANONICAL_QUIET_END = "08:00";
+const BLOCKING_QUIET_START = "14:00";
+const BLOCKING_QUIET_END = "16:00";
+
+async function publishQuietHours(
+  page: import("@playwright/test").Page,
+  start: string,
+  end: string,
+): Promise<void> {
+  await page.getByRole("link", { name: "Policy" }).first().click();
+  await page.getByLabel("Quiet hours start").fill(start);
+  await page.getByLabel("Quiet hours end").fill(end);
+  await page.getByRole("button", { name: "Publish channel policy" }).click();
+}
+
+async function sendConciergeReply(page: import("@playwright/test").Page, body: string): Promise<void> {
+  await page.getByRole("link", { name: "Inbox" }).click();
+  await expect(page.getByRole("link", { name: /conversation/i })).toBeVisible({ timeout: 15_000 });
+  await page.getByRole("link", { name: /conversation/i }).click();
+  await page.getByLabel("Guest-visible reply").fill(body);
+  await page.getByRole("button", { name: "Send reply" }).click();
+}
+
 test("HV remediation operator journey for unmatched, correction, author and quiet hours", async ({ page }) => {
+  test.setTimeout(180_000);
   await login(page);
   await page.goto(`/app/events/${EVENT}/guests/new`);
   await page.getByLabel("Given name").fill("Tunde");
@@ -43,14 +69,14 @@ test("HV remediation operator journey for unmatched, correction, author and quie
   await page.getByRole("link", { name: "Unmatched" }).click();
   const linkArticle = page.locator("article.card-list").filter({ hasText: "Please update my email" });
   await linkArticle.getByLabel("Action").selectOption("Link to guest");
-  await linkArticle.getByRole("radio", { name: /Tunde Okafor/ }).check();
+  await linkArticle.getByRole("group", { name: "Select guest to link" }).getByRole("radio", { name: /Tunde Okafor/ }).check();
   await linkArticle.getByRole("button", { name: "Resolve inbound" }).click();
   await expect(page.getByText("No unmatched inbound messages.")).toBeVisible({ timeout: 15_000 });
 
   await ingestUnmatched(page, "another.unknown@example.test", "My email should be tunde.proposed@example.test");
   await page.getByRole("link", { name: "Unmatched" }).click();
   const proposalArticle = page.locator("article.card-list").filter({ hasText: "My email should be tunde.proposed" });
-  await proposalArticle.getByRole("radio", { name: /Tunde Okafor/ }).check();
+  await proposalArticle.getByRole("group", { name: "Guest" }).getByRole("radio", { name: /Tunde Okafor/ }).check();
   await proposalArticle.getByLabel("Proposed value").fill("tunde.proposed@example.test");
   await proposalArticle.getByRole("button", { name: "Propose contact correction" }).click();
   await expect(page).toHaveURL(/status=correction-proposed/);
@@ -58,7 +84,7 @@ test("HV remediation operator journey for unmatched, correction, author and quie
 
   await login(page);
   await page.goto(`/app/events/${EVENT}/communications/corrections`);
-  await expect(page.getByText("PROPOSED")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "PROPOSED" })).toBeVisible();
   await expect(page.getByText("tunde.proposed@example.test")).toBeVisible();
   await expect(page.getByText("Linked inbound message")).toBeVisible();
   await page.getByLabel("Decision").selectOption("Apply through guest amend");
@@ -79,26 +105,23 @@ test("HV remediation operator journey for unmatched, correction, author and quie
   await expect(page.getByText("Author")).toBeVisible();
   await expect(page.getByText("Assigned Planner")).toBeVisible();
 
-  await page.getByRole("link", { name: "Policy" }).click();
-  await page.getByLabel("Quiet hours start").fill("00:00");
-  await page.getByLabel("Quiet hours end").fill("23:59");
-  await page.getByRole("button", { name: "Publish channel policy" }).click();
-  await page.getByRole("link", { name: "Inbox" }).click();
-  await page.getByLabel("Sender").fill("tunde.okafor@example.test");
-  await page.getByLabel("Message").fill("Can you confirm parking?");
-  await page.getByRole("button", { name: "Receive synthetic inbound" }).click();
-  await page.getByRole("link", { name: /conversation/i }).click();
-  await page.getByLabel("Guest-visible reply").fill("Parking is available from 15:00.");
-  await page.getByRole("button", { name: "Send reply" }).click();
-  await expect(page.getByText("Reply blocked by the event channel quiet-hours policy.")).toBeVisible();
+  let quietHoursRestored = false;
+  try {
+    await publishQuietHours(page, BLOCKING_QUIET_START, BLOCKING_QUIET_END);
+    await page.getByRole("link", { name: "Inbox" }).click();
+    await page.getByLabel("Sender").fill("tunde.proposed@example.test");
+    await page.getByLabel("Message").fill("Can you confirm parking?");
+    await page.getByRole("button", { name: "Receive synthetic inbound" }).click();
+    await sendConciergeReply(page, "Parking is available from 15:00.");
+    await expect(page.getByText("Reply blocked by the event channel quiet-hours policy.")).toBeVisible();
 
-  await page.getByRole("link", { name: "Policy" }).click();
-  await page.getByLabel("Quiet hours start").fill("22:00");
-  await page.getByLabel("Quiet hours end").fill("08:00");
-  await page.getByRole("button", { name: "Publish channel policy" }).click();
-  await page.getByRole("link", { name: "Inbox" }).click();
-  await page.getByRole("link", { name: /conversation/i }).click();
-  await page.getByLabel("Guest-visible reply").fill("Parking is available from 15:00.");
-  await page.getByRole("button", { name: "Send reply" }).click();
-  await expect(page.getByText("Reply blocked by the event channel quiet-hours policy.")).toHaveCount(0);
+    await publishQuietHours(page, CANONICAL_QUIET_START, CANONICAL_QUIET_END);
+    quietHoursRestored = true;
+    await sendConciergeReply(page, "Parking is available from 15:00.");
+    await expect(page.getByText("Reply blocked by the event channel quiet-hours policy.")).toHaveCount(0);
+  } finally {
+    if (!quietHoursRestored) {
+      await publishQuietHours(page, CANONICAL_QUIET_START, CANONICAL_QUIET_END);
+    }
+  }
 });

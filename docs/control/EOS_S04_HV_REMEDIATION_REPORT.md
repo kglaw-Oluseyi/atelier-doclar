@@ -65,7 +65,12 @@
 
 All four in-scope HV findings (02, 08, 09, 10) are remediated in source. Other EOS-S04 human-verification items not in MD-PR-S017-R2 scope remain **PENDING CEO VERIFICATION**. EOS-HV2 is **not** marked complete or accepted.
 
-## Confirmations
+## R2.1 corrections (MD-PR-S017-R2.1)
+
+- Deterministic quiet-hours E2E via `EVENT_OS_TEST_NOW` fixture clock and bounded policy windows with `finally` restore.
+- Cross-platform Playwright store cleanup via `apps/event-os/scripts/clean-e2e-store.mjs`.
+- Masked guest contact hints in `eventGuestOptions()` with unit tests in `apps/event-os/test/comms-display.test.ts`.
+
 
 - **EOS-S05:** Not touched
 - **Production:** Remains unauthorised (`productionAuthorised: false` contract unchanged)

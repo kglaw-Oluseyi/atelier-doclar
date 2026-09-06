@@ -6,7 +6,7 @@ import {
   type ActorContext,
   type Person,
 } from "@maison-doclar/shared-platform";
-import { sessionConfig } from "./config";
+import { fixturesAllowed, sessionConfig } from "./config";
 import { getRuntime } from "./runtime";
 
 export async function requireActor(): Promise<{ actor: ActorContext; person: Person }> {
@@ -23,8 +23,15 @@ export async function requireActor(): Promise<{ actor: ActorContext; person: Per
       personId: resolved.person.id,
       correlationId: crypto.randomUUID(),
       actorKind: "HUMAN",
+      ...(testActorNow() ? { now: testActorNow() } : {}),
     },
   };
+}
+
+function testActorNow(): string | undefined {
+  if (!fixturesAllowed()) return undefined;
+  const fixed = process.env.EVENT_OS_TEST_NOW?.trim();
+  return fixed || undefined;
 }
 
 export async function optionalActor(): Promise<{ actor: ActorContext; person: Person } | undefined> {

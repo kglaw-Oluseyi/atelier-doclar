@@ -1,6 +1,9 @@
 import { defineConfig } from "@playwright/test";
 
 const productionLike = process.env.PLAYWRIGHT_PROD === "1" || process.env.CI === "1";
+/** Use installed Google Chrome on Windows when Playwright-managed browsers are unavailable. */
+const chromiumUse =
+  process.platform === "win32" ? ({ channel: "chrome" as const } as const) : ({} as const);
 
 export default defineConfig({
   testDir: "./e2e",
@@ -11,18 +14,21 @@ export default defineConfig({
   use: {
     baseURL: "http://127.0.0.1:3020",
     browserName: "chromium",
+    ...chromiumUse,
   },
-  projects: [{ name: "chromium", use: { browserName: "chromium" as const } }],
+  projects: [{ name: "chromium", use: { browserName: "chromium" as const, ...chromiumUse } }],
   webServer: {
     command: productionLike
-      ? "rm -f data/event-os-non-production.json && pnpm start"
-      : "rm -f data/event-os-non-production.json && pnpm dev",
+      ? "node ./scripts/clean-e2e-store.mjs && pnpm exec next start --port 3020"
+      : "node ./scripts/clean-e2e-store.mjs && pnpm dev",
     url: "http://127.0.0.1:3020/sign-in",
     reuseExistingServer: false,
     timeout: 120_000,
     env: {
       ...process.env,
+      PORT: "3020",
       EVENT_OS_ALLOW_FIXTURES: "1",
+      EVENT_OS_TEST_NOW: "2026-09-05T14:00:00.000Z",
       CI: process.env.CI ?? "1",
       EVENT_OS_ACCESS_TOKEN: productionLike
         ? (process.env.EVENT_OS_ACCESS_TOKEN ?? "ci-event-os-access-token")

@@ -12,6 +12,39 @@ export function staffDisplayName(service: PlatformService, personId: string | un
   }
 }
 
+/** Mask an email for operator identification without revealing the full address. */
+export function maskedEmail(value: string): string {
+  const trimmed = value.trim();
+  const at = trimmed.indexOf("@");
+  if (at <= 0) return "Email on file";
+  const local = trimmed.slice(0, at);
+  const domain = trimmed.slice(at);
+  return `${local.charAt(0) || "*"}***${domain}`;
+}
+
+/** Mask a phone number for operator identification without revealing the full number. */
+export function maskedPhone(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length < 4) return "Phone on file";
+  return `***${digits.slice(-4)}`;
+}
+
+/** Choose a safely masked contact hint from guest or projection values. */
+export function maskedContactHint(input: {
+  email?: string;
+  phone?: string;
+  projectionDisplay?: string;
+}): string | undefined {
+  if (input.email) return maskedEmail(input.email);
+  if (input.phone) return maskedPhone(input.phone);
+  if (input.projectionDisplay) {
+    return input.projectionDisplay.includes("@")
+      ? maskedEmail(input.projectionDisplay)
+      : maskedPhone(input.projectionDisplay);
+  }
+  return undefined;
+}
+
 /** Event-scoped guest choices for unmatched linking and correction proposals. */
 export function eventGuestOptions(
   service: PlatformService,
@@ -25,7 +58,12 @@ export function eventGuestOptions(
     const email = fieldValue(guest.email);
     const phone = fieldValue(guest.phone);
     const projection = snap.contactProjections.find((item) => item.guestId === guest.id && item.channel === "EMAIL");
-    const contactHint = projection?.displayValue ?? email ?? phone ?? "Contact not supplied";
+    const contactHint =
+      maskedContactHint({
+        email,
+        phone,
+        projectionDisplay: projection?.displayValue,
+      }) ?? "Contact not supplied";
     return {
       id: guest.id,
       displayName: operationalDisplayName(guest),
