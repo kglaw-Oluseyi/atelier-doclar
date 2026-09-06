@@ -423,6 +423,14 @@ export const CreateResponsibleAdultLinkInputSchema = z
   .strict()
   .refine((value) => value.childGuestId !== value.responsibleAdultGuestId, "a child cannot be their own responsible adult");
 
+export const EndResponsibleAdultLinkInputSchema = z
+  .object({
+    ...mutationBase,
+    linkId: ResponsibleAdultLinkIdSchema,
+    expectedVersion: z.number().int().positive(),
+  })
+  .strict();
+
 export const ReconcileCompanionNamesInputSchema = z
   .object({
     ...mutationBase,
@@ -454,6 +462,7 @@ export type CreateRelationshipInput = z.infer<typeof CreateRelationshipInputSche
 export type AdministerCompanionEntitlementInput = z.infer<typeof AdministerCompanionEntitlementInputSchema>;
 export type NominateCompanionInput = z.infer<typeof NominateCompanionInputSchema>;
 export type CreateResponsibleAdultLinkInput = z.infer<typeof CreateResponsibleAdultLinkInputSchema>;
+export type EndResponsibleAdultLinkInput = z.infer<typeof EndResponsibleAdultLinkInputSchema>;
 export type ReconcileCompanionNamesInput = z.infer<typeof ReconcileCompanionNamesInputSchema>;
 export type CompanionAuthority = z.infer<typeof CompanionAuthoritySchema>;
 export type S04ACreatedRecordRef = z.infer<typeof S04ACreatedRecordRefSchema>;

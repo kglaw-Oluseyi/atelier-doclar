@@ -12,9 +12,9 @@ test("titled Yorùbá adult addressing journey with permissions and fallback", a
   await page.getByRole("button", { name: "Create guest record" }).click();
   await expect(page.getByTestId("formal-salutation")).toHaveText("Dr (Mrs) Ọmọ́wùnmí Adéyẹmí");
   await expect(page.getByTestId("familiar-name")).toContainText("Ọmọ́wùnmí");
-  await page.locator("#addressing-heading").locator("..").getByLabel("Reason").fill("Host confirmed titled adult");
+  await page.locator("#structured-addressing-form").getByLabel("Reason").fill("Host confirmed titled adult");
   await page.getByRole("button", { name: "Confirm addressing" }).click();
-  await expect(page.getByText("HOST CONFIRMED")).toBeVisible();
+  await expect(page.getByText("HOST CONFIRMED").first()).toBeVisible();
   const guestUrl = page.url();
 
   await loginAs(page, "planner");

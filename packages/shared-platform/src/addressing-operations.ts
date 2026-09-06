@@ -25,6 +25,7 @@ import {
   type CreatePartyInput,
   type CreateRelationshipInput,
   type CreateResponsibleAdultLinkInput,
+  type EndResponsibleAdultLinkInput,
   type GuestParty,
   type GuestPartyMember,
   type GuestRelationship,
@@ -304,6 +305,31 @@ export function createResponsibleAdultLinkOnSnap(
     ...versioned(now),
   });
   snap.responsibleAdultLinks.push(record);
+  syncChildReadiness(snap, child);
+  child.version += 1;
+  child.updatedAt = now;
+  return record;
+}
+
+export function endResponsibleAdultLinkOnSnap(
+  snap: PlatformSnapshot,
+  input: EndResponsibleAdultLinkInput,
+  now: string,
+): ResponsibleAdultLink {
+  const record = snap.responsibleAdultLinks.find((item) => item.id === input.linkId);
+  if (!record || record.organisationId !== input.organisationId || record.eventId !== input.eventId) {
+    throw new PlatformError("NOT_FOUND", "responsible-adult link was not found");
+  }
+  if (record.version !== input.expectedVersion) {
+    throw new PlatformError("VERSION_CONFLICT", `expected version ${input.expectedVersion} but found ${record.version}`);
+  }
+  if (record.status !== "ACTIVE") {
+    throw new PlatformError("TRANSITION_INVALID", "only an active responsible-adult link can be ended");
+  }
+  record.status = "ENDED";
+  record.version += 1;
+  record.updatedAt = now;
+  const child = requireScopedGuest(snap, input.organisationId, input.eventId, record.childGuestId);
   syncChildReadiness(snap, child);
   child.version += 1;
   child.updatedAt = now;

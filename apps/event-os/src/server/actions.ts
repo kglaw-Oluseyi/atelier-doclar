@@ -1,8 +1,16 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { NonProductionIdentityAdapter, PlatformError } from "@maison-doclar/shared-platform";
+import {
+  AGE_BANDS,
+  HONORIFICS,
+  NonProductionIdentityAdapter,
+  PlatformError,
+  type AgeBand,
+  type Honorific,
+} from "@maison-doclar/shared-platform";
 import { fixturesAllowed } from "./config";
+import { classifyActionError } from "./operational-state";
 import { getRuntime, withDurable } from "./runtime";
 import { clearStaffSessionCookie, readStaffSessionCookie, writeStaffSessionCookie } from "./staff-session-cookie";
 import { requireActor } from "./with-session";
@@ -66,13 +74,38 @@ function toIso(value: string): string | undefined {
 }
 
 function actionError(error: unknown): string {
-  if (error instanceof PlatformError) {
-    return [error.publicMessage, ...(error.details ?? [])].filter(Boolean).join(" ");
+  return classifyActionError(error).message;
+}
+
+function failQuery(error: unknown): string {
+  const classified = classifyActionError(error);
+  return `state=${encodeURIComponent(classified.code)}&error=${encodeURIComponent(classified.message)}`;
+}
+
+function optionalHonorific(value: string): Honorific | undefined {
+  return (HONORIFICS as readonly string[]).includes(value) ? (value as Honorific) : undefined;
+}
+
+function optionalAgeBand(value: string): AgeBand | undefined {
+  return (AGE_BANDS as readonly string[]).includes(value) ? (value as AgeBand) : undefined;
+}
+
+function optionalList(value: string): string[] | undefined {
+  const items = value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  return items.length ? items : undefined;
+}
+
+function sessionOrAssignmentRedirect(error: unknown, nextPath: string): void {
+  const classified = classifyActionError(error);
+  if (classified.code === "AUTH_REQUIRED") {
+    redirect(`/sign-in?next=${encodeURIComponent(nextPath)}&status=session-expired&state=AUTH_REQUIRED`);
   }
-  if (error instanceof Error && error.message && !error.message.includes("NEXT_REDIRECT")) {
-    return error.message;
+  if (classified.code === "ACCESS_PENDING") {
+    redirect(`/access-pending?state=ACCESS_PENDING`);
   }
-  return "The request could not be completed.";
 }
 
 export async function createClientAction(formData: FormData): Promise<void> {
@@ -168,13 +201,19 @@ export async function grantAssignmentAction(formData: FormData): Promise<void> {
 
 export async function intakeGuestAction(formData: FormData): Promise<void> {
   return await withDurable(async () => {
-  const { actor } = await requireActor();
-  const runtime = getRuntime();
   const eventId = String(formData.get("eventId") ?? "");
-  const fail = `/app/events/${encodeURIComponent(eventId)}/guests/new?error=`;
+  const fail = `/app/events/${encodeURIComponent(eventId)}/guests/new?`;
+  let actor;
+  try {
+    ({ actor } = await requireActor());
+  } catch (error) {
+    sessionOrAssignmentRedirect(error, `/app/events/${eventId}/guests/new`);
+    redirect(`${fail}${failQuery(error)}`);
+  }
+  const runtime = getRuntime();
   const organisation = runtime.service.listOrganisations(actor)[0];
   if (!organisation) {
-    redirect(`${fail}${encodeURIComponent("No organisation assignment is available.")}`);
+    redirect(`${fail}state=ACCESS_PENDING&error=${encodeURIComponent("No organisation assignment is available.")}`);
   }
   let guest;
   try {
@@ -190,48 +229,21 @@ export async function intakeGuestAction(formData: FormData): Promise<void> {
       accessibilityRequirement: String(formData.get("accessibilityRequirement") ?? "") || undefined,
       operationalNote: String(formData.get("operationalNote") ?? "") || undefined,
       householdKey: String(formData.get("householdKey") ?? "") || undefined,
-      honorific: (String(formData.get("honorific") ?? "") || undefined) as
-        | "Mr"
-        | "Mrs"
-        | "Ms"
-        | "Mx"
-        | "Dr"
-        | "Dr (Mrs)"
-        | "Dr (Mr)"
-        | "Dr (Ms)"
-        | "Professor"
-        | "Rev"
-        | "Pastor"
-        | "Chief"
-        | "Alhaji"
-        | "Alhaja"
-        | "Engr"
-        | "Barrister"
-        | "Hon"
-        | "HRH"
-        | "Sir"
-        | "Dame"
-        | undefined,
+      honorific: optionalHonorific(String(formData.get("honorific") ?? "")),
       professionalTitle: String(formData.get("professionalTitle") ?? "") || undefined,
       traditionalTitle: String(formData.get("traditionalTitle") ?? "") || undefined,
       middleNames: String(formData.get("middleNames") ?? "") || undefined,
+      postNominals: optionalList(String(formData.get("postNominals") ?? "")),
       preferredDisplayName: String(formData.get("preferredDisplayName") ?? "") || undefined,
       preferredFormalSalutation: String(formData.get("preferredFormalSalutation") ?? "") || undefined,
-      ageBand: (String(formData.get("ageBand") ?? "") || undefined) as
-        | "INFANT"
-        | "EARLY_CHILDHOOD"
-        | "CHILD"
-        | "PRE_TEEN"
-        | "TEEN"
-        | "ADULT"
-        | "UNKNOWN"
-        | undefined,
+      ageBand: optionalAgeBand(String(formData.get("ageBand") ?? "")),
       reason: String(formData.get("reason") ?? ""),
+      idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
     });
   } catch (error) {
-    redirect(`${fail}${encodeURIComponent(actionError(error))}`);
+    redirect(`${fail}${failQuery(error)}`);
   }
-  redirect(`/app/events/${eventId}/guests/${guest.id}`);
+  redirect(`/app/events/${eventId}/guests/${guest.id}?ok=intake`);
   });
 }
 
@@ -1011,8 +1023,11 @@ export async function applySyntheticCallbackAction(formData: FormData): Promise<
 }
 
 function guestFail(eventId: string, guestId: string, error: unknown): never {
+  sessionOrAssignmentRedirect(error, `/app/events/${eventId}/guests/${guestId}`);
+  const classified = classifyActionError(error);
+  const permissionChanged = classified.code === "FORBIDDEN" ? "&hint=permission" : "";
   redirect(
-    `/app/events/${encodeURIComponent(eventId)}/guests/${encodeURIComponent(guestId)}?error=${encodeURIComponent(actionError(error))}`,
+    `/app/events/${encodeURIComponent(eventId)}/guests/${encodeURIComponent(guestId)}?${failQuery(error)}${permissionChanged}`,
   );
 }
 
@@ -1050,13 +1065,15 @@ export async function updateGuestAddressingAction(formData: FormData): Promise<v
       ...(confirm
         ? { addressingStatus: optionalFormValue(formData, "addressingStatus") ?? "HOST_CONFIRMED" }
         : {}),
-      ageBand: optionalFormValue(formData, "ageBand"),
+      ageBand: optionalAgeBand(String(formData.get("ageBand") ?? "")),
+      postNominals: optionalList(String(formData.get("postNominals") ?? "")),
       reason: String(formData.get("reason") ?? ""),
+      idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
     });
   } catch (error) {
     guestFail(eventId, guestId, error);
   }
-  redirect(`/app/events/${eventId}/guests/${guestId}`);
+  redirect(`/app/events/${eventId}/guests/${guestId}?ok=addressing`);
   });
 }
 
@@ -1078,11 +1095,12 @@ export async function nominateCompanionAction(formData: FormData): Promise<void>
       suppliedFamilyName: optionalFormValue(formData, "suppliedFamilyName"),
       suppliedEmail: optionalFormValue(formData, "suppliedEmail"),
       reason: String(formData.get("reason") ?? "Nominate companion"),
+      idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
     });
   } catch (error) {
     guestFail(eventId, guestId, error);
   }
-  redirect(`/app/events/${eventId}/guests/${guestId}`);
+  redirect(`/app/events/${eventId}/guests/${guestId}?ok=nominate`);
   });
 }
 
@@ -1099,11 +1117,12 @@ export async function reconcileCompanionNamesAction(formData: FormData): Promise
       eventId,
       guestId,
       reason: String(formData.get("reason") ?? "Reconcile S03 companion names"),
+      idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
     });
   } catch (error) {
     guestFail(eventId, guestId, error);
   }
-  redirect(`/app/events/${eventId}/guests/${guestId}`);
+  redirect(`/app/events/${eventId}/guests/${guestId}?ok=reconcile`);
   });
 }
 
@@ -1122,10 +1141,147 @@ export async function createResponsibleAdultLinkAction(formData: FormData): Prom
       responsibleAdultGuestId: String(formData.get("responsibleAdultGuestId") ?? ""),
       scope: optionalFormValue(formData, "scope") ?? "EVENT",
       reason: String(formData.get("reason") ?? "Record responsible adult"),
+      idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
     });
   } catch (error) {
     guestFail(eventId, guestId, error);
   }
-  redirect(`/app/events/${eventId}/guests/${guestId}`);
+  redirect(`/app/events/${eventId}/guests/${guestId}?ok=child`);
+  });
+}
+
+export async function endResponsibleAdultLinkAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+  const { actor } = await requireActor().catch((error) => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const guestId = String(formData.get("guestId") ?? "");
+    guestFail(eventId, guestId, error);
+  });
+  const eventId = String(formData.get("eventId") ?? "");
+  const guestId = String(formData.get("guestId") ?? "");
+  const organisation = getRuntime().service.listOrganisations(actor)[0];
+  if (!organisation) guestFail(eventId, guestId, new Error("No organisation assignment is available."));
+  try {
+    getRuntime().service.endResponsibleAdultLink(actor, {
+      organisationId: organisation.id,
+      eventId,
+      linkId: String(formData.get("linkId") ?? ""),
+      expectedVersion: Number(formData.get("expectedVersion")),
+      reason: String(formData.get("reason") ?? "End responsible-adult link"),
+      idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+    });
+  } catch (error) {
+    guestFail(eventId, guestId, error);
+  }
+  redirect(`/app/events/${eventId}/guests/${guestId}?ok=child`);
+  });
+}
+
+export async function createGuestPartyAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+  const eventId = String(formData.get("eventId") ?? "");
+  const guestId = String(formData.get("guestId") ?? "");
+  const { actor } = await requireActor().catch((error) => guestFail(eventId, guestId, error));
+  const organisation = getRuntime().service.listOrganisations(actor)[0];
+  if (!organisation) guestFail(eventId, guestId, new Error("No organisation assignment is available."));
+  try {
+    getRuntime().service.createGuestParty(actor, {
+      organisationId: organisation.id,
+      eventId,
+      type: String(formData.get("type") ?? ""),
+      label: String(formData.get("label") ?? ""),
+      principalGuestId: optionalFormValue(formData, "principalGuestId"),
+      reason: String(formData.get("reason") ?? "Create operational party"),
+      idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+    });
+  } catch (error) {
+    guestFail(eventId, guestId, error);
+  }
+  redirect(`/app/events/${eventId}/guests/${guestId}?ok=party`);
+  });
+}
+
+export async function addGuestPartyMemberAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+  const eventId = String(formData.get("eventId") ?? "");
+  const guestId = String(formData.get("guestId") ?? "");
+  const { actor } = await requireActor().catch((error) => guestFail(eventId, guestId, error));
+  const organisation = getRuntime().service.listOrganisations(actor)[0];
+  if (!organisation) guestFail(eventId, guestId, new Error("No organisation assignment is available."));
+  try {
+    getRuntime().service.addGuestPartyMember(actor, {
+      organisationId: organisation.id,
+      eventId,
+      partyId: String(formData.get("partyId") ?? ""),
+      guestId: String(formData.get("memberGuestId") ?? ""),
+      expectedPartyVersion: Number(formData.get("expectedPartyVersion")),
+      role: String(formData.get("role") ?? "MEMBER"),
+      reason: String(formData.get("reason") ?? "Add party member"),
+      idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+    });
+  } catch (error) {
+    guestFail(eventId, guestId, error);
+  }
+  redirect(`/app/events/${eventId}/guests/${guestId}?ok=member`);
+  });
+}
+
+export async function removeGuestPartyMemberAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+  const eventId = String(formData.get("eventId") ?? "");
+  const guestId = String(formData.get("guestId") ?? "");
+  const { actor } = await requireActor().catch((error) => guestFail(eventId, guestId, error));
+  const organisation = getRuntime().service.listOrganisations(actor)[0];
+  if (!organisation) guestFail(eventId, guestId, new Error("No organisation assignment is available."));
+  try {
+    getRuntime().service.removeGuestPartyMember(actor, {
+      organisationId: organisation.id,
+      eventId,
+      partyMemberId: String(formData.get("partyMemberId") ?? ""),
+      expectedVersion: Number(formData.get("expectedVersion")),
+      reason: String(formData.get("reason") ?? "Remove party member"),
+      idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+    });
+  } catch (error) {
+    guestFail(eventId, guestId, error);
+  }
+  redirect(`/app/events/${eventId}/guests/${guestId}?ok=member`);
+  });
+}
+
+export async function administerCompanionEntitlementAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+  const eventId = String(formData.get("eventId") ?? "");
+  const guestId = String(formData.get("guestId") ?? "");
+  const { actor } = await requireActor().catch((error) => guestFail(eventId, guestId, error));
+  const organisation = getRuntime().service.listOrganisations(actor)[0];
+  if (!organisation) guestFail(eventId, guestId, new Error("No organisation assignment is available."));
+  const authorityKind = String(formData.get("authorityKind") ?? "");
+  const authorityId = String(formData.get("authorityId") ?? "");
+  const status = optionalFormValue(formData, "status");
+  try {
+    getRuntime().service.administerCompanionEntitlement(actor, {
+      organisationId: organisation.id,
+      eventId,
+      principalGuestId: guestId,
+      allowance: Number(formData.get("allowance")),
+      authority:
+        authorityKind === "RSVP_POLICY_DEFAULT"
+          ? { kind: "RSVP_POLICY_DEFAULT" as const, rsvpPolicyId: authorityId }
+          : { kind: "RSVP_ENTITLEMENT" as const, rsvpEntitlementId: authorityId },
+      ...(status ? { status } : {}),
+      reason: String(formData.get("reason") ?? "Administer companion entitlement"),
+      idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+    });
+  } catch (error) {
+    const classified = classifyActionError(error);
+    if (classified.code === "FORBIDDEN" && status === "EXCEPTION_REVIEW") {
+      redirect(
+        `/app/events/${encodeURIComponent(eventId)}/guests/${encodeURIComponent(guestId)}?state=FORBIDDEN&hint=permission&error=${encodeURIComponent(classified.message)}`,
+      );
+    }
+    guestFail(eventId, guestId, error);
+  }
+  redirect(`/app/events/${eventId}/guests/${guestId}?ok=entitlement`);
   });
 }

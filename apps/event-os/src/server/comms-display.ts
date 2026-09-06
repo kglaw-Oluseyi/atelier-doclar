@@ -1,5 +1,5 @@
 import type { ActorContext, MsgChannel, PlatformService } from "@maison-doclar/shared-platform";
-import { DEFAULT_TIMEZONE, SYSTEM_ROLE_KEYS, fieldValue, operationalDisplayName } from "@maison-doclar/shared-platform";
+import { DEFAULT_TIMEZONE, SYSTEM_ROLE_KEYS, fieldValue, renderFamiliarName } from "@maison-doclar/shared-platform";
 import type { UnmatchedGuestOption } from "../components/unmatched-resolution-form";
 
 type SystemRoleKey = (typeof SYSTEM_ROLE_KEYS)[number];
@@ -120,7 +120,7 @@ export function eventGuestOptions(
       }) ?? "Contact not supplied";
     return {
       id: guest.id,
-      displayName: operationalDisplayName(guest),
+      displayName: renderFamiliarName(guest).text,
       contactHint,
     };
   });

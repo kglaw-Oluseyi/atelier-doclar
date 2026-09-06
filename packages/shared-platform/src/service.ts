@@ -23,6 +23,7 @@ import {
   createPartyOnSnap,
   createRelationshipOnSnap,
   createResponsibleAdultLinkOnSnap,
+  endResponsibleAdultLinkOnSnap,
   nominateCompanionOnSnap,
   reconcileCompanionNamesOnSnap,
   removePartyMemberOnSnap,
@@ -42,6 +43,7 @@ import {
   CreatePartyInputSchema,
   CreateRelationshipInputSchema,
   CreateResponsibleAdultLinkInputSchema,
+  EndResponsibleAdultLinkInputSchema,
   NominateCompanionInputSchema,
   ReconcileCompanionNamesInputSchema,
   RemovePartyMemberInputSchema,
@@ -52,6 +54,7 @@ import {
   type CreatePartyInput,
   type CreateRelationshipInput,
   type CreateResponsibleAdultLinkInput,
+  type EndResponsibleAdultLinkInput,
   type GuestParty,
   type GuestPartyMember,
   type GuestRelationship,
@@ -1468,6 +1471,24 @@ export class PlatformService {
       run: (snap, ctx) => {
         this.requireEvent(snap, input.organisationId, input.eventId);
         return createResponsibleAdultLinkOnSnap(snap, input, ctx.now);
+      },
+    });
+  }
+
+  endResponsibleAdultLink(actor: ActorContext, raw: unknown): ResponsibleAdultLink {
+    const input = parseStrict<EndResponsibleAdultLinkInput>(EndResponsibleAdultLinkInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "guest.child.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "guest.child.responsibleAdult.ended",
+      resourceType: "responsible_adult_link",
+      resourceId: input.linkId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        this.requireEvent(snap, input.organisationId, input.eventId);
+        return endResponsibleAdultLinkOnSnap(snap, input, ctx.now);
       },
     });
   }

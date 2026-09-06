@@ -1,7 +1,9 @@
 import { AtelierPageHeader } from "../../../../../../components/atelier-page-header";
+import { AtelierOperationalState } from "../../../../../../components/atelier-operational-state";
 import { AppShell } from "../../../../../../components/shell";
 import { GuestIntakeForm } from "../../../../../../components/guest-intake-form";
 import { guestPermissions, resolveScopedEvent } from "../../../../../../server/guest-scope";
+import { operationalStateFromCode, operationalStateFromQuery } from "../../../../../../server/operational-state";
 import { guardedActor } from "../../../../../../server/guard";
 
 export default async function GuestIntakePage({
@@ -9,17 +11,18 @@ export default async function GuestIntakePage({
   searchParams,
 }: {
   params: Promise<{ eventId: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; state?: string; ok?: string; demo?: string }>;
 }) {
   const { eventId } = await params;
-  const error = (await searchParams).error;
+  const query = await searchParams;
   const { actor, person } = await guardedActor();
   const scoped = resolveScopedEvent(actor, eventId);
+  const state = operationalStateFromQuery(query);
   if (!scoped) {
     return (
       <AppShell person={person} current="/app/events">
         <h1>Guest intake</h1>
-        <p className="empty">The requested event is not available in this assignment.</p>
+        <AtelierOperationalState state={operationalStateFromCode("NOT_FOUND", "The requested event is not available in this assignment.")} />
       </AppShell>
     );
   }
@@ -34,12 +37,14 @@ export default async function GuestIntakePage({
       <AtelierPageHeader
         eyebrow={`Guest intake · ${scoped.event.name}`}
         title="Manual guest intake"
-        lede={`Creates an operational guest record for ${scoped.event.name}. This does not create a person, user, or membership.`}
+        lede={`Creates an operational guest record for ${scoped.event.name}. This does not create a person, user, or membership. Titles are never inferred. A date of birth is not collected.`}
       />
       {permissions.intake ? (
-        <GuestIntakeForm eventId={scoped.event.id} error={error} />
+        <GuestIntakeForm eventId={scoped.event.id} state={state} />
       ) : (
-        <p className="empty">Your assignment does not include guest intake.</p>
+        <AtelierOperationalState
+          state={operationalStateFromCode("FORBIDDEN", "Your assignment does not include guest intake.")}
+        />
       )}
     </AppShell>
   );

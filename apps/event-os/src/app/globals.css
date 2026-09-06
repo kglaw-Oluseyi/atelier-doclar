@@ -200,13 +200,14 @@ html {
 
 .user-menu {
   margin-top: 28px;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .staff-identity {
   margin: 0 0 12px;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .staff-identity-name,

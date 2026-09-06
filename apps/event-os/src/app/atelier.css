@@ -759,11 +759,175 @@ body.atelier {
   }
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.guest-name,
+.atelier-name,
+.addressing-preview dd,
+.atelier-address-pair .guest-name,
+.atelier-guestbook .guest-name,
+.atelier-dossier h1.guest-name {
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: none;
+  white-space: normal;
+}
+
+.field-req,
+.field-opt {
+  display: block;
+  margin-top: 2px;
+  color: var(--at-umber);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+
+.atelier-shell a,
+.atelier-shell button,
+.atelier-shell [role="button"],
+.atelier-shell input[type="submit"],
+.atelier-shell select,
+.atelier-shell .at-switch,
+.atelier-shell .check {
+  cursor: pointer;
+}
+
+.atelier-shell button:disabled,
+.atelier-shell [aria-disabled="true"],
+.atelier-shell input:disabled,
+.atelier-shell select:disabled {
+  cursor: not-allowed;
+}
+
+.atelier-state {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 20px;
+  padding: 16px 18px;
+  border: 1px solid var(--at-line);
+  border-radius: 14px;
+  background: rgba(252, 250, 247, 0.88);
+  box-shadow: var(--at-shadow-soft);
+}
+
+.atelier-state h2 {
+  margin: 0;
+  font-family: var(--at-editorial);
+  font-size: 1.45rem;
+  font-weight: 400;
+}
+
+.atelier-state dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.atelier-state dt {
+  color: var(--at-umber);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+}
+
+.atelier-state dd {
+  margin: 0;
+}
+
+.atelier-state[data-tone="danger"] {
+  border-color: rgba(148, 54, 54, 0.35);
+  box-shadow: inset 3px 0 0 #943636;
+}
+
+.atelier-state[data-tone="warn"] {
+  box-shadow: inset 3px 0 0 var(--at-champagne);
+}
+
+.atelier-state[data-tone="ok"] {
+  box-shadow: inset 3px 0 0 #2f5d3a;
+}
+
+.atelier-state-loading {
+  min-height: 8rem;
+}
+
+.atelier-loading-mark {
+  width: 2.4rem;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--at-champagne), transparent);
+  animation: at-loading 1.2s ease-in-out infinite;
+}
+
+.atelier-refresh {
+  margin: 12px 0 0;
+}
+
+.atelier-party-list,
+.atelier-member-cards {
+  display: grid;
+  gap: 14px;
+  padding: 0;
+  margin: 0 0 18px;
+  list-style: none;
+}
+
+.atelier-party-card,
+.atelier-member-cards li {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--at-line);
+  border-radius: 14px;
+  background: rgba(252, 250, 247, 0.82);
+}
+
+.atelier-member-cards {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+}
+
+.atelier-intake .atelier-field-grid,
+.addressing-workspace .atelier-field-grid {
+  min-width: 0;
+}
+
+@media (max-width: 860px) {
+  .atelier-party-card,
+  .atelier-member-cards li,
+  .atelier-state {
+    min-width: 0;
+  }
+
+  .meta-list > div {
+    grid-template-columns: 1fr;
+  }
+}
+
+@keyframes at-loading {
+  from {
+    transform: translateX(-20%);
+    opacity: 0.35;
+  }
+  to {
+    transform: translateX(20%);
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .atelier-shell .nav a,
   .atelier-guest-row,
   .atelier-shell .main,
-  .atelier-shell .data-table tbody tr {
+  .atelier-shell .data-table tbody tr,
+  .atelier-loading-mark {
     transition: none;
     animation: none;
   }

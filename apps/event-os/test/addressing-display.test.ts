@@ -37,4 +37,45 @@ describe("Event OS addressing frontend contracts", () => {
       ),
     );
   });
+
+  it("keeps planner confirmation and exception review off the capability projection", () => {
+    const { store, service } = fixtureService();
+    store.replace(applyS04AFixtures(store.snapshot()));
+    const planner = service.getGuestAddressingWorkspace(
+      actor(people.personPlanner),
+      people.orgMaison,
+      people.eventAlphaOne,
+      S04A_FIXTURE_IDS.guestEbunoluwa,
+    );
+    assert.equal(planner.capabilities.canManageAddressing, true);
+    assert.equal(planner.capabilities.canConfirmAddressing, false);
+    assert.equal(planner.capabilities.canManageEntitlement, true);
+    assert.equal(planner.capabilities.canReviewEntitlementException, false);
+    const auditor = service.getGuestAddressingWorkspace(
+      actor(people.personAuditor),
+      people.orgMaison,
+      people.eventAlphaOne,
+      S04A_FIXTURE_IDS.guestEbunoluwa,
+    );
+    assert.equal(auditor.capabilities.canManageAddressing, false);
+    assert.equal(auditor.capabilities.canManageEntitlement, false);
+    assert.equal(auditor.capabilities.canManageChild, false);
+    assert.equal(auditor.capabilities.canManageRelationship, false);
+  });
+
+  it("projects party membership and unnamed entitlement without fabricating a guest", () => {
+    const { store, service } = fixtureService();
+    store.replace(applyS04AFixtures(store.snapshot()));
+    const workspace = service.getGuestAddressingWorkspace(
+      actor(people.personDirector),
+      people.orgMaison,
+      people.eventAlphaOne,
+      S04A_FIXTURE_IDS.guestEbunoluwa,
+    );
+    assert.ok(workspace.parties.some((party) => party.label.includes("Alákíjà")));
+    assert.ok(workspace.parties[0]?.members.every((member) => member.membershipId));
+    const unnamed = workspace.entitlements.find((item) => item.unnamed);
+    assert.ok(unnamed);
+    assert.equal(unnamed.nominatedGuestId, undefined);
+  });
 });

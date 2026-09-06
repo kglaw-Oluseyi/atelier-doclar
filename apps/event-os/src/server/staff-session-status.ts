@@ -2,6 +2,7 @@ const SIGN_IN_STATUS_COPY = {
   "signed-out": "You have been signed out.",
   "already-signed-out": "You are already signed out.",
   "session-required": "Sign in is required.",
+  "session-expired": "Your session expired or was revoked. Sign in again. The last attempted change was not applied.",
   "session-ended": "Your session has ended. Sign in again.",
   expired: "Your session has expired. Sign in again.",
   revoked: "This session is no longer active. Sign in again.",

@@ -1,4 +1,5 @@
 import {
+  allowedEntitlementTransitions,
   childReadinessFor,
   renderFamiliarName,
   renderGuestSalutation,
@@ -11,7 +12,9 @@ import type {
   AddressingStatus,
   AgeBand,
   ChildReadiness,
+  CompanionAuthority,
   CompanionEntitlement,
+  CompanionEntitlementStatus,
   GuestAddressing,
   Honorific,
 } from "./addressing-schemas.js";
@@ -66,14 +69,17 @@ export interface GuestChildProjection {
     adultFamiliarName: string;
     scope: string;
     status: string;
+    version: number;
   };
 }
 
 export interface GuestPartyMemberProjection {
+  membershipId: string;
   guestId: string;
   displayName: string;
   role: string;
   status: string;
+  version: number;
 }
 
 export interface GuestPartyProjection {
@@ -81,8 +87,11 @@ export interface GuestPartyProjection {
   type: string;
   label: string;
   status: string;
+  version: number;
   memberCount: number;
   members: GuestPartyMemberProjection[];
+  principalGuestId?: string;
+  principalDisplayName?: string;
 }
 
 export interface GuestRelationshipProjection {
@@ -95,6 +104,7 @@ export interface GuestRelationshipProjection {
   direction: string;
   visibility: string;
   status: string;
+  source: string;
 }
 
 export interface CompanionEntitlementProjection {
@@ -104,8 +114,11 @@ export interface CompanionEntitlementProjection {
   nominatedGuestId?: string;
   nominatedDisplayName?: string;
   authorityKind: string;
+  authority: CompanionAuthority;
   unnamed: boolean;
   version: number;
+  allowedTransitions: CompanionEntitlementStatus[];
+  authorisedAllowance?: number;
 }
 
 export interface CompanionNameReconciliationProjection {
@@ -245,6 +258,7 @@ export function projectGuestChild(
             adultFamiliarName: displayNameFor(snap, link.responsibleAdultGuestId),
             scope: link.scope,
             status: link.status,
+            version: link.version,
           },
         }
       : {}),
@@ -275,13 +289,22 @@ export function projectGuestParties(
         type: party.type,
         label: party.label,
         status: party.status,
+        version: party.version,
         memberCount: members.length,
         members: members.map((item) => ({
+          membershipId: item.id,
           guestId: item.guestId,
           displayName: displayNameFor(snap, item.guestId),
           role: item.role,
           status: item.status,
+          version: item.version,
         })),
+        ...(party.principalGuestId
+          ? {
+              principalGuestId: party.principalGuestId,
+              principalDisplayName: displayNameFor(snap, party.principalGuestId),
+            }
+          : {}),
       };
     });
 }
@@ -310,6 +333,7 @@ export function projectGuestRelationships(
       direction: item.direction,
       visibility: item.visibility,
       status: item.status,
+      source: item.source,
     }));
 }
 
@@ -324,10 +348,18 @@ export function projectCompanionEntitlements(
     .map((item) => projectCompanionEntitlement(snap, item));
 }
 
+function authorisedAllowanceFor(snap: PlatformSnapshot, item: CompanionEntitlement): number | undefined {
+  if (item.authority.kind !== "RSVP_ENTITLEMENT") return undefined;
+  const authorityId = item.authority.rsvpEntitlementId;
+  const authority = snap.rsvpEntitlements.find((record) => record.id === authorityId);
+  return authority?.allowance;
+}
+
 export function projectCompanionEntitlement(
   snap: PlatformSnapshot,
   item: CompanionEntitlement,
 ): CompanionEntitlementProjection {
+  const authorisedAllowance = authorisedAllowanceFor(snap, item);
   return {
     id: item.id,
     status: item.status,
@@ -335,8 +367,11 @@ export function projectCompanionEntitlement(
     ...(item.nominatedGuestId ? { nominatedGuestId: item.nominatedGuestId } : {}),
     ...(item.nominatedGuestId ? { nominatedDisplayName: displayNameFor(snap, item.nominatedGuestId) } : {}),
     authorityKind: item.authority.kind,
+    authority: item.authority,
     unnamed: unnamedAllowanceHasNoGuest(item) && item.nominatedGuestId === undefined,
     version: item.version,
+    allowedTransitions: [...allowedEntitlementTransitions(item.status)],
+    ...(authorisedAllowance !== undefined ? { authorisedAllowance } : {}),
   };
 }
 

@@ -520,4 +520,50 @@ describe("EOS-S04A guest services", () => {
       "Sẹ̀yí Ọbáfẹ́mi",
     );
   });
+
+  it("ends an authorised responsible-adult link and blocks child readiness", () => {
+    const { service } = s04aService();
+    const before = service.getGuestAddressingWorkspace(
+      director(),
+      people.orgMaison,
+      people.eventAlphaOne,
+      S04A_FIXTURE_IDS.guestTomi,
+    );
+    assert.equal(before.child?.childReadiness, "READY_FOR_EVENT");
+    assert.ok(before.child?.responsibleAdult);
+    service.endResponsibleAdultLink(director(), {
+      ...ALPHA,
+      linkId: before.child!.responsibleAdult!.linkId,
+      expectedVersion: before.child!.responsibleAdult!.version,
+      reason: "end responsible adult for readiness check",
+    });
+    const after = service.getGuestAddressingWorkspace(
+      director(),
+      people.orgMaison,
+      people.eventAlphaOne,
+      S04A_FIXTURE_IDS.guestTomi,
+    );
+    assert.equal(after.child?.responsibleAdult, undefined);
+    assert.equal(after.child?.childReadiness, "BLOCKED_MISSING_RESPONSIBLE_ADULT");
+    assert.equal(after.child?.requiresResponsibleAdult, true);
+  });
+
+  it("projects party membership ids, principal only when supplied, and entitlement transitions", () => {
+    const { service } = s04aService();
+    const workspace = service.getGuestAddressingWorkspace(
+      director(),
+      people.orgMaison,
+      people.eventAlphaOne,
+      S04A_FIXTURE_IDS.guestEbunoluwa,
+    );
+    const party = workspace.parties.find((item) => item.id === S04A_FIXTURE_IDS.partyAlakija);
+    assert.ok(party);
+    assert.equal(party.principalGuestId, S04A_FIXTURE_IDS.guestEbunoluwa);
+    assert.ok(party.members.every((member) => member.membershipId && member.version >= 1));
+    const entitlement = workspace.entitlements.find((item) => item.id === S04A_FIXTURE_IDS.entitlementPlusOne);
+    assert.ok(entitlement);
+    assert.equal(entitlement.unnamed, true);
+    assert.equal(entitlement.authorisedAllowance, 1);
+    assert.ok(entitlement.allowedTransitions.includes("NOMINATED"));
+  });
 });

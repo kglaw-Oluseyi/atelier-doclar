@@ -135,12 +135,17 @@ export function partyIsNotIdentity(party: GuestParty, member: GuestPartyMember):
   return party.id !== member.guestId && member.partyId === party.id;
 }
 
+export function allowedEntitlementTransitions(
+  from: CompanionEntitlementStatus,
+): readonly CompanionEntitlementStatus[] {
+  return ENTITLEMENT_TRANSITIONS[from] ?? [];
+}
+
 export function entitlementTransitionAllowed(
   from: CompanionEntitlementStatus,
   to: CompanionEntitlementStatus,
 ): boolean {
-  const allowed = ENTITLEMENT_TRANSITIONS[from];
-  return allowed !== undefined && allowed.includes(to);
+  return allowedEntitlementTransitions(from).includes(to);
 }
 
 export function allowanceExceedsAuthority(input: {

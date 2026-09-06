@@ -36,7 +36,7 @@ test("Command Atelier prototype screens and interaction states", async ({ page }
 
   await page.goto(DIRECTORY);
   await expect(page.getByRole("heading", { name: "Guest directory" })).toBeVisible();
-  await expect(page.getByText("Olúfẹ́mi")).toBeVisible();
+  await expect(page.getByRole("link", { name: /Olúfẹ́mi/ })).toBeVisible();
   await page.screenshot({ path: evidencePath("03-guest-directory-desktop.png"), fullPage: true });
 
   const row = page.locator("tr.atelier-guest-row").first();
@@ -65,7 +65,7 @@ test("Command Atelier prototype screens and interaction states", async ({ page }
   await expect(addressingTab).toHaveAttribute("aria-current", "true");
   await page.screenshot({ path: evidencePath("10-tab-selected-hover.png") });
 
-  const addressing = page.locator("#addressing-heading").locator("..");
+  const addressing = page.locator("#structured-addressing-form");
   await addressing.getByLabel("Preferred display name").focus();
   await page.screenshot({ path: evidencePath("14-keyboard-focus.png") });
 
@@ -80,7 +80,7 @@ test("Command Atelier prototype screens and interaction states", async ({ page }
     el.value = String(current > 1 ? current - 1 : current + 1);
   });
   await addressing.getByRole("button", { name: "Save addressing" }).click();
-  await expect(page.locator("p.alert[role='alert']").first()).toContainText(/expected version|changed while/);
+  await expect(page.locator(".atelier-state[data-kind='conflict']")).toContainText(/expected version|changed while/);
   await page.screenshot({ path: evidencePath("13-version-conflict.png"), fullPage: true });
 
   const desktopAxe = await new AxeBuilder({ page }).analyze();
