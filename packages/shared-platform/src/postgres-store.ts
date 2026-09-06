@@ -188,9 +188,27 @@ export class PostgresPlatformStore implements PlatformStore {
             });
           }
         }
-        for (const [id] of previousById) {
+        for (const [id, existed] of previousById) {
           if (remaining.has(id)) continue;
-          await tx.query("DELETE FROM platform_documents WHERE collection=$1 AND id=$2", [collection, id]);
+          const persistedVersion = Number(existed.version ?? 1);
+          const result = await tx.query(
+            "DELETE FROM platform_documents WHERE collection=$1 AND id=$2 AND version=$3",
+            [collection, id, persistedVersion],
+          );
+          if ((result.rowCount ?? 0) > 0) continue;
+          const existing = await tx.query<{ version: number }>(
+            "SELECT version FROM platform_documents WHERE collection=$1 AND id=$2",
+            [collection, id],
+          );
+          if ((existing.rowCount ?? 0) > 0) {
+            throw new PlatformError("VERSION_CONFLICT", "persisted version conflict", {
+              publicMessage: "This record changed while you were editing. Reload before saving.",
+            });
+          }
+          // Concurrent delete/delete: a versioned DELETE that matches no row, and
+          // the durable key is already absent, is an idempotent success. The
+          // second writer does not receive VERSION_CONFLICT. If the row still
+          // exists at another version, that is a stale delete and conflicts.
         }
       }
       for (const entry of normalised.audit) {
@@ -399,6 +417,12 @@ export class MemoryPlatformPg implements PgTransactor {
       });
       return { rows: [], rowCount: 1 };
     }
+    if (sql.startsWith("SELECT version FROM platform_documents")) {
+      const [collection, id] = values as [string, string];
+      const row = this.documents.find((item) => item.collection === collection && item.id === id);
+      if (!row) return { rows: [], rowCount: 0 };
+      return { rows: [{ version: row.version }] as T[], rowCount: 1 };
+    }
     if (sql.startsWith("SELECT collection, body FROM platform_documents")) {
       return { rows: this.documents.map((row) => ({ collection: row.collection, body: row.body })) as T[], rowCount: this.documents.length };
     }
@@ -456,16 +480,16 @@ export class MemoryPlatformPg implements PgTransactor {
       return { rows: [], rowCount: 1 };
     }
     if (sql.startsWith("DELETE FROM platform_documents")) {
-      const [collection, id] = values as [string, string];
-      let removed = 0;
-      for (let index = this.documents.length - 1; index >= 0; index -= 1) {
-        const row = this.documents[index];
-        if (row && row.collection === collection && row.id === id) {
-          this.documents.splice(index, 1);
-          removed += 1;
-        }
+      if (!sql.includes("AND version")) {
+        throw new Error("unversioned document delete is forbidden");
       }
-      return { rows: [], rowCount: removed };
+      const [collection, id, version] = values as [string, string, number];
+      const index = this.documents.findIndex(
+        (row) => row.collection === collection && row.id === id && Number(row.version) === Number(version),
+      );
+      if (index < 0) return { rows: [], rowCount: 0 };
+      this.documents.splice(index, 1);
+      return { rows: [], rowCount: 1 };
     }
     if (sql.startsWith("INSERT INTO platform_audit")) {
       this.audit.push(JSON.parse(String(values[7])));

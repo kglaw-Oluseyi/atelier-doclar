@@ -178,7 +178,7 @@ export {
   type SessionActor,
   type SessionConfig,
 } from "./session.js";
-export { FIXTURE_IDS, fixturePersons, isFixtureId } from "./fixtures.js";
+export { FIXTURE_IDS, fixturePersons, isFixtureId, lineageFixtureMark } from "./fixtures.js";
 export { emptyMasterEventFile } from "./mef.js";
 export { emptySnapshot, normalizeSnapshot, type PlatformStore, type PlatformSnapshot } from "./store.js";
 export {
@@ -214,8 +214,12 @@ export {
 } from "./synthetic-seed.js";
 export {
   SYNTHETIC_CLEANUP_CONFIRMATION,
+  EVENT_OS_CLEANUP_PROJECT_ID,
+  EVENT_OS_CLEANUP_PROJECT_NAME,
   applySyntheticCleanup,
   assertCleanupConfirmation,
+  assertCleanupProjectScope,
+  classifySyntheticCleanupAttribution,
   previewSyntheticCleanup,
   recordCleanupAudit,
 } from "./synthetic-cleanup.js";

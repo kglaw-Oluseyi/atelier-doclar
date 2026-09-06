@@ -359,6 +359,29 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 
 ---
 
+## Open pre-client blockers
+
+### TDR-S04A-011 — Synthetic cleanup cannot attribute browser-created operational residue
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04A-011` |
+| Source slice | Event OS Postgres concurrency and cleanup hardening |
+| Description | Cleanup selects only documents with top-level `nonProductionFixture: true`. Original seed orgs, clients, events, persons, memberships, assignments, MEF and S04A fixture guests are marked. Staff sessions and RSVP guest sessions now inherit that mark from a fixture parent. Browser-created operational guests, companion nominations, unmarked sessions already issued, and all audit/idempotency rows remain unmarked or intentionally excluded. A preview that removes only seed fixtures is not a complete pre-client wipe. |
+| Classification | In-slice debt |
+| Severity | HIGH |
+| Evidence | `classifySyntheticCleanupAttribution`; `packages/shared-platform/test/guest-security.test.ts` (intake guests unmarked); cleanup preview counts |
+| Affected surface or contract | `previewSyntheticCleanup` / `applySyntheticCleanup` / Event OS `seed:cleanup` |
+| Reason for deferral | Broadening deletion by heuristic (any record under a fixture org, any recent browser session, any guest without a client code) would risk removing the wrong rows. A lineage or scope design is required. |
+| Blocking | `BLOCKING` for client onboarding; `NON_BLOCKING` for P08 |
+| Current owner | Pre-client data classification |
+| Required regression coverage | Attribution report distinguishes safely included, intentionally preserved, and not currently attributable counts; no heuristic delete; leftover browser-created guests still visible after seed-fixture cleanup |
+| Latest safe remediation milestone | Pre-client onboarding — close before any real client data enters Event OS |
+| Current status | OPEN |
+| Resolution evidence | |
+
+---
+
 ## Closed items
 
 - `TDR-S04A-007` — unsafe collection-clearing rollback. Closed by Milestone 1 scoped-receipt rollback.
@@ -380,3 +403,4 @@ EOS-S04 remains CLOSED / ACCEPTED and is not reopened.
 | EOS-S04A Milestone 1 M1R4 | Entered blocking TDR-S04A-010 for unvalidated guest addressing/ageBand/childReadiness and closed it after persist/hydrate validation. Not deferred to P03. |
 | Local / GitHub parity policy | Recorded `docs/control/LOCAL_GITHUB_PARITY_POLICY.md`. A later authorised push is durability only. It does not accept EOS-S04A, pass Milestone 1, or authorise P03, deployment or production. |
 | EOS-S04A-P03–P07 | Closed TDR-S04A-005, TDR-S04A-006 and TDR-S04A-009 after guest services, server-side permission/projection enforcement, companion-name reconciliation and safe communications salutation. EOS-S04 not reopened. EOS-S04A remains not accepted. |
+| Event OS Postgres concurrency and cleanup hardening | Entered blocking pre-client TDR-S04A-011: fixture-mark cleanup does not attribute browser-created operational residue. Staff/RSVP sessions now inherit fixture lineage. EOS-S04 not reopened. |

@@ -9,6 +9,7 @@ import {
 import { permissionIdForKey, roleIdForKey, seededPermissions, seededRoles } from "./catalog.js";
 import { PlatformError } from "./errors.js";
 import { assertNamedHuman } from "./identity.js";
+import { lineageFixtureMark } from "./fixtures.js";
 import { emptyMasterEventFile } from "./mef.js";
 import { authorize, canSeeClient, canSeeEvent, singleCoveringRoleKey, type ActorSnapshot, type PolicyDecision } from "./policy.js";
 import { parseCanonicalCsv, rowToIntakeFields } from "./guest-intake.js";
@@ -473,6 +474,7 @@ export class PlatformService {
       version: 1,
       createdAt: now,
       updatedAt: now,
+      ...lineageFixtureMark(person),
     };
     snap.staffSessions.push(record);
     person.lastAuthenticatedAt = now;
@@ -2152,6 +2154,7 @@ export class PlatformService {
       version: 1,
       createdAt: occurredAt,
       updatedAt: occurredAt,
+      ...lineageFixtureMark(invitation, guest),
     });
     invitation.lastExchangedAt = occurredAt;
     invitation.exchangeCount += 1;

@@ -282,4 +282,13 @@ export function isFixtureId(id: string): boolean {
   return Object.values(FIXTURE_IDS).includes(id as (typeof FIXTURE_IDS)[keyof typeof FIXTURE_IDS]);
 }
 
+export function lineageFixtureMark(
+  ...sources: Array<{ id?: string; nonProductionFixture?: boolean } | undefined>
+): { nonProductionFixture: true } | Record<string, never> {
+  const inherited = sources.some(
+    (item) => item?.nonProductionFixture === true || (typeof item?.id === "string" && isFixtureId(item.id)),
+  );
+  return inherited ? { nonProductionFixture: true } : {};
+}
+
 export { seededPermissions, seededRoles };

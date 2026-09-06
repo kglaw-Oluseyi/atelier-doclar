@@ -35,6 +35,29 @@ function collectionCounts(snap: PlatformSnapshot): CleanupCollectionCount[] {
   })).filter((item) => item.count > 0);
 }
 
+export const EVENT_OS_CLEANUP_PROJECT_ID = "c1c937b7-2660-4fc2-8257-c08bd6346658";
+export const EVENT_OS_CLEANUP_PROJECT_NAME = "atelier-doclar";
+
+const CATALOG_COLLECTIONS = new Set(["roles", "permissions", "rolePermissions"]);
+
+export type CleanupAttributionClass =
+  | "SAFELY_INCLUDED"
+  | "INTENTIONALLY_PRESERVED"
+  | "NOT_CURRENTLY_ATTRIBUTABLE"
+  | "REMEDIATION_REQUIRED";
+
+export interface CleanupAttributionReport {
+  safelyIncluded: CleanupCollectionCount[];
+  intentionallyPreserved: Array<CleanupCollectionCount & { reason: string }>;
+  notCurrentlyAttributable: CleanupCollectionCount[];
+  remediationRequired: Array<{
+    id: string;
+    class: "REMEDIATION_REQUIRED";
+    reason: string;
+    latestSafeMilestone: string;
+  }>;
+}
+
 export function previewSyntheticCleanup(snap: PlatformSnapshot): SyntheticCleanupPreview {
   const collections = collectionCounts(snap);
   return {
@@ -44,6 +67,68 @@ export function previewSyntheticCleanup(snap: PlatformSnapshot): SyntheticCleanu
     collections,
     total: collections.reduce((sum, item) => sum + item.count, 0),
   };
+}
+
+export function classifySyntheticCleanupAttribution(snap: PlatformSnapshot): CleanupAttributionReport {
+  const safelyIncluded = collectionCounts(snap);
+  const notCurrentlyAttributable = DOCUMENT_COLLECTIONS.filter((collection) => !CATALOG_COLLECTIONS.has(collection))
+    .map((collection) => ({
+      collection,
+      count: (snap[collection] as unknown[]).filter((item) => !isSyntheticRecord(item)).length,
+    }))
+    .filter((item) => item.count > 0);
+  const intentionallyPreserved: Array<CleanupCollectionCount & { reason: string }> = [
+    { collection: "audit", count: snap.audit.length, reason: "append-only audit is excluded from fixture cleanup" },
+    {
+      collection: "idempotency",
+      count: snap.idempotency.length,
+      reason: "idempotency keys are excluded from fixture cleanup",
+    },
+    ...DOCUMENT_COLLECTIONS.filter((collection) => CATALOG_COLLECTIONS.has(collection)).map((collection) => ({
+      collection,
+      count: (snap[collection] as unknown[]).length,
+      reason: "shared catalogue records are not fixture-marked and are preserved",
+    })),
+  ].filter((item) => item.count > 0);
+  return {
+    safelyIncluded,
+    intentionallyPreserved,
+    notCurrentlyAttributable,
+    remediationRequired: [
+      {
+        id: "TDR-S04A-011",
+        class: "REMEDIATION_REQUIRED",
+        reason:
+          "Browser-created operational residue (unmarked guests, nominations, sessions, and related audit/idempotency) is not attributable from top-level nonProductionFixture alone. Cleanup of original seed fixtures is not a complete pre-client wipe.",
+        latestSafeMilestone: "Pre-client onboarding — close before any real client data enters Event OS",
+      },
+    ],
+  };
+}
+
+export function assertCleanupProjectScope(
+  env: NodeJS.ProcessEnv = process.env,
+  options: { execute?: boolean } = {},
+): void {
+  const projectId = env.RAILWAY_PROJECT_ID ?? "";
+  const projectName = env.RAILWAY_PROJECT_NAME ?? "";
+  const explicitScope = env.EVENT_OS_CLEANUP_SCOPE ?? "";
+  if (projectId && projectId !== EVENT_OS_CLEANUP_PROJECT_ID) {
+    throw new Error("Cleanup refused: Railway project is not atelier-doclar.");
+  }
+  if (projectName && projectName !== EVENT_OS_CLEANUP_PROJECT_NAME) {
+    throw new Error("Cleanup refused: Railway project is not atelier-doclar.");
+  }
+  if (options.execute) {
+    if (projectId !== EVENT_OS_CLEANUP_PROJECT_ID && projectName !== EVENT_OS_CLEANUP_PROJECT_NAME) {
+      throw new Error("Destructive cleanup can only run on Railway project atelier-doclar.");
+    }
+    return;
+  }
+  if (projectId === EVENT_OS_CLEANUP_PROJECT_ID || projectName === EVENT_OS_CLEANUP_PROJECT_NAME) return;
+  if (explicitScope === EVENT_OS_CLEANUP_PROJECT_NAME) return;
+  if (!env.DATABASE_URL && !projectId && !projectName) return;
+  throw new Error("Cleanup preview refused: not bound to Railway project atelier-doclar.");
 }
 
 export function applySyntheticCleanup(snap: PlatformSnapshot): PlatformSnapshot {

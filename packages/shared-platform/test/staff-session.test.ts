@@ -30,6 +30,7 @@ describe("revocable staff sessions", () => {
     assert.equal(issued.session.revokedAt, undefined);
     assert.equal(store.snapshot().staffSessions.length, 1);
     assert.equal(store.snapshot().staffSessions[0]?.id, issued.session.id);
+    assert.equal(store.snapshot().staffSessions[0]?.nonProductionFixture, true);
     const resolved = service.requireStaffSession(issued.token, NOW);
     assert.equal(resolved.session.id, issued.session.id);
     assert.equal(resolved.actor.personId, people.personDirector);

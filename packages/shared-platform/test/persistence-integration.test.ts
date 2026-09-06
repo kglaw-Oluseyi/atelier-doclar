@@ -1,18 +1,47 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { actor, people } from "./helpers.js";
+import { actor, fixtureService, people } from "./helpers.js";
 import { PlatformError } from "../src/errors.js";
 import { MemoryPlatformStore } from "../src/memory-store.js";
 import { MemoryPlatformPg, PostgresPlatformStore } from "../src/postgres-store.js";
 import { PLATFORM_MIGRATIONS, runPlatformMigrations } from "../src/migrations.js";
+import { SCHEMA_VERSION } from "../src/constants.js";
 import {
+  EVENT_OS_CLEANUP_PROJECT_ID,
+  EVENT_OS_CLEANUP_PROJECT_NAME,
   SYNTHETIC_CLEANUP_CONFIRMATION,
   applySyntheticCleanup,
   assertCleanupConfirmation,
+  assertCleanupProjectScope,
+  classifySyntheticCleanupAttribution,
   previewSyntheticCleanup,
   recordCleanupAudit,
 } from "../src/synthetic-cleanup.js";
+import { applyS04AFixturesIfMissing } from "../src/addressing-fixtures.js";
 import { SYNTHETIC_SEED_VERSION, applySyntheticSeedIfNeeded } from "../src/synthetic-seed.js";
+import type { Client } from "../src/schemas.js";
+
+const ISOLATED = {
+  stale: "00000000-0000-4000-8000-ffff00000001",
+  partial: "00000000-0000-4000-8000-ffff00000002",
+  ordinary: "00000000-0000-4000-8000-ffff00000003",
+  concurrent: "00000000-0000-4000-8000-ffff00000004",
+} as const;
+
+function isolatedClient(id: string, displayName: string, version = 1): Client {
+  return {
+    id,
+    organisationId: people.orgMaison,
+    code: `ISO${id.slice(-4)}`,
+    displayName,
+    status: "ACTIVE",
+    schemaVersion: SCHEMA_VERSION,
+    version,
+    createdAt: "2026-09-06T18:00:00.000Z",
+    updatedAt: "2026-09-06T18:00:00.000Z",
+    nonProductionFixture: true,
+  };
+}
 
 describe("platform persistence integration", () => {
   it("migrates, survives reopen, and replays seed idempotently", async () => {
@@ -131,6 +160,140 @@ describe("platform persistence integration", () => {
     assert.equal(previewSyntheticCleanup(reopened.snapshot()).total, 0);
     assert.equal(db.cleanup.some((row) => row.mode === "PREVIEW" && row.confirmed === false), true);
     assert.equal(db.cleanup.some((row) => row.mode === "EXECUTED" && row.confirmed === true), true);
+  });
+
+  it("rejects a stale delete at the SQL row-count boundary and rehydrates", async () => {
+    const db = new MemoryPlatformPg();
+    const writerA = await PostgresPlatformStore.open(db);
+    await applySyntheticSeedIfNeeded(writerA, db);
+    await writerA.flush();
+    const seeded = writerA.snapshot();
+    seeded.clients.push(isolatedClient(ISOLATED.stale, "Shared Isolated"));
+    await writerA.replaceAsync(seeded);
+
+    const writerB = await PostgresPlatformStore.open(db);
+    const observedA = writerA.snapshot().clients.find((item) => item.id === ISOLATED.stale);
+    const observedB = writerB.snapshot().clients.find((item) => item.id === ISOLATED.stale);
+    assert.ok(observedA);
+    assert.ok(observedB);
+    assert.equal(observedA.version, observedB.version);
+    assert.equal(observedA.displayName, observedB.displayName);
+
+    const updated = writerA.snapshot();
+    const target = updated.clients.find((item) => item.id === ISOLATED.stale);
+    assert.ok(target);
+    target.displayName = "Writer A Durable";
+    target.version += 1;
+    target.updatedAt = "2026-09-06T18:05:00.000Z";
+    await writerA.replaceAsync(updated);
+
+    const stale = writerB.snapshot();
+    stale.clients = stale.clients.filter((item) => item.id !== ISOLATED.stale);
+    stale.clients.push(isolatedClient(ISOLATED.partial, "Partial Write Must Not Survive"));
+    await assert.rejects(
+      () => writerB.replaceAsync(stale),
+      (error: unknown) => error instanceof PlatformError && error.code === "VERSION_CONFLICT",
+    );
+
+    assert.equal(writerB.snapshot().clients.find((item) => item.id === ISOLATED.stale)?.displayName, "Writer A Durable");
+    assert.equal(writerB.snapshot().clients.some((item) => item.id === ISOLATED.partial), false);
+    const durable = await PostgresPlatformStore.open(db);
+    assert.equal(durable.snapshot().clients.find((item) => item.id === ISOLATED.stale)?.displayName, "Writer A Durable");
+    assert.equal(durable.snapshot().clients.some((item) => item.id === ISOLATED.partial), false);
+    assert.equal(db.documents.some((row) => row.id === ISOLATED.partial), false);
+  });
+
+  it("deletes the current persisted version and treats concurrent delete/delete as idempotent", async () => {
+    const db = new MemoryPlatformPg();
+    const writerA = await PostgresPlatformStore.open(db);
+    await applySyntheticSeedIfNeeded(writerA, db);
+    await writerA.flush();
+    const withOrdinary = writerA.snapshot();
+    withOrdinary.clients.push(isolatedClient(ISOLATED.ordinary, "Current Version Delete"));
+    withOrdinary.clients.push(isolatedClient(ISOLATED.concurrent, "Concurrent Delete"));
+    await writerA.replaceAsync(withOrdinary);
+
+    const current = writerA.snapshot();
+    current.clients = current.clients.filter((item) => item.id !== ISOLATED.ordinary);
+    await writerA.replaceAsync(current);
+    assert.equal(writerA.snapshot().clients.some((item) => item.id === ISOLATED.ordinary), false);
+    const reopened = await PostgresPlatformStore.open(db);
+    assert.equal(reopened.snapshot().clients.some((item) => item.id === ISOLATED.ordinary), false);
+
+    const writerB = await PostgresPlatformStore.open(db);
+    const deleteA = writerA.snapshot();
+    const deleteB = writerB.snapshot();
+    assert.equal(deleteA.clients.some((item) => item.id === ISOLATED.concurrent), true);
+    assert.equal(deleteB.clients.some((item) => item.id === ISOLATED.concurrent), true);
+    deleteA.clients = deleteA.clients.filter((item) => item.id !== ISOLATED.concurrent);
+    deleteB.clients = deleteB.clients.filter((item) => item.id !== ISOLATED.concurrent);
+    await writerA.replaceAsync(deleteA);
+    await writerB.replaceAsync(deleteB);
+    assert.equal(writerB.snapshot().clients.some((item) => item.id === ISOLATED.concurrent), false);
+    const afterBoth = await PostgresPlatformStore.open(db);
+    assert.equal(afterBoth.snapshot().clients.some((item) => item.id === ISOLATED.concurrent), false);
+  });
+
+  it("forbids an unversioned document delete in the SQL emulator", async () => {
+    const db = new MemoryPlatformPg();
+    await assert.rejects(
+      () => db.query("DELETE FROM platform_documents WHERE collection=$1 AND id=$2", ["clients", ISOLATED.stale]),
+      /unversioned document delete is forbidden/,
+    );
+  });
+
+  it("classifies cleanup attribution without treating seed-only cleanup as complete", async () => {
+    const db = new MemoryPlatformPg();
+    const store = await PostgresPlatformStore.open(db);
+    const { service } = await applySyntheticSeedIfNeeded(store, db);
+    await store.flush();
+    service.intakeGuest(actor(people.personDirector), {
+      organisationId: people.orgMaison,
+      eventId: people.eventAlphaOne,
+      familyName: "Browser",
+      reason: "unmarked residue",
+    });
+    await store.flush();
+    const report = classifySyntheticCleanupAttribution(store.snapshot());
+    assert.ok(report.safelyIncluded.some((item) => item.collection === "organisations" && item.count >= 2));
+    assert.ok(report.intentionallyPreserved.some((item) => item.collection === "audit"));
+    assert.ok(report.intentionallyPreserved.some((item) => item.collection === "roles"));
+    assert.ok(report.notCurrentlyAttributable.some((item) => item.collection === "operationalGuests" && item.count >= 1));
+    assert.equal(report.remediationRequired[0]?.id, "TDR-S04A-011");
+    assertCleanupProjectScope({ EVENT_OS_CLEANUP_SCOPE: EVENT_OS_CLEANUP_PROJECT_NAME }, { execute: false });
+    assertCleanupProjectScope(
+      { RAILWAY_PROJECT_ID: EVENT_OS_CLEANUP_PROJECT_ID, RAILWAY_PROJECT_NAME: EVENT_OS_CLEANUP_PROJECT_NAME },
+      { execute: true },
+    );
+    assert.throws(
+      () => assertCleanupProjectScope({ RAILWAY_PROJECT_ID: "other-project" }, { execute: false }),
+      /not atelier-doclar/,
+    );
+    assert.throws(
+      () => assertCleanupProjectScope({ EVENT_OS_CLEANUP_SCOPE: EVENT_OS_CLEANUP_PROJECT_NAME }, { execute: true }),
+      /can only run on Railway project/,
+    );
+  });
+
+  it("stamps RSVP guest sessions whose parent guest is a fixture", () => {
+    const { service, store } = fixtureService();
+    store.replace(applyS04AFixturesIfMissing(store.snapshot()));
+    const guest = store.snapshot().operationalGuests.find((item) => item.nonProductionFixture);
+    assert.ok(guest);
+    service.prepareEventRsvp(actor(people.personDirector), {
+      organisationId: people.orgMaison,
+      eventId: people.eventAlphaOne,
+      reason: "lineage prepare",
+    });
+    const invitation = service.issueRsvpInvitation(actor(people.personDirector), {
+      organisationId: people.orgMaison,
+      eventId: people.eventAlphaOne,
+      guestId: guest.id,
+      reason: "lineage issue",
+    });
+    service.exchangeGuestAccess(invitation.token);
+    const session = store.snapshot().rsvpGuestSessions.find((item) => item.guestId === guest.id);
+    assert.equal(session?.nonProductionFixture, true);
   });
 
   it("fails closed when a migration cannot apply", async () => {
