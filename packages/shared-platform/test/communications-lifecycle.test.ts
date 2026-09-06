@@ -273,7 +273,7 @@ describe("communications lifecycle", () => {
       reason: "guest wrote a new address",
     });
     assert.equal(service.getGuest(director(), people.orgMaison, people.eventAlphaOne, guest.id).email.value, before);
-    service.decideContactCorrection(director(), {
+    service.decideContactCorrection(actor(people.personCeo), {
       organisationId: people.orgMaison,
       eventId: people.eventAlphaOne,
       correctionId: correction.id,

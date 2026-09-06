@@ -1,6 +1,7 @@
 import { CEO_RESERVED_ACTIONS, SYSTEM_ROLE_KEYS } from "./constants.js";
 import { isCeoRole, isSystemAdministratorRole, permissionsForRole } from "./catalog.js";
-import type { Assignment, EventRecord, PermissionKey, Person, Role } from "./schemas.js";
+import { PlatformError } from "./errors.js";
+import type { Assignment, EventRecord, PermissionKey, Person, Role, SystemRoleKey } from "./schemas.js";
 
 function rolePermissionKeys(key: string): readonly PermissionKey[] {
   if ((SYSTEM_ROLE_KEYS as readonly string[]).includes(key)) {
@@ -133,6 +134,47 @@ export function authorize(input: {
   if (denied && matchedRoleKeys.length === 0) return { allow: false, reason: "RESERVED_TO_CEO" };
   if (matchedRoleKeys.length === 0) return { allow: false, reason: "PERMISSION_ABSENT" };
   return { allow: true, matchedRoleKeys };
+}
+
+function isSystemRoleKey(key: string): key is SystemRoleKey {
+  return (SYSTEM_ROLE_KEYS as readonly string[]).includes(key);
+}
+
+function assignmentSpecificity(assignment: Assignment): number {
+  if (assignment.eventId) return 3;
+  if (assignment.clientId) return 2;
+  return 1;
+}
+
+/** Role taken from the single most specific covering assignment, not privilege rank. */
+export function singleCoveringRoleKey(
+  actor: ActorSnapshot,
+  permission: PermissionKey,
+  scope: PolicyScope,
+  now: string,
+): SystemRoleKey {
+  const decision = authorize({ actor, permission, scope, context: { now } });
+  if (!decision.allow) {
+    throw new PlatformError("FORBIDDEN", decision.reason);
+  }
+  const covering = actor.assignments.filter((item) => assignmentIsActive(item, now) && assignmentCoversScope(item, scope));
+  const scored: { key: SystemRoleKey; specificity: number }[] = [];
+  for (const grant of covering) {
+    const role = actor.roles.find((item) => item.id === grant.roleId);
+    if (!role || role.status !== "ACTIVE" || !isSystemRoleKey(role.key)) continue;
+    if (!rolePermissionKeys(role.key).includes(permission)) continue;
+    scored.push({ key: role.key, specificity: assignmentSpecificity(grant) });
+  }
+  const highest = Math.max(0, ...scored.map((item) => item.specificity));
+  const unique = [...new Set(scored.filter((item) => item.specificity === highest).map((item) => item.key))];
+  const only = unique.length === 1 ? unique[0] : undefined;
+  if (!only) {
+    throw new PlatformError(
+      "VALIDATION_FAILED",
+      "a single event assignment is required to propose a contact correction",
+    );
+  }
+  return only;
 }
 
 export function canSeeClient(actor: ActorSnapshot, organisationId: string, clientId: string, now: string): boolean {

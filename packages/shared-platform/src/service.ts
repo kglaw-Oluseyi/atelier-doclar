@@ -4,7 +4,7 @@ import { permissionIdForKey, roleIdForKey, seededPermissions, seededRoles } from
 import { PlatformError } from "./errors.js";
 import { assertNamedHuman } from "./identity.js";
 import { emptyMasterEventFile } from "./mef.js";
-import { authorize, canSeeClient, canSeeEvent, type ActorSnapshot, type PolicyDecision } from "./policy.js";
+import { authorize, canSeeClient, canSeeEvent, singleCoveringRoleKey, type ActorSnapshot, type PolicyDecision } from "./policy.js";
 import { parseCanonicalCsv, rowToIntakeFields } from "./guest-intake.js";
 import { operationalDisplayName } from "./guest-matching.js";
 import {
@@ -179,6 +179,8 @@ import {
   type Campaign,
   type ChannelPolicy,
   type ContactCorrection,
+  type ContactCorrectionReview,
+  type ContactCorrectionSourceEvidence,
   type FollowUpTask,
   type GuestSafeOccasion,
   type GuestSafeOccasionView,
@@ -2531,6 +2533,12 @@ export class PlatformService {
       run: (snap, ctx) => {
         const guest = this.requireOperationalGuest(snap, input.organisationId, input.eventId, input.guestId);
         const existing = snap.contactProjections.find((item) => item.guestId === guest.id && item.channel === input.channel);
+        const proposedByRoleKey = singleCoveringRoleKey(
+          ctx.actor,
+          "msg.inbox.respond",
+          { organisationId: input.organisationId, eventId: input.eventId },
+          ctx.now,
+        );
         const record: ContactCorrection = {
           id: randomUUID(),
           organisationId: guest.organisationId,
@@ -2543,6 +2551,9 @@ export class PlatformService {
           status: "PROPOSED",
           ...(input.sourceMessageId ? { sourceMessageId: input.sourceMessageId } : {}),
           reason: input.reason,
+          proposedByPersonId: actor.personId,
+          proposedByRoleKey,
+          guestVersionAtProposal: guest.version,
           schemaVersion: SCHEMA_VERSION,
           version: 1,
           createdAt: ctx.now,
@@ -2571,12 +2582,25 @@ export class PlatformService {
           throw new PlatformError("NOT_FOUND", "contact correction was not found");
         }
         this.assertVersion(correction.version, input.expectedVersion);
-        correction.decidedByPersonId = actor.personId;
-        correction.decidedAt = ctx.now;
+        if (!correction.proposedByPersonId || !correction.proposedByRoleKey || correction.guestVersionAtProposal === undefined) {
+          throw new PlatformError(
+            "FORBIDDEN",
+            "contact correction attribution is unavailable; recreate the proposal",
+            {
+              publicMessage:
+                "This correction cannot be decided because proposer attribution is unavailable. Recreate the proposal.",
+            },
+          );
+        }
+        if (correction.proposedByPersonId === actor.personId) {
+          throw new PlatformError("FORBIDDEN", "approval requires a different named human");
+        }
         if (input.decision === "REJECTED") {
           correction.status = "REJECTED";
         } else {
           const guest = this.requireOperationalGuest(snap, input.organisationId, input.eventId, correction.guestId);
+          this.assertVersion(guest.version, correction.guestVersionAtProposal);
+          const beforeGuest = structuredClone(guest);
           applyGuestAmendment(
             guest,
             {
@@ -2584,15 +2608,37 @@ export class PlatformService {
               eventId: guest.eventId,
               guestId: guest.id,
               expectedVersion: guest.version,
-              ...(correction.channel === "EMAIL" ? { email: correction.proposedValue } : { phone: correction.proposedValue }),
+              ...(correction.channel === "EMAIL"
+                ? { email: correction.proposedValue }
+                : { phone: correction.proposedValue }),
               replaceVerifiedField: true,
               reason: input.reason,
             },
             ctx.now,
           );
-          syncContactProjections(snap, guest.eventId, ctx.now);
+          if (eventChannelPolicy(snap, guest.eventId)) {
+            syncContactProjections(snap, guest.eventId, ctx.now);
+          }
+          recordDuplicateCandidates(snap, guest, snap.persons, ctx.now);
+          this.writeAudit(snap, {
+            action: "guest.record.amended",
+            outcome: "SUCCESS",
+            actorPersonId: actor.personId,
+            organisationId: guest.organisationId,
+            clientId: guest.clientId,
+            eventId: guest.eventId,
+            resourceType: "operational_guest",
+            resourceId: guest.id,
+            correlationId: actor.correlationId,
+            reason: input.reason,
+            beforeHash: stableHash(beforeGuest),
+            afterHash: stableHash(guest),
+            occurredAt: ctx.now,
+          });
           correction.status = "APPLIED";
         }
+        correction.decidedByPersonId = actor.personId;
+        correction.decidedAt = ctx.now;
         correction.version += 1;
         correction.updatedAt = ctx.now;
         return correction;
@@ -2704,6 +2750,14 @@ export class PlatformService {
   listContactCorrections(actor: ActorContext, organisationId: string, eventId: string) {
     const { snap } = this.authorizeQuery(actor, "msg.contactCorrection.review", { organisationId, eventId });
     return snap.contactCorrections.filter((item) => item.organisationId === organisationId && item.eventId === eventId);
+  }
+
+  listContactCorrectionReviews(actor: ActorContext, organisationId: string, eventId: string): ContactCorrectionReview[] {
+    const { snap } = this.authorizeQuery(actor, "msg.contactCorrection.review", { organisationId, eventId });
+    this.requireEvent(snap, organisationId, eventId);
+    return snap.contactCorrections
+      .filter((item) => item.organisationId === organisationId && item.eventId === eventId)
+      .map((item) => this.projectContactCorrectionReview(snap, item));
   }
 
   listGuestCommunications(actor: ActorContext, organisationId: string, eventId: string, guestId: string) {
@@ -3295,6 +3349,70 @@ export class PlatformService {
     }
     void type;
     return undefined;
+  }
+
+  private projectContactCorrectionReview(snap: PlatformSnapshot, item: ContactCorrection): ContactCorrectionReview {
+    const guest = snap.operationalGuests.find(
+      (record) =>
+        record.id === item.guestId && record.organisationId === item.organisationId && record.eventId === item.eventId,
+    );
+    return {
+      id: item.id,
+      organisationId: item.organisationId,
+      eventId: item.eventId,
+      guestId: item.guestId,
+      guestDisplayName: guest ? operationalDisplayName(guest) : "Guest unavailable",
+      channel: item.channel,
+      ...(item.existingValue ? { existingValue: item.existingValue } : {}),
+      proposedValue: item.proposedValue,
+      reason: item.reason,
+      status: item.status,
+      version: item.version,
+      proposedAt: item.createdAt,
+      maker:
+        item.proposedByPersonId && item.proposedByRoleKey
+          ? {
+              state: "AVAILABLE",
+              personId: item.proposedByPersonId,
+              displayName: this.staffDisplayName(snap, item.proposedByPersonId, "Proposer unavailable"),
+              roleKey: item.proposedByRoleKey,
+            }
+          : { state: "UNAVAILABLE" },
+      decision:
+        item.decidedByPersonId && item.decidedAt
+          ? {
+              state: "RECORDED",
+              personId: item.decidedByPersonId,
+              displayName: this.staffDisplayName(snap, item.decidedByPersonId, "Reviewer unavailable"),
+              decidedAt: item.decidedAt,
+            }
+          : { state: "PENDING" },
+      sourceEvidence: this.projectCorrectionSourceEvidence(snap, item),
+    };
+  }
+
+  private projectCorrectionSourceEvidence(
+    snap: PlatformSnapshot,
+    item: ContactCorrection,
+  ): ContactCorrectionSourceEvidence {
+    if (!item.sourceMessageId) return { state: "NOT_LINKED" };
+    const message = snap.inboundMessages.find((row) => row.id === item.sourceMessageId);
+    if (!message || message.organisationId !== item.organisationId || message.eventId !== item.eventId) {
+      return { state: "UNAVAILABLE" };
+    }
+    if (message.matchStatus === "QUARANTINED" || message.attachmentQuarantined === true) {
+      return { state: "REDACTED" };
+    }
+    const reviewPath = message.threadId
+      ? `/app/events/${item.eventId}/communications/inbox/${message.threadId}`
+      : `/app/events/${item.eventId}/communications/unmatched`;
+    return { state: "AVAILABLE", inboundMessageId: message.id, reviewPath };
+  }
+
+  private staffDisplayName(snap: PlatformSnapshot, personId: string, fallback: string): string {
+    const person = snap.persons.find((item) => item.id === personId);
+    const name = person?.displayName.trim();
+    return name ? name : fallback;
   }
 
   private writeAudit(

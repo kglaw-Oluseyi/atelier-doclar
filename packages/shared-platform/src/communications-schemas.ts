@@ -24,6 +24,7 @@ import {
   NonEmptySchema,
   OrganisationIdSchema,
   PersonIdSchema,
+  SystemRoleKeySchema,
   UuidSchema,
 } from "./schemas.js";
 
@@ -376,9 +377,69 @@ export const ContactCorrectionSchema = z
     status: z.enum(MSG_CORRECTION_STATUSES),
     sourceMessageId: UuidSchema.optional(),
     reason: NonEmptySchema.max(240),
+    proposedByPersonId: PersonIdSchema.optional(),
+    proposedByRoleKey: SystemRoleKeySchema.optional(),
+    guestVersionAtProposal: z.number().int().positive().optional(),
     decidedByPersonId: PersonIdSchema.optional(),
     decidedAt: IsoDatetimeSchema.optional(),
     ...versioned,
+  })
+  .strict();
+
+export const ContactCorrectionSourceEvidenceSchema = z.discriminatedUnion("state", [
+  z.object({ state: z.literal("NOT_LINKED") }).strict(),
+  z.object({ state: z.literal("UNAVAILABLE") }).strict(),
+  z.object({ state: z.literal("REDACTED") }).strict(),
+  z
+    .object({
+      state: z.literal("AVAILABLE"),
+      inboundMessageId: UuidSchema,
+      reviewPath: NonEmptySchema.max(240),
+    })
+    .strict(),
+]);
+
+export const ContactCorrectionMakerAttributionSchema = z.discriminatedUnion("state", [
+  z
+    .object({
+      state: z.literal("AVAILABLE"),
+      personId: PersonIdSchema,
+      displayName: NonEmptySchema.max(180),
+      roleKey: SystemRoleKeySchema,
+    })
+    .strict(),
+  z.object({ state: z.literal("UNAVAILABLE") }).strict(),
+]);
+
+export const ContactCorrectionDecisionAttributionSchema = z.discriminatedUnion("state", [
+  z
+    .object({
+      state: z.literal("RECORDED"),
+      personId: PersonIdSchema,
+      displayName: NonEmptySchema.max(180),
+      decidedAt: IsoDatetimeSchema,
+    })
+    .strict(),
+  z.object({ state: z.literal("PENDING") }).strict(),
+]);
+
+export const ContactCorrectionReviewSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    eventId: EventIdSchema,
+    guestId: UuidSchema,
+    guestDisplayName: NonEmptySchema.max(180),
+    channel: MsgChannelSchema,
+    existingValue: z.string().max(180).optional(),
+    proposedValue: NonEmptySchema.max(180),
+    reason: NonEmptySchema.max(240),
+    status: z.enum(MSG_CORRECTION_STATUSES),
+    version: z.number().int().positive(),
+    proposedAt: IsoDatetimeSchema,
+    maker: ContactCorrectionMakerAttributionSchema,
+    decision: ContactCorrectionDecisionAttributionSchema,
+    sourceEvidence: ContactCorrectionSourceEvidenceSchema,
   })
   .strict();
 
@@ -691,6 +752,10 @@ export type ConversationThread = z.infer<typeof ConversationThreadSchema>;
 export type InboundMessage = z.infer<typeof InboundMessageSchema>;
 export type FollowUpTask = z.infer<typeof FollowUpTaskSchema>;
 export type ContactCorrection = z.infer<typeof ContactCorrectionSchema>;
+export type ContactCorrectionSourceEvidence = z.infer<typeof ContactCorrectionSourceEvidenceSchema>;
+export type ContactCorrectionMakerAttribution = z.infer<typeof ContactCorrectionMakerAttributionSchema>;
+export type ContactCorrectionDecisionAttribution = z.infer<typeof ContactCorrectionDecisionAttributionSchema>;
+export type ContactCorrectionReview = z.infer<typeof ContactCorrectionReviewSchema>;
 export type CommsNotification = z.infer<typeof CommsNotificationSchema>;
 export type CommsIntelligenceAlert = z.infer<typeof CommsIntelligenceAlertSchema>;
 export type GuestSafeOccasionView = z.infer<typeof GuestSafeOccasionViewSchema>;

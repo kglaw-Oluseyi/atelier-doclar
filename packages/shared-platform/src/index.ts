@@ -80,7 +80,7 @@ export {
 export { operationalDisplayName, normalizeEmail, normalizePhone, findDuplicateMatches, fieldValue } from "./guest-matching.js";
 export { parseCanonicalCsv, CANONICAL_CSV_COLUMNS } from "./guest-intake.js";
 export { seededPermissions, seededRoles, permissionsForRole, roleIdForKey } from "./catalog.js";
-export { authorize, assignmentIsActive, canSeeClient, canSeeEvent, type ActorSnapshot, type PolicyDecision } from "./policy.js";
+export { authorize, assignmentIsActive, canSeeClient, canSeeEvent, singleCoveringRoleKey, type ActorSnapshot, type PolicyDecision } from "./policy.js";
 export { allowedNextPhases, assertPhaseTransition } from "./transitions.js";
 export { redactValue, stableHash } from "./redaction.js";
 export {
@@ -152,6 +152,8 @@ export {
   type InboundMessage,
   type FollowUpTask,
   type ContactCorrection,
+  type ContactCorrectionReview,
+  type ContactCorrectionSourceEvidence,
   type CommsMessage,
   type MsgChannel,
   type MsgPurpose,

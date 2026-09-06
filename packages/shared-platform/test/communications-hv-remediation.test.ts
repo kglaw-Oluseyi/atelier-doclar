@@ -320,7 +320,7 @@ describe("EOS-S04 HV remediation", () => {
           }),
         (error: unknown) => error instanceof PlatformError && error.code === "FORBIDDEN",
       );
-      service.decideContactCorrection(director(), {
+      service.decideContactCorrection(ceo(), {
         organisationId: people.orgMaison,
         eventId: people.eventAlphaOne,
         correctionId: proposal.id,
@@ -346,7 +346,7 @@ describe("EOS-S04 HV remediation", () => {
         reason: "test rejection",
       });
       const before = service.getGuest(director(), people.orgMaison, people.eventAlphaOne, guest.id).email.value;
-      service.decideContactCorrection(director(), {
+      service.decideContactCorrection(ceo(), {
         organisationId: people.orgMaison,
         eventId: people.eventAlphaOne,
         correctionId: proposal.id,

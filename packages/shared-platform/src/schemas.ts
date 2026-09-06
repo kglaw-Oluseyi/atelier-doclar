@@ -481,6 +481,7 @@ export type GuestReference = z.infer<typeof GuestReferenceSchema>;
 export type PolicyVersionRef = z.infer<typeof PolicyVersionRefSchema>;
 export type ScopeInput = z.infer<typeof ScopeInputSchema>;
 export type PermissionKey = z.infer<typeof PermissionKeySchema>;
+export type SystemRoleKey = z.infer<typeof SystemRoleKeySchema>;
 export type EventPhase = z.infer<typeof EventPhaseSchema>;
 export type CreateClientInput = z.infer<typeof CreateClientInputSchema>;
 export type UpdateClientInput = z.infer<typeof UpdateClientInputSchema>;
