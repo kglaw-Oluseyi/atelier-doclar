@@ -9,6 +9,7 @@ import {
   normalizeEmail,
   normalizeName,
 } from "./guest-matching.js";
+import { GuestAddressingSchema, type GuestAddressing } from "./addressing-schemas.js";
 import type {
   AmendGuestInput,
   GuestDuplicateCandidate,
@@ -19,6 +20,44 @@ import type {
 } from "./guest-schemas.js";
 import type { Person } from "./schemas.js";
 import type { PlatformSnapshot } from "./store.js";
+
+function optionalText(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+}
+
+export function addressingFromIntake(fields: IntakeGuestInput): GuestAddressing | undefined {
+  const honorific = fields.honorific;
+  const professionalTitle = optionalText(fields.professionalTitle);
+  const traditionalTitle = optionalText(fields.traditionalTitle);
+  const middleNames = optionalText(fields.middleNames);
+  const postNominals = fields.postNominals?.filter((item) => item.trim().length > 0);
+  const preferredDisplayName = optionalText(fields.preferredDisplayName);
+  const preferredFormalSalutation = optionalText(fields.preferredFormalSalutation);
+  const jointAddressForm = optionalText(fields.jointAddressForm);
+  const has =
+    honorific ||
+    professionalTitle ||
+    traditionalTitle ||
+    middleNames ||
+    (postNominals && postNominals.length > 0) ||
+    preferredDisplayName ||
+    preferredFormalSalutation ||
+    jointAddressForm;
+  if (!has) return undefined;
+  return GuestAddressingSchema.parse({
+    ...(honorific ? { honorific } : {}),
+    ...(professionalTitle ? { professionalTitle, professionalTitleSource: "STAFF" as const } : {}),
+    ...(traditionalTitle ? { traditionalTitle, traditionalTitleSource: "STAFF" as const } : {}),
+    ...(middleNames ? { middleNames } : {}),
+    ...(postNominals?.length ? { postNominals } : {}),
+    ...(preferredDisplayName ? { preferredDisplayName } : {}),
+    ...(preferredFormalSalutation ? { preferredFormalSalutation } : {}),
+    ...(jointAddressForm ? { jointAddressForm } : {}),
+    addressingStatus: "UNVERIFIED",
+    addressingSource: "STAFF",
+  });
+}
 
 export function qualityForSupplied(value: string | undefined): QualifiedField {
   const trimmed = value?.trim();
@@ -79,6 +118,13 @@ export function buildOperationalGuest(input: {
     dietaryRequirement: qualityForSupplied(input.fields.dietaryRequirement),
     accessibilityRequirement: qualityForSupplied(input.fields.accessibilityRequirement),
     operationalNote: qualityForSupplied(input.fields.operationalNote),
+    ...((): { addressing?: GuestAddressing; ageBand?: IntakeGuestInput["ageBand"] } => {
+      const addressing = addressingFromIntake(input.fields);
+      return {
+        ...(addressing ? { addressing } : {}),
+        ...(input.fields.ageBand ? { ageBand: input.fields.ageBand } : {}),
+      };
+    })(),
     lifecycle: "ACTIVE",
     identityResolution: "UNRESOLVED",
     intakeSource: input.source,

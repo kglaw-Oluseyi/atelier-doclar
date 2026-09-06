@@ -12,7 +12,54 @@ import { assertNamedHuman } from "./identity.js";
 import { emptyMasterEventFile } from "./mef.js";
 import { authorize, canSeeClient, canSeeEvent, singleCoveringRoleKey, type ActorSnapshot, type PolicyDecision } from "./policy.js";
 import { parseCanonicalCsv, rowToIntakeFields } from "./guest-intake.js";
+import { dateOfBirthForbidden, requiresResponsibleAdult } from "./addressing.js";
 import { operationalDisplayName } from "./guest-matching.js";
+import {
+  addPartyMemberOnSnap,
+  administerCompanionEntitlementOnSnap,
+  amendHasAddressingFields,
+  applyGuestAddressing,
+  createPartyOnSnap,
+  createRelationshipOnSnap,
+  createResponsibleAdultLinkOnSnap,
+  nominateCompanionOnSnap,
+  reconcileCompanionNamesOnSnap,
+  removePartyMemberOnSnap,
+  requireScopedGuest,
+  syncChildReadiness,
+} from "./addressing-operations.js";
+import {
+  addressingStatusRequiresConfirm,
+  buildGuestAddressingWorkspace,
+  projectOperationalGuest,
+  type GuestAddressingCapabilities,
+  type GuestAddressingWorkspace,
+} from "./addressing-projections.js";
+import {
+  AddPartyMemberInputSchema,
+  AdministerCompanionEntitlementInputSchema,
+  CreatePartyInputSchema,
+  CreateRelationshipInputSchema,
+  CreateResponsibleAdultLinkInputSchema,
+  NominateCompanionInputSchema,
+  ReconcileCompanionNamesInputSchema,
+  RemovePartyMemberInputSchema,
+  UpdateGuestAddressingInputSchema,
+  type AddPartyMemberInput,
+  type AdministerCompanionEntitlementInput,
+  type CompanionEntitlement,
+  type CreatePartyInput,
+  type CreateRelationshipInput,
+  type CreateResponsibleAdultLinkInput,
+  type GuestParty,
+  type GuestPartyMember,
+  type GuestRelationship,
+  type NominateCompanionInput,
+  type ReconcileCompanionNamesInput,
+  type RemovePartyMemberInput,
+  type ResponsibleAdultLink,
+  type UpdateGuestAddressingInput,
+} from "./addressing-schemas.js";
 import {
   applyGuestAmendment,
   buildOperationalGuest,
@@ -245,6 +292,8 @@ export interface GuestSelfServiceView {
   confirmation?: { submittedAt: string; attendanceIntent: RsvpResponse["attendanceIntent"] };
   occasion?: GuestSafeOccasionView;
 }
+
+export type { GuestAddressingCapabilities, GuestAddressingWorkspace };
 
 export interface RsvpGuestDirectoryRow {
   guest: OperationalGuest;
@@ -975,6 +1024,7 @@ export class PlatformService {
           ...(household ? { householdId: household.id } : {}),
         });
         snap.operationalGuests.push(record);
+        if (record.ageBand) syncChildReadiness(snap, record);
         const resolved = recordDuplicateCandidates(snap, record, snap.persons, ctx.now);
         if (input.personId) {
           this.linkGuestInSnapshot(snap, resolved, input.personId, actor, ctx.now);
@@ -999,6 +1049,12 @@ export class PlatformService {
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash(input),
       run: (snap, ctx) => {
+        if (amendHasAddressingFields(input)) {
+          throw new PlatformError(
+            "VALIDATION_FAILED",
+            "addressing must be updated through the addressing service",
+          );
+        }
         const record = this.requireOperationalGuest(snap, input.organisationId, input.eventId, input.guestId);
         this.assertVersion(record.version, input.expectedVersion);
         applyGuestAmendment(record, input, ctx.now);
@@ -1205,6 +1261,7 @@ export class PlatformService {
     if (!canSeeEvent(ctx.actor, event, ctx.now)) {
       throw new PlatformError("NOT_FOUND", "event was not found");
     }
+    const capabilities = this.s04aCapabilities(ctx.actor, { organisationId: input.organisationId, eventId: input.eventId });
     return snap.operationalGuests
       .filter((item) => item.organisationId === input.organisationId && item.eventId === input.eventId)
       .filter((item) => (input.lifecycle ? item.lifecycle === input.lifecycle : true))
@@ -1221,7 +1278,8 @@ export class PlatformService {
         if (input.rsvpStatus && (response?.status ?? "NOT_STARTED") !== input.rsvpStatus) return false;
         return true;
       })
-      .sort((left, right) => compareGuests(left, right, input.sort));
+      .sort((left, right) => compareGuests(left, right, input.sort))
+      .map((item) => projectOperationalGuest(item, capabilities));
   }
 
   getGuest(actor: ActorContext, organisationId: string, eventId: string, guestId: string): OperationalGuest {
@@ -1230,7 +1288,202 @@ export class PlatformService {
     if (!canSeeEvent(ctx.actor, event, ctx.now)) {
       throw new PlatformError("NOT_FOUND", "event was not found");
     }
-    return this.requireOperationalGuest(snap, organisationId, eventId, guestId);
+    const guest = this.requireOperationalGuest(snap, organisationId, eventId, guestId);
+    return projectOperationalGuest(guest, this.s04aCapabilities(ctx.actor, { organisationId, eventId }));
+  }
+
+  getGuestAddressingWorkspace(
+    actor: ActorContext,
+    organisationId: string,
+    eventId: string,
+    guestId: string,
+  ): GuestAddressingWorkspace {
+    const { snap, ctx } = this.authorizeQuery(actor, "guest.addressing.view", { organisationId, eventId });
+    const event = this.requireEvent(snap, organisationId, eventId);
+    if (!canSeeEvent(ctx.actor, event, ctx.now)) {
+      throw new PlatformError("NOT_FOUND", "event was not found");
+    }
+    const guest = requireScopedGuest(snap, organisationId, eventId, guestId);
+    return buildGuestAddressingWorkspace(snap, guest, this.s04aCapabilities(ctx.actor, { organisationId, eventId }));
+  }
+
+  updateGuestAddressing(actor: ActorContext, raw: unknown): GuestAddressingWorkspace {
+    if (raw && typeof raw === "object" && dateOfBirthForbidden(raw as Record<string, unknown>)) {
+      throw new PlatformError("VALIDATION_FAILED", "date of birth is not permitted");
+    }
+    const input = parseStrict<UpdateGuestAddressingInput>(UpdateGuestAddressingInputSchema, raw);
+    const confirmRequired = addressingStatusRequiresConfirm(input.addressingStatus);
+    return this.mutate(actor, {
+      permission: confirmRequired ? "guest.addressing.confirm" : "guest.addressing.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: confirmRequired ? "guest.addressing.confirmed" : "guest.addressing.updated",
+      resourceType: "operational_guest",
+      resourceId: input.guestId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const guest = requireScopedGuest(snap, input.organisationId, input.eventId, input.guestId);
+        this.assertVersion(guest.version, input.expectedVersion);
+        if (input.ageBand && requiresResponsibleAdult(input.ageBand)) {
+          const allowed = this.permissionAllowed(ctx.actor, "guest.child.manage", {
+            organisationId: input.organisationId,
+            eventId: input.eventId,
+          });
+          if (!allowed) {
+            throw new PlatformError("FORBIDDEN", "child age band requires child management authority");
+          }
+        }
+        applyGuestAddressing(guest, input, ctx.now);
+        syncChildReadiness(snap, guest);
+        return buildGuestAddressingWorkspace(
+          snap,
+          guest,
+          this.s04aCapabilities(ctx.actor, { organisationId: input.organisationId, eventId: input.eventId }),
+        );
+      },
+    });
+  }
+
+  createGuestParty(actor: ActorContext, raw: unknown): GuestParty {
+    const input = parseStrict<CreatePartyInput>(CreatePartyInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "guest.relationship.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "guest.party.created",
+      resourceType: "guest_party",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        this.requireEvent(snap, input.organisationId, input.eventId);
+        return createPartyOnSnap(snap, input, ctx.now);
+      },
+    });
+  }
+
+  addGuestPartyMember(actor: ActorContext, raw: unknown): GuestPartyMember {
+    const input = parseStrict<AddPartyMemberInput>(AddPartyMemberInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "guest.relationship.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "guest.party.member.added",
+      resourceType: "guest_party_member",
+      resourceId: input.partyId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        this.requireEvent(snap, input.organisationId, input.eventId);
+        return addPartyMemberOnSnap(snap, input, ctx.now);
+      },
+    });
+  }
+
+  removeGuestPartyMember(actor: ActorContext, raw: unknown): GuestPartyMember {
+    const input = parseStrict<RemovePartyMemberInput>(RemovePartyMemberInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "guest.relationship.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "guest.party.member.removed",
+      resourceType: "guest_party_member",
+      resourceId: input.partyMemberId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        this.requireEvent(snap, input.organisationId, input.eventId);
+        return removePartyMemberOnSnap(snap, input, ctx.now);
+      },
+    });
+  }
+
+  createGuestRelationship(actor: ActorContext, raw: unknown): GuestRelationship {
+    const input = parseStrict<CreateRelationshipInput>(CreateRelationshipInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "guest.relationship.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "guest.relationship.created",
+      resourceType: "guest_relationship",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        this.requireEvent(snap, input.organisationId, input.eventId);
+        return createRelationshipOnSnap(snap, input, ctx.now);
+      },
+    });
+  }
+
+  administerCompanionEntitlement(actor: ActorContext, raw: unknown): CompanionEntitlement {
+    const input = parseStrict<AdministerCompanionEntitlementInput>(AdministerCompanionEntitlementInputSchema, raw);
+    const exception = input.status === "EXCEPTION_REVIEW";
+    return this.mutate(actor, {
+      permission: exception ? "guest.entitlement.exception.review" : "guest.entitlement.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: exception ? "guest.entitlement.exception.reviewed" : "guest.entitlement.administered",
+      resourceType: "companion_entitlement",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        this.requireEvent(snap, input.organisationId, input.eventId);
+        return administerCompanionEntitlementOnSnap(snap, input, ctx.now);
+      },
+    });
+  }
+
+  nominateCompanion(actor: ActorContext, raw: unknown): CompanionEntitlement {
+    const input = parseStrict<NominateCompanionInput>(NominateCompanionInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "guest.entitlement.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "guest.entitlement.nominated",
+      resourceType: "companion_entitlement",
+      resourceId: input.entitlementId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        this.requireEvent(snap, input.organisationId, input.eventId);
+        return nominateCompanionOnSnap(snap, input, actor.personId, actor.correlationId, ctx.now).entitlement;
+      },
+    });
+  }
+
+  createResponsibleAdultLink(actor: ActorContext, raw: unknown): ResponsibleAdultLink {
+    const input = parseStrict<CreateResponsibleAdultLinkInput>(CreateResponsibleAdultLinkInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "guest.child.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "guest.child.responsibleAdult.linked",
+      resourceType: "responsible_adult_link",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        this.requireEvent(snap, input.organisationId, input.eventId);
+        return createResponsibleAdultLinkOnSnap(snap, input, ctx.now);
+      },
+    });
+  }
+
+  reconcileCompanionNames(actor: ActorContext, raw: unknown) {
+    const input = parseStrict<ReconcileCompanionNamesInput>(ReconcileCompanionNamesInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "guest.entitlement.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "guest.entitlement.companionNames.reconciled",
+      resourceType: "addressing_reconciliation",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        this.requireEvent(snap, input.organisationId, input.eventId);
+        const created = reconcileCompanionNamesOnSnap(snap, input, ctx.now);
+        return { id: created[0]?.id ?? input.guestId, items: created };
+      },
+    });
   }
 
   listGuestHouseholds(actor: ActorContext, organisationId: string, eventId: string): GuestHousehold[] {
@@ -3377,6 +3630,26 @@ export class PlatformService {
     return record;
   }
 
+  private permissionAllowed(actorSnap: ActorSnapshot, permission: PermissionKey, scope: ScopeInput): boolean {
+    return authorize({ actor: actorSnap, permission, scope }).allow;
+  }
+
+  private s04aCapabilities(actorSnap: ActorSnapshot, scope: ScopeInput): GuestAddressingCapabilities {
+    return {
+      canViewAddressing: this.permissionAllowed(actorSnap, "guest.addressing.view", scope),
+      canManageAddressing: this.permissionAllowed(actorSnap, "guest.addressing.manage", scope),
+      canConfirmAddressing: this.permissionAllowed(actorSnap, "guest.addressing.confirm", scope),
+      canViewProtocolNote: this.permissionAllowed(actorSnap, "guest.protocolNote.view", scope),
+      canViewRelationship: this.permissionAllowed(actorSnap, "guest.relationship.view", scope),
+      canManageRelationship: this.permissionAllowed(actorSnap, "guest.relationship.manage", scope),
+      canViewEntitlement: this.permissionAllowed(actorSnap, "guest.entitlement.view", scope),
+      canManageEntitlement: this.permissionAllowed(actorSnap, "guest.entitlement.manage", scope),
+      canReviewEntitlementException: this.permissionAllowed(actorSnap, "guest.entitlement.exception.review", scope),
+      canViewChild: this.permissionAllowed(actorSnap, "guest.child.view", scope),
+      canManageChild: this.permissionAllowed(actorSnap, "guest.child.manage", scope),
+    };
+  }
+
   private assertVersion(actual: number, expected: number): void {
     if (actual !== expected) {
       throw new PlatformError("VERSION_CONFLICT", `expected version ${expected} but found ${actual}`);
@@ -3446,6 +3719,28 @@ export class PlatformService {
         clientId: record?.clientId,
         eventId: record?.eventId,
       };
+    }
+    const s04aTables = [
+      snap.guestParties,
+      snap.guestPartyMembers,
+      snap.guestRelationships,
+      snap.companionEntitlements,
+      snap.companionNominations,
+      snap.responsibleAdultLinks,
+      snap.eventSeries,
+      snap.eventSeriesMembers,
+      snap.addressingReconciliationItems,
+    ];
+    for (const table of s04aTables) {
+      const record = table.find((item) => item.id === id);
+      if (record && "organisationId" in record) {
+        return {
+          type,
+          organisationId: record.organisationId,
+          clientId: "clientId" in record ? record.clientId : undefined,
+          eventId: "eventId" in record ? record.eventId : undefined,
+        };
+      }
     }
     const rsvpTables = [
       snap.rsvpPolicies,
@@ -3521,6 +3816,15 @@ export class PlatformService {
       snap.guestReferences,
       snap.operationalGuests,
       snap.guestHouseholds,
+      snap.guestParties,
+      snap.guestPartyMembers,
+      snap.guestRelationships,
+      snap.companionEntitlements,
+      snap.companionNominations,
+      snap.responsibleAdultLinks,
+      snap.eventSeries,
+      snap.eventSeriesMembers,
+      snap.addressingReconciliationItems,
       snap.guestDuplicateCandidates,
       snap.guestIntakeBatches,
       snap.rsvpPolicies,

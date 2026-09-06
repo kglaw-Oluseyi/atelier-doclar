@@ -247,3 +247,8 @@ export function applyS04AFixtures(snap: PlatformSnapshot): PlatformSnapshot {
   next.companionEntitlements.push(fixtureS04AUnnamedEntitlement());
   return next;
 }
+
+export function applyS04AFixturesIfMissing(snap: PlatformSnapshot): PlatformSnapshot {
+  if (snap.operationalGuests.some((item) => item.id === S04A_FIXTURE_IDS.guestEbunoluwa)) return snap;
+  return applyS04AFixtures(snap);
+}

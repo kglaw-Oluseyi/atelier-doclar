@@ -344,6 +344,7 @@ export const UpdateGuestAddressingInputSchema = z
     pronunciationNote: z.string().trim().max(240).optional(),
     addressingStatus: AddressingStatusSchema.optional(),
     addressingSource: AddressingSourceSchema,
+    ageBand: AgeBandSchema.optional(),
   })
   .strict();
 
@@ -422,6 +423,13 @@ export const CreateResponsibleAdultLinkInputSchema = z
   .strict()
   .refine((value) => value.childGuestId !== value.responsibleAdultGuestId, "a child cannot be their own responsible adult");
 
+export const ReconcileCompanionNamesInputSchema = z
+  .object({
+    ...mutationBase,
+    guestId: GuestIdSchema,
+  })
+  .strict();
+
 export type Honorific = z.infer<typeof HonorificSchema>;
 export type AddressingStatus = z.infer<typeof AddressingStatusSchema>;
 export type CompanionEntitlementStatus = z.infer<typeof CompanionEntitlementStatusSchema>;
@@ -446,6 +454,7 @@ export type CreateRelationshipInput = z.infer<typeof CreateRelationshipInputSche
 export type AdministerCompanionEntitlementInput = z.infer<typeof AdministerCompanionEntitlementInputSchema>;
 export type NominateCompanionInput = z.infer<typeof NominateCompanionInputSchema>;
 export type CreateResponsibleAdultLinkInput = z.infer<typeof CreateResponsibleAdultLinkInputSchema>;
+export type ReconcileCompanionNamesInput = z.infer<typeof ReconcileCompanionNamesInputSchema>;
 export type CompanionAuthority = z.infer<typeof CompanionAuthoritySchema>;
 export type S04ACreatedRecordRef = z.infer<typeof S04ACreatedRecordRefSchema>;
 export type S04AMigrationNote = z.infer<typeof S04AMigrationNoteSchema>;

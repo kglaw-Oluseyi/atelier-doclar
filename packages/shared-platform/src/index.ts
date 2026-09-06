@@ -108,8 +108,12 @@ export {
   UpdateGuestAddressingInputSchema,
   CreatePartyInputSchema,
   AddPartyMemberInputSchema,
+  RemovePartyMemberInputSchema,
+  CreateRelationshipInputSchema,
+  AdministerCompanionEntitlementInputSchema,
   NominateCompanionInputSchema,
   CreateResponsibleAdultLinkInputSchema,
+  ReconcileCompanionNamesInputSchema,
   HonorificSchema,
   AgeBandSchema,
   type GuestAddressing,
@@ -125,6 +129,16 @@ export {
   type Honorific,
   type S04AMigrationReceipt,
 } from "./addressing-schemas.js";
+export {
+  communicationsSalutation,
+  projectGuestAddressing,
+  buildGuestAddressingWorkspace,
+  type GuestAddressingCapabilities,
+  type GuestAddressingProjection,
+  type GuestAddressingWorkspace,
+  type GuestChildProjection,
+  type CompanionEntitlementProjection,
+} from "./addressing-projections.js";
 export {
   validateS04APersistedCollections,
   S04A_UNKNOWN_FIELDS_POLICY,
@@ -177,6 +191,7 @@ export {
 } from "./addressing-migration.js";
 export {
   applyS04AFixtures,
+  applyS04AFixturesIfMissing,
   fixtureS04AGuests,
   fixtureS04AHousehold,
   fixtureS03CompanionEntitlement,
