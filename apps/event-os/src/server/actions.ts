@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { NonProductionIdentityAdapter, PlatformError } from "@maison-doclar/shared-platform";
 import { fixturesAllowed } from "./config";
-import { getRuntime } from "./runtime";
+import { getRuntime, withDurable } from "./runtime";
 import { clearStaffSessionCookie, readStaffSessionCookie, writeStaffSessionCookie } from "./staff-session-cookie";
 import { requireActor } from "./with-session";
 
@@ -12,6 +12,7 @@ function safeNextPath(value: string): string {
 }
 
 export async function signInAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const next = safeNextPath(String(formData.get("next") ?? "/app"));
   const fail = `/sign-in?next=${encodeURIComponent(next)}&error=`;
   const denied = `${fail}${encodeURIComponent("Sign in failed. Check the named identity and access token.")}`;
@@ -34,9 +35,11 @@ export async function signInAction(formData: FormData): Promise<void> {
     redirect(`${fail}${encodeURIComponent(actionError(error))}`);
   }
   redirect(next);
+  });
 }
 
 export async function signOutAction(): Promise<void> {
+  return await withDurable(async () => {
   const token = await readStaffSessionCookie();
   if (!token) {
     await clearStaffSessionCookie();
@@ -51,6 +54,7 @@ export async function signOutAction(): Promise<void> {
   }
   await clearStaffSessionCookie();
   redirect(revoked ? "/sign-in?status=signed-out" : "/sign-in?status=already-signed-out");
+  });
 }
 
 function toIso(value: string): string | undefined {
@@ -72,6 +76,7 @@ function actionError(error: unknown): string {
 }
 
 export async function createClientAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const runtime = getRuntime();
   const organisation = runtime.service.listOrganisations(actor)[0];
@@ -91,9 +96,11 @@ export async function createClientAction(formData: FormData): Promise<void> {
     redirect(`/app/clients/new?error=${encodeURIComponent(actionError(error))}`);
   }
   redirect(`/app/clients/${client.id}`);
+  });
 }
 
 export async function createEventAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const runtime = getRuntime();
   const organisation = runtime.service.listOrganisations(actor)[0];
@@ -123,9 +130,11 @@ export async function createEventAction(formData: FormData): Promise<void> {
     redirect(`${returnTo}${encodeURIComponent(actionError(error))}`);
   }
   redirect(`/app/events/${event.id}`);
+  });
 }
 
 export async function grantAssignmentAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const runtime = getRuntime();
   const organisation = runtime.service.listOrganisations(actor)[0];
@@ -154,9 +163,11 @@ export async function grantAssignmentAction(formData: FormData): Promise<void> {
     redirect(`/app/admin/access?error=${encodeURIComponent(actionError(error))}`);
   }
   redirect("/app/admin/access");
+  });
 }
 
 export async function intakeGuestAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const runtime = getRuntime();
   const eventId = String(formData.get("eventId") ?? "");
@@ -221,9 +232,11 @@ export async function intakeGuestAction(formData: FormData): Promise<void> {
     redirect(`${fail}${encodeURIComponent(actionError(error))}`);
   }
   redirect(`/app/events/${eventId}/guests/${guest.id}`);
+  });
 }
 
 export async function amendGuestAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const runtime = getRuntime();
   const eventId = String(formData.get("eventId") ?? "");
@@ -255,9 +268,11 @@ export async function amendGuestAction(formData: FormData): Promise<void> {
     redirect(`${fail}${encodeURIComponent(actionError(error))}`);
   }
   redirect(`/app/events/${eventId}/guests/${guestId}`);
+  });
 }
 
 export async function resolveDuplicateAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const runtime = getRuntime();
   const eventId = String(formData.get("eventId") ?? "");
@@ -279,9 +294,11 @@ export async function resolveDuplicateAction(formData: FormData): Promise<void> 
     redirect(`${fail}${encodeURIComponent(actionError(error))}`);
   }
   redirect(`/app/events/${eventId}/guests`);
+  });
 }
 
 export async function importGuestsAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const runtime = getRuntime();
   const eventId = String(formData.get("eventId") ?? "");
@@ -302,9 +319,11 @@ export async function importGuestsAction(formData: FormData): Promise<void> {
     redirect(`${fail}${encodeURIComponent(actionError(error))}`);
   }
   redirect(`/app/events/${eventId}/guests`);
+  });
 }
 
 export async function transitionEventAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const runtime = getRuntime();
   const organisation = runtime.service.listOrganisations(actor)[0];
@@ -325,9 +344,11 @@ export async function transitionEventAction(formData: FormData): Promise<void> {
     redirect(`${settings}${encodeURIComponent(actionError(error))}`);
   }
   redirect(`/app/events/${eventId}/settings`);
+  });
 }
 
 export async function prepareRsvpAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const runtime = getRuntime();
   const eventId = String(formData.get("eventId") ?? "");
@@ -348,9 +369,11 @@ export async function prepareRsvpAction(formData: FormData): Promise<void> {
     redirect(`${fail}${encodeURIComponent(actionError(error))}`);
   }
   redirect(`/app/events/${eventId}/rsvp`);
+  });
 }
 
 export async function upsertRsvpPolicyAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const runtime = getRuntime();
   const eventId = String(formData.get("eventId") ?? "");
@@ -376,9 +399,11 @@ export async function upsertRsvpPolicyAction(formData: FormData): Promise<void> 
     redirect(`${fail}${encodeURIComponent(actionError(error))}`);
   }
   redirect(`/app/events/${eventId}/rsvp/policy`);
+  });
 }
 
 export async function issueRsvpInvitationAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const runtime = getRuntime();
   const eventId = String(formData.get("eventId") ?? "");
@@ -401,9 +426,11 @@ export async function issueRsvpInvitationAction(formData: FormData): Promise<voi
     redirect(`${fail}${encodeURIComponent(actionError(error))}`);
   }
   redirect(`/app/events/${eventId}/guests/${guestId}?issued=${encodeURIComponent(token)}`);
+  });
 }
 
 export async function staffEnterRsvpAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const runtime = getRuntime();
   const eventId = String(formData.get("eventId") ?? "");
@@ -427,9 +454,11 @@ export async function staffEnterRsvpAction(formData: FormData): Promise<void> {
     redirect(`${fail}${encodeURIComponent(actionError(error))}`);
   }
   redirect(`/app/events/${eventId}/guests/${guestId}`);
+  });
 }
 
 export async function reviewRsvpExceptionAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const runtime = getRuntime();
   const eventId = String(formData.get("eventId") ?? "");
@@ -451,9 +480,11 @@ export async function reviewRsvpExceptionAction(formData: FormData): Promise<voi
     redirect(`${fail}${encodeURIComponent(actionError(error))}`);
   }
   redirect(`/app/events/${eventId}/rsvp/exceptions`);
+  });
 }
 
 export async function acknowledgeAssistanceAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const runtime = getRuntime();
   const eventId = String(formData.get("eventId") ?? "");
@@ -475,6 +506,7 @@ export async function acknowledgeAssistanceAction(formData: FormData): Promise<v
     redirect(`${fail}${encodeURIComponent(actionError(error))}`);
   }
   redirect(`/app/events/${eventId}/rsvp/exceptions`);
+  });
 }
 
 function invitationToken(raw: string): string {
@@ -488,6 +520,7 @@ function invitationToken(raw: string): string {
 }
 
 export async function exchangeGuestAccessAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const token = invitationToken(String(formData.get("token") ?? ""));
   const access = await import("./guest-access");
   try {
@@ -497,9 +530,11 @@ export async function exchangeGuestAccessAction(formData: FormData): Promise<voi
     redirect("/rsvp/unavailable");
   }
   redirect("/rsvp");
+  });
 }
 
 export async function submitGuestRsvpAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const token = await (await import("./guest-access")).readGuestSessionCookie();
   if (!token) {
     redirect("/rsvp/unavailable");
@@ -530,9 +565,11 @@ export async function submitGuestRsvpAction(formData: FormData): Promise<void> {
     redirect("/rsvp/confirmed");
   }
   redirect("/rsvp");
+  });
 }
 
 export async function logoutGuestRsvpAction(): Promise<void> {
+  return await withDurable(async () => {
   const access = await import("./guest-access");
   const token = await access.readGuestSessionCookie();
   if (token) {
@@ -544,6 +581,7 @@ export async function logoutGuestRsvpAction(): Promise<void> {
   }
   await access.clearGuestSessionCookie();
   redirect("/rsvp/unavailable");
+  });
 }
 
 function commsFail(eventId: string, path: string, error: unknown): never {
@@ -557,6 +595,7 @@ function commsOrg(actor: Awaited<ReturnType<typeof requireActor>>["actor"], even
 }
 
 export async function prepareCommunicationsAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const eventId = String(formData.get("eventId") ?? "");
   try {
@@ -570,9 +609,11 @@ export async function prepareCommunicationsAction(formData: FormData): Promise<v
     commsFail(eventId, "", error);
   }
   redirect(`/app/events/${eventId}/communications`);
+  });
 }
 
 export async function publishChannelPolicyAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const eventId = String(formData.get("eventId") ?? "");
   try {
@@ -592,9 +633,11 @@ export async function publishChannelPolicyAction(formData: FormData): Promise<vo
     commsFail(eventId, "policy", error);
   }
   redirect(`/app/events/${eventId}/communications/policy?status=published`);
+  });
 }
 
 export async function publishOccasionAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const eventId = String(formData.get("eventId") ?? "");
   try {
@@ -614,9 +657,11 @@ export async function publishOccasionAction(formData: FormData): Promise<void> {
     commsFail(eventId, "policy", error);
   }
   redirect(`/app/events/${eventId}/communications/policy?status=occasion-published`);
+  });
 }
 
 export async function createTemplateVersionAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const eventId = String(formData.get("eventId") ?? "");
   const templateId = String(formData.get("templateId") ?? "");
@@ -634,9 +679,11 @@ export async function createTemplateVersionAction(formData: FormData): Promise<v
     commsFail(eventId, `templates/${templateId}`, error);
   }
   redirect(`/app/events/${eventId}/communications/templates/${templateId}`);
+  });
 }
 
 export async function approveTemplateAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const eventId = String(formData.get("eventId") ?? "");
   const templateId = String(formData.get("templateId") ?? "");
@@ -653,9 +700,11 @@ export async function approveTemplateAction(formData: FormData): Promise<void> {
     commsFail(eventId, `templates/${templateId}`, error);
   }
   redirect(`/app/events/${eventId}/communications/templates/${templateId}?status=approved`);
+  });
 }
 
 export async function upsertAudienceAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const eventId = String(formData.get("eventId") ?? "");
   let audienceId: string;
@@ -678,9 +727,11 @@ export async function upsertAudienceAction(formData: FormData): Promise<void> {
     commsFail(eventId, "audiences", error);
   }
   redirect(`/app/events/${eventId}/communications/audiences/${audienceId}`);
+  });
 }
 
 export async function createCampaignAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const eventId = String(formData.get("eventId") ?? "");
   let campaignId: string;
@@ -703,9 +754,11 @@ export async function createCampaignAction(formData: FormData): Promise<void> {
     commsFail(eventId, "campaigns/new", error);
   }
   redirect(`/app/events/${eventId}/communications/campaigns/${campaignId}`);
+  });
 }
 
 export async function requestCampaignApprovalAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const eventId = String(formData.get("eventId") ?? "");
   const campaignId = String(formData.get("campaignId") ?? "");
@@ -722,9 +775,11 @@ export async function requestCampaignApprovalAction(formData: FormData): Promise
     commsFail(eventId, `campaigns/${campaignId}`, error);
   }
   redirect(`/app/events/${eventId}/communications/campaigns/${campaignId}`);
+  });
 }
 
 export async function decideCampaignAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const eventId = String(formData.get("eventId") ?? "");
   const campaignId = String(formData.get("campaignId") ?? "");
@@ -743,9 +798,11 @@ export async function decideCampaignAction(formData: FormData): Promise<void> {
     commsFail(eventId, `campaigns/${campaignId}`, error);
   }
   redirect(`/app/events/${eventId}/communications/campaigns/${campaignId}`);
+  });
 }
 
 export async function actOnCampaignAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const eventId = String(formData.get("eventId") ?? "");
   const campaignId = String(formData.get("campaignId") ?? "");
@@ -765,9 +822,11 @@ export async function actOnCampaignAction(formData: FormData): Promise<void> {
     commsFail(eventId, `campaigns/${campaignId}`, error);
   }
   redirect(`/app/events/${eventId}/communications/campaigns/${campaignId}?act=${encodeURIComponent(String(formData.get("action") ?? "RUN"))}`);
+  });
 }
 
 export async function ingestInboundAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const eventId = String(formData.get("eventId") ?? "");
   try {
@@ -791,9 +850,11 @@ export async function ingestInboundAction(formData: FormData): Promise<void> {
     commsFail(eventId, "inbox", error);
   }
   redirect(`/app/events/${eventId}/communications/inbox`);
+  });
 }
 
 export async function resolveUnmatchedAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const eventId = String(formData.get("eventId") ?? "");
   try {
@@ -811,9 +872,11 @@ export async function resolveUnmatchedAction(formData: FormData): Promise<void> 
     commsFail(eventId, "unmatched", error);
   }
   redirect(`/app/events/${eventId}/communications/unmatched`);
+  });
 }
 
 export async function replyOnThreadAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const eventId = String(formData.get("eventId") ?? "");
   const threadId = String(formData.get("threadId") ?? "");
@@ -831,9 +894,11 @@ export async function replyOnThreadAction(formData: FormData): Promise<void> {
     commsFail(eventId, `inbox/${threadId}`, error);
   }
   redirect(`/app/events/${eventId}/communications/inbox/${threadId}`);
+  });
 }
 
 export async function actOnTaskAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const eventId = String(formData.get("eventId") ?? "");
   try {
@@ -852,6 +917,7 @@ export async function actOnTaskAction(formData: FormData): Promise<void> {
     commsFail(eventId, "tasks", error);
   }
   redirect(`/app/events/${eventId}/communications/tasks`);
+  });
 }
 
 function correctionDecisionError(error: unknown): string {
@@ -872,6 +938,7 @@ function correctionDecisionError(error: unknown): string {
 }
 
 export async function decideCorrectionAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const eventId = String(formData.get("eventId") ?? "");
   const decision = String(formData.get("decision") ?? "");
@@ -892,9 +959,11 @@ export async function decideCorrectionAction(formData: FormData): Promise<void> 
   }
   const status = decision === "REJECTED" ? "rejected" : "applied";
   redirect(`/app/events/${eventId}/communications/corrections?status=${status}`);
+  });
 }
 
 export async function proposeCorrectionAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const eventId = String(formData.get("eventId") ?? "");
   try {
@@ -912,9 +981,11 @@ export async function proposeCorrectionAction(formData: FormData): Promise<void>
     commsFail(eventId, "unmatched", error);
   }
   redirect(`/app/events/${eventId}/communications/unmatched?status=correction-proposed`);
+  });
 }
 
 export async function applySyntheticCallbackAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const eventId = String(formData.get("eventId") ?? "");
   const campaignId = String(formData.get("campaignId") ?? "");
@@ -936,6 +1007,7 @@ export async function applySyntheticCallbackAction(formData: FormData): Promise<
     commsFail(eventId, `campaigns/${campaignId}`, error);
   }
   redirect(`/app/events/${eventId}/communications/campaigns/${campaignId}`);
+  });
 }
 
 function guestFail(eventId: string, guestId: string, error: unknown): never {
@@ -950,6 +1022,7 @@ function optionalFormValue(formData: FormData, name: string): string | undefined
 }
 
 export async function updateGuestAddressingAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const eventId = String(formData.get("eventId") ?? "");
   const guestId = String(formData.get("guestId") ?? "");
@@ -984,9 +1057,11 @@ export async function updateGuestAddressingAction(formData: FormData): Promise<v
     guestFail(eventId, guestId, error);
   }
   redirect(`/app/events/${eventId}/guests/${guestId}`);
+  });
 }
 
 export async function nominateCompanionAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const eventId = String(formData.get("eventId") ?? "");
   const guestId = String(formData.get("guestId") ?? "");
@@ -1008,9 +1083,11 @@ export async function nominateCompanionAction(formData: FormData): Promise<void>
     guestFail(eventId, guestId, error);
   }
   redirect(`/app/events/${eventId}/guests/${guestId}`);
+  });
 }
 
 export async function reconcileCompanionNamesAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const eventId = String(formData.get("eventId") ?? "");
   const guestId = String(formData.get("guestId") ?? "");
@@ -1027,9 +1104,11 @@ export async function reconcileCompanionNamesAction(formData: FormData): Promise
     guestFail(eventId, guestId, error);
   }
   redirect(`/app/events/${eventId}/guests/${guestId}`);
+  });
 }
 
 export async function createResponsibleAdultLinkAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
   const { actor } = await requireActor();
   const eventId = String(formData.get("eventId") ?? "");
   const guestId = String(formData.get("guestId") ?? "");
@@ -1048,4 +1127,5 @@ export async function createResponsibleAdultLinkAction(formData: FormData): Prom
     guestFail(eventId, guestId, error);
   }
   redirect(`/app/events/${eventId}/guests/${guestId}`);
+  });
 }

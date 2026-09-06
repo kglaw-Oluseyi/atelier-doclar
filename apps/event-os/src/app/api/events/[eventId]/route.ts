@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { jsonError } from "../../../../server/http";
-import { getRuntime } from "../../../../server/runtime";
+import { getRuntime, withDurable } from "../../../../server/runtime";
 import { requireActor } from "../../../../server/with-session";
 
 export async function GET(request: Request, context: { params: Promise<{ eventId: string }> }): Promise<Response> {
@@ -21,13 +21,15 @@ export async function GET(request: Request, context: { params: Promise<{ eventId
 }
 
 export async function PATCH(request: Request, context: { params: Promise<{ eventId: string }> }): Promise<Response> {
-  try {
-    const { actor } = await requireActor();
-    const { eventId } = await context.params;
-    const body = (await request.json()) as Record<string, unknown>;
-    const event = getRuntime().service.updateEvent(actor, { ...body, eventId });
-    return NextResponse.json({ ok: true, event });
-  } catch (error) {
-    return jsonError(error);
-  }
+  return withDurable(async () => {
+    try {
+      const { actor } = await requireActor();
+      const { eventId } = await context.params;
+      const body = (await request.json()) as Record<string, unknown>;
+      const event = getRuntime().service.updateEvent(actor, { ...body, eventId });
+      return NextResponse.json({ ok: true, event });
+    } catch (error) {
+      return jsonError(error);
+    }
+  });
 }

@@ -20,7 +20,9 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const { ensureRuntime } = await import("../server/runtime");
+  await ensureRuntime();
   return (
     <html lang="en" className={`atelier ${instrument.variable}`}>
       <head>

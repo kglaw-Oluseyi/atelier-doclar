@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { jsonError } from "../../../server/http";
-import { getRuntime } from "../../../server/runtime";
+import { getRuntime, withDurable } from "../../../server/runtime";
 import { requireActor } from "../../../server/with-session";
 
 export async function GET(request: Request): Promise<Response> {
@@ -15,11 +15,13 @@ export async function GET(request: Request): Promise<Response> {
 }
 
 export async function POST(request: Request): Promise<Response> {
-  try {
-    const { actor } = await requireActor();
-    const client = getRuntime().service.createClient(actor, await request.json());
-    return NextResponse.json({ ok: true, client }, { status: 201 });
-  } catch (error) {
-    return jsonError(error);
-  }
+  return withDurable(async () => {
+    try {
+      const { actor } = await requireActor();
+      const client = getRuntime().service.createClient(actor, await request.json());
+      return NextResponse.json({ ok: true, client }, { status: 201 });
+    } catch (error) {
+      return jsonError(error);
+    }
+  });
 }

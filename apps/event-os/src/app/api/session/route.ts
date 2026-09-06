@@ -2,10 +2,11 @@ import { NextResponse, type NextRequest } from "next/server";
 import { AuthenticateStaffInputSchema, NonProductionIdentityAdapter, SESSION_COOKIE } from "@maison-doclar/shared-platform";
 import { fixturesAllowed } from "../../../server/config";
 import { jsonError } from "../../../server/http";
-import { getRuntime } from "../../../server/runtime";
+import { getRuntime, withDurable } from "../../../server/runtime";
 import { staffSessionClearCookie, staffSessionSetCookie } from "../../../server/staff-session-cookie";
 
 export async function POST(request: Request): Promise<Response> {
+  return withDurable(async () => {
   try {
     if (!fixturesAllowed()) {
       return NextResponse.json({ ok: false, code: "PRODUCTION_ADAPTER_FORBIDDEN" }, { status: 403 });
@@ -25,9 +26,11 @@ export async function POST(request: Request): Promise<Response> {
   } catch (error) {
     return jsonError(error);
   }
+  });
 }
 
 export async function DELETE(request: NextRequest): Promise<Response> {
+  return withDurable(async () => {
   const token = request.cookies.get(SESSION_COOKIE)?.value;
   try {
     getRuntime().service.logoutStaffSession(token);
@@ -39,4 +42,5 @@ export async function DELETE(request: NextRequest): Promise<Response> {
   const response = NextResponse.json({ ok: true, status: "signed-out" });
   response.cookies.set(staffSessionClearCookie());
   return response;
+  });
 }

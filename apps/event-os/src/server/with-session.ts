@@ -1,11 +1,11 @@
 import { PlatformError, type ActorContext, type Person } from "@maison-doclar/shared-platform";
 import { fixturesAllowed } from "./config";
-import { getRuntime } from "./runtime";
+import { ensureRuntime } from "./runtime";
 import { readStaffSessionCookie } from "./staff-session-cookie";
 
 export async function requireActor(): Promise<{ actor: ActorContext; person: Person }> {
   const token = await readStaffSessionCookie();
-  const runtime = getRuntime();
+  const runtime = await ensureRuntime();
   const { actor: session } = runtime.service.requireStaffSession(token, testActorNow() ?? new Date().toISOString());
   const resolved = runtime.service.resolveActor(session.personId);
   if (resolved.assignments.every((item) => item.status !== "ACTIVE")) {

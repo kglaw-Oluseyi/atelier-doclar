@@ -17,6 +17,8 @@ export default async function GuestRsvpConfirmedPage() {
   const token = await readGuestSessionCookie();
   if (!token) redirect("/rsvp/unavailable");
   try {
+    const { ensureRuntime } = await import("../../../server/runtime");
+    await ensureRuntime();
     const view = getRuntime().service.guestSelfServiceView(token);
     return (
       <GuestFrame host={view.hostDisplayName} eventName={view.eventDisplayName}>

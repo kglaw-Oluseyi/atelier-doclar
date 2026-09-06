@@ -18,6 +18,11 @@ export function fixturesAllowed(): boolean {
   return runtimeEnv("EVENT_OS_ALLOW_FIXTURES") === "1";
 }
 
+export function databaseUrl(): string | undefined {
+  const value = runtimeEnv("DATABASE_URL")?.trim();
+  return value || undefined;
+}
+
 export function sessionConfig(): SessionConfig {
   const production = runtimeEnv("NODE_ENV") === "production";
   const accessToken = runtimeEnv("EVENT_OS_ACCESS_TOKEN") ?? (production ? "" : DEV_TOKEN);

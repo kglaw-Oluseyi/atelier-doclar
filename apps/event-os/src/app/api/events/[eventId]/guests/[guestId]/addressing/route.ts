@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { jsonError, readJson } from "../../../../../../../server/http";
-import { getRuntime } from "../../../../../../../server/runtime";
+import { getRuntime, withDurable } from "../../../../../../../server/runtime";
 import { requireActor } from "../../../../../../../server/with-session";
 
 export async function GET(
@@ -24,21 +24,23 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ eventId: string; guestId: string }> },
 ): Promise<Response> {
-  try {
-    const { actor } = await requireActor();
-    const { eventId, guestId } = await context.params;
-    const body = (await readJson(request)) as Record<string, unknown>;
-    const runtime = getRuntime();
-    const organisation = runtime.service.listOrganisations(actor)[0];
-    if (!organisation) return NextResponse.json({ ok: false, code: "NOT_FOUND" }, { status: 404 });
-    const workspace = runtime.service.updateGuestAddressing(actor, {
-      ...body,
-      organisationId: organisation.id,
-      eventId,
-      guestId,
-    });
-    return NextResponse.json({ ok: true, workspace });
-  } catch (error) {
-    return jsonError(error);
-  }
+  return withDurable(async () => {
+    try {
+      const { actor } = await requireActor();
+      const { eventId, guestId } = await context.params;
+      const body = (await readJson(request)) as Record<string, unknown>;
+      const runtime = getRuntime();
+      const organisation = runtime.service.listOrganisations(actor)[0];
+      if (!organisation) return NextResponse.json({ ok: false, code: "NOT_FOUND" }, { status: 404 });
+      const workspace = runtime.service.updateGuestAddressing(actor, {
+        ...body,
+        organisationId: organisation.id,
+        eventId,
+        guestId,
+      });
+      return NextResponse.json({ ok: true, workspace });
+    } catch (error) {
+      return jsonError(error);
+    }
+  });
 }

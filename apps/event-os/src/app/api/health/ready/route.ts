@@ -1,14 +1,17 @@
 import { NextResponse } from "next/server";
 import { fixturesAllowed, productionAuthorised } from "../../../../server/config";
-import { persistenceLabel } from "../../../../server/runtime";
+import { ensureRuntime } from "../../../../server/runtime";
 
 export async function GET(): Promise<Response> {
   try {
+    const runtime = await ensureRuntime();
     return NextResponse.json({
-      ready: fixturesAllowed(),
-      persistence: persistenceLabel(),
+      ready: runtime.persistence !== "UNAVAILABLE",
+      persistence: runtime.persistence,
+      databaseReady: runtime.persistence === "POSTGRES",
+      migrationStatus: runtime.migrationStatus,
       identityAdapter: fixturesAllowed() ? "NON_PRODUCTION_FIXTURE" : "UNBOUND",
-      fixtures: fixturesAllowed(),
+      fixtures: runtime.fixtures,
       productionAuthorised: productionAuthorised(),
       productionIdpSelected: false,
     });
@@ -17,6 +20,8 @@ export async function GET(): Promise<Response> {
       {
         ready: false,
         persistence: "UNAVAILABLE",
+        databaseReady: false,
+        migrationStatus: "FAILED",
         identityAdapter: "UNBOUND",
         fixtures: false,
         productionAuthorised: false,

@@ -19,7 +19,7 @@ export default async function SystemPage() {
         <li>Persistence: {persistenceLabel()}</li>
         <li>Production authorised: {String(productionAuthorised())}</li>
         <li>Production IdP: not selected</li>
-        <li>Railway mutation: not authorised</li>
+        <li>Railway project: atelier-doclar (deploy-by-default; production operations gated)</li>
       </ul>
     </AppShell>
   );

@@ -10,6 +10,8 @@ export default async function GuestRsvpPage({ searchParams }: { searchParams: Pr
   if (!token) redirect("/rsvp/unavailable");
   const error = (await searchParams).error;
   try {
+    const { ensureRuntime } = await import("../../server/runtime");
+    await ensureRuntime();
     const view = getRuntime().service.guestSelfServiceView(token);
     return (
       <GuestFrame host={view.hostDisplayName} eventName={view.eventDisplayName}>
