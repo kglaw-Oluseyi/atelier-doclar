@@ -1,8 +1,8 @@
 # Local / GitHub Parity Policy
 
-**Authority:** George Lawson, CEO, Maison Doclar  
-**Repository:** `kglaw-Oluseyi/atelier-doclar`  
-**Branch:** `main`  
+**Authority:** George Lawson, CEO, Maison Doclar
+**Repository:** `kglaw-Oluseyi/atelier-doclar`
+**Branch:** `main`
 **Status:** CONTROLLING GOVERNANCE — not an acceptance, deployment or production decision
 
 This policy is the continuing rule for local work versus GitHub durability. It does not accept a slice, pass a milestone, authorise P03, authorise deployment, authorise production, or sign a protected gate.
