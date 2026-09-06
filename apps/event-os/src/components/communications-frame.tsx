@@ -1,21 +1,7 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
 import { AppShell } from "./shell";
+import { CommunicationsNav } from "./communications-nav";
 import type { Person } from "@maison-doclar/shared-platform";
-
-const LINKS = [
-  ["", "Overview"],
-  ["policy", "Policy"],
-  ["templates", "Templates"],
-  ["audiences", "Audiences"],
-  ["campaigns", "Campaigns"],
-  ["inbox", "Inbox"],
-  ["unmatched", "Unmatched"],
-  ["failures", "Failures"],
-  ["tasks", "Tasks"],
-  ["corrections", "Corrections"],
-  ["audit", "Attention"],
-] as const;
 
 export function CommunicationsFrame({
   person,
@@ -36,7 +22,6 @@ export function CommunicationsFrame({
   error?: string;
   children: ReactNode;
 }) {
-  const base = `/app/events/${eventId}/communications`;
   return (
     <AppShell
       person={person}
@@ -49,13 +34,7 @@ export function CommunicationsFrame({
         <h1>{title}</h1>
         <p className="lede">{lede}</p>
       </div>
-      <nav className="comms-nav" aria-label="Communications">
-        {LINKS.map(([path, label]) => (
-          <Link key={path || "overview"} href={path ? `${base}/${path}` : base}>
-            {label}
-          </Link>
-        ))}
-      </nav>
+      <CommunicationsNav eventId={eventId} />
       {error ? (
         <p className="alert" data-tone="danger" role="alert">
           {error}

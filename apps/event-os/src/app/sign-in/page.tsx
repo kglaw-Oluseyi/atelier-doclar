@@ -1,3 +1,4 @@
+import { PublicChrome } from "../../components/public-chrome";
 import { SignInForm } from "../../components/sign-in-form";
 import { signInStatusMessage } from "../../server/staff-session-status";
 
@@ -9,6 +10,7 @@ export default async function SignInPage({
   const params = await searchParams;
   return (
     <main className="sign-in">
+      <PublicChrome />
       <p className="brand">Maison Doclar</p>
       <h1>Event OS</h1>
       <p className="lede">
