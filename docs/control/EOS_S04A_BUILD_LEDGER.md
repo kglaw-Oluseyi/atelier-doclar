@@ -188,3 +188,23 @@ Adéṣínà Ọládàpọ̀ (`00000000-0000-4000-8000-000000000076`) is an unre
 | Residual limitations | Full `OperationalGuest` shape outside the three S04A extensions is unchanged. Server-side permission enforcement remains P03 / P04 / P06. |
 | Brought forward | Independent Milestone 1 re-review. P03 remains prohibited. |
 | Railway / production / providers / later slices | Untouched |
+
+---
+
+## Local / GitHub parity governance
+
+Controlling policy: `docs/control/LOCAL_GITHUB_PARITY_POLICY.md`.
+
+GitHub is the durable source of truth for repository work. A push records and protects implementation evidence. It does not accept EOS-S04A, pass Milestone 1, authorise P03, authorise deployment, authorise production, or sign a protected gate.
+
+EOS-S04A Milestone 1 work-state at the time this policy was established:
+
+| State | EOS-S04A Milestone 1 |
+|-------|----------------------|
+| Implemented | Yes — P00–P02 and Milestone 1 remediations exist as commits |
+| Locally verified | Yes — typecheck, tests, programme validation and `git diff --check` passed locally |
+| Pushed | Recorded after the authorised durability push |
+| Independently reviewed | Pending ChatGPT review of the pushed evidence |
+| Accepted | No |
+| Deployed | No |
+| Production authorised | No |
