@@ -198,8 +198,27 @@ export {
   S04A_FIXTURE_IDS,
 } from "./addressing-fixtures.js";
 export { MemoryPlatformStore } from "./memory-store.js";
-export { PLATFORM_POSTGRES_SCHEMA, type PgQueryable } from "./postgres-schema.js";
+export { PLATFORM_POSTGRES_SCHEMA, type PgQueryable, type PgTransactor } from "./postgres-schema.js";
 export { PostgresPlatformStore, MemoryPlatformPg } from "./postgres-store.js";
+export {
+  PLATFORM_MIGRATIONS,
+  runPlatformMigrations,
+  type MigrationReport,
+} from "./migrations.js";
+export {
+  SYNTHETIC_SEED_ID,
+  SYNTHETIC_SEED_VERSION,
+  applySyntheticSeedIfNeeded,
+  applySyntheticSnapshot,
+  readSeedLedger,
+} from "./synthetic-seed.js";
+export {
+  SYNTHETIC_CLEANUP_CONFIRMATION,
+  applySyntheticCleanup,
+  assertCleanupConfirmation,
+  previewSyntheticCleanup,
+  recordCleanupAudit,
+} from "./synthetic-cleanup.js";
 export {
   PlatformService,
   type ActorContext,

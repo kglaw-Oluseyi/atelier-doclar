@@ -502,7 +502,11 @@ export const PLATFORM_PERSISTENCE_CONTRACT = {
   kind: "shared-platform-repository",
   productionDatabaseDecision: "POSTGRESQL",
   localAdapterStatus: LOCAL_STORE_PRODUCTION_STATUS,
-  productionMigrationAuthorised: false,
-  railwayMutationAuthorised: false,
+  // Safe Event OS schema migrations and atelier-doclar Railway mutation are
+  // standing-authorised by docs/control/DEPLOYMENT_AND_PRODUCTION_REALISM_POLICY.md.
+  // This is not production-operations authorisation and does not admit real data.
+  productionMigrationAuthorised: true,
+  railwayMutationAuthorised: true,
+  railwayProject: "atelier-doclar",
   competingTruthStores: false,
 } as const;

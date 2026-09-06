@@ -31,9 +31,18 @@ CREATE TABLE IF NOT EXISTS platform_idempotency (
 );
 `;
 
+export interface PgQueryResult<T extends object = Record<string, unknown>> {
+  rows: T[];
+  rowCount?: number;
+}
+
 export interface PgQueryable {
   query<T extends object = Record<string, unknown>>(
     text: string,
     values?: unknown[],
-  ): Promise<{ rows: T[] }>;
+  ): Promise<PgQueryResult<T>>;
+}
+
+export interface PgTransactor extends PgQueryable {
+  transaction<T>(fn: (client: PgQueryable) => Promise<T>): Promise<T>;
 }

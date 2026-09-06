@@ -14,7 +14,9 @@ describe("shared platform ownership", () => {
       assert.equal(owner, PLATFORM_PACKAGE);
     }
     assert.equal(PLATFORM_PERSISTENCE_CONTRACT.competingTruthStores, false);
-    assert.equal(PLATFORM_PERSISTENCE_CONTRACT.productionMigrationAuthorised, false);
+    assert.equal(PLATFORM_PERSISTENCE_CONTRACT.productionMigrationAuthorised, true);
+    assert.equal(PLATFORM_PERSISTENCE_CONTRACT.railwayMutationAuthorised, true);
+    assert.equal(PLATFORM_PERSISTENCE_CONTRACT.railwayProject, "atelier-doclar");
     assert.ok(FORBIDDEN_PARALLEL_TRUTH.includes("EventOSUser"));
     assert.ok(FORBIDDEN_PARALLEL_TRUTH.includes("EventDayUser"));
     assert.ok(FORBIDDEN_PARALLEL_TRUTH.includes("EventOSGuest"));
