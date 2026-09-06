@@ -4,6 +4,7 @@ import { GuestAddressingWorkspace } from "../../../../../../components/guest-add
 import { DuplicateResolveForm, GuestAmendForm } from "../../../../../../components/guest-amend-form";
 import { GuestAccessLink } from "../../../../../../components/guest-access-link";
 import { IssueInvitationForm, StaffRsvpForm } from "../../../../../../components/staff-rsvp-forms";
+import { AtelierSectionTabs } from "../../../../../../components/atelier-section-tabs";
 import { AppShell } from "../../../../../../components/shell";
 import { guestPermissions, resolveScopedEvent } from "../../../../../../server/guest-scope";
 import { guardedActor } from "../../../../../../server/guard";
@@ -22,7 +23,7 @@ function GuestCommunicationsTimeline({
 }) {
   const timeline = getRuntime().service.listGuestCommunications(actor, organisationId, eventId, guestId);
   return (
-    <section>
+    <section className="atelier-panel">
       <h2>Communications</h2>
       <p>
         <Link href={`/app/events/${eventId}/communications`}>Open communications centre</Link>
@@ -118,21 +119,54 @@ export default async function GuestDetailPage({
       eventName={scoped.event.name}
       current="/app/events"
     >
-      <div className="page-header">
+      <div className="atelier-dossier at-scope">
+      <header className="atelier-dossier-header atelier-masthead">
+        <p className="eyebrow">Operational dossier · {scoped.event.name}</p>
+        <span className="at-thread" aria-hidden="true" />
         <h1>{operationalDisplayName(guest)}</h1>
         <p className="lede">
           Operational guest record. Identity resolution is {guest.identityResolution.replaceAll("_", " ").toLowerCase()}.
         </p>
-      </div>
+        {workspace ? (
+          <div className="atelier-address-pair">
+            <p>
+              <span className="eyebrow">Formal</span>
+              {workspace.guest.formalSalutation.text}
+            </p>
+            <p>
+              <span className="eyebrow">Familiar</span>
+              {workspace.guest.familiarName.text}
+            </p>
+          </div>
+        ) : null}
+        <AtelierSectionTabs
+          label="Dossier sections"
+          items={[
+            { href: "#record-state", label: "Identity" },
+            { href: "#addressing-heading", label: "Addressing" },
+            { href: "#guest-amendment", label: "Amendment" },
+          ]}
+        />
+      </header>
       <p>
         <Link href={`/app/events/${scoped.event.id}/guests`}>Back to directory</Link>
       </p>
       {error ? (
-        <p className="alert" data-tone="danger" role="alert">
+        <p
+          className="alert"
+          data-tone="danger"
+          data-kind={
+            error.includes("changed while") || error.includes("Reload before") || error.includes("expected version")
+              ? "conflict"
+              : "validation"
+          }
+          role="alert"
+        >
           {error}
         </p>
       ) : null}
-      <section>
+      <div className="atelier-columns">
+      <section id="record-state" className="atelier-panel">
         <h2>Record state</h2>
         <p>
           <span className="md-status" data-tone="brass">
@@ -163,8 +197,9 @@ export default async function GuestDetailPage({
           {guest.personId ? "Linked to an authoritative person reference" : "Unresolved — no person created"}
         </p>
       </section>
+      <div className="atelier-side-stack">
       {rsvp ? (
-        <section>
+        <section className="atelier-panel">
           <h2>RSVP</h2>
           <p>
             <span className="md-status" data-tone="brass">
@@ -212,7 +247,7 @@ export default async function GuestDetailPage({
         />
       ) : null}
       {duplicates.length > 0 ? (
-        <section>
+        <section className="atelier-panel">
           <h2>Duplicate and identity review</h2>
           {duplicates.map((candidate) => (
             <article key={candidate.id} className="card-list">
@@ -229,17 +264,20 @@ export default async function GuestDetailPage({
           ))}
         </section>
       ) : null}
+      </div>
+      </div>
       {workspace ? (
         <GuestAddressingWorkspace workspace={workspace} eventId={scoped.event.id} error={error} />
       ) : null}
       {permissions.amend ? (
-        <section>
+        <section id="guest-amendment" className="atelier-panel">
           <h2>Controlled amendment</h2>
           <GuestAmendForm guest={guest} eventId={scoped.event.id} error={error} />
         </section>
       ) : (
         <p className="empty">Your assignment can view this record but cannot amend it.</p>
       )}
+      </div>
     </AppShell>
   );
 }

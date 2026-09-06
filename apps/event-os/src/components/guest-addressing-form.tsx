@@ -70,7 +70,16 @@ export function GuestAddressingWorkspace({
         ) : null}
       </dl>
       {error ? (
-        <p className="alert" data-tone="danger" role="alert">
+        <p
+          className="alert"
+          data-tone="danger"
+          data-kind={
+            error.includes("changed while") || error.includes("Reload before") || error.includes("expected version")
+              ? "conflict"
+              : "validation"
+          }
+          role="alert"
+        >
           {error}
         </p>
       ) : null}
@@ -81,6 +90,7 @@ export function GuestAddressingWorkspace({
           <input type="hidden" name="expectedVersion" value={guest.version} />
           <fieldset>
             <legend>Structured addressing</legend>
+            <div className="atelier-field-grid">
             <label>
               Honorific
               <select name="honorific" defaultValue={guest.honorific ?? ""}>
@@ -137,9 +147,12 @@ export function GuestAddressingWorkspace({
               Reason
               <input name="reason" required defaultValue="Update structured addressing" />
             </label>
+            </div>
           </fieldset>
           <div className="actions">
-            <button type="submit">Save addressing</button>
+            <button type="submit" className="secondary">
+              Save addressing
+            </button>
             {capabilities.canConfirmAddressing ? (
               <button type="submit" name="confirm" value="true">
                 Confirm addressing

@@ -69,18 +69,21 @@ export default async function GuestDirectoryPage({
       eventName={scoped.event.name}
       current="/app/events"
     >
-      <div className="page-header">
+      <div className="atelier-guestbook at-scope">
+      <header className="atelier-masthead">
+        <p className="eyebrow">Guest book · {scoped.event.name}</p>
+        <span className="at-thread" aria-hidden="true" />
         <h1>Guest directory</h1>
         <p className="lede">
           Operational records for {scoped.event.name}. A guest record is not a user, membership, or admission
           decision.
         </p>
-      </div>
+      </header>
       <p>
-        <span className="md-status" data-tone="brass">
+        <span className="at-seal md-status" data-tone="brass">
           {guests.length} records
         </span>{" "}
-        <span className="md-status" data-tone={attentionCount ? "warn" : "ok"}>
+        <span className="at-seal md-status" data-tone={attentionCount ? "warn" : "ok"}>
           {attentionCount} need attention
         </span>
       </p>
@@ -95,7 +98,7 @@ export default async function GuestDirectoryPage({
           <input name="q" defaultValue={query.q ?? ""} type="search" />
         </label>
         <label className="check">
-          <input type="checkbox" name="attention" value="1" defaultChecked={query.attention === "1"} />
+          <input className="at-switch" type="checkbox" name="attention" value="1" defaultChecked={query.attention === "1"} />
           Attention only
         </label>
         <label>
@@ -143,31 +146,31 @@ export default async function GuestDirectoryPage({
             </thead>
             <tbody>
               {guests.map((guest) => (
-                <tr key={guest.id}>
-                  <td>
+                <tr key={guest.id} className="atelier-guest-row">
+                  <td data-label="Name">
                     <Link href={`/app/events/${scoped.event.id}/guests/${guest.id}`}>
                       {guest.addressing
                         ? [guest.addressing.honorific, operationalDisplayName(guest)].filter(Boolean).join(" ")
                         : operationalDisplayName(guest)}
                     </Link>
                   </td>
-                  <td>
+                  <td data-label="Identity">
                     <span className="md-status" data-tone={guest.identityResolution === "DUPLICATE_RISK" ? "warn" : undefined}>
                       {guest.identityResolution.replaceAll("_", " ")}
                     </span>
                   </td>
-                  <td>
+                  <td data-label="Email quality">
                     <span className="md-status" data-tone={qualityTone(guest.email.quality)}>
                       {guest.email.quality.replaceAll("_", " ")}
                     </span>
                   </td>
-                  <td>
+                  <td data-label="RSVP">
                     <span className="md-status">
                       {(rsvpByGuest.get(guest.id)?.attendanceIntent ?? "NOT_SUPPLIED").replaceAll("_", " ")}
                     </span>
                   </td>
-                  <td>{guest.intakeSource.replaceAll("_", " ")}</td>
-                  <td>{guest.lifecycle}</td>
+                  <td data-label="Source">{guest.intakeSource.replaceAll("_", " ")}</td>
+                  <td data-label="State">{guest.lifecycle}</td>
                 </tr>
               ))}
             </tbody>
@@ -181,6 +184,7 @@ export default async function GuestDirectoryPage({
           <GuestImportForm eventId={scoped.event.id} error={query.importError} />
         </section>
       ) : null}
+      </div>
     </AppShell>
   );
 }

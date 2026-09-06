@@ -20,29 +20,43 @@ export function AppShell({
   children: ReactNode;
 }) {
   const identity = presentStaffIdentity(person, eventId);
-  const links = [
+  const operations = [
     ["/app", "Home"],
     ["/app/clients", "Clients"],
     ["/app/events", "Events"],
     ["/app/my-work", "My Work"],
+  ] as const;
+  const governance = [
     ["/app/admin/access", "Access"],
     ["/app/admin/audit", "Audit"],
     ["/app/admin/system", "System"],
   ] as const;
 
   return (
-    <div className="shell">
+    <div className="shell atelier-shell at-scope">
       <a className="skip" href="#main">
         Skip to content
       </a>
       <nav className="nav" aria-label="Staff">
         <p className="brand">Maison Doclar</p>
-        <p className="brand-note">Event OS</p>
-        {links.map(([href, label]) => (
-          <Link key={href} href={href} aria-current={current === href ? "page" : undefined}>
-            {label}
-          </Link>
-        ))}
+        <p className="brand-note">Command Atelier</p>
+        <p className="brand-env">Event OS · staff environment</p>
+        <div className="nav-group">
+          <p className="nav-label">Operations</p>
+          {operations.map(([href, label]) => (
+            <Link key={href} href={href} aria-current={current === href ? "page" : undefined}>
+              {label}
+            </Link>
+          ))}
+        </div>
+        <div className="nav-group">
+          <p className="nav-label">Governance</p>
+          {governance.map(([href, label]) => (
+            <Link key={href} href={href} aria-current={current === href ? "page" : undefined}>
+              {label}
+            </Link>
+          ))}
+        </div>
         <div className="user-menu">
           <StaffIdentity identity={identity} />
           <LogoutButton />
@@ -60,10 +74,18 @@ export function AppShell({
         <main id="main">{children}</main>
       </div>
       <nav className="mobile-nav" aria-label="Primary">
-        <Link href="/app">Home</Link>
-        <Link href="/app/events">Events</Link>
-        <Link href="/app/my-work">My Work</Link>
-        <Link href="/app/clients">More</Link>
+        <Link href="/app" aria-current={current === "/app" ? "page" : undefined}>
+          Home
+        </Link>
+        <Link href="/app/events" aria-current={current === "/app/events" ? "page" : undefined}>
+          Events
+        </Link>
+        <Link href="/app/my-work" aria-current={current === "/app/my-work" ? "page" : undefined}>
+          My Work
+        </Link>
+        <Link href="/app/clients" aria-current={current === "/app/clients" ? "page" : undefined}>
+          More
+        </Link>
       </nav>
     </div>
   );
