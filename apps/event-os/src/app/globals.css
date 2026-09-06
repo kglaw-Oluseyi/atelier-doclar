@@ -1,5 +1,9 @@
 @import "@maison-doclar/design-system/tokens.css";
 
+html {
+  overflow-x: clip;
+}
+
 .shell {
   display: grid;
   grid-template-columns: 240px 1fr;
@@ -189,7 +193,10 @@
   border-bottom: 1px solid var(--md-line);
 }
 
-.user-menu { margin-top: 28px; }
+.user-menu {
+  margin-top: 28px;
+  overflow-wrap: anywhere;
+}
 
 .filter-bar {
   display: flex;
@@ -377,4 +384,62 @@
 .guest-occasion {
   margin: 0 0 24px;
   color: var(--md-muted);
+}
+
+.main,
+.card-list,
+.correction-review,
+.meta-list,
+.form {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.meta-list dd,
+.correction-value {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.correction-value-current {
+  font-weight: 400;
+}
+
+.correction-value-proposed {
+  font-weight: 600;
+}
+
+.correction-review h2,
+.correction-review h3 {
+  overflow-wrap: anywhere;
+}
+
+.correction-review h3 {
+  margin: 20px 0 8px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.correction-review a {
+  overflow-wrap: anywhere;
+}
+
+.correction-decision-note {
+  margin: 0 0 16px;
+  color: var(--md-muted);
+  max-width: 42rem;
+}
+
+@media (max-width: 480px) {
+  .meta-list > div {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .correction-review,
+  .form,
+  .alert {
+    scroll-behavior: auto;
+  }
 }

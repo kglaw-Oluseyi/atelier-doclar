@@ -1,5 +1,8 @@
 import {
+  channelLabel,
   eventGuestOptions,
+  formatOperationalTimestamp,
+  governedRoleLabel,
   maskedContactHint,
   maskedEmail,
   maskedPhone,
@@ -45,5 +48,27 @@ describe("comms display masking", () => {
     assert.doesNotMatch(target.contactHint, /mask\.test@example\.test/);
     assert.doesNotMatch(target.contactHint, /8099988776/);
     assert.match(target.contactHint, /@example\.test/);
+  });
+});
+
+describe("comms display role and time labels", () => {
+  it("renders governed role labels without raw keys", () => {
+    assert.equal(governedRoleLabel("EVENT_DIRECTOR"), "Event Director");
+    assert.equal(governedRoleLabel("CEO"), "CEO");
+    assert.equal(governedRoleLabel("PLANNER"), "Planner");
+    assert.notEqual(governedRoleLabel("EVENT_DIRECTOR"), "EVENT_DIRECTOR");
+  });
+
+  it("formats proposal timestamps in Africa/Lagos without raw ISO", () => {
+    const label = formatOperationalTimestamp("2026-09-05T14:00:00.000Z");
+    assert.match(label, /2026/);
+    assert.match(label, /15:00|3:00/);
+    assert.doesNotMatch(label, /T14:00:00/);
+    assert.doesNotMatch(label, /Z$/);
+  });
+
+  it("labels channels without raw codes as ordinary copy", () => {
+    assert.equal(channelLabel("EMAIL"), "Email");
+    assert.equal(channelLabel("WHATSAPP"), "WhatsApp");
   });
 });

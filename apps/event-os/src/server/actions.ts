@@ -837,9 +837,27 @@ export async function actOnTaskAction(formData: FormData): Promise<void> {
   redirect(`/app/events/${eventId}/communications/tasks`);
 }
 
+function correctionDecisionError(error: unknown): string {
+  const message = error instanceof Error ? error.message : "";
+  if (message.includes("different named human")) {
+    return "A different authorised person must review this correction. You cannot decide a proposal you made.";
+  }
+  if (message.includes("attribution is unavailable")) {
+    return "This correction cannot be decided because proposer attribution is unavailable. Recreate the proposal.";
+  }
+  if (error instanceof PlatformError && error.code === "VERSION_CONFLICT") {
+    return "This correction or guest record changed while you were reviewing. Reload before deciding. Canonical contact information is unchanged.";
+  }
+  if (message.includes("expected version") || message.includes("VERSION_CONFLICT")) {
+    return "This correction or guest record changed while you were reviewing. Reload before deciding. Canonical contact information is unchanged.";
+  }
+  return actionError(error);
+}
+
 export async function decideCorrectionAction(formData: FormData): Promise<void> {
   const { actor } = await requireActor();
   const eventId = String(formData.get("eventId") ?? "");
+  const decision = String(formData.get("decision") ?? "");
   try {
     const organisation = commsOrg(actor, eventId, "corrections");
     getRuntime().service.decideContactCorrection(actor, {
@@ -847,13 +865,16 @@ export async function decideCorrectionAction(formData: FormData): Promise<void> 
       eventId,
       correctionId: String(formData.get("correctionId") ?? ""),
       expectedVersion: Number(formData.get("expectedVersion")),
-      decision: String(formData.get("decision") ?? "REJECTED"),
+      decision,
       reason: String(formData.get("reason") ?? "Decide contact correction"),
     });
   } catch (error) {
-    commsFail(eventId, "corrections", error);
+    redirect(
+      `/app/events/${encodeURIComponent(eventId)}/communications/corrections?error=${encodeURIComponent(correctionDecisionError(error))}`,
+    );
   }
-  redirect(`/app/events/${eventId}/communications/corrections`);
+  const status = decision === "REJECTED" ? "rejected" : "applied";
+  redirect(`/app/events/${eventId}/communications/corrections?status=${status}`);
 }
 
 export async function proposeCorrectionAction(formData: FormData): Promise<void> {

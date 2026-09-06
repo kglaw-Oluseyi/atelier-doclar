@@ -1,17 +1,22 @@
 import { CommunicationsFrame } from "../../../../../../components/communications-frame";
-import { CorrectionDecisionForm } from "../../../../../../components/communications-forms";
-import { eventGuestOptions, staffDisplayName } from "../../../../../../server/comms-display";
+import { CorrectionReviewCard } from "../../../../../../components/correction-review-card";
+import {
+  correctionDecisionStatusCopy,
+  presentCorrectionReview,
+} from "../../../../../../server/correction-review-display";
 import { getRuntime } from "../../../../../../server/runtime";
 import { loadCommunicationsPage } from "../../../../../../server/communications-page";
+import type { ContactCorrectionReview } from "@maison-doclar/shared-platform";
 
 export default async function CorrectionsPage({
   params,
   searchParams,
 }: {
   params: Promise<{ eventId: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; status?: string }>;
 }) {
   const { eventId } = await params;
+  const query = await searchParams;
   const loaded = await loadCommunicationsPage(eventId);
   if (!loaded.scoped || !loaded.permissions?.msgCorrection) {
     return (
@@ -20,14 +25,13 @@ export default async function CorrectionsPage({
       </CommunicationsFrame>
     );
   }
-  const runtime = getRuntime();
-  const corrections = runtime.service.listContactCorrections(
+  const reviews: ContactCorrectionReview[] = getRuntime().service.listContactCorrectionReviews(
     loaded.actor,
     loaded.scoped.organisation.id,
     loaded.scoped.event.id,
   );
-  const guestOptions = eventGuestOptions(runtime.service, loaded.actor, loaded.scoped.organisation.id, loaded.scoped.event.id);
-  const guestNameById = new Map(guestOptions.map((item) => [item.id, item.displayName]));
+  const presented = reviews.map((review) => presentCorrectionReview(review));
+  const statusCopy = correctionDecisionStatusCopy(query.status);
   return (
     <CommunicationsFrame
       person={loaded.person}
@@ -35,49 +39,17 @@ export default async function CorrectionsPage({
       eventName={loaded.scoped.event.name}
       eventId={eventId}
       title="Contact corrections"
-      lede="Inbound inference does not change canonical contact truth. Approval applies S02 amend semantics."
-      error={(await searchParams).error}
+      lede="Inbound inference does not change canonical contact truth. Apply through guest amend is one governed action."
+      error={query.error}
     >
-      {corrections.length === 0 ? <p className="empty">No contact correction proposals.</p> : null}
-      {corrections.map((item) => (
-        <article key={item.id} className="card-list">
-          <h2>{item.status}</h2>
-          <dl className="meta-list">
-            <div>
-              <dt>Guest</dt>
-              <dd>{guestNameById.get(item.guestId) ?? "Guest unavailable"}</dd>
-            </div>
-            <div>
-              <dt>Channel</dt>
-              <dd>{item.channel}</dd>
-            </div>
-            <div>
-              <dt>Existing value</dt>
-              <dd>{item.existingValue ?? "none"}</dd>
-            </div>
-            <div>
-              <dt>Proposed value</dt>
-              <dd>{item.proposedValue}</dd>
-            </div>
-            <div>
-              <dt>Source evidence</dt>
-              <dd>{item.sourceMessageId ? "Linked inbound message" : "No source message linked"}</dd>
-            </div>
-            <div>
-              <dt>Reason</dt>
-              <dd>{item.reason}</dd>
-            </div>
-            {item.decidedByPersonId ? (
-              <div>
-                <dt>Reviewed by</dt>
-                <dd>{staffDisplayName(runtime.service, item.decidedByPersonId)}</dd>
-              </div>
-            ) : null}
-          </dl>
-          {item.status === "PROPOSED" ? (
-            <CorrectionDecisionForm eventId={eventId} correctionId={item.id} expectedVersion={item.version} />
-          ) : null}
-        </article>
+      {statusCopy ? (
+        <p className="alert" data-tone="ok" role="status">
+          {statusCopy}
+        </p>
+      ) : null}
+      {presented.length === 0 ? <p className="empty">No contact correction proposals.</p> : null}
+      {presented.map((review) => (
+        <CorrectionReviewCard key={review.id} eventId={eventId} review={review} />
       ))}
     </CommunicationsFrame>
   );

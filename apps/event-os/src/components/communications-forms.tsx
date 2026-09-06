@@ -416,16 +416,25 @@ export function CorrectionDecisionForm({
       <input type="hidden" name="eventId" value={eventId} />
       <input type="hidden" name="correctionId" value={correctionId} />
       <input type="hidden" name="expectedVersion" value={expectedVersion} />
+      <p className="correction-decision-note">
+        Applying invokes the governed guest-amend process and updates canonical contact information in one action.
+        Rejection leaves the current verified value unchanged. The current value remains canonical until this action
+        succeeds.
+      </p>
+      <fieldset>
+        <legend>Decision</legend>
+        <label className="check">
+          <input type="radio" name="decision" value="APPROVED" required />
+          <span>Apply through guest amend</span>
+        </label>
+        <label className="check">
+          <input type="radio" name="decision" value="REJECTED" required />
+          <span>Reject</span>
+        </label>
+      </fieldset>
       <label>
-        Decision
-        <select name="decision" defaultValue="REJECTED">
-          <option value="APPROVED">Apply through guest amend</option>
-          <option value="REJECTED">Reject</option>
-        </select>
-      </label>
-      <label>
-        Reason
-        <input name="reason" defaultValue="Review contact correction" required />
+        Decision reason
+        <input name="reason" defaultValue="Review contact correction" required autoComplete="off" />
       </label>
       <button type="submit">Record correction decision</button>
     </form>

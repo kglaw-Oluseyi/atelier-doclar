@@ -1,6 +1,60 @@
-import type { ActorContext, PlatformService } from "@maison-doclar/shared-platform";
-import { fieldValue, operationalDisplayName } from "@maison-doclar/shared-platform";
+import type { ActorContext, MsgChannel, PlatformService } from "@maison-doclar/shared-platform";
+import { DEFAULT_TIMEZONE, SYSTEM_ROLE_KEYS, fieldValue, operationalDisplayName } from "@maison-doclar/shared-platform";
 import type { UnmatchedGuestOption } from "../components/unmatched-resolution-form";
+
+type SystemRoleKey = (typeof SYSTEM_ROLE_KEYS)[number];
+
+const OPERATIONAL_TIME_ZONE = DEFAULT_TIMEZONE;
+
+/** Human-readable governed role label. Never return a raw role key. */
+export function governedRoleLabel(roleKey: SystemRoleKey): string {
+  switch (roleKey) {
+    case "CEO":
+      return "CEO";
+    case "EVENT_DIRECTOR":
+      return "Event Director";
+    case "CLIENT_LEAD":
+      return "Client Lead";
+    case "DEPARTMENT_LEAD":
+      return "Department Lead";
+    case "PLANNER":
+      return "Planner";
+    case "SYSTEM_ADMINISTRATOR":
+      return "System Administrator";
+    case "READ_ONLY_AUDITOR":
+      return "Read-only Auditor";
+    default: {
+      const _exhaustive: never = roleKey;
+      return _exhaustive;
+    }
+  }
+}
+
+/** Locale- and time-zone-safe operational timestamp. Africa/Lagos, en-GB. */
+export function formatOperationalTimestamp(iso: string): string {
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) return "Time unavailable";
+  return new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: OPERATIONAL_TIME_ZONE,
+  }).format(parsed);
+}
+
+export function channelLabel(channel: MsgChannel): string {
+  switch (channel) {
+    case "EMAIL":
+      return "Email";
+    case "SMS":
+      return "SMS";
+    case "WHATSAPP":
+      return "WhatsApp";
+    default: {
+      const _exhaustive: never = channel;
+      return _exhaustive;
+    }
+  }
+}
 
 /** Human-readable staff name without exposing person ids or external subjects. */
 export function staffDisplayName(service: PlatformService, personId: string | undefined): string {
