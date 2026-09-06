@@ -548,6 +548,8 @@ export function reconcileEventProjection(
 }
 
 export function guestVisibleName(guest: OperationalGuest): string {
+  const preferredDisplay = guest.addressing?.preferredDisplayName?.trim();
+  if (preferredDisplay) return preferredDisplay;
   return guest.preferredName.value?.trim() || operationalDisplayName(guest);
 }
 

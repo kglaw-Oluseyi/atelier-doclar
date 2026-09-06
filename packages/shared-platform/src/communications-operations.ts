@@ -2,6 +2,7 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import { SCHEMA_VERSION } from "./constants.js";
 import { PlatformError } from "./errors.js";
 import { normalizeEmail, normalizePhone } from "./guest-matching.js";
+import { renderGuestSalutation } from "./addressing.js";
 import type { OperationalGuest } from "./guest-schemas.js";
 import type { ConsentRecord, EventRecord } from "./schemas.js";
 import type { RsvpInvitation, RsvpResponse } from "./rsvp-schemas.js";
@@ -336,7 +337,7 @@ export function templateVariablesFor(input: {
   event: EventRecord;
 }): Record<string, string | undefined> {
   return {
-    "guest.name": input.guest.preferredName.value ?? input.guest.givenName.value ?? input.guest.familyName.value,
+    "guest.name": renderGuestSalutation(input.guest).text,
     "event.name": input.occasion.eventName ?? input.event.name,
     "occasion.when": input.occasion.when,
     "occasion.venue": input.occasion.venue,
