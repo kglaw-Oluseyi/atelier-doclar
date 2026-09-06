@@ -279,7 +279,7 @@ Native pack extracted from `MDOS/slice4/Maison_Doclar_Slice_4_Cursor_Prompt_Pack
 
 **Prompt Control ID:** `MD-PR-S015` / `MD-PR-S016`  
 **Slice ID:** `EOS-S04`  
-**Status:** `ACCEPTED`
+**Status:** `CLOSED / ACCEPTED`
 
 | ID | Kind | Summary | Location |
 |----|------|---------|----------|
@@ -287,6 +287,22 @@ Native pack extracted from `MDOS/slice4/Maison_Doclar_Slice_4_Cursor_Prompt_Pack
 | EV-EOS-S04-ARCH | DOCUMENT | Communications / concierge boundary | `docs/control/EVENT_OS_COMMUNICATIONS_CONCIERGE.md` |
 | EV-EOS-S04-COMMIT | COMMIT | Implementation commit | `git:8d87dc13ce87ab1431783d0e6649b34807eeb7ab` |
 | EV-EOS-S04-ACCEPT | DOCUMENT | Formal technical acceptance record | `docs/control/EOS_S04_ACCEPTANCE.md` |
+| EV-EOS-S04-CLOSE | DOCUMENT | R3 final independent review and closure record | `docs/control/Maison_Doclar_EOS-S04_R3_Final_Closure_Record_v1.0.docx` |
 
-ACCEPTED under `MD-PR-S016` by `ChatGPT / AI CTO` at `2026-09-06T04:10:00Z`. Accepted implementation remains `8d87dc13ce87ab1431783d0e6649b34807eeb7ab`. S4-61 satisfied for technical review only. S4-62 satisfied for controlled technical acceptance/handover only. Production not authorised. No Railway mutation. EOS-S05 is not authorised for implementation.
+CLOSED / ACCEPTED under hosted verification `MD-EOS-S04-R3-05` with classification `PASS WITH OBSERVATIONS`. Earlier technical acceptance under `MD-PR-S016` by `ChatGPT / AI CTO` at `2026-09-06T04:10:00Z` remains historical evidence. Accepted implementation remains `8d87dc13ce87ab1431783d0e6649b34807eeb7ab`. Accepted-slice count remains 4. S4-61 satisfied for technical review only. S4-62 satisfied for controlled technical acceptance/handover only. Production not authorised. EOS-S05 is not authorised for implementation.
+
+## EOS-S04F
+
+**Slice ID:** `EOS-S04F`
+**Title:** Language, Cultural Text & Multilingual Editions
+**Status:** `RATIFIED / NOT_STARTED`
+**Position:** after EOS-S04E and before EOS-S05
+**Execution authority:** `HELD`
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-EOS-S04F-PACK | DOCUMENT | Controlled slice pack v1.0 draft (ratified artefact; filename retained) | `docs/control/Maison_Doclar_EOS-S04F_Controlled_Slice_Pack_v1.0_DRAFT.docx` |
+| EV-EOS-S04F-PROMPTS | DOCUMENT | Controlled Cursor prompt pack v1.0 draft (P00–P11; HELD) | `docs/control/Maison_Doclar_EOS-S04F_Cursor_Prompt_Pack_v1.0_DRAFT.docx` |
+
+Ratification does not authorise implementation. Dependency: implementation follows completion of EOS-S04A through EOS-S04E. `PROMPT_REGISTER.md` was not updated; adding P00–P11 would require a separate governed Prompt Control ID decision.
 

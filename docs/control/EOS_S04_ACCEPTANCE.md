@@ -156,7 +156,7 @@ The projector derived `ACCEPTED`. No handwritten status override was used as sou
 | EOS-S01 | `ACCEPTED` |
 | EOS-S02 | `ACCEPTED` |
 | EOS-S03 | `ACCEPTED` |
-| EOS-S04 | `ACCEPTED` |
+| EOS-S04 | `CLOSED / ACCEPTED` |
 | Accepted slice count | `4` |
 | Foundation slices | `IN_REVIEW` |
 | EOS-S05 | May become `READY` / technically eligible by dependency law only |
@@ -186,3 +186,45 @@ The projector derived `ACCEPTED`. No handwritten status override was used as sou
 - Live-event release
 - Real guest communication
 - Production provider selection
+
+## Formal programme closure (R3)
+
+This section records CEO formal closure after hosted R3 verification. It does not rewrite, erase, or contradict the earlier formal technical-acceptance evidence above. Accepted-slice count remains `4`; this closure does not increment it.
+
+| Field | Value |
+|-------|-------|
+| EOS-S04 final status | `CLOSED / ACCEPTED` |
+| Final independent classification | `PASS WITH OBSERVATIONS` |
+| Hosted verification | `MD-EOS-S04-R3-05` |
+| Closure record | `docs/control/Maison_Doclar_EOS-S04_R3_Final_Closure_Record_v1.0.docx` |
+| Hosted deployment / document baseline | `a8b66f55fea02e45e714d7a81bbe888b9b0ac3bf` |
+
+### Remediation commits
+
+- `3dbc56006b3acdca6b6ff808bf7e58818417b7f7` — R3-02 maker-checker backend provenance
+- `349e29d80969fbec65b6dd8b9fb8d55a39ac8fdd` — R3-03 checker experience / review provenance
+- `9c5c2fdbaad115b7e90767734808f3ef22593bfe` — R3-04 revocable staff sessions
+
+### Successful verification outcomes
+
+- stable correction-maker provenance
+- distinct-human maker/checker enforcement
+- explicit named staff identity
+- server-side session revocation
+- single atomic correction application
+- correlated decision and guest-amendment audit evidence
+- no second application
+- no real data or provider use
+
+### Observations retained without blocking closure
+
+These remain observations. They are not blockers and are not deleted.
+
+- genuine 360px browser evidence was unavailable to the human reviewer
+- simulated 2× CSS zoom showed poor character-by-character wrapping in a narrow value column
+- Yorùbá diacritics were not exercised in that final read-only fixture
+- the exact HTTP status/audit mechanics of the denied self-review attempt were not isolated retrospectively
+- field-level `CONFLICTING` remained distinct from correction status `APPLIED`
+- the earlier session-restoration anomaly was not reproduced after R3-04 and hosted revocation testing passed
+
+Closure accepts the verified EOS-S04 capability. It does not authorise production, sign any protected gate, select a real provider, or authorise EOS-S04A–F implementation or EOS-S05.

@@ -1,10 +1,10 @@
 # Current State
 
-**Updated:** Event OS S04 formal technical acceptance  
-**Prompt Control ID:** `MD-PR-S016`  
+**Updated:** Event OS S04 formal closure and EOS-S04F ratification (held)
+**Prompt Control ID:** `MD-PR-S016` / `MD-DOC-EOS-S04-CLOSE-S04F`
 **Milestone:** `EOS-S04`
 
-MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is ACCEPTED. EOS-S02 is ACCEPTED. EOS-S03 is ACCEPTED. EOS-S04 is ACCEPTED. Accepted count is 4. Native coverage is 62/62. S4-61 is satisfied for technical review only. S4-62 is satisfied for controlled technical acceptance/handover only. Independent, specialist and CEO production gates remain unsigned.
+MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is ACCEPTED. EOS-S02 is ACCEPTED. EOS-S03 is ACCEPTED. EOS-S04 is CLOSED / ACCEPTED (`PASS WITH OBSERVATIONS`). Accepted count remains 4. Native coverage is 62/62. S4-61 is satisfied for technical review only. S4-62 is satisfied for controlled technical acceptance/handover only. Independent, specialist and CEO production gates remain unsigned.
 
 **FOUNDATION IMPLEMENTATION COMPLETE: YES**  
 **KNOWN FOUNDATION TECHNICAL DEBT: ZERO**  
@@ -32,7 +32,17 @@ MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is A
 **EOS-S04 IMPLEMENTATION AUTHORISED: YES**  
 **EOS-S04 IMPLEMENTATION COMPLETE: YES**  
 **EOS-S04 ACCEPTED: YES**  
-**EOS-S04 STATUS: ACCEPTED**  
+**EOS-S04 STATUS: CLOSED / ACCEPTED**
+**EOS-S04 CLASSIFICATION: PASS WITH OBSERVATIONS**
+**EOS-S04 HOSTED VERIFICATION: MD-EOS-S04-R3-05**
+**EOS-S04 CLOSURE RECORD: docs/control/Maison_Doclar_EOS-S04_R3_Final_Closure_Record_v1.0.docx**
+**EOS-S04F TITLE: Language, Cultural Text & Multilingual Editions**
+**EOS-S04F STATUS: RATIFIED / NOT_STARTED**
+**EOS-S04F POSITION: after EOS-S04E and before EOS-S05**
+**EOS-S04F EXECUTION AUTHORITY: HELD**
+**EOS-S04F CONTROLLED PACK: docs/control/Maison_Doclar_EOS-S04F_Controlled_Slice_Pack_v1.0_DRAFT.docx**
+**EOS-S04F CURSOR PROMPT PACK: docs/control/Maison_Doclar_EOS-S04F_Cursor_Prompt_Pack_v1.0_DRAFT.docx**
+**EOS-S04F IMPLEMENTATION AUTHORISED: NO**
 **EOS-S05 TECHNICALLY ELIGIBLE: YES**  
 **EOS-S05 IMPLEMENTATION AUTHORISED: NO**  
 **EVENT OS S01-S03 LIVE DEPLOYED: YES**  
@@ -51,4 +61,4 @@ Railway project: `atelier-doclar` only.
 
 `OI-FC1-004` is `RESOLVED_BY_EVENT_OS_ARCHITECTURE`. This is not production authorisation and does not accept any Foundation slice.
 
-Event OS S01–S04 remain formally accepted. S4-61 and S4-62 are satisfied only for technical review and controlled handover. Cursor did not deploy, authorise production, or start EOS-S05. Production is not authorised.
+Event OS S01–S03 remain formally accepted. EOS-S04 is CLOSED / ACCEPTED after hosted verification `MD-EOS-S04-R3-05` (`PASS WITH OBSERVATIONS`). Accepted-slice count remains 4. S4-61 and S4-62 are satisfied only for technical review and controlled handover. EOS-S04F is RATIFIED / NOT_STARTED; its Cursor prompt pack remains HELD and was not executed. Implementation of EOS-S04A–F is not authorised. Cursor did not deploy, authorise production, or start EOS-S05. Production is not authorised.
