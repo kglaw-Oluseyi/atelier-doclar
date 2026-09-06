@@ -125,7 +125,7 @@ See `docs/control/EOS_S04A_HUMAN_VERIFICATION.md` and the Claude-in-Chrome whole
 ## Current limitations
 
 - `TDR-S04A-011` — browser-created residue is not fully attributable for global cleanup. Blocking before client onboarding.
-- `TDR-S04A-012` — RSC prefetch 503 locally contained; deployed classification pending.
+- `TDR-S04A-012` — RSC prefetch 503 locally contained (layout no longer throws; Planner audit is a controlled FORBIDDEN). Deployed classification pending.
 - `TDR-S04A-016` / `TDR-S04A-017` — Claude MAJOR acceptance defects; implemented; close only with deployed evidence.
 - Preferred formal salutation is authored. Title change never silently rewrites it; mismatch requires update or explicit retention.
 - `TDR-S04A-015` — no physical offline-browser matrix.

@@ -34,7 +34,7 @@
 
 Use a newly created synthetic guest. Do not mutate fixture Adéṣínà or cycle Ebun entitlement.
 
-1. **Stale two-tab amendment.** Open the same guest in two tabs. Save a preferred-name change in tab A. Submit a different preferred name from tab B without refresh. Tab B must show the conflict alert (record changed elsewhere; attempted edit not saved). No success message. Reload. Durable value is tab A. Rejected tab B text is absent.
+1. **Stale two-tab amendment.** Open the same guest in two tabs. Save a preferred-name change in tab A. Submit a different preferred name from tab B without refresh. Tab B must show the conflict alert (record changed elsewhere; attempted edit not saved). No success message. Use **Reload the current record** (this clears the conflict flash and unlocks the form). Durable value is tab A. Rejected tab B text is absent. Retry without that reload remains disabled.
 2. **Identical rapid double-submit.** Double-click Save Amendment with the same values. One version increment. No `CONFLICTING`. No guest attention flag. Retry without refresh is not required.
 3. **Different concurrent values.** Two tabs submit different preferred names against the same version. One write wins. The other shows the same visible conflict workflow.
 4. **Attention consistency.** Create a genuine field conflict (sequential different dietary values, or equivalent). Dossier and directory both show Attention required. Auditor sees the attention flag and field quality only — no extra private values in the summary.

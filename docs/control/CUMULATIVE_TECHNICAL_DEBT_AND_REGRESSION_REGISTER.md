@@ -386,7 +386,7 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 |-------|-------|
 | ID | `TDR-S04A-012` |
 | Source slice | EOS-S04A-P08 / P09 |
-| Description | Authenticated `?_rsc=` prefetch of `/app`, clients, events, my-work, admin and guest directory returned 503 when root-layout `ensureRuntime()` threw during boot. Layout now swallows boot unreadiness so prefetch is not an unexplained 503; pages classify unreadiness as `DEPENDENCY_UNAVAILABLE`. Local CEO/Planner/Auditor prefetch is not 503. Close only after a clean deployed reproduction. |
+| Description | Authenticated `?_rsc=` prefetch of `/app`, clients, events, my-work, admin and guest directory returned 503 when root-layout `ensureRuntime()` threw during boot. Layout now swallows boot unreadiness so prefetch is not an unexplained 503; boot failure is a controlled `DEPENDENCY_UNAVAILABLE` on `/access-denied`. Planner audit prefetch is a controlled `FORBIDDEN`, not an uncaught throw. Local CEO/Planner/Auditor prefetch is not 503. Close only after a clean deployed reproduction. |
 | Classification | Related observation |
 | Severity | LOW |
 | Evidence | Event OS `ensureRuntime` / `/api/health/ready`; no failing P08/P09 case isolated to RSC prefetch |
@@ -397,7 +397,7 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 | Required regression coverage | Prefetch of guest routes while runtime is down must not leak secrets or show another event's data |
 | Latest safe remediation milestone | Later Event OS runtime prompt |
 | Current status | IN_COVERAGE — locally contained; deployed classification pending |
-| Resolution evidence | Root layout no longer throws `ensureRuntime()` into Next.js `?_rsc=` 503. Local CEO/Planner/Auditor prefetch of `/app`, clients, events, my-work, admin and guest directory is not an unexplained 503. Unauthorised audit prefetch is a controlled `FORBIDDEN`, not 503. Do not mark CLOSED until a clean deployed prefetch reproduction is recorded. |
+| Resolution evidence | Root layout no longer throws `ensureRuntime()` into Next.js `?_rsc=` 503. Boot unreadiness is not treated as session expiry. Planner `/app/admin/audit` prefetch is a controlled `FORBIDDEN` with no audit payload. Local CEO/Planner/Auditor prefetch of `/app`, clients, events, my-work, admin and guest directory is not an unexplained 503. Do not mark CLOSED until a clean deployed prefetch reproduction is recorded. |
 
 ### TDR-S04A-016 — Stale two-tab amendment was silent in the UI
 

@@ -10,14 +10,14 @@ Claude’s whole-slice verification found two **MAJOR** blocking acceptance defe
 
 | ID | Finding | Root cause | Remediation | Acceptance status |
 |----|---------|------------|-------------|-------------------|
-| TDR-S04A-016 | Stale two-tab amendment: durable truth stayed correct; tab B showed neither success nor error | Server-action conflict used a droppable `?error=` query; same-page redirects lost it; conflict was classified as validation or dropped | Flash cookie + `state=VERSION_CONFLICT`; conflict wins over `ok=`; accessible alert; reload required; retry locked | Implemented locally; close only after deployed two-tab evidence |
-| TDR-S04A-017 | Rapid identical Save Amendment: one version increment, field left `CONFLICTING`, no guest attention | Second identical submit hit `VERSION_CONFLICT` and was treated as a competing amendment; attention ignored dietary/accessibility/note/preferredName | Client lock + idempotency key; `alreadyApplied` on fresh snapshot; attention derived from all conflict/pending fields | Implemented locally; close only after deployed double-submit evidence |
+| TDR-S04A-016 | Stale two-tab amendment: durable truth stayed correct; tab B showed neither success nor error | Server-action conflict used a droppable `?error=` query; same-page redirects lost it; conflict was classified as validation or dropped; a later page-level cookie clear crashed the dossier | Flash cookie + `state=VERSION_CONFLICT`; conflict wins over `ok=`; accessible alert; reload is a server action that consumes flash and unlocks; retry locked until reload | Implemented; close only after deployed two-tab evidence |
+| TDR-S04A-017 | Rapid identical Save Amendment: one version increment, field left `CONFLICTING`, no guest attention | Second identical submit hit `VERSION_CONFLICT` and was treated as a competing amendment; attention ignored dietary/accessibility/note/preferredName | Client lock + idempotency key; `alreadyApplied` on fresh snapshot; attention derived from all conflict/pending fields | Implemented; close only after deployed double-submit evidence |
 
 Contract decision (structured addressing, not a redesign):
 
 > A manually supplied preferred formal salutation is explicit authored data and must not be silently recomputed when an honorific or title changes. If the stored salutation still contains a title being removed, the operator must **update** it or **explicitly retain** it. The system does not infer replacement wording. If the salutation contains no detectable former title, no mismatch is invented.
 
-RSC prefetch (`TDR-S04A-012`): root-layout `ensureRuntime()` throw became Next.js `?_rsc=` 503. Layout now fails closed without crashing the shell; `requireActor` maps boot failure to `DEPENDENCY_UNAVAILABLE`; `pg` is a server-external package. Local CEO/Planner/Auditor prefetch is not an unexplained 503. Do not close TDR-S04A-012 until a clean **deployed** prefetch reproduction is recorded.
+RSC prefetch (`TDR-S04A-012`): root-layout `ensureRuntime()` throw became Next.js `?_rsc=` 503. Layout now fails closed without crashing the shell; `requireActor` maps boot failure to `DEPENDENCY_UNAVAILABLE` and `guardedActor` sends that to `/access-denied`, not a false session expiry. Planner prefetch of `/app/admin/audit` renders a controlled `FORBIDDEN` instead of throwing. Local CEO/Planner/Auditor prefetch is not an unexplained 503. Do not close TDR-S04A-012 until a clean **deployed** prefetch reproduction is recorded.
 
 ## Ratified requirements matrix
 
