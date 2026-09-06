@@ -50,6 +50,17 @@ export function guestPermissions(person: Person, actor: ActorContext, organisati
     msgTask: authorize({ actor: actorSnap, permission: "msg.task.manage", scope }).allow,
     msgCorrection: authorize({ actor: actorSnap, permission: "msg.contactCorrection.review", scope }).allow,
     msgAnalytics: authorize({ actor: actorSnap, permission: "msg.analytics.view", scope }).allow,
+    addressingView: authorize({ actor: actorSnap, permission: "guest.addressing.view", scope }).allow,
+    addressingManage: authorize({ actor: actorSnap, permission: "guest.addressing.manage", scope }).allow,
+    addressingConfirm: authorize({ actor: actorSnap, permission: "guest.addressing.confirm", scope }).allow,
+    relationshipView: authorize({ actor: actorSnap, permission: "guest.relationship.view", scope }).allow,
+    relationshipManage: authorize({ actor: actorSnap, permission: "guest.relationship.manage", scope }).allow,
+    entitlementView: authorize({ actor: actorSnap, permission: "guest.entitlement.view", scope }).allow,
+    entitlementManage: authorize({ actor: actorSnap, permission: "guest.entitlement.manage", scope }).allow,
+    entitlementException: authorize({ actor: actorSnap, permission: "guest.entitlement.exception.review", scope }).allow,
+    childView: authorize({ actor: actorSnap, permission: "guest.child.view", scope }).allow,
+    childManage: authorize({ actor: actorSnap, permission: "guest.child.manage", scope }).allow,
+    protocolNoteView: authorize({ actor: actorSnap, permission: "guest.protocolNote.view", scope }).allow,
   };
   void actor;
 }

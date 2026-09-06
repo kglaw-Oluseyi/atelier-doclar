@@ -1,6 +1,7 @@
 import "server-only";
 import { join } from "node:path";
 import {
+  applyS04AFixturesIfMissing,
   LOCAL_STORE_PRODUCTION_STATUS,
   loadNonProductionFixtures,
   PlatformService,
@@ -32,6 +33,9 @@ export function getRuntime(): Runtime {
     store.snapshot().organisations.length > 0
       ? new PlatformService(store, options)
       : loadNonProductionFixtures(store, options);
+  const snap = store.snapshot();
+  const withAddressing = applyS04AFixturesIfMissing(snap);
+  if (withAddressing !== snap) store.replace(withAddressing);
   const runtime = { service, store, fixtures: true };
   globalStore.__eventOsRuntime = runtime;
   return runtime;

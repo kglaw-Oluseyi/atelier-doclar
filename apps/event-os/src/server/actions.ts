@@ -179,6 +179,42 @@ export async function intakeGuestAction(formData: FormData): Promise<void> {
       accessibilityRequirement: String(formData.get("accessibilityRequirement") ?? "") || undefined,
       operationalNote: String(formData.get("operationalNote") ?? "") || undefined,
       householdKey: String(formData.get("householdKey") ?? "") || undefined,
+      honorific: (String(formData.get("honorific") ?? "") || undefined) as
+        | "Mr"
+        | "Mrs"
+        | "Ms"
+        | "Mx"
+        | "Dr"
+        | "Dr (Mrs)"
+        | "Dr (Mr)"
+        | "Dr (Ms)"
+        | "Professor"
+        | "Rev"
+        | "Pastor"
+        | "Chief"
+        | "Alhaji"
+        | "Alhaja"
+        | "Engr"
+        | "Barrister"
+        | "Hon"
+        | "HRH"
+        | "Sir"
+        | "Dame"
+        | undefined,
+      professionalTitle: String(formData.get("professionalTitle") ?? "") || undefined,
+      traditionalTitle: String(formData.get("traditionalTitle") ?? "") || undefined,
+      middleNames: String(formData.get("middleNames") ?? "") || undefined,
+      preferredDisplayName: String(formData.get("preferredDisplayName") ?? "") || undefined,
+      preferredFormalSalutation: String(formData.get("preferredFormalSalutation") ?? "") || undefined,
+      ageBand: (String(formData.get("ageBand") ?? "") || undefined) as
+        | "INFANT"
+        | "EARLY_CHILDHOOD"
+        | "CHILD"
+        | "PRE_TEEN"
+        | "TEEN"
+        | "ADULT"
+        | "UNKNOWN"
+        | undefined,
       reason: String(formData.get("reason") ?? ""),
     });
   } catch (error) {
@@ -900,4 +936,116 @@ export async function applySyntheticCallbackAction(formData: FormData): Promise<
     commsFail(eventId, `campaigns/${campaignId}`, error);
   }
   redirect(`/app/events/${eventId}/communications/campaigns/${campaignId}`);
+}
+
+function guestFail(eventId: string, guestId: string, error: unknown): never {
+  redirect(
+    `/app/events/${encodeURIComponent(eventId)}/guests/${encodeURIComponent(guestId)}?error=${encodeURIComponent(actionError(error))}`,
+  );
+}
+
+function optionalFormValue(formData: FormData, name: string): string | undefined {
+  const value = String(formData.get(name) ?? "").trim();
+  return value ? value : undefined;
+}
+
+export async function updateGuestAddressingAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const eventId = String(formData.get("eventId") ?? "");
+  const guestId = String(formData.get("guestId") ?? "");
+  const fail = `/app/events/${encodeURIComponent(eventId)}/guests/${encodeURIComponent(guestId)}?error=`;
+  const organisation = getRuntime().service.listOrganisations(actor)[0];
+  if (!organisation) {
+    redirect(`${fail}${encodeURIComponent("No organisation assignment is available.")}`);
+  }
+  const confirm = formData.get("confirm") === "true";
+  try {
+    getRuntime().service.updateGuestAddressing(actor, {
+      organisationId: organisation.id,
+      eventId,
+      guestId,
+      expectedVersion: Number(formData.get("expectedVersion")),
+      honorific: optionalFormValue(formData, "honorific"),
+      clearHonorific: formData.get("clearHonorific") === "true" || formData.get("honorific") === "",
+      professionalTitle: optionalFormValue(formData, "professionalTitle"),
+      traditionalTitle: optionalFormValue(formData, "traditionalTitle"),
+      middleNames: optionalFormValue(formData, "middleNames"),
+      preferredDisplayName: optionalFormValue(formData, "preferredDisplayName"),
+      preferredFormalSalutation: optionalFormValue(formData, "preferredFormalSalutation"),
+      pronunciationNote: optionalFormValue(formData, "pronunciationNote"),
+      addressingSource: optionalFormValue(formData, "addressingSource") ?? "STAFF",
+      ...(confirm
+        ? { addressingStatus: optionalFormValue(formData, "addressingStatus") ?? "HOST_CONFIRMED" }
+        : {}),
+      ageBand: optionalFormValue(formData, "ageBand"),
+      reason: String(formData.get("reason") ?? ""),
+    });
+  } catch (error) {
+    guestFail(eventId, guestId, error);
+  }
+  redirect(`/app/events/${eventId}/guests/${guestId}`);
+}
+
+export async function nominateCompanionAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const eventId = String(formData.get("eventId") ?? "");
+  const guestId = String(formData.get("guestId") ?? "");
+  const organisation = getRuntime().service.listOrganisations(actor)[0];
+  if (!organisation) guestFail(eventId, guestId, new Error("No organisation assignment is available."));
+  try {
+    getRuntime().service.nominateCompanion(actor, {
+      organisationId: organisation.id,
+      eventId,
+      entitlementId: String(formData.get("entitlementId") ?? ""),
+      expectedVersion: Number(formData.get("expectedVersion")),
+      guestId: optionalFormValue(formData, "nominatedGuestId"),
+      suppliedGivenName: optionalFormValue(formData, "suppliedGivenName"),
+      suppliedFamilyName: optionalFormValue(formData, "suppliedFamilyName"),
+      suppliedEmail: optionalFormValue(formData, "suppliedEmail"),
+      reason: String(formData.get("reason") ?? "Nominate companion"),
+    });
+  } catch (error) {
+    guestFail(eventId, guestId, error);
+  }
+  redirect(`/app/events/${eventId}/guests/${guestId}`);
+}
+
+export async function reconcileCompanionNamesAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const eventId = String(formData.get("eventId") ?? "");
+  const guestId = String(formData.get("guestId") ?? "");
+  const organisation = getRuntime().service.listOrganisations(actor)[0];
+  if (!organisation) guestFail(eventId, guestId, new Error("No organisation assignment is available."));
+  try {
+    getRuntime().service.reconcileCompanionNames(actor, {
+      organisationId: organisation.id,
+      eventId,
+      guestId,
+      reason: String(formData.get("reason") ?? "Reconcile S03 companion names"),
+    });
+  } catch (error) {
+    guestFail(eventId, guestId, error);
+  }
+  redirect(`/app/events/${eventId}/guests/${guestId}`);
+}
+
+export async function createResponsibleAdultLinkAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const eventId = String(formData.get("eventId") ?? "");
+  const guestId = String(formData.get("guestId") ?? "");
+  const organisation = getRuntime().service.listOrganisations(actor)[0];
+  if (!organisation) guestFail(eventId, guestId, new Error("No organisation assignment is available."));
+  try {
+    getRuntime().service.createResponsibleAdultLink(actor, {
+      organisationId: organisation.id,
+      eventId,
+      childGuestId: guestId,
+      responsibleAdultGuestId: String(formData.get("responsibleAdultGuestId") ?? ""),
+      scope: optionalFormValue(formData, "scope") ?? "EVENT",
+      reason: String(formData.get("reason") ?? "Record responsible adult"),
+    });
+  } catch (error) {
+    guestFail(eventId, guestId, error);
+  }
+  redirect(`/app/events/${eventId}/guests/${guestId}`);
 }
