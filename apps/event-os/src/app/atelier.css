@@ -222,6 +222,7 @@ body.atelier {
   max-width: 46rem;
 }
 
+.eyebrow,
 .atelier-masthead .eyebrow,
 .atelier-featured .eyebrow,
 .atelier-attention .eyebrow,
@@ -315,9 +316,12 @@ body.atelier {
   box-shadow: inset 0 1px 0 rgba(252, 250, 247, 0.9);
 }
 
+.atelier-folio h2,
 .atelier-folio h3 {
   margin: 0 0 8px;
   font-size: 1rem;
+  font-weight: 600;
+  font-family: inherit;
 }
 
 .atelier-folio a {
@@ -549,10 +553,217 @@ body.atelier {
   }
 }
 
+.atelier-shell .page-header {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 24px;
+  max-width: 46rem;
+}
+
+.atelier-shell .page-header h1,
+.atelier-shell main > h1 {
+  margin: 0;
+  font-family: var(--at-editorial);
+  font-size: clamp(2.1rem, 4vw, 3.2rem);
+  font-weight: 400;
+  line-height: 1.05;
+}
+
+.atelier-shell .card-list,
+.atelier-shell .table-wrap,
+.atelier-shell .form,
+.atelier-shell .correction-review {
+  border: 1px solid var(--at-line);
+  border-radius: 14px;
+  background: rgba(252, 250, 247, 0.82);
+  box-shadow: var(--at-shadow-soft);
+}
+
+.atelier-shell .card-list article,
+.atelier-shell .atelier-folio article {
+  padding: 4px 0;
+}
+
+.atelier-shell .card-list article + article {
+  border-top: 1px solid var(--at-line);
+  padding-top: 14px;
+}
+
+.atelier-shell .data-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.atelier-shell .data-table caption {
+  padding: 14px 16px 0;
+  color: var(--at-umber);
+  text-align: left;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+}
+
+.atelier-shell .data-table th {
+  padding: 14px 16px 10px;
+  color: var(--at-umber);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--at-line);
+  background: #f8f3eb;
+}
+
+.atelier-shell .data-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--at-line);
+}
+
+.atelier-shell .data-table tbody tr {
+  transition: background-color var(--at-control) var(--at-ease), box-shadow var(--at-control) var(--at-ease);
+}
+
+.atelier-shell .data-table tbody tr:hover,
+.atelier-shell .data-table tbody tr:focus-within {
+  background: #fbf7f0;
+  box-shadow: inset 2px 0 0 var(--at-champagne);
+}
+
+.atelier-shell .filter-bar {
+  padding: 16px 16px 12px;
+  border: 1px solid var(--at-line);
+  border-radius: 14px;
+  background: rgba(252, 250, 247, 0.72);
+}
+
+.atelier-shell .empty {
+  padding: 18px 20px;
+  border: 1px dashed var(--at-line-strong);
+  border-radius: 12px;
+  background: rgba(252, 250, 247, 0.55);
+}
+
+.atelier-shell .correction-review h2 {
+  margin-top: 0;
+}
+
+.atelier-shell .correction-value-current {
+  color: var(--at-umber);
+}
+
+.atelier-shell .correction-value-proposed {
+  font-family: var(--at-editorial);
+  font-size: 1.15rem;
+  font-weight: 400;
+}
+
+.atelier-queue,
+.atelier-ledger {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.atelier-queue li,
+.atelier-ledger li {
+  padding: 14px 16px;
+  border: 1px solid var(--at-line);
+  border-radius: 12px;
+  background: rgba(252, 250, 247, 0.78);
+}
+
+.atelier-guest {
+  min-height: 100vh;
+  background:
+    var(--at-grain),
+    linear-gradient(180deg, #f8f3eb 0%, var(--at-ivory) 40%, #efe6d8 100%);
+  color: var(--at-ink);
+}
+
+.atelier-guest .guest-mark {
+  font-family: var(--at-editorial);
+  letter-spacing: 0.18em;
+}
+
+.atelier-guest .guest-masthead h1 {
+  font-family: var(--at-editorial);
+  font-weight: 400;
+  font-size: clamp(2.2rem, 6vw, 3.4rem);
+}
+
+.atelier-guest .guest-choice {
+  border-color: var(--at-line);
+  background: var(--at-porcelain);
+  transition: border-color var(--at-control) var(--at-ease), box-shadow var(--at-control) var(--at-ease);
+}
+
+.atelier-guest .guest-choice:hover,
+.atelier-guest .guest-choice:focus-within {
+  border-color: var(--at-champagne);
+  box-shadow: 0 0 0 3px rgba(184, 154, 98, 0.16);
+}
+
+.atelier-chamber {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px 16px;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(184, 154, 98, 0.16), transparent 28%),
+    linear-gradient(180deg, #1b1815 0%, #11100f 55%, #191714 100%);
+}
+
+.atelier-chamber .sign-in,
+.atelier-chamber main.sign-in {
+  width: min(440px, 100%);
+  margin: 0;
+  padding: 36px 32px 32px;
+  border: 1px solid rgba(216, 197, 156, 0.22);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(252, 250, 247, 0.98), #f5f0e8);
+  color: var(--at-ink);
+  box-shadow: var(--at-shadow-lift);
+}
+
+.atelier-chamber h1 {
+  font-family: var(--at-editorial);
+  font-weight: 400;
+  font-size: clamp(2rem, 5vw, 2.8rem);
+}
+
+@media (max-width: 860px) {
+  .atelier-shell .data-table tbody tr {
+    display: grid;
+    gap: 8px;
+    margin: 10px 12px;
+    padding: 14px;
+    border: 1px solid var(--at-line);
+    border-radius: 12px;
+    background: var(--at-porcelain);
+  }
+
+  .atelier-shell .data-table td {
+    border: 0;
+    padding: 0;
+  }
+
+  .atelier-shell .data-table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 2px;
+    color: var(--at-umber);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.68rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .atelier-shell .nav a,
   .atelier-guest-row,
-  .atelier-shell .main {
+  .atelier-shell .main,
+  .atelier-shell .data-table tbody tr {
     transition: none;
     animation: none;
   }

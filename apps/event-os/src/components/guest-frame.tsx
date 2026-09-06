@@ -10,12 +10,13 @@ export function GuestFrame({
   children: ReactNode;
 }) {
   return (
-    <div className="guest-shell">
+    <div className="guest-shell atelier-guest at-scope">
       <a className="skip" href="#guest-main">
         Skip to response
       </a>
       <header className="guest-masthead">
         <p className="guest-mark">Maison Doclar</p>
+        <span className="at-thread" aria-hidden="true" />
         <p className="guest-host">{host}</p>
         <h1>{eventName}</h1>
       </header>
