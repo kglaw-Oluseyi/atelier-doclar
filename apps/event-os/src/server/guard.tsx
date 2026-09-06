@@ -7,6 +7,9 @@ export async function guardedActor() {
   try {
     return await requireActor();
   } catch (error) {
+    if (error instanceof PlatformError && error.code === "DEPENDENCY_UNAVAILABLE") {
+      redirect("/access-denied?state=DEPENDENCY_UNAVAILABLE");
+    }
     if (error instanceof PlatformError && error.code === "ACCESS_PENDING") {
       redirect("/access-pending");
     }

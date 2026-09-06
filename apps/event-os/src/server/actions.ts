@@ -10,7 +10,7 @@ import {
   type Honorific,
 } from "@maison-doclar/shared-platform";
 import { fixturesAllowed } from "./config";
-import { writeActionFlash } from "./action-flash";
+import { consumeActionFlash, writeActionFlash } from "./action-flash";
 import { classifyActionError } from "./operational-state";
 import { getRuntime, withDurable } from "./runtime";
 import { clearStaffSessionCookie, readStaffSessionCookie, writeStaffSessionCookie } from "./staff-session-cookie";
@@ -1021,6 +1021,13 @@ export async function applySyntheticCallbackAction(formData: FormData): Promise<
   }
   redirect(`/app/events/${eventId}/communications/campaigns/${campaignId}`);
   });
+}
+
+export async function refreshGuestRecordAction(formData: FormData): Promise<void> {
+  const eventId = String(formData.get("eventId") ?? "");
+  const guestId = String(formData.get("guestId") ?? "");
+  await consumeActionFlash();
+  redirect(`/app/events/${encodeURIComponent(eventId)}/guests/${encodeURIComponent(guestId)}`);
 }
 
 async function guestFail(eventId: string, guestId: string, error: unknown): Promise<never> {

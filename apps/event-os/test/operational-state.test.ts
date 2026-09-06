@@ -5,6 +5,7 @@ import {
   classifyActionError,
   operationalStateFromCode,
   operationalStateFromQuery,
+  parseActionFlash,
 } from "../src/server/operational-state.ts";
 import { directoryNameLines } from "../src/server/guest-name-display.ts";
 import { applyS04AFixtures, S04A_FIXTURE_IDS } from "@maison-doclar/shared-platform";
@@ -78,6 +79,18 @@ describe("EOS-S04A operational state matrix", () => {
     assert.equal(fromMessage?.kind, "conflict");
     assert.notEqual(fromMessage?.kind, "success");
     assert.notEqual(fromMessage?.kind, "validation");
+  });
+
+  it("parses a flash conflict and rejects stack traces", () => {
+    const flash = parseActionFlash(
+      JSON.stringify({
+        code: "VERSION_CONFLICT",
+        message: "This record changed while you were editing. Reload before saving.",
+      }),
+    );
+    assert.equal(flash?.code, "VERSION_CONFLICT");
+    assert.equal(parseActionFlash(JSON.stringify({ code: "VERSION_CONFLICT", message: "boom\n    at PlatformService" })), undefined);
+    assert.equal(parseActionFlash("not-json"), undefined);
   });
 });
 

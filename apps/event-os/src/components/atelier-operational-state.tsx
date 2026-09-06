@@ -5,10 +5,14 @@ export function AtelierOperationalState({
   state,
   id = "operational-state",
   reloadHref,
+  reloadAction,
+  reloadFields,
 }: {
   state: OperationalStateView;
   id?: string;
   reloadHref?: string;
+  reloadAction?: (formData: FormData) => void | Promise<void>;
+  reloadFields?: Record<string, string>;
 }) {
   const role = state.live === "assertive" ? "alert" : state.live === "polite" ? "status" : undefined;
   return (
@@ -47,7 +51,16 @@ export function AtelierOperationalState({
           <dd>{state.retrySafe ? "Yes — retry will not invent a second success." : "No — reload or choose another action first."}</dd>
         </div>
       </dl>
-      {state.reloadRequired && reloadHref ? (
+      {state.reloadRequired && reloadAction ? (
+        <form className="actions" action={reloadAction}>
+          {Object.entries(reloadFields ?? {}).map(([name, value]) => (
+            <input key={name} type="hidden" name={name} value={value} />
+          ))}
+          <button className="button" type="submit" data-testid="conflict-reload">
+            Reload the current record
+          </button>
+        </form>
+      ) : state.reloadRequired && reloadHref ? (
         <p className="actions">
           <a className="button" href={reloadHref} data-testid="conflict-reload">
             Reload the current record

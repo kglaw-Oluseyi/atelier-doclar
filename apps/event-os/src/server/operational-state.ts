@@ -60,6 +60,19 @@ export function isPlatformErrorCode(value: string | undefined): value is Platfor
   return Boolean(value && (PLATFORM_ERROR_CODES as readonly string[]).includes(value));
 }
 
+export function parseActionFlash(raw: string | undefined): { code: PlatformErrorCode; message: string } | undefined {
+  if (!raw) return undefined;
+  try {
+    const parsed = JSON.parse(raw) as { code?: unknown; message?: unknown };
+    if (typeof parsed.code !== "string" || !isPlatformErrorCode(parsed.code)) return undefined;
+    if (typeof parsed.message !== "string" || parsed.message.length > 400) return undefined;
+    if (parsed.message.includes("    at ")) return undefined;
+    return { code: parsed.code, message: parsed.message };
+  } catch {
+    return undefined;
+  }
+}
+
 function isPlatformErrorLike(error: unknown): error is PlatformError {
   if (error instanceof PlatformError) return true;
   if (!error || typeof error !== "object" || !("code" in error)) return false;

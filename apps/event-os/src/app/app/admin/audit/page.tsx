@@ -1,13 +1,30 @@
+import { authorize } from "@maison-doclar/shared-platform";
 import { AtelierPageHeader } from "../../../../components/atelier-page-header";
+import { AtelierOperationalState } from "../../../../components/atelier-operational-state";
 import { AppShell } from "../../../../components/shell";
 import { guardedActor } from "../../../../server/guard";
+import { operationalStateFromCode } from "../../../../server/operational-state";
 import { getRuntime } from "../../../../server/runtime";
 
 export default async function AuditPage() {
   const { actor, person } = await guardedActor();
   const runtime = getRuntime();
   const organisation = runtime.service.listOrganisations(actor)[0];
-  const audit = organisation ? runtime.service.searchAudit(actor, organisation.id) : [];
+  const actorSnap = runtime.service.resolveActor(person.id);
+  const canViewAudit = organisation
+    ? authorize({ actor: actorSnap, permission: "audit.view", scope: { organisationId: organisation.id } }).allow
+    : false;
+  if (organisation && !canViewAudit) {
+    return (
+      <AppShell person={person} organisationName={organisation.displayName} current="/app/admin/audit">
+        <h1>Audit</h1>
+        <AtelierOperationalState
+          state={operationalStateFromCode("FORBIDDEN", "This assignment cannot view the audit ledger.")}
+        />
+      </AppShell>
+    );
+  }
+  const audit = organisation && canViewAudit ? runtime.service.searchAudit(actor, organisation.id) : [];
 
   return (
     <AppShell person={person} organisationName={organisation?.displayName} current="/app/admin/audit">

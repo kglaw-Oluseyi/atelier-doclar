@@ -14,6 +14,7 @@ import { AtelierOperationalState } from "../../../../../../components/atelier-op
 import { AtelierRecordRefresh } from "../../../../../../components/atelier-record-refresh";
 import { AtelierStateFocus } from "../../../../../../components/atelier-state-focus";
 import { AppShell } from "../../../../../../components/shell";
+import { refreshGuestRecordAction } from "../../../../../../server/actions";
 import { readActionFlash } from "../../../../../../server/action-flash";
 import { guestChoicesFromRecords } from "../../../../../../server/guest-name-display";
 import { guestPermissions, resolveScopedEvent } from "../../../../../../server/guest-scope";
@@ -71,10 +72,19 @@ export default async function GuestDetailPage({
   searchParams,
 }: {
   params: Promise<{ eventId: string; guestId: string }>;
-  searchParams: Promise<{ error?: string; issued?: string; state?: string; ok?: string; demo?: string; hint?: string }>;
+  searchParams: Promise<{
+    error?: string;
+    issued?: string;
+    state?: string;
+    ok?: string;
+    demo?: string;
+    hint?: string;
+    refreshed?: string;
+  }>;
 }) {
   const { eventId, guestId } = await params;
   const paramsQuery = await searchParams;
+  const explicitRefresh = paramsQuery.refreshed === "1";
   const flash = await readActionFlash();
   const { actor, person } = await guardedActor();
   const scoped = resolveScopedEvent(actor, eventId);
@@ -137,19 +147,19 @@ export default async function GuestDetailPage({
   const adultChoices = guestChoices.filter(
     (item) => item.id !== guest.id && (!item.ageBand || !(CHILD_AGE_BANDS as readonly string[]).includes(item.ageBand)),
   );
-  const conflictPreserved = paramsQuery.state === "VERSION_CONFLICT" || flash?.code === "VERSION_CONFLICT";
+  const appliedFlash = explicitRefresh ? undefined : flash;
+  const conflictPreserved = paramsQuery.state === "VERSION_CONFLICT" || appliedFlash?.code === "VERSION_CONFLICT";
   const queryState = operationalStateFromQuery({
-    error: paramsQuery.error ?? flash?.message,
+    error: paramsQuery.error ?? appliedFlash?.message,
     state:
       paramsQuery.hint === "permission" && paramsQuery.state === "FORBIDDEN"
         ? "PERMISSION_CHANGED"
-        : paramsQuery.state ?? flash?.code,
+        : paramsQuery.state ?? appliedFlash?.code,
     ok: conflictPreserved ? undefined : paramsQuery.ok,
     demo: paramsQuery.demo,
   });
   const mutationLocked = queryState?.kind === "conflict";
-  const dossierPath = `/app/events/${eventId}/guests/${guestId}`;
-  const conflictReloadHref = `${dossierPath}?state=VERSION_CONFLICT&error=${encodeURIComponent(queryState?.message ?? "The record changed elsewhere. Your attempted edit was not saved.")}`;
+  const recordReloadFields = { eventId, guestId };
   const partialState =
     workspacePartial || rsvpPartial
       ? operationalStateFromCode(
@@ -197,7 +207,10 @@ export default async function GuestDetailPage({
               { href: "#guest-amendment", label: "Amendment" },
             ]}
           />
-          <AtelierRecordRefresh href={mutationLocked ? dossierPath : undefined} />
+          <AtelierRecordRefresh
+            action={mutationLocked ? refreshGuestRecordAction : undefined}
+            fields={mutationLocked ? recordReloadFields : undefined}
+          />
         </header>
         <p>
           <Link href={`/app/events/${scoped.event.id}/guests`}>Back to directory</Link>
@@ -207,7 +220,8 @@ export default async function GuestDetailPage({
             <AtelierStateFocus targetId="operational-state" active={queryState.kind === "conflict"} />
             <AtelierOperationalState
               state={queryState}
-              reloadHref={queryState.reloadRequired ? (mutationLocked ? dossierPath : conflictReloadHref) : undefined}
+              reloadAction={queryState.reloadRequired ? refreshGuestRecordAction : undefined}
+              reloadFields={queryState.reloadRequired ? recordReloadFields : undefined}
             />
           </>
         ) : null}

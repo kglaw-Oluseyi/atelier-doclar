@@ -43,8 +43,11 @@ test("stale two-tab amendment surfaces a conflict and does not persist the rejec
   await expect(tabB.locator(".atelier-state[data-kind='success']")).toHaveCount(0);
   await expect(tabB.locator("#guest-amendment").getByRole("button", { name: "Reload before retrying" })).toBeDisabled();
   await tabB.getByTestId("conflict-reload").click();
+  await expect(tabB.locator(".atelier-state[data-kind='conflict']")).toHaveCount(0);
+  await expect(tabB.locator(".atelier-state[data-kind='success']")).toHaveCount(0);
   await expect(tabB.getByTestId("familiar-name")).toHaveText("Títí saved");
   await expect(tabB.getByText("Rejected tab B")).toHaveCount(0);
+  await expect(tabB.locator("#guest-amendment").getByRole("button", { name: "Save amendment" })).toBeEnabled();
 });
 
 test("identical rapid double-submit is idempotent and different values still conflict", async ({ page, context }) => {
@@ -154,6 +157,16 @@ test("authenticated RSC prefetch is role-controlled and not an unexplained 503",
       headers: { RSC: "1", "Next-Url": `/app/events/${EVENT}/guests` },
     });
     expect(directory.status(), `${identity} directory`).not.toBe(503);
+    if (identity === "planner") {
+      const audit = await page.request.get("/app/admin/audit?_rsc=1", {
+        headers: { RSC: "1", "Next-Url": "/app/admin/audit" },
+      });
+      expect(audit.status()).not.toBe(503);
+      expect([200, 307, 403]).toContain(audit.status());
+      const auditBody = await audit.text();
+      expect(auditBody).toMatch(/not permitted|Access denied|cannot view the audit/i);
+      expect(auditBody).not.toMatch(/DATABASE_URL|Bearer [A-Za-z0-9._-]{12,}/i);
+    }
     await context.close();
   }
 });

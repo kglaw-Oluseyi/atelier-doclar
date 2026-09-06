@@ -1,6 +1,6 @@
 "use client";
 
-export default function ErrorPage({ error }: { error: Error }) {
+export default function ErrorPage({ error: _error }: { error: Error }) {
   return (
     <div className="atelier-chamber at-scope">
       <main className="sign-in">

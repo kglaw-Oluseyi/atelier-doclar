@@ -74,7 +74,13 @@ describe("EOS-S04A acceptance remediation", () => {
 
   it("replays an identical amendment from a second service without a second version or audit", async () => {
     const { primary, secondary, store } = dualServices();
-    const guest = intakeNamed(primary, { preferredName: "Original" });
+    const guest = primary.intakeGuest(director(), {
+      ...ALPHA,
+      givenName: "Kẹ́hìndé",
+      familyName: "Adéwálé",
+      email: `kehinde.${crypto.randomUUID()}@example.test`,
+      reason: "acceptance remediation intake without preferred name",
+    });
     const payload = {
       ...ALPHA,
       guestId: guest.id,
@@ -94,12 +100,27 @@ describe("EOS-S04A acceptance remediation", () => {
     const durable = store.snapshot().operationalGuests.find((item) => item.id === guest.id);
     assert.equal(durable?.version, guest.version + 1);
     assert.equal(durable?.preferredName.value, "Shared name");
+    assert.notEqual(durable?.preferredName.quality, "CONFLICTING");
+    assert.equal(attentionRequiredFor(durable!), false);
     const successAudits = store.snapshot().audit.filter(
       (item) => item.action === "guest.record.amended" && item.outcome === "SUCCESS" && item.resourceId === guest.id,
     );
     assert.equal(successAudits.length, 1);
     assert.equal(store.snapshot().idempotency.filter((item) => item.action === "guest.record.amended").length, 1);
-    assert.equal(durable?.preferredName.quality === "CONFLICTING", attentionRequiredFor(durable!));
+
+    const sequential = secondary.amendGuest(director(), {
+      ...payload,
+      expectedVersion: guest.version,
+      idempotencyKey: "double-c",
+    });
+    assert.equal(sequential.version, guest.version + 1);
+    assert.notEqual(sequential.preferredName.quality, "CONFLICTING");
+    assert.equal(
+      store.snapshot().audit.filter(
+        (item) => item.action === "guest.record.amended" && item.outcome === "SUCCESS" && item.resourceId === guest.id,
+      ).length,
+      1,
+    );
   });
 
   it("still conflicts when two independently loaded services submit different values", async () => {
