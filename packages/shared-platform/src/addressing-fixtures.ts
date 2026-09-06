@@ -2,6 +2,7 @@ import { SCHEMA_VERSION } from "./constants.js";
 import type { CompanionEntitlement, GuestParty, GuestPartyMember, ResponsibleAdultLink } from "./addressing-schemas.js";
 import { FIXTURE_IDS } from "./fixtures.js";
 import type { GuestHousehold, OperationalGuest } from "./guest-schemas.js";
+import type { RsvpEntitlement } from "./rsvp-schemas.js";
 import type { PlatformSnapshot } from "./store.js";
 
 const AT = "2026-09-06T14:00:00.000Z";
@@ -12,7 +13,8 @@ export const S04A_FIXTURE_IDS = {
   guestOlufemi: "00000000-0000-4000-8000-000000000073",
   guestTomi: "00000000-0000-4000-8000-000000000074",
   guestKemi: "00000000-0000-4000-8000-000000000075",
-  guestCompanion: "00000000-0000-4000-8000-000000000076",
+  /** Unrelated existing OperationalGuest — not a nomination or materialised companion. */
+  guestAdesina: "00000000-0000-4000-8000-000000000076",
   partyAlakija: "00000000-0000-4000-8000-000000000077",
   entitlementPlusOne: "00000000-0000-4000-8000-000000000078",
   rsvpEntitlementPlusOne: "00000000-0000-4000-8000-000000000079",
@@ -129,7 +131,7 @@ export function fixtureS04AGuests(): OperationalGuest[] {
     }),
     stamp({
       ...shared,
-      id: S04A_FIXTURE_IDS.guestCompanion,
+      id: S04A_FIXTURE_IDS.guestAdesina,
       householdId: undefined,
       givenName: nameField("Adéṣínà"),
       familyName: nameField("Ọládàpọ̀"),
@@ -203,6 +205,21 @@ export function fixtureS04AResponsibleAdultLinks(): ResponsibleAdultLink[] {
   ];
 }
 
+export function fixtureS03CompanionEntitlement(): RsvpEntitlement {
+  return stamp({
+    id: S04A_FIXTURE_IDS.rsvpEntitlementPlusOne,
+    organisationId: FIXTURE_IDS.orgMaison,
+    clientId: FIXTURE_IDS.clientAlpha,
+    eventId: FIXTURE_IDS.eventAlphaOne,
+    guestId: S04A_FIXTURE_IDS.guestEbunoluwa,
+    kind: "COMPANION",
+    allowance: 1,
+    status: "ACTIVE",
+    reason: "S03 synthetic companion allowance for the S04A unnamed entitlement",
+    ...versioned(),
+  });
+}
+
 export function fixtureS04AUnnamedEntitlement(): CompanionEntitlement {
   return stamp({
     id: S04A_FIXTURE_IDS.entitlementPlusOne,
@@ -226,6 +243,7 @@ export function applyS04AFixtures(snap: PlatformSnapshot): PlatformSnapshot {
   next.guestParties.push(party);
   next.guestPartyMembers.push(...members);
   next.responsibleAdultLinks.push(...fixtureS04AResponsibleAdultLinks());
+  next.rsvpEntitlements.push(fixtureS03CompanionEntitlement());
   next.companionEntitlements.push(fixtureS04AUnnamedEntitlement());
   return next;
 }

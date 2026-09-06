@@ -1,6 +1,7 @@
+import { S04A_STORE_COLLECTIONS, validateS04APersistedCollections } from "./addressing-persistence.js";
 import { PRODUCTION_STORE_STATUS, type StoreProductionStatus } from "./constants.js";
 import type { AuditEvent } from "./schemas.js";
-import { emptySnapshot, type IdempotencyRecord, type PlatformSnapshot, type PlatformStore } from "./store.js";
+import { emptySnapshot, normalizeSnapshot, type IdempotencyRecord, type PlatformSnapshot, type PlatformStore } from "./store.js";
 import { PLATFORM_POSTGRES_SCHEMA, type PgQueryable } from "./postgres-schema.js";
 
 type Collection = keyof Omit<PlatformSnapshot, "audit" | "idempotency">;
@@ -34,6 +35,7 @@ const COLLECTIONS: Collection[] = [
   "eventSeries",
   "eventSeriesMembers",
   "addressingReconciliationItems",
+  "s04aMigrationReceipts",
   "rsvpPolicies",
   "rsvpQuestionnaires",
   "rsvpInvitations",
@@ -103,9 +105,11 @@ export class PostgresPlatformStore implements PlatformStore {
   }
 
   async replaceAsync(next: PlatformSnapshot): Promise<void> {
+    const normalised = normalizeSnapshot(next);
+    validateS04APersistedCollections(normalised);
     const previous = this.snapshot();
     for (const collection of COLLECTIONS) {
-      for (const record of next[collection] as Array<Record<string, unknown>>) {
+      for (const record of normalised[collection] as Array<Record<string, unknown>>) {
         const existed = (previous[collection] as Array<Record<string, unknown>>).some(
           (item) => idOf(collection, item) === idOf(collection, record),
         );
@@ -138,7 +142,17 @@ export class PostgresPlatformStore implements PlatformStore {
         }
       }
     }
-    for (const entry of next.audit) {
+    for (const collection of S04A_STORE_COLLECTIONS) {
+      const remaining = new Set(
+        (normalised[collection] as Array<Record<string, unknown>>).map((record) => idOf(collection, record)),
+      );
+      for (const record of previous[collection] as Array<Record<string, unknown>>) {
+        const id = idOf(collection, record);
+        if (remaining.has(id)) continue;
+        await this.client.query("DELETE FROM platform_documents WHERE collection=$1 AND id=$2", [collection, id]);
+      }
+    }
+    for (const entry of normalised.audit) {
       if (!previous.audit.some((item) => item.id === entry.id)) {
         await this.client.query(
           "INSERT INTO platform_audit (id, occurred_at, organisation_id, client_id, event_id, action, outcome, body) VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb)",
@@ -155,7 +169,7 @@ export class PostgresPlatformStore implements PlatformStore {
         );
       }
     }
-    for (const entry of next.idempotency) {
+    for (const entry of normalised.idempotency) {
       if (!previous.idempotency.some((item) => item.key === entry.key)) {
         await this.client.query(
           "INSERT INTO platform_idempotency (key, action, hash, result_ref, created_at, body) VALUES ($1, $2, $3, $4, $5, $6::jsonb)",
@@ -163,7 +177,7 @@ export class PostgresPlatformStore implements PlatformStore {
         );
       }
     }
-    this.state = structuredClone(next);
+    this.state = structuredClone(normalised);
   }
 
   private async hydrate(): Promise<void> {
@@ -178,7 +192,9 @@ export class PostgresPlatformStore implements PlatformStore {
     next.audit = audit.rows.map((row) => row.body);
     const idem = await this.client.query<{ body: IdempotencyRecord }>("SELECT body FROM platform_idempotency");
     next.idempotency = idem.rows.map((row) => row.body);
-    this.state = next;
+    const normalised = normalizeSnapshot(next);
+    validateS04APersistedCollections(normalised);
+    this.state = normalised;
   }
 }
 
@@ -248,6 +264,16 @@ export class MemoryPlatformPg implements PgQueryable {
         row.event_id = eventId;
         row.version = version;
         row.body = JSON.parse(bodyJson);
+      }
+      return { rows: [] };
+    }
+    if (sql.startsWith("DELETE FROM platform_documents")) {
+      const [collection, id] = values as [string, string];
+      for (let index = this.documents.length - 1; index >= 0; index -= 1) {
+        const row = this.documents[index];
+        if (row && row.collection === collection && row.id === id) {
+          this.documents.splice(index, 1);
+        }
       }
       return { rows: [] };
     }

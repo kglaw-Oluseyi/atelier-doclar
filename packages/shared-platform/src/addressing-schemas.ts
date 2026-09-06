@@ -269,6 +269,57 @@ export const AddressingReconciliationItemSchema = z
   })
   .strict();
 
+export const S04A_CANONICAL_COLLECTIONS = [
+  "guestParties",
+  "guestPartyMembers",
+  "guestRelationships",
+  "companionEntitlements",
+  "companionNominations",
+  "responsibleAdultLinks",
+  "eventSeries",
+  "eventSeriesMembers",
+  "addressingReconciliationItems",
+] as const;
+
+export type S04ACanonicalCollection = (typeof S04A_CANONICAL_COLLECTIONS)[number];
+
+export const S04ACanonicalCollectionSchema = z.enum(S04A_CANONICAL_COLLECTIONS);
+export const S04AMigrationReceiptStatusSchema = z.enum(["APPLIED", "ROLLED_BACK"]);
+export const S04AMigrationSubjectTypeSchema = z.enum([
+  "HOUSEHOLD",
+  "GUEST",
+  "PARTY",
+  "PARTY_MEMBER",
+  "MIGRATION",
+]);
+
+export const S04ACreatedRecordRefSchema = z
+  .object({
+    collection: S04ACanonicalCollectionSchema,
+    id: UuidSchema,
+    version: z.number().int().positive(),
+  })
+  .strict();
+
+export const S04AMigrationNoteSchema = z
+  .object({
+    code: NonEmptySchema.max(80),
+    subjectType: S04AMigrationSubjectTypeSchema,
+    subjectId: UuidSchema.optional(),
+  })
+  .strict();
+
+export const S04AMigrationReceiptSchema = z
+  .object({
+    id: UuidSchema,
+    migrationId: NonEmptySchema.max(80),
+    status: S04AMigrationReceiptStatusSchema,
+    createdRecords: z.array(S04ACreatedRecordRefSchema).max(10_000),
+    notes: z.array(S04AMigrationNoteSchema).max(10_000),
+    ...versioned,
+  })
+  .strict();
+
 const mutationBase = {
   organisationId: OrganisationIdSchema,
   eventId: EventIdSchema,
@@ -396,3 +447,7 @@ export type AdministerCompanionEntitlementInput = z.infer<typeof AdministerCompa
 export type NominateCompanionInput = z.infer<typeof NominateCompanionInputSchema>;
 export type CreateResponsibleAdultLinkInput = z.infer<typeof CreateResponsibleAdultLinkInputSchema>;
 export type CompanionAuthority = z.infer<typeof CompanionAuthoritySchema>;
+export type S04ACreatedRecordRef = z.infer<typeof S04ACreatedRecordRefSchema>;
+export type S04AMigrationNote = z.infer<typeof S04AMigrationNoteSchema>;
+export type S04AMigrationReceipt = z.infer<typeof S04AMigrationReceiptSchema>;
+export type S04AMigrationReceiptStatus = z.infer<typeof S04AMigrationReceiptStatusSchema>;

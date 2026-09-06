@@ -28,6 +28,7 @@ import type {
   GuestPartyMember,
   GuestRelationship,
   ResponsibleAdultLink,
+  S04AMigrationReceipt,
 } from "./addressing-schemas.js";
 import type {
   GuestDuplicateCandidate,
@@ -110,6 +111,7 @@ export interface PlatformSnapshot {
   eventSeries: EventSeries[];
   eventSeriesMembers: EventSeriesMember[];
   addressingReconciliationItems: AddressingReconciliationItem[];
+  s04aMigrationReceipts: S04AMigrationReceipt[];
   rsvpPolicies: RsvpPolicy[];
   rsvpQuestionnaires: RsvpQuestionnaire[];
   rsvpInvitations: RsvpInvitation[];
@@ -184,6 +186,7 @@ export function emptySnapshot(): PlatformSnapshot {
     eventSeries: [],
     eventSeriesMembers: [],
     addressingReconciliationItems: [],
+    s04aMigrationReceipts: [],
     rsvpPolicies: [],
     rsvpQuestionnaires: [],
     rsvpInvitations: [],
@@ -242,6 +245,7 @@ export function normalizeSnapshot(input: PlatformSnapshot): PlatformSnapshot {
     eventSeries: input.eventSeries ?? [],
     eventSeriesMembers: input.eventSeriesMembers ?? [],
     addressingReconciliationItems: input.addressingReconciliationItems ?? [],
+    s04aMigrationReceipts: input.s04aMigrationReceipts ?? [],
     rsvpPolicies: input.rsvpPolicies ?? [],
     rsvpQuestionnaires: input.rsvpQuestionnaires ?? [],
     rsvpInvitations: input.rsvpInvitations ?? [],

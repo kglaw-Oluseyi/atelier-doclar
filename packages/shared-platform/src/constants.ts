@@ -1,4 +1,10 @@
 export const PLATFORM_PACKAGE = "@maison-doclar/shared-platform" as const;
+/**
+ * Repository generation number. EOS-S04A is a backward-compatible additive
+ * extension: missing S04A collections normalise to empty arrays. This value
+ * stays 1 because existing guest, event and RSVP records remain readable
+ * without a generation change.
+ */
 export const SCHEMA_VERSION = 1 as const;
 export const LOCAL_STORE_PRODUCTION_STATUS = "NON_PRODUCTION" as const;
 export const PRODUCTION_STORE_STATUS = "PRODUCTION" as const;

@@ -104,6 +104,7 @@ export {
   EventSeriesSchema,
   EventSeriesMemberSchema,
   AddressingReconciliationItemSchema,
+  S04AMigrationReceiptSchema,
   UpdateGuestAddressingInputSchema,
   CreatePartyInputSchema,
   AddPartyMemberInputSchema,
@@ -122,7 +123,13 @@ export {
   type EventSeriesMember,
   type AgeBand,
   type Honorific,
+  type S04AMigrationReceipt,
 } from "./addressing-schemas.js";
+export {
+  validateS04APersistedCollections,
+  S04A_UNKNOWN_FIELDS_POLICY,
+  S04A_STORE_COLLECTIONS,
+} from "./addressing-persistence.js";
 export {
   renderGuestSalutation,
   renderFamiliarName,
@@ -160,11 +167,19 @@ export {
 export { FIXTURE_IDS, fixturePersons, isFixtureId } from "./fixtures.js";
 export { emptyMasterEventFile } from "./mef.js";
 export { emptySnapshot, normalizeSnapshot, type PlatformStore, type PlatformSnapshot } from "./store.js";
-export { migrateEosS04A, rollbackEosS04A, compatibleLegacySnapshot, EOS_S04A_MIGRATION_ID } from "./addressing-migration.js";
+export {
+  migrateEosS04A,
+  rollbackEosS04A,
+  compatibleLegacySnapshot,
+  EOS_S04A_MIGRATION_ID,
+  type S04AMigrationResult,
+  type S04ARollbackResult,
+} from "./addressing-migration.js";
 export {
   applyS04AFixtures,
   fixtureS04AGuests,
   fixtureS04AHousehold,
+  fixtureS03CompanionEntitlement,
   S04A_FIXTURE_IDS,
 } from "./addressing-fixtures.js";
 export { MemoryPlatformStore } from "./memory-store.js";
