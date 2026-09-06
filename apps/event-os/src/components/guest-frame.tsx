@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { ThemeToggle } from "./theme-toggle";
 
 export function GuestFrame({
   host,
@@ -16,9 +15,6 @@ export function GuestFrame({
         Skip to response
       </a>
       <header className="guest-masthead">
-        <div className="public-toolbar">
-          <ThemeToggle />
-        </div>
         <p className="guest-mark">Maison Doclar</p>
         <p className="guest-host">{host}</p>
         <h1>{eventName}</h1>

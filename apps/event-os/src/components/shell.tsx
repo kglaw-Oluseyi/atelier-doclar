@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import type { Person } from "@maison-doclar/shared-platform";
 import { LogoutButton } from "./logout-button";
-import { ThemeToggle } from "./theme-toggle";
 import { presentStaffIdentity } from "../server/staff-identity-display";
 
 export function AppShell({
@@ -45,7 +44,6 @@ export function AppShell({
           </Link>
         ))}
         <div className="user-menu">
-          <ThemeToggle />
           <StaffIdentity identity={identity} />
           <LogoutButton />
         </div>
@@ -53,10 +51,7 @@ export function AppShell({
       <div className="main">
         <header className="staff-identity-bar" aria-label="Signed-in staff">
           <StaffIdentity identity={identity} />
-          <div className="staff-identity-actions">
-            <ThemeToggle />
-            <LogoutButton />
-          </div>
+          <LogoutButton />
         </header>
         <div className="context" role="status">
           <span>Organisation: {organisationName ?? "Not provided"}</span>
@@ -65,18 +60,10 @@ export function AppShell({
         <main id="main">{children}</main>
       </div>
       <nav className="mobile-nav" aria-label="Primary">
-        <Link href="/app" aria-current={current === "/app" ? "page" : undefined}>
-          Home
-        </Link>
-        <Link href="/app/events" aria-current={current === "/app/events" ? "page" : undefined}>
-          Events
-        </Link>
-        <Link href="/app/my-work" aria-current={current === "/app/my-work" ? "page" : undefined}>
-          My Work
-        </Link>
-        <Link href="/app/clients" aria-current={current === "/app/clients" ? "page" : undefined}>
-          More
-        </Link>
+        <Link href="/app">Home</Link>
+        <Link href="/app/events">Events</Link>
+        <Link href="/app/my-work">My Work</Link>
+        <Link href="/app/clients">More</Link>
       </nav>
     </div>
   );
