@@ -202,8 +202,8 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 | Current owner | EOS-S04A-P10 |
 | Required regression coverage | Do not start EOS-S05; do not invent catalogue acceptance |
 | Latest safe remediation milestone | EOS-S04A-P10 |
-| Current status | OPEN |
-| Resolution evidence | |
+| Current status | CLOSED |
+| Resolution evidence | P10 records ACA-S04A as a training delta only. `programme/slices/catalog.json` still has no EOS-S04A accepted-slice id. Operator handbook states the omission is intentional. Catalogue acceptance was not invented. |
 
 ### TDR-S04A-003 — CURRENT_STATE still records S04A as unauthorised
 
@@ -221,8 +221,8 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 | Current owner | EOS-S04A-P10 |
 | Required regression coverage | P10 updates current-state without marking the slice ACCEPTED |
 | Latest safe remediation milestone | EOS-S04A-P10 |
-| Current status | OPEN |
-| Resolution evidence | |
+| Current status | CLOSED |
+| Resolution evidence | P10 updated `docs/control/CURRENT_STATE.md`: EOS-S04A is implemented / IN_REVIEW and not ACCEPTED. S04B–F remain unstarted. |
 
 ### TDR-S04A-004 — Existing household is a grouping key, not a party or identity
 
@@ -470,6 +470,8 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 - `TDR-S04-002` — character-by-character wrapping. Closed by word-level name CSS and 640px/360px tests.
 - `TDR-S04-003` — Yorùbá diacritics. Closed by fixtures plus P09 intake/directory/companion evidence.
 - `TDR-S04A-014` — deployed SHA observability. Closed by health and system surfaces.
+- `TDR-S04A-002` — programme catalogue has no EOS-S04A id. Closed by P10 documentation: omission is intentional; catalogue acceptance was not invented.
+- `TDR-S04A-003` — CURRENT_STATE S04A authorisation lag. Closed by P10 current-state update (IN_REVIEW, not ACCEPTED).
 
 EOS-S04 remains CLOSED / ACCEPTED and is not reopened.
 
@@ -485,3 +487,4 @@ EOS-S04 remains CLOSED / ACCEPTED and is not reopened.
 | EOS-S04A-P03–P07 | Closed TDR-S04A-005, TDR-S04A-006 and TDR-S04A-009 after guest services, server-side permission/projection enforcement, companion-name reconciliation and safe communications salutation. EOS-S04 not reopened. EOS-S04A remains not accepted. |
 | Event OS Postgres concurrency and cleanup hardening | Entered blocking pre-client TDR-S04A-011: fixture-mark cleanup does not attribute browser-created operational residue. Staff/RSVP sessions now inherit fixture lineage. EOS-S04 not reopened. |
 | EOS-S04A-P08–P09 | Closed TDR-S04-001, TDR-S04-002, TDR-S04-003 and TDR-S04A-014 after frontend hardening, integration evidence and deployed-SHA observability. TDR-S04-006 moved to IN_COVERAGE. Entered TDR-S04A-012, TDR-S04A-013 and TDR-S04A-015 as non-blocking carry-forwards. TDR-S04A-011 remains blocking before client onboarding. EOS-S04 not reopened. EOS-S04A remains not accepted. |
+| EOS-S04A-P10 | Academy delta ACA-S04A and operator handover. Closed TDR-S04A-002 and TDR-S04A-003. TDR-S04A-011 remains blocking before client onboarding. EOS-S04A remains not accepted. |

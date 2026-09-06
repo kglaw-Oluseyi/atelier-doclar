@@ -349,7 +349,7 @@ EOS-S04A Milestone 1 work-state at the time this policy was established:
 | Guest Concierge / Gate-Security system roles (TDR-S04A-001) | LOW | Later authorised slice |
 | Programme catalog EOS-S04A id (TDR-S04A-002) | LOW | Programme admin |
 | TDR-S04A-011 synthetic cleanup attribution | HIGH | Before client onboarding |
-| P10 documentation | — | Not started |
+| P10 documentation | — | Operator handbook and current-state update in this P10 commit |
 
 ---
 
@@ -390,3 +390,21 @@ EOS-S04A Milestone 1 work-state at the time this policy was established:
 | Residual limitations | Restart-survival against Railway Postgres is recorded after deploy. Local e2e uses the cleaned file store. |
 | Brought forward | TDR-S04A-011; permanent IdP; global real-data cleanup; external providers; P10. |
 | Railway / production / providers / later slices | Event OS in project `atelier-doclar` is deployed after this commit is pushed. Control Tower is not deployed. Production operations remain unauthorised. |
+
+---
+
+## EOS-S04A-P10 — Academy delta, operational documentation and handover
+
+| Field | Value |
+|-------|-------|
+| Starting HEAD | `14f47b19bd723e81c0489e7efe326f2e46b137dd` |
+| Ending HEAD | this P10 commit |
+| Commit | this P10 commit `docs(control): record EOS-S04A academy and implementation` |
+| Files changed | `packages/academy` ACA-S04A contracts; Event OS Academy surface and durable attempt store; operator handbook; human-verification procedure; current-state / TDR / ACADEMY product note |
+| Schema / migration | No guest-schema change. Academy attempts persist in Event OS table `event_os_academy_delta` (Postgres) or `data/academy-s04a.json` (local). `SCHEMA_VERSION` remains `1`. |
+| API / permission / transaction / audit | Academy enrolment uses existing role keys. Completion never grants permissions or signs gates. |
+| Frontend | Command Atelier `/app/academy` and `/app/academy/aca-s04a` with progressive modules, warnings, assessment, retake and evidence. |
+| Verification | `pnpm typecheck` PASS (8 packages including academy). `pnpm test` PASS: academy 7, design-system 3, shared-platform 166, programme-domain 155, programme-ingestion 46, event-os 39, programme-tower 42, control-tower 3 (461 pass / 0 fail). `pnpm programme:validate` PASS. Event OS build PASS. Focused Playwright `e2e/academy-s04a.spec.ts` 2 passed. `git diff --check` clean. |
+| Residual limitations | TDR-S04A-011, TDR-S04A-012, TDR-S04A-015; permanent IdP unselected; synthetic data present; providers disabled. |
+| Brought forward | P11 whole-slice hardening and independent-review package. |
+| Railway / production / providers / later slices | Event OS may be deployed after P11. Control Tower is not deployed for documentation-only shared files. Production remains unauthorised. EOS-S04B / S04F / S05 not started. |

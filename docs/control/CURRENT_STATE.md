@@ -1,8 +1,8 @@
 # Current State
 
-**Updated:** Event OS S04 formal closure and EOS-S04F ratification (held)
-**Prompt Control ID:** `MD-PR-S016` / `MD-DOC-EOS-S04-CLOSE-S04F`
-**Milestone:** `EOS-S04`
+**Updated:** EOS-S04A P10 Academy delta and operator handover (not accepted)
+**Prompt Control ID:** EOS-S04A-P10
+**Milestone:** `EOS-S04A` IN_REVIEW / not accepted
 
 MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is ACCEPTED. EOS-S02 is ACCEPTED. EOS-S03 is ACCEPTED. EOS-S04 is CLOSED / ACCEPTED (`PASS WITH OBSERVATIONS`). Accepted count remains 4. Native coverage is 62/62. S4-61 is satisfied for technical review only. S4-62 is satisfied for controlled technical acceptance/handover only. Independent, specialist and CEO production gates remain unsigned.
 
@@ -61,7 +61,13 @@ Railway project: `atelier-doclar` only.
 
 `OI-FC1-004` is `RESOLVED_BY_EVENT_OS_ARCHITECTURE`. This is not production authorisation and does not accept any Foundation slice.
 
-Event OS S01–S03 remain formally accepted. EOS-S04 is CLOSED / ACCEPTED after hosted verification `MD-EOS-S04-R3-05` (`PASS WITH OBSERVATIONS`). Accepted-slice count remains 4. S4-61 and S4-62 are satisfied only for technical review and controlled handover. EOS-S04F is RATIFIED / NOT_STARTED; its Cursor prompt pack remains HELD and was not executed. Implementation of EOS-S04A–F is not authorised as a product slice. Production operations are not authorised (`productionAuthorised=false`).
+Event OS S01–S03 remain formally accepted. EOS-S04 is CLOSED / ACCEPTED after hosted verification `MD-EOS-S04-R3-05` (`PASS WITH OBSERVATIONS`). Accepted-slice count remains 4. S4-61 and S4-62 are satisfied only for technical review and controlled handover.
+
+**EOS-S04A:** Implemented through P00–P10 (P11 hardening follows). Status is **IN_REVIEW / whole-slice-review-ready pending P11**. It is **not ACCEPTED**. Independent, specialist and CEO production gates remain unsigned. Academy delta ACA-S04A is training evidence only and does not grant operational authority.
+
+**EOS-S04B, EOS-S04F, EOS-S05:** Not started. EOS-S04F remains RATIFIED / NOT_STARTED and HELD. Production operations are not authorised (`productionAuthorised=false`).
+
+Historical sentence “Implementation of EOS-S04A–F is not authorised as a product slice” applied before CEO S04A implementation authority. For S04A that sentence is superseded. S04B–F remain unauthorised.
 
 ## Supersession — deploy-by-default (6 September 2026)
 

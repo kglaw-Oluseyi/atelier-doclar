@@ -334,3 +334,18 @@
 | S4-62 | SATISFIED FOR EOS-S04 TECHNICAL ACCEPTANCE / HANDOVER ONLY |
 | Production / Railway / real send | NO |
 | Status | ACCEPTED; accepted count 4 |
+
+## EOS-S04A
+
+**Prompt Control ID:** EOS-S04A-P00–P11
+**Slice ID:** `EOS-S04A` (not a programme-catalogue accepted slice)
+
+| Requirement | Implementation |
+|-------------|----------------|
+| Structured addressing, parties, RA, entitlements | `packages/shared-platform` S04A schemas/services; Event OS dossier workspaces |
+| Academy delta ACA-S04A | `packages/academy`; Event OS `/app/academy/aca-s04a` |
+| Assessment 80 / 90 / retake | `evaluateAcademyAttempt` |
+| Course ≠ operational authority | `AUTHORITY_DISCLAIMER`; result flags all false |
+| Operator handover | `docs/control/EOS_S04A_OPERATOR_HANDBOOK.md` |
+| Human verification | `docs/control/EOS_S04A_HUMAN_VERIFICATION.md` |
+| Status | IN_REVIEW / not ACCEPTED |

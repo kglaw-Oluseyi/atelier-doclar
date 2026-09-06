@@ -911,6 +911,47 @@ body.atelier {
   }
 }
 
+.atelier-academy-authority {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-left: 2px solid var(--at-champagne);
+  background: rgba(184, 154, 98, 0.08);
+}
+
+.atelier-academy-progress {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0;
+  margin: 0 0 20px;
+  list-style: none;
+}
+
+.atelier-academy-progress button[aria-current="step"] {
+  box-shadow: 0 0 0 2px var(--at-champagne);
+}
+
+.atelier-academy-warnings {
+  display: grid;
+  gap: 16px;
+}
+
+.atelier-academy-warnings dt {
+  font-family: var(--at-editorial);
+  font-size: 1.05rem;
+}
+
+.atelier-academy fieldset label {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  cursor: pointer;
+}
+
+.atelier-academy fieldset input[type="radio"] {
+  margin-top: 4px;
+}
+
 @keyframes at-loading {
   from {
     transform: translateX(-20%);

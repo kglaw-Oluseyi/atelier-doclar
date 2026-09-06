@@ -16,6 +16,7 @@
     "node": ">=20"
   },
   "dependencies": {
+    "@maison-doclar/academy": "workspace:*",
     "@maison-doclar/design-system": "workspace:*",
     "@maison-doclar/shared-platform": "workspace:*",
     "next": "^15.2.4",

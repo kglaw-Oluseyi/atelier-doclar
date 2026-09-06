@@ -202,6 +202,8 @@ export function successCopy(ok: string): string {
       return "Companion nomination was recorded. An unnamed allowance is never treated as a person.";
     case "reconcile":
       return "Free-text companion names were recorded without creating guests.";
+    case "academy":
+      return "Training evidence was recorded. Course completion does not grant Event OS authority.";
     default:
       return "The change was recorded.";
   }
