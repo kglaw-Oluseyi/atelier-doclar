@@ -328,12 +328,32 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 | Current status | OPEN |
 | Resolution evidence | |
 
+### TDR-S04A-010 — Embedded OperationalGuest S04A fields were not validated at persist/hydrate
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04A-010` |
+| Source slice | EOS-S04A Milestone 1 review / M1R4 |
+| Description | TDR-S04A-008 closed validation of the nine new collections. `OperationalGuest.addressing`, `ageBand` and `childReadiness` could still be persisted or rehydrated as arbitrary JSON. This is blocking P02 persistence remediation, not deferred P03 work. |
+| Classification | In-slice debt |
+| Severity | CRITICAL |
+| Evidence | Independent Milestone 1 residual-risk note after `336a5f4fc33bf9138cabd11a25df76e716b1fff4`; `validateS04APersistedCollections` before M1R4 |
+| Affected surface or contract | `operationalGuests` persist/hydrate boundary |
+| Reason for deferral | Not deferred. Blocking Milestone 1 persistence remediation. |
+| Blocking | BLOCKING |
+| Current owner | EOS-S04A Milestone 1 remediation |
+| Required regression coverage | Legacy guests without the three fields load; valid Yorùbá addressing round-trips; unsourced title, invalid enum, invalid ageBand, invalid childReadiness and unknown addressing fields fail with path/code only and no partial snapshot |
+| Latest safe remediation milestone | EOS-S04A Milestone 1 remediation |
+| Current status | CLOSED |
+| Resolution evidence | Shared `GuestAddressingSchema` / `AgeBandSchema` / `ChildReadinessSchema` applied to present guest extensions in `validateS04APersistedCollections`. Tests in `packages/shared-platform/test/addressing-persistence.test.ts`. |
+
 ---
 
 ## Closed items
 
 - `TDR-S04A-007` — unsafe collection-clearing rollback. Closed by Milestone 1 scoped-receipt rollback.
 - `TDR-S04A-008` — invalid S04A persistence. Closed by Milestone 1 persist/hydrate schema validation.
+- `TDR-S04A-010` — unvalidated `OperationalGuest` S04A extensions. Closed by Milestone 1 guest persist/hydrate validation.
 
 EOS-S04 remains CLOSED / ACCEPTED and is not reopened.
 
@@ -344,3 +364,4 @@ EOS-S04 remains CLOSED / ACCEPTED and is not reopened.
 | EOS-S04A-P00 | Register established. Entered TDR-S04-001–006 and TDR-S04A-001–006. EOS-S04 not reopened. |
 | EOS-S04A-P02 | TDR-S04-003 and TDR-S04A-004 moved to IN_COVERAGE after Yorùbá fixtures and dedicated-household backfill. |
 | EOS-S04A Milestone 1 remediation | Entered blocking TDR-S04A-007 and TDR-S04A-008 from independent review and closed them after scoped rollback and persist validation. Entered TDR-S04A-009 for server-side permission and projection enforcement (P03/P04/P06). TDR-S04A-005 retained for P03/P05 companion materialisation. EOS-S04 not reopened. |
+| EOS-S04A Milestone 1 M1R4 | Entered blocking TDR-S04A-010 for unvalidated guest addressing/ageBand/childReadiness and closed it after persist/hydrate validation. Not deferred to P03. |

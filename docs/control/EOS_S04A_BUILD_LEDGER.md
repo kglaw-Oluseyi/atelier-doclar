@@ -89,7 +89,7 @@ If any listed record was subsequently changed, or acquired dependencies that mak
 
 ## Persistence validation
 
-The nine S04A collections, plus the migration journal, are validated with the shared runtime schemas at the memory `replace` and Postgres `replaceAsync` / `hydrate` boundary. Missing collections still normalise to empty arrays. Valid records round-trip. Invalid records raise `VALIDATION_FAILED` with collection path and issue code only. Unknown fields are rejected (schemas are `.strict()`; persistence does not strip or coerce). A validation failure does not yield a partially hydrated canonical snapshot. Errors do not expose secrets or unrestricted record bodies.
+The nine S04A collections, plus the migration journal, are validated with the shared runtime schemas at the memory `replace` and Postgres `replaceAsync` / `hydrate` boundary. When present, `OperationalGuest.addressing`, `ageBand` and `childReadiness` are validated with the same shared `GuestAddressingSchema`, `AgeBandSchema` and `ChildReadinessSchema` — the store does not duplicate those schemas. Legacy guests that omit the three fields still load. Missing S04A collections still normalise to empty arrays. Valid records round-trip. Invalid records raise `VALIDATION_FAILED` with collection path and issue code only. Unknown fields are rejected (schemas are `.strict()`; persistence does not strip or coerce). A validation failure does not yield a partially hydrated canonical snapshot. Errors do not expose secrets or unrestricted record bodies.
 
 ---
 
@@ -166,5 +166,25 @@ Adéṣínà Ọládàpọ̀ (`00000000-0000-4000-8000-000000000076`) is an unre
 | Failures found | Historical P00/P02 `git diff --check` clean claims were false; trailing two-space hard breaks in these two Markdown files. Corrected here. |
 | Browser evidence | Not applicable |
 | Residual limitations | P03, Railway, production, providers and later slices remain untouched. EOS-S04 remains CLOSED / ACCEPTED. |
+| Brought forward | Independent Milestone 1 re-review. P03 remains prohibited. |
+| Railway / production / providers / later slices | Untouched |
+
+---
+
+## EOS-S04A-M1R4 — Validate embedded guest S04A fields
+
+| Field | Value |
+|-------|-------|
+| Starting HEAD | `336a5f4fc33bf9138cabd11a25df76e716b1fff4` |
+| Ending HEAD | this guest-persistence commit |
+| Commit | this guest-persistence commit |
+| Files changed | `packages/shared-platform/src/addressing-persistence.ts`, `packages/shared-platform/test/addressing-persistence.test.ts`, `docs/control/EOS_S04A_BUILD_LEDGER.md`, `docs/control/CUMULATIVE_TECHNICAL_DEBT_AND_REGRESSION_REGISTER.md` |
+| Schema / migration | Persist/hydrate now applies the shared addressing, ageBand and childReadiness schemas to `OperationalGuest` when those fields are present. Legacy guests without the fields remain readable. No schema duplication in the store. |
+| API / permission / transaction / audit | None |
+| Frontend | None |
+| Verification | `pnpm typecheck` PASS (7 packages). `pnpm test` PASS: design-system 1, shared-platform 134, programme-domain 155, event-os 25, programme-ingestion 46, programme-tower 42, control-tower 3 (406 pass / 0 fail / 0 skip). `pnpm programme:validate` PASS (84 slices, 0 cycles). |
+| Failures found | None |
+| Browser evidence | Not applicable |
+| Residual limitations | Full `OperationalGuest` shape outside the three S04A extensions is unchanged. Server-side permission enforcement remains P03 / P04 / P06. |
 | Brought forward | Independent Milestone 1 re-review. P03 remains prohibited. |
 | Railway / production / providers / later slices | Untouched |

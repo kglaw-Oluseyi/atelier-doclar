@@ -505,4 +505,98 @@ describe("EOS-S04A persistence and migration", () => {
       return true;
     });
   });
+
+  it("loads a valid legacy guest without S04A fields and a valid Yorùbá addressing guest", () => {
+    const [legacy] = fixtureS04AGuests();
+    assert.ok(legacy);
+    const { addressing: _addressing, ageBand: _ageBand, childReadiness: _childReadiness, ...legacyGuest } = legacy;
+    const store = new MemoryPlatformStore();
+    store.replace(compatibleLegacySnapshot({ operationalGuests: [legacyGuest] }));
+    const loaded = store.snapshot().operationalGuests[0];
+    assert.equal(loaded?.id, S04A_FIXTURE_IDS.guestEbunoluwa);
+    assert.equal(loaded?.addressing, undefined);
+    assert.equal(loaded?.ageBand, undefined);
+    assert.equal(loaded?.childReadiness, undefined);
+
+    const titled = applyS04AFixtures(emptySnapshot());
+    store.replace(titled);
+    const ebun = store.snapshot().operationalGuests.find((item) => item.id === S04A_FIXTURE_IDS.guestEbunoluwa);
+    assert.equal(ebun?.addressing?.honorific, "Dr (Mrs)");
+    assert.equal(ebun?.addressing?.addressingStatus, "HOST_CONFIRMED");
+    assert.match(ebun?.givenName.value ?? "", /Ẹ̀bùnolúwa/);
+    assert.doesNotMatch(JSON.stringify(store.snapshot().operationalGuests[0]?.addressing), /inferred/);
+  });
+
+  it("rejects invalid OperationalGuest S04A extensions without a partial snapshot", () => {
+    const valid = applyS04AFixtures(emptySnapshot());
+    const store = new MemoryPlatformStore();
+    store.replace(valid);
+    const before = store.snapshot();
+
+    const unsourcedTitle = structuredClone(valid);
+    unsourcedTitle.operationalGuests[0] = {
+      ...unsourcedTitle.operationalGuests[0]!,
+      addressing: {
+        professionalTitle: "Barrister",
+        addressingStatus: "UNVERIFIED",
+        addressingSource: "STAFF",
+      },
+    };
+    assert.throws(() => store.replace(unsourcedTitle), (error: unknown) => {
+      assertPersistenceError(error);
+      assert.ok((error.details ?? []).some((item) => item.startsWith("operationalGuests[0].addressing")));
+      return true;
+    });
+    assert.deepEqual(store.snapshot(), before);
+
+    const badEnum = structuredClone(valid);
+    (badEnum.operationalGuests[0] as { addressing: { addressingStatus: string } }).addressing = {
+      ...(badEnum.operationalGuests[0]!.addressing ?? {
+        addressingStatus: "UNVERIFIED",
+        addressingSource: "STAFF",
+      }),
+      addressingStatus: "GUESSED",
+    };
+    assert.throws(() => validateS04APersistedCollections(badEnum), (error: unknown) => {
+      assertPersistenceError(error);
+      assert.ok((error.details ?? []).some((item) => item.includes("addressingStatus") && item.includes("invalid_enum_value")));
+      return true;
+    });
+
+    const badAge = structuredClone(valid);
+    (badAge.operationalGuests[0] as { ageBand: string }).ageBand = "TODDLER";
+    assert.throws(() => validateS04APersistedCollections(badAge), (error: unknown) => {
+      assertPersistenceError(error);
+      assert.ok((error.details ?? []).some((item) => item.startsWith("operationalGuests[0].ageBand")));
+      return true;
+    });
+
+    const badReadiness = structuredClone(valid);
+    (badReadiness.operationalGuests[2] as { childReadiness: string }).childReadiness = "READY_ENOUGH";
+    assert.throws(() => validateS04APersistedCollections(badReadiness), (error: unknown) => {
+      assertPersistenceError(error);
+      assert.ok((error.details ?? []).some((item) => item.includes("childReadiness")));
+      return true;
+    });
+
+    const unknownAddressingField = structuredClone(valid);
+    (unknownAddressingField.operationalGuests[0] as { addressing: Record<string, unknown> }).addressing = {
+      ...unknownAddressingField.operationalGuests[0]!.addressing,
+      personId: S04A_FIXTURE_IDS.guestEbunoluwa,
+    };
+    assert.throws(() => validateS04APersistedCollections(unknownAddressingField), (error: unknown) => {
+      assertPersistenceError(error);
+      assert.ok((error.details ?? []).some((item) => item.includes("unrecognized_keys")));
+      return true;
+    });
+
+    const mixed = structuredClone(valid);
+    (mixed.operationalGuests[1] as { ageBand: string }).ageBand = "NOT_AN_AGE";
+    assert.throws(() => store.replace(mixed), (error: unknown) => {
+      assertPersistenceError(error);
+      return true;
+    });
+    assert.deepEqual(store.snapshot(), before);
+    assert.equal(store.snapshot().operationalGuests[1]?.ageBand, "ADULT");
+  });
 });
