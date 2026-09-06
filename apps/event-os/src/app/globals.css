@@ -76,6 +76,57 @@
   margin-top: 12px;
 }
 
+.meta-list {
+  margin: 0 0 16px;
+}
+
+.meta-list > div {
+  display: grid;
+  grid-template-columns: minmax(8rem, 30%) 1fr;
+  gap: 8px 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--md-line);
+}
+
+.meta-list dt {
+  margin: 0;
+  color: var(--md-muted);
+  font-weight: 600;
+}
+
+.meta-list dd {
+  margin: 0;
+}
+
+.form fieldset {
+  border: 1px solid var(--md-line);
+  border-radius: var(--md-radius);
+  margin: 0 0 16px;
+  padding: 12px;
+}
+
+.form legend {
+  padding: 0 6px;
+  font-weight: 600;
+}
+
+.form .check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.form .check input {
+  width: auto;
+  min-height: auto;
+  margin-top: 4px;
+}
+
+.form .check span {
+  flex: 1;
+}
+
 .form label, .field {
   display: block;
   margin-bottom: 16px;

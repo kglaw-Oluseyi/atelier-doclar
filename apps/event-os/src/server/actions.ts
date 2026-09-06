@@ -856,6 +856,26 @@ export async function decideCorrectionAction(formData: FormData): Promise<void> 
   redirect(`/app/events/${eventId}/communications/corrections`);
 }
 
+export async function proposeCorrectionAction(formData: FormData): Promise<void> {
+  const { actor } = await requireActor();
+  const eventId = String(formData.get("eventId") ?? "");
+  try {
+    const organisation = commsOrg(actor, eventId, "unmatched");
+    getRuntime().service.proposeContactCorrection(actor, {
+      organisationId: organisation.id,
+      eventId,
+      guestId: String(formData.get("guestId") ?? ""),
+      channel: String(formData.get("channel") ?? "EMAIL"),
+      proposedValue: String(formData.get("proposedValue") ?? ""),
+      sourceMessageId: String(formData.get("sourceMessageId") ?? "") || undefined,
+      reason: String(formData.get("reason") ?? "Propose contact correction"),
+    });
+  } catch (error) {
+    commsFail(eventId, "unmatched", error);
+  }
+  redirect(`/app/events/${eventId}/communications/unmatched?status=correction-proposed`);
+}
+
 export async function applySyntheticCallbackAction(formData: FormData): Promise<void> {
   const { actor } = await requireActor();
   const eventId = String(formData.get("eventId") ?? "");

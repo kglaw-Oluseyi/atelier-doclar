@@ -13,7 +13,6 @@ import {
   publishOccasionAction,
   replyOnThreadAction,
   requestCampaignApprovalAction,
-  resolveUnmatchedAction,
   upsertAudienceAction,
 } from "../server/actions";
 
@@ -238,7 +237,15 @@ export function CampaignComposerForm({
   );
 }
 
-export function CampaignLifecycleForms({ eventId, campaign }: { eventId: string; campaign: Campaign }) {
+export function CampaignLifecycleForms({
+  eventId,
+  campaign,
+  canApprove = false,
+}: {
+  eventId: string;
+  campaign: Campaign;
+  canApprove?: boolean;
+}) {
   return (
     <div className="stack">
       {campaign.status === "DRAFT" ? (
@@ -250,7 +257,7 @@ export function CampaignLifecycleForms({ eventId, campaign }: { eventId: string;
           <button type="submit">Request approval</button>
         </form>
       ) : null}
-      {campaign.status === "AWAITING_APPROVAL" ? (
+      {campaign.status === "AWAITING_APPROVAL" && canApprove ? (
         <form className="form" action={decideCampaignAction}>
           <input type="hidden" name="eventId" value={eventId} />
           <input type="hidden" name="campaignId" value={campaign.id} />
@@ -391,40 +398,6 @@ export function TaskActionForm({
         <input name="reason" defaultValue="Update follow-up task" required />
       </label>
       <button type="submit">Update task</button>
-    </form>
-  );
-}
-
-export function UnmatchedForm({
-  eventId,
-  inboundId,
-  expectedVersion,
-  guestId,
-}: {
-  eventId: string;
-  inboundId: string;
-  expectedVersion: number;
-  guestId?: string;
-}) {
-  return (
-    <form className="form" action={resolveUnmatchedAction}>
-      <input type="hidden" name="eventId" value={eventId} />
-      <input type="hidden" name="inboundId" value={inboundId} />
-      <input type="hidden" name="expectedVersion" value={expectedVersion} />
-      <input type="hidden" name="guestId" value={guestId ?? ""} />
-      <label>
-        Action
-        <select name="action" defaultValue={guestId ? "LINK" : "DISMISS"}>
-          <option value="LINK">Link to guest</option>
-          <option value="DISMISS">Keep unmatched</option>
-          <option value="ESCALATE">Escalate</option>
-        </select>
-      </label>
-      <label>
-        Reason
-        <input name="reason" defaultValue="Resolve unmatched inbound" required />
-      </label>
-      <button type="submit">Resolve inbound</button>
     </form>
   );
 }

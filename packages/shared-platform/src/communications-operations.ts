@@ -243,6 +243,28 @@ export function evaluateEligibility(input: {
   return { status: "ALLOW", reasons: ["ELIGIBLE"] };
 }
 
+/** Safe operator-facing copy for concierge reply eligibility denials. Never exposes contact values or internal ids. */
+export function replyEligibilityPublicMessage(reasons: readonly string[]): string {
+  const primary = reasons[0];
+  switch (primary) {
+    case "QUIET_HOURS":
+      return "Reply blocked by the event channel quiet-hours policy.";
+    case "CHANNEL_DISABLED":
+      return "Reply blocked because this channel is disabled for the event.";
+    case "CONTACT_INVALID":
+    case "CONTACT_ABSENT":
+      return "Reply blocked because the guest does not have an eligible contact for this channel.";
+    case "SUPPRESSED":
+      return "Reply blocked by the guest communication restrictions.";
+    case "FREQUENCY_CAP":
+      return "Reply blocked because the event communication limit has been reached.";
+    case "CHANNEL_POLICY_UNPUBLISHED":
+      return "Reply blocked because the event channel policy is not published.";
+    default:
+      return "You do not have permission to perform this action.";
+  }
+}
+
 export function inQuietHours(policy: ChannelPolicy, nowIso: string): boolean {
   try {
     const parts = new Intl.DateTimeFormat("en-GB", {

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CommunicationsFrame } from "../../../../../../../components/communications-frame";
 import { CampaignLifecycleForms } from "../../../../../../../components/communications-forms";
+import { staffDisplayName } from "../../../../../../../server/comms-display";
 import { getRuntime } from "../../../../../../../server/runtime";
 import { loadCommunicationsPage } from "../../../../../../../server/communications-page";
 
@@ -20,13 +21,21 @@ export default async function CampaignDetailPage({
       </CommunicationsFrame>
     );
   }
-  const campaign = getRuntime().service.getCampaign(
+  const runtime = getRuntime();
+  const campaign = runtime.service.getCampaign(
     loaded.actor,
     loaded.scoped.organisation.id,
     loaded.scoped.event.id,
     campaignId,
   );
-  const failures = getRuntime().service.listFailures(loaded.actor, loaded.scoped.organisation.id, loaded.scoped.event.id);
+  const failures = runtime.service.listFailures(loaded.actor, loaded.scoped.organisation.id, loaded.scoped.event.id);
+  const approvals = runtime.service
+    .currentSnapshot()
+    .campaignApprovals.filter((item) => item.campaignId === campaign.id)
+    .sort((left, right) => Date.parse(right.decidedAt) - Date.parse(left.decidedAt));
+  const latestApproval = approvals[0];
+  const authorName = staffDisplayName(runtime.service, campaign.createdByPersonId);
+  const approverName = latestApproval ? staffDisplayName(runtime.service, latestApproval.decidedByPersonId) : undefined;
   return (
     <CommunicationsFrame
       person={loaded.person}
@@ -41,13 +50,29 @@ export default async function CampaignDetailPage({
         <span className="md-status">{campaign.status}</span> · {campaign.purpose} · {campaign.channel}
         {campaign.testOnly ? " · Test watermark" : ""}
       </p>
+      <dl className="meta-list">
+        <div>
+          <dt>Author</dt>
+          <dd>{authorName}</dd>
+        </div>
+        <div>
+          <dt>Approval state</dt>
+          <dd>{campaign.status === "AWAITING_APPROVAL" ? "Awaiting separate approver" : campaign.status}</dd>
+        </div>
+        {approverName ? (
+          <div>
+            <dt>Approver</dt>
+            <dd>{approverName}</dd>
+          </div>
+        ) : null}
+      </dl>
       {campaign.status === "AWAITING_APPROVAL" ? (
         <section>
           <h2>Approval</h2>
           <p>A different named human must approve. The author cannot approve their own campaign.</p>
         </section>
       ) : null}
-      <CampaignLifecycleForms eventId={eventId} campaign={campaign} />
+      <CampaignLifecycleForms eventId={eventId} campaign={campaign} canApprove={loaded.permissions.msgApprove} />
       <p>
         <Link href={`/app/events/${eventId}/communications/failures`}>Delivery failures ({failures.length})</Link>
       </p>

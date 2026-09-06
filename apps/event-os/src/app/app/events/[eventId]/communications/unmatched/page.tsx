@@ -1,5 +1,7 @@
 import { CommunicationsFrame } from "../../../../../../components/communications-frame";
-import { UnmatchedForm } from "../../../../../../components/communications-forms";
+import { ProposeCorrectionForm } from "../../../../../../components/propose-correction-form";
+import { UnmatchedResolutionForm } from "../../../../../../components/unmatched-resolution-form";
+import { eventGuestOptions } from "../../../../../../server/comms-display";
 import { getRuntime } from "../../../../../../server/runtime";
 import { loadCommunicationsPage } from "../../../../../../server/communications-page";
 
@@ -8,7 +10,7 @@ export default async function UnmatchedPage({
   searchParams,
 }: {
   params: Promise<{ eventId: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; status?: string }>;
 }) {
   const { eventId } = await params;
   const loaded = await loadCommunicationsPage(eventId);
@@ -21,6 +23,10 @@ export default async function UnmatchedPage({
   }
   const runtime = getRuntime();
   const unmatched = runtime.service.listUnmatchedInbound(loaded.actor, loaded.scoped.organisation.id, loaded.scoped.event.id);
+  const guestOptions = loaded.permissions.view
+    ? eventGuestOptions(runtime.service, loaded.actor, loaded.scoped.organisation.id, loaded.scoped.event.id)
+    : [];
+  const query = await searchParams;
   return (
     <CommunicationsFrame
       person={loaded.person}
@@ -29,8 +35,13 @@ export default async function UnmatchedPage({
       eventId={eventId}
       title="Unmatched inbound"
       lede="Ambiguous messages stay unmatched. They are not silently attached to a guest."
-      error={(await searchParams).error}
+      error={query.error}
     >
+      {query.status === "correction-proposed" ? (
+        <p className="alert" data-tone="ok" role="status">
+          Contact correction proposal recorded for review.
+        </p>
+      ) : null}
       {unmatched.length === 0 ? <p className="empty">No unmatched inbound messages.</p> : null}
       {unmatched.map((item) => (
         <article key={item.id} className="card-list">
@@ -39,7 +50,21 @@ export default async function UnmatchedPage({
           </p>
           <p>{item.body}</p>
           {loaded.permissions.msgUnmatched ? (
-            <UnmatchedForm eventId={eventId} inboundId={item.id} expectedVersion={item.version} />
+            <UnmatchedResolutionForm
+              eventId={eventId}
+              inboundId={item.id}
+              expectedVersion={item.version}
+              guests={guestOptions}
+            />
+          ) : null}
+          {loaded.permissions.msgRespond ? (
+            <ProposeCorrectionForm
+              eventId={eventId}
+              inboundId={item.id}
+              sourceMessageId={item.id}
+              guests={guestOptions}
+              defaultChannel={item.channel}
+            />
           ) : null}
         </article>
       ))}

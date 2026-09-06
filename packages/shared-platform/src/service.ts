@@ -154,6 +154,7 @@ import {
   eventOccasion,
   extractVariables,
   projectGuestSafeOccasion,
+  replyEligibilityPublicMessage,
 } from "./communications-operations.js";
 import {
   ApproveTemplateInputSchema,
@@ -2415,7 +2416,9 @@ export class PlatformService {
         if (thread.guestId) {
           const eligibility = guestEligibility(snap, thread.guestId, thread.channel, "CONCIERGE", ctx.now);
           if (eligibility.status !== "ALLOW") {
-            throw new PlatformError("FORBIDDEN", `reply is not eligible: ${eligibility.reasons.join(",")}`);
+            throw new PlatformError("FORBIDDEN", `reply is not eligible: ${eligibility.reasons.join(",")}`, {
+              publicMessage: replyEligibilityPublicMessage(eligibility.reasons),
+            });
           }
         }
         const message = {

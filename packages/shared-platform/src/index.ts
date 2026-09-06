@@ -77,7 +77,7 @@ export {
   type QualifiedField,
   type FieldQuality,
 } from "./guest-schemas.js";
-export { operationalDisplayName, normalizeEmail, normalizePhone, findDuplicateMatches } from "./guest-matching.js";
+export { operationalDisplayName, normalizeEmail, normalizePhone, findDuplicateMatches, fieldValue } from "./guest-matching.js";
 export { parseCanonicalCsv, CANONICAL_CSV_COLUMNS } from "./guest-intake.js";
 export { seededPermissions, seededRoles, permissionsForRole, roleIdForKey } from "./catalog.js";
 export { authorize, assignmentIsActive, canSeeClient, canSeeEvent, type ActorSnapshot, type PolicyDecision } from "./policy.js";
@@ -132,6 +132,7 @@ export { canonicalQuestionnaireSections, guestVisibleName } from "./rsvp-operati
 export {
   ALLOWED_TEMPLATE_VARIABLES,
   presentationLabel,
+  replyEligibilityPublicMessage,
   signSyntheticPayload,
   projectGuestSafeOccasion,
 } from "./communications-operations.js";
