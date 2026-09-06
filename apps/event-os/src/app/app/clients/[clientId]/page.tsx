@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AtelierPageHeader } from "../../../../components/atelier-page-header";
 import { AppShell } from "../../../../components/shell";
 import { guardedActor } from "../../../../server/guard";
 import { getRuntime } from "../../../../server/runtime";
@@ -21,10 +22,11 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ c
 
   return (
     <AppShell person={person} organisationName={organisation.displayName} current="/app/clients">
-      <div className="page-header">
-        <h1>{client.displayName}</h1>
-        <p className="lede">Client scope is fixed. Events below belong to this client only.</p>
-      </div>
+      <AtelierPageHeader
+        eyebrow="Client dossier"
+        title={client.displayName}
+        lede="Client scope is fixed. Events below belong to this client only."
+      />
       <p>
         <span className="md-status">{client.status}</span> Code {client.code}
       </p>
@@ -36,13 +38,20 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ c
       {events.length === 0 ? (
         <p className="empty">No events are visible for this client.</p>
       ) : (
-        <ul>
+        <section className="atelier-folio" aria-label="Client events">
           {events.map((event) => (
-            <li key={event.id}>
-              <Link href={`/app/events/${event.id}`}>{event.name}</Link>
-            </li>
+            <article key={event.id}>
+              <h2>
+                <Link href={`/app/events/${event.id}`}>{event.name}</Link>
+              </h2>
+              <p>
+                <span className="md-status" data-tone="brass">
+                  {event.phase}
+                </span>
+              </p>
+            </article>
           ))}
-        </ul>
+        </section>
       )}
     </AppShell>
   );

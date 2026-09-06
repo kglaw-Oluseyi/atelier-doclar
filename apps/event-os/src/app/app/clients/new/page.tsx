@@ -1,3 +1,4 @@
+import { AtelierPageHeader } from "../../../../components/atelier-page-header";
 import { ClientForm } from "../../../../components/client-form";
 import { AppShell } from "../../../../components/shell";
 import { guardedActor } from "../../../../server/guard";
@@ -17,10 +18,11 @@ export default async function NewClientPage({ searchParams }: { searchParams: Pr
   }
   return (
     <AppShell person={person} organisationName={organisation.displayName} current="/app/clients">
-      <div className="page-header">
-        <h1>Create client</h1>
-        <p className="lede">Create a client inside the current organisation. Scope is resolved on the server.</p>
-      </div>
+      <AtelierPageHeader
+        eyebrow="Client intake"
+        title="Create client"
+        lede="Create a client inside the current organisation. Scope is resolved on the server."
+      />
       <ClientForm error={error} />
     </AppShell>
   );

@@ -1,3 +1,4 @@
+import { AtelierPageHeader } from "../../../../components/atelier-page-header";
 import { EventForm } from "../../../../components/event-form";
 import { AppShell } from "../../../../components/shell";
 import { guardedActor } from "../../../../server/guard";
@@ -25,10 +26,11 @@ export default async function NewEventPage({
   }
   return (
     <AppShell person={person} organisationName={organisation.displayName} current="/app/events">
-      <div className="page-header">
-        <h1>Create event</h1>
-        <p className="lede">Events start in Discover. Client lineage is verified on the server.</p>
-      </div>
+      <AtelierPageHeader
+        eyebrow="Event intake"
+        title="Create event"
+        lede="Events start in Discover. Client lineage is verified on the server."
+      />
       {clients.length === 0 ? (
         <p className="empty">Create a client before creating an event.</p>
       ) : (

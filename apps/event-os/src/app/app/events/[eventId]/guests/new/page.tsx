@@ -1,3 +1,4 @@
+import { AtelierPageHeader } from "../../../../../../components/atelier-page-header";
 import { AppShell } from "../../../../../../components/shell";
 import { GuestIntakeForm } from "../../../../../../components/guest-intake-form";
 import { guestPermissions, resolveScopedEvent } from "../../../../../../server/guest-scope";
@@ -30,13 +31,11 @@ export default async function GuestIntakePage({
       eventName={scoped.event.name}
       current="/app/events"
     >
-      <div className="page-header">
-        <h1>Manual guest intake</h1>
-        <p className="lede">
-          Creates an operational guest record for {scoped.event.name}. This does not create a person, user, or
-          membership.
-        </p>
-      </div>
+      <AtelierPageHeader
+        eyebrow={`Guest intake · ${scoped.event.name}`}
+        title="Manual guest intake"
+        lede={`Creates an operational guest record for ${scoped.event.name}. This does not create a person, user, or membership.`}
+      />
       {permissions.intake ? (
         <GuestIntakeForm eventId={scoped.event.id} error={error} />
       ) : (

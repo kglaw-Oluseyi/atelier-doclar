@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { acknowledgeAssistanceAction, reviewRsvpExceptionAction } from "../../../../../../server/actions";
+import { AtelierPageHeader } from "../../../../../../components/atelier-page-header";
 import { AppShell } from "../../../../../../components/shell";
 import { guestPermissions, resolveScopedEvent } from "../../../../../../server/guest-scope";
 import { guardedActor } from "../../../../../../server/guard";
@@ -39,10 +40,11 @@ export default async function RsvpExceptionsPage({
 
   return (
     <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
-      <div className="page-header">
-        <h1>RSVP review queue</h1>
-        <p className="lede">Conflicts and assistance requests that need a named operator.</p>
-      </div>
+      <AtelierPageHeader
+        eyebrow={`Review desk · ${scoped.event.name}`}
+        title="RSVP review queue"
+        lede="Conflicts and assistance requests that need a named operator."
+      />
       <p>
         <Link href={`/app/events/${scoped.event.id}/rsvp`}>Back to RSVP</Link>
       </p>

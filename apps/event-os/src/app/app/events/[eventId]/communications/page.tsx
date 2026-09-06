@@ -53,13 +53,13 @@ export default async function CommunicationsOverviewPage({
       error={error}
     >
       {!policy && permissions.msgPolicy ? (
-        <section>
+        <section className="atelier-panel">
           <h2>Prepare this event</h2>
           <PrepareCommunicationsForm eventId={eventId} />
         </section>
       ) : null}
       {overview ? (
-        <section>
+        <section className="atelier-attention">
           <h2>Attention</h2>
           <p>
             Awaiting approval {overview.awaitingApproval} · Open tasks {overview.openTasks} · Unmatched{" "}

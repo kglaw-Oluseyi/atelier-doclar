@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AtelierPageHeader } from "../../../components/atelier-page-header";
 import { AppShell } from "../../../components/shell";
 import { guardedActor } from "../../../server/guard";
 import { getRuntime } from "../../../server/runtime";
@@ -11,14 +12,15 @@ export default async function MyWorkPage() {
 
   return (
     <AppShell person={person} organisationName={organisation?.displayName} current="/app/my-work">
-      <div className="page-header">
-        <h1>My Work</h1>
-        <p className="lede">Active assignments only. This is not a task or alert product.</p>
-      </div>
+      <AtelierPageHeader
+        eyebrow="Work queue"
+        title="My Work"
+        lede="Active assignments only. This is not a task or alert product."
+      />
       {assignments.length === 0 ? (
         <p className="empty">No active assignments.</p>
       ) : (
-        <ul>
+        <ul className="atelier-queue">
           {assignments.map((item) => (
             <li key={item.id}>
               {item.eventId ? <Link href={`/app/events/${item.eventId}`}>Open assigned event</Link> : "Organisation assignment"}{" "}

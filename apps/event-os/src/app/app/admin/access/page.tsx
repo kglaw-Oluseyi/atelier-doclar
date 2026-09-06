@@ -1,4 +1,5 @@
 import { AssignmentForm } from "../../../../components/assignment-form";
+import { AtelierPageHeader } from "../../../../components/atelier-page-header";
 import { AppShell } from "../../../../components/shell";
 import { guardedActor } from "../../../../server/guard";
 import { getRuntime } from "../../../../server/runtime";
@@ -27,11 +28,12 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
 
   return (
     <AppShell person={person} organisationName={organisation.displayName} current="/app/admin/access">
-      <div className="page-header">
-        <h1>Access administration</h1>
-        <p className="lede">Technical administration is not CEO or Event Director business authority.</p>
-      </div>
-      <ul>
+      <AtelierPageHeader
+        eyebrow="Governance"
+        title="Access administration"
+        lede="Technical administration is not CEO or Event Director business authority."
+      />
+      <ul className="atelier-ledger">
         {assignments.map((item) => (
           <li key={item.id}>
             {item.personId} · {item.status} · {item.eventId ?? "organisation"}

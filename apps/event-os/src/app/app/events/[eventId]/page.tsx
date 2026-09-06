@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AtelierPageHeader } from "../../../../components/atelier-page-header";
 import { AppShell } from "../../../../components/shell";
 import { guardedActor } from "../../../../server/guard";
 import { getRuntime } from "../../../../server/runtime";
@@ -30,10 +31,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
       eventName={event.name}
       current="/app/events"
     >
-      <div className="page-header">
-        <h1>{event.name}</h1>
-        <p className="lede">Operational event overview. Guest intake and RSVP are available for this event. Later Event OS domains remain unbuilt.</p>
-      </div>
+      <AtelierPageHeader
+        eyebrow={`Event brief · ${client.displayName}`}
+        title={event.name}
+        lede="Operational event overview. Guest intake and RSVP are available for this event. Later Event OS domains remain unbuilt."
+      />
       <p>
         <span className="md-status" data-tone="brass">
           {event.phase}
@@ -54,7 +56,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
           Event settings
         </Link>
       </p>
-      <section>
+      <section className="atelier-panel">
         <h2>Master Event File</h2>
         <p>
           Foundation completeness {composed} of {mef.slots.length} doctrine slots. Uncomposed slots remain unverified

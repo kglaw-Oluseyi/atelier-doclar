@@ -1,3 +1,4 @@
+import { AtelierPageHeader } from "../../../../components/atelier-page-header";
 import { AppShell } from "../../../../components/shell";
 import { guardedActor } from "../../../../server/guard";
 import { getRuntime } from "../../../../server/runtime";
@@ -10,15 +11,17 @@ export default async function AuditPage() {
 
   return (
     <AppShell person={person} organisationName={organisation?.displayName} current="/app/admin/audit">
-      <div className="page-header">
-        <h1>Audit</h1>
-        <p className="lede">Append-only consequential history. Secrets are not stored.</p>
-      </div>
+      <AtelierPageHeader
+        eyebrow="Executive ledger"
+        title="Audit"
+        lede="Append-only consequential history. Secrets are not stored."
+      />
       {audit.length === 0 ? (
         <p className="empty">No audit events are visible.</p>
       ) : (
         <div className="table-wrap">
           <table className="data-table">
+            <caption>Consequential history</caption>
             <thead>
               <tr>
                 <th>When</th>
@@ -30,12 +33,12 @@ export default async function AuditPage() {
             <tbody>
               {audit.map((item) => (
                 <tr key={item.id}>
-                  <td>{item.occurredAt}</td>
-                  <td>{item.action}</td>
-                  <td>
+                  <td data-label="When">{item.occurredAt}</td>
+                  <td data-label="Action">{item.action}</td>
+                  <td data-label="Outcome">
                     <span className="md-status">{item.outcome}</span>
                   </td>
-                  <td>{item.correlationId}</td>
+                  <td data-label="Correlation">{item.correlationId}</td>
                 </tr>
               ))}
             </tbody>

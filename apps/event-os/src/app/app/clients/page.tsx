@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AtelierPageHeader } from "../../../components/atelier-page-header";
 import { AppShell } from "../../../components/shell";
 import { guardedActor } from "../../../server/guard";
 import { getRuntime } from "../../../server/runtime";
@@ -11,10 +12,11 @@ export default async function ClientsPage() {
 
   return (
     <AppShell person={person} organisationName={organisation?.displayName} current="/app/clients">
-      <div className="page-header">
-        <h1>Clients</h1>
-        <p className="lede">Clients you are permitted to see in the current organisation.</p>
-      </div>
+      <AtelierPageHeader
+        eyebrow={`Client register · ${organisation?.displayName ?? "Organisation"}`}
+        title="Clients"
+        lede="Clients you are permitted to see in the current organisation."
+      />
       <p className="actions">
         <Link className="button" href="/app/clients/new">
           Create client
@@ -25,6 +27,7 @@ export default async function ClientsPage() {
       ) : (
         <div className="table-wrap">
           <table className="data-table">
+            <caption>Permitted clients</caption>
             <thead>
               <tr>
                 <th>Client</th>
@@ -35,11 +38,11 @@ export default async function ClientsPage() {
             <tbody>
               {clients.map((client) => (
                 <tr key={client.id}>
-                  <td>
+                  <td data-label="Client">
                     <Link href={`/app/clients/${client.id}`}>{client.displayName}</Link>
                   </td>
-                  <td>{client.code}</td>
-                  <td>
+                  <td data-label="Code">{client.code}</td>
+                  <td data-label="Status">
                     <span className="md-status">{client.status}</span>
                   </td>
                 </tr>

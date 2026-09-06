@@ -1,3 +1,4 @@
+import { AtelierPageHeader } from "../../../../components/atelier-page-header";
 import { AppShell } from "../../../../components/shell";
 import { productionAuthorised } from "../../../../server/config";
 import { guardedActor } from "../../../../server/guard";
@@ -8,11 +9,12 @@ export default async function SystemPage() {
   const organisation = getRuntime().service.listOrganisations(actor)[0];
   return (
     <AppShell person={person} organisationName={organisation?.displayName} current="/app/admin/system">
-      <div className="page-header">
-        <h1>System health</h1>
-        <p className="lede">Release and dependency status without secrets.</p>
-      </div>
-      <ul>
+      <AtelierPageHeader
+        eyebrow="Governance"
+        title="System health"
+        lede="Release and dependency status without secrets."
+      />
+      <ul className="atelier-ledger">
         <li>Service: Event OS foundation</li>
         <li>Persistence: {persistenceLabel()}</li>
         <li>Production authorised: {String(productionAuthorised())}</li>

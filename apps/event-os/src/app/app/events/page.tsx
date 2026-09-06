@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AtelierPageHeader } from "../../../components/atelier-page-header";
 import { AppShell } from "../../../components/shell";
 import { guardedActor } from "../../../server/guard";
 import { getRuntime } from "../../../server/runtime";
@@ -12,10 +13,11 @@ export default async function EventsPage() {
 
   return (
     <AppShell person={person} organisationName={organisation?.displayName} current="/app/events">
-      <div className="page-header">
-        <h1>Events</h1>
-        <p className="lede">Permitted events only. Switching context opens a different event record.</p>
-      </div>
+      <AtelierPageHeader
+        eyebrow={`Event book · ${organisation?.displayName ?? "Organisation"}`}
+        title="Events"
+        lede="Permitted events only. Switching context opens a different event record."
+      />
       <p className="actions">
         <Link className="button" href="/app/events/new">
           Create event
@@ -24,7 +26,7 @@ export default async function EventsPage() {
       {events.length === 0 ? (
         <p className="empty">No permitted events.</p>
       ) : (
-        <div className="card-list">
+        <section className="atelier-folio" aria-label="Permitted events">
           {events.map((event) => (
             <article key={event.id}>
               <h2>
@@ -38,7 +40,7 @@ export default async function EventsPage() {
               </p>
             </article>
           ))}
-        </div>
+        </section>
       )}
     </AppShell>
   );

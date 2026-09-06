@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AtelierPageHeader } from "../../../../../components/atelier-page-header";
 import { AppShell } from "../../../../../components/shell";
 import { PrepareRsvpForm } from "../../../../../components/staff-rsvp-forms";
 import { guestPermissions, resolveScopedEvent } from "../../../../../server/guest-scope";
@@ -68,12 +69,11 @@ export default async function RsvpOverviewPage({
 
   return (
     <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
-      <div className="page-header">
-        <h1>RSVP</h1>
-        <p className="lede">
-          Guest responses for {scoped.event.name}. An attending response is not admission, check-in, or a credential.
-        </p>
-      </div>
+      <AtelierPageHeader
+        eyebrow={`Response book · ${scoped.event.name}`}
+        title="RSVP"
+        lede={`Guest responses for ${scoped.event.name}. An attending response is not admission, check-in, or a credential.`}
+      />
       {query.error ? (
         <p className="alert" data-tone="danger" role="alert">
           {query.error}
@@ -143,19 +143,19 @@ export default async function RsvpOverviewPage({
             <tbody>
               {rows.map((row) => (
                 <tr key={row.guest.id}>
-                  <td>
+                  <td data-label="Guest">
                     <Link href={`/app/events/${scoped.event.id}/guests/${row.guest.id}`}>
                       {runtime.service.guestDisplayName(row.guest)}
                     </Link>
                   </td>
-                  <td>
+                  <td data-label="Response">
                     <span className="md-status" data-tone={intentTone(row.attendanceIntent)}>
                       {intentLabel(row.attendanceIntent)}
                     </span>
                   </td>
-                  <td>{row.provenance ? row.provenance.replaceAll("_", " ") : "—"}</td>
-                  <td>{row.respondedAt ?? "—"}</td>
-                  <td>
+                  <td data-label="Source">{row.provenance ? row.provenance.replaceAll("_", " ") : "—"}</td>
+                  <td data-label="When">{row.respondedAt ?? "—"}</td>
+                  <td data-label="Attention">
                     <span className="md-status" data-tone={row.attentionRequired ? "warn" : "ok"}>
                       {row.attentionRequired ? "Needs review" : "Clear"}
                     </span>

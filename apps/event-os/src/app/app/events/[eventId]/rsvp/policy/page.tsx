@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AtelierPageHeader } from "../../../../../../components/atelier-page-header";
 import { AppShell } from "../../../../../../components/shell";
 import { RsvpPolicyForm } from "../../../../../../components/staff-rsvp-forms";
 import { guestPermissions, resolveScopedEvent } from "../../../../../../server/guest-scope";
@@ -38,10 +39,11 @@ export default async function RsvpPolicyPage({
   const questionnaire = runtime.service.getPublishedQuestionnaire(actor, scoped.organisation.id, scoped.event.id);
   return (
     <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
-      <div className="page-header">
-        <h1>RSVP policy and form</h1>
-        <p className="lede">Guest-facing names and the published response form. Delivery of invitations remains deferred.</p>
-      </div>
+      <AtelierPageHeader
+        eyebrow={`Configuration · ${scoped.event.name}`}
+        title="RSVP policy and form"
+        lede="Guest-facing names and the published response form. Delivery of invitations remains deferred."
+      />
       <p>
         <Link href={`/app/events/${scoped.event.id}/rsvp`}>Back to RSVP</Link>
       </p>
