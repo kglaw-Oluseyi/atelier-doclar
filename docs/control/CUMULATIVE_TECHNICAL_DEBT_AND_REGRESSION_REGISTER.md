@@ -63,8 +63,8 @@ These six items were retained at EOS-S04 formal closure (`CLOSED / ACCEPTED`, cl
 | Current owner | EOS-S04A implementation |
 | Required regression coverage | Genuine 360px browser behaviour on EOS-S04A primary surfaces (intake, profile, party workspace, entitlements, directory/communications rendering) |
 | Latest safe remediation milestone | EOS-S04A-P08 / P09 (frontend hardening and E2E evidence) |
-| Current status | OPEN |
-| Resolution evidence | |
+| Current status | CLOSED |
+| Resolution evidence | P08/P09 Playwright at 360×800 on intake, directory and dossier. Directory transforms to labelled cards. Primary actions remain reachable. Artifacts: `e2e/s04a-hardening.spec.ts`, `e2e/evidence/artifacts/p09-mobile-360-directory.png`, `p09-mobile-360-long-yoruba.png`. |
 
 ### TDR-S04-002 — Narrow-column character wrapping under 200% zoom
 
@@ -82,8 +82,8 @@ These six items were retained at EOS-S04 formal closure (`CLOSED / ACCEPTED`, cl
 | Current owner | EOS-S04A implementation |
 | Required regression coverage | 200% zoom and narrow-column wrapping tests; long Nigerian and Yorùbá names must wrap by word/phrase, not character |
 | Latest safe remediation milestone | EOS-S04A-P08 / P09 |
-| Current status | OPEN |
-| Resolution evidence | |
+| Current status | CLOSED |
+| Resolution evidence | Guest names use `overflow-wrap: break-word; word-break: normal`. 640px layout (200% of 1280) and 360px cards keep long Yorùbá names intact. Tests: `e2e/s04a-hardening.spec.ts`, `test/operational-state.test.ts` directory names. |
 
 ### TDR-S04-003 — Yorùbá diacritics not exercised in final S04 fixture
 
@@ -101,8 +101,8 @@ These six items were retained at EOS-S04 formal closure (`CLOSED / ACCEPTED`, cl
 | Current owner | EOS-S04A implementation |
 | Required regression coverage | Long Yorùbá names with preserved diacritics in fixtures, domain tests, UI and E2E (for example `Ẹ̀bùnolúwa`, `Olúfẹ́mi`, `Alákíjà`) |
 | Latest safe remediation milestone | EOS-S04A-P02 fixtures; proven through P05 / P07 / P09 |
-| Current status | IN_COVERAGE |
-| Resolution evidence | |
+| Current status | CLOSED |
+| Resolution evidence | Fixtures and P09 journey persist Ẹ̀bùnolúwa, Olúfẹ́mi, Ọmọ́tọ́lá, Fọláṣadé with diacritics through intake, directory, dossier and companion materialisation. Artifacts `p09-desktop-titled-adult.png`, `p09-directory-formal-familiar.png`. |
 
 ### TDR-S04-004 — Denied self-review HTTP and audit mechanics not isolated
 
@@ -158,8 +158,8 @@ These six items were retained at EOS-S04 formal closure (`CLOSED / ACCEPTED`, cl
 | Current owner | EOS-S04A implementation |
 | Required regression coverage | Session revocation and restoration behaviour remains covered; no silent session resurrection |
 | Latest safe remediation milestone | EOS-S04A-P09 regression; do not weaken R3-04 tests |
-| Current status | OPEN |
-| Resolution evidence | |
+| Current status | IN_COVERAGE |
+| Resolution evidence | P09 keeps staff-session tests and adds session-expired / assignment-revoked operational states. The original R3-04 anomaly was not reproduced. Watch item remains; tests were not weakened. |
 
 ---
 
@@ -380,6 +380,82 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 | Current status | OPEN |
 | Resolution evidence | |
 
+### TDR-S04A-012 — RSC prefetch 503 is not isolated
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04A-012` |
+| Source slice | EOS-S04A-P08 / P09 |
+| Description | Next.js RSC prefetch can still surface a 503 when the Event OS runtime is not yet ready. Guest pages now show a readiness/unavailable operational state after navigation, but prefetch noise was not independently reproduced in this environment. |
+| Classification | Related observation |
+| Severity | LOW |
+| Evidence | Event OS `ensureRuntime` / `/api/health/ready`; no failing P08/P09 case isolated to RSC prefetch |
+| Affected surface or contract | Next.js App Router prefetch against Event OS |
+| Reason for deferral | Not a false-success or data-integrity defect; pages fail closed after navigation |
+| Blocking | NON_BLOCKING |
+| Current owner | Event OS runtime hardening |
+| Required regression coverage | Prefetch of guest routes while runtime is down must not leak secrets or show another event's data |
+| Latest safe remediation milestone | Later Event OS runtime prompt |
+| Current status | OPEN |
+| Resolution evidence | |
+
+### TDR-S04A-013 — Auditor-visible out-of-scope mutation controls
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04A-013` |
+| Source slice | EOS-S04A-P08 / P09 |
+| Description | Auditor P08/P09 checks hide intake, addressing save, party create and companion materialise. Server mutations remain denied. Residual risk is any non-S04A control that still renders for Auditor on adjacent modules. |
+| Classification | Related observation |
+| Severity | LOW |
+| Evidence | `e2e/s04a-hardening.spec.ts` auditor assertions; service denial tests |
+| Affected surface or contract | Auditor UI visibility vs server enforcement |
+| Reason for deferral | S04A primary mutations are hidden and server-denied. Adjacent-module audit is outside this slice. |
+| Blocking | NON_BLOCKING |
+| Current owner | Later UI hardening |
+| Required regression coverage | Auditor cannot submit S04A mutations via UI or forged POST |
+| Latest safe remediation milestone | Later authorised frontend prompt |
+| Current status | IN_COVERAGE |
+| Resolution evidence | Planner/Auditor S04A mutation controls are absent on the guest dossier; server still refuses. |
+
+### TDR-S04A-014 — Deployed SHA observability
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04A-014` |
+| Source slice | EOS-S04A-P09 |
+| Description | Operators needed a non-secret deployed SHA on health and system surfaces to verify Railway parity. |
+| Classification | In-slice debt |
+| Severity | LOW |
+| Evidence | `/api/health/live`, `/api/health/ready`, `/app/admin/system` now expose `deployedSha` from `RAILWAY_GIT_COMMIT_SHA` or `EVENT_OS_GIT_SHA` |
+| Affected surface or contract | Event OS readiness and system health |
+| Reason for deferral | Not deferred. Closed in P09. |
+| Blocking | NON_BLOCKING |
+| Current owner | EOS-S04A-P09 |
+| Required regression coverage | Ready payload includes `deployedSha`; system page shows it |
+| Latest safe remediation milestone | EOS-S04A-P09 |
+| Current status | CLOSED |
+| Resolution evidence | `deployedSha()` on live/ready and the system ledger. |
+
+### TDR-S04A-015 — Incomplete earlier offline testing
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04A-015` |
+| Source slice | EOS-S04A-P08 / P09 |
+| Description | Offline / disconnected-client behaviour was not re-run as a dedicated matrix. Postgres-unavailable and readiness states are simulated and classified, but a true offline browser run was not executed here. |
+| Classification | Related observation |
+| Severity | LOW |
+| Evidence | Operational states `DEPENDENCY_UNAVAILABLE` and `CAPABILITY_NOT_ENABLED`; artifact `p09-server-failure.png` |
+| Affected surface or contract | Guest pages when the network or store is down |
+| Reason for deferral | Simulated failure is covered; a physical offline pass is not required to close P09 |
+| Blocking | NON_BLOCKING |
+| Current owner | Later hosted verification |
+| Required regression coverage | Offline or 503 store failure shows the operational state and does not false-succeed |
+| Latest safe remediation milestone | Hosted verification |
+| Current status | OPEN |
+| Resolution evidence | |
+
 ---
 
 ## Closed items
@@ -390,6 +466,10 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 - `TDR-S04A-006` — communications salutation now uses safe structured addressing. Closed by P07.
 - `TDR-S04A-009` — server-side S04A permission and projection enforcement. Closed by P03/P04/P06.
 - `TDR-S04A-010` — unvalidated `OperationalGuest` S04A extensions. Closed by Milestone 1 guest persist/hydrate validation.
+- `TDR-S04-001` — 360px primary-surface evidence. Closed by P08/P09 Playwright and artifacts.
+- `TDR-S04-002` — character-by-character wrapping. Closed by word-level name CSS and 640px/360px tests.
+- `TDR-S04-003` — Yorùbá diacritics. Closed by fixtures plus P09 intake/directory/companion evidence.
+- `TDR-S04A-014` — deployed SHA observability. Closed by health and system surfaces.
 
 EOS-S04 remains CLOSED / ACCEPTED and is not reopened.
 
@@ -404,3 +484,4 @@ EOS-S04 remains CLOSED / ACCEPTED and is not reopened.
 | Local / GitHub parity policy | Recorded `docs/control/LOCAL_GITHUB_PARITY_POLICY.md`. A later authorised push is durability only. It does not accept EOS-S04A, pass Milestone 1, or authorise P03, deployment or production. |
 | EOS-S04A-P03–P07 | Closed TDR-S04A-005, TDR-S04A-006 and TDR-S04A-009 after guest services, server-side permission/projection enforcement, companion-name reconciliation and safe communications salutation. EOS-S04 not reopened. EOS-S04A remains not accepted. |
 | Event OS Postgres concurrency and cleanup hardening | Entered blocking pre-client TDR-S04A-011: fixture-mark cleanup does not attribute browser-created operational residue. Staff/RSVP sessions now inherit fixture lineage. EOS-S04 not reopened. |
+| EOS-S04A-P08–P09 | Closed TDR-S04-001, TDR-S04-002, TDR-S04-003 and TDR-S04A-014 after frontend hardening, integration evidence and deployed-SHA observability. TDR-S04-006 moved to IN_COVERAGE. Entered TDR-S04A-012, TDR-S04A-013 and TDR-S04A-015 as non-blocking carry-forwards. TDR-S04A-011 remains blocking before client onboarding. EOS-S04 not reopened. EOS-S04A remains not accepted. |

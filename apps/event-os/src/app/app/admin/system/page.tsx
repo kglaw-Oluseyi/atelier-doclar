@@ -1,6 +1,6 @@
 import { AtelierPageHeader } from "../../../../components/atelier-page-header";
 import { AppShell } from "../../../../components/shell";
-import { productionAuthorised } from "../../../../server/config";
+import { deployedSha, productionAuthorised } from "../../../../server/config";
 import { guardedActor } from "../../../../server/guard";
 import { getRuntime, persistenceLabel } from "../../../../server/runtime";
 
@@ -17,6 +17,7 @@ export default async function SystemPage() {
       <ul className="atelier-ledger">
         <li>Service: Event OS foundation</li>
         <li>Persistence: {persistenceLabel()}</li>
+        <li>Deployed SHA: {deployedSha()}</li>
         <li>Production authorised: {String(productionAuthorised())}</li>
         <li>Production IdP: not selected</li>
         <li>Railway project: atelier-doclar (deploy-by-default; production operations gated)</li>

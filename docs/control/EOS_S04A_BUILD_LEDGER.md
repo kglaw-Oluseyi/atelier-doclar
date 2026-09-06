@@ -348,4 +348,45 @@ EOS-S04A Milestone 1 work-state at the time this policy was established:
 | Independent Milestone 2 review | — | After Claude-in-Chrome verification |
 | Guest Concierge / Gate-Security system roles (TDR-S04A-001) | LOW | Later authorised slice |
 | Programme catalog EOS-S04A id (TDR-S04A-002) | LOW | Programme admin |
-| P08 onward | — | Not authorised |
+| TDR-S04A-011 synthetic cleanup attribution | HIGH | Before client onboarding |
+| P10 documentation | — | Not started |
+
+---
+
+## EOS-S04A-P08 — Frontend states, accessibility and responsive hardening
+
+| Field | Value |
+|-------|-------|
+| Starting HEAD | `1051aeab90671093684c3e5a8eda84b34c5dbb76` |
+| Ending HEAD | `feb73cd` |
+| Commit | `feb73cd` `fix(event-os): harden EOS-S04A frontend states` |
+| Files changed | Event OS guest intake, dossier, directory, party/child/entitlement workspaces, operational-state system, shared-platform party/RA/entitlement projections and `endResponsibleAdultLink` |
+| Schema / migration | Additive `EndResponsibleAdultLinkInputSchema` only. `SCHEMA_VERSION` remains `1`. |
+| API / permission / transaction / audit | New server actions wrap existing PlatformService mutations. Planner confirmation and exception review remain server-denied. Ending a responsible-adult link is `guest.child.manage`. |
+| Frontend | Complete P08 surfaces: intake fields, dossier projections, party lifecycle, responsible-adult picker/end, entitlement administer/nominate, structured directory names, Command Atelier states. |
+| Verification | `pnpm typecheck` PASS. `pnpm test` PASS: design-system 3, shared-platform 166, programme-domain 155, event-os 37, programme-ingestion 46, programme-tower 42, control-tower 3 (452 pass / 0 fail). `pnpm programme:validate` PASS. Event OS production build PASS. Focused Playwright: addressing, atelier, s04a-hardening PASS. |
+| Failures found | Existing Reason/name locators became ambiguous after workspace expansion; tests tightened. PlatformError `instanceof` failed across the action boundary; classification now duck-types `code`. |
+| Browser evidence | `apps/event-os/e2e/s04a-hardening.spec.ts`; 360px, 640px-as-200%, keyboard, reduced motion, axe. |
+| Residual limitations | Playwright CSS `zoom` is not identical to browser zoom; 640px used as the 200% layout equivalent. |
+| Brought forward | P09 integration, visual evidence, deploy. |
+| Railway / production / providers / later slices | Untouched in this commit. `productionAuthorised` remains false. |
+
+---
+
+## EOS-S04A-P09 — Integration, cross-platform E2E and visual evidence
+
+| Field | Value |
+|-------|-------|
+| Starting HEAD | `feb73cd` |
+| Ending HEAD | this P09 commit |
+| Commit | this P09 commit `test(event-os): verify EOS-S04A integration and visual evidence` |
+| Files changed | P09 integration spec, evidence index, ledger/TDR, party-create adds the creating guest as an explicit member, deployed SHA on health/system |
+| Schema / migration | None |
+| API / permission / transaction / audit | Creating a party from a dossier now also adds that guest as MEMBER (or PRINCIPAL only when explicitly selected). Health/live and ready expose `deployedSha`. |
+| Frontend | No new domain surfaces. Evidence and observability only. |
+| Verification | `pnpm typecheck` PASS. `pnpm test` PASS (452). `pnpm programme:validate` PASS. Event OS build PASS. `git diff --check` clean. Playwright: 31 passed in the full run; `zz-communications-hv` failed once after a Next.js memory restart and passed on isolated retry. P08/P09 specs passed in the same full run. |
+| Failures found | Party created from a dossier was invisible until the creating guest was explicitly added as a member. Corrected in this commit. |
+| Browser evidence | `apps/event-os/e2e/s04a-integration.spec.ts`; index `apps/event-os/e2e/evidence/INDEX.md`; artifacts untracked. |
+| Residual limitations | Restart-survival against Railway Postgres is recorded after deploy. Local e2e uses the cleaned file store. |
+| Brought forward | TDR-S04A-011; permanent IdP; global real-data cleanup; external providers; P10. |
+| Railway / production / providers / later slices | Event OS in project `atelier-doclar` is deployed after this commit is pushed. Control Tower is not deployed. Production operations remain unauthorised. |

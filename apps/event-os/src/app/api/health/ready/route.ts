@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fixturesAllowed, productionAuthorised } from "../../../../server/config";
+import { deployedSha, fixturesAllowed, productionAuthorised } from "../../../../server/config";
 import { ensureRuntime } from "../../../../server/runtime";
 
 export async function GET(): Promise<Response> {
@@ -14,6 +14,7 @@ export async function GET(): Promise<Response> {
       fixtures: runtime.fixtures,
       productionAuthorised: productionAuthorised(),
       productionIdpSelected: false,
+      deployedSha: deployedSha(),
     });
   } catch {
     return NextResponse.json(
@@ -26,6 +27,7 @@ export async function GET(): Promise<Response> {
         fixtures: false,
         productionAuthorised: false,
         productionIdpSelected: false,
+        deployedSha: deployedSha(),
       },
       { status: 503 },
     );

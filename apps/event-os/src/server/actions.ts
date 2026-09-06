@@ -1185,14 +1185,24 @@ export async function createGuestPartyAction(formData: FormData): Promise<void> 
   const organisation = getRuntime().service.listOrganisations(actor)[0];
   if (!organisation) guestFail(eventId, guestId, new Error("No organisation assignment is available."));
   try {
-    getRuntime().service.createGuestParty(actor, {
+    const principalGuestId = optionalFormValue(formData, "principalGuestId");
+    const party = getRuntime().service.createGuestParty(actor, {
       organisationId: organisation.id,
       eventId,
       type: String(formData.get("type") ?? ""),
       label: String(formData.get("label") ?? ""),
-      principalGuestId: optionalFormValue(formData, "principalGuestId"),
+      principalGuestId,
       reason: String(formData.get("reason") ?? "Create operational party"),
       idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+    });
+    getRuntime().service.addGuestPartyMember(actor, {
+      organisationId: organisation.id,
+      eventId,
+      partyId: party.id,
+      guestId,
+      expectedPartyVersion: party.version,
+      role: principalGuestId === guestId ? "PRINCIPAL" : "MEMBER",
+      reason: String(formData.get("reason") ?? "Add creating guest as an explicit party member"),
     });
   } catch (error) {
     guestFail(eventId, guestId, error);

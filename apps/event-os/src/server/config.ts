@@ -44,6 +44,14 @@ export function productionAuthorised(): false {
   return false;
 }
 
+export function deployedSha(): string {
+  return (
+    runtimeEnv("RAILWAY_GIT_COMMIT_SHA") ??
+    runtimeEnv("EVENT_OS_GIT_SHA") ??
+    "local-unreleased"
+  );
+}
+
 export function rsvpAccessConfig(): RsvpAccessConfig {
   const config: RsvpAccessConfig = {
     invitationPepper: runtimeEnv("EVENT_OS_RSVP_PEPPER") ?? DEFAULT_NON_PRODUCTION_RSVP_ACCESS.invitationPepper,
