@@ -172,7 +172,27 @@ export {
   dateOfBirthForbidden,
   type RenderedSalutation,
 } from "./addressing.js";
-export { operationalDisplayName, normalizeEmail, normalizePhone, findDuplicateMatches, fieldValue } from "./guest-matching.js";
+export {
+  operationalDisplayName,
+  normalizeEmail,
+  normalizePhone,
+  findDuplicateMatches,
+  fieldValue,
+  attentionRequiredFor,
+  attentionFieldKeysFor,
+  projectGuestAttention,
+  ATTENTION_FIELD_KEYS,
+} from "./guest-matching.js";
+export {
+  detectSalutationTitleMismatch,
+  titleAppearsInSalutation,
+  addressingTitles,
+  proposedAddressingTitles,
+} from "./addressing-salutation.js";
+export {
+  guestAmendmentAlreadyApplied,
+  addressingAlreadyApplied,
+} from "./mutation-replay.js";
 export { parseCanonicalCsv, CANONICAL_CSV_COLUMNS } from "./guest-intake.js";
 export { seededPermissions, seededRoles, permissionsForRole, roleIdForKey } from "./catalog.js";
 export { authorize, assignmentIsActive, assignmentCoversScope, canSeeClient, canSeeEvent, singleCoveringRoleKey, type ActorSnapshot, type PolicyDecision } from "./policy.js";

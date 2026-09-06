@@ -172,6 +172,7 @@ export default async function GuestDirectoryPage({
                   <th scope="col">Name</th>
                   <th scope="col">Formal addressing</th>
                   <th scope="col">Identity</th>
+                  <th scope="col">Attention</th>
                   <th scope="col">Email quality</th>
                   <th scope="col">RSVP</th>
                   <th scope="col">Source</th>
@@ -196,6 +197,15 @@ export default async function GuestDirectoryPage({
                       <td data-label="Identity">
                         <span className="md-status" data-tone={guest.identityResolution === "DUPLICATE_RISK" ? "warn" : undefined}>
                           {guest.identityResolution.replaceAll("_", " ")}
+                        </span>
+                      </td>
+                      <td data-label="Attention">
+                        <span
+                          className="md-status"
+                          data-tone={guest.attentionRequired ? "warn" : "ok"}
+                          data-testid="directory-attention"
+                        >
+                          {guest.attentionRequired ? "Attention required" : "No attention flag"}
                         </span>
                       </td>
                       <td data-label="Email quality">

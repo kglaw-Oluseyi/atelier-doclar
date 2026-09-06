@@ -18,7 +18,7 @@ import type {
   GuestAddressing,
   Honorific,
 } from "./addressing-schemas.js";
-import { fieldValue } from "./guest-matching.js";
+import { fieldValue, projectGuestAttention } from "./guest-matching.js";
 import type { OperationalGuest } from "./guest-schemas.js";
 import type { PlatformSnapshot } from "./store.js";
 
@@ -54,6 +54,7 @@ export interface GuestAddressingProjection {
   postNominals?: string[];
   preferredDisplayName?: string;
   preferredFormalSalutation?: string;
+  preferredFormalSalutationGovernance?: GuestAddressing["preferredFormalSalutationGovernance"];
   jointAddressForm?: string;
   traditionalTitle?: string;
   pronunciationNote?: string;
@@ -168,6 +169,7 @@ export function projectAddressingFields(
   | "postNominals"
   | "preferredDisplayName"
   | "preferredFormalSalutation"
+  | "preferredFormalSalutationGovernance"
   | "jointAddressForm"
   | "traditionalTitle"
   | "pronunciationNote"
@@ -182,6 +184,9 @@ export function projectAddressingFields(
     ...(addressing.postNominals?.length ? { postNominals: addressing.postNominals } : {}),
     ...(addressing.preferredDisplayName ? { preferredDisplayName: addressing.preferredDisplayName } : {}),
     ...(addressing.preferredFormalSalutation ? { preferredFormalSalutation: addressing.preferredFormalSalutation } : {}),
+    ...(addressing.preferredFormalSalutationGovernance
+      ? { preferredFormalSalutationGovernance: addressing.preferredFormalSalutationGovernance }
+      : {}),
     ...(addressing.jointAddressForm ? { jointAddressForm: addressing.jointAddressForm } : {}),
     ...(capabilities.canViewProtocolNote && addressing.traditionalTitle
       ? { traditionalTitle: addressing.traditionalTitle }
@@ -216,7 +221,8 @@ export function projectOperationalGuest(
   guest: OperationalGuest,
   capabilities: GuestAddressingCapabilities,
 ): OperationalGuest {
-  const next: OperationalGuest = { ...guest };
+  const attention = projectGuestAttention(guest);
+  const next: OperationalGuest = { ...guest, attentionRequired: attention.required };
   if (!capabilities.canViewAddressing) {
     delete next.addressing;
   } else if (next.addressing && !capabilities.canViewProtocolNote) {
@@ -228,6 +234,13 @@ export function projectOperationalGuest(
     delete next.childReadiness;
   }
   return next;
+}
+
+export function projectAttentionSummary(guest: OperationalGuest): {
+  required: boolean;
+  fieldKeys: ReturnType<typeof projectGuestAttention>["fieldKeys"];
+} {
+  return projectGuestAttention(guest);
 }
 
 function displayNameFor(snap: PlatformSnapshot, guestId: string): string {

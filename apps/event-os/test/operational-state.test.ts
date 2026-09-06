@@ -61,6 +61,24 @@ describe("EOS-S04A operational state matrix", () => {
     assert.equal(operationalStateFromCode("PARTIAL").retrySafe, true);
     assert.equal(operationalStateFromCode("STALE").kind, "stale");
   });
+
+  it("never renders a stale submission as success or a neutral validation state", () => {
+    const conflict = operationalStateFromQuery({
+      ok: "amend",
+      state: "VERSION_CONFLICT",
+      error: "This record changed while you were editing. Reload before saving.",
+    });
+    assert.equal(conflict?.kind, "conflict");
+    assert.equal(conflict?.retrySafe, false);
+    assert.equal(conflict?.reloadRequired, true);
+    assert.match(conflict?.whatHappened ?? "", /not saved|not applied/i);
+    const fromMessage = operationalStateFromQuery({
+      error: "This record changed while you were editing. Reload before saving.",
+    });
+    assert.equal(fromMessage?.kind, "conflict");
+    assert.notEqual(fromMessage?.kind, "success");
+    assert.notEqual(fromMessage?.kind, "validation");
+  });
 });
 
 describe("directory structured addressing", () => {

@@ -10,6 +10,7 @@ import {
   type Honorific,
 } from "@maison-doclar/shared-platform";
 import { fixturesAllowed } from "./config";
+import { writeActionFlash } from "./action-flash";
 import { classifyActionError } from "./operational-state";
 import { getRuntime, withDurable } from "./runtime";
 import { clearStaffSessionCookie, readStaffSessionCookie, writeStaffSessionCookie } from "./staff-session-cookie";
@@ -253,10 +254,9 @@ export async function amendGuestAction(formData: FormData): Promise<void> {
   const runtime = getRuntime();
   const eventId = String(formData.get("eventId") ?? "");
   const guestId = String(formData.get("guestId") ?? "");
-  const fail = `/app/events/${encodeURIComponent(eventId)}/guests/${encodeURIComponent(guestId)}?error=`;
   const organisation = runtime.service.listOrganisations(actor)[0];
   if (!organisation) {
-    redirect(`${fail}${encodeURIComponent("No organisation assignment is available.")}`);
+    return await guestFail(eventId, guestId, new Error("No organisation assignment is available."));
   }
   try {
     runtime.service.amendGuest(actor, {
@@ -275,11 +275,12 @@ export async function amendGuestAction(formData: FormData): Promise<void> {
       lifecycle: String(formData.get("lifecycle") ?? "") || undefined,
       replaceVerifiedField: formData.get("replaceVerifiedField") === "true",
       reason: String(formData.get("reason") ?? ""),
+      idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
     });
   } catch (error) {
-    redirect(`${fail}${encodeURIComponent(actionError(error))}`);
+    await guestFail(eventId, guestId, error);
   }
-  redirect(`/app/events/${eventId}/guests/${guestId}`);
+  redirect(`/app/events/${eventId}/guests/${guestId}?ok=amend`);
   });
 }
 
@@ -1022,9 +1023,10 @@ export async function applySyntheticCallbackAction(formData: FormData): Promise<
   });
 }
 
-function guestFail(eventId: string, guestId: string, error: unknown): never {
+async function guestFail(eventId: string, guestId: string, error: unknown): Promise<never> {
   sessionOrAssignmentRedirect(error, `/app/events/${eventId}/guests/${guestId}`);
   const classified = classifyActionError(error);
+  await writeActionFlash({ code: classified.code, message: classified.message });
   const permissionChanged = classified.code === "FORBIDDEN" ? "&hint=permission" : "";
   redirect(
     `/app/events/${encodeURIComponent(eventId)}/guests/${encodeURIComponent(guestId)}?${failQuery(error)}${permissionChanged}`,
@@ -1060,6 +1062,10 @@ export async function updateGuestAddressingAction(formData: FormData): Promise<v
       middleNames: optionalFormValue(formData, "middleNames"),
       preferredDisplayName: optionalFormValue(formData, "preferredDisplayName"),
       preferredFormalSalutation: optionalFormValue(formData, "preferredFormalSalutation"),
+      salutationDecision:
+        formData.get("salutationDecision") === "RETAIN" || formData.get("salutationDecision") === "UPDATE"
+          ? (String(formData.get("salutationDecision")) as "RETAIN" | "UPDATE")
+          : undefined,
       pronunciationNote: optionalFormValue(formData, "pronunciationNote"),
       addressingSource: optionalFormValue(formData, "addressingSource") ?? "STAFF",
       ...(confirm
@@ -1071,7 +1077,7 @@ export async function updateGuestAddressingAction(formData: FormData): Promise<v
       idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
     });
   } catch (error) {
-    guestFail(eventId, guestId, error);
+    await guestFail(eventId, guestId, error);
   }
   redirect(`/app/events/${eventId}/guests/${guestId}?ok=addressing`);
   });
@@ -1083,7 +1089,7 @@ export async function nominateCompanionAction(formData: FormData): Promise<void>
   const eventId = String(formData.get("eventId") ?? "");
   const guestId = String(formData.get("guestId") ?? "");
   const organisation = getRuntime().service.listOrganisations(actor)[0];
-  if (!organisation) guestFail(eventId, guestId, new Error("No organisation assignment is available."));
+  if (!organisation) return await guestFail(eventId, guestId, new Error("No organisation assignment is available."));
   try {
     getRuntime().service.nominateCompanion(actor, {
       organisationId: organisation.id,
@@ -1098,7 +1104,7 @@ export async function nominateCompanionAction(formData: FormData): Promise<void>
       idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
     });
   } catch (error) {
-    guestFail(eventId, guestId, error);
+    await guestFail(eventId, guestId, error);
   }
   redirect(`/app/events/${eventId}/guests/${guestId}?ok=nominate`);
   });
@@ -1110,7 +1116,7 @@ export async function reconcileCompanionNamesAction(formData: FormData): Promise
   const eventId = String(formData.get("eventId") ?? "");
   const guestId = String(formData.get("guestId") ?? "");
   const organisation = getRuntime().service.listOrganisations(actor)[0];
-  if (!organisation) guestFail(eventId, guestId, new Error("No organisation assignment is available."));
+  if (!organisation) return await guestFail(eventId, guestId, new Error("No organisation assignment is available."));
   try {
     getRuntime().service.reconcileCompanionNames(actor, {
       organisationId: organisation.id,
@@ -1120,7 +1126,7 @@ export async function reconcileCompanionNamesAction(formData: FormData): Promise
       idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
     });
   } catch (error) {
-    guestFail(eventId, guestId, error);
+    await guestFail(eventId, guestId, error);
   }
   redirect(`/app/events/${eventId}/guests/${guestId}?ok=reconcile`);
   });
@@ -1132,7 +1138,7 @@ export async function createResponsibleAdultLinkAction(formData: FormData): Prom
   const eventId = String(formData.get("eventId") ?? "");
   const guestId = String(formData.get("guestId") ?? "");
   const organisation = getRuntime().service.listOrganisations(actor)[0];
-  if (!organisation) guestFail(eventId, guestId, new Error("No organisation assignment is available."));
+  if (!organisation) return await guestFail(eventId, guestId, new Error("No organisation assignment is available."));
   try {
     getRuntime().service.createResponsibleAdultLink(actor, {
       organisationId: organisation.id,
@@ -1144,7 +1150,7 @@ export async function createResponsibleAdultLinkAction(formData: FormData): Prom
       idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
     });
   } catch (error) {
-    guestFail(eventId, guestId, error);
+    await guestFail(eventId, guestId, error);
   }
   redirect(`/app/events/${eventId}/guests/${guestId}?ok=child`);
   });
@@ -1155,12 +1161,12 @@ export async function endResponsibleAdultLinkAction(formData: FormData): Promise
   const { actor } = await requireActor().catch((error) => {
     const eventId = String(formData.get("eventId") ?? "");
     const guestId = String(formData.get("guestId") ?? "");
-    guestFail(eventId, guestId, error);
+    return guestFail(eventId, guestId, error);
   });
   const eventId = String(formData.get("eventId") ?? "");
   const guestId = String(formData.get("guestId") ?? "");
   const organisation = getRuntime().service.listOrganisations(actor)[0];
-  if (!organisation) guestFail(eventId, guestId, new Error("No organisation assignment is available."));
+  if (!organisation) return await guestFail(eventId, guestId, new Error("No organisation assignment is available."));
   try {
     getRuntime().service.endResponsibleAdultLink(actor, {
       organisationId: organisation.id,
@@ -1171,7 +1177,7 @@ export async function endResponsibleAdultLinkAction(formData: FormData): Promise
       idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
     });
   } catch (error) {
-    guestFail(eventId, guestId, error);
+    await guestFail(eventId, guestId, error);
   }
   redirect(`/app/events/${eventId}/guests/${guestId}?ok=child`);
   });
@@ -1183,7 +1189,7 @@ export async function createGuestPartyAction(formData: FormData): Promise<void> 
   const guestId = String(formData.get("guestId") ?? "");
   const { actor } = await requireActor().catch((error) => guestFail(eventId, guestId, error));
   const organisation = getRuntime().service.listOrganisations(actor)[0];
-  if (!organisation) guestFail(eventId, guestId, new Error("No organisation assignment is available."));
+  if (!organisation) return await guestFail(eventId, guestId, new Error("No organisation assignment is available."));
   try {
     const principalGuestId = optionalFormValue(formData, "principalGuestId");
     const party = getRuntime().service.createGuestParty(actor, {
@@ -1205,7 +1211,7 @@ export async function createGuestPartyAction(formData: FormData): Promise<void> 
       reason: String(formData.get("reason") ?? "Add creating guest as an explicit party member"),
     });
   } catch (error) {
-    guestFail(eventId, guestId, error);
+    await guestFail(eventId, guestId, error);
   }
   redirect(`/app/events/${eventId}/guests/${guestId}?ok=party`);
   });
@@ -1217,7 +1223,7 @@ export async function addGuestPartyMemberAction(formData: FormData): Promise<voi
   const guestId = String(formData.get("guestId") ?? "");
   const { actor } = await requireActor().catch((error) => guestFail(eventId, guestId, error));
   const organisation = getRuntime().service.listOrganisations(actor)[0];
-  if (!organisation) guestFail(eventId, guestId, new Error("No organisation assignment is available."));
+  if (!organisation) return await guestFail(eventId, guestId, new Error("No organisation assignment is available."));
   try {
     getRuntime().service.addGuestPartyMember(actor, {
       organisationId: organisation.id,
@@ -1230,7 +1236,7 @@ export async function addGuestPartyMemberAction(formData: FormData): Promise<voi
       idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
     });
   } catch (error) {
-    guestFail(eventId, guestId, error);
+    await guestFail(eventId, guestId, error);
   }
   redirect(`/app/events/${eventId}/guests/${guestId}?ok=member`);
   });
@@ -1242,7 +1248,7 @@ export async function removeGuestPartyMemberAction(formData: FormData): Promise<
   const guestId = String(formData.get("guestId") ?? "");
   const { actor } = await requireActor().catch((error) => guestFail(eventId, guestId, error));
   const organisation = getRuntime().service.listOrganisations(actor)[0];
-  if (!organisation) guestFail(eventId, guestId, new Error("No organisation assignment is available."));
+  if (!organisation) return await guestFail(eventId, guestId, new Error("No organisation assignment is available."));
   try {
     getRuntime().service.removeGuestPartyMember(actor, {
       organisationId: organisation.id,
@@ -1253,7 +1259,7 @@ export async function removeGuestPartyMemberAction(formData: FormData): Promise<
       idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
     });
   } catch (error) {
-    guestFail(eventId, guestId, error);
+    await guestFail(eventId, guestId, error);
   }
   redirect(`/app/events/${eventId}/guests/${guestId}?ok=member`);
   });
@@ -1265,7 +1271,7 @@ export async function administerCompanionEntitlementAction(formData: FormData): 
   const guestId = String(formData.get("guestId") ?? "");
   const { actor } = await requireActor().catch((error) => guestFail(eventId, guestId, error));
   const organisation = getRuntime().service.listOrganisations(actor)[0];
-  if (!organisation) guestFail(eventId, guestId, new Error("No organisation assignment is available."));
+  if (!organisation) return await guestFail(eventId, guestId, new Error("No organisation assignment is available."));
   const authorityKind = String(formData.get("authorityKind") ?? "");
   const authorityId = String(formData.get("authorityId") ?? "");
   const status = optionalFormValue(formData, "status");
@@ -1280,6 +1286,7 @@ export async function administerCompanionEntitlementAction(formData: FormData): 
           ? { kind: "RSVP_POLICY_DEFAULT" as const, rsvpPolicyId: authorityId }
           : { kind: "RSVP_ENTITLEMENT" as const, rsvpEntitlementId: authorityId },
       ...(status ? { status } : {}),
+      expectedVersion: Number(formData.get("expectedVersion")) || undefined,
       reason: String(formData.get("reason") ?? "Administer companion entitlement"),
       idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
     });
@@ -1290,7 +1297,7 @@ export async function administerCompanionEntitlementAction(formData: FormData): 
         `/app/events/${encodeURIComponent(eventId)}/guests/${encodeURIComponent(guestId)}?state=FORBIDDEN&hint=permission&error=${encodeURIComponent(classified.message)}`,
       );
     }
-    guestFail(eventId, guestId, error);
+    await guestFail(eventId, guestId, error);
   }
   redirect(`/app/events/${eventId}/guests/${guestId}?ok=entitlement`);
   });
@@ -1302,7 +1309,7 @@ export async function createGuestRelationshipAction(formData: FormData): Promise
     const guestId = String(formData.get("guestId") ?? "");
     const { actor } = await requireActor().catch((error) => guestFail(eventId, guestId, error));
     const organisation = getRuntime().service.listOrganisations(actor)[0];
-    if (!organisation) guestFail(eventId, guestId, new Error("No organisation assignment is available."));
+    if (!organisation) return await guestFail(eventId, guestId, new Error("No organisation assignment is available."));
     try {
       getRuntime().service.createGuestRelationship(actor, {
         organisationId: organisation.id,
@@ -1317,7 +1324,7 @@ export async function createGuestRelationshipAction(formData: FormData): Promise
         idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
       });
     } catch (error) {
-      guestFail(eventId, guestId, error);
+      await guestFail(eventId, guestId, error);
     }
     redirect(`/app/events/${eventId}/guests/${guestId}?ok=relationship`);
   });
@@ -1329,7 +1336,7 @@ export async function administerGuestRelationshipAction(formData: FormData): Pro
     const guestId = String(formData.get("guestId") ?? "");
     const { actor } = await requireActor().catch((error) => guestFail(eventId, guestId, error));
     const organisation = getRuntime().service.listOrganisations(actor)[0];
-    if (!organisation) guestFail(eventId, guestId, new Error("No organisation assignment is available."));
+    if (!organisation) return await guestFail(eventId, guestId, new Error("No organisation assignment is available."));
     try {
       getRuntime().service.administerGuestRelationship(actor, {
         organisationId: organisation.id,
@@ -1343,7 +1350,7 @@ export async function administerGuestRelationshipAction(formData: FormData): Pro
         idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
       });
     } catch (error) {
-      guestFail(eventId, guestId, error);
+      await guestFail(eventId, guestId, error);
     }
     redirect(`/app/events/${eventId}/guests/${guestId}?ok=relationship`);
   });

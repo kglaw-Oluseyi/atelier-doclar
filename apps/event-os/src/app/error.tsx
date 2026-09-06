@@ -8,7 +8,6 @@ export default function ErrorPage({ error }: { error: Error }) {
         <span className="at-thread" aria-hidden="true" />
         <h1>The requested record is not available</h1>
         <p className="lede">No protected detail is shown. Return to a permitted screen or sign in again.</p>
-        <p className="empty">{error.name}</p>
       </main>
     </div>
   );

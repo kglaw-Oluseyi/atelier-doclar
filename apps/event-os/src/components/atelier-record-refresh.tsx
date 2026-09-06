@@ -5,8 +5,10 @@ import { useState, useTransition } from "react";
 
 export function AtelierRecordRefresh({
   label = "Refresh this record",
+  href,
 }: {
   label?: string;
+  href?: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -19,6 +21,11 @@ export function AtelierRecordRefresh({
         disabled={pending}
         aria-busy={pending}
         onClick={() => {
+          if (href) {
+            setAnnounced("The record is being reloaded from the server.");
+            window.location.assign(href);
+            return;
+          }
           startTransition(() => {
             router.refresh();
             setAnnounced("The record is being refreshed from the server.");

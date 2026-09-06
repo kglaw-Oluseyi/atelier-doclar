@@ -21,8 +21,13 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  const { ensureRuntime } = await import("../server/runtime");
-  await ensureRuntime();
+  try {
+    const { ensureRuntime } = await import("../server/runtime");
+    await ensureRuntime();
+  } catch {
+    // Prefetch and navigation must not become an unexplained 503 when boot is slow.
+    // Pages classify unreadiness as a controlled operational state.
+  }
   return (
     <html lang="en" className={`atelier ${instrument.variable}`}>
       <head>

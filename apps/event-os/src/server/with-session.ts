@@ -5,7 +5,14 @@ import { readStaffSessionCookie } from "./staff-session-cookie";
 
 export async function requireActor(): Promise<{ actor: ActorContext; person: Person }> {
   const token = await readStaffSessionCookie();
-  const runtime = await ensureRuntime();
+  let runtime;
+  try {
+    runtime = await ensureRuntime();
+  } catch (error) {
+    throw new PlatformError("DEPENDENCY_UNAVAILABLE", error instanceof Error ? error.message : "runtime is not ready", {
+      publicMessage: "Durable storage is not available. Canonical records were not changed.",
+    });
+  }
   const { actor: session } = runtime.service.requireStaffSession(token, testActorNow() ?? new Date().toISOString());
   const resolved = runtime.service.resolveActor(session.personId);
   if (resolved.assignments.every((item) => item.status !== "ACTIVE")) {

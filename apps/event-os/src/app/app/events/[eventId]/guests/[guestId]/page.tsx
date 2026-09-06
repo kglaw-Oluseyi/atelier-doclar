@@ -12,7 +12,9 @@ import { IssueInvitationForm, StaffRsvpForm } from "../../../../../../components
 import { AtelierSectionTabs } from "../../../../../../components/atelier-section-tabs";
 import { AtelierOperationalState } from "../../../../../../components/atelier-operational-state";
 import { AtelierRecordRefresh } from "../../../../../../components/atelier-record-refresh";
+import { AtelierStateFocus } from "../../../../../../components/atelier-state-focus";
 import { AppShell } from "../../../../../../components/shell";
+import { readActionFlash } from "../../../../../../server/action-flash";
 import { guestChoicesFromRecords } from "../../../../../../server/guest-name-display";
 import { guestPermissions, resolveScopedEvent } from "../../../../../../server/guest-scope";
 import { operationalStateFromCode, operationalStateFromQuery } from "../../../../../../server/operational-state";
@@ -73,6 +75,7 @@ export default async function GuestDetailPage({
 }) {
   const { eventId, guestId } = await params;
   const paramsQuery = await searchParams;
+  const flash = await readActionFlash();
   const { actor, person } = await guardedActor();
   const scoped = resolveScopedEvent(actor, eventId);
   if (!scoped) {
@@ -134,12 +137,19 @@ export default async function GuestDetailPage({
   const adultChoices = guestChoices.filter(
     (item) => item.id !== guest.id && (!item.ageBand || !(CHILD_AGE_BANDS as readonly string[]).includes(item.ageBand)),
   );
+  const conflictPreserved = paramsQuery.state === "VERSION_CONFLICT" || flash?.code === "VERSION_CONFLICT";
   const queryState = operationalStateFromQuery({
-    error: paramsQuery.error,
-    state: paramsQuery.hint === "permission" && paramsQuery.state === "FORBIDDEN" ? "PERMISSION_CHANGED" : paramsQuery.state,
-    ok: paramsQuery.ok,
+    error: paramsQuery.error ?? flash?.message,
+    state:
+      paramsQuery.hint === "permission" && paramsQuery.state === "FORBIDDEN"
+        ? "PERMISSION_CHANGED"
+        : paramsQuery.state ?? flash?.code,
+    ok: conflictPreserved ? undefined : paramsQuery.ok,
     demo: paramsQuery.demo,
   });
+  const mutationLocked = queryState?.kind === "conflict";
+  const dossierPath = `/app/events/${eventId}/guests/${guestId}`;
+  const conflictReloadHref = `${dossierPath}?state=VERSION_CONFLICT&error=${encodeURIComponent(queryState?.message ?? "The record changed elsewhere. Your attempted edit was not saved.")}`;
   const partialState =
     workspacePartial || rsvpPartial
       ? operationalStateFromCode(
@@ -187,12 +197,20 @@ export default async function GuestDetailPage({
               { href: "#guest-amendment", label: "Amendment" },
             ]}
           />
-          <AtelierRecordRefresh />
+          <AtelierRecordRefresh href={mutationLocked ? dossierPath : undefined} />
         </header>
         <p>
           <Link href={`/app/events/${scoped.event.id}/guests`}>Back to directory</Link>
         </p>
-        {queryState ? <AtelierOperationalState state={queryState} /> : null}
+        {queryState ? (
+          <>
+            <AtelierStateFocus targetId="operational-state" active={queryState.kind === "conflict"} />
+            <AtelierOperationalState
+              state={queryState}
+              reloadHref={queryState.reloadRequired ? (mutationLocked ? dossierPath : conflictReloadHref) : undefined}
+            />
+          </>
+        ) : null}
         {partialState ? <AtelierOperationalState state={partialState} id="partial-state" /> : null}
         {runtime.persistence === "UNAVAILABLE" || runtime.migrationStatus === "FAILED" ? (
           <AtelierOperationalState
@@ -208,7 +226,11 @@ export default async function GuestDetailPage({
               <span className="md-status" data-tone="brass">
                 {guest.lifecycle}
               </span>{" "}
-              <span className="md-status" data-tone={guest.attentionRequired ? "warn" : "ok"}>
+              <span
+                className="md-status"
+                data-tone={guest.attentionRequired ? "warn" : "ok"}
+                data-testid="guest-attention"
+              >
                 {guest.attentionRequired ? "Attention required" : "No attention flag"}
               </span>
             </p>
@@ -232,7 +254,7 @@ export default async function GuestDetailPage({
               <strong>Person link</strong>{" "}
               {guest.personId ? "Linked to an authoritative person reference" : "Unresolved — no person created"}
             </p>
-            <p>
+            <p data-testid="record-version">
               <strong>Record version</strong> {guest.version} · updated {guest.updatedAt}
             </p>
           </section>
@@ -310,6 +332,7 @@ export default async function GuestDetailPage({
             eventId={scoped.event.id}
             guestChoices={guestChoices}
             adultChoices={adultChoices}
+            locked={mutationLocked}
           />
         ) : permissions.addressingView ? null : (
           <AtelierOperationalState
@@ -319,7 +342,13 @@ export default async function GuestDetailPage({
         {permissions.amend ? (
           <section id="guest-amendment" className="atelier-panel">
             <h2>Controlled amendment</h2>
-            <GuestAmendForm guest={guest} eventId={scoped.event.id} error={paramsQuery.error} />
+            <GuestAmendForm
+              key={`${guest.id}-${guest.version}-${queryState?.kind ?? "idle"}`}
+              guest={guest}
+              eventId={scoped.event.id}
+              error={queryState?.kind === "conflict" ? undefined : paramsQuery.error}
+              locked={mutationLocked}
+            />
           </section>
         ) : (
           <p className="empty">Your assignment can view this record but cannot amend it.</p>

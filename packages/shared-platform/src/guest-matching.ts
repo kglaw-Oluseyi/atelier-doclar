@@ -33,10 +33,52 @@ export function operationalDisplayName(guest: Pick<OperationalGuest, "givenName"
   return "Name not supplied";
 }
 
-export function attentionRequiredFor(guest: Pick<OperationalGuest, "identityResolution" | "givenName" | "familyName" | "email" | "phone">): boolean {
+export const ATTENTION_FIELD_KEYS = [
+  "givenName",
+  "familyName",
+  "preferredName",
+  "email",
+  "phone",
+  "dietaryRequirement",
+  "accessibilityRequirement",
+  "operationalNote",
+] as const;
+
+export type AttentionFieldKey = (typeof ATTENTION_FIELD_KEYS)[number];
+
+export interface GuestAttentionProjection {
+  required: boolean;
+  fieldKeys: AttentionFieldKey[];
+}
+
+function attentionFieldsOf(
+  guest: Pick<OperationalGuest, AttentionFieldKey>,
+): { key: AttentionFieldKey; field: QualifiedField }[] {
+  return ATTENTION_FIELD_KEYS.map((key) => ({ key, field: guest[key] }));
+}
+
+export function attentionFieldKeysFor(
+  guest: Pick<OperationalGuest, AttentionFieldKey | "identityResolution">,
+): AttentionFieldKey[] {
+  return attentionFieldsOf(guest)
+    .filter((item) => item.field.quality === "CONFLICTING" || item.field.quality === "PENDING_VERIFICATION")
+    .map((item) => item.key);
+}
+
+export function attentionRequiredFor(
+  guest: Pick<OperationalGuest, AttentionFieldKey | "identityResolution">,
+): boolean {
   if (guest.identityResolution === "DUPLICATE_RISK" || guest.identityResolution === "CONFLICTING") return true;
-  const fields = [guest.givenName, guest.familyName, guest.email, guest.phone];
-  return fields.some((field) => field.quality === "CONFLICTING" || field.quality === "PENDING_VERIFICATION");
+  return attentionFieldKeysFor(guest).length > 0;
+}
+
+export function projectGuestAttention(
+  guest: Pick<OperationalGuest, AttentionFieldKey | "identityResolution">,
+): GuestAttentionProjection {
+  return {
+    required: attentionRequiredFor(guest),
+    fieldKeys: attentionFieldKeysFor(guest),
+  };
 }
 
 export interface DuplicateMatch {

@@ -15,10 +15,12 @@ export function GuestRelationshipWorkspace({
   workspace,
   eventId,
   guestChoices,
+  locked = false,
 }: {
   workspace: GuestAddressingWorkspace;
   eventId: string;
   guestChoices: GuestChoice[];
+  locked?: boolean;
 }) {
   const { guest, capabilities, relationships } = workspace;
   if (!capabilities.canViewRelationship) return null;
@@ -73,7 +75,9 @@ export function GuestRelationshipWorkspace({
                     Reason
                     <input name="reason" required defaultValue="Amend declared relationship" />
                   </label>
-                  <PendingSubmit pendingLabel="Saving relationship…">Save relationship correction</PendingSubmit>
+                  <PendingSubmit pendingLabel="Saving relationship…" locked={locked}>
+                    Save relationship correction
+                  </PendingSubmit>
                 </fieldset>
               </form>
             ) : null}
@@ -126,7 +130,9 @@ export function GuestRelationshipWorkspace({
               Reason
               <input name="reason" required defaultValue="Declare relationship" />
             </label>
-            <PendingSubmit pendingLabel="Recording…">Create relationship</PendingSubmit>
+            <PendingSubmit pendingLabel="Recording…" locked={locked}>
+              Create relationship
+            </PendingSubmit>
           </fieldset>
         </form>
       ) : (

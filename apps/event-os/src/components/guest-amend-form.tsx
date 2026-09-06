@@ -1,20 +1,24 @@
 import { amendGuestAction, resolveDuplicateAction } from "../server/actions";
 import type { GuestDuplicateCandidate, OperationalGuest } from "@maison-doclar/shared-platform";
+import { IdempotencyField, PendingSubmit } from "./atelier-pending-submit";
 
 export function GuestAmendForm({
   guest,
   eventId,
   error,
+  locked = false,
 }: {
   guest: OperationalGuest;
   eventId: string;
   error?: string;
+  locked?: boolean;
 }) {
   return (
     <form className="form" action={amendGuestAction}>
       <input type="hidden" name="eventId" value={eventId} />
       <input type="hidden" name="guestId" value={guest.id} />
       <input type="hidden" name="expectedVersion" value={guest.version} />
+      <IdempotencyField />
       <label>
         Given name
         <input name="givenName" defaultValue={guest.givenName.value ?? ""} />
@@ -64,7 +68,9 @@ export function GuestAmendForm({
           {error}
         </p>
       ) : null}
-      <button type="submit">Save amendment</button>
+      <PendingSubmit pendingLabel="Saving amendment…" locked={locked}>
+        Save amendment
+      </PendingSubmit>
     </form>
   );
 }
@@ -92,7 +98,7 @@ export function DuplicateResolveForm({
         Reason
         <input name="reason" required defaultValue="Operator reviewed duplicate risk" />
       </label>
-      <button type="submit">Record resolution</button>
+      <PendingSubmit pendingLabel="Recording…">Record resolution</PendingSubmit>
     </form>
   );
 }

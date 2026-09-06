@@ -4,9 +4,11 @@ import type { OperationalStateView } from "../server/operational-state";
 export function AtelierOperationalState({
   state,
   id = "operational-state",
+  reloadHref,
 }: {
   state: OperationalStateView;
   id?: string;
+  reloadHref?: string;
 }) {
   const role = state.live === "assertive" ? "alert" : state.live === "polite" ? "status" : undefined;
   return (
@@ -16,6 +18,8 @@ export function AtelierOperationalState({
       data-tone={state.tone}
       data-retry-safe={state.retrySafe ? "true" : "false"}
       aria-labelledby={`${id}-title`}
+      tabIndex={state.kind === "conflict" ? -1 : undefined}
+      id={id}
       {...(role ? { role } : {})}
     >
       <h2 id={`${id}-title`}>{state.title}</h2>
@@ -43,6 +47,13 @@ export function AtelierOperationalState({
           <dd>{state.retrySafe ? "Yes — retry will not invent a second success." : "No — reload or choose another action first."}</dd>
         </div>
       </dl>
+      {state.reloadRequired && reloadHref ? (
+        <p className="actions">
+          <a className="button" href={reloadHref} data-testid="conflict-reload">
+            Reload the current record
+          </a>
+        </p>
+      ) : null}
     </section>
   );
 }

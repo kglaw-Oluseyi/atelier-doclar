@@ -16,10 +16,12 @@ export function GuestEntitlementWorkspace({
   workspace,
   eventId,
   guestChoices,
+  locked = false,
 }: {
   workspace: GuestAddressingWorkspace;
   eventId: string;
   guestChoices: GuestChoice[];
+  locked?: boolean;
 }) {
   const { guest, capabilities, entitlements } = workspace;
   if (!capabilities.canViewEntitlement) return null;
@@ -97,7 +99,9 @@ export function GuestEntitlementWorkspace({
                     Reason
                     <input name="reason" required defaultValue="Nominate companion" />
                   </label>
-                  <PendingSubmit pendingLabel="Materialising…">Materialise companion</PendingSubmit>
+                  <PendingSubmit pendingLabel="Materialising…" locked={locked}>
+                    Materialise companion
+                  </PendingSubmit>
                 </fieldset>
               </form>
             ) : null}
@@ -143,7 +147,8 @@ export function GuestEntitlementWorkspace({
                     Reason
                     <input name="reason" required defaultValue="Administer companion entitlement" />
                   </label>
-                  <PendingSubmit className="secondary" pendingLabel="Saving entitlement…">
+                  <input type="hidden" name="expectedVersion" value={item.version} />
+                  <PendingSubmit className="secondary" pendingLabel="Saving entitlement…" locked={locked}>
                     Save entitlement
                   </PendingSubmit>
                 </fieldset>
@@ -174,7 +179,9 @@ export function GuestEntitlementWorkspace({
             Reason
             <input name="reason" required defaultValue="Reconcile S03 companion names" />
           </label>
-          <PendingSubmit pendingLabel="Recording…">Record companion-name reconciliation</PendingSubmit>
+          <PendingSubmit pendingLabel="Recording…" locked={locked}>
+            Record companion-name reconciliation
+          </PendingSubmit>
         </form>
       ) : null}
     </section>

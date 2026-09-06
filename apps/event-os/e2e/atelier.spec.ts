@@ -75,12 +75,15 @@ test("Command Atelier prototype screens and interaction states", async ({ page }
   await page.screenshot({ path: evidencePath("12-addressing-validation.png") });
 
   await addressing.getByLabel("Reason").fill("Update structured addressing");
+  await addressing.getByLabel("Preferred display name").fill("Stale atelier edit");
   await addressing.locator('input[name="expectedVersion"]').evaluate((el: HTMLInputElement) => {
     const current = Number(el.value);
     el.value = String(current > 1 ? current - 1 : current + 1);
   });
   await addressing.getByRole("button", { name: "Save addressing" }).click();
-  await expect(page.locator(".atelier-state[data-kind='conflict']")).toContainText(/expected version|changed while/);
+  await expect(page.locator(".atelier-state[data-kind='conflict']").first()).toContainText(
+    /changed elsewhere|not saved|expected version|changed while/,
+  );
   await page.screenshot({ path: evidencePath("13-version-conflict.png"), fullPage: true });
 
   const desktopAxe = await new AxeBuilder({ page }).analyze();

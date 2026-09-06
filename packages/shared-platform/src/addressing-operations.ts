@@ -37,6 +37,11 @@ import {
   type UpdateGuestAddressingInput,
 } from "./addressing-schemas.js";
 import { refreshGuestChildReadiness } from "./addressing-projections.js";
+import {
+  addressingTitles,
+  detectSalutationTitleMismatch,
+  proposedAddressingTitles,
+} from "./addressing-salutation.js";
 import { buildOperationalGuest, recordDuplicateCandidates } from "./guest-operations.js";
 import type { IntakeGuestInput, OperationalGuest } from "./guest-schemas.js";
 import { companionAllowance, eventPolicy } from "./rsvp-operations.js";
@@ -99,6 +104,39 @@ export function applyGuestAddressing(
     input.preferredFormalSalutation !== undefined
       ? optionalText(input.preferredFormalSalutation)
       : previous?.preferredFormalSalutation;
+  const mismatch = detectSalutationTitleMismatch({
+    previousTitles: addressingTitles(previous),
+    nextTitles: proposedAddressingTitles(previous, input),
+    salutation: previous?.preferredFormalSalutation,
+  });
+  const previousSalutation = previous?.preferredFormalSalutation;
+  const salutationTextChanged = (preferredFormalSalutation ?? "") !== (previousSalutation ?? "");
+  let preferredFormalSalutationGovernance = previous?.preferredFormalSalutationGovernance;
+  if (mismatch) {
+    if (input.salutationDecision === "UPDATE" && salutationTextChanged) {
+      preferredFormalSalutationGovernance = {
+        decision: "UPDATED",
+        formerTitles: mismatch.formerTitles,
+        recordedAt: now,
+      };
+    } else if (input.salutationDecision === "RETAIN" && !salutationTextChanged) {
+      preferredFormalSalutationGovernance = {
+        decision: "RETAINED",
+        formerTitles: mismatch.formerTitles,
+        recordedAt: now,
+      };
+    } else {
+      throw new PlatformError(
+        "VALIDATION_FAILED",
+        "preferred formal salutation still contains the former title and will not be changed automatically",
+        {
+          field: "preferredFormalSalutation",
+          publicMessage:
+            "The preferred formal salutation still contains the former title. It will not be changed automatically. Update the salutation or explicitly retain it.",
+        },
+      );
+    }
+  }
   const jointAddressForm =
     input.jointAddressForm !== undefined ? optionalText(input.jointAddressForm) : previous?.jointAddressForm;
   const pronunciationNote =
@@ -121,6 +159,7 @@ export function applyGuestAddressing(
     ...(postNominals?.length ? { postNominals } : {}),
     ...(preferredDisplayName ? { preferredDisplayName } : {}),
     ...(preferredFormalSalutation ? { preferredFormalSalutation } : {}),
+    ...(preferredFormalSalutationGovernance ? { preferredFormalSalutationGovernance } : {}),
     ...(jointAddressForm ? { jointAddressForm } : {}),
     ...(pronunciationNote ? { pronunciationNote } : {}),
     addressingStatus: input.addressingStatus ?? previous?.addressingStatus ?? "UNVERIFIED",
@@ -184,7 +223,7 @@ export function addPartyMemberOnSnap(snap: PlatformSnapshot, input: AddPartyMemb
     (item) => item.partyId === party.id && item.guestId === guest.id && item.status === "ACTIVE",
   );
   if (duplicate) {
-    throw new PlatformError("VALIDATION_FAILED", "guest is already an active party member");
+    return duplicate;
   }
   const record = GuestPartyMemberSchema.parse({
     id: randomUUID(),
@@ -212,6 +251,9 @@ export function removePartyMemberOnSnap(snap: PlatformSnapshot, input: RemovePar
   const record = snap.guestPartyMembers.find((item) => item.id === input.partyMemberId);
   if (!record || record.organisationId !== input.organisationId || record.eventId !== input.eventId) {
     throw new PlatformError("NOT_FOUND", "party member was not found");
+  }
+  if (record.status === "LEFT") {
+    return record;
   }
   if (record.version !== input.expectedVersion) {
     throw new PlatformError("VERSION_CONFLICT", `expected version ${input.expectedVersion} but found ${record.version}`);
@@ -266,6 +308,16 @@ export function administerRelationshipOnSnap(
   if (!record || record.organisationId !== input.organisationId || record.eventId !== input.eventId) {
     throw new PlatformError("NOT_FOUND", "relationship was not found");
   }
+  if (
+    (!input.type || record.type === input.type) &&
+    (!input.source || record.source === input.source) &&
+    (!input.visibility || record.visibility === input.visibility) &&
+    (!input.status || record.status === input.status)
+  ) {
+    if (record.version !== input.expectedVersion) {
+      return record;
+    }
+  }
   if (record.version !== input.expectedVersion) {
     throw new PlatformError("VERSION_CONFLICT", `expected version ${input.expectedVersion} but found ${record.version}`);
   }
@@ -313,7 +365,7 @@ export function createResponsibleAdultLinkOnSnap(
       item.status === "ACTIVE",
   );
   if (existing) {
-    throw new PlatformError("VALIDATION_FAILED", "an active responsible-adult link already exists");
+    return existing;
   }
   const record = ResponsibleAdultLinkSchema.parse({
     id: randomUUID(),
@@ -342,6 +394,9 @@ export function endResponsibleAdultLinkOnSnap(
   const record = snap.responsibleAdultLinks.find((item) => item.id === input.linkId);
   if (!record || record.organisationId !== input.organisationId || record.eventId !== input.eventId) {
     throw new PlatformError("NOT_FOUND", "responsible-adult link was not found");
+  }
+  if (record.status === "ENDED") {
+    return record;
   }
   if (record.version !== input.expectedVersion) {
     throw new PlatformError("VERSION_CONFLICT", `expected version ${input.expectedVersion} but found ${record.version}`);
@@ -423,6 +478,12 @@ export function administerCompanionEntitlementOnSnap(
   });
   const nextStatus = input.status ?? existing?.status ?? "AVAILABLE";
   if (existing) {
+    if (existing.allowance === input.allowance && existing.status === nextStatus) {
+      return existing;
+    }
+    if (input.expectedVersion !== undefined && existing.version !== input.expectedVersion) {
+      throw new PlatformError("VERSION_CONFLICT", `expected version ${input.expectedVersion} but found ${existing.version}`);
+    }
     if (!entitlementTransitionAllowed(existing.status, nextStatus) && existing.status !== nextStatus) {
       throw new PlatformError("TRANSITION_INVALID", "companion entitlement transition is not permitted");
     }

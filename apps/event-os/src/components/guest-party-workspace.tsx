@@ -17,10 +17,12 @@ export function GuestPartyWorkspace({
   workspace,
   eventId,
   guestChoices,
+  locked = false,
 }: {
   workspace: GuestAddressingWorkspace;
   eventId: string;
   guestChoices: GuestChoice[];
+  locked?: boolean;
 }) {
   const { guest, capabilities, parties } = workspace;
   return (
@@ -83,7 +85,7 @@ export function GuestPartyWorkspace({
                             Reason
                             <input name="reason" required defaultValue="Remove party member" />
                           </label>
-                          <PendingSubmit className="secondary" pendingLabel="Removing…">
+                          <PendingSubmit className="secondary" pendingLabel="Removing…" locked={locked}>
                             Remove member
                           </PendingSubmit>
                         </form>
@@ -128,7 +130,9 @@ export function GuestPartyWorkspace({
                       Reason
                       <input name="reason" required defaultValue="Add party member" />
                     </label>
-                    <PendingSubmit pendingLabel="Adding…">Add member</PendingSubmit>
+                    <PendingSubmit pendingLabel="Adding…" locked={locked}>
+                      Add member
+                    </PendingSubmit>
                   </fieldset>
                 </form>
               ) : null}
@@ -176,7 +180,9 @@ export function GuestPartyWorkspace({
               Reason
               <input name="reason" required defaultValue="Create operational party" />
             </label>
-            <PendingSubmit pendingLabel="Creating party…">Create party</PendingSubmit>
+            <PendingSubmit pendingLabel="Creating party…" locked={locked}>
+              Create party
+            </PendingSubmit>
           </fieldset>
         </form>
       ) : (

@@ -20,12 +20,14 @@ export function GuestAddressingWorkspace({
   state,
   guestChoices,
   adultChoices,
+  locked = false,
 }: {
   workspace: GuestAddressingWorkspace;
   eventId: string;
   state?: OperationalStateView;
   guestChoices: GuestChoice[];
   adultChoices: GuestChoice[];
+  locked?: boolean;
 }) {
   const { guest, capabilities } = workspace;
   return (
@@ -154,6 +156,30 @@ export function GuestAddressingWorkspace({
                 Preferred formal salutation
                 <input name="preferredFormalSalutation" defaultValue={guest.preferredFormalSalutation ?? ""} />
               </label>
+              {guest.preferredFormalSalutation ? (
+                <fieldset data-testid="salutation-governance">
+                  <legend>Preferred salutation after a title change</legend>
+                  <p className="lede">
+                    A manually supplied preferred formal salutation is explicit authored data. Changing an honorific or
+                    title will not rewrite it. If the current wording still contains the former title, update the
+                    salutation yourself or explicitly retain it. The system will not infer replacement wording.
+                  </p>
+                  {guest.preferredFormalSalutationGovernance ? (
+                    <p>
+                      Last governed choice: {guest.preferredFormalSalutationGovernance.decision.replaceAll("_", " ")} at{" "}
+                      {guest.preferredFormalSalutationGovernance.recordedAt}
+                    </p>
+                  ) : null}
+                  <label className="check">
+                    <input type="radio" name="salutationDecision" value="UPDATE" />
+                    I am updating this salutation
+                  </label>
+                  <label className="check">
+                    <input type="radio" name="salutationDecision" value="RETAIN" />
+                    Keep this salutation unchanged
+                  </label>
+                </fieldset>
+              ) : null}
               {capabilities.canViewProtocolNote ? (
                 <label>
                   Pronunciation note
@@ -191,11 +217,11 @@ export function GuestAddressingWorkspace({
             </div>
           </fieldset>
           <div className="actions">
-            <PendingSubmit className="secondary" pendingLabel="Saving addressing…">
+            <PendingSubmit className="secondary" pendingLabel="Saving addressing…" locked={locked}>
               Save addressing
             </PendingSubmit>
             {capabilities.canConfirmAddressing ? (
-              <PendingSubmit name="confirm" value="true" pendingLabel="Confirming…">
+              <PendingSubmit name="confirm" value="true" pendingLabel="Confirming…" locked={locked}>
                 Confirm addressing
               </PendingSubmit>
             ) : (
@@ -206,10 +232,10 @@ export function GuestAddressingWorkspace({
       ) : (
         <p className="empty">Your assignment can view addressing but cannot change it.</p>
       )}
-      <GuestRelationshipWorkspace workspace={workspace} eventId={eventId} guestChoices={guestChoices} />
-      <GuestChildWorkspace workspace={workspace} eventId={eventId} adultChoices={adultChoices} />
-      <GuestPartyWorkspace workspace={workspace} eventId={eventId} guestChoices={guestChoices} />
-      <GuestEntitlementWorkspace workspace={workspace} eventId={eventId} guestChoices={guestChoices} />
+      <GuestRelationshipWorkspace workspace={workspace} eventId={eventId} guestChoices={guestChoices} locked={locked} />
+      <GuestChildWorkspace workspace={workspace} eventId={eventId} adultChoices={adultChoices} locked={locked} />
+      <GuestPartyWorkspace workspace={workspace} eventId={eventId} guestChoices={guestChoices} locked={locked} />
+      <GuestEntitlementWorkspace workspace={workspace} eventId={eventId} guestChoices={guestChoices} locked={locked} />
     </section>
   );
 }

@@ -12,10 +12,12 @@ export function GuestChildWorkspace({
   workspace,
   eventId,
   adultChoices,
+  locked = false,
 }: {
   workspace: GuestAddressingWorkspace;
   eventId: string;
   adultChoices: GuestChoice[];
+  locked?: boolean;
 }) {
   const child = workspace.child;
   if (!child) return null;
@@ -71,7 +73,7 @@ export function GuestChildWorkspace({
                 Reason
                 <input name="reason" required defaultValue="End responsible-adult link" />
               </label>
-              <PendingSubmit className="secondary" pendingLabel="Ending link…">
+              <PendingSubmit className="secondary" pendingLabel="Ending link…" locked={locked}>
                 End responsible-adult link
               </PendingSubmit>
             </form>
@@ -119,7 +121,9 @@ export function GuestChildWorkspace({
               <input name="reason" required defaultValue="Record responsible adult" />
             </label>
             <p className="lede">Age band on file: {(child.ageBand ?? "not supplied").replaceAll("_", " ")}. Available bands are {AGE_BANDS.join(", ").replaceAll("_", " ")} and are edited in structured addressing, never as a date of birth.</p>
-            <PendingSubmit pendingLabel="Linking…">Link responsible adult</PendingSubmit>
+            <PendingSubmit pendingLabel="Linking…" locked={locked}>
+              Link responsible adult
+            </PendingSubmit>
           </fieldset>
         </form>
       ) : null}

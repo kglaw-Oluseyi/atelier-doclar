@@ -86,6 +86,14 @@ export const GuestAddressingSchema = z
     postNominals: z.array(unicodeName.max(32)).max(8).optional(),
     preferredDisplayName: optionalUnicodeName.optional(),
     preferredFormalSalutation: optionalUnicodeName.max(200).optional(),
+    preferredFormalSalutationGovernance: z
+      .object({
+        decision: z.enum(["RETAINED", "UPDATED"]),
+        formerTitles: z.array(z.string().trim().min(1).max(120)).max(8),
+        recordedAt: IsoDatetimeSchema,
+      })
+      .strict()
+      .optional(),
     jointAddressForm: optionalUnicodeName.max(240).optional(),
     pronunciationNote: z.string().trim().max(240).optional(),
     addressingStatus: AddressingStatusSchema,
@@ -340,6 +348,7 @@ export const UpdateGuestAddressingInputSchema = z
     postNominals: z.array(z.string().trim().max(32)).max(8).optional(),
     preferredDisplayName: z.string().trim().max(120).optional(),
     preferredFormalSalutation: z.string().trim().max(200).optional(),
+    salutationDecision: z.enum(["RETAIN", "UPDATE"]).optional(),
     jointAddressForm: z.string().trim().max(240).optional(),
     pronunciationNote: z.string().trim().max(240).optional(),
     addressingStatus: AddressingStatusSchema.optional(),
@@ -409,6 +418,7 @@ export const AdministerCompanionEntitlementInputSchema = z
     allowance: z.number().int().min(0).max(4),
     authority: CompanionAuthoritySchema,
     status: CompanionEntitlementStatusSchema.optional(),
+    expectedVersion: z.number().int().positive().optional(),
   })
   .strict();
 

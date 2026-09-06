@@ -14,7 +14,18 @@ import { emptyMasterEventFile } from "./mef.js";
 import { authorize, canSeeClient, canSeeEvent, singleCoveringRoleKey, type ActorSnapshot, type PolicyDecision } from "./policy.js";
 import { parseCanonicalCsv, rowToIntakeFields } from "./guest-intake.js";
 import { dateOfBirthForbidden, requiresResponsibleAdult } from "./addressing.js";
-import { operationalDisplayName } from "./guest-matching.js";
+import { attentionRequiredFor, operationalDisplayName } from "./guest-matching.js";
+import {
+  addressingAlreadyApplied,
+  entitlementAlreadyApplied,
+  findAlreadyAppliedPartyMember,
+  findAlreadyAppliedResponsibleAdultLink,
+  findAlreadyEndedResponsibleAdultLink,
+  findAlreadyRemovedPartyMember,
+  guestAmendmentAlreadyApplied,
+  nominationAlreadyApplied,
+  relationshipAlreadyApplied,
+} from "./mutation-replay.js";
 import {
   addPartyMemberOnSnap,
   administerCompanionEntitlementOnSnap,
@@ -1058,6 +1069,13 @@ export class PlatformService {
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash(input),
+      alreadyApplied: (fresh) => {
+        const record = fresh.operationalGuests.find((item) => item.id === input.guestId);
+        if (!record || record.organisationId !== input.organisationId || record.eventId !== input.eventId) {
+          return undefined;
+        }
+        return guestAmendmentAlreadyApplied(record, input) ? record : undefined;
+      },
       run: (snap, ctx) => {
         if (amendHasAddressingFields(input)) {
           throw new PlatformError(
@@ -1276,7 +1294,9 @@ export class PlatformService {
       .filter((item) => item.organisationId === input.organisationId && item.eventId === input.eventId)
       .filter((item) => (input.lifecycle ? item.lifecycle === input.lifecycle : true))
       .filter((item) => (input.identityResolution ? item.identityResolution === input.identityResolution : true))
-      .filter((item) => (input.attentionRequired === undefined ? true : item.attentionRequired === input.attentionRequired))
+      .filter((item) =>
+        input.attentionRequired === undefined ? true : attentionRequiredFor(item) === input.attentionRequired,
+      )
       .filter((item) => (input.householdId ? item.householdId === input.householdId : true))
       .filter((item) => guestMatchesQuery(item, input.query))
       .filter((item) => {
@@ -1332,6 +1352,18 @@ export class PlatformService {
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash(input),
+      alreadyApplied: (fresh) => {
+        const guest = fresh.operationalGuests.find((item) => item.id === input.guestId);
+        if (!guest || guest.organisationId !== input.organisationId || guest.eventId !== input.eventId) {
+          return undefined;
+        }
+        return addressingAlreadyApplied(guest, input)
+          ? buildGuestAddressingWorkspace(fresh, guest, this.s04aCapabilities(this.actorSnapshot(actor), {
+              organisationId: input.organisationId,
+              eventId: input.eventId,
+            }))
+          : undefined;
+      },
       run: (snap, ctx) => {
         const guest = requireScopedGuest(snap, input.organisationId, input.eventId, input.guestId);
         this.assertVersion(guest.version, input.expectedVersion);
@@ -1383,6 +1415,7 @@ export class PlatformService {
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash(input),
+      alreadyApplied: (fresh) => findAlreadyAppliedPartyMember(fresh, input),
       run: (snap, ctx) => {
         this.requireEvent(snap, input.organisationId, input.eventId);
         return addPartyMemberOnSnap(snap, input, ctx.now);
@@ -1401,6 +1434,7 @@ export class PlatformService {
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash(input),
+      alreadyApplied: (fresh) => findAlreadyRemovedPartyMember(fresh, input),
       run: (snap, ctx) => {
         this.requireEvent(snap, input.organisationId, input.eventId);
         return removePartyMemberOnSnap(snap, input, ctx.now);
@@ -1436,6 +1470,7 @@ export class PlatformService {
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash(input),
+      alreadyApplied: (fresh) => relationshipAlreadyApplied(fresh, input),
       run: (snap, ctx) => {
         this.requireEvent(snap, input.organisationId, input.eventId);
         return administerRelationshipOnSnap(snap, input, ctx.now);
@@ -1454,6 +1489,7 @@ export class PlatformService {
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash(input),
+      alreadyApplied: (fresh) => entitlementAlreadyApplied(fresh, input),
       run: (snap, ctx) => {
         this.requireEvent(snap, input.organisationId, input.eventId);
         return administerCompanionEntitlementOnSnap(snap, input, ctx.now);
@@ -1472,6 +1508,7 @@ export class PlatformService {
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash(input),
+      alreadyApplied: (fresh) => nominationAlreadyApplied(fresh, input),
       run: (snap, ctx) => {
         this.requireEvent(snap, input.organisationId, input.eventId);
         return nominateCompanionOnSnap(snap, input, actor.personId, actor.correlationId, ctx.now).entitlement;
@@ -1489,6 +1526,7 @@ export class PlatformService {
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash(input),
+      alreadyApplied: (fresh) => findAlreadyAppliedResponsibleAdultLink(fresh, input),
       run: (snap, ctx) => {
         this.requireEvent(snap, input.organisationId, input.eventId);
         return createResponsibleAdultLinkOnSnap(snap, input, ctx.now);
@@ -1507,6 +1545,7 @@ export class PlatformService {
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash(input),
+      alreadyApplied: (fresh) => findAlreadyEndedResponsibleAdultLink(fresh, input),
       run: (snap, ctx) => {
         this.requireEvent(snap, input.organisationId, input.eventId);
         return endResponsibleAdultLinkOnSnap(snap, input, ctx.now);
@@ -3324,6 +3363,7 @@ export class PlatformService {
       reason?: string;
       idempotencyKey?: string;
       payloadHash?: string;
+      alreadyApplied?: (snap: PlatformSnapshot) => T | undefined;
       run: (snap: PlatformSnapshot, ctx: { now: string; actor: ActorSnapshot }) => T;
     },
   ): T {
@@ -3393,8 +3433,13 @@ export class PlatformService {
       this.store.replace(snap);
       return result;
     } catch (error) {
+      if (error instanceof PlatformError && error.code === "VERSION_CONFLICT" && input.alreadyApplied) {
+        const reused = input.alreadyApplied(this.store.snapshot());
+        if (reused) return reused;
+      }
       if (error instanceof PlatformError && (error.code === "VERSION_CONFLICT" || error.code === "TRANSITION_INVALID" || error.code === "CAPABILITY_NOT_ENABLED")) {
-        this.writeAudit(snap, {
+        const failed = this.store.snapshot();
+        this.writeAudit(failed, {
           action: input.action,
           outcome: "FAILED",
           actorPersonId: actor.personId,
@@ -3405,7 +3450,7 @@ export class PlatformService {
           reason: error.code,
           occurredAt: now,
         });
-        this.store.replace(snap);
+        this.store.replace(failed);
       }
       throw error;
     }

@@ -35,6 +35,7 @@ export interface OperationalStateView {
   message?: string;
   tone: "ok" | "warn" | "danger" | "brass";
   live: "assertive" | "polite" | "off";
+  reloadRequired?: boolean;
 }
 
 const KIND_BY_CODE: Record<PlatformErrorCode, OperationalStateKind> = {
@@ -137,7 +138,21 @@ export function operationalStateFromCode(
     case "VALIDATION_FAILED":
       return view("validation", code, "The submitted information is not valid", "The server rejected the values. Canonical data was not changed.", "no", "Correct the highlighted fields and submit once. Retry is safe after correction.", true, "danger", "assertive", message);
     case "VERSION_CONFLICT":
-      return view("conflict", code, "The record changed while you were editing", "Another approved write landed first. Your submission was not applied.", "no", "Reload the current record, then apply the change again if it is still required. Retry without reload is not safe.", false, "warn", "assertive", message);
+      return {
+        ...view(
+          "conflict",
+          code,
+          "The record changed elsewhere",
+          "Another approved write landed first. Your attempted edit was not saved. The rejected values are not the durable record.",
+          "no",
+          "Reload the current record before editing again. Retry without refresh is not safe and is disabled.",
+          false,
+          "warn",
+          "assertive",
+          message,
+        ),
+        reloadRequired: true,
+      };
     case "TRANSITION_INVALID":
       return view("invalid_transition", code, "That change is not permitted from this state", "The current lifecycle does not allow the requested transition. Canonical data was not changed.", "no", "Review the current status. Do not retry the same transition.", false, "warn", "assertive", message);
     case "IDEMPOTENCY_CONFLICT":
@@ -160,11 +175,14 @@ export function operationalStateFromQuery(input: {
   if (input.demo === "loading") return operationalStateFromCode("LOADING");
   if (input.demo === "refreshing") return operationalStateFromCode("REFRESHING");
   if (input.demo === "empty") return operationalStateFromCode("EMPTY");
-  if (input.ok) {
-    return operationalStateFromCode("SUCCESS", successCopy(input.ok));
+  if (input.state === "VERSION_CONFLICT" || isVersionConflictMessage(input.error)) {
+    return operationalStateFromCode("VERSION_CONFLICT", input.error);
   }
   if (isPlatformErrorCode(input.state)) {
     return operationalStateFromCode(input.state, input.error);
+  }
+  if (input.ok) {
+    return operationalStateFromCode("SUCCESS", successCopy(input.ok));
   }
   if (input.state === "PERMISSION_CHANGED") {
     return {
@@ -204,9 +222,20 @@ export function successCopy(ok: string): string {
       return "Free-text companion names were recorded without creating guests.";
     case "academy":
       return "Training evidence was recorded. Course completion does not grant Event OS authority.";
+    case "amend":
+      return "The guest amendment was recorded.";
+    case "already-applied":
+      return "This amendment was already recorded. No second write was applied.";
     default:
       return "The change was recorded.";
   }
+}
+
+export function isVersionConflictMessage(message?: string): boolean {
+  if (!message) return false;
+  return /changed while you were editing|changed elsewhere|reload before saving|attempted edit was not saved|expected version/i.test(
+    message,
+  );
 }
 
 function view(
