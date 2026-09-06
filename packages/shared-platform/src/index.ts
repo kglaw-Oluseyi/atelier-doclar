@@ -160,6 +160,13 @@ export {
 export { FIXTURE_IDS, fixturePersons, isFixtureId } from "./fixtures.js";
 export { emptyMasterEventFile } from "./mef.js";
 export { emptySnapshot, normalizeSnapshot, type PlatformStore, type PlatformSnapshot } from "./store.js";
+export { migrateEosS04A, rollbackEosS04A, compatibleLegacySnapshot, EOS_S04A_MIGRATION_ID } from "./addressing-migration.js";
+export {
+  applyS04AFixtures,
+  fixtureS04AGuests,
+  fixtureS04AHousehold,
+  S04A_FIXTURE_IDS,
+} from "./addressing-fixtures.js";
 export { MemoryPlatformStore } from "./memory-store.js";
 export { PLATFORM_POSTGRES_SCHEMA, type PgQueryable } from "./postgres-schema.js";
 export { PostgresPlatformStore, MemoryPlatformPg } from "./postgres-store.js";

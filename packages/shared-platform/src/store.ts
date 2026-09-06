@@ -19,6 +19,17 @@ import type {
   StaffSession,
 } from "./schemas.js";
 import type {
+  AddressingReconciliationItem,
+  CompanionEntitlement,
+  CompanionNomination,
+  EventSeries,
+  EventSeriesMember,
+  GuestParty,
+  GuestPartyMember,
+  GuestRelationship,
+  ResponsibleAdultLink,
+} from "./addressing-schemas.js";
+import type {
   GuestDuplicateCandidate,
   GuestHousehold,
   GuestIntakeBatch,
@@ -90,6 +101,15 @@ export interface PlatformSnapshot {
   guestDuplicateCandidates: GuestDuplicateCandidate[];
   guestIntakeBatches: GuestIntakeBatch[];
   guestIntakeRows: GuestIntakeRow[];
+  guestParties: GuestParty[];
+  guestPartyMembers: GuestPartyMember[];
+  guestRelationships: GuestRelationship[];
+  companionEntitlements: CompanionEntitlement[];
+  companionNominations: CompanionNomination[];
+  responsibleAdultLinks: ResponsibleAdultLink[];
+  eventSeries: EventSeries[];
+  eventSeriesMembers: EventSeriesMember[];
+  addressingReconciliationItems: AddressingReconciliationItem[];
   rsvpPolicies: RsvpPolicy[];
   rsvpQuestionnaires: RsvpQuestionnaire[];
   rsvpInvitations: RsvpInvitation[];
@@ -155,6 +175,15 @@ export function emptySnapshot(): PlatformSnapshot {
     guestDuplicateCandidates: [],
     guestIntakeBatches: [],
     guestIntakeRows: [],
+    guestParties: [],
+    guestPartyMembers: [],
+    guestRelationships: [],
+    companionEntitlements: [],
+    companionNominations: [],
+    responsibleAdultLinks: [],
+    eventSeries: [],
+    eventSeriesMembers: [],
+    addressingReconciliationItems: [],
     rsvpPolicies: [],
     rsvpQuestionnaires: [],
     rsvpInvitations: [],
@@ -204,6 +233,15 @@ export function normalizeSnapshot(input: PlatformSnapshot): PlatformSnapshot {
     guestDuplicateCandidates: input.guestDuplicateCandidates ?? [],
     guestIntakeBatches: input.guestIntakeBatches ?? [],
     guestIntakeRows: input.guestIntakeRows ?? [],
+    guestParties: input.guestParties ?? [],
+    guestPartyMembers: input.guestPartyMembers ?? [],
+    guestRelationships: input.guestRelationships ?? [],
+    companionEntitlements: input.companionEntitlements ?? [],
+    companionNominations: input.companionNominations ?? [],
+    responsibleAdultLinks: input.responsibleAdultLinks ?? [],
+    eventSeries: input.eventSeries ?? [],
+    eventSeriesMembers: input.eventSeriesMembers ?? [],
+    addressingReconciliationItems: input.addressingReconciliationItems ?? [],
     rsvpPolicies: input.rsvpPolicies ?? [],
     rsvpQuestionnaires: input.rsvpQuestionnaires ?? [],
     rsvpInvitations: input.rsvpInvitations ?? [],

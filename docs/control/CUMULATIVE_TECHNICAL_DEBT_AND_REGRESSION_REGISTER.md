@@ -91,7 +91,7 @@ These six items were retained at EOS-S04 formal closure (`CLOSED / ACCEPTED`, cl
 | Current owner | EOS-S04A implementation |
 | Required regression coverage | Long Yorùbá names with preserved diacritics in fixtures, domain tests, UI and E2E (for example `Ẹ̀bùnolúwa`, `Olúfẹ́mi`, `Alákíjà`) |
 | Latest safe remediation milestone | EOS-S04A-P02 fixtures; proven through P05 / P07 / P09 |
-| Current status | OPEN |
+| Current status | IN_COVERAGE |
 | Resolution evidence | |
 
 ### TDR-S04-004 — Denied self-review HTTP and audit mechanics not isolated
@@ -230,7 +230,7 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 | Current owner | EOS-S04A-P01 / P02 |
 | Required regression coverage | Migration does not invent parties from shared contact data; S03 household respondent rules remain |
 | Latest safe remediation milestone | EOS-S04A-P02 |
-| Current status | OPEN |
+| Current status | IN_COVERAGE |
 | Resolution evidence | |
 
 ### TDR-S04A-005 — RSVP companion names are free-text, not guests
@@ -282,3 +282,4 @@ None.
 | When | Change |
 |------|--------|
 | EOS-S04A-P00 | Register established. Entered TDR-S04-001–006 and TDR-S04A-001–006. EOS-S04 not reopened. |
+| EOS-S04A-P02 | TDR-S04-003 and TDR-S04A-004 moved to IN_COVERAGE after Yorùbá fixtures and dedicated-household backfill. |
