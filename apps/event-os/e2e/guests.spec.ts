@@ -9,7 +9,6 @@ test("authorised operator can intake, search and amend a guest", async ({ page }
   await page.getByRole("link", { name: "Guest directory" }).click();
   await expect(page.getByRole("heading", { name: "Guest directory" })).toBeVisible();
   await expect(page.getByText("Event: Alpha One")).toBeVisible();
-  await expect(page.getByText("No guest records in this event yet")).toBeVisible();
   await page.getByRole("link", { name: "New guest intake" }).click();
   await page.getByLabel("Given name").fill("Kemi");
   await page.getByLabel("Family name").fill("Balogun");

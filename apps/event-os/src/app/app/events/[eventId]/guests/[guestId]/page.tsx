@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PlatformError, operationalDisplayName, type ActorContext } from "@maison-doclar/shared-platform";
+import { GuestAddressingWorkspace } from "../../../../../../components/guest-addressing-form";
 import { DuplicateResolveForm, GuestAmendForm } from "../../../../../../components/guest-amend-form";
 import { GuestAccessLink } from "../../../../../../components/guest-access-link";
 import { IssueInvitationForm, StaffRsvpForm } from "../../../../../../components/staff-rsvp-forms";
@@ -90,6 +91,14 @@ export default async function GuestDetailPage({
   }
   const duplicates = runtime.service.listGuestDuplicates(actor, scoped.organisation.id, scoped.event.id, guest.id);
   const permissions = guestPermissions(person, actor, scoped.organisation.id, scoped.event.id);
+  let workspace;
+  try {
+    workspace = permissions.addressingView
+      ? runtime.service.getGuestAddressingWorkspace(actor, scoped.organisation.id, scoped.event.id, guest.id)
+      : undefined;
+  } catch {
+    workspace = undefined;
+  }
   let rsvp;
   try {
     rsvp = permissions.rsvpView
@@ -118,6 +127,11 @@ export default async function GuestDetailPage({
       <p>
         <Link href={`/app/events/${scoped.event.id}/guests`}>Back to directory</Link>
       </p>
+      {error ? (
+        <p className="alert" data-tone="danger" role="alert">
+          {error}
+        </p>
+      ) : null}
       <section>
         <h2>Record state</h2>
         <p>
@@ -128,6 +142,12 @@ export default async function GuestDetailPage({
             {guest.attentionRequired ? "Attention required" : "No attention flag"}
           </span>
         </p>
+        {workspace ? (
+          <p>
+            <strong>Formal</strong> {workspace.guest.formalSalutation.text} · <strong>Familiar</strong>{" "}
+            {workspace.guest.familiarName.text}
+          </p>
+        ) : null}
         {fieldLine("Given name", guest.givenName.quality, guest.givenName.value)}
         {fieldLine("Family name", guest.familyName.quality, guest.familyName.value)}
         {fieldLine("Preferred name", guest.preferredName.quality, guest.preferredName.value)}
@@ -208,6 +228,9 @@ export default async function GuestDetailPage({
             </article>
           ))}
         </section>
+      ) : null}
+      {workspace ? (
+        <GuestAddressingWorkspace workspace={workspace} eventId={scoped.event.id} error={error} />
       ) : null}
       {permissions.amend ? (
         <section>

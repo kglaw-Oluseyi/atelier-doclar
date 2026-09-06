@@ -146,7 +146,9 @@ export default async function GuestDirectoryPage({
                 <tr key={guest.id}>
                   <td>
                     <Link href={`/app/events/${scoped.event.id}/guests/${guest.id}`}>
-                      {operationalDisplayName(guest)}
+                      {guest.addressing
+                        ? [guest.addressing.honorific, operationalDisplayName(guest)].filter(Boolean).join(" ")
+                        : operationalDisplayName(guest)}
                     </Link>
                   </td>
                   <td>
