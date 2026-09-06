@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "tsx --test test/*.test.ts",
     "e2e": "playwright test",
-    "seed:cleanup": "node ./scripts/synthetic-cleanup.mjs"
+    "seed:cleanup": "tsx ./scripts/synthetic-cleanup.ts"
   },
   "engines": {
     "node": ">=20"
@@ -22,7 +22,8 @@
     "pg": "^8.23.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "server-only": "^0.0.1"
+    "server-only": "^0.0.1",
+    "tsx": "^4.19.3"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.1",
@@ -31,7 +32,6 @@
     "@types/pg": "^8.23.1",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
-    "tsx": "^4.19.3",
     "typescript": "^5.8.2"
   }
 }
