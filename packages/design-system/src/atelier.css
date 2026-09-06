@@ -1,0 +1,379 @@
+:root {
+  --at-onyx: #11100f;
+  --at-espresso: #1b1815;
+  --at-ivory: #f5f0e8;
+  --at-parchment: #eae1d4;
+  --at-porcelain: #fcfaf7;
+  --at-ink: #191714;
+  --at-umber: #5a534b;
+  --at-champagne: #b89a62;
+  --at-champagne-pale: #d8c59c;
+  --at-oxblood: #65352f;
+  --at-success: #2f5d3a;
+  --at-warning: #8a6a1f;
+  --at-error: #8a3a32;
+  --at-info: #3d4f63;
+  --at-line: rgba(25, 23, 20, 0.1);
+  --at-line-strong: rgba(25, 23, 20, 0.18);
+  --at-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --at-control: 200ms;
+  --at-panel: 280ms;
+  --at-radius-sm: 6px;
+  --at-radius: 10px;
+  --at-shadow-soft: 0 10px 28px rgba(27, 24, 21, 0.08);
+  --at-shadow-lift: 0 14px 32px rgba(27, 24, 21, 0.12);
+  --at-grain:
+    radial-gradient(circle at 20% 0%, rgba(184, 154, 98, 0.07), transparent 36%),
+    repeating-linear-gradient(0deg, rgba(25, 23, 20, 0.015) 0 1px, transparent 1px 3px);
+  --at-editorial: var(--font-editorial), "Iowan Old Style", Palatino, "Times New Roman", serif;
+}
+
+.at-thread {
+  display: block;
+  width: 42px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--at-champagne), var(--at-champagne-pale));
+}
+
+.at-seal,
+.at-scope .md-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 28px;
+  padding: 0 9px;
+  border: 1px solid var(--at-line-strong);
+  border-radius: 999px;
+  background: rgba(252, 250, 247, 0.72);
+  color: var(--at-ink);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.at-seal::before,
+.at-scope .md-status::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--at-umber);
+  box-shadow: 0 0 0 1px rgba(25, 23, 20, 0.08);
+}
+
+.at-seal[data-tone="ok"]::before,
+.at-scope .md-status[data-tone="ok"]::before { background: var(--at-success); }
+.at-seal[data-tone="warn"]::before,
+.at-scope .md-status[data-tone="warn"]::before { background: var(--at-warning); }
+.at-seal[data-tone="danger"]::before,
+.at-scope .md-status[data-tone="danger"]::before { background: var(--at-error); }
+.at-seal[data-tone="brass"]::before,
+.at-scope .md-status[data-tone="brass"]::before { background: var(--at-champagne); }
+.at-seal[data-tone="info"]::before,
+.at-scope .md-status[data-tone="info"]::before { background: var(--at-info); }
+
+.at-button,
+.at-scope .button,
+.at-scope button[type="submit"] {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: var(--md-touch);
+  min-width: var(--md-touch);
+  padding: 0 18px;
+  border: 1px solid #9d824c;
+  border-radius: var(--at-radius-sm);
+  background: linear-gradient(180deg, #d8c59c 0%, #b89a62 58%, #a88852 100%);
+  color: var(--at-ink);
+  box-shadow: inset 0 1px 0 rgba(252, 250, 247, 0.45), 0 1px 2px rgba(25, 23, 20, 0.16);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform var(--at-control) var(--at-ease),
+    box-shadow var(--at-control) var(--at-ease),
+    filter var(--at-control) var(--at-ease),
+    background-color var(--at-control) var(--at-ease),
+    border-color var(--at-control) var(--at-ease);
+}
+
+.at-button::after,
+.at-scope .button:not(.secondary)::after,
+.at-scope button[type="submit"]:not(.secondary)::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  margin-left: 2px;
+  border-right: 1.5px solid currentColor;
+  border-top: 1.5px solid currentColor;
+  transform: rotate(45deg) translateX(0);
+  transition: transform var(--at-control) var(--at-ease);
+}
+
+.at-button:hover,
+.at-scope .button:not(.secondary):hover,
+.at-scope button[type="submit"]:not(.secondary):hover {
+  transform: translateY(-2px);
+  filter: saturate(1.06);
+  box-shadow: inset 0 1px 0 rgba(252, 250, 247, 0.55), var(--at-shadow-soft);
+}
+
+.at-button:hover::after,
+.at-scope .button:not(.secondary):hover::after,
+.at-scope button[type="submit"]:not(.secondary):hover::after {
+  transform: rotate(45deg) translateX(3px);
+}
+
+.at-button:active,
+.at-scope .button:not(.secondary):active,
+.at-scope button[type="submit"]:not(.secondary):active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: inset 0 1px 2px rgba(25, 23, 20, 0.18);
+}
+
+.at-scope .button.secondary,
+.at-scope button.secondary {
+  background: rgba(252, 250, 247, 0.78);
+  color: var(--at-ink);
+  border-color: var(--at-line-strong);
+  box-shadow: inset 0 1px 0 rgba(252, 250, 247, 0.8);
+}
+
+.at-scope .button.secondary::after,
+.at-scope button.secondary::after {
+  content: none;
+}
+
+.at-scope .button.secondary:hover,
+.at-scope button.secondary:hover {
+  background: var(--at-porcelain);
+  border-color: var(--at-champagne);
+  transform: translateY(-1px);
+}
+
+.at-scope a:not(.button):not(.at-tabs a) {
+  text-underline-offset: 4px;
+  transition: color var(--at-control) var(--at-ease), text-decoration-color var(--at-control) var(--at-ease);
+}
+
+.at-scope a:not(.button):not(.at-tabs a):hover {
+  color: var(--at-oxblood);
+}
+
+.at-scope .button:disabled,
+.at-scope button:disabled,
+.at-scope .button[aria-disabled="true"] {
+  cursor: not-allowed;
+  transform: none;
+  filter: grayscale(0.2);
+  opacity: 0.55;
+  box-shadow: none;
+}
+
+.at-scope a[href],
+.at-scope button:not(:disabled),
+.at-scope summary,
+.at-scope label[for],
+.at-scope label:has(input[type="checkbox"]:not(:disabled)),
+.at-scope input[type="checkbox"]:not(:disabled),
+.at-scope input[type="radio"]:not(:disabled),
+.at-scope select:not(:disabled),
+.at-scope .button {
+  cursor: pointer;
+}
+
+.at-scope :disabled,
+.at-scope [aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+.at-scope input[type="text"],
+.at-scope input[type="email"],
+.at-scope input[type="password"],
+.at-scope input[type="search"],
+.at-scope input[type="tel"],
+.at-scope textarea {
+  cursor: text;
+}
+
+.at-scope .form input,
+.at-scope .form select,
+.at-scope .form textarea,
+.at-scope .filter-bar input,
+.at-scope .filter-bar select {
+  border: 1px solid var(--at-line-strong);
+  border-radius: var(--at-radius-sm);
+  background:
+    linear-gradient(180deg, rgba(234, 225, 212, 0.35), transparent 40%),
+    var(--at-porcelain);
+  box-shadow: inset 0 1px 2px rgba(25, 23, 20, 0.05);
+  transition: border-color var(--at-control) var(--at-ease), box-shadow var(--at-control) var(--at-ease);
+}
+
+.at-scope .form input:focus-visible,
+.at-scope .form select:focus-visible,
+.at-scope .form textarea:focus-visible,
+.at-scope .filter-bar input:focus-visible,
+.at-scope .filter-bar select:focus-visible {
+  border-color: var(--at-champagne);
+  box-shadow: 0 0 0 3px rgba(184, 154, 98, 0.22);
+  outline: none;
+}
+
+.at-scope :focus-visible {
+  outline: 2px solid var(--at-champagne);
+  outline-offset: 3px;
+}
+
+.at-scope .alert {
+  border-radius: var(--at-radius);
+  background: rgba(252, 250, 247, 0.86);
+  box-shadow: inset 3px 0 0 var(--at-champagne);
+}
+
+.at-scope .alert[data-tone="danger"] {
+  background: #f7ece8;
+  box-shadow: inset 3px 0 0 var(--at-oxblood);
+}
+
+.at-scope .alert[data-kind="conflict"] {
+  background: #f3ebe3;
+  box-shadow: inset 3px 0 0 var(--at-warning);
+}
+
+.at-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 4px;
+  border: 1px solid var(--at-line);
+  border-radius: 999px;
+  background: rgba(252, 250, 247, 0.7);
+  box-shadow: inset 0 1px 0 rgba(252, 250, 247, 0.9);
+}
+
+.at-tabs a,
+.at-tabs button {
+  position: relative;
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--at-umber);
+  text-decoration: none;
+  transition: color var(--at-control) var(--at-ease), background-color var(--at-control) var(--at-ease);
+}
+
+.at-tabs a:hover,
+.at-tabs button:hover {
+  color: var(--at-ink);
+  background: rgba(184, 154, 98, 0.08);
+}
+
+.at-tabs a[aria-current="page"],
+.at-tabs a[aria-current="true"],
+.at-tabs button[aria-current="page"],
+.at-tabs button[aria-current="true"],
+.at-tabs a[aria-selected="true"],
+.at-tabs button[aria-selected="true"] {
+  color: var(--at-ink);
+  background: var(--at-porcelain);
+}
+
+.at-tabs a[aria-current="page"]::after,
+.at-tabs a[aria-current="true"]::after,
+.at-tabs button[aria-current="page"]::after,
+.at-tabs button[aria-current="true"]::after,
+.at-tabs a[aria-selected="true"]::after,
+.at-tabs button[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 6px;
+  height: 1.5px;
+  background: linear-gradient(90deg, var(--at-champagne), var(--at-champagne-pale));
+  transition: left var(--at-panel) var(--at-ease), right var(--at-panel) var(--at-ease);
+}
+
+.at-switch {
+  appearance: none;
+  width: 44px;
+  height: 24px;
+  margin: 0;
+  border: 1px solid var(--at-line-strong);
+  border-radius: 999px;
+  background: var(--at-parchment);
+  box-shadow: inset 0 1px 2px rgba(25, 23, 20, 0.08);
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.at-switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--at-porcelain);
+  box-shadow: 0 1px 2px rgba(25, 23, 20, 0.18);
+  transition: transform var(--at-control) var(--at-ease), background-color var(--at-control) var(--at-ease);
+}
+
+.at-switch:hover {
+  box-shadow: 0 0 0 4px rgba(184, 154, 98, 0.16);
+}
+
+.at-switch:checked {
+  background: linear-gradient(180deg, var(--at-champagne-pale), var(--at-champagne));
+}
+
+.at-switch:checked::after {
+  transform: translateX(20px);
+}
+
+.at-switch:focus-visible {
+  outline: 2px solid var(--at-champagne);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .at-button,
+  .at-scope .button,
+  .at-scope button[type="submit"],
+  .at-switch::after,
+  .at-tabs a,
+  .at-tabs a::after {
+    transition: none !important;
+  }
+
+  .at-button:hover,
+  .at-scope .button:hover,
+  .at-scope button[type="submit"]:hover {
+    transform: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .at-button,
+  .at-scope .button,
+  .at-scope .form input,
+  .at-switch,
+  .at-tabs {
+    border: 1px solid ButtonText;
+  }
+
+  .at-tabs a[aria-current="page"]::after,
+  .at-seal::before,
+  .at-scope .md-status::before {
+    background: ButtonText;
+  }
+}
