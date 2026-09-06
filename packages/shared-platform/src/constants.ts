@@ -19,6 +19,15 @@ export const SHARED_PLATFORM_OWNERSHIP = {
   guestReference: PLATFORM_PACKAGE,
   operationalGuest: PLATFORM_PACKAGE,
   guestHousehold: PLATFORM_PACKAGE,
+  guestParty: PLATFORM_PACKAGE,
+  guestPartyMember: PLATFORM_PACKAGE,
+  guestRelationship: PLATFORM_PACKAGE,
+  companionEntitlement: PLATFORM_PACKAGE,
+  companionNomination: PLATFORM_PACKAGE,
+  responsibleAdultLink: PLATFORM_PACKAGE,
+  eventSeries: PLATFORM_PACKAGE,
+  eventSeriesMember: PLATFORM_PACKAGE,
+  addressingReconciliation: PLATFORM_PACKAGE,
   guestDuplicateCandidate: PLATFORM_PACKAGE,
   guestIntakeBatch: PLATFORM_PACKAGE,
   rsvpPolicy: PLATFORM_PACKAGE,
@@ -166,6 +175,17 @@ export const PERMISSION_KEYS = [
   "guest.record.amend",
   "guest.duplicate.resolve",
   "guest.person.link",
+  "guest.addressing.view",
+  "guest.addressing.manage",
+  "guest.addressing.confirm",
+  "guest.relationship.view",
+  "guest.relationship.manage",
+  "guest.entitlement.view",
+  "guest.entitlement.manage",
+  "guest.entitlement.exception.review",
+  "guest.child.view",
+  "guest.child.manage",
+  "guest.protocolNote.view",
   "rsvp.policy.manage",
   "rsvp.form.manage",
   "rsvp.invitation.manage",
@@ -235,6 +255,124 @@ export const DUPLICATE_DECISIONS = ["KEEP_SEPARATE", "DISMISS", "LINK_PERSON"] a
 export const INTAKE_BATCH_STATUSES = ["RECEIVED", "VALIDATED", "PROMOTED", "FAILED"] as const;
 export const INTAKE_ROW_STATUSES = ["RAW", "INVALID", "PROMOTED", "SKIPPED"] as const;
 export const CANONICAL_INTAKE_MAPPING_VERSION = "canonical-v1" as const;
+
+export const HONORIFICS = [
+  "Mr",
+  "Mrs",
+  "Ms",
+  "Mx",
+  "Dr",
+  "Dr (Mrs)",
+  "Dr (Mr)",
+  "Dr (Ms)",
+  "Professor",
+  "Rev",
+  "Pastor",
+  "Chief",
+  "Alhaji",
+  "Alhaja",
+  "Engr",
+  "Barrister",
+  "Hon",
+  "HRH",
+  "Sir",
+  "Dame",
+] as const;
+export const ADDRESSING_STATUSES = [
+  "UNVERIFIED",
+  "GUEST_CONFIRMED",
+  "HOST_CONFIRMED",
+  "PROTOCOL_CONFIRMED",
+] as const;
+export const ADDRESSING_SOURCES = [
+  "GUEST",
+  "HOST",
+  "AUTHORISED_IMPORT",
+  "PROTOCOL_TEAM",
+  "STAFF",
+] as const;
+export const AGE_BANDS = [
+  "INFANT",
+  "EARLY_CHILDHOOD",
+  "CHILD",
+  "PRE_TEEN",
+  "TEEN",
+  "ADULT",
+  "UNKNOWN",
+] as const;
+export const CHILD_AGE_BANDS = ["INFANT", "EARLY_CHILDHOOD", "CHILD", "PRE_TEEN", "TEEN"] as const;
+export const CHILD_READINESS_STATES = [
+  "DRAFT",
+  "BLOCKED_MISSING_RESPONSIBLE_ADULT",
+  "READY_FOR_EVENT",
+] as const;
+export const PARTY_TYPES = [
+  "HOUSEHOLD",
+  "INVITATION_PARTY",
+  "ARRIVAL_PARTY",
+  "PROTOCOL_PARTY",
+  "PROTECTION_PARTY",
+  "CARE_PARTY",
+  "FAMILY_UNIT",
+] as const;
+export const PARTY_STATUSES = ["ACTIVE", "SUSPENDED", "CLOSED"] as const;
+export const PARTY_MEMBER_ROLES = [
+  "PRINCIPAL",
+  "MEMBER",
+  "AIDE",
+  "CARER",
+  "DRIVER",
+  "PROTECTION_OFFICER",
+  "PROTOCOL_REPRESENTATIVE",
+  "RESPONSIBLE_ADULT",
+  "CHILD",
+] as const;
+export const PARTY_MEMBER_STATUSES = ["ACTIVE", "LEFT", "REMOVED"] as const;
+export const RELATIONSHIP_TYPES = [
+  "SPOUSE_PARTNER",
+  "PARENT_CHILD",
+  "RESPONSIBLE_ADULT",
+  "CARER_FOR",
+  "COMPANION_OF",
+  "AIDE_TO",
+  "DRIVER_FOR",
+  "PROTECTION_FOR",
+  "PROTOCOL_FOR",
+  "OTHER_DECLARED",
+] as const;
+export const RELATIONSHIP_DIRECTIONS = ["FORWARD", "BIDIRECTIONAL"] as const;
+export const RELATIONSHIP_VISIBILITIES = ["STAFF", "PROTOCOL", "RESTRICTED"] as const;
+export const RELATIONSHIP_STATUSES = ["ACTIVE", "SUSPENDED", "DISPUTED", "ENDED"] as const;
+export const COMPANION_ENTITLEMENT_STATUSES = [
+  "AVAILABLE",
+  "NOMINATED",
+  "CONFIRMED",
+  "DECLINED",
+  "WITHDRAWN",
+  "EXPIRED",
+  "REVOKED",
+  "EXCEPTION_REVIEW",
+] as const;
+export const COMPANION_NOMINATION_STATES = [
+  "DRAFT",
+  "SUBMITTED",
+  "MATERIALISED",
+  "REPLACED",
+  "WITHDRAWN",
+  "REJECTED",
+] as const;
+export const COMPANION_AUTHORITY_KINDS = ["RSVP_ENTITLEMENT", "RSVP_POLICY_DEFAULT"] as const;
+export const RESPONSIBLE_ADULT_SCOPES = ["EVENT", "COMMUNICATIONS", "ARRIVAL", "SAFEGUARDING"] as const;
+export const RESPONSIBLE_ADULT_LINK_STATUSES = ["ACTIVE", "SUSPENDED", "ENDED"] as const;
+export const EVENT_SERIES_STATUSES = ["ACTIVE", "ARCHIVED"] as const;
+export const EVENT_SERIES_OCCURRENCE_TYPES = ["PRIMARY", "RELATED", "REHEARSAL", "OTHER"] as const;
+export const ADDRESSING_RECONCILIATION_STATUSES = ["OPEN", "RESOLVED", "DEFERRED"] as const;
+export const S04A_SENSITIVE_PERMISSIONS = [
+  "guest.addressing.confirm",
+  "guest.entitlement.exception.review",
+  "guest.protocolNote.view",
+  "guest.child.manage",
+] as const;
 
 export const CEO_RESERVED_ACTIONS: readonly string[] = [
   "organisation.manage",
