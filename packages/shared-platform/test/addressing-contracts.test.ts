@@ -24,6 +24,7 @@ import {
 } from "../src/addressing.js";
 import { permissionsForRole } from "../src/catalog.js";
 import { FIELD_QUALITY_STATES, MSG_CORRECTION_STATUSES, PERMISSION_KEYS } from "../src/constants.js";
+import type { PermissionKey } from "../src/schemas.js";
 import { IntakeGuestInputSchema, OperationalGuestSchema as GuestRecordSchema } from "../src/guest-schemas.js";
 import { RsvpEntitlementSchema } from "../src/rsvp-schemas.js";
 
@@ -337,7 +338,7 @@ describe("EOS-S04A domain contracts", () => {
   });
 
   it("assigns S04A permission keys without granting Planner protocol confirmation", () => {
-    const required = [
+    const required: readonly PermissionKey[] = [
       "guest.addressing.view",
       "guest.addressing.manage",
       "guest.addressing.confirm",
@@ -356,17 +357,30 @@ describe("EOS-S04A domain contracts", () => {
     const planner = permissionsForRole("PLANNER");
     assert.ok(planner.includes("guest.addressing.manage"));
     assert.ok(planner.includes("guest.entitlement.manage"));
+    assert.ok(planner.includes("guest.child.manage"));
     assert.equal(planner.includes("guest.addressing.confirm"), false);
     assert.equal(planner.includes("guest.entitlement.exception.review"), false);
     assert.equal(planner.includes("guest.protocolNote.view"), false);
     const director = permissionsForRole("EVENT_DIRECTOR");
     assert.ok(director.includes("guest.addressing.confirm"));
     assert.ok(director.includes("guest.entitlement.exception.review"));
+    assert.ok(director.includes("guest.child.manage"));
+    const ceo = permissionsForRole("CEO");
+    assert.ok(required.every((key) => ceo.includes(key)));
     const auditor = permissionsForRole("READ_ONLY_AUDITOR");
     assert.ok(auditor.includes("guest.addressing.view"));
+    assert.ok(auditor.includes("guest.child.view"));
     assert.equal(auditor.includes("guest.addressing.manage"), false);
+    assert.equal(auditor.includes("guest.child.manage"), false);
     const admin = permissionsForRole("SYSTEM_ADMINISTRATOR");
     assert.equal(admin.includes("guest.addressing.manage"), false);
+    assert.equal(admin.includes("guest.child.view"), false);
+    const clientLead = permissionsForRole("CLIENT_LEAD");
+    const departmentLead = permissionsForRole("DEPARTMENT_LEAD");
+    for (const key of required) {
+      assert.equal(clientLead.includes(key), false, `CLIENT_LEAD must not receive ${key}`);
+      assert.equal(departmentLead.includes(key), false, `DEPARTMENT_LEAD must not receive ${key}`);
+    }
   });
 
   it("rejects unknown honorifics, titles without source, and extra identity fields", () => {

@@ -86,6 +86,21 @@ const ROLE_IDS: Record<(typeof SYSTEM_ROLE_KEYS)[number], string> = {
   READ_ONLY_AUDITOR: "22222222-2222-4222-8222-222222222007",
 };
 
+/**
+ * EOS-S04A catalogue grants (contracts only; P03/P04/P06 must enforce server-side):
+ * CEO — governed broad authority (all keys except support.impersonate).
+ * Event Director — operational management, confirmation and exception review.
+ * Planner — routine addressing, party, child and entitlement administration.
+ *   Planner must not confirm protocol-sensitive addressing, review entitlement
+ *   exceptions, or view restricted protocol notes.
+ *   `guest.entitlement.manage` never authorises entitlement expansion; P03/P04
+ *   must enforce EOS-S03 quantity authority server-side.
+ * Client Lead / Department Lead — no EOS-S04A role in the ratified pack.
+ * System Administrator — no business authority by default.
+ * Gate/Security — no system role and no S04A mutation path.
+ * Read-only Auditor — read-only minimum-necessary projection contract, including
+ *   `guest.child.view`. This is not unrestricted child-record or household visibility.
+ */
 const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly PermissionKey[]> = {
   CEO: PERMISSION_KEYS.filter((key) => key !== "support.impersonate"),
   EVENT_DIRECTOR: [
@@ -159,10 +174,6 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "audit.view",
     "mef.view",
     "guest.directory.view",
-    "guest.addressing.view",
-    "guest.relationship.view",
-    "guest.entitlement.view",
-    "guest.child.view",
     "rsvp.directory.view",
     "msg.inbox.view",
     "msg.analytics.view",
@@ -175,10 +186,6 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "assignment.view",
     "mef.view",
     "guest.directory.view",
-    "guest.addressing.view",
-    "guest.relationship.view",
-    "guest.entitlement.view",
-    "guest.child.view",
     "rsvp.directory.view",
     "msg.inbox.view",
     "msg.task.manage",
