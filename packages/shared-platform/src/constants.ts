@@ -25,6 +25,7 @@ export const SHARED_PLATFORM_OWNERSHIP = {
   rsvpQuestionnaire: PLATFORM_PACKAGE,
   rsvpInvitation: PLATFORM_PACKAGE,
   rsvpGuestSession: PLATFORM_PACKAGE,
+  staffSession: PLATFORM_PACKAGE,
   rsvpResponse: PLATFORM_PACKAGE,
   rsvpReceipt: PLATFORM_PACKAGE,
   rsvpEntitlement: PLATFORM_PACKAGE,
@@ -93,6 +94,16 @@ export const CLIENT_STATUSES = ["PROSPECT", "ACTIVE", "PAUSED", "CLOSED", "ARCHI
 export const EVENT_STATUSES = ["DRAFT", "ACTIVE", "CANCELLED", "COMPLETED", "ARCHIVED"] as const;
 export const EVENT_PHASES = ["DISCOVER", "DESIGN", "PREPARE", "READY", "LIVE", "CLOSE", "LEARN"] as const;
 export const USER_STATUSES = ["INVITED", "ACTIVE", "SUSPENDED", "DEACTIVATED"] as const;
+export const STAFF_SESSION_REVOCATION_REASONS = ["LOGOUT", "SUPERSEDED", "ADMIN"] as const;
+export const STAFF_SESSION_DENIAL_STATUSES = [
+  "missing",
+  "expired",
+  "revoked",
+  "malformed",
+  "legacy",
+  "inactive",
+] as const;
+export type StaffSessionDenialStatus = (typeof STAFF_SESSION_DENIAL_STATUSES)[number];
 export const ASSIGNMENT_STATUSES = ["PENDING", "ACTIVE", "SUSPENDED", "REVOKED", "EXPIRED"] as const;
 export const AUDIT_OUTCOMES = ["SUCCESS", "DENIED", "FAILED"] as const;
 export const ACTOR_TYPES = ["USER", "SERVICE", "SYSTEM", "GUEST_CAPABILITY"] as const;

@@ -1,5 +1,11 @@
 import { randomUUID } from "node:crypto";
-import { DEFAULT_TIMEZONE, PRODUCTION_STORE_STATUS, SCHEMA_VERSION, SYSTEM_ROLE_KEYS } from "./constants.js";
+import {
+  DEFAULT_TIMEZONE,
+  PRODUCTION_STORE_STATUS,
+  SCHEMA_VERSION,
+  STAFF_SESSION_REVOCATION_REASONS,
+  SYSTEM_ROLE_KEYS,
+} from "./constants.js";
 import { permissionIdForKey, roleIdForKey, seededPermissions, seededRoles } from "./catalog.js";
 import { PlatformError } from "./errors.js";
 import { assertNamedHuman } from "./identity.js";
@@ -97,12 +103,23 @@ import {
 } from "./rsvp-schemas.js";
 import { redactValue, stableHash } from "./redaction.js";
 import {
+  DEFAULT_NON_PRODUCTION_STAFF_SESSION,
+  assertSessionConfig,
+  hashStaffSessionToken,
+  issueSession,
+  readSession,
+  type SessionConfig,
+} from "./session.js";
+import {
   CreateClientInputSchema,
   CreateEventInputSchema,
   GrantAssignmentInputSchema,
   RecordConsentInputSchema,
+  AuthenticateStaffInputSchema,
   RegisterGuestReferenceInputSchema,
   RevokeAssignmentInputSchema,
+  type AuthenticateStaffInput,
+  type StaffSession,
   TransitionEventInputSchema,
   UpdateClientInputSchema,
   UpdateEventInputSchema,
@@ -201,6 +218,7 @@ export interface ActorContext {
 
 export interface PlatformServiceOptions {
   rsvpAccess?: RsvpAccessConfig;
+  staffSession?: SessionConfig;
 }
 
 export interface IssuedRsvpInvitation {
@@ -258,6 +276,13 @@ export class PlatformService {
     const production = this.store.productionStatus === PRODUCTION_STORE_STATUS;
     const config = this.options.rsvpAccess ?? DEFAULT_NON_PRODUCTION_RSVP_ACCESS;
     assertRsvpAccessConfig(config, production);
+    return config;
+  }
+
+  staffSessionConfig(): SessionConfig {
+    const production = this.store.productionStatus === PRODUCTION_STORE_STATUS;
+    const config = this.options.staffSession ?? DEFAULT_NON_PRODUCTION_STAFF_SESSION;
+    assertSessionConfig(config, production);
     return config;
   }
 
@@ -327,6 +352,192 @@ export class PlatformService {
       occurredAt: now,
     });
     this.store.replace(snap);
+  }
+
+  authenticateNamedStaff(
+    raw: unknown,
+    now = new Date().toISOString(),
+    correlationId = randomUUID(),
+  ): { person: Person; token: string; session: StaffSession } {
+    const input = parseStrict<AuthenticateStaffInput>(AuthenticateStaffInputSchema, raw);
+    const config = this.staffSessionConfig();
+    const snap = this.store.snapshot();
+    const email = input.email.trim().toLowerCase();
+    const matches = snap.persons.filter((item) => item.email.trim().toLowerCase() === email);
+    if (matches.length > 1) {
+      this.writeAudit(snap, {
+        action: "auth.session.denied",
+        outcome: "DENIED",
+        resourceType: "staff_session",
+        correlationId,
+        occurredAt: now,
+        reason: "ambiguous identity",
+      });
+      this.store.replace(snap);
+      throw new PlatformError("VALIDATION_FAILED", "identity is ambiguous", {
+        publicMessage: "Sign in failed. Check the named identity and access token.",
+      });
+    }
+    const person = matches[0];
+    if (!person || person.status !== "ACTIVE") {
+      this.writeAudit(snap, {
+        action: "auth.session.denied",
+        outcome: "DENIED",
+        resourceType: "staff_session",
+        correlationId,
+        occurredAt: now,
+        reason: "unrecognised or inactive identity",
+      });
+      this.store.replace(snap);
+      throw new PlatformError("AUTH_REQUIRED", "unrecognised identity", {
+        publicMessage: "Sign in failed. Check the named identity and access token.",
+      });
+    }
+    const sessionId = randomUUID();
+    let issued: ReturnType<typeof issueSession>;
+    try {
+      issued = issueSession(
+        { personId: person.id, accessToken: input.accessToken, sessionId, now },
+        config,
+      );
+    } catch (error) {
+      this.writeAudit(snap, {
+        action: "auth.session.denied",
+        outcome: "DENIED",
+        resourceType: "staff_session",
+        correlationId,
+        occurredAt: now,
+        reason: "authentication failed",
+      });
+      this.store.replace(snap);
+      throw error;
+    }
+    const record: StaffSession = {
+      id: sessionId,
+      personId: person.id,
+      issuedAt: issued.actor.issuedAt,
+      expiresAt: issued.actor.expiresAt,
+      tokenBindingHash: hashStaffSessionToken(issued.token, config),
+      lastSeenAt: now,
+      schemaVersion: SCHEMA_VERSION,
+      version: 1,
+      createdAt: now,
+      updatedAt: now,
+    };
+    snap.staffSessions.push(record);
+    person.lastAuthenticatedAt = now;
+    person.updatedAt = now;
+    this.writeAudit(snap, {
+      action: "auth.session.issued",
+      outcome: "SUCCESS",
+      actorPersonId: person.id,
+      resourceType: "staff_session",
+      resourceId: sessionId,
+      correlationId,
+      occurredAt: now,
+    });
+    this.store.replace(snap);
+    return { person, token: issued.token, session: record };
+  }
+
+  requireStaffSession(token: string | undefined, now = new Date().toISOString()) {
+    const config = this.staffSessionConfig();
+    const actor = readSession(token, config, now);
+    const snap = this.store.snapshot();
+    const record = snap.staffSessions.find((item) => item.id === actor.sessionId);
+    if (!record) {
+      throw new PlatformError("AUTH_REQUIRED", "session is no longer valid", {
+        publicMessage: "Sign in is required.",
+        details: ["legacy"],
+      });
+    }
+    if (record.revokedAt) {
+      throw new PlatformError("AUTH_REQUIRED", "session is no longer valid", {
+        publicMessage: "Sign in is required.",
+        details: ["revoked"],
+      });
+    }
+    if (record.personId !== actor.personId || !token || record.tokenBindingHash !== hashStaffSessionToken(token, config)) {
+      throw new PlatformError("AUTH_REQUIRED", "session is no longer valid", {
+        publicMessage: "Sign in is required.",
+        details: ["revoked"],
+      });
+    }
+    if (Date.parse(record.expiresAt) <= Date.parse(now)) {
+      throw new PlatformError("AUTH_REQUIRED", "session has expired", {
+        publicMessage: "Sign in is required.",
+        details: ["expired"],
+      });
+    }
+    const person = snap.persons.find((item) => item.id === record.personId);
+    if (!person || person.status !== "ACTIVE") {
+      throw new PlatformError("AUTH_REQUIRED", "identity is inactive", {
+        publicMessage: "Sign in is required.",
+        details: ["inactive"],
+      });
+    }
+    return { actor, session: record, person };
+  }
+
+  revokeStaffSession(
+    sessionId: string,
+    reason: (typeof STAFF_SESSION_REVOCATION_REASONS)[number],
+    now = new Date().toISOString(),
+    correlationId = randomUUID(),
+  ): { revoked: boolean } {
+    const snap = this.store.snapshot();
+    const record = snap.staffSessions.find((item) => item.id === sessionId);
+    if (!record || record.revokedAt) return { revoked: false };
+    record.revokedAt = now;
+    record.revocationReason = reason;
+    record.version += 1;
+    record.updatedAt = now;
+    this.writeAudit(snap, {
+      action: "auth.session.revoked",
+      outcome: "SUCCESS",
+      actorPersonId: record.personId,
+      resourceType: "staff_session",
+      resourceId: record.id,
+      correlationId,
+      reason,
+      occurredAt: now,
+    });
+    this.store.replace(snap);
+    return { revoked: true };
+  }
+
+  logoutStaffSession(
+    token: string | undefined,
+    now = new Date().toISOString(),
+    correlationId = randomUUID(),
+  ): { revoked: boolean } {
+    if (!token) return { revoked: false };
+    let actor;
+    try {
+      actor = readSession(token, this.staffSessionConfig(), now);
+    } catch {
+      return { revoked: false };
+    }
+    const snap = this.store.snapshot();
+    const record = snap.staffSessions.find((item) => item.id === actor.sessionId);
+    if (!record || record.revokedAt) return { revoked: false };
+    if (record.personId !== actor.personId) return { revoked: false };
+    record.revokedAt = now;
+    record.revocationReason = "LOGOUT";
+    record.version += 1;
+    record.updatedAt = now;
+    this.writeAudit(snap, {
+      action: "auth.session.revoked",
+      outcome: "SUCCESS",
+      actorPersonId: record.personId,
+      resourceType: "staff_session",
+      resourceId: record.id,
+      correlationId,
+      reason: "LOGOUT",
+      occurredAt: now,
+    });
+    this.store.replace(snap);
+    return { revoked: true };
   }
 
   createClient(actor: ActorContext, raw: unknown): Client {
@@ -3316,6 +3527,7 @@ export class PlatformService {
       snap.rsvpQuestionnaires,
       snap.rsvpInvitations,
       snap.rsvpGuestSessions,
+      snap.staffSessions,
       snap.rsvpResponses,
       snap.rsvpReceipts,
       snap.rsvpEntitlements,

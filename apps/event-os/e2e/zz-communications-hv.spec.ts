@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openStaffContext } from "./login";
+import { openStaffContext, staffNavIdentity } from "./login";
 
 const EVENT = "00000000-0000-4000-8000-000000000021";
 
@@ -63,7 +63,7 @@ test("HV remediation operator journey for unmatched, correction, author and quie
   let planner: Awaited<ReturnType<typeof openStaffContext>> | undefined;
   try {
     const page = maker.page;
-    await expect(page.getByRole("navigation", { name: "Staff" }).getByText("Event Director", { exact: true })).toBeVisible();
+    await expect(staffNavIdentity(page).locator(".staff-identity-name")).toHaveText("Event Director");
     await page.goto(`/app/events/${EVENT}/guests/new`);
     await page.getByLabel("Given name").fill("Tunde");
     await page.getByLabel("Family name").fill("Okafor");
@@ -95,7 +95,7 @@ test("HV remediation operator journey for unmatched, correction, author and quie
       waitUntil: "domcontentloaded",
       timeout: 30_000,
     });
-    await expect(checker.page.getByRole("navigation", { name: "Staff" }).getByText("George Lawson", { exact: true })).toBeVisible();
+    await expect(staffNavIdentity(checker.page).locator(".staff-identity-name")).toHaveText("George Lawson");
     const correction = checker.page.locator("article.correction-review").filter({ hasText: "Tunde Okafor" });
     await expect(correction.getByRole("heading", { level: 2, name: /Proposed · Tunde Okafor/ })).toBeVisible();
     await expect(correction.getByText("tunde.proposed@example.test")).toBeVisible();

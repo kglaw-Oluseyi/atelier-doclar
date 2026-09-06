@@ -1,9 +1,10 @@
 import { SignInForm } from "../../components/sign-in-form";
+import { signInStatusMessage } from "../../server/staff-session-status";
 
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; error?: string }>;
+  searchParams: Promise<{ next?: string; error?: string; status?: string }>;
 }) {
   const params = await searchParams;
   return (
@@ -14,7 +15,7 @@ export default async function SignInPage({
         Staff sign-in for the Event OS foundation. This adapter is non-production and does not select a permanent
         identity provider.
       </p>
-      <SignInForm next={params.next} error={params.error} />
+      <SignInForm next={params.next} error={params.error} status={signInStatusMessage(params.status)} />
       <p className="lede">Privacy and support remain outside this slice. Production use is not authorised.</p>
     </main>
   );

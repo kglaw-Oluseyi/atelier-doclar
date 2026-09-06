@@ -1,13 +1,17 @@
 import { expect, type Browser, type BrowserContext, type Page } from "@playwright/test";
 
 export const STAFF_IDENTITIES = {
-  ceo: { email: "ceo@maison-doclar.test", displayName: "George Lawson" },
-  director: { email: "director@maison-doclar.test", displayName: "Event Director" },
-  planner: { email: "planner@maison-doclar.test", displayName: "Assigned Planner" },
-  auditor: { email: "auditor@maison-doclar.test", displayName: "Read Only Auditor" },
+  ceo: { email: "ceo@maison-doclar.test", displayName: "George Lawson", roleLabel: "CEO" },
+  director: { email: "director@maison-doclar.test", displayName: "Event Director", roleLabel: "Event Director" },
+  planner: { email: "planner@maison-doclar.test", displayName: "Assigned Planner", roleLabel: "Planner" },
+  auditor: { email: "auditor@maison-doclar.test", displayName: "Read Only Auditor", roleLabel: "Read-only Auditor" },
 } as const;
 
 export type StaffIdentityKey = keyof typeof STAFF_IDENTITIES;
+
+export function staffNavIdentity(page: Page) {
+  return page.getByRole("navigation", { name: "Staff" }).locator(".staff-identity");
+}
 
 export async function login(page: Page, email = STAFF_IDENTITIES.ceo.email): Promise<void> {
   await page.goto("/sign-in");
@@ -21,7 +25,7 @@ export async function login(page: Page, email = STAFF_IDENTITIES.ceo.email): Pro
 export async function loginAs(page: Page, identity: StaffIdentityKey): Promise<void> {
   const staff = STAFF_IDENTITIES[identity];
   await login(page, staff.email);
-  await expect(page.getByRole("navigation", { name: "Staff" }).getByText(staff.displayName, { exact: true })).toBeVisible();
+  await expect(staffNavIdentity(page).locator(".staff-identity-name")).toHaveText(staff.displayName);
 }
 
 export async function openStaffContext(
@@ -32,4 +36,12 @@ export async function openStaffContext(
   const page = await context.newPage();
   await loginAs(page, identity);
   return { context, page };
+}
+
+export async function readStaffSessionCookie(context: BrowserContext): Promise<string> {
+  const cookie = (await context.cookies()).find((item) => item.name === "md_event_os_session");
+  if (!cookie?.value) {
+    throw new Error("staff session cookie was not issued");
+  }
+  return cookie.value;
 }

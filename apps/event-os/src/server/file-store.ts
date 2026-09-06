@@ -12,7 +12,12 @@ export class FileBackedPlatformStore extends MemoryPlatformStore {
 
   private hydrateFromDisk(): void {
     if (!existsSync(this.filePath)) return;
-    const raw = JSON.parse(readFileSync(this.filePath, "utf8")) as PlatformSnapshot;
+    let raw: PlatformSnapshot;
+    try {
+      raw = JSON.parse(readFileSync(this.filePath, "utf8")) as PlatformSnapshot;
+    } catch {
+      return;
+    }
     this.hydrating = true;
     try {
       super.replace(raw);

@@ -16,6 +16,7 @@ import type {
   PolicyVersionRef,
   Role,
   RolePermission,
+  StaffSession,
 } from "./schemas.js";
 import type {
   GuestDuplicateCandidate,
@@ -93,6 +94,7 @@ export interface PlatformSnapshot {
   rsvpQuestionnaires: RsvpQuestionnaire[];
   rsvpInvitations: RsvpInvitation[];
   rsvpGuestSessions: RsvpGuestSession[];
+  staffSessions: StaffSession[];
   rsvpResponses: RsvpResponse[];
   rsvpReceipts: RsvpReceipt[];
   rsvpEntitlements: RsvpEntitlement[];
@@ -157,6 +159,7 @@ export function emptySnapshot(): PlatformSnapshot {
     rsvpQuestionnaires: [],
     rsvpInvitations: [],
     rsvpGuestSessions: [],
+    staffSessions: [],
     rsvpResponses: [],
     rsvpReceipts: [],
     rsvpEntitlements: [],
@@ -205,6 +208,7 @@ export function normalizeSnapshot(input: PlatformSnapshot): PlatformSnapshot {
     rsvpQuestionnaires: input.rsvpQuestionnaires ?? [],
     rsvpInvitations: input.rsvpInvitations ?? [],
     rsvpGuestSessions: input.rsvpGuestSessions ?? [],
+    staffSessions: input.staffSessions ?? [],
     rsvpResponses: input.rsvpResponses ?? [],
     rsvpReceipts: input.rsvpReceipts ?? [],
     rsvpEntitlements: input.rsvpEntitlements ?? [],

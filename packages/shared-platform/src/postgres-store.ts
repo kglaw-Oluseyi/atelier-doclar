@@ -29,6 +29,7 @@ const COLLECTIONS: Collection[] = [
   "rsvpQuestionnaires",
   "rsvpInvitations",
   "rsvpGuestSessions",
+  "staffSessions",
   "rsvpResponses",
   "rsvpReceipts",
   "rsvpEntitlements",

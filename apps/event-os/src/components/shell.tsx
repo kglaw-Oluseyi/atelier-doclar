@@ -2,20 +2,24 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import type { Person } from "@maison-doclar/shared-platform";
 import { LogoutButton } from "./logout-button";
+import { presentStaffIdentity } from "../server/staff-identity-display";
 
 export function AppShell({
   person,
   organisationName,
   eventName,
+  eventId,
   children,
   current,
 }: {
   person: Person;
   organisationName?: string;
   eventName?: string;
+  eventId?: string;
   current: string;
   children: ReactNode;
 }) {
+  const identity = presentStaffIdentity(person, eventId);
   const links = [
     ["/app", "Home"],
     ["/app/clients", "Clients"],
@@ -40,11 +44,15 @@ export function AppShell({
           </Link>
         ))}
         <div className="user-menu">
-          <p>{person.displayName}</p>
+          <StaffIdentity identity={identity} />
           <LogoutButton />
         </div>
       </nav>
       <div className="main">
+        <header className="staff-identity-bar" aria-label="Signed-in staff">
+          <StaffIdentity identity={identity} />
+          <LogoutButton />
+        </header>
         <div className="context" role="status">
           <span>Organisation: {organisationName ?? "Not provided"}</span>
           <span>Event: {eventName ?? "Not provided"}</span>
@@ -58,5 +66,14 @@ export function AppShell({
         <Link href="/app/clients">More</Link>
       </nav>
     </div>
+  );
+}
+
+function StaffIdentity({ identity }: { identity: { displayName: string; roleLabel: string } }) {
+  return (
+    <p className="staff-identity" aria-label={`Signed in as ${identity.displayName}, ${identity.roleLabel}`}>
+      <span className="staff-identity-name">{identity.displayName}</span>
+      <span className="staff-identity-role">{identity.roleLabel}</span>
+    </p>
   );
 }

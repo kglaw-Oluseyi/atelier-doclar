@@ -9,6 +9,9 @@ export {
   DEFAULT_TIMEZONE,
   SESSION_COOKIE,
   RSVP_SESSION_COOKIE,
+  STAFF_SESSION_REVOCATION_REASONS,
+  STAFF_SESSION_DENIAL_STATUSES,
+  type StaffSessionDenialStatus,
   RSVP_ATTENDANCE_INTENTS,
   CORRELATION_HEADER,
   MEF_COMPOSITION_SLOTS,
@@ -47,6 +50,9 @@ export {
   TransitionEventInputSchema,
   GrantAssignmentInputSchema,
   SignInInputSchema,
+  AuthenticateStaffInputSchema,
+  StaffSessionSchema,
+  StaffSessionActorSchema,
   type Organisation,
   type Client,
   type EventRecord,
@@ -62,6 +68,9 @@ export {
   type PermissionKey,
   type EventPhase,
   type ScopeInput,
+  type AuthenticateStaffInput,
+  type StaffSession,
+  type StaffSessionActor,
 } from "./schemas.js";
 export {
   OperationalGuestSchema,
@@ -80,7 +89,7 @@ export {
 export { operationalDisplayName, normalizeEmail, normalizePhone, findDuplicateMatches, fieldValue } from "./guest-matching.js";
 export { parseCanonicalCsv, CANONICAL_CSV_COLUMNS } from "./guest-intake.js";
 export { seededPermissions, seededRoles, permissionsForRole, roleIdForKey } from "./catalog.js";
-export { authorize, assignmentIsActive, canSeeClient, canSeeEvent, singleCoveringRoleKey, type ActorSnapshot, type PolicyDecision } from "./policy.js";
+export { authorize, assignmentIsActive, assignmentCoversScope, canSeeClient, canSeeEvent, singleCoveringRoleKey, type ActorSnapshot, type PolicyDecision } from "./policy.js";
 export { allowedNextPhases, assertPhaseTransition } from "./transitions.js";
 export { redactValue, stableHash } from "./redaction.js";
 export {
@@ -89,7 +98,15 @@ export {
   assertNamedHuman,
   type IdentityAdapter,
 } from "./identity.js";
-export { issueSession, readSession, assertSessionConfig, type SessionActor, type SessionConfig } from "./session.js";
+export {
+  issueSession,
+  readSession,
+  assertSessionConfig,
+  hashStaffSessionToken,
+  DEFAULT_NON_PRODUCTION_STAFF_SESSION,
+  type SessionActor,
+  type SessionConfig,
+} from "./session.js";
 export { FIXTURE_IDS, fixturePersons, isFixtureId } from "./fixtures.js";
 export { emptyMasterEventFile } from "./mef.js";
 export { emptySnapshot, normalizeSnapshot, type PlatformStore, type PlatformSnapshot } from "./store.js";

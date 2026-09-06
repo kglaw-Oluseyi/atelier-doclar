@@ -1,15 +1,10 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import {
-  NonProductionIdentityAdapter,
-  PlatformError,
-  SESSION_COOKIE,
-  issueSession,
-} from "@maison-doclar/shared-platform";
-import { cookieSecure, fixturesAllowed, sessionConfig, sessionTtlSeconds } from "./config";
+import { NonProductionIdentityAdapter, PlatformError } from "@maison-doclar/shared-platform";
+import { fixturesAllowed } from "./config";
 import { getRuntime } from "./runtime";
+import { clearStaffSessionCookie, readStaffSessionCookie, writeStaffSessionCookie } from "./staff-session-cookie";
 import { requireActor } from "./with-session";
 
 function safeNextPath(value: string): string {
@@ -19,37 +14,19 @@ function safeNextPath(value: string): string {
 export async function signInAction(formData: FormData): Promise<void> {
   const next = safeNextPath(String(formData.get("next") ?? "/app"));
   const fail = `/sign-in?next=${encodeURIComponent(next)}&error=`;
+  const denied = `${fail}${encodeURIComponent("Sign in failed. Check the named identity and access token.")}`;
   if (!fixturesAllowed()) {
     redirect(`${fail}${encodeURIComponent("The non-production identity adapter cannot be used here.")}`);
   }
-  const email = String(formData.get("email") ?? "");
+  const email = String(formData.get("email") ?? "").trim();
   const accessToken = String(formData.get("accessToken") ?? "");
-  const denied = `${fail}${encodeURIComponent("Sign in failed. Check the named identity and access token.")}`;
-  let token: string;
+  if (!email) {
+    redirect(denied);
+  }
   try {
-    const identity = new NonProductionIdentityAdapter(true).resolve({
-      externalSubject: email,
-      email,
-    });
-    const runtime = getRuntime();
-    const person = runtime.service.findPersonByIdentity({
-      externalSubject: identity.externalSubject,
-      email,
-    });
-    if (!person) {
-      throw new PlatformError("AUTH_REQUIRED", "unrecognised identity");
-    }
-    token = issueSession({ personId: person.id, accessToken }, sessionConfig());
-    runtime.service.recordAuthentication(person.id, new Date().toISOString(), crypto.randomUUID(), "SUCCESS");
-    (await cookies()).set({
-      name: SESSION_COOKIE,
-      value: token,
-      httpOnly: true,
-      sameSite: "lax",
-      secure: cookieSecure(),
-      path: "/",
-      maxAge: sessionTtlSeconds(),
-    });
+    new NonProductionIdentityAdapter(true).resolve({ externalSubject: email, email });
+    const issued = getRuntime().service.authenticateNamedStaff({ email, accessToken });
+    await writeStaffSessionCookie(issued.token);
   } catch (error) {
     if (error instanceof PlatformError && (error.code === "AUTH_REQUIRED" || error.code === "VALIDATION_FAILED")) {
       redirect(denied);
@@ -60,16 +37,20 @@ export async function signInAction(formData: FormData): Promise<void> {
 }
 
 export async function signOutAction(): Promise<void> {
-  (await cookies()).set({
-    name: SESSION_COOKIE,
-    value: "",
-    httpOnly: true,
-    sameSite: "lax",
-    secure: cookieSecure(),
-    path: "/",
-    maxAge: 0,
-  });
-  redirect("/sign-in");
+  const token = await readStaffSessionCookie();
+  if (!token) {
+    await clearStaffSessionCookie();
+    redirect("/sign-in?status=already-signed-out");
+  }
+  let revoked = false;
+  try {
+    revoked = getRuntime().service.logoutStaffSession(token).revoked;
+  } catch {
+    await clearStaffSessionCookie();
+    redirect("/sign-in?error=" + encodeURIComponent("Sign out could not be completed. Sign in again if needed."));
+  }
+  await clearStaffSessionCookie();
+  redirect(revoked ? "/sign-in?status=signed-out" : "/sign-in?status=already-signed-out");
 }
 
 function toIso(value: string): string | undefined {

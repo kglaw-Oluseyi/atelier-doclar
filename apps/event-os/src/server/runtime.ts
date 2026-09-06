@@ -6,7 +6,7 @@ import {
   PlatformService,
   type PlatformStore,
 } from "@maison-doclar/shared-platform";
-import { fixturesAllowed, rsvpAccessConfig } from "./config";
+import { fixturesAllowed, rsvpAccessConfig, sessionConfig } from "./config";
 import { FileBackedPlatformStore } from "./file-store";
 
 interface Runtime {
@@ -27,7 +27,7 @@ export function getRuntime(): Runtime {
     throw new Error("Event OS local runtime requires EVENT_OS_ALLOW_FIXTURES=1; production IdP remains unselected");
   }
   const store = new FileBackedPlatformStore(storePath());
-  const options = { rsvpAccess: rsvpAccessConfig() };
+  const options = { rsvpAccess: rsvpAccessConfig(), staffSession: sessionConfig() };
   const service =
     store.snapshot().organisations.length > 0
       ? new PlatformService(store, options)

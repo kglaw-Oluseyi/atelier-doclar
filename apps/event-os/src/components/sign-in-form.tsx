@@ -1,8 +1,12 @@
 import { signInAction } from "../server/actions";
 
-export function SignInForm({ next, error }: { next?: string; error?: string }) {
+export function SignInForm({ next, error, status }: { next?: string; error?: string; status?: string }) {
   return (
-    <form className="form" action={signInAction} aria-describedby={error ? "sign-in-error" : undefined}>
+    <form
+      className="form"
+      action={signInAction}
+      aria-describedby={error ? "sign-in-error" : status ? "sign-in-status" : undefined}
+    >
       <input type="hidden" name="next" value={next && next.startsWith("/") && !next.startsWith("//") ? next : "/app"} />
       <label>
         Staff email
@@ -12,6 +16,11 @@ export function SignInForm({ next, error }: { next?: string; error?: string }) {
         Access token
         <input name="accessToken" type="password" autoComplete="current-password" required />
       </label>
+      {status ? (
+        <p id="sign-in-status" className="alert" role="status">
+          {status}
+        </p>
+      ) : null}
       {error ? (
         <p id="sign-in-error" className="alert" data-tone="danger" role="alert">
           {error}

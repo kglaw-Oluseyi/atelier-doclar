@@ -14,6 +14,7 @@ import {
   ROLE_EFFECTS,
   SCHEMA_VERSION,
   SYSTEM_ROLE_KEYS,
+  STAFF_SESSION_REVOCATION_REASONS,
   USER_STATUSES,
   VERIFICATION_STATES,
 } from "./constants.js";
@@ -461,6 +462,36 @@ export const SignInInputSchema = z
     message: "externalSubject or email is required",
   });
 
+export const AuthenticateStaffInputSchema = z
+  .object({
+    email: z.string().trim().email(),
+    accessToken: NonEmptySchema,
+  })
+  .strict();
+
+export const StaffSessionActorSchema = z
+  .object({
+    sessionId: UuidSchema,
+    personId: PersonIdSchema,
+    issuedAt: IsoDatetimeSchema,
+    expiresAt: IsoDatetimeSchema,
+  })
+  .strict();
+
+export const StaffSessionSchema = z
+  .object({
+    id: UuidSchema,
+    personId: PersonIdSchema,
+    issuedAt: IsoDatetimeSchema,
+    expiresAt: IsoDatetimeSchema,
+    revokedAt: IsoDatetimeSchema.optional(),
+    revocationReason: z.enum(STAFF_SESSION_REVOCATION_REASONS).optional(),
+    lastSeenAt: IsoDatetimeSchema.optional(),
+    tokenBindingHash: NonEmptySchema.max(128),
+    ...scopedRecord,
+  })
+  .strict();
+
 export type Organisation = z.infer<typeof OrganisationSchema>;
 export type Client = z.infer<typeof ClientSchema>;
 export type EventProgramme = z.infer<typeof EventProgrammeSchema>;
@@ -493,3 +524,6 @@ export type RevokeAssignmentInput = z.infer<typeof RevokeAssignmentInputSchema>;
 export type UpdateMefSlotInput = z.infer<typeof UpdateMefSlotInputSchema>;
 export type RecordConsentInput = z.infer<typeof RecordConsentInputSchema>;
 export type RegisterGuestReferenceInput = z.infer<typeof RegisterGuestReferenceInputSchema>;
+export type AuthenticateStaffInput = z.infer<typeof AuthenticateStaffInputSchema>;
+export type StaffSessionActor = z.infer<typeof StaffSessionActorSchema>;
+export type StaffSession = z.infer<typeof StaffSessionSchema>;

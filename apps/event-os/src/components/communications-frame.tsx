@@ -38,7 +38,13 @@ export function CommunicationsFrame({
 }) {
   const base = `/app/events/${eventId}/communications`;
   return (
-    <AppShell person={person} organisationName={organisationName} eventName={eventName} current="/app/events">
+    <AppShell
+      person={person}
+      organisationName={organisationName}
+      eventName={eventName}
+      eventId={eventId}
+      current="/app/events"
+    >
       <div className="page-header">
         <h1>{title}</h1>
         <p className="lede">{lede}</p>

@@ -198,6 +198,35 @@ html {
   overflow-wrap: anywhere;
 }
 
+.staff-identity {
+  margin: 0 0 12px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.staff-identity-name,
+.staff-identity-role {
+  display: block;
+}
+
+.staff-identity-role {
+  color: var(--md-muted);
+  font-size: 0.875rem;
+}
+
+.staff-identity-bar {
+  display: none;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.staff-identity-bar .staff-identity {
+  margin: 0;
+  min-width: 0;
+}
+
 .filter-bar {
   display: flex;
   flex-wrap: wrap;
@@ -240,6 +269,7 @@ html {
     padding-bottom: 72px;
   }
   .nav { display: none; }
+  .staff-identity-bar { display: flex; }
   .main { padding: 20px 16px 32px; }
   .mobile-nav {
     display: flex;

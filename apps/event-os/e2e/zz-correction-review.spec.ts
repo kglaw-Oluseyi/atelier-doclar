@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openStaffContext, STAFF_IDENTITIES } from "./login";
+import { openStaffContext, staffNavIdentity, STAFF_IDENTITIES } from "./login";
 
 const EVENT = "00000000-0000-4000-8000-000000000021";
 const OTHER_EVENT = "00000000-0000-4000-8000-000000000022";
@@ -69,9 +69,9 @@ test("Event Director maker and CEO checker review a correction in isolated conte
   const maker = await openStaffContext(browser, "director");
   let checker: Awaited<ReturnType<typeof openStaffContext>> | undefined;
   try {
-    await expect(
-      maker.page.getByRole("navigation", { name: "Staff" }).getByText(STAFF_IDENTITIES.director.displayName, { exact: true }),
-    ).toBeVisible();
+    await expect(staffNavIdentity(maker.page).locator(".staff-identity-name")).toHaveText(
+      STAFF_IDENTITIES.director.displayName,
+    );
     await prepareCommunications(maker.page);
 
     const applyEmail = "olayemi.current@example.test";
@@ -127,13 +127,13 @@ test("Event Director maker and CEO checker review a correction in isolated conte
     await expect(maker.page.getByText("bola.staff-amended@example.test")).toBeVisible();
 
     checker = await openStaffContext(browser, "ceo");
-    await expect(
-      checker.page.getByRole("navigation", { name: "Staff" }).getByText(STAFF_IDENTITIES.ceo.displayName, { exact: true }),
-    ).toBeVisible();
+    await expect(staffNavIdentity(checker.page).locator(".staff-identity-name")).toHaveText(
+      STAFF_IDENTITIES.ceo.displayName,
+    );
     await checker.page.goto(CORRECTIONS, { waitUntil: "domcontentloaded", timeout: 30_000 });
-    await expect(
-      checker.page.getByRole("navigation", { name: "Staff" }).getByText(STAFF_IDENTITIES.ceo.displayName, { exact: true }),
-    ).toBeVisible();
+    await expect(staffNavIdentity(checker.page).locator(".staff-identity-name")).toHaveText(
+      STAFF_IDENTITIES.ceo.displayName,
+    );
 
     const applyArticle = reviewArticle(checker.page, "Ọláyẹmí Folákẹ̀ Adeṣínà-Babatúndé");
     await expect(applyArticle.getByRole("heading", { level: 2, name: /Proposed · Ọláyẹmí Folákẹ̀ Adeṣínà-Babatúndé/ })).toBeVisible();

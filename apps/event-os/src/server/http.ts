@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
-import { PlatformError, publicMessageFor } from "@maison-doclar/shared-platform";
+import { PLATFORM_ERROR_CODES, PlatformError, publicMessageFor } from "@maison-doclar/shared-platform";
+
+function isPlatformError(error: unknown): error is PlatformError {
+  if (error instanceof PlatformError) return true;
+  if (!error || typeof error !== "object" || !("code" in error)) return false;
+  const code = (error as { code?: unknown }).code;
+  return typeof code === "string" && (PLATFORM_ERROR_CODES as readonly string[]).includes(code);
+}
 
 export function jsonError(error: unknown): NextResponse {
-  if (error instanceof PlatformError) {
+  if (isPlatformError(error)) {
     const status =
       error.code === "AUTH_REQUIRED"
         ? 401

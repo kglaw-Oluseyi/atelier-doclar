@@ -56,16 +56,15 @@ export function rsvpSessionTtlSeconds(): number {
   return rsvpAccessConfig().sessionTtlSeconds ?? 2 * 60 * 60;
 }
 
-export function cookieSecure(requestUrl?: string): boolean {
+export function cookieSecure(): boolean {
   const forced = runtimeEnv("EVENT_OS_COOKIE_SECURE");
   if (forced === "1") return true;
   if (forced === "0") return false;
-  if (requestUrl) {
-    try {
-      return new URL(requestUrl).protocol === "https:";
-    } catch {
-      return false;
-    }
+  const publicUrl = runtimeEnv("EVENT_OS_PUBLIC_URL") ?? runtimeEnv("EVENT_OS_BASE_URL");
+  if (!publicUrl) return false;
+  try {
+    return new URL(publicUrl).protocol === "https:";
+  } catch {
+    return false;
   }
-  return false;
 }
