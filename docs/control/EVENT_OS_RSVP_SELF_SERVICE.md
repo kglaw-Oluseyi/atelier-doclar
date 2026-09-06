@@ -91,4 +91,14 @@ Guest routes do not expose other guests, staff data, operational notes, permissi
 
 ## Production status
 
-`productionAuthorised = false`. Protected gates remain unsigned. Synthetic fixtures only. No Railway mutation.
+`productionAuthorised = false`. Protected gates remain unsigned. Synthetic fixtures only.
+
+## Supersession — deploy-by-default (6 September 2026)
+
+**Former restriction:** No Railway mutation.
+
+**Status:** SUPERSEDED for ordinary deployment and safe Postgres use in Railway project `atelier-doclar`.
+
+**Current policy:** `docs/control/DEPLOYMENT_AND_PRODUCTION_REALISM_POLICY.md`
+
+**Safeguards retained:** Real guest contact, live communications, payments, destructive resets, other Railway projects, and protected-gate signatures remain gated.

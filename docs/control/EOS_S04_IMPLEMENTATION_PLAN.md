@@ -9,6 +9,16 @@ Do not create 62 micro-commits. Do not collapse the pack into vague buckets. If 
 
 Native sequential “one prompt, one commit, stop” remains historical pack law. Programme law after MD-PR-S004–S013 is a single authorised slice wrapper. Workstream grouping is the reconciliation of those two laws.
 
+## Supersession — deploy-by-default (6 September 2026)
+
+**Former restriction:** WS12 purpose said do not deploy; S4-60 forbade Railway.
+
+**Status:** SUPERSEDED for ordinary `atelier-doclar` Event OS deployment after verification. Historical S04 workstream text is retained.
+
+**Current policy:** `docs/control/DEPLOYMENT_AND_PRODUCTION_REALISM_POLICY.md`
+
+**Safeguards retained:** Protected-gate signatures, real contact, live providers, and `productionAuthorised` remain gated.
+
 ## Workstream map
 
 | WS | Name | Native IDs | Count |

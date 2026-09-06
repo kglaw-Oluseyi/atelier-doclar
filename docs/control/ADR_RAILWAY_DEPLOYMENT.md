@@ -32,3 +32,13 @@ MD-FC1 did not contact Railway. MD-LV1 deployed the Control Tower to this projec
 - Production IdP when `CT4-OI-001` is decided.
 
 **CONTROL TOWER PRODUCTION AUTHORISED: NO**
+
+## Supersession — Event OS deploy-by-default (6 September 2026)
+
+**Former restriction:** MD-FC1 did not contact Railway; Event OS slices later treated Railway mutation as unauthorised.
+
+**Status:** SUPERSEDED for Event OS service `event-os` in project `atelier-doclar`. Control Tower production operations remain unauthorised.
+
+**Current policy:** `docs/control/DEPLOYMENT_AND_PRODUCTION_REALISM_POLICY.md`
+
+**Safeguards retained:** Other Railway projects, real client operations, force-push, and protected gates remain gated. Event OS persistence uses the same Postgres plugin via `platform_*` tables, not Control Tower `programme_*` tables.

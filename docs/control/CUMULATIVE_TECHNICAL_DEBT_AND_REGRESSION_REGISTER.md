@@ -4,7 +4,17 @@
 **Created:** EOS-S04A-P00
 **Status:** OPEN — controlled register; not a reopen of EOS-S04
 **Production:** `productionAuthorised=false`; protected gates remain UNSIGNED / `NOT_READY`
-**Railway / providers / later slices:** untouched
+**Railway / providers / later slices:** Event OS deployment and safe Postgres use inside Railway project `atelier-doclar` follow `docs/control/DEPLOYMENT_AND_PRODUCTION_REALISM_POLICY.md`. Other Railway projects, live providers and later unauthorised slices remain untouched.
+
+## Supersession — deploy-by-default (6 September 2026)
+
+**Former restriction:** Railway / providers / later slices: untouched.
+
+**Status:** SUPERSEDED for `atelier-doclar` Event OS deployment and durable Postgres. Provider activation and other Railway projects remain forbidden.
+
+**Current policy:** `docs/control/DEPLOYMENT_AND_PRODUCTION_REALISM_POLICY.md`
+
+**Safeguards retained:** Real data, live communications, payments, destructive resets, force-push, and protected-gate signatures remain gated.
 
 This register is the authorised EOS-S04A control-document addition. It records inherited EOS-S04 observations and later non-blocking related debt. It does not reopen EOS-S04, increment accepted-slice count, sign a protected gate, or authorise production.
 

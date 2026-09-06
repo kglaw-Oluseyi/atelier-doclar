@@ -6,7 +6,17 @@
 **Branch:** `main`  
 **Required starting baseline:** `c2d137372376f1f821d22b91bdf5a45e1d5889fd`  
 **Scope:** EOS-S04A P03-P07 only  
-**Status:** AUTHORISED
+**Status:** AUTHORISED for the named P03–P07 slice work. Standing Railway/deploy prohibitions below are superseded.
+
+## Supersession — deploy-by-default (6 September 2026)
+
+**Former restriction:** No Railway mutation or deployment. Confirmation that Railway deployment remained untouched.
+
+**Status:** SUPERSEDED for ordinary GitHub push and deployment of affected `atelier-doclar` services after verification. The P03–P07 product scope itself is unchanged.
+
+**Current policy:** `docs/control/DEPLOYMENT_AND_PRODUCTION_REALISM_POLICY.md`
+
+**Safeguards retained:** No production authority. No real guests, recipients, providers, payments, biometrics or live communications. No force push, history rewrite, autonomous merge or rebase. Other repositories and Railway projects remain out of scope.
 
 ## Direction
 

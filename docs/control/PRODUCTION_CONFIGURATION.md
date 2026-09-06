@@ -41,4 +41,8 @@ Machine evaluation: `evaluateRuntimeConfig` in `@maison-doclar/programme-tower`.
 
 ## Persistent-service dependencies
 
-Live MD-LV1 persistence is PostgreSQL via `DATABASE_URL`. Local/CI without `DATABASE_URL` continues to use corpus-seed memory and optional `PROGRAMME_DATA_DIR` files. Fixtures must stay off on the live service.
+Live MD-LV1 persistence is PostgreSQL via `DATABASE_URL`. Local/CI without `DATABASE_URL` continues to use corpus-seed memory and optional `PROGRAMME_DATA_DIR` files. Fixtures must stay off on the live Control Tower service.
+
+## Event OS (6 September 2026)
+
+Event OS on Railway project `atelier-doclar` uses the same Postgres plugin through `DATABASE_URL`. Table names are `platform_*` and do not replace Control Tower `programme_*` tables. Synthetic Event OS fixtures may be seeded. `productionAuthorised` remains false. See `docs/control/DEPLOYMENT_AND_PRODUCTION_REALISM_POLICY.md` and `docs/control/EVENT_OS_PRODUCTION_CONFIGURATION.md`.

@@ -52,3 +52,15 @@ When a future instruction authorises a CT or product prompt:
 8. Treat RAG as non-authoritative for status.
 
 Historical Claude-role sentences stay in the source files.
+
+## Deploy-by-default compatibility (6 September 2026)
+
+| Historical wording (leave in source) | Current execution meaning |
+|--------------------------------------|---------------------------|
+| do not push; do not deploy; Railway must remain untouched | **Superseded** for repository `kglaw-Oluseyi/atelier-doclar` and Railway project `atelier-doclar`. See `docs/control/DEPLOYMENT_AND_PRODUCTION_REALISM_POLICY.md` |
+| production deployment requires slice acceptance | **Superseded** as a general stop. Acceptance remains a separate record. Deployment is not acceptance and is not production-operations authorisation |
+| frontend/backend work must remain local pending routine review | **Superseded**. Verified work is pushed and deployed by default |
+| `productionAuthorised: false` | **Retained.** Blocks real operational capabilities only. Does not block deployment, Railway Postgres, synthetic data, or production builds |
+| No Railway mutation (historical slice closeouts) | Historical evidence of those slices. Not a current stop for `atelier-doclar` Event OS |
+
+Safeguards retained: real client/guest data; live communications; payments; other repositories or Railway projects; force-push; history rewrite; destructive database resets; protected-gate signatures.

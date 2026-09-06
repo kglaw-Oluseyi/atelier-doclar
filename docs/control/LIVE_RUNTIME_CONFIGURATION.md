@@ -33,6 +33,8 @@ Revoke live access by rotating `PROGRAMME_ACCESS_TOKEN` or `PROGRAMME_SESSION_SE
 
 Provider: Railway PostgreSQL plugin inside `atelier-doclar` only. Adapter: `PostgresProgrammeStore`. Audit: `PostgresAuditRepository`. Webhook replay: `programme_deliveries`.
 
+Event OS uses the same Postgres plugin through `platform_*` tables when `DATABASE_URL` is configured on service `event-os`. That does not share Control Tower event truth. See `docs/control/EVENT_OS_PRODUCTION_CONFIGURATION.md`.
+
 ## Build
 
 GitHub-sourced deploys use Railpack with the root `package.json` `build` / `start` scripts. `railway.toml` is not used (Config as Code is retired for this new service). `NODE_ENV=production` remains a runtime variable only.

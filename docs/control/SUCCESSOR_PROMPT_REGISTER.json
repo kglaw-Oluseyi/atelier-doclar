@@ -1,7 +1,7 @@
 {
   "scheme": "MD-PR-SNNN successor accountability IDs; historical MD-PR-NNNN remain intact",
   "generated_at": "2026-09-05T21:20:00Z",
-  "notes": "Do not impersonate historical Control Tower prompt IDs. MD-PR-0011 is already used.",
+  "notes": "Do not impersonate historical Control Tower prompt IDs. MD-PR-0011 is already used. Historical authorising_instruction values that say do not deploy or no Railway remain slice history. Current deploy-by-default rule is docs/control/DEPLOYMENT_AND_PRODUCTION_REALISM_POLICY.md (6 September 2026). Real operations and other Railway projects remain gated.",
   "entries": [
     {
       "prompt_control_id": "MD-PR-S001",

@@ -30,7 +30,17 @@ Forbidden parallel types include `EventOSUser`, `EventDayUser`, and independent 
 
 ## Persistence boundary
 
-`PlatformStore` is the only mutation API. Local/test use `MemoryPlatformStore` (`NON_PRODUCTION`). PostgreSQL is the ratified production direction and is implemented as `PostgresPlatformStore` behind the same port. EOS-S01 does not authorise production migration or Railway database mutation.
+`PlatformStore` is the only mutation API. Local/test use `MemoryPlatformStore` (`NON_PRODUCTION`). PostgreSQL is the ratified production direction and is implemented as `PostgresPlatformStore` behind the same port.
+
+## Supersession — deploy-by-default (6 September 2026)
+
+**Former restriction:** EOS-S01 did not authorise production migration or Railway database mutation.
+
+**Status:** SUPERSEDED for safe Event OS schema migrations and durable persistence on Railway project `atelier-doclar` Postgres. Historical EOS-S01 text remains as slice history.
+
+**Current policy:** `docs/control/DEPLOYMENT_AND_PRODUCTION_REALISM_POLICY.md`
+
+**Safeguards retained:** `productionAuthorised` remains false. Real client/guest data, external communications, payments, destructive resets, other Railway projects, and protected-gate signatures remain gated.
 
 Control Tower continues to use `ProgrammeStore` for programme governance events. That store is not Event OS operational truth.
 

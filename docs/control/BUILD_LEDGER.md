@@ -2,6 +2,8 @@
 
 **Authority:** First created in MD-CT1. B0 recorded this file as absent (GAP-009).
 
+Historical EOS-S01–S04 notes saying “No Railway mutation” record what those slices did. They are not a current standing prohibition. Current rule: `docs/control/DEPLOYMENT_AND_PRODUCTION_REALISM_POLICY.md` (6 September 2026). Production operations remain unauthorised.
+
 | Slice | Prompt | Native | Product | Commit | Status | Notes |
 |-------|--------|--------|---------|--------|--------|-------|
 | MD-B0 | — | B0 | FOUNDATION | `f7abb431be9a15ab730b3fdd16baa8e83776c170` | IN_REVIEW | Controlled corpus baseline. Not ACCEPTED. |

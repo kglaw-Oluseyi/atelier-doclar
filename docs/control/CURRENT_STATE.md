@@ -61,4 +61,12 @@ Railway project: `atelier-doclar` only.
 
 `OI-FC1-004` is `RESOLVED_BY_EVENT_OS_ARCHITECTURE`. This is not production authorisation and does not accept any Foundation slice.
 
-Event OS S01–S03 remain formally accepted. EOS-S04 is CLOSED / ACCEPTED after hosted verification `MD-EOS-S04-R3-05` (`PASS WITH OBSERVATIONS`). Accepted-slice count remains 4. S4-61 and S4-62 are satisfied only for technical review and controlled handover. EOS-S04F is RATIFIED / NOT_STARTED; its Cursor prompt pack remains HELD and was not executed. Implementation of EOS-S04A–F is not authorised. Cursor did not deploy, authorise production, or start EOS-S05. Production is not authorised.
+Event OS S01–S03 remain formally accepted. EOS-S04 is CLOSED / ACCEPTED after hosted verification `MD-EOS-S04-R3-05` (`PASS WITH OBSERVATIONS`). Accepted-slice count remains 4. S4-61 and S4-62 are satisfied only for technical review and controlled handover. EOS-S04F is RATIFIED / NOT_STARTED; its Cursor prompt pack remains HELD and was not executed. Implementation of EOS-S04A–F is not authorised as a product slice. Production operations are not authorised (`productionAuthorised=false`).
+
+## Supersession — deploy-by-default (6 September 2026)
+
+**Former restriction:** Cursor did not deploy; Railway mutation was treated as a standing stop.
+
+**Status:** SUPERSEDED. Ordinary verified work is committed, pushed and deployed to affected `atelier-doclar` services by default. See `docs/control/DEPLOYMENT_AND_PRODUCTION_REALISM_POLICY.md`.
+
+**Safeguards retained:** Real client/guest data, live communications, payments, other Railway projects, force-push, destructive resets, and protected-gate signatures remain gated.

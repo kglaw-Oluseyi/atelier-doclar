@@ -6,6 +6,16 @@
 **Railway mutation:** none  
 **Real guest communication:** prohibited
 
+## Supersession — deploy-by-default (6 September 2026)
+
+**Former restriction:** Railway mutation: none.
+
+**Status:** SUPERSEDED for ordinary `atelier-doclar` Event OS deployment. Historical S04 closeout remains unchanged.
+
+**Current policy:** `docs/control/DEPLOYMENT_AND_PRODUCTION_REALISM_POLICY.md`
+
+**Safeguards retained:** Real guest communication, payments, other Railway projects, and `productionAuthorised` remain gated.
+
 ## What this slice owns
 
 Event-scoped guest communications, synthetic delivery operations, and two-way concierge follow-up.

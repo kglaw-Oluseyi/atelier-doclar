@@ -60,7 +60,17 @@ Enforcement is server-side.
 
 ## Persistence and audit
 
-`PlatformStore` remains the only mutation API. Memory and PostgreSQL adapters stay at parity. Mutable guest records use `expectedVersion`. Creates and consequential mutations accept idempotency keys. Audit is append-only and is not editable through guest-directory CRUD. Production migration and Railway mutation remain unauthorised.
+`PlatformStore` remains the only mutation API. Memory and PostgreSQL adapters stay at parity. Mutable guest records use `expectedVersion`. Creates and consequential mutations accept idempotency keys. Audit is append-only and is not editable through guest-directory CRUD.
+
+## Supersession — deploy-by-default (6 September 2026)
+
+**Former restriction:** Production migration and Railway mutation remain unauthorised.
+
+**Status:** SUPERSEDED for safe Event OS schema migrations and deployment inside Railway project `atelier-doclar`.
+
+**Current policy:** `docs/control/DEPLOYMENT_AND_PRODUCTION_REALISM_POLICY.md`
+
+**Safeguards retained:** `productionAuthorised` remains false. Real guest data, destructive resets, force-push, other repositories or Railway projects, and protected-gate signatures remain gated.
 
 ## Deferred
 
