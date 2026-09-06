@@ -428,3 +428,22 @@ EOS-S04A Milestone 1 work-state at the time this policy was established:
 | Status | IN_REVIEW / not ACCEPTED |
 | Residual limitations | TDR-S04A-011, 012, 015; IdP unselected; synthetic data; providers off. |
 | Railway / production / providers / later slices | Event OS deployed after this commit is pushed. Control Tower not deployed (runtime unchanged). EOS-S04B / S04F / S05 not started. |
+
+---
+
+## EOS-S04A final-acceptance remediation — concurrency, attention, salutation, prefetch
+
+| Field | Value |
+|-------|-------|
+| Starting HEAD | `234ab6c2347928900fb91e5b9022bb45b8d49176` |
+| Ending HEAD | this remediation commit chain |
+| Commits | product remediations plus `docs(control): record EOS-S04A acceptance remediation` |
+| Files changed | Shared-platform already-applied / attention / salutation governance; Event OS conflict flash, locked submits, prefetch boot containment; focused tests; control docs |
+| Schema / migration | Additive optional `preferredFormalSalutationGovernance` and `salutationDecision`. `SCHEMA_VERSION` remains `1`. |
+| API / permission / transaction / audit | Permissions unchanged. Identical replay reuses the existing record with no second audit or idempotency row. Genuine stale different values remain `VERSION_CONFLICT`. Salutation retain/update is audited through the addressing write. |
+| Frontend | Visible conflict (never success/neutral); in-progress lock; salutation governance radios; derived guest attention on directory and dossier. |
+| Verification | `pnpm typecheck` PASS. `pnpm test` PASS (shared-platform 175, event-os 40). `pnpm programme:validate` PASS. Event OS build PASS. `git diff --check` clean. Focused remediation e2e 7 passed. First full Event OS e2e: 39 passed / 4 failed (2 Next.js memory-restart TypeError on P11/P09; 2 stale-version-only addressing tests updated because identical replay is now already-applied). Isolated retry of those four specs: 7 passed. |
+| Failures found | Stale identical addressing was incorrectly expected to conflict; tests now change a field. Memory-restart TypeError remains infrastructure. |
+| Status | IN_REVIEW / not ACCEPTED |
+| Residual limitations | TDR-S04A-011; TDR-S04A-012 pending deployed prefetch classification; TDR-S04A-016/017 close only after deployed evidence; TDR-S04A-015; IdP unselected; synthetic data; providers off. |
+| Railway / production / providers / later slices | Event OS deployed after push. Control Tower not deployed. EOS-S04B / S04F / S05 not started. |

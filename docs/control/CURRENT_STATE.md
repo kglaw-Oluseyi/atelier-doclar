@@ -1,8 +1,8 @@
 # Current State
 
-**Updated:** EOS-S04A P11 whole-slice hardening and independent-review package (not accepted)
-**Prompt Control ID:** EOS-S04A-P11
-**Milestone:** `EOS-S04A` IN_REVIEW / whole-slice-review-ready / not accepted
+**Updated:** EOS-S04A final-acceptance concurrency remediation (not accepted)
+**Prompt Control ID:** EOS-S04A-FINAL-ACCEPTANCE-REMEDIATION
+**Milestone:** `EOS-S04A` IN_REVIEW / remediation deployed / focused re-verification required / not accepted
 
 MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is ACCEPTED. EOS-S02 is ACCEPTED. EOS-S03 is ACCEPTED. EOS-S04 is CLOSED / ACCEPTED (`PASS WITH OBSERVATIONS`). Accepted count remains 4. Native coverage is 62/62. S4-61 is satisfied for technical review only. S4-62 is satisfied for controlled technical acceptance/handover only. Independent, specialist and CEO production gates remain unsigned.
 
@@ -63,7 +63,7 @@ Railway project: `atelier-doclar` only.
 
 Event OS S01–S03 remain formally accepted. EOS-S04 is CLOSED / ACCEPTED after hosted verification `MD-EOS-S04-R3-05` (`PASS WITH OBSERVATIONS`). Accepted-slice count remains 4. S4-61 and S4-62 are satisfied only for technical review and controlled handover.
 
-**EOS-S04A:** Implemented through P00–P11. Status is **IN_REVIEW / whole-slice-review-ready**. It is **not ACCEPTED**. Independent, specialist and CEO production gates remain unsigned. Academy delta ACA-S04A is training evidence only and does not grant operational authority. Review record: `docs/control/EOS_S04A_WHOLE_SLICE_REVIEW.md`.
+**EOS-S04A:** Implemented through P00–P11 plus final-acceptance concurrency remediation. Status is **IN_REVIEW**. It is **not ACCEPTED**. Claude’s two MAJOR findings (stale-edit silence; false double-submit conflict) are recorded as TDR-S04A-016 and TDR-S04A-017 and stay blocking until deployed evidence is attached. Independent, specialist and CEO production gates remain unsigned. Academy delta ACA-S04A is training evidence only and does not grant operational authority. Review record: `docs/control/EOS_S04A_WHOLE_SLICE_REVIEW.md`. Focused re-verification: `docs/control/EOS_S04A_CLAUDE_IN_CHROME_FOCUSED_ACCEPTANCE_REMEDIATION.md`.
 
 **EOS-S04B, EOS-S04F, EOS-S05:** Not started. EOS-S04F remains RATIFIED / NOT_STARTED and HELD. Production operations are not authorised (`productionAuthorised=false`).
 

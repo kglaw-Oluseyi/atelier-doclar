@@ -386,7 +386,7 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 |-------|-------|
 | ID | `TDR-S04A-012` |
 | Source slice | EOS-S04A-P08 / P09 |
-| Description | Next.js RSC prefetch can still surface a 503 when the Event OS runtime is not yet ready. Guest pages now show a readiness/unavailable operational state after navigation, but prefetch noise was not independently reproduced in this environment. |
+| Description | Authenticated `?_rsc=` prefetch of `/app`, clients, events, my-work, admin and guest directory returned 503 when root-layout `ensureRuntime()` threw during boot. Layout now swallows boot unreadiness so prefetch is not an unexplained 503; pages classify unreadiness as `DEPENDENCY_UNAVAILABLE`. Local CEO/Planner/Auditor prefetch is not 503. Close only after a clean deployed reproduction. |
 | Classification | Related observation |
 | Severity | LOW |
 | Evidence | Event OS `ensureRuntime` / `/api/health/ready`; no failing P08/P09 case isolated to RSC prefetch |
@@ -396,8 +396,46 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 | Current owner | Event OS runtime hardening |
 | Required regression coverage | Prefetch of guest routes while runtime is down must not leak secrets or show another event's data |
 | Latest safe remediation milestone | Later Event OS runtime prompt |
-| Current status | OPEN |
-| Resolution evidence | |
+| Current status | IN_COVERAGE — locally contained; deployed classification pending |
+| Resolution evidence | Root layout no longer throws `ensureRuntime()` into Next.js `?_rsc=` 503. Local CEO/Planner/Auditor prefetch of `/app`, clients, events, my-work, admin and guest directory is not an unexplained 503. Unauthorised audit prefetch is a controlled `FORBIDDEN`, not 503. Do not mark CLOSED until a clean deployed prefetch reproduction is recorded. |
+
+### TDR-S04A-016 — Stale two-tab amendment was silent in the UI
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04A-016` |
+| Source slice | EOS-S04A final-acceptance / Claude whole-slice verification |
+| Description | Two tabs opened guest version 3. Tab A saved version 4. Tab B submitted stale version 3. Durable truth stayed correct. Tab B displayed neither success nor error. |
+| Classification | Blocking acceptance defect |
+| Severity | MAJOR |
+| Evidence | Claude whole-slice verification; `amendGuestAction` used droppable `?error=`; Next.js same-page server-action redirects can drop query params. |
+| Affected surface or contract | Guest amendment form, addressing and other S04A mutations, Command Atelier operational state |
+| Reason for deferral | Not deferred. Implemented in the final-acceptance remediation. Remains blocking until deployed two-tab evidence exists. |
+| Blocking | `BLOCKING` for EOS-S04A acceptance |
+| Current owner | EOS-S04A final-acceptance remediation |
+| Required regression coverage | Stale different-value submit shows conflict alert, no success, rejected values not persisted, reload required, retry locked; API PATCH returns 409 `VERSION_CONFLICT` |
+| Latest safe remediation milestone | This remediation + deployed focused verification |
+| Current status | IMPLEMENTED_PENDING_DEPLOYED_EVIDENCE |
+| Resolution evidence | Implementation present. Close only after deployed two-tab conflict evidence against the deployed SHA. |
+
+### TDR-S04A-017 — Identical double-submit left a false field conflict
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04A-017` |
+| Source slice | EOS-S04A final-acceptance / Claude whole-slice verification |
+| Description | Rapid double-click of Save Amendment produced one version increment, left the field `CONFLICTING`, and did not raise the guest-level attention indicator. |
+| Classification | Blocking acceptance defect |
+| Severity | MAJOR |
+| Evidence | Claude whole-slice verification; second identical submit raced `VERSION_CONFLICT`; attention projection omitted preferredName, dietary, accessibility and operationalNote. |
+| Affected surface or contract | Guest amend and other S04A high-risk mutations; directory/dossier attention |
+| Reason for deferral | Not deferred. Implemented in the final-acceptance remediation. Remains blocking until deployed double-submit evidence exists. |
+| Blocking | `BLOCKING` for EOS-S04A acceptance |
+| Current owner | EOS-S04A final-acceptance remediation |
+| Required regression coverage | Identical replay is already-applied; one version; no false `CONFLICTING`; no duplicate audit/idempotency; genuine different concurrent values still conflict and raise attention |
+| Latest safe remediation milestone | This remediation + deployed focused verification |
+| Current status | IMPLEMENTED_PENDING_DEPLOYED_EVIDENCE |
+| Resolution evidence | Implementation present. Close only after deployed identical double-submit evidence against the deployed SHA. |
 
 ### TDR-S04A-013 — Auditor-visible out-of-scope mutation controls
 
@@ -489,3 +527,4 @@ EOS-S04 remains CLOSED / ACCEPTED and is not reopened.
 | EOS-S04A-P08–P09 | Closed TDR-S04-001, TDR-S04-002, TDR-S04-003 and TDR-S04A-014 after frontend hardening, integration evidence and deployed-SHA observability. TDR-S04-006 moved to IN_COVERAGE. Entered TDR-S04A-012, TDR-S04A-013 and TDR-S04A-015 as non-blocking carry-forwards. TDR-S04A-011 remains blocking before client onboarding. EOS-S04 not reopened. EOS-S04A remains not accepted. |
 | EOS-S04A-P10 | Academy delta ACA-S04A and operator handover. Closed TDR-S04A-002 and TDR-S04A-003. TDR-S04A-011 remains blocking before client onboarding. EOS-S04A remains not accepted. |
 | EOS-S04A-P11 | Whole-slice hardening and independent-review package. EOS-S04A set to IN_REVIEW / not ACCEPTED. TDR-S04A-011 remains blocking before client onboarding. EOS-S04B / S04F / S05 not started. |
+| EOS-S04A final-acceptance remediation | Entered blocking TDR-S04A-016 and TDR-S04A-017 from Claude’s MAJOR findings. Implemented visible conflict, identical-replay idempotency, derived attention, explicit salutation retain/update, and local RSC-prefetch containment. TDR-S04A-012 moved to IN_COVERAGE pending deployed prefetch classification. EOS-S04A remains IN_REVIEW / not ACCEPTED. |
