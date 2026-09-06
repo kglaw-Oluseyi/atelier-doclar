@@ -3,7 +3,7 @@
 **Slice:** EOS-S04A — Guest Addressing, Relationships & Party Entitlements
 **Authorised starting HEAD:** `19973f1a0f1f399c74dec5f47b110f896aab785a`
 **Repository:** `kglaw-Oluseyi/atelier-doclar` · branch `main`
-**Railway / production / providers / later slices:** untouched throughout
+**Railway / production / providers / later slices:** Event OS in project `atelier-doclar` may be deployed after P07 for frontend visibility only. That deploy is not acceptance, protected-gate approval or production authorisation. Other Railway projects remain untouched.
 
 ---
 
@@ -208,3 +208,144 @@ EOS-S04A Milestone 1 work-state at the time this policy was established:
 | Accepted | No |
 | Deployed | No |
 | Production authorised | No |
+
+---
+
+## EOS-S04A-P03 — Guest services
+
+| Field | Value |
+|-------|-------|
+| Starting HEAD | `3fa43f096c56b263b5f98f4da01b4d16386cd226` |
+| Ending HEAD | `0de24a170929ebb0505a392f24f9a1d818a95850` |
+| Commit | `0de24a170929ebb0505a392f24f9a1d818a95850` |
+| Files changed | `packages/shared-platform/src/addressing-operations.ts`, `packages/shared-platform/src/addressing-projections.ts`, `packages/shared-platform/src/addressing-schemas.ts`, `packages/shared-platform/src/addressing-fixtures.ts`, `packages/shared-platform/src/guest-operations.ts`, `packages/shared-platform/src/service.ts`, `packages/shared-platform/src/index.ts` |
+| Schema / migration | Additive optional `ageBand` on addressing update and `ReconcileCompanionNamesInputSchema`. `SCHEMA_VERSION` remains `1`. Intake now persists structured addressing and computed child readiness. |
+| API / permission / transaction / audit | `PlatformService` mutations: `updateGuestAddressing`, `createGuestParty`, `addGuestPartyMember`, `removeGuestPartyMember`, `createGuestRelationship`, `administerCompanionEntitlement`, `nominateCompanion`, `createResponsibleAdultLink`, `reconcileCompanionNames`. Query: `getGuestAddressingWorkspace`. Coupled writes run inside one `mutate()` clone; a thrown error does not replace the store except audited VERSION_CONFLICT / TRANSITION_INVALID. S03 remains sole quantity authority. |
+| Frontend | None in this commit. |
+| Verification | Covered by the P03–P07 suite below. |
+| Failures found | Typecheck unused import / possible undefined party — resolved before commit. |
+| Browser evidence | Not applicable |
+| Residual limitations | UI remains P06/P07. |
+| Brought forward | P04–P07 |
+| Railway / production / providers / later slices | Untouched in this commit |
+
+---
+
+## EOS-S04A-P04 — Authority and privacy
+
+| Field | Value |
+|-------|-------|
+| Starting HEAD | `0de24a170929ebb0505a392f24f9a1d818a95850` |
+| Ending HEAD | `165ef73ad9e8fc196ebfbad57cad9a49623aad1b` |
+| Commit | `165ef73ad9e8fc196ebfbad57cad9a49623aad1b` |
+| Files changed | `packages/shared-platform/src/communications-operations.ts`, `packages/shared-platform/src/rsvp-operations.ts` |
+| Schema / migration | None |
+| API / permission / transaction / audit | Communications `guest.name` uses `renderGuestSalutation`. RSVP visible name prefers an explicit preferred display name. Directory `getGuest` / `listGuests` already project child and protocol fields in P03. |
+| Frontend | None in this commit. |
+| Verification | Covered by the P03–P07 suite below. |
+| Failures found | None |
+| Browser evidence | Not applicable |
+| Residual limitations | UI remains P06/P07. |
+| Brought forward | P05–P07 |
+| Railway / production / providers / later slices | Untouched in this commit |
+
+---
+
+## EOS-S04A-P05 — Backend invariant verification
+
+| Field | Value |
+|-------|-------|
+| Starting HEAD | `165ef73ad9e8fc196ebfbad57cad9a49623aad1b` |
+| Ending HEAD | `c6081fd93009397c951787fd54c56c4a575017dd` |
+| Commit | `c6081fd93009397c951787fd54c56c4a575017dd` |
+| Files changed | `packages/shared-platform/test/addressing-services.test.ts` |
+| Schema / migration | None |
+| API / permission / transaction / audit | Tests cover grant/denial, auditor min-necessary projection, cross-event SCOPE_MISMATCH, S03 expansion refusal, planner exception-review denial, exactly-once nomination, unnamed allowance, companionNames reconciliation without fabricating guests, child readiness, VERSION_CONFLICT rollback, and date-of-birth refusal. |
+| Frontend | None |
+| Verification | `pnpm --filter @maison-doclar/shared-platform test` 152 pass / 0 fail / 0 skip (18 new service tests). |
+| Failures found | None remaining |
+| Browser evidence | Not applicable |
+| Residual limitations | UI remains P06/P07. |
+| Brought forward | P06–P07 |
+| Railway / production / providers / later slices | Untouched in this commit |
+
+---
+
+## EOS-S04A-P06 — Frontend contracts
+
+| Field | Value |
+|-------|-------|
+| Starting HEAD | `c6081fd93009397c951787fd54c56c4a575017dd` |
+| Ending HEAD | `7bda73d398cc2f88a053226904c8ad33a5fb9eb6` |
+| Commit | `7bda73d398cc2f88a053226904c8ad33a5fb9eb6` |
+| Files changed | `apps/event-os/src/server/runtime.ts`, `apps/event-os/src/server/guest-scope.ts`, `apps/event-os/src/server/actions.ts`, `apps/event-os/src/app/api/events/[eventId]/guests/[guestId]/addressing/route.ts`, `apps/event-os/test/addressing-display.test.ts` |
+| Schema / migration | None |
+| API / permission / transaction / audit | Event OS applies missing S04A fixtures on boot. Server actions and `GET`/`PATCH` `/api/events/:eventId/guests/:guestId/addressing` call `PlatformService` only. Permission flags are server-derived. |
+| Frontend | Contracts only. |
+| Verification | Event OS unit tests 27 pass / 0 fail / 0 skip. |
+| Failures found | Incorrect addressing API import depth — resolved before commit. |
+| Browser evidence | Not applicable |
+| Residual limitations | Visible journey remains P07. |
+| Brought forward | P07 |
+| Railway / production / providers / later slices | Untouched in this commit |
+
+---
+
+## EOS-S04A-P07 — Guest experience
+
+| Field | Value |
+|-------|-------|
+| Starting HEAD | `7bda73d398cc2f88a053226904c8ad33a5fb9eb6` |
+| Ending HEAD | `5d821de9afc1d48c8772ff3f3cf6f6325dec4cee` |
+| Commit | `5d821de9afc1d48c8772ff3f3cf6f6325dec4cee` |
+| Files changed | `apps/event-os/src/components/guest-addressing-form.tsx`, `apps/event-os/src/components/guest-intake-form.tsx`, `apps/event-os/src/app/app/events/[eventId]/guests/[guestId]/page.tsx`, `apps/event-os/src/app/app/events/[eventId]/guests/page.tsx`, `apps/event-os/src/app/globals.css`, `apps/event-os/e2e/addressing.spec.ts`, `apps/event-os/e2e/guests.spec.ts` |
+| Schema / migration | None |
+| API / permission / transaction / audit | UI consumes the typed workspace only. Planner has no confirm control. Material failure states use `role="alert"`. |
+| Frontend | Intake and guest-detail addressing workspace: formal/familiar render, blank-title fallback, 360px wrap, `:focus-visible`, 200% zoom coverage in Playwright. |
+| Verification | `pnpm typecheck` PASS (7 packages). `pnpm test` PASS: design-system 1, shared-platform 152, programme-domain 155, event-os 27, programme-ingestion 46, programme-tower 42, control-tower 3 (426 pass / 0 fail / 0 skip). `pnpm programme:validate` PASS (84 slices, 0 cycles). `pnpm --filter @maison-doclar/event-os build` PASS. `git diff --check origin/main` clean. |
+| Failures found | Existing guest-directory e2e empty-state assertion updated because S04A fixtures are now loaded in Event OS. |
+| Browser evidence | Playwright specs `apps/event-os/e2e/addressing.spec.ts` and updated `guests.spec.ts`. Independent Claude-in-Chrome verification is prepared after deploy. |
+| Residual limitations | Playwright was not executed in this agent environment after the production build; Claude-in-Chrome remains the independent frontend verifier. |
+| Brought forward | Independent Milestone 2 review. P08 remains prohibited. |
+| Railway / production / providers / later slices | Deploy of existing project `atelier-doclar` Event OS is authorised after this vertical is pushed, for frontend visibility only. |
+
+---
+
+## Milestone 2 vertical evidence
+
+| State | EOS-S04A P03–P07 |
+|-------|------------------|
+| Implemented | Yes — services, permissions, projections, tests, Event OS contracts and guest addressing UI |
+| Locally verified | Yes — typecheck, 426 tests, programme validation, Event OS production build, `git diff --check` |
+| Pushed | Recorded after the authorised durability push |
+| Independently reviewed | Pending |
+| Accepted | No |
+| Deployed | Frontend-visibility deploy of Event OS in `atelier-doclar` only, after push. Not acceptance. |
+| Production authorised | No |
+
+### Requirements-to-evidence matrix
+
+| Requirement | Evidence |
+|-------------|----------|
+| Server org/client/event scope | `requireScopedGuest` / `SCOPE_MISMATCH`; tests for cross-event party and relationship |
+| Referential validation | Party, relationship, invitation and S03 authority checks in `addressing-operations.ts` |
+| S03 sole quantity authority | `authorisedCompanionAllowance` + expansion test |
+| Exactly-once companion materialisation | `nominateCompanion` version + idempotency tests |
+| Atomic coupled writes + rollback | `mutate()` clone; VERSION_CONFLICT leaves guest/nomination counts unchanged |
+| Optimistic conflict | `expectedVersion` on addressing, party membership, nomination |
+| Permission independent of UI | Service `mutate`/`authorizeQuery`; planner confirm and exception-review denied |
+| Min-necessary projections | `projectOperationalGuest` / `buildGuestAddressingWorkspace`; auditor test |
+| Addressing intake/amendment via shared schemas | Intake `addressingFromIntake`; `UpdateGuestAddressingInputSchema` |
+| Safe communications salutation | `templateVariablesFor` + P04 commit |
+| S03 `companionNames` reconciliation | `reconcileCompanionNames`; no fabricated guests |
+| Correlated audit | Existing `mutate`/`authorizeQuery` audit for success, DENIED, FAILED |
+| Accurate migration receipts | Unchanged from Milestone 1 |
+
+### Unresolved items
+
+| Item | Severity | Latest safe remediation |
+|------|----------|-------------------------|
+| Independent Milestone 2 review | — | After Claude-in-Chrome verification |
+| Guest Concierge / Gate-Security system roles (TDR-S04A-001) | LOW | Later authorised slice |
+| Programme catalog EOS-S04A id (TDR-S04A-002) | LOW | Programme admin |
+| P08 onward | — | Not authorised |

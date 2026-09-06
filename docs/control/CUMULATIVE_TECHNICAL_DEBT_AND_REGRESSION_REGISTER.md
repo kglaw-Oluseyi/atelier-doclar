@@ -249,8 +249,8 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 | Current owner | EOS-S04A-P01 / P03 / P05 |
 | Required regression coverage | Unnamed allowance has entitlementId only; materialisation is exactly-once; no people-count inflation |
 | Latest safe remediation milestone | EOS-S04A-P05 |
-| Current status | OPEN |
-| Resolution evidence | |
+| Current status | CLOSED |
+| Resolution evidence | `reconcileCompanionNames` persists free-text `companionNames` as `addressingReconciliationItems` only. `nominateCompanion` materialises exactly one guest under optimistic versioning and idempotency. Unnamed AVAILABLE entitlements carry no `nominatedGuestId`. Tests in `packages/shared-platform/test/addressing-services.test.ts`. |
 
 ### TDR-S04A-006 — Communications salutation uses `guest.name` without formal addressing
 
@@ -268,8 +268,8 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 | Current owner | EOS-S04A-P03 / P07 |
 | Required regression coverage | Confirmed formal salutation used when present; otherwise safe fallback; never a guessed honorific |
 | Latest safe remediation milestone | EOS-S04A-P07 |
-| Current status | OPEN |
-| Resolution evidence | |
+| Current status | CLOSED |
+| Resolution evidence | `templateVariablesFor` fills `guest.name` from `renderGuestSalutation`. Confirmed preferred formal salutation is used when present; otherwise a safe fallback. Honorifics are never inferred. `guestVisibleName` uses explicit preferred display name when present. |
 
 ### TDR-S04A-007 — Collection-clearing S04A rollback is unsafe
 
@@ -325,8 +325,8 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 | Current owner | EOS-S04A-P03 / P04 / P06 |
 | Required regression coverage | Server-side grant and denial tests; auditor child access is a minimum-necessary projection only; entitlement expansion is rejected even when the catalogue grant is present |
 | Latest safe remediation milestone | EOS-S04A-P06 |
-| Current status | OPEN |
-| Resolution evidence | |
+| Current status | CLOSED |
+| Resolution evidence | `PlatformService` enforces S04A permissions on every mutation and workspace query. `getGuest` / `listGuests` project child and protocol fields. Planner confirmation and exception review are denied with audit. Entitlement expansion beyond S03 allowance is rejected even with `guest.entitlement.manage`. Auditor child access is a minimum-necessary projection. |
 
 ### TDR-S04A-010 — Embedded OperationalGuest S04A fields were not validated at persist/hydrate
 
@@ -353,6 +353,9 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 
 - `TDR-S04A-007` — unsafe collection-clearing rollback. Closed by Milestone 1 scoped-receipt rollback.
 - `TDR-S04A-008` — invalid S04A persistence. Closed by Milestone 1 persist/hydrate schema validation.
+- `TDR-S04A-005` — S03 companion names reconciled without fabricating guests. Closed by P03/P05 nomination and reconciliation services.
+- `TDR-S04A-006` — communications salutation now uses safe structured addressing. Closed by P07.
+- `TDR-S04A-009` — server-side S04A permission and projection enforcement. Closed by P03/P04/P06.
 - `TDR-S04A-010` — unvalidated `OperationalGuest` S04A extensions. Closed by Milestone 1 guest persist/hydrate validation.
 
 EOS-S04 remains CLOSED / ACCEPTED and is not reopened.
@@ -366,3 +369,4 @@ EOS-S04 remains CLOSED / ACCEPTED and is not reopened.
 | EOS-S04A Milestone 1 remediation | Entered blocking TDR-S04A-007 and TDR-S04A-008 from independent review and closed them after scoped rollback and persist validation. Entered TDR-S04A-009 for server-side permission and projection enforcement (P03/P04/P06). TDR-S04A-005 retained for P03/P05 companion materialisation. EOS-S04 not reopened. |
 | EOS-S04A Milestone 1 M1R4 | Entered blocking TDR-S04A-010 for unvalidated guest addressing/ageBand/childReadiness and closed it after persist/hydrate validation. Not deferred to P03. |
 | Local / GitHub parity policy | Recorded `docs/control/LOCAL_GITHUB_PARITY_POLICY.md`. A later authorised push is durability only. It does not accept EOS-S04A, pass Milestone 1, or authorise P03, deployment or production. |
+| EOS-S04A-P03–P07 | Closed TDR-S04A-005, TDR-S04A-006 and TDR-S04A-009 after guest services, server-side permission/projection enforcement, companion-name reconciliation and safe communications salutation. EOS-S04 not reopened. EOS-S04A remains not accepted. |
