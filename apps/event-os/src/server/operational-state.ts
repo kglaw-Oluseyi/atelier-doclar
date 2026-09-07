@@ -124,7 +124,7 @@ export function guestDossierConflictDecision(input: {
   return { mutationLocked: showConflict, showConflict };
 }
 
-function isPlatformErrorLike(error: unknown): error is PlatformError {
+export function isPlatformErrorLike(error: unknown): error is PlatformError {
   if (error instanceof PlatformError) return true;
   if (!error || typeof error !== "object" || !("code" in error)) return false;
   const code = (error as { code?: unknown }).code;

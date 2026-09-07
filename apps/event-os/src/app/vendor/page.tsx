@@ -1,4 +1,4 @@
-import { FULFILMENT_STATES, PlatformError } from "@maison-doclar/shared-platform";
+import { FULFILMENT_STATES } from "@maison-doclar/shared-platform";
 import { redirect } from "next/navigation";
 import { VendorFrame } from "../../components/vendor-frame";
 import { IdempotencyField, PendingSubmit } from "../../components/atelier-pending-submit";
@@ -45,6 +45,9 @@ export default async function VendorPortalPage({
               {item.itemName}
               {item.variantLabel ? ` · ${item.variantLabel}` : ""} · ref {item.vendorReference}
             </p>
+            {item.headCircumferenceInches ? (
+              <p>Assigned cap circumference: {item.headCircumferenceInches} in</p>
+            ) : null}
             <p>Current milestone: {item.milestoneStatus.replaceAll("_", " ")}</p>
             <form action={vendorSubmitUpdateAction}>
               <input type="hidden" name="assignmentId" value={view.assignmentId} />
@@ -77,7 +80,9 @@ export default async function VendorPortalPage({
       </VendorFrame>
     );
   } catch (error) {
-    if (error instanceof PlatformError) redirect("/vendor/unavailable");
-    throw error;
+    if (error && typeof error === "object" && "digest" in error && String((error as { digest: unknown }).digest).startsWith("NEXT_REDIRECT")) {
+      throw error;
+    }
+    redirect("/vendor/unavailable");
   }
 }
