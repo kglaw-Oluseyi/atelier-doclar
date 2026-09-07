@@ -80,6 +80,33 @@ Starting baseline: `40d65fa97fc9f2f0424757b7abd27872c0644f21`.
 - `git diff --check` clean
 - Playwright `e2e/s04b-vertical.spec.ts` PASS after in-batch locator and redirect fixes
 
+## Accessibility and responsive remediation — 2026-09-07
+
+Starting SHA: `5fd7fbda224699b1d820de1aa8b3876f8594da5a`. Slice remains `IN_REVIEW`. Control Tower and EOS-S04C–F / EOS-S05 untouched.
+
+| Change | Detail |
+|--------|--------|
+| Functional token | `--at-champagne-functional` / `champagneFunctional` `#8B6E38` for light-surface indicators |
+| Decorative token | Approved `#B89A62` retained for threads and dark-surface focus |
+| Contrast | Functional on ivory 4.22:1, porcelain 4.60:1, parchment 3.70:1 |
+| Perimeter | SVG scales; wrapping numbered legend for checkpoint names |
+| Evidence | `e2e/s04b-responsive-a11y.spec.ts`; screenshots in `apps/event-os/test-results/eos-s04b-responsive/` |
+
+### First-run notes
+
+1. Design-system text-colour contract first matched `border-color` via a loose regex. Tightened to `(?<!-)color:` in-batch.
+2. Playwright CSS `zoom` set only in `addInitScript` did not survive Next.js navigations. Reapplied after each navigation in-batch. Overflow assertions still passed on the first run.
+3. No product contrast or overflow failures after the token change.
+
+### Gates
+
+- `pnpm typecheck` PASS (8 packages)
+- `pnpm test` PASS: academy 7, design-system 8, shared-platform 200, programme-domain 155, programme-ingestion 46, event-os 45, programme-tower 42, control-tower 3 (506 pass / 0 fail)
+- `pnpm programme:validate` PASS (84 slices, 0 cycles)
+- `pnpm --filter @maison-doclar/event-os build` PASS
+- `git diff --check` clean
+- Playwright `e2e/s04b-responsive-a11y.spec.ts` 4/4 PASS
+
 ### Not started
 
 EOS-S04C, EOS-S04D, EOS-S04E, EOS-S04F, EOS-S05. Academy P10 and whole-slice P11 are outside this milestone. Control Tower was not changed.
