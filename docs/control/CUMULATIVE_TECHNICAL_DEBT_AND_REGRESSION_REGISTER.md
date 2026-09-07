@@ -727,6 +727,26 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 
 ---
 
+### TDR-S04D-002 — Live church eligible headcount may include S04B verification residue
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04D-002` |
+| Source slice | EOS-S04D |
+| Description | S04D seed church entitlements are Ẹ̀bùnolúwa `...072`, Olúfẹ́mi `...073` and Adéṣínà `...076` (3). Independent review observed church eligible 4 with centre 3. The likely fourth distinct `guestId` is Tómiwà `...074`, a governed S04B verification assignment, not a seed rewrite. Legitimate durable membership must not be deleted to force church = 3. Extra entitlements are pre-client cleanup residue (`TDR-S04A-011`). |
+| Classification | In-slice related observation |
+| Severity | LOW |
+| Evidence | `phaseEligibleGuestIds`; S04D fixtures; Claude S04D review church eligible 4 / centre 3 |
+| Affected surface or contract | Forecast phase occupancy labels vs seed counts |
+| Reason for deferral | Membership is valid if present. UI now distinguishes eligible people from forecast centre. Cleanup remains the pre-client gate. |
+| Blocking | NON_BLOCKING |
+| Current owner | Event OS forecasting / synthetic cleanup |
+| Required regression coverage | Eligible vs centre labels; whole-event union ≠ phase sum |
+| Latest safe remediation milestone | Pre-client onboarding (`TDR-S04A-011`) |
+| Current status | OPEN |
+
+---
+
 ## Closed items
 
 - `TDR-S04A-007` — unsafe collection-clearing rollback. Closed by Milestone 1 scoped-receipt rollback.
@@ -788,3 +808,4 @@ These do not reopen EOS-S04A and do not create new blocking IDs.
 | EOS-S04C guest-renewal false-success remediation 2026-09-07 | Entered and remediated TDR-S04C-004. Persist-before-flash, shared conflict alert, lock-until-reload. Historical status IN_REVIEW / NOT READY. |
 | EOS-S04C formal technical acceptance 2026-09-07 | ChatGPT accepted EOS-S04C at SHA `b378fa4f092e4fa5237894975738e3f22b530d73`. Closed TDR-S04C-001–004. Catalogue accepted-slice count remains 4. EOS-S04D–F and EOS-S05 remain unauthorised. Production remains unauthorised. Documentation-only commit does not redeploy Event OS. |
 | EOS-S04D ratification MD-PR-S022 2026-09-07 | George Lawson ratifies the EOS-S04D packs and authorises P00–P11. Status RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS. Entered TDR-S04D-001 (non-blocking). EOS-S04E–F and EOS-S05 remain unauthorised. Production remains unauthorised. |
+| EOS-S04D action-result and ACA-S04D delivery remediation 2026-09-07 | Signed single-consume action results; canonical ACA-S04D route and catalogue seed; eligible vs forecast-centre labels. Entered TDR-S04D-002. Status remains IN_REVIEW / NOT READY. EOS-S04E–F and EOS-S05 not started. |

@@ -2,7 +2,7 @@
 
 **Slice ID:** `EOS-S04D`  
 **Prompt Control ID:** `MD-PR-S022`  
-**Status:** `IN_PROGRESS` (implementation complete; not accepted)  
+**Status:** `IN_REVIEW / NOT READY` (implementation plus action-result/ACA-S04D remediation; not accepted)
 **Catalogue slice:** no  
 **Production:** unauthorised (`productionAuthorised` remains false)  
 **Starting baseline:** `2f86fee762678d01e502a23a026511cafb4e3f57`
@@ -67,4 +67,4 @@ See `docs/control/CUMULATIVE_TECHNICAL_DEBT_AND_REGRESSION_REGISTER.md` item `TD
 
 ## Not accepted
 
-This record does not accept EOS-S04D. Independent Claude-in-Chrome verification is `docs/control/EOS_S04D_CLAUDE_IN_CHROME_VERIFICATION.md`.
+Independent focused Claude verification after this remediation is `docs/control/EOS_S04D_FOCUSED_CLAUDE_VERIFICATION.md`. Whole-slice prompt remains `docs/control/EOS_S04D_CLAUDE_IN_CHROME_VERIFICATION.md` and must not be re-run for already passed journeys.

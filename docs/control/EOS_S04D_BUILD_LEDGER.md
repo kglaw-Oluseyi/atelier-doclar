@@ -43,3 +43,7 @@ First Playwright run: 1 passed / 3 failed (strict-mode locators). After assertio
 `ACA-S04D` course-id union, assignment, Event OS academy surface. Thresholds unchanged: distinction ≥90, pass 80–89, retake <80. Completion never grants authority. Independent Claude-in-Chrome prompt prepared after deployment.
 
 EOS-S04E, EOS-S04F and EOS-S05 were not started.
+
+## Action-result and ACA-S04D delivery remediation
+
+Signed, action-scoped, single-consume results. Canonical `/app/academy/ACA-S04D`. Phase eligible vs centre labels. Status remains `IN_REVIEW / NOT READY`. Focused prompt: `EOS_S04D_FOCUSED_CLAUDE_VERIFICATION.md`.
