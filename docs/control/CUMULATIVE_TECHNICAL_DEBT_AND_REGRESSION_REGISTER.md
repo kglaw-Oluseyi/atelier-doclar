@@ -707,6 +707,24 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 | Current status | CLOSED |
 | Resolution evidence | `docs/control/EOS_S04C_GUEST_RENEWAL_FALSE_SUCCESS_REMEDIATION.md`; SHA `b378fa4f092e4fa5237894975738e3f22b530d73`; Railway deployment `22ac7b6e-93d2-4ba4-8913-a2564b427d8d`; `docs/control/EOS_S04C_ACCEPTANCE.md` |
 
+### TDR-S04D-001 — Parameter-set creation is role-gated, not a separate proposer/checker workflow
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04D-001` |
+| Source slice | EOS-S04D |
+| Description | Event-scoped model parameter sets may be created by CEO or Event Director (`model.parameters.manage`). The creating actor is recorded as owner and approver. Override and provision remain dual-controlled. Used parameter sets stay immutable; a new version does not rewrite an existing forecast run. |
+| Classification | In-slice related observation |
+| Severity | LOW |
+| Evidence | `createEventParameterSetOnSnap`; planner/sysadmin denied; existing run checksum preserved |
+| Affected surface or contract | Parameter governance |
+| Reason for deferral | Dual-control roles already gate the write. A second checker workflow would be a later authorised enhancement, not a current integrity failure. |
+| Blocking | NON_BLOCKING |
+| Current owner | Event OS forecasting |
+| Required regression coverage | Sysadmin cannot manage parameters; new parameter version does not rewrite prior runs |
+| Latest safe remediation milestone | A later authorised forecasting slice, if any |
+| Current status | OPEN |
+
 ---
 
 ## Closed items
@@ -733,7 +751,7 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 - `TDR-S04C-003` — Vendor access was a dead fixture link. Closed by vendor issue/renew/revoke plus 2026-09-07 acceptance at the same SHA.
 - `TDR-S04C-004` — Guest-access renewal false success. Closed by persist-before-flash conflict UI plus 2026-09-07 acceptance at SHA `b378fa4f092e4fa5237894975738e3f22b530d73` (Railway `22ac7b6e-93d2-4ba4-8913-a2564b427d8d`).
 
-EOS-S04 remains CLOSED / ACCEPTED and is not reopened. EOS-S04A is ACCEPTED and is not reopened. EOS-S04B is ACCEPTED and is not reopened. EOS-S04C is ACCEPTED and is not reopened.
+EOS-S04 remains CLOSED / ACCEPTED and is not reopened. EOS-S04A is ACCEPTED and is not reopened. EOS-S04B is ACCEPTED and is not reopened. EOS-S04C is ACCEPTED and is not reopened. EOS-S04D is IN_PROGRESS and is not accepted.
 
 ## Final acceptance observations (2026-09-07)
 
@@ -769,3 +787,4 @@ These do not reopen EOS-S04A and do not create new blocking IDs.
 | EOS-S04C primary-journey remediation 2026-09-07 | Entered blocking TDR-S04C-001–003 from Claude’s whole-slice findings. Remediated staff creation, merchandise-only guest grants, and vendor assignment/session lifecycle. Historical status IN_REVIEW / NOT READY. EOS-S04D–F and EOS-S05 not started. |
 | EOS-S04C guest-renewal false-success remediation 2026-09-07 | Entered and remediated TDR-S04C-004. Persist-before-flash, shared conflict alert, lock-until-reload. Historical status IN_REVIEW / NOT READY. |
 | EOS-S04C formal technical acceptance 2026-09-07 | ChatGPT accepted EOS-S04C at SHA `b378fa4f092e4fa5237894975738e3f22b530d73`. Closed TDR-S04C-001–004. Catalogue accepted-slice count remains 4. EOS-S04D–F and EOS-S05 remain unauthorised. Production remains unauthorised. Documentation-only commit does not redeploy Event OS. |
+| EOS-S04D ratification MD-PR-S022 2026-09-07 | George Lawson ratifies the EOS-S04D packs and authorises P00–P11. Status RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS. Entered TDR-S04D-001 (non-blocking). EOS-S04E–F and EOS-S05 remain unauthorised. Production remains unauthorised. |
