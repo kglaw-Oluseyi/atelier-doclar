@@ -785,6 +785,42 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 | Latest safe remediation milestone | Before multi-replica Event OS |
 | Current status | OPEN |
 
+### TDR-S04E-001 — Process-local action-result recall remains replica-unsafe
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04E-001` |
+| Source slice | EOS-S04E |
+| Description | Host and staff Atelier actions use the accepted signed single-consume action-result mechanism. Recall remains process-local, as recorded in `TDR-S04D-004`. |
+| Classification | Scale-out observation |
+| Severity | LOW |
+| Evidence | `docs/control/EOS_S04E_IMPLEMENTATION.md`; inherited `TDR-S04D-004` |
+| Affected surface or contract | Staff Atelier banners / action-result lifecycle |
+| Reason for deferral | Current Event OS is single-instance. The single-consume contract is already correct on one process. |
+| Blocking | NON_BLOCKING |
+| Current owner | Event OS shared action results |
+| Required regression coverage | Result cannot be replayed, misattributed, or shown after consume; replica-safe only after shared store |
+| Latest safe remediation milestone | Before multi-replica Event OS |
+| Current status | OPEN |
+
+### TDR-S04E-002 — Budget assurance remains fail-closed until finance authority
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04E-002` |
+| Source slice | EOS-S04E |
+| Description | Host budget assurance is an explicit unavailable projection (`FINANCE_AUTHORITY_ABSENT`). No parallel finance ledger was created. |
+| Classification | Dependency observation |
+| Severity | LOW |
+| Evidence | `budgetAssuranceProjections` fixture; host Assurance chapter copy |
+| Affected surface or contract | Host Assurance chapter |
+| Reason for deferral | Canonical finance authority does not exist. Fail-closed is the required behaviour. |
+| Blocking | NON_BLOCKING |
+| Current owner | Future finance authority |
+| Required regression coverage | Host never sees invented budget figures; availability flips only after a ratified finance source |
+| Latest safe remediation milestone | After a finance-authority slice |
+| Current status | OPEN |
+
 ---
 
 ## Closed items
@@ -856,3 +892,4 @@ These do not reopen EOS-S04A and do not create new blocking IDs.
 | EOS-S04D ratification MD-PR-S022 2026-09-07 | George Lawson ratifies the EOS-S04D packs and authorises P00–P11. Status RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS. Entered TDR-S04D-001 (non-blocking). EOS-S04E–F and EOS-S05 remain unauthorised. Production remains unauthorised. |
 | EOS-S04D action-result and ACA-S04D delivery remediation 2026-09-07 | Signed single-consume action results; canonical ACA-S04D route and catalogue seed; eligible vs forecast-centre labels. Entered TDR-S04D-002. Historical status IN_REVIEW / NOT READY. EOS-S04E–F and EOS-S05 not started. |
 | EOS-S04D formal technical acceptance 2026-09-07 | ChatGPT accepted EOS-S04D at SHA `64683a853ead39c62caeb2d2e9f26bcb9d1dca21`. Closed the blocking banner, ACA-S04D delivery and phase-labelling findings. Entered TDR-S04D-003–004 as non-blocking carry-forwards. TDR-S04D-001–002 remain OPEN. Catalogue accepted-slice count remains 4. EOS-S04E–F and EOS-S05 remain unauthorised. Production remains unauthorised. Documentation-only commit does not redeploy Event OS. |
+| EOS-S04E ratification and implementation MD-PR-S024 2026-09-07 | George Lawson ratifies the EOS-S04E packs and authorises P00–P11. Status RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS. Entered TDR-S04E-001–002 (non-blocking). TDR-S04D-004 remains OPEN. EOS-S04F and EOS-S05 remain unauthorised. Production remains unauthorised. |
