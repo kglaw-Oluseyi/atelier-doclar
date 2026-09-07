@@ -2,7 +2,7 @@
 
 **Slice ID:** `EOS-S04E`  
 **Prompt Control ID:** `MD-PR-S024`  
-**Status:** `RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS`  
+**Status:** `IN_REVIEW / NOT READY`  
 **Catalogue slice:** no  
 **Production:** unauthorised (`productionAuthorised` remains false)  
 **Starting baseline:** `3463590e5b3f6f2b4070140c73ee803386542c39`
@@ -58,7 +58,9 @@ Maker/checker: the staff publisher of a decision cannot review the resulting rec
 
 ## First-run verification
 
-Workspace `pnpm typecheck`, `pnpm test` (585 pass / 0 fail), `pnpm programme:validate` and `pnpm --filter @maison-doclar/event-os build` passed. `git diff --check` clean.
+Workspace `pnpm typecheck`, `pnpm test` (593 pass / 0 fail after acceptance remediation), `pnpm programme:validate` and `pnpm --filter @maison-doclar/event-os build` passed. `git diff --check` clean.
+
+Later acceptance remediation is recorded in `docs/control/EOS_S04E_ACCEPTANCE_REMEDIATION.md`. Current status is `IN_REVIEW / NOT READY`. This implementation record is not acceptance.
 
 `packages/shared-platform/test/atelier-journeys.test.ts` first run: 3 passed / 1 failed (idempotent replay with a stale expected version was treated as the same choice). Product behaviour was correct; the test was tightened. Second run: 4 passed.
 

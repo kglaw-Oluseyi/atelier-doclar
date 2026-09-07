@@ -3,7 +3,7 @@
 **Slice ID:** `EOS-S04E`  
 **Prompt Control ID:** `MD-PR-S024`  
 **Starting baseline:** `3463590e5b3f6f2b4070140c73ee803386542c39`  
-**Status:** `RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS`  
+**Status:** `IN_REVIEW / NOT READY`  
 **Production:** unauthorised  
 **Next slices:** EOS-S04F and EOS-S05 not started; not authorised by this overlay
 
@@ -36,4 +36,8 @@ Staff `/app/events/[eventId]/atelier`. Host `/atelier`, `/atelier/[token]`. Play
 
 ## P10–P11 — Academy, hardening, independent review
 
-ACA-S04E registered at `/app/academy/ACA-S04E`. Thresholds 80 / 90. Completion grants no authority. Independent verification prompt: `EOS_S04E_CLAUDE_IN_CHROME_VERIFICATION.md`. Claude verifies; Claude does not accept.
+ACA-S04E registered at `/app/academy/ACA-S04E`. Thresholds 80 / 90. Completion grants no authority. Independent verification prompt: `EOS_S04E_CLAUDE_IN_CHROME_VERIFICATION.md`. Focused re-verification: `EOS_S04E_FOCUSED_CLAUDE_VERIFICATION.md`. Claude verifies; Claude does not accept.
+
+## Acceptance remediation
+
+Edition lineage, staff-editor hydration and host `canDecide` were remediated from live Alpha One diagnosis. Reveal no longer publishes narrative drafts in place. Publishing supersedes all other published editions. The staff editor hydrates every edition-owned field from one draft or published source. Host decision authority is explicit, durable and renewable without rewriting the original grant. See `docs/control/EOS_S04E_ACCEPTANCE_REMEDIATION.md`.

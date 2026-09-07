@@ -150,3 +150,10 @@ Successor implementation after EOS-S04D requires a separate CEO decision. Cursor
 | S04E Cursor pack wording that holds routine commits, pushes or Railway deployment | SUPERSEDED for this authorised slice by deploy-by-default and the CEO overlay. Push and deploy Event OS in `atelier-doclar`. Deployment is not acceptance. |
 | EOS-S04F and EOS-S05 | Retained unauthorised / HELD. This overlay does not start them. |
 | Control Tower | Compatibility-only unless a ratified contract requires a genuine change. Not a deploy target for this slice. |
+
+## Addendum — 2026-09-07 EOS-S04E acceptance remediation
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| EOS-S04E `RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS` | SUPERSEDED for current programme language by `IN_REVIEW / NOT READY` after independent review blocked edition lineage, staff hydration and host `canDecide`. Implementation authority for the remediation remains. The slice is not accepted. |
+| “0 earlier editions preserved” as proof of data loss | Rejected. Live diagnosis is Outcome A plus a later in-place reveal publish. See `docs/control/EOS_S04E_ACCEPTANCE_REMEDIATION.md`. |

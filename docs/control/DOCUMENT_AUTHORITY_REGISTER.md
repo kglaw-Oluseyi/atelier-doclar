@@ -133,5 +133,7 @@ This addendum does not rewrite the B0 row set or the earlier S04A–S04D addenda
 | EOS-S04E implementation record | `docs/control/EOS_S04E_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | P00–P11; not acceptance. |
 | EOS-S04E frontend architecture | `docs/control/EOS_S04E_FRONTEND_ARCHITECTURE.md` | IMPLEMENTATION EVIDENCE | Staff Command Atelier; host editorial Atelier. |
 | EOS-S04E build ledger | `docs/control/EOS_S04E_BUILD_LEDGER.md` | IMPLEMENTATION EVIDENCE | Prompt-by-prompt ledger. |
-| EOS-S04E Claude-in-Chrome verification | `docs/control/EOS_S04E_CLAUDE_IN_CHROME_VERIFICATION.md` | INDEPENDENT REVIEW PACKAGE | Claude verifies; Claude does not accept. |
+| EOS-S04E Claude-in-Chrome verification | `docs/control/EOS_S04E_CLAUDE_IN_CHROME_VERIFICATION.md` | HISTORICAL INDEPENDENT REVIEW | Whole-slice prompt. Passed surfaces are not re-tested. |
+| EOS-S04E acceptance remediation | `docs/control/EOS_S04E_ACCEPTANCE_REMEDIATION.md` | CURRENT REMEDIATION EVIDENCE | Edition lineage, staff hydration and host `canDecide`. Status `IN_REVIEW / NOT READY`. |
+| EOS-S04E focused Claude verification | `docs/control/EOS_S04E_FOCUSED_CLAUDE_VERIFICATION.md` | INDEPENDENT REVIEW PACKAGE | Claude verifies; Claude does not accept. |
 

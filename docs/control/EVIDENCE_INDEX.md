@@ -387,7 +387,7 @@ ACCEPTED on `2026-09-07` by `ChatGPT / AI CTO` after Claude-in-Chrome verificati
 **Product:** `EVENT_OS`
 **Prompt Control ID:** `MD-PR-S024`
 **Title:** Maison Doclar Private Event Atelier — Event Blueprint, Journey & Host Experience
-**Status:** `RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS`
+**Status:** `IN_REVIEW / NOT READY`
 
 | Evidence ID | Type | Description | Location |
 |-------------|------|-------------|----------|
@@ -399,6 +399,8 @@ ACCEPTED on `2026-09-07` by `ChatGPT / AI CTO` after Claude-in-Chrome verificati
 | EV-EOS-S04E-FRONTEND | DOCUMENT | Frontend architecture | `docs/control/EOS_S04E_FRONTEND_ARCHITECTURE.md` |
 | EV-EOS-S04E-IMPL | DOCUMENT | Implementation record | `docs/control/EOS_S04E_IMPLEMENTATION.md` |
 | EV-EOS-S04E-CLAUDE | DOCUMENT | Independent Claude-in-Chrome verification prompt | `docs/control/EOS_S04E_CLAUDE_IN_CHROME_VERIFICATION.md` |
+| EV-EOS-S04E-REMEDIATE | DOCUMENT | Acceptance remediation for edition lineage, hydration and canDecide | `docs/control/EOS_S04E_ACCEPTANCE_REMEDIATION.md` |
+| EV-EOS-S04E-FOCUSED | DOCUMENT | Focused Claude re-verification prompt | `docs/control/EOS_S04E_FOCUSED_CLAUDE_VERIFICATION.md` |
 
 Not accepted. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised` remains false. Does not authorise EOS-S04F, EOS-S05, real data, providers or production.
 

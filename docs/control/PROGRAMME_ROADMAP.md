@@ -67,7 +67,7 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 | EOS-S04B | ACCEPTED — multi-phase events, arrival routing and perimeter access; not a catalogue slice; SHA `f9f218c9d3e357ba82e6c04e7409138267a94396` |
 | EOS-S04C | ACCEPTED — Aso-Ebi, Aso-Oke & Event Merchandise Coordination; not a catalogue slice; SHA `b378fa4f092e4fa5237894975738e3f22b530d73` |
 | EOS-S04D | ACCEPTED — Attendance Forecasting & Planning Intelligence; not a catalogue slice; SHA `64683a853ead39c62caeb2d2e9f26bcb9d1dca21`; `MD-PR-S022` / `MD-PR-S023` |
-| EOS-S04E | RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS — Event Blueprint, Journey & Host Experience; not a catalogue slice; `MD-PR-S024` |
+| EOS-S04E | IN_REVIEW / NOT READY — Event Blueprint, Journey & Host Experience; not a catalogue slice; `MD-PR-S024` |
 | EOS-S04F | RATIFIED / NOT_STARTED — Language, Cultural Text & Multilingual Editions; after EOS-S04E and before EOS-S05; execution HELD; implementation follows EOS-S04A–E |
 | All others | NOT_STARTED, READY, or BLOCKED only by valid Event OS / Event-Day dependencies |
 
@@ -75,8 +75,8 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 
 | Band | Content |
 |------|---------|
-| Now | Event OS S01–S03 accepted; EOS-S04 CLOSED / ACCEPTED; EOS-S04A–D ACCEPTED; EOS-S04E RATIFIED / IN_PROGRESS (not a catalogue slice); production unsigned; no real communication provider |
-| Next | Independent verification of EOS-S04E; do not implement EOS-S04F or EOS-S05 without separate CEO authority |
+| Now | Event OS S01–S03 accepted; EOS-S04 CLOSED / ACCEPTED; EOS-S04A–D ACCEPTED; EOS-S04E IN_REVIEW / NOT READY (not a catalogue slice); production unsigned; no real communication provider |
+| Next | Focused independent re-verification of EOS-S04E edition lineage, staff hydration and host decision authority; do not implement EOS-S04F or EOS-S05 without separate CEO authority |
 | Later | Event OS S01 after a new authorised instruction; Runtime after Event OS foundations |
 | Held | All 693 product/recon prompts except CT0/CT1 wrappers; EOS-S04F Cursor prompt pack (P00–P11) |
 | External | Independent, specialist, venue, CEO gates — unsigned |
