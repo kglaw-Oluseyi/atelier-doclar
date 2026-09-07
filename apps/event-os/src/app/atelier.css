@@ -1331,8 +1331,27 @@ body.atelier {
 .merchandise-atelier button:disabled,
 .merchandise-atelier [aria-disabled="true"],
 .merchandise-atelier input:disabled,
-.merchandise-atelier select:disabled {
+.merchandise-atelier select:disabled,
+.merchandise-atelier fieldset:disabled,
+.merchandise-atelier form[aria-busy="true"],
+.merchandise-atelier form[aria-busy="true"] * {
   cursor: not-allowed;
+}
+
+.merchandise-atelier fieldset:disabled {
+  pointer-events: none;
+}
+
+.lifecycle-fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-inline-size: 0;
+}
+
+.lifecycle-progress {
+  margin: 0 0 8px;
+  color: var(--at-umber);
 }
 
 .merchandise-atelier a:hover,

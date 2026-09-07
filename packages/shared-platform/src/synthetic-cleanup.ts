@@ -4,6 +4,7 @@ import { SYNTHETIC_SEED_ID } from "./synthetic-seed.js";
 import { emptySnapshot, type PlatformSnapshot } from "./store.js";
 
 export const SYNTHETIC_CLEANUP_CONFIRMATION = "SYNTHETIC_CLEANUP_CONFIRMED";
+export const ACCESS_LIFECYCLE_PROBE_VENDOR_ID = "eos-s04c-lifecycle-probe";
 
 type DocumentCollection = Exclude<keyof PlatformSnapshot, "audit" | "idempotency">;
 
@@ -143,6 +144,39 @@ export function assertCleanupConfirmation(confirmation: string): void {
   if (confirmation !== SYNTHETIC_CLEANUP_CONFIRMATION) {
     throw new Error("synthetic cleanup requires explicit confirmation SYNTHETIC_CLEANUP_CONFIRMED");
   }
+}
+
+export async function cleanupAccessLifecycleProbe(
+  client: PgQueryable,
+  vendorId = ACCESS_LIFECYCLE_PROBE_VENDOR_ID,
+): Promise<{ deletedAssignments: number; deletedSessions: number; deletedUpdates: number }> {
+  if (vendorId !== ACCESS_LIFECYCLE_PROBE_VENDOR_ID) {
+    throw new Error("cleanupAccessLifecycleProbe only deletes the governed lifecycle probe vendor id");
+  }
+  const assignments = await client.query<{ id: string; version: number }>(
+    "SELECT id, version FROM platform_documents WHERE collection = $1 AND body->>'vendorId' = $2",
+    ["vendorAssignments", vendorId],
+  );
+  let deletedSessions = 0;
+  let deletedUpdates = 0;
+  for (const row of assignments.rows) {
+    const sessions = await client.query(
+      "DELETE FROM platform_documents WHERE collection = $1 AND body->>'assignmentId' = $2",
+      ["vendorSessions", row.id],
+    );
+    const updates = await client.query(
+      "DELETE FROM platform_documents WHERE collection = $1 AND body->>'assignmentId' = $2",
+      ["vendorUpdates", row.id],
+    );
+    deletedSessions += sessions.rowCount ?? 0;
+    deletedUpdates += updates.rowCount ?? 0;
+    await client.query("DELETE FROM platform_documents WHERE collection = $1 AND id = $2 AND version = $3", [
+      "vendorAssignments",
+      row.id,
+      row.version,
+    ]);
+  }
+  return { deletedAssignments: assignments.rows.length, deletedSessions, deletedUpdates };
 }
 
 export async function recordCleanupAudit(

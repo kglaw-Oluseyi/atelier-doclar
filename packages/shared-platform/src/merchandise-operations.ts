@@ -844,6 +844,7 @@ export function submitVendorUpdateOnSnap(
   if (
     !assignment ||
     assignment.status !== "ACTIVE" ||
+    assignment.revokedAt ||
     assignment.vendorId !== actor.vendorId ||
     assignment.eventId !== actor.eventId ||
     assignment.organisationId !== actor.organisationId ||
@@ -851,6 +852,7 @@ export function submitVendorUpdateOnSnap(
   ) {
     throw new PlatformError("FORBIDDEN", "vendor assignment is not active for this event");
   }
+  bump(assignment, now, assignment.version);
   const fulfilment = snap.merchandiseFulfilments.find((item) => item.id === input.fulfilmentId);
   if (!fulfilment || fulfilment.eventId !== actor.eventId) {
     throw new PlatformError("NOT_FOUND", "fulfilment was not found");

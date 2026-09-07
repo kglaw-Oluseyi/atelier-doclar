@@ -105,8 +105,18 @@ export default async function MerchandisePage({
           { href: "#vendor-handoff", label: "Vendor" },
         ]}
       />
-      {flash ? <AtelierOperationalState state={operationalStateFromCode(flash.code, flash.message)} /> : null}
-      {queryState ? <AtelierOperationalState state={queryState} /> : null}
+      {flash ? (
+        <AtelierOperationalState
+          state={operationalStateFromCode(flash.code, flash.message)}
+          reloadHref={flash.code === "VERSION_CONFLICT" ? `/app/events/${eventId}/merchandise` : undefined}
+        />
+      ) : null}
+      {queryState ? (
+        <AtelierOperationalState
+          state={queryState}
+          reloadHref={queryState.reloadRequired ? `/app/events/${eventId}/merchandise` : undefined}
+        />
+      ) : null}
       {success ? <AtelierOperationalState state={success} /> : null}
       <MerchandiseWorkspace workspace={workspace} issued={issued} previewNames={previewNames} />
     </AppShell>

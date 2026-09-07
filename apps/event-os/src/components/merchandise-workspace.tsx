@@ -19,6 +19,7 @@ import {
 } from "../server/actions";
 import type { IssuedAccessFlash } from "../server/action-flash";
 import { AtelierEmptyState } from "./atelier-operational-state";
+import { LifecycleForm } from "./atelier-lifecycle-form";
 import { IdempotencyField, PendingSubmit } from "./atelier-pending-submit";
 import { CopyTestLink } from "./copy-test-link";
 import { StaffMerchandiseChoiceForm } from "./staff-merchandise-choice-form";
@@ -508,6 +509,9 @@ export function MerchandiseWorkspace({
             <CopyTestLink href={`/offers/${issued.token}`} testId="merch-copy-guest-link" />
           </div>
         ) : null}
+        {workspace.guestGrants.length === 0 ? (
+          <p data-testid="merch-guest-not-issued">Not issued</p>
+        ) : null}
         {workspace.guestGrants.map((grant) => (
           <article key={grant.id} className="merchandise-card">
             <h3 className="guest-name">{grant.guestDisplayName}</h3>
@@ -518,7 +522,7 @@ export function MerchandiseWorkspace({
             />
             {capabilities.canManageOffer && grant.status === "ACTIVE" ? (
               <div className="merch-actions">
-                <form action={renewMerchandiseGuestAccessAction}>
+                <LifecycleForm action={renewMerchandiseGuestAccessAction} testId="merch-guest-renew">
                   <input type="hidden" name="eventId" value={workspace.eventId} />
                   <input type="hidden" name="grantId" value={grant.id} />
                   <input type="hidden" name="expectedVersion" value={grant.version} />
@@ -531,22 +535,28 @@ export function MerchandiseWorkspace({
                     Reason
                     <input name="reason" required defaultValue="Renew private merchandise guest access" />
                   </label>
-                  <PendingSubmit>Renew</PendingSubmit>
-                </form>
-                <form action={revokeMerchandiseGuestAccessAction}>
+                  <PendingSubmit pendingLabel="Recording access…">Renew</PendingSubmit>
+                </LifecycleForm>
+                <LifecycleForm action={revokeMerchandiseGuestAccessAction} testId="merch-guest-revoke">
                   <input type="hidden" name="eventId" value={workspace.eventId} />
                   <input type="hidden" name="grantId" value={grant.id} />
                   <input type="hidden" name="expectedVersion" value={grant.version} />
                   <IdempotencyField />
                   <input type="hidden" name="reason" value="Revoke private merchandise guest access" />
-                  <PendingSubmit className="secondary">Revoke</PendingSubmit>
-                </form>
+                  <PendingSubmit className="secondary" pendingLabel="Recording access…">
+                    Revoke
+                  </PendingSubmit>
+                </LifecycleForm>
               </div>
             ) : null}
           </article>
         ))}
         {capabilities.canManageOffer && uniqueOfferGuests.length > 0 ? (
-          <form className="merchandise-form" action={issueMerchandiseGuestAccessAction} data-testid="merch-guest-access-issue">
+          <LifecycleForm
+            className="merchandise-form"
+            action={issueMerchandiseGuestAccessAction}
+            testId="merch-guest-access-issue"
+          >
             <h3>Issue guest access</h3>
             <input type="hidden" name="eventId" value={workspace.eventId} />
             <IdempotencyField />
@@ -568,8 +578,8 @@ export function MerchandiseWorkspace({
               Reason
               <input name="reason" required defaultValue="Issue private merchandise guest access" />
             </label>
-            <PendingSubmit>Issue guest access</PendingSubmit>
-          </form>
+            <PendingSubmit pendingLabel="Recording access…">Issue guest access</PendingSubmit>
+          </LifecycleForm>
         ) : (
           <p>Issue an offer before creating private guest access.</p>
         )}
@@ -672,6 +682,9 @@ export function MerchandiseWorkspace({
             <CopyTestLink href={`/vendor/${issued.token}`} testId="merch-copy-vendor-link" />
           </div>
         ) : null}
+        {workspace.vendorAssignments.length === 0 ? (
+          <p data-testid="merch-vendor-not-issued">Not issued</p>
+        ) : null}
         {workspace.vendorAssignments.map((item) => (
           <article key={item.id} className="merchandise-card">
             <h3>{item.vendorDisplayName}</h3>
@@ -683,7 +696,7 @@ export function MerchandiseWorkspace({
             <p>Prefix {item.tokenPrefix} · expires {item.expiresAt}</p>
             {capabilities.canManageVendorAssignment && item.status !== "REVOKED" ? (
               <div className="merch-actions">
-                <form action={renewVendorAssignmentAction} data-testid="merch-vendor-renew">
+                <LifecycleForm action={renewVendorAssignmentAction} testId="merch-vendor-renew">
                   <input type="hidden" name="eventId" value={workspace.eventId} />
                   <input type="hidden" name="assignmentId" value={item.id} />
                   <input type="hidden" name="expectedVersion" value={item.version} />
@@ -696,22 +709,24 @@ export function MerchandiseWorkspace({
                     Reason
                     <input name="reason" required defaultValue="Renew synthetic vendor access" />
                   </label>
-                  <PendingSubmit>Renew</PendingSubmit>
-                </form>
-                <form action={revokeVendorAssignmentAction} data-testid="merch-vendor-revoke">
+                  <PendingSubmit pendingLabel="Recording access…">Renew</PendingSubmit>
+                </LifecycleForm>
+                <LifecycleForm action={revokeVendorAssignmentAction} testId="merch-vendor-revoke">
                   <input type="hidden" name="eventId" value={workspace.eventId} />
                   <input type="hidden" name="assignmentId" value={item.id} />
                   <input type="hidden" name="expectedVersion" value={item.version} />
                   <IdempotencyField />
                   <input type="hidden" name="reason" value="Revoke vendor access" />
-                  <PendingSubmit className="secondary">Revoke</PendingSubmit>
-                </form>
+                  <PendingSubmit className="secondary" pendingLabel="Recording access…">
+                    Revoke
+                  </PendingSubmit>
+                </LifecycleForm>
               </div>
             ) : null}
           </article>
         ))}
         {capabilities.canManageVendorAssignment && workspace.collections.length > 0 && workspace.items.length > 0 ? (
-          <form className="merchandise-form" action={createVendorAssignmentAction} data-testid="merch-vendor-issue">
+          <LifecycleForm className="merchandise-form" action={createVendorAssignmentAction} testId="merch-vendor-issue">
             <h3>Assign a synthetic vendor</h3>
             <input type="hidden" name="eventId" value={workspace.eventId} />
             <IdempotencyField />
@@ -749,8 +764,8 @@ export function MerchandiseWorkspace({
               Reason
               <input name="reason" required defaultValue="Issue synthetic vendor assignment" />
             </label>
-            <PendingSubmit>Issue vendor access</PendingSubmit>
-          </form>
+            <PendingSubmit pendingLabel="Recording access…">Issue vendor access</PendingSubmit>
+          </LifecycleForm>
         ) : null}
       </section>
     </div>
