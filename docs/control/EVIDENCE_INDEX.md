@@ -336,13 +336,19 @@ ACCEPTED on `2026-09-07` by `ChatGPT / AI CTO` after Claude-in-Chrome first-vert
 
 **Slice ID:** `EOS-S04C`
 **Title:** Aso-Ebi, Aso-Oke & Event Merchandise Coordination
-**Status:** `DRAFT FOR CEO RATIFICATION — implementation not authorised`
+**Status:** `RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS`
+**Prompt Control ID:** `MD-PR-S020`
 **Position:** after EOS-S04B and before EOS-S05
 
 | ID | Kind | Summary | Location |
 |----|------|---------|----------|
-| EV-EOS-S04C-PACK | DOCUMENT | Controlled slice pack v1.0 draft | `docs/control/Maison_Doclar_EOS-S04C_Controlled_Slice_Pack_v1.0_DRAFT.docx` |
+| EV-EOS-S04C-PACK | DOCUMENT | Controlled slice pack v1.0 (filename retained DRAFT) | `docs/control/Maison_Doclar_EOS-S04C_Controlled_Slice_Pack_v1.0_DRAFT.docx` |
 | EV-EOS-S04C-PROMPTS | DOCUMENT | Controlled Cursor prompt pack v1.0 (P00–P11) | `docs/control/Maison_Doclar_EOS-S04C_Cursor_Prompt_Pack_v1.0.docx` |
+| EV-EOS-S04C-RATIFY | DOCUMENT | CEO ratification and implementation authority | `docs/control/EOS_S04C_RATIFICATION.md` |
+| EV-EOS-S04C-LEDGER | DOCUMENT | Slice build ledger | `docs/control/EOS_S04C_BUILD_LEDGER.md` |
+| EV-EOS-S04C-FRONTEND | DOCUMENT | Frontend architecture | `docs/control/EOS_S04C_FRONTEND_ARCHITECTURE.md` |
+| EV-EOS-S04C-IMPL | DOCUMENT | Implementation record | `docs/control/EOS_S04C_IMPLEMENTATION.md` |
+| EV-EOS-S04C-CLAUDE | DOCUMENT | Independent Claude-in-Chrome verification prompt | `docs/control/EOS_S04C_CLAUDE_IN_CHROME_VERIFICATION.md` |
 
 ## EOS-S04F
 

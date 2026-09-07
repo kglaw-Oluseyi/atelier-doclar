@@ -97,3 +97,12 @@ Successor implementation after EOS-S04A requires a separate CEO decision. Cursor
 | S04C Cursor pack “Railway / no action or deployment” and “Push held” | Historical pack wording. Deploy-by-default remains the current `atelier-doclar` rule **if** S04C is later authorised. It is not itself S04C implementation authority. |
 
 Successor implementation after EOS-S04B requires a separate CEO decision. Cursor must not start EOS-S04C–F or EOS-S05 from this acceptance record.
+
+## Addendum — 2026-09-07 EOS-S04C ratification (`MD-PR-S020`)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| EOS-S04C `DRAFT FOR CEO RATIFICATION — implementation not authorised` | SUPERSEDED by `docs/control/EOS_S04C_RATIFICATION.md`. Status is `RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS`. |
+| S04C Cursor pack “Railway / no action or deployment” and “Push held” | SUPERSEDED for this authorised slice by deploy-by-default and the CEO overlay. Push and deploy affected `atelier-doclar` services. Deployment is not acceptance. |
+| EOS-S04D–F and EOS-S05 | Retained unauthorised. This overlay does not start them. |
+| Slice pack §18 “approval of the draft does not itself authorise implementation” | Historical draft-pack rule. The 2026-09-07 overlay is the separate implementation-authority decision. |
