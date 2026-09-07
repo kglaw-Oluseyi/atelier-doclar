@@ -244,11 +244,14 @@ import {
   type AtelierSessionActor,
 } from "./atelier-access.js";
 import {
+  ensureNarrativeRevisionDraftOnSnap,
   issueAtelierAccessOnSnap,
+  issueAtelierStepUpOnSnap,
   publishAtelierOnSnap,
   publishCuratedUpdateOnSnap,
   publishDecisionRequestOnSnap,
   publishNarrativeEditionOnSnap,
+  renewAtelierAccessOnSnap,
   reviewHostDecisionOnSnap,
   revokeAtelierAccessOnSnap,
   submitHostDecisionOnSnap,
@@ -266,8 +269,10 @@ import {
   PublishCuratedUpdateInputSchema,
   PublishDecisionRequestInputSchema,
   PublishNarrativeEditionInputSchema,
+  RenewAtelierAccessInputSchema,
   ReviewHostDecisionInputSchema,
   RevokeAtelierAccessInputSchema,
+  StartNarrativeRevisionInputSchema,
   SubmitHostDecisionInputSchema,
   type AtelierAccessGrant,
   type EventAtelier,
@@ -2539,6 +2544,20 @@ export class PlatformService {
     });
   }
 
+  ensureAtelierNarrativeRevision(actor: ActorContext, raw: unknown): EventNarrativeEdition {
+    const input = parseStrict(StartNarrativeRevisionInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "atelier.publish",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "atelier.narrative.revision_started",
+      resourceType: "event_narrative_edition",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => ensureNarrativeRevisionDraftOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
   publishAtelierDecision(actor: ActorContext, raw: unknown): HostDecisionRequest {
     const input = parseStrict(PublishDecisionRequestInputSchema, raw);
     return this.mutate(actor, {
@@ -2601,6 +2620,60 @@ export class PlatformService {
       reason: input.reason,
       run: (snap, ctx) => revokeAtelierAccessOnSnap(snap, input, ctx.now),
     });
+  }
+
+  issueAtelierStepUp(actor: ActorContext, raw: unknown): { grant: AtelierAccessGrant; token: string } {
+    const input = parseStrict(RevokeAtelierAccessInputSchema, raw);
+    let token = "";
+    const grant = this.mutate(actor, {
+      permission: "atelier.access.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "atelier.access.step_up_issued",
+      resourceType: "magic_link_challenge",
+      resourceId: input.grantId,
+      reason: input.reason,
+      run: (snap, ctx) => {
+        const issued = issueAtelierStepUpOnSnap(
+          snap,
+          {
+            organisationId: input.organisationId,
+            eventId: input.eventId,
+            grantId: input.grantId,
+            reason: input.reason,
+          },
+          ctx.now,
+          ctx.actor.person.id,
+          this.atelierAccessConfig(),
+        );
+        token = issued.token;
+        return issued.grant;
+      },
+    });
+    return { grant, token };
+  }
+
+  renewAtelierAccess(actor: ActorContext, raw: unknown): { grant: AtelierAccessGrant; token: string; priorGrant: AtelierAccessGrant } {
+    const input = parseStrict(RenewAtelierAccessInputSchema, raw);
+    let token = "";
+    let priorGrant: AtelierAccessGrant | undefined;
+    const grant = this.mutate(actor, {
+      permission: "atelier.access.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "atelier.access.renewed",
+      resourceType: "atelier_access_grant",
+      resourceId: input.grantId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash({ ...input, token: undefined }),
+      run: (snap, ctx) => {
+        const renewed = renewAtelierAccessOnSnap(snap, input, ctx.now, ctx.actor.person.id, this.atelierAccessConfig());
+        token = renewed.token;
+        priorGrant = renewed.priorGrant;
+        return renewed.grant;
+      },
+    });
+    if (!priorGrant) throw new PlatformError("NOT_FOUND", "atelier grant was not found");
+    return { grant, token, priorGrant };
   }
 
   reviewAtelierDecision(actor: ActorContext, raw: unknown): HostDecisionReceipt {
@@ -2750,7 +2823,7 @@ export class PlatformService {
         eventId: grant.eventId,
         resourceType: "host_decision_receipt",
         resourceId: receipt.id,
-        correlationId: "atelier-decision",
+        correlationId: receipt.correlationId ?? receipt.id,
         occurredAt,
         actorType: "HOST_CAPABILITY",
         actorPersonId: grant.personId,

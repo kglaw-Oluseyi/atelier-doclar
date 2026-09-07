@@ -88,6 +88,7 @@ export const EventAtelierSchema = z
     lifecycleState: z.enum(ATELIER_LIFECYCLE_STATES),
     publicationState: z.enum(ATELIER_PUBLICATION_STATES),
     currentNarrativeEditionId: EventNarrativeEditionIdSchema.optional(),
+    currentNarrativeDraftId: EventNarrativeEditionIdSchema.optional(),
     themeLabel: NonEmptySchema.max(120),
     publishedAt: IsoDatetimeSchema.optional(),
     publishedByPersonId: PersonIdSchema.optional(),
@@ -140,6 +141,7 @@ export const EventNarrativeEditionSchema = z
     publicationState: z.enum(ATELIER_PUBLICATION_STATES),
     publishedAt: IsoDatetimeSchema.optional(),
     supersedesEditionId: EventNarrativeEditionIdSchema.optional(),
+    changeSummary: NonEmptySchema.max(800).optional(),
     provenance: NonEmptySchema.max(400),
     effectiveAt: IsoDatetimeSchema,
     ...versioned,
@@ -286,6 +288,7 @@ export const HostDecisionReceiptSchema = z
     finalOutcome: NonEmptySchema.max(240),
     reviewedByPersonId: PersonIdSchema.optional(),
     requestVersion: z.number().int().positive(),
+    correlationId: NonEmptySchema.max(120).optional(),
     ...versioned,
   })
   .strict();
@@ -398,6 +401,20 @@ export const PublishNarrativeEditionInputSchema = z
     culturalIntent: NonEmptySchema.max(800),
     designDirection: NonEmptySchema.max(800),
     provenance: NonEmptySchema.max(400),
+    changeSummary: NonEmptySchema.max(800).optional(),
+    expectedAtelierVersion: z.number().int().positive().optional(),
+  })
+  .strict();
+export const StartNarrativeRevisionInputSchema = z.object({ ...mutationBase }).strict();
+export const RenewAtelierAccessInputSchema = z
+  .object({
+    ...mutationBase,
+    grantId: AtelierAccessGrantIdSchema,
+    expectedVersion: z.number().int().positive(),
+    canDecide: z.boolean(),
+    canExport: z.boolean(),
+    ttlSeconds: z.number().int().positive().max(14 * 24 * 60 * 60).optional(),
+    purpose: z.enum(MAGIC_LINK_PURPOSES).optional(),
   })
   .strict();
 export const PublishDecisionRequestInputSchema = z
@@ -478,8 +495,10 @@ export type AtelierSession = z.infer<typeof AtelierSessionSchema>;
 export type S04EMigrationReceipt = z.infer<typeof S04EMigrationReceiptSchema>;
 export type PublishAtelierInput = z.infer<typeof PublishAtelierInputSchema>;
 export type PublishNarrativeEditionInput = z.infer<typeof PublishNarrativeEditionInputSchema>;
+export type StartNarrativeRevisionInput = z.infer<typeof StartNarrativeRevisionInputSchema>;
 export type PublishDecisionRequestInput = z.infer<typeof PublishDecisionRequestInputSchema>;
 export type IssueAtelierAccessInput = z.infer<typeof IssueAtelierAccessInputSchema>;
+export type RenewAtelierAccessInput = z.infer<typeof RenewAtelierAccessInputSchema>;
 export type RevokeAtelierAccessInput = z.infer<typeof RevokeAtelierAccessInputSchema>;
 export type SubmitHostDecisionInput = z.infer<typeof SubmitHostDecisionInputSchema>;
 export type ReviewHostDecisionInput = z.infer<typeof ReviewHostDecisionInputSchema>;

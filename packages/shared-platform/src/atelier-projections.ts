@@ -16,12 +16,56 @@ export interface AtelierStaffCapabilities {
   canAudit: boolean;
 }
 
+export interface AtelierNarrativeFields {
+  story: string;
+  atmosphere: string;
+  pillars: readonly string[];
+  culturalIntent: string;
+  designDirection: string;
+  provenance: string;
+}
+
+export interface AtelierEditorSource extends AtelierNarrativeFields {
+  source: "DRAFT" | "PUBLISHED";
+  editionId: string;
+  publicationState: string;
+  version: number;
+  publishedAt?: string;
+  authorPersonId?: string;
+  supersedesEditionId?: string;
+  changeSummary?: string;
+}
+
+export interface AtelierEditionHistoryItem {
+  id: string;
+  publicationState: string;
+  version: number;
+  publishedAt?: string;
+  authorPersonId?: string;
+  supersedesEditionId?: string;
+  changeSummary?: string;
+  provenance: string;
+  story: string;
+}
+
 export interface EventAtelierWorkspace {
   eventId: string;
   eventName: string;
   atelier: EventAtelier;
   genesisIntent: string;
-  narrative?: { story: string; atmosphere: string; pillars: readonly string[]; editionId: string; supersededCount: number };
+  narrative?: AtelierNarrativeFields & {
+    editionId: string;
+    publicationState: string;
+    version: number;
+    publishedAt?: string;
+    authorPersonId?: string;
+    supersedesEditionId?: string;
+    changeSummary?: string;
+    earlierPublishedCount: number;
+    supersededCount: number;
+  };
+  editor?: AtelierEditorSource;
+  history: readonly AtelierEditionHistoryItem[];
   chapters: readonly AtelierChapter[];
   decisions: readonly HostDecisionRequest[];
   receipts: readonly HostDecisionReceipt[];
@@ -70,9 +114,11 @@ export interface HostAtelierProjection {
     reviewStatus: string;
     nextOwner: string;
     finalOutcome: string;
+    correlationId?: string;
   }[];
   canDecide: boolean;
   stepUpRequired: boolean;
+  vision?: AtelierNarrativeFields & { editionId: string; version: number; publishedAt?: string };
 }
 
 const CHAPTER_TITLES: Record<AtelierChapterType, string> = {
@@ -110,10 +156,32 @@ export function buildEventAtelierWorkspace(
   const atelier = snap.eventAteliers.find((item) => item.eventId === eventId);
   if (!event || !atelier) return undefined;
   const genesis = snap.blueprintGenesises.find((item) => item.atelierId === atelier.id);
-  const narrative = snap.eventNarrativeEditions.find((item) => item.id === atelier.currentNarrativeEditionId);
-  const supersededCount = snap.eventNarrativeEditions.filter(
-    (item) => item.atelierId === atelier.id && item.publicationState === "SUPERSEDED",
+  const editions = snap.eventNarrativeEditions.filter((item) => item.atelierId === atelier.id);
+  const currentPublished = editions.find(
+    (item) => item.id === atelier.currentNarrativeEditionId && item.publicationState === "PUBLISHED",
+  );
+  const currentPointer = editions.find((item) => item.id === atelier.currentNarrativeEditionId);
+  const revisionDraft = editions.find(
+    (item) => item.id === atelier.currentNarrativeDraftId && item.publicationState === "DRAFT",
+  );
+  const editorSource = revisionDraft ?? currentPublished ?? currentPointer;
+  const earlierPublishedCount = editions.filter(
+    (item) =>
+      item.id !== currentPublished?.id &&
+      (item.publicationState === "SUPERSEDED" || item.publicationState === "PUBLISHED"),
   ).length;
+  const supersededCount = editions.filter((item) => item.publicationState === "SUPERSEDED").length;
+  const narrativeFields = (item: typeof currentPointer) =>
+    item
+      ? {
+          story: item.story,
+          atmosphere: item.atmosphere,
+          pillars: item.pillars,
+          culturalIntent: item.culturalIntent,
+          designDirection: item.designDirection,
+          provenance: item.provenance,
+        }
+      : undefined;
   const grants = snap.atelierAccessGrants
     .filter((item) => item.atelierId === atelier.id)
     .map((grant) => {
@@ -136,15 +204,62 @@ export function buildEventAtelierWorkspace(
     eventName: event.name,
     atelier,
     genesisIntent: genesis?.capturedIntent ?? "Being prepared.",
-    narrative: narrative
+    narrative:
+      currentPublished || currentPointer
+        ? {
+            ...(narrativeFields(currentPublished ?? currentPointer) ?? {
+              story: "",
+              atmosphere: "",
+              pillars: [],
+              culturalIntent: "",
+              designDirection: "",
+              provenance: "",
+            }),
+            editionId: (currentPublished ?? currentPointer)!.id,
+            publicationState: (currentPublished ?? currentPointer)!.publicationState,
+            version: (currentPublished ?? currentPointer)!.version,
+            publishedAt: (currentPublished ?? currentPointer)!.publishedAt,
+            authorPersonId: (currentPublished ?? currentPointer)!.authorPersonId,
+            supersedesEditionId: (currentPublished ?? currentPointer)!.supersedesEditionId,
+            changeSummary: (currentPublished ?? currentPointer)!.changeSummary,
+            earlierPublishedCount,
+            supersededCount,
+          }
+        : undefined,
+    editor: editorSource
       ? {
-          story: narrative.story,
-          atmosphere: narrative.atmosphere,
-          pillars: narrative.pillars,
-          editionId: narrative.id,
-          supersededCount,
+          source: editorSource.publicationState === "DRAFT" ? "DRAFT" : "PUBLISHED",
+          editionId: editorSource.id,
+          publicationState: editorSource.publicationState,
+          version: editorSource.version,
+          publishedAt: editorSource.publishedAt,
+          authorPersonId: editorSource.authorPersonId,
+          supersedesEditionId: editorSource.supersedesEditionId,
+          changeSummary: editorSource.changeSummary,
+          ...(narrativeFields(editorSource) ?? {
+            story: "",
+            atmosphere: "",
+            pillars: [],
+            culturalIntent: "",
+            designDirection: "",
+            provenance: "",
+          }),
         }
       : undefined,
+    history: editions
+      .filter((item) => item.publicationState === "PUBLISHED" || item.publicationState === "SUPERSEDED")
+      .sort((left, right) => Date.parse(right.publishedAt ?? right.createdAt) - Date.parse(left.publishedAt ?? left.createdAt))
+      .map((item) => ({
+        id: item.id,
+        publicationState: item.publicationState,
+        version: item.version,
+        publishedAt: item.publishedAt,
+        authorPersonId: item.authorPersonId,
+        supersedesEditionId: item.supersedesEditionId,
+        changeSummary: item.changeSummary,
+        provenance: item.provenance,
+        story: item.story,
+      })),
     chapters: snap.atelierChapters.filter((item) => item.atelierId === atelier.id),
     decisions: snap.hostDecisionRequests.filter((item) => item.atelierId === atelier.id),
     receipts: snap.hostDecisionReceipts.filter((item) => item.atelierId === atelier.id),
@@ -217,7 +332,14 @@ export function buildHostAtelierProjection(
       chapters.push({
         type,
         title: CHAPTER_TITLES[type],
-        body: `${narrative.story} ${narrative.atmosphere} Pillars: ${narrative.pillars.join(" · ")}.`,
+        body: [
+          narrative.story,
+          narrative.atmosphere,
+          `Pillars: ${narrative.pillars.join(" · ")}.`,
+          narrative.culturalIntent,
+          narrative.designDirection,
+          narrative.provenance,
+        ].join(" "),
       });
     } else if (type === "JOURNEY" && journey) {
       chapters.push({
@@ -318,9 +440,23 @@ export function buildHostAtelierProjection(
           reviewStatus: item.reviewStatus,
           nextOwner: item.nextOwner,
           finalOutcome: item.finalOutcome,
+          correlationId: item.correlationId,
         };
       }),
     canDecide: grant.canDecide,
     stepUpRequired,
+    vision: narrative
+      ? {
+          story: narrative.story,
+          atmosphere: narrative.atmosphere,
+          pillars: narrative.pillars,
+          culturalIntent: narrative.culturalIntent,
+          designDirection: narrative.designDirection,
+          provenance: narrative.provenance,
+          editionId: narrative.id,
+          version: narrative.version,
+          publishedAt: narrative.publishedAt,
+        }
+      : undefined,
   };
 }
