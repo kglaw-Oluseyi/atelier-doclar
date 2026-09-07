@@ -15,7 +15,11 @@ export function ActionResultBanner({
   if (!presented.view) return <ActionResultConsumer enabled={false} />;
   return (
     <>
-      <AtelierStateFocus targetId="operational-state" active={presented.view.kind === "conflict" || presented.view.kind === "forbidden"} />
+      <AtelierStateFocus
+        targetId="operational-state"
+        active={presented.view.kind === "conflict" || presented.view.kind === "forbidden" || presented.view.kind === "validation"}
+      />
+      <AtelierStateFocus targetId="placeholder-validation" active={presented.view.kind === "validation"} />
       <AtelierOperationalState
         state={presented.view}
         reloadAction={presented.mutationLocked ? reloadAction : undefined}

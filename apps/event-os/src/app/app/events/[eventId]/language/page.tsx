@@ -71,6 +71,7 @@ export default async function LanguagePage({
         items={[
           { href: "#language-preferences", label: "Preferences" },
           { href: "#language-cultural", label: "Cultural text" },
+          { href: "#language-source", label: "Source editions" },
           { href: "#language-translations", label: "Translations" },
           { href: "#language-coverage", label: "Coverage" },
           { href: "#language-assembly", label: "Recipient preview" },

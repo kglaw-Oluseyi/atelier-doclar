@@ -1651,6 +1651,33 @@ body.atelier {
   font-size: 0.9rem;
 }
 
+.language-history {
+  margin: 16px 0 0;
+  padding-inline-start: 20px;
+}
+
+.placeholder-inspector,
+.placeholder-validation {
+  display: grid;
+  gap: 8px;
+}
+
+.placeholder-validation {
+  border-top: 1px solid color-mix(in srgb, var(--at-rule, #d7cbb8) 80%, transparent);
+  padding-top: 8px;
+}
+
+.placeholder-validation:focus {
+  outline: 2px solid var(--at-accent, #8b6e38);
+  outline-offset: 4px;
+}
+
+.language-inline-check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 @media (min-width: 900px) {
   .language-compare {
     grid-template-columns: 1fr 1fr;

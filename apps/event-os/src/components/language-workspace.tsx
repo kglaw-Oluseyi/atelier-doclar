@@ -3,11 +3,15 @@ import {
   assembleRecipientContentAction,
   createCulturalSourceTextAction,
   createDependentEditionAction,
+  createSourceRevisionAction,
   decideCulturalTextAction,
+  decideSourceEditionAction,
   decideTranslationAction,
   recordLanguagePreferenceAction,
+  submitSourceRevisionAction,
 } from "../server/actions";
 import { IdempotencyField, PendingSubmit } from "./atelier-pending-submit";
+import { PlaceholderSetField } from "./placeholder-set-field";
 
 export function LanguageWorkspace({
   workspace,
@@ -16,7 +20,7 @@ export function LanguageWorkspace({
   workspace: EventLanguageWorkspace;
   mutationLocked: boolean;
 }) {
-  const primary = workspace.editions.find((item) => item.kind === "PRIMARY" && item.status === "APPROVED");
+  const primary = workspace.sourceLineage[0]?.current ?? workspace.editions.find((item) => item.kind === "PRIMARY" && item.status === "APPROVED");
   return (
     <div className="language-atelier" data-testid="language-workspace">
       <p className="lede" data-testid="language-convention">
@@ -134,6 +138,90 @@ export function LanguageWorkspace({
         ) : null}
       </section>
 
+      <section className="atelier-panel" id="language-source" data-testid="language-source">
+        <h2>Source editions</h2>
+        <p>Approved source text is never edited in place. A revision creates a new edition. The previous edition stays in history.</p>
+        {workspace.sourceLineage.map((line) => (
+          <article key={line.workId} className="language-source-card" data-testid={`source-lineage-${line.workId}`}>
+            <p className="eyebrow">{line.workTitle}</p>
+            <p data-testid="current-source-id">
+              Current source {line.current.id} · version {line.current.version} · {line.current.status}
+            </p>
+            <p>
+              Locale {line.current.languageName} ({line.current.languageTag}) · Author {line.current.authorName}
+              {line.current.reviewerName ? ` · Reviewer ${line.current.reviewerName}` : ""}
+            </p>
+            <p lang={line.current.htmlLang}>{line.current.blocks[0]?.exactText}</p>
+            <p data-testid="source-dependent-impact">
+              Dependent translations that will become stale:{" "}
+              {line.dependentImpact.filter((item) => item.willBecomeStale).map((item) => item.languageName).join(", ") || "none"}
+            </p>
+            {line.openRevision ? (
+              <div data-testid="source-open-revision">
+                <p>
+                  Open revision {line.openRevision.id} · {line.openRevision.status} · Author {line.openRevision.authorName}
+                  {line.openRevision.changeSummary ? ` · ${line.openRevision.changeSummary}` : ""}
+                </p>
+                <p>Prior edition {line.openRevision.supersedesEditionId}</p>
+                {workspace.capabilities.canManageEdition && line.openRevision.status === "DRAFT" ? (
+                  <form action={submitSourceRevisionAction}>
+                    <input type="hidden" name="eventId" value={workspace.eventId} />
+                    <input type="hidden" name="editionId" value={line.openRevision.id} />
+                    <input type="hidden" name="expectedVersion" value={line.openRevision.version} />
+                    <IdempotencyField />
+                    <PendingSubmit locked={mutationLocked}>Submit source revision for review</PendingSubmit>
+                  </form>
+                ) : null}
+                {workspace.capabilities.canPublishEdition && line.openRevision.status === "IN_REVIEW" ? (
+                  <form action={decideSourceEditionAction}>
+                    <input type="hidden" name="eventId" value={workspace.eventId} />
+                    <input type="hidden" name="editionId" value={line.openRevision.id} />
+                    <input type="hidden" name="expectedVersion" value={line.openRevision.version} />
+                    <input type="hidden" name="decision" value="APPROVED" />
+                    <IdempotencyField />
+                    <PendingSubmit locked={mutationLocked}>Approve source revision</PendingSubmit>
+                  </form>
+                ) : null}
+              </div>
+            ) : workspace.capabilities.canManageEdition ? (
+              <form action={createSourceRevisionAction} className="language-editor" data-testid="source-revision-form">
+                <input type="hidden" name="eventId" value={workspace.eventId} />
+                <input type="hidden" name="workId" value={line.workId} />
+                <input type="hidden" name="sourceEditionId" value={line.current.id} />
+                <input type="hidden" name="expectedVersion" value={line.current.version} />
+                <IdempotencyField />
+                <label>
+                  Revised source text
+                  <textarea name="primaryText" required rows={4} lang={line.current.htmlLang} defaultValue={line.current.blocks[0]?.exactText} />
+                </label>
+                <label>
+                  Purpose / context
+                  <input name="purposeContext" required defaultValue={line.current.purposeContext ?? line.current.blocks[0]?.purpose ?? "Invitation source"} />
+                </label>
+                <label>
+                  Change summary
+                  <input name="changeSummary" required defaultValue="Clarify the governed English source." />
+                </label>
+                <label className="language-inline-check">
+                  <input type="checkbox" name="submitForReview" value="1" defaultChecked />
+                  Submit for review now
+                </label>
+                <PendingSubmit locked={mutationLocked}>Start source revision</PendingSubmit>
+              </form>
+            ) : null}
+            <ol className="language-history" data-testid="source-edition-history">
+              {line.history.map((item) => (
+                <li key={item.id}>
+                  {item.id} · {item.status} · v{item.version}
+                  {item.supersedesEditionId ? ` · supersedes ${item.supersedesEditionId}` : ""}
+                  {item.changeSummary ? ` · ${item.changeSummary}` : ""}
+                </li>
+              ))}
+            </ol>
+          </article>
+        ))}
+      </section>
+
       <section className="atelier-panel" id="language-translations" data-testid="language-translations">
         <h2>Translation workspace</h2>
         <p>Source stays first. Target sits beside it on wide screens and beneath it on a narrow one.</p>
@@ -199,10 +287,10 @@ export function LanguageWorkspace({
                 <option value="COMPLETE">Translate entire message</option>
               </select>
             </label>
-            <label>
-              Translation
-              <textarea name="exactText" required rows={4} />
-            </label>
+            <PlaceholderSetField
+              expected={primary.expectedPlaceholders.length ? primary.expectedPlaceholders : primary.blocks[0]?.placeholderNames ?? ["guestName"]}
+              lang={undefined}
+            />
             <PendingSubmit locked={mutationLocked}>Save translation draft</PendingSubmit>
           </form>
         ) : null}
@@ -226,9 +314,19 @@ export function LanguageWorkspace({
             <p>
               {item.displayName} · requested {item.requestedLanguageTag ?? "unknown"} · selected {item.selectedLanguageName}
             </p>
-            <p className="md-status" data-tone="ok">
-              Ready for governed communications review · not dispatched
+            <p className="md-status" data-tone={item.status === "SUPERSEDED" || item.status === "STALE" ? "warn" : "ok"}>
+              {item.status === "SUPERSEDED" || item.status === "STALE"
+                ? `${item.status} · historical · not dispatched`
+                : "Ready for governed communications review · not dispatched"}
             </p>
+            {item.fallbackUsed ? (
+              <p data-testid="assembly-fallback">
+                Fallback used. Preference was not overwritten.
+                {item.units.find((unit) => unit.fallbackReason)?.fallbackReason
+                  ? ` Reason: ${item.units.find((unit) => unit.fallbackReason)?.fallbackReason}.`
+                  : ""}
+              </p>
+            ) : null}
             {item.units.map((unit) => (
               <p key={unit.selectedBlockId} lang={unit.selectedLanguageTag}>
                 {unit.renderedText}
@@ -240,7 +338,7 @@ export function LanguageWorkspace({
         {workspace.capabilities.canPreviewAssembly && workspace.works[0] && workspace.preferences[0] ? (
           <form action={assembleRecipientContentAction}>
             <input type="hidden" name="eventId" value={workspace.eventId} />
-            <input type="hidden" name="workId" value={workspace.works[0].id} />
+            <input type="hidden" name="workId" value={(workspace.works.find((item) => item.purpose === "GUEST_MESSAGE") ?? workspace.works[0]).id} />
             <label>
               Guest
               <select name="guestId" defaultValue={workspace.preferences[0].guestId}>

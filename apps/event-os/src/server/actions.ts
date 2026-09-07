@@ -3078,6 +3078,82 @@ export async function decideTranslationAction(formData: FormData): Promise<void>
   });
 }
 
+export async function createSourceRevisionAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const actionType = "language.source.revise";
+    const { actor } = await requireActor().catch((error) => languageFail(eventId, error, undefined, actionType));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await languageFail(eventId, new Error("No organisation assignment is available."), actor, actionType);
+    try {
+      getRuntime().service.createSourceRevision(actor, {
+        organisationId: organisation.id,
+        eventId,
+        workId: String(formData.get("workId") ?? ""),
+        sourceEditionId: String(formData.get("sourceEditionId") ?? ""),
+        primaryText: String(formData.get("primaryText") ?? ""),
+        purposeContext: String(formData.get("purposeContext") ?? "Source revision"),
+        changeSummary: String(formData.get("changeSummary") ?? "Source revision"),
+        submitForReview: String(formData.get("submitForReview") ?? "") === "1",
+        expectedVersion: Number(formData.get("expectedVersion")),
+        reason: String(formData.get("reason") ?? "Start governed source revision"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await languageFail(eventId, error, actor, actionType);
+    }
+    await languageOk(eventId, actor, actionType, "language-source");
+  });
+}
+
+export async function submitSourceRevisionAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const actionType = "language.source.submit";
+    const { actor } = await requireActor().catch((error) => languageFail(eventId, error, undefined, actionType));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await languageFail(eventId, new Error("No organisation assignment is available."), actor, actionType);
+    try {
+      getRuntime().service.submitSourceRevision(actor, {
+        organisationId: organisation.id,
+        eventId,
+        editionId: String(formData.get("editionId") ?? ""),
+        expectedVersion: Number(formData.get("expectedVersion")),
+        reason: String(formData.get("reason") ?? "Submit source revision for review"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await languageFail(eventId, error, actor, actionType);
+    }
+    await languageOk(eventId, actor, actionType, "language-source-submit");
+  });
+}
+
+export async function decideSourceEditionAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const actionType = "language.source.decide";
+    const { actor } = await requireActor().catch((error) => languageFail(eventId, error, undefined, actionType));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await languageFail(eventId, new Error("No organisation assignment is available."), actor, actionType);
+    try {
+      getRuntime().service.decideSourceEdition(actor, {
+        organisationId: organisation.id,
+        eventId,
+        editionId: String(formData.get("editionId") ?? ""),
+        decision: String(formData.get("decision") ?? "") === "REJECTED" ? "REJECTED" : "APPROVED",
+        expectedVersion: Number(formData.get("expectedVersion")),
+        notes: optionalFormValue(formData, "notes"),
+        reason: String(formData.get("reason") ?? "Review source revision"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await languageFail(eventId, error, actor, actionType);
+    }
+    await languageOk(eventId, actor, actionType, "language-source-decide");
+  });
+}
+
 export async function assembleRecipientContentAction(formData: FormData): Promise<void> {
   return await withDurable(async () => {
     const eventId = String(formData.get("eventId") ?? "");

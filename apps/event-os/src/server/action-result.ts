@@ -81,6 +81,9 @@ export function actionLabel(actionType: string): string {
     "language.translation.create": "Draft translation",
     "language.translation.decide": "Review translation",
     "language.assembly.preview": "Preview recipient assembly",
+    "language.source.revise": "Start source revision",
+    "language.source.submit": "Submit source revision",
+    "language.source.decide": "Review source revision",
   };
   return labels[actionType] ?? actionType.replaceAll(".", " ");
 }
