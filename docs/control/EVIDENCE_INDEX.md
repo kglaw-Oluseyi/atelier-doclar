@@ -381,6 +381,27 @@ ACCEPTED on `2026-09-07` by `ChatGPT / AI CTO` after Claude-in-Chrome verificati
 
 ACCEPTED on `2026-09-07` by `ChatGPT / AI CTO` after Claude-in-Chrome verification and action-result / ACA-S04D / phase-labelling remediation. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised` remains false. TDR-S04D-001–004 remain carried forward. Does not authorise EOS-S04E–F, EOS-S05, real data, providers or production.
 
+## EOS-S04E
+
+**Slice ID:** `EOS-S04E`
+**Product:** `EVENT_OS`
+**Prompt Control ID:** `MD-PR-S024`
+**Title:** Maison Doclar Private Event Atelier — Event Blueprint, Journey & Host Experience
+**Status:** `RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS`
+
+| Evidence ID | Type | Description | Location |
+|-------------|------|-------------|----------|
+| EV-EOS-S04E-PACK | DOCUMENT | Controlled slice pack v1.0 (filename retained DRAFT) | `docs/control/Maison_Doclar_EOS-S04E_Controlled_Slice_Pack_v1.0_DRAFT.docx` |
+| EV-EOS-S04E-PROMPTS | DOCUMENT | Controlled Cursor prompt pack v1.0 (P00–P11) | `docs/control/Maison_Doclar_EOS-S04E_Cursor_Prompt_Pack_v1.0.docx` |
+| EV-EOS-S04E-RATIFY | DOCUMENT | CEO ratification and implementation authority | `docs/control/EOS_S04E_RATIFICATION.md` |
+| EV-EOS-S04E-MAP | DOCUMENT | Canonical record mapping | `docs/control/EOS_S04E_CANONICAL_RECORD_MAPPING.md` |
+| EV-EOS-S04E-LEDGER | DOCUMENT | Slice build ledger | `docs/control/EOS_S04E_BUILD_LEDGER.md` |
+| EV-EOS-S04E-FRONTEND | DOCUMENT | Frontend architecture | `docs/control/EOS_S04E_FRONTEND_ARCHITECTURE.md` |
+| EV-EOS-S04E-IMPL | DOCUMENT | Implementation record | `docs/control/EOS_S04E_IMPLEMENTATION.md` |
+| EV-EOS-S04E-CLAUDE | DOCUMENT | Independent Claude-in-Chrome verification prompt | `docs/control/EOS_S04E_CLAUDE_IN_CHROME_VERIFICATION.md` |
+
+Not accepted. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised` remains false. Does not authorise EOS-S04F, EOS-S05, real data, providers or production.
+
 ## EOS-S04F
 
 **Slice ID:** `EOS-S04F`

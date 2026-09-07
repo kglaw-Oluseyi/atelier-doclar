@@ -31,6 +31,9 @@
 | `EVENT_OS_VENDOR_PEPPER` | Vendor assignment hashing material |
 | `EVENT_OS_VENDOR_SESSION_SECRET` | Vendor session HMAC |
 | `EVENT_OS_VENDOR_KEY_ID` | Current vendor key ring identifier |
+| `EVENT_OS_ATELIER_LINK_PEPPER` | Host Atelier magic-link hashing material |
+| `EVENT_OS_ATELIER_SESSION_SECRET` | Host Atelier session HMAC |
+| `EVENT_OS_ATELIER_KEY_ID` | Current host Atelier key ring identifier |
 
 ## Persistence
 

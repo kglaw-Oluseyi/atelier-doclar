@@ -178,6 +178,14 @@
       "product": "EVENT_OS",
       "title": "EOS-S04D Formal Technical Acceptance Record",
       "authorising_instruction": "Record formal technical acceptance of EOS-S04D after independent AI CTO review, Claude-in-Chrome verification and action-result / ACA-S04D / phase-labelling remediation; do not start EOS-S04E–F or EOS-S05, invent catalogue acceptance, or authorise production"
+    },
+    {
+      "prompt_control_id": "MD-PR-S024",
+      "native_id": "S04E",
+      "slice_id": "EOS-S04E",
+      "product": "EVENT_OS",
+      "title": "EOS-S04E — Maison Doclar Private Event Atelier: Event Blueprint, Journey & Host Experience",
+      "authorising_instruction": "CEO ratification of the EOS-S04E controlled slice and Cursor prompt packs as controlling requirements and implementation packs, subject to the 2026-09-07 authority overlay; implement P00–P11; push and deploy affected atelier-doclar Event OS; do not start EOS-S04F or EOS-S05, invent catalogue acceptance, or authorise production"
     }
   ]
 }
