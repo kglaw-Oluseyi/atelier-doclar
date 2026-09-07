@@ -1,6 +1,8 @@
 import { applyS04AFixturesIfMissing } from "./addressing-fixtures.js";
 import { applyS04BFixturesIfMissing } from "./programme-fixtures.js";
 import { applyEosS04BToSnapshot } from "./programme-migration.js";
+import { applyS04CFixturesIfMissing } from "./merchandise-fixtures.js";
+import { applyEosS04CToSnapshot } from "./merchandise-migration.js";
 import { loadNonProductionFixtures } from "./bootstrap.js";
 import { seededPermissions, seededRoles } from "./catalog.js";
 import type { PgQueryable } from "./postgres-schema.js";
@@ -79,6 +81,13 @@ function applyS04BLayer(store: PlatformStore, now = "2026-09-07T10:00:00.000Z"):
   if (withFixtures !== snap) store.replace(withFixtures);
 }
 
+function applyS04CLayer(store: PlatformStore, now = "2026-09-07T12:00:00.000Z"): void {
+  const snap = store.snapshot();
+  const migrated = applyEosS04CToSnapshot(snap, now);
+  const withFixtures = applyS04CFixturesIfMissing(migrated);
+  if (withFixtures !== snap) store.replace(withFixtures);
+}
+
 /** Replay-safe: insert missing catalogue rows only. Never rewrite accepted permission bodies. */
 export function ensureMissingCatalogueRecords(store: PlatformStore): void {
   const snap = store.snapshot();
@@ -105,6 +114,7 @@ export function applySyntheticSnapshot(store: PlatformStore, options: PlatformSe
   const withAddressing = applyS04AFixturesIfMissing(snap);
   if (withAddressing !== snap) store.replace(withAddressing);
   applyS04BLayer(store);
+  applyS04CLayer(store);
   return service;
 }
 
@@ -118,6 +128,7 @@ export async function applySyntheticSeedIfNeeded(
     const service = new PlatformService(store, options);
     ensureMissingCatalogueRecords(store);
     applyS04BLayer(store);
+    applyS04CLayer(store);
     return {
       service,
       seed: {
@@ -135,6 +146,7 @@ export async function applySyntheticSeedIfNeeded(
   const withAddressing = applyS04AFixturesIfMissing(snap);
   if (withAddressing !== snap) store.replace(withAddressing);
   applyS04BLayer(store);
+  applyS04CLayer(store);
   const durable = store as { flush?: () => Promise<void> };
   if (typeof durable.flush === "function") await durable.flush();
   const recordCount = countableRecords(store.snapshot());

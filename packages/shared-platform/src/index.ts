@@ -9,6 +9,7 @@ export {
   DEFAULT_TIMEZONE,
   SESSION_COOKIE,
   RSVP_SESSION_COOKIE,
+  VENDOR_SESSION_COOKIE,
   STAFF_SESSION_REVOCATION_REASONS,
   STAFF_SESSION_DENIAL_STATUSES,
   type StaffSessionDenialStatus,
@@ -44,6 +45,9 @@ export {
   CHECKPOINT_TYPES,
   ARRIVAL_ROUTE_KINDS,
   VEHICLE_CLASSES,
+  MERCHANDISE_ITEM_TYPES,
+  PARTICIPATION_CHOICES,
+  FULFILMENT_STATES,
   type StoreProductionStatus,
 } from "./constants.js";
 export { PlatformError, PLATFORM_ERROR_CODES, publicMessageFor, type PlatformErrorCode } from "./errors.js";
@@ -262,6 +266,66 @@ export {
   type EventProgrammeWorkspace,
   type ProgrammeCapabilities,
 } from "./programme-projections.js";
+export {
+  migrateEosS04C,
+  rollbackEosS04C,
+  applyEosS04CToSnapshot,
+  EOS_S04C_MIGRATION_ID,
+  EOS_S04C_MIGRATION_CHECKSUM,
+  type S04CMigrationResult,
+} from "./merchandise-migration.js";
+export {
+  applyS04CFixturesIfMissing,
+  S04C_FIXTURE_IDS,
+  S04C_VENDOR_TOKEN,
+  S04C_OTHER_VENDOR_TOKEN,
+} from "./merchandise-fixtures.js";
+export {
+  validateS04CPersistedCollections,
+  S04C_STORE_COLLECTIONS,
+} from "./merchandise-persistence.js";
+export {
+  assertNoProhibitedMerchandiseFields,
+  prohibitedMerchandisePayload,
+} from "./merchandise-operations.js";
+export {
+  buildEventMerchandiseWorkspace,
+  buildGuestMerchandiseProjection,
+  buildVendorPortalProjection,
+  merchandisePermissionAllowed,
+  type EventMerchandiseWorkspace,
+  type MerchandiseCapabilities,
+  type GuestMerchandiseProjection,
+  type VendorPortalProjection,
+} from "./merchandise-projections.js";
+export {
+  MerchandiseCollectionSchema,
+  MerchandiseItemSchema,
+  GuestOfferSchema,
+  GuestParticipationSchema,
+  CapMeasurementSchema,
+  FulfilmentSchema,
+  VendorAssignmentSchema,
+  CreateMerchandiseCollectionInputSchema,
+  CreateHostOfferRuleInputSchema,
+  RecordGuestParticipationInputSchema,
+  CaptureCapMeasurementInputSchema,
+  SubmitVendorUpdateInputSchema,
+  type MerchandiseCollection,
+  type MerchandiseItem,
+  type GuestOffer,
+  type GuestParticipation,
+  type CapMeasurement,
+  type Fulfilment,
+  type VendorAssignment,
+} from "./merchandise-schemas.js";
+export {
+  DEFAULT_NON_PRODUCTION_VENDOR_ACCESS,
+  assertVendorAccessConfig,
+  readVendorSession,
+  type VendorAccessConfig,
+  type VendorSessionActor,
+} from "./merchandise-vendor-access.js";
 export {
   ProgrammePhaseSchema,
   PhaseEntitlementSchema,

@@ -3,6 +3,7 @@ import {
   PERMISSION_KEYS,
   S04A_SENSITIVE_PERMISSIONS,
   S04B_SENSITIVE_PERMISSIONS,
+  S04C_SENSITIVE_PERMISSIONS,
   SCHEMA_VERSION,
   SYSTEM_ROLE_KEYS,
 } from "./constants.js";
@@ -84,6 +85,23 @@ const PERMISSION_IDS: Record<PermissionKey, string> = {
   "programme.vehicle.manage": "11111111-1111-4111-8111-111111111071",
   "programme.accessPlan.publish": "11111111-1111-4111-8111-111111111072",
   "programme.exception.review": "11111111-1111-4111-8111-111111111073",
+  "merch.collection.view": "11111111-1111-4111-8111-111111111074",
+  "merch.collection.manage": "11111111-1111-4111-8111-111111111075",
+  "merch.offer.view": "11111111-1111-4111-8111-111111111076",
+  "merch.offer.manage": "11111111-1111-4111-8111-111111111077",
+  "merch.offer.sponsor": "11111111-1111-4111-8111-111111111078",
+  "merch.participation.view": "11111111-1111-4111-8111-111111111079",
+  "merch.participation.manage": "11111111-1111-4111-8111-111111111080",
+  "merch.capMeasurement.view": "11111111-1111-4111-8111-111111111081",
+  "merch.capMeasurement.manage": "11111111-1111-4111-8111-111111111082",
+  "merch.fulfilment.view": "11111111-1111-4111-8111-111111111083",
+  "merch.fulfilment.manage": "11111111-1111-4111-8111-111111111084",
+  "merch.vendorAssignment.view": "11111111-1111-4111-8111-111111111085",
+  "merch.vendorAssignment.manage": "11111111-1111-4111-8111-111111111086",
+  "merch.exception.view": "11111111-1111-4111-8111-111111111087",
+  "merch.exception.review": "11111111-1111-4111-8111-111111111088",
+  "merch.report.view": "11111111-1111-4111-8111-111111111089",
+  "merch.audit.view": "11111111-1111-4111-8111-111111111090",
 };
 
 const ROLE_IDS: Record<(typeof SYSTEM_ROLE_KEYS)[number], string> = {
@@ -180,6 +198,23 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "programme.vehicle.manage",
     "programme.accessPlan.publish",
     "programme.exception.review",
+    "merch.collection.view",
+    "merch.collection.manage",
+    "merch.offer.view",
+    "merch.offer.manage",
+    "merch.offer.sponsor",
+    "merch.participation.view",
+    "merch.participation.manage",
+    "merch.capMeasurement.view",
+    "merch.capMeasurement.manage",
+    "merch.fulfilment.view",
+    "merch.fulfilment.manage",
+    "merch.vendorAssignment.view",
+    "merch.vendorAssignment.manage",
+    "merch.exception.view",
+    "merch.exception.review",
+    "merch.report.view",
+    "merch.audit.view",
   ],
   CLIENT_LEAD: [
     "organisation.view",
@@ -245,6 +280,14 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "programme.checkpoint.manage",
     "programme.entitlement.manage",
     "programme.vehicle.manage",
+    "merch.collection.view",
+    "merch.collection.manage",
+    "merch.offer.view",
+    "merch.offer.manage",
+    "merch.participation.view",
+    "merch.participation.manage",
+    "merch.fulfilment.view",
+    "merch.report.view",
   ],
   SYSTEM_ADMINISTRATOR: [
     "organisation.view",
@@ -274,6 +317,11 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "rsvp.directory.view",
     "msg.analytics.view",
     "programme.view",
+    "merch.collection.view",
+    "merch.offer.view",
+    "merch.fulfilment.view",
+    "merch.report.view",
+    "merch.audit.view",
   ],
 };
 
@@ -289,7 +337,8 @@ function permissionRecord(key: PermissionKey): Permission {
       BUSINESS_PERMISSIONS.includes(key) ||
       key.startsWith("audit.") ||
       (S04A_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
-      (S04B_SENSITIVE_PERMISSIONS as readonly string[]).includes(key)
+      (S04B_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
+      (S04C_SENSITIVE_PERMISSIONS as readonly string[]).includes(key)
         ? "SENSITIVE"
         : "NORMAL",
     schemaVersion: SCHEMA_VERSION,

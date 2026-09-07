@@ -45,6 +45,24 @@ import type {
   VehicleAssociation,
 } from "./programme-schemas.js";
 import type {
+  CapMeasurement,
+  ExternalContactLink,
+  Fulfilment,
+  GuestOffer,
+  GuestParticipation,
+  HostOfferRule,
+  ItemVariant,
+  MerchandiseCohort,
+  MerchandiseCohortMember,
+  MerchandiseCollection,
+  MerchandiseException,
+  MerchandiseItem,
+  S04CMigrationReceipt,
+  VendorAssignment,
+  VendorSession,
+  VendorUpdate,
+} from "./merchandise-schemas.js";
+import type {
   GuestDuplicateCandidate,
   GuestHousehold,
   GuestIntakeBatch,
@@ -138,6 +156,22 @@ export interface PlatformSnapshot {
   offlineAccessPackages: OfflineAccessPackage[];
   accessExceptions: AccessException[];
   s04bMigrationReceipts: S04BMigrationReceipt[];
+  merchandiseCollections: MerchandiseCollection[];
+  merchandiseItems: MerchandiseItem[];
+  merchandiseItemVariants: ItemVariant[];
+  merchandiseCohorts: MerchandiseCohort[];
+  merchandiseCohortMembers: MerchandiseCohortMember[];
+  hostOfferRules: HostOfferRule[];
+  guestOffers: GuestOffer[];
+  guestParticipations: GuestParticipation[];
+  capMeasurements: CapMeasurement[];
+  merchandiseFulfilments: Fulfilment[];
+  vendorAssignments: VendorAssignment[];
+  vendorUpdates: VendorUpdate[];
+  vendorSessions: VendorSession[];
+  externalContactLinks: ExternalContactLink[];
+  merchandiseExceptions: MerchandiseException[];
+  s04cMigrationReceipts: S04CMigrationReceipt[];
   rsvpPolicies: RsvpPolicy[];
   rsvpQuestionnaires: RsvpQuestionnaire[];
   rsvpInvitations: RsvpInvitation[];
@@ -225,6 +259,22 @@ export function emptySnapshot(): PlatformSnapshot {
     offlineAccessPackages: [],
     accessExceptions: [],
     s04bMigrationReceipts: [],
+    merchandiseCollections: [],
+    merchandiseItems: [],
+    merchandiseItemVariants: [],
+    merchandiseCohorts: [],
+    merchandiseCohortMembers: [],
+    hostOfferRules: [],
+    guestOffers: [],
+    guestParticipations: [],
+    capMeasurements: [],
+    merchandiseFulfilments: [],
+    vendorAssignments: [],
+    vendorUpdates: [],
+    vendorSessions: [],
+    externalContactLinks: [],
+    merchandiseExceptions: [],
+    s04cMigrationReceipts: [],
     rsvpPolicies: [],
     rsvpQuestionnaires: [],
     rsvpInvitations: [],
@@ -296,6 +346,22 @@ export function normalizeSnapshot(input: PlatformSnapshot): PlatformSnapshot {
     offlineAccessPackages: input.offlineAccessPackages ?? [],
     accessExceptions: input.accessExceptions ?? [],
     s04bMigrationReceipts: input.s04bMigrationReceipts ?? [],
+    merchandiseCollections: input.merchandiseCollections ?? [],
+    merchandiseItems: input.merchandiseItems ?? [],
+    merchandiseItemVariants: input.merchandiseItemVariants ?? [],
+    merchandiseCohorts: input.merchandiseCohorts ?? [],
+    merchandiseCohortMembers: input.merchandiseCohortMembers ?? [],
+    hostOfferRules: input.hostOfferRules ?? [],
+    guestOffers: input.guestOffers ?? [],
+    guestParticipations: input.guestParticipations ?? [],
+    capMeasurements: input.capMeasurements ?? [],
+    merchandiseFulfilments: input.merchandiseFulfilments ?? [],
+    vendorAssignments: input.vendorAssignments ?? [],
+    vendorUpdates: input.vendorUpdates ?? [],
+    vendorSessions: input.vendorSessions ?? [],
+    externalContactLinks: input.externalContactLinks ?? [],
+    merchandiseExceptions: input.merchandiseExceptions ?? [],
+    s04cMigrationReceipts: input.s04cMigrationReceipts ?? [],
     rsvpPolicies: input.rsvpPolicies ?? [],
     rsvpQuestionnaires: input.rsvpQuestionnaires ?? [],
     rsvpInvitations: input.rsvpInvitations ?? [],

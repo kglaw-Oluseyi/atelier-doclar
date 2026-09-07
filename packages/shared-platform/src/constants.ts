@@ -85,6 +85,21 @@ export const SHARED_PLATFORM_OWNERSHIP = {
   vehicleAssociation: PLATFORM_PACKAGE,
   offlineAccessPackage: PLATFORM_PACKAGE,
   accessException: PLATFORM_PACKAGE,
+  merchandiseCollection: PLATFORM_PACKAGE,
+  merchandiseItem: PLATFORM_PACKAGE,
+  merchandiseItemVariant: PLATFORM_PACKAGE,
+  merchandiseCohort: PLATFORM_PACKAGE,
+  merchandiseCohortMember: PLATFORM_PACKAGE,
+  hostOfferRule: PLATFORM_PACKAGE,
+  guestOffer: PLATFORM_PACKAGE,
+  guestParticipation: PLATFORM_PACKAGE,
+  capMeasurement: PLATFORM_PACKAGE,
+  merchandiseFulfilment: PLATFORM_PACKAGE,
+  vendorAssignment: PLATFORM_PACKAGE,
+  vendorUpdate: PLATFORM_PACKAGE,
+  vendorSession: PLATFORM_PACKAGE,
+  externalContactLink: PLATFORM_PACKAGE,
+  merchandiseException: PLATFORM_PACKAGE,
 } as const;
 
 /** Parallel product-owned truth stores are forbidden. Product projections may exist. */
@@ -116,6 +131,11 @@ export const FORBIDDEN_PARALLEL_TRUTH = [
   "CheckpointScanner",
   "OfflineAdmissionOutbox",
   "ParallelGuestCredential",
+  "MerchandiseGuest",
+  "MerchPaymentLedger",
+  "VendorStaffSession",
+  "ParallelMeasurementStore",
+  "HouseholdMerchandiseIdentity",
 ] as const;
 
 export const DEFAULT_TIMEZONE = "Africa/Lagos";
@@ -137,7 +157,7 @@ export const STAFF_SESSION_DENIAL_STATUSES = [
 export type StaffSessionDenialStatus = (typeof STAFF_SESSION_DENIAL_STATUSES)[number];
 export const ASSIGNMENT_STATUSES = ["PENDING", "ACTIVE", "SUSPENDED", "REVOKED", "EXPIRED"] as const;
 export const AUDIT_OUTCOMES = ["SUCCESS", "DENIED", "FAILED"] as const;
-export const ACTOR_TYPES = ["USER", "SERVICE", "SYSTEM", "GUEST_CAPABILITY"] as const;
+export const ACTOR_TYPES = ["USER", "SERVICE", "SYSTEM", "GUEST_CAPABILITY", "VENDOR_CAPABILITY"] as const;
 export const ROLE_EFFECTS = ["ALLOW", "DENY"] as const;
 export const CONSENT_STATUSES = ["RECORDED", "WITHDRAWN", "EXPIRED"] as const;
 export const VERIFICATION_STATES = ["UNVERIFIED", "HUMAN_VERIFIED", "SPECIALIST_REQUIRED"] as const;
@@ -238,6 +258,23 @@ export const PERMISSION_KEYS = [
   "programme.vehicle.manage",
   "programme.accessPlan.publish",
   "programme.exception.review",
+  "merch.collection.view",
+  "merch.collection.manage",
+  "merch.offer.view",
+  "merch.offer.manage",
+  "merch.offer.sponsor",
+  "merch.participation.view",
+  "merch.participation.manage",
+  "merch.capMeasurement.view",
+  "merch.capMeasurement.manage",
+  "merch.fulfilment.view",
+  "merch.fulfilment.manage",
+  "merch.vendorAssignment.view",
+  "merch.vendorAssignment.manage",
+  "merch.exception.view",
+  "merch.exception.review",
+  "merch.report.view",
+  "merch.audit.view",
 ] as const;
 
 export const SYSTEM_ROLE_KEYS = [
@@ -409,6 +446,123 @@ export const S04B_SENSITIVE_PERMISSIONS = [
   "programme.protectedAccess.grant",
   "programme.accessPlan.publish",
   "programme.exception.review",
+] as const;
+
+export const S04C_SENSITIVE_PERMISSIONS = [
+  "merch.offer.sponsor",
+  "merch.capMeasurement.view",
+  "merch.capMeasurement.manage",
+  "merch.vendorAssignment.manage",
+  "merch.exception.review",
+] as const;
+
+export const MERCHANDISE_ITEM_TYPES = [
+  "ASO_EBI_FABRIC",
+  "ASO_OKE_GELE",
+  "ASO_OKE_FILA",
+  "ASO_OKE_IPELE",
+  "ASO_OKE_SET",
+  "ACCESSORY",
+  "GIFT",
+  "EVENT_MERCHANDISE",
+  "MADE_TO_MEASURE_CAP",
+] as const;
+export const MERCHANDISE_COLLECTION_STATUSES = ["DRAFT", "ACTIVE", "CLOSED", "WITHDRAWN"] as const;
+export const MERCHANDISE_ITEM_STATUSES = ["DRAFT", "ACTIVE", "WITHDRAWN"] as const;
+export const HOST_OFFER_RULE_STATUSES = ["DRAFT", "ISSUED", "AMENDED", "WITHDRAWN", "CONFLICT_REVIEW"] as const;
+export const GUEST_OFFER_STATES = ["OFFERED", "ISSUED", "AMENDED", "WITHDRAWN", "CONFLICT_HOLD"] as const;
+export const PARTICIPATION_CHOICES = [
+  "FULL_PARTICIPATION",
+  "FABRIC_ONLY",
+  "ACCESSORY_ONLY",
+  "ALTERNATIVE",
+  "HOST_SPONSORED",
+  "DECLINE_GRACEFULLY",
+  "UNDECIDED",
+] as const;
+export const PARTICIPATION_STATUSES = ["RECORDED", "AMENDED", "WITHDRAWN"] as const;
+export const CAP_MEASUREMENT_SOURCES = ["GUEST_ENTERED", "STAFF_ASSISTED", "VENDOR_REPORTED"] as const;
+export const CAP_MEASUREMENT_STATUSES = ["ACTIVE", "CORRECTED", "WITHDRAWN"] as const;
+export const FULFILMENT_STATES = [
+  "OFFERED",
+  "GUEST_SELECTED",
+  "VENDOR_ACKNOWLEDGED",
+  "IN_PREPARATION",
+  "READY_FOR_COLLECTION",
+  "DISPATCHED",
+  "COLLECTED",
+  "DELIVERED",
+  "CLOSED",
+  "DECLINED",
+  "ON_HOLD",
+  "DELAYED",
+  "SHORTAGE",
+  "DAMAGED",
+  "REPLACEMENT_REQUIRED",
+  "UNCOLLECTED",
+  "CANCELLED",
+  "DISPUTED",
+] as const;
+export const EXTERNAL_COMMERCIAL_STATUSES = [
+  "NOT_REQUIRED",
+  "PAYMENT_PENDING_WITH_VENDOR",
+  "VENDOR_CONFIRMED",
+  "DISPUTED_WITH_VENDOR",
+  "WAIVED_OR_HOST_SPONSORED",
+] as const;
+export const VENDOR_ASSIGNMENT_STATUSES = ["ACTIVE", "EXPIRED", "REVOKED"] as const;
+export const VENDOR_UPDATE_REVIEW_STATES = ["PENDING_REVIEW", "ACCEPTED", "REJECTED"] as const;
+export const MERCHANDISE_EXCEPTION_TYPES = [
+  "DELAY",
+  "SHORTAGE",
+  "DAMAGE",
+  "REPLACEMENT",
+  "NON_COLLECTION",
+  "WRONG_RECIPIENT",
+  "WRONG_ITEM",
+  "DISPUTE",
+  "CONFLICTING_OFFERS",
+] as const;
+export const MERCHANDISE_EXCEPTION_STATUSES = ["OPEN", "IN_REVIEW", "RESOLVED", "DISMISSED"] as const;
+export const MERCHANDISE_AUDIENCE_KINDS = ["NAMED_GUESTS", "EXPLICIT_COHORT", "PHASE_AUDIENCE"] as const;
+export const EXTERNAL_CONTACT_CHANNELS = ["WHATSAPP", "TELEPHONE", "EMAIL", "WEB"] as const;
+export const CAP_CIRCUMFERENCE_MIN_INCHES = 18 as const;
+export const CAP_CIRCUMFERENCE_MAX_INCHES = 26 as const;
+export const VENDOR_SESSION_COOKIE = "md_event_os_vendor";
+export const S04C_VENDOR_PEPPER_REF = "s04c-vendor-pepper-not-for-production";
+export const PROHIBITED_MEASUREMENT_KEYS = [
+  "waist",
+  "waistInches",
+  "chest",
+  "chestInches",
+  "hip",
+  "hips",
+  "bust",
+  "height",
+  "heightInches",
+  "weight",
+  "neck",
+  "sleeve",
+  "inseam",
+  "dressSize",
+  "shoeSize",
+  "hatSize",
+  "bodyMeasurement",
+  "fittingPhoto",
+  "tailorNote",
+] as const;
+export const PROHIBITED_PAYMENT_KEYS = [
+  "amount",
+  "amountPaid",
+  "balance",
+  "price",
+  "cardNumber",
+  "bankAccount",
+  "sortCode",
+  "receipt",
+  "refund",
+  "iban",
+  "paymentInstrument",
 ] as const;
 
 export const PROGRAMME_PHASE_TYPES = [

@@ -5,6 +5,7 @@ import type { AuditEvent } from "./schemas.js";
 import { emptySnapshot, normalizeSnapshot, type IdempotencyRecord, type PlatformSnapshot, type PlatformStore } from "./store.js";
 import { validateS04APersistedCollections } from "./addressing-persistence.js";
 import { validateS04BPersistedCollections } from "./programme-persistence.js";
+import { validateS04CPersistedCollections } from "./merchandise-persistence.js";
 import type { PgQueryable, PgQueryResult, PgTransactor } from "./postgres-schema.js";
 
 type Collection = keyof Omit<PlatformSnapshot, "audit" | "idempotency">;
@@ -51,6 +52,22 @@ const COLLECTIONS: Collection[] = [
   "offlineAccessPackages",
   "accessExceptions",
   "s04bMigrationReceipts",
+  "merchandiseCollections",
+  "merchandiseItems",
+  "merchandiseItemVariants",
+  "merchandiseCohorts",
+  "merchandiseCohortMembers",
+  "hostOfferRules",
+  "guestOffers",
+  "guestParticipations",
+  "capMeasurements",
+  "merchandiseFulfilments",
+  "vendorAssignments",
+  "vendorUpdates",
+  "vendorSessions",
+  "externalContactLinks",
+  "merchandiseExceptions",
+  "s04cMigrationReceipts",
   "rsvpPolicies",
   "rsvpQuestionnaires",
   "rsvpInvitations",
@@ -132,6 +149,7 @@ export class PostgresPlatformStore implements PlatformStore {
     const normalised = normalizeSnapshot(next);
     validateS04APersistedCollections(normalised);
     validateS04BPersistedCollections(normalised);
+    validateS04CPersistedCollections(normalised);
     const previous = this.snapshot();
     this.state = structuredClone(normalised);
     this.pending = this.pending
@@ -273,6 +291,7 @@ export class PostgresPlatformStore implements PlatformStore {
     const normalised = normalizeSnapshot(next);
     validateS04APersistedCollections(normalised);
     validateS04BPersistedCollections(normalised);
+    validateS04CPersistedCollections(normalised);
     this.state = normalised;
   }
 }
