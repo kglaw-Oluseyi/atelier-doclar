@@ -49,6 +49,10 @@ export {
   MERCHANDISE_ITEM_TYPES,
   PARTICIPATION_CHOICES,
   FULFILMENT_STATES,
+  FORECAST_MODEL_VERSION,
+  DEFAULT_PARAMETER_SET_VERSION,
+  PROVISION_DOMAINS,
+  FORECAST_CONFIDENCE_LEVELS,
   type StoreProductionStatus,
 } from "./constants.js";
 export { PlatformError, PLATFORM_ERROR_CODES, publicMessageFor, type PlatformErrorCode } from "./errors.js";
@@ -288,6 +292,72 @@ export {
   validateS04CPersistedCollections,
   S04C_STORE_COLLECTIONS,
 } from "./merchandise-persistence.js";
+export {
+  migrateEosS04D,
+  rollbackEosS04D,
+  applyEosS04DToSnapshot,
+  EOS_S04D_MIGRATION_ID,
+  EOS_S04D_MIGRATION_CHECKSUM,
+  type S04DMigrationResult,
+} from "./forecast-migration.js";
+export {
+  applyS04DFixturesIfMissing,
+  S04D_FIXTURE_IDS,
+  S04D_KNOWN_COUNTS,
+} from "./forecast-fixtures.js";
+export {
+  validateS04DPersistedCollections,
+  S04D_STORE_COLLECTIONS,
+} from "./forecast-persistence.js";
+export {
+  assertNoProhibitedForecastFields,
+  prohibitedForecastPayload,
+  DEFAULT_FORECAST_POLICY_ID,
+  DEFAULT_PARAMETER_SET_ID,
+  buildForecastPopulation,
+  coreTruthFingerprint,
+} from "./forecast-operations.js";
+export {
+  computeForecast,
+  classifyAttendanceIntent,
+  displayRange,
+  currentInputChecksum,
+} from "./forecast-model.js";
+export {
+  buildEventForecastWorkspace,
+  buildHostForecastProjection,
+  buildForecastOverviewStrip,
+  forecastPermissionAllowed,
+  type EventForecastWorkspace,
+  type ForecastCapabilities,
+  type HostForecastProjection,
+} from "./forecast-projections.js";
+export {
+  ForecastPolicySchema,
+  ModelParameterSetSchema,
+  AttendanceForecastRunSchema,
+  ForecastEstimateSchema,
+  RunAttendanceForecastInputSchema,
+  ProposeForecastOverrideInputSchema,
+  DecideForecastOverrideInputSchema,
+  ProposeProvisionInputSchema,
+  DecideProvisionInputSchema,
+  ApproveHostProjectionInputSchema,
+  RecordCalibrationObservationInputSchema,
+  EvaluateForecastInputSchema,
+  CreateEventParameterSetInputSchema,
+  type ForecastPolicy,
+  type ModelParameterSet,
+  type AttendanceForecastRun,
+  type ForecastPopulationMember,
+  type ForecastEstimate,
+  type UncertaintyDriver,
+  type ConfidenceAssessment,
+  type ForecastOverride,
+  type OperationalProvisionRecommendation,
+  type CalibrationObservation,
+  type ForecastEvaluation,
+} from "./forecast-schemas.js";
 export {
   assertNoProhibitedMerchandiseFields,
   prohibitedMerchandisePayload,

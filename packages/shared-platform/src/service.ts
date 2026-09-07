@@ -197,6 +197,43 @@ import {
   type VendorUpdate,
 } from "./merchandise-schemas.js";
 import {
+  assertNoProhibitedForecastFields,
+  approveHostProjectionOnSnap,
+  createEventParameterSetOnSnap,
+  decideForecastOverrideOnSnap,
+  decideProvisionOnSnap,
+  evaluateForecastOnSnap,
+  proposeForecastOverrideOnSnap,
+  proposeProvisionOnSnap,
+  recordCalibrationObservationOnSnap,
+  runAttendanceForecastOnSnap,
+} from "./forecast-operations.js";
+import {
+  buildEventForecastWorkspace,
+  buildForecastOverviewStrip,
+  buildHostForecastProjection,
+  forecastPermissionAllowed,
+  type EventForecastWorkspace,
+  type HostForecastProjection,
+} from "./forecast-projections.js";
+import {
+  ApproveHostProjectionInputSchema,
+  CreateEventParameterSetInputSchema,
+  DecideForecastOverrideInputSchema,
+  DecideProvisionInputSchema,
+  EvaluateForecastInputSchema,
+  ProposeForecastOverrideInputSchema,
+  ProposeProvisionInputSchema,
+  RecordCalibrationObservationInputSchema,
+  RunAttendanceForecastInputSchema,
+  type AttendanceForecastRun,
+  type CalibrationObservation,
+  type ForecastEvaluation,
+  type ForecastOverride,
+  type ModelParameterSet,
+  type OperationalProvisionRecommendation,
+} from "./forecast-schemas.js";
+import {
   DEFAULT_NON_PRODUCTION_VENDOR_ACCESS,
   assertVendorAccessConfig,
   generateVendorAssignmentToken,
@@ -2390,6 +2427,172 @@ export class PlatformService {
 
   vendorAttemptCoreMutation(): never {
     throw new PlatformError("FORBIDDEN", "vendor sessions cannot mutate Guest, Invitation, RSVP, Party, Credential or Attendance records");
+  }
+
+  getEventForecastWorkspace(actor: ActorContext, organisationId: string, eventId: string): EventForecastWorkspace {
+    const { snap, ctx } = this.authorizeQuery(actor, "forecast.detail.view", { organisationId, eventId });
+    this.requireEvent(snap, organisationId, eventId);
+    const workspace = buildEventForecastWorkspace(
+      snap,
+      organisationId,
+      eventId,
+      forecastPermissionAllowed((permission) => this.permissionAllowed(ctx.actor, permission, { organisationId, eventId })),
+      ctx.now,
+    );
+    if (!workspace) throw new PlatformError("NOT_FOUND", "event was not found");
+    return workspace;
+  }
+
+  getForecastOverviewStrip(actor: ActorContext, organisationId: string, eventId: string) {
+    const { snap, ctx } = this.authorizeQuery(actor, "forecast.detail.view", { organisationId, eventId });
+    this.requireEvent(snap, organisationId, eventId);
+    return buildForecastOverviewStrip(snap, organisationId, eventId, ctx.now);
+  }
+
+  getHostForecastProjection(actor: ActorContext, organisationId: string, eventId: string): HostForecastProjection {
+    const { snap, ctx } = this.authorizeQuery(actor, "forecast.hostProjection.view", { organisationId, eventId });
+    this.requireEvent(snap, organisationId, eventId);
+    const projection = buildHostForecastProjection(snap, organisationId, eventId, ctx.now);
+    if (!projection) throw new PlatformError("NOT_FOUND", "event was not found");
+    return projection;
+  }
+
+  runAttendanceForecast(actor: ActorContext, raw: unknown): AttendanceForecastRun {
+    assertNoProhibitedForecastFields(raw);
+    const input = parseStrict(RunAttendanceForecastInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "forecast.run",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "forecast.run.created",
+      resourceType: "attendance_forecast_run",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => runAttendanceForecastOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  proposeForecastOverride(actor: ActorContext, raw: unknown): ForecastOverride {
+    assertNoProhibitedForecastFields(raw);
+    const input = parseStrict(ProposeForecastOverrideInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "forecast.override.propose",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "forecast.override.proposed",
+      resourceType: "forecast_override",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => proposeForecastOverrideOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  decideForecastOverride(actor: ActorContext, raw: unknown): ForecastOverride {
+    assertNoProhibitedForecastFields(raw);
+    const input = parseStrict(DecideForecastOverrideInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "forecast.override.approve",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: input.decision === "APPROVE" ? "forecast.override.approved" : "forecast.override.rejected",
+      resourceType: "forecast_override",
+      resourceId: input.overrideId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => decideForecastOverrideOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  proposeProvisionRecommendation(actor: ActorContext, raw: unknown): OperationalProvisionRecommendation {
+    assertNoProhibitedForecastFields(raw);
+    const input = parseStrict(ProposeProvisionInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "provision.propose",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "provision.proposed",
+      resourceType: "operational_provision_recommendation",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => proposeProvisionOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  decideProvisionRecommendation(actor: ActorContext, raw: unknown): OperationalProvisionRecommendation {
+    assertNoProhibitedForecastFields(raw);
+    const input = parseStrict(DecideProvisionInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "provision.approve",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: input.decision === "APPROVE" ? "provision.approved" : "provision.rejected",
+      resourceType: "operational_provision_recommendation",
+      resourceId: input.provisionId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => decideProvisionOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  approveHostForecastProjection(actor: ActorContext, raw: unknown): AttendanceForecastRun {
+    assertNoProhibitedForecastFields(raw);
+    const input = parseStrict(ApproveHostProjectionInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "forecast.override.approve",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "forecast.hostProjection.approved",
+      resourceType: "attendance_forecast_run",
+      resourceId: input.forecastRunId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => approveHostProjectionOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  createEventForecastParameterSet(actor: ActorContext, raw: unknown): ModelParameterSet {
+    assertNoProhibitedForecastFields(raw);
+    const input = parseStrict(CreateEventParameterSetInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "model.parameters.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "forecast.parameters.created",
+      resourceType: "model_parameter_set",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => createEventParameterSetOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  recordForecastCalibration(actor: ActorContext, raw: unknown): CalibrationObservation {
+    assertNoProhibitedForecastFields(raw);
+    const input = parseStrict(RecordCalibrationObservationInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "model.evaluate",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "forecast.calibration.recorded",
+      resourceType: "calibration_observation",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => recordCalibrationObservationOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  evaluateForecast(actor: ActorContext, raw: unknown): ForecastEvaluation {
+    assertNoProhibitedForecastFields(raw);
+    const input = parseStrict(EvaluateForecastInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "model.evaluate",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "forecast.evaluation.recorded",
+      resourceType: "forecast_evaluation",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => evaluateForecastOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
   }
 
   updateGuestAddressing(actor: ActorContext, raw: unknown): GuestAddressingWorkspace {
@@ -5166,6 +5369,17 @@ export class PlatformService {
       snap.merchandiseGuestSessions,
       snap.externalContactLinks,
       snap.merchandiseExceptions,
+      snap.forecastPolicies,
+      snap.modelParameterSets,
+      snap.attendanceForecastRuns,
+      snap.forecastPopulationMembers,
+      snap.forecastEstimates,
+      snap.uncertaintyDrivers,
+      snap.confidenceAssessments,
+      snap.forecastOverrides,
+      snap.operationalProvisionRecommendations,
+      snap.calibrationObservations,
+      snap.forecastEvaluations,
       snap.guestDuplicateCandidates,
       snap.guestIntakeBatches,
       snap.rsvpPolicies,

@@ -65,6 +65,20 @@ import type {
   MerchandiseGuestSession,
 } from "./merchandise-schemas.js";
 import type {
+  AttendanceForecastRun,
+  CalibrationObservation,
+  ConfidenceAssessment,
+  ForecastEstimate,
+  ForecastEvaluation,
+  ForecastOverride,
+  ForecastPolicy,
+  ForecastPopulationMember,
+  ModelParameterSet,
+  OperationalProvisionRecommendation,
+  S04DMigrationReceipt,
+  UncertaintyDriver,
+} from "./forecast-schemas.js";
+import type {
   GuestDuplicateCandidate,
   GuestHousehold,
   GuestIntakeBatch,
@@ -176,6 +190,18 @@ export interface PlatformSnapshot {
   externalContactLinks: ExternalContactLink[];
   merchandiseExceptions: MerchandiseException[];
   s04cMigrationReceipts: S04CMigrationReceipt[];
+  forecastPolicies: ForecastPolicy[];
+  modelParameterSets: ModelParameterSet[];
+  attendanceForecastRuns: AttendanceForecastRun[];
+  forecastPopulationMembers: ForecastPopulationMember[];
+  forecastEstimates: ForecastEstimate[];
+  uncertaintyDrivers: UncertaintyDriver[];
+  confidenceAssessments: ConfidenceAssessment[];
+  forecastOverrides: ForecastOverride[];
+  operationalProvisionRecommendations: OperationalProvisionRecommendation[];
+  calibrationObservations: CalibrationObservation[];
+  forecastEvaluations: ForecastEvaluation[];
+  s04dMigrationReceipts: S04DMigrationReceipt[];
   rsvpPolicies: RsvpPolicy[];
   rsvpQuestionnaires: RsvpQuestionnaire[];
   rsvpInvitations: RsvpInvitation[];
@@ -281,6 +307,18 @@ export function emptySnapshot(): PlatformSnapshot {
     externalContactLinks: [],
     merchandiseExceptions: [],
     s04cMigrationReceipts: [],
+    forecastPolicies: [],
+    modelParameterSets: [],
+    attendanceForecastRuns: [],
+    forecastPopulationMembers: [],
+    forecastEstimates: [],
+    uncertaintyDrivers: [],
+    confidenceAssessments: [],
+    forecastOverrides: [],
+    operationalProvisionRecommendations: [],
+    calibrationObservations: [],
+    forecastEvaluations: [],
+    s04dMigrationReceipts: [],
     rsvpPolicies: [],
     rsvpQuestionnaires: [],
     rsvpInvitations: [],
@@ -370,6 +408,18 @@ export function normalizeSnapshot(input: PlatformSnapshot): PlatformSnapshot {
     externalContactLinks: input.externalContactLinks ?? [],
     merchandiseExceptions: input.merchandiseExceptions ?? [],
     s04cMigrationReceipts: input.s04cMigrationReceipts ?? [],
+    forecastPolicies: input.forecastPolicies ?? [],
+    modelParameterSets: input.modelParameterSets ?? [],
+    attendanceForecastRuns: input.attendanceForecastRuns ?? [],
+    forecastPopulationMembers: input.forecastPopulationMembers ?? [],
+    forecastEstimates: input.forecastEstimates ?? [],
+    uncertaintyDrivers: input.uncertaintyDrivers ?? [],
+    confidenceAssessments: input.confidenceAssessments ?? [],
+    forecastOverrides: input.forecastOverrides ?? [],
+    operationalProvisionRecommendations: input.operationalProvisionRecommendations ?? [],
+    calibrationObservations: input.calibrationObservations ?? [],
+    forecastEvaluations: input.forecastEvaluations ?? [],
+    s04dMigrationReceipts: input.s04dMigrationReceipts ?? [],
     rsvpPolicies: input.rsvpPolicies ?? [],
     rsvpQuestionnaires: input.rsvpQuestionnaires ?? [],
     rsvpInvitations: input.rsvpInvitations ?? [],

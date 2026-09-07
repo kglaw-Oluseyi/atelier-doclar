@@ -275,6 +275,16 @@ export const PERMISSION_KEYS = [
   "merch.exception.review",
   "merch.report.view",
   "merch.audit.view",
+  "forecast.run",
+  "forecast.detail.view",
+  "forecast.hostProjection.view",
+  "forecast.override.propose",
+  "forecast.override.approve",
+  "provision.propose",
+  "provision.approve",
+  "model.parameters.manage",
+  "model.evaluate",
+  "forecast.audit.view",
 ] as const;
 
 export const SYSTEM_ROLE_KEYS = [
@@ -454,6 +464,68 @@ export const S04C_SENSITIVE_PERMISSIONS = [
   "merch.capMeasurement.manage",
   "merch.vendorAssignment.manage",
   "merch.exception.review",
+] as const;
+
+export const S04D_SENSITIVE_PERMISSIONS = [
+  "forecast.override.approve",
+  "provision.approve",
+  "model.parameters.manage",
+  "model.evaluate",
+  "forecast.audit.view",
+] as const;
+
+export const FORECAST_MODEL_VERSION = "FORECAST-MODEL-V1" as const;
+export const FORECAST_POLICY_VERSION = "FORECAST-POLICY-V1" as const;
+export const DEFAULT_PARAMETER_SET_VERSION = "PARAM-SET-V1" as const;
+export const FORECAST_STALE_AFTER_MS = 24 * 60 * 60 * 1000;
+export const FORECAST_RATE_SCALE = 10_000;
+
+export const FORECAST_RSVP_CLASSES = ["YES", "NO", "NO_RESPONSE", "UNKNOWN"] as const;
+export const FORECAST_SCOPES = ["PROGRAMME", "DAY", "PHASE", "LOCATION", "TRANSITION"] as const;
+export const FORECAST_RUN_STATUSES = ["SUCCEEDED", "FAILED", "SUPERSEDED"] as const;
+export const FORECAST_HOST_PROJECTION_STATUSES = ["DRAFT", "APPROVED", "WITHDRAWN"] as const;
+export const FORECAST_CONFIDENCE_LEVELS = ["HIGH", "MEDIUM", "LOW"] as const;
+export const FORECAST_PARAMETER_SCOPES = ["GLOBAL", "EVENT"] as const;
+export const FORECAST_PARAMETER_STATUSES = ["DRAFT", "ACTIVE", "SUPERSEDED", "WITHDRAWN"] as const;
+export const FORECAST_POLICY_STATUSES = ["ACTIVE", "SUPERSEDED", "WITHDRAWN"] as const;
+export const FORECAST_OVERRIDE_STATUSES = ["PROPOSED", "APPROVED", "REJECTED", "SUPERSEDED", "EXPIRED"] as const;
+export const FORECAST_OVERRIDE_FIELDS = ["LOW", "EXPECTED", "HIGH", "RANGE", "CONFIDENCE"] as const;
+export const PROVISION_DOMAINS = ["CATERING", "SEATING", "TRANSPORT", "PARKING", "STAFFING"] as const;
+export const PROVISION_STATUSES = ["PROPOSED", "APPROVED", "REJECTED", "SUPERSEDED", "EXPIRED"] as const;
+export const CALIBRATION_EVIDENCE_KINDS = ["SYNTHETIC_SHADOW", "RECONCILED_OPERATIONAL"] as const;
+export const CALIBRATION_COMPLETENESS = ["INCOMPLETE", "ACCEPTED"] as const;
+export const FORECAST_EVALUATION_STATUSES = ["SHADOW", "REVIEWED", "NOT_RELEASED"] as const;
+export const FORECAST_POPULATION_KINDS = ["PERSON", "UNNAMED_ENTITLEMENT"] as const;
+export const FORECAST_ASSUMPTION_KINDS = ["DATA_BACKED", "EXPLICIT_PARAMETER", "OPERATOR_JUDGMENT", "APPROVED_OVERRIDE", "UNRESOLVED_UNCERTAINTY"] as const;
+export const UNCERTAINTY_DRIVER_CODES = [
+  "NON_RESPONSE",
+  "UNNAMED_ENTITLEMENT",
+  "DATA_GAP",
+  "STALE_EVIDENCE",
+  "LOW_COVERAGE",
+  "PHASE_ELIGIBILITY_INCOMPLETE",
+  "PROVISIONAL_DEFAULTS",
+] as const;
+export const FORECAST_LOCALITY_LABELS = ["PROVISIONAL_DEFAULT_NOT_LAGOS_FACT"] as const;
+
+export const PROHIBITED_FORECAST_TRAIT_KEYS = [
+  "ethnicity",
+  "ethnic",
+  "religion",
+  "faith",
+  "health",
+  "disability",
+  "wealth",
+  "socioeconomic",
+  "socialClass",
+  "class",
+  "political",
+  "politics",
+  "biometric",
+  "surnameProxy",
+  "titleProxy",
+  "addressProxy",
+  "protectedCharacteristic",
 ] as const;
 
 export const MERCHANDISE_ITEM_TYPES = [

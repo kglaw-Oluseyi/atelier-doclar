@@ -4,6 +4,7 @@ import {
   S04A_SENSITIVE_PERMISSIONS,
   S04B_SENSITIVE_PERMISSIONS,
   S04C_SENSITIVE_PERMISSIONS,
+  S04D_SENSITIVE_PERMISSIONS,
   SCHEMA_VERSION,
   SYSTEM_ROLE_KEYS,
 } from "./constants.js";
@@ -102,6 +103,16 @@ const PERMISSION_IDS: Record<PermissionKey, string> = {
   "merch.exception.review": "11111111-1111-4111-8111-111111111088",
   "merch.report.view": "11111111-1111-4111-8111-111111111089",
   "merch.audit.view": "11111111-1111-4111-8111-111111111090",
+  "forecast.run": "11111111-1111-4111-8111-111111111091",
+  "forecast.detail.view": "11111111-1111-4111-8111-111111111092",
+  "forecast.hostProjection.view": "11111111-1111-4111-8111-111111111093",
+  "forecast.override.propose": "11111111-1111-4111-8111-111111111094",
+  "forecast.override.approve": "11111111-1111-4111-8111-111111111095",
+  "provision.propose": "11111111-1111-4111-8111-111111111096",
+  "provision.approve": "11111111-1111-4111-8111-111111111097",
+  "model.parameters.manage": "11111111-1111-4111-8111-111111111098",
+  "model.evaluate": "11111111-1111-4111-8111-111111111099",
+  "forecast.audit.view": "11111111-1111-4111-8111-111111111100",
 };
 
 const ROLE_IDS: Record<(typeof SYSTEM_ROLE_KEYS)[number], string> = {
@@ -215,6 +226,16 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "merch.exception.review",
     "merch.report.view",
     "merch.audit.view",
+    "forecast.run",
+    "forecast.detail.view",
+    "forecast.hostProjection.view",
+    "forecast.override.propose",
+    "forecast.override.approve",
+    "provision.propose",
+    "provision.approve",
+    "model.parameters.manage",
+    "model.evaluate",
+    "forecast.audit.view",
   ],
   CLIENT_LEAD: [
     "organisation.view",
@@ -231,6 +252,8 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "rsvp.directory.view",
     "msg.inbox.view",
     "msg.analytics.view",
+    "forecast.hostProjection.view",
+    "forecast.detail.view",
   ],
   DEPARTMENT_LEAD: [
     "organisation.view",
@@ -243,6 +266,8 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "rsvp.directory.view",
     "msg.inbox.view",
     "msg.task.manage",
+    "forecast.detail.view",
+    "provision.propose",
   ],
   PLANNER: [
     "organisation.view",
@@ -288,6 +313,11 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "merch.participation.manage",
     "merch.fulfilment.view",
     "merch.report.view",
+    "forecast.run",
+    "forecast.detail.view",
+    "forecast.hostProjection.view",
+    "forecast.override.propose",
+    "provision.propose",
   ],
   SYSTEM_ADMINISTRATOR: [
     "organisation.view",
@@ -322,6 +352,9 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "merch.fulfilment.view",
     "merch.report.view",
     "merch.audit.view",
+    "forecast.detail.view",
+    "forecast.hostProjection.view",
+    "forecast.audit.view",
   ],
 };
 
@@ -338,7 +371,8 @@ function permissionRecord(key: PermissionKey): Permission {
       key.startsWith("audit.") ||
       (S04A_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
       (S04B_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
-      (S04C_SENSITIVE_PERMISSIONS as readonly string[]).includes(key)
+      (S04C_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
+      (S04D_SENSITIVE_PERMISSIONS as readonly string[]).includes(key)
         ? "SENSITIVE"
         : "NORMAL",
     schemaVersion: SCHEMA_VERSION,
