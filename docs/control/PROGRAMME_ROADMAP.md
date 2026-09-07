@@ -12,7 +12,7 @@ Percent complete is not used. Unknown is not healthy. Documented ≠ implemented
 | Code | Name | Route | Implementation reality |
 |------|------|-------|------------------------|
 | FOUNDATION | Shared Foundation / Control Tower | `/programme` | Control Tower implemented; Foundation closeout IN_REVIEW; production unsigned |
-| EVENT_OS | Event OS | `/programme/event-os` | S01–S03 accepted; S04 CLOSED / ACCEPTED; S04F ratified and held; S05 not authorised |
+| EVENT_OS | Event OS | `/programme/event-os` | S01–S03 accepted; S04 CLOSED / ACCEPTED; S04A ACCEPTED (not catalogue); S04B IN_PROGRESS under MD-PR-S018; S04F ratified and held; S05 not authorised |
 | EVENT_DAY | Event-Day Runtime | `/programme/event-day` | Specs + contracts; no app |
 | ACADEMY | Academy | `/programme/academy` | Specified/prompted; no app |
 | MARKETING | Marketing OS | `/programme/marketing` | Specified/prompted; no app |
@@ -70,8 +70,8 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 
 | Band | Content |
 |------|---------|
-| Now | Event OS S01–S03 accepted; EOS-S04 CLOSED / ACCEPTED; EOS-S04A ACCEPTED (not a catalogue slice); production unsigned; no real communication provider |
-| Next | Successor after EOS-S04A requires a separate CEO implementation-authority decision; do not implement EOS-S04B–F or EOS-S05 without that authority |
+| Now | Event OS S01–S03 accepted; EOS-S04 CLOSED / ACCEPTED; EOS-S04A ACCEPTED (not a catalogue slice); EOS-S04B RATIFIED / IN_PROGRESS under MD-PR-S018; production unsigned; no real communication provider |
+| Next | Complete EOS-S04B vertical and independent verification; do not implement EOS-S04C–F or EOS-S05 without separate CEO authority |
 | Later | Event OS S01 after a new authorised instruction; Runtime after Event OS foundations |
 | Held | All 693 product/recon prompts except CT0/CT1 wrappers; EOS-S04F Cursor prompt pack (P00–P11) |
 | External | Independent, specialist, venue, CEO gates — unsigned |

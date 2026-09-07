@@ -130,6 +130,14 @@
       "product": "EVENT_OS",
       "title": "EOS-S04A Formal Technical Acceptance Record",
       "authorising_instruction": "Record formal technical acceptance of EOS-S04A after independent AI CTO review and Claude-in-Chrome focused verification; do not start EOS-S04B–F or EOS-S05, invent catalogue acceptance, or authorise production"
+    },
+    {
+      "prompt_control_id": "MD-PR-S018",
+      "native_id": "S04B",
+      "slice_id": "EOS-S04B",
+      "product": "EVENT_OS",
+      "title": "EOS-S04B — Multi-Phase Events, Arrival Routing & Perimeter Access",
+      "authorising_instruction": "CEO ratification of the EOS-S04B Cursor prompt pack as controlling implementation pack, subject to the 2026-09-07 authority overlay; implement the first complete deployable vertical; push and deploy affected atelier-doclar services; do not start EOS-S04C–F or EOS-S05, invent catalogue acceptance, or authorise production"
     }
   ]
 }

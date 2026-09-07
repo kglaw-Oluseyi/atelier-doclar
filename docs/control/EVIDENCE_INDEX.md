@@ -306,7 +306,22 @@ CLOSED / ACCEPTED under hosted verification `MD-EOS-S04-R3-05` with classificati
 | EV-EOS-S04A-LEDGER | DOCUMENT | Cumulative S04A build ledger | `docs/control/EOS_S04A_BUILD_LEDGER.md` |
 | EV-EOS-S04A-COMMIT | COMMIT | Accepted implementation SHA | `git:8f1957d2353db539449d9bcce62f9e4d71eb31af` |
 
-ACCEPTED on `2026-09-07` by `ChatGPT / AI CTO` after Claude-in-Chrome focused verification (zero BLOCKER, zero MAJOR). Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised` remains false. Does not authorise EOS-S04B–F, EOS-S05, real data, providers or production.
+ACCEPTED on `2026-09-07` by `ChatGPT / AI CTO` after Claude-in-Chrome focused verification (zero BLOCKER, zero MAJOR). Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised` remains false. Historical sentence that acceptance does not authorise EOS-S04B is superseded by `MD-PR-S018`. Does not authorise EOS-S04C–F, EOS-S05, real data, providers or production.
+
+## EOS-S04B
+
+**Prompt Control ID:** `MD-PR-S018`
+**Slice ID:** `EOS-S04B`
+**Title:** Multi-Phase Events, Arrival Routing & Perimeter Access
+**Status:** `RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS`
+**Catalogue slice:** `NO` — accepted-slice count remains 4
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-EOS-S04B-RATIFY | DOCUMENT | CEO ratification and implementation authority | `docs/control/EOS_S04B_RATIFICATION.md` |
+| EV-EOS-S04B-LEDGER | DOCUMENT | Cumulative S04B build ledger | `docs/control/EOS_S04B_BUILD_LEDGER.md` |
+| EV-EOS-S04B-PACK | DOCUMENT | Controlling Cursor prompt pack v1.0 | `docs/control/Maison_Doclar_EOS-S04B_Cursor_Prompt_Pack_v1.0.docx` |
+| EV-EOS-S04B-SLICE | DOCUMENT | Requirements source (historical DRAFT filename retained) | `docs/control/Maison_Doclar_EOS-S04B_Controlled_Slice_Pack_v1.0_DRAFT.docx` |
 
 ## EOS-S04F
 

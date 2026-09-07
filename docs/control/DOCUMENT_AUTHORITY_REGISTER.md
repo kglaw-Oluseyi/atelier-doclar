@@ -52,6 +52,14 @@ This addendum does not rewrite the B0 row set.
 | Title | Path | Current programme status | Notes |
 |-------|------|--------------------------|-------|
 | EOS-S04A Formal Technical Acceptance | `docs/control/EOS_S04A_ACCEPTANCE.md` | CANONICAL ACCEPTANCE RECORD | Status `ACCEPTED` at SHA `8f1957d2353db539449d9bcce62f9e4d71eb31af`. Not catalogue-slice acceptance. |
-| EOS-S04B Controlled Slice Pack v1.0 DRAFT | `docs/control/Maison_Doclar_EOS-S04B_Controlled_Slice_Pack_v1.0_DRAFT.docx` | DRAFT FOR CEO RATIFICATION — implementation not authorised | Logical successor after EOS-S04A; not executable without a separate CEO implementation-authority decision. |
-| EOS-S04B Cursor Prompt Pack v1.0 | `docs/control/Maison_Doclar_EOS-S04B_Cursor_Prompt_Pack_v1.0.docx` | SUPPORTING / NOT IMPLEMENTATION AUTHORITY | Converts a ratified S04B pack; the controlling slice pack remains DRAFT. |
+| EOS-S04B Controlled Slice Pack v1.0 DRAFT | `docs/control/Maison_Doclar_EOS-S04B_Controlled_Slice_Pack_v1.0_DRAFT.docx` | HISTORICAL DRAFT FILENAME; requirements source RATIFIED 2026-09-07 | Filename retained. Former status `DRAFT FOR CEO RATIFICATION — implementation not authorised` is historical evidence. |
+| EOS-S04B Cursor Prompt Pack v1.0 | `docs/control/Maison_Doclar_EOS-S04B_Cursor_Prompt_Pack_v1.0.docx` | CONTROLLING IMPLEMENTATION PACK, subject to CEO overlay | Ratified 2026-09-07 as the controlling EOS-S04B implementation pack. |
+
+## Addendum — 2026-09-07 EOS-S04B ratification (`MD-PR-S018`)
+
+This addendum does not rewrite the B0 row set or the S04A acceptance addendum.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| EOS-S04B CEO ratification overlay | `docs/control/EOS_S04B_RATIFICATION.md` | CANONICAL AUTHORITY RECORD | Changes S04B from DRAFT / NOT AUTHORISED to RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS. Does not authorise EOS-S04C–F, EOS-S05 or production. |
 

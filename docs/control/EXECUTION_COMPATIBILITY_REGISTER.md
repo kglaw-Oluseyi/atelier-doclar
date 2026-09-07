@@ -76,3 +76,12 @@ Safeguards retained: real client/guest data; live communications; payments; othe
 | EOS-S04F RATIFIED / HELD | Retained. Execution remains after EOS-S04E. |
 
 Successor implementation after EOS-S04A requires a separate CEO decision. Cursor must not start EOS-S04B–F or EOS-S05 from this acceptance record.
+
+## Addendum — 2026-09-07 EOS-S04B ratification (`MD-PR-S018`)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| EOS-S04B `DRAFT FOR CEO RATIFICATION — implementation not authorised` | SUPERSEDED by `docs/control/EOS_S04B_RATIFICATION.md`. Status is `RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS`. |
+| S04B Cursor pack “Railway / no action or deployment” and “Push held” | SUPERSEDED for this authorised slice by deploy-by-default and the CEO overlay. Push and deploy affected `atelier-doclar` services. Deployment is not acceptance. |
+| EOS-S04C–F and EOS-S05 | Retained unauthorised. This overlay does not start them. |
+| Slice pack §18 “ratification does not itself authorise implementation” | Historical draft-pack rule. The 2026-09-07 overlay is the separate implementation-authority decision. |
