@@ -120,33 +120,45 @@ describe("EOS-S04C primary journeys", () => {
     assert.equal(store.snapshot().rsvpInvitations.length, beforeInvites);
     const exchanged = service.exchangeMerchandiseGuestAccess(issued.token, "2026-09-07T13:00:00.000Z");
     assert.ok(exchanged.view.offers.some((item) => item.itemName.includes("fila") || item.madeToMeasureCap));
-    service.guestRecordParticipation(exchanged.sessionToken, {
-      guestOfferId: S04C_FIXTURE_IDS.offerOlufemiCap,
-      guestId: S04A_FIXTURE_IDS.guestOlufemi,
-      choice: "FULL_PARTICIPATION",
-      expectedOfferVersion: 1,
-      reason: "private choice",
-    });
+    service.guestRecordParticipation(
+      exchanged.sessionToken,
+      {
+        guestOfferId: S04C_FIXTURE_IDS.offerOlufemiCap,
+        guestId: S04A_FIXTURE_IDS.guestOlufemi,
+        choice: "FULL_PARTICIPATION",
+        expectedOfferVersion: 1,
+        reason: "private choice",
+      },
+      "2026-09-07T13:01:00.000Z",
+    );
     assert.throws(
       () =>
-        service.guestCaptureCapMeasurement(exchanged.sessionToken, {
-          guestId: S04A_FIXTURE_IDS.guestOlufemi,
-          itemId: S04C_FIXTURE_IDS.itemCap,
-          headCircumferenceInches: "22cm",
-          consentGiven: true,
-          reason: "cm text",
-        }),
+        service.guestCaptureCapMeasurement(
+          exchanged.sessionToken,
+          {
+            guestId: S04A_FIXTURE_IDS.guestOlufemi,
+            itemId: S04C_FIXTURE_IDS.itemCap,
+            headCircumferenceInches: "22cm",
+            consentGiven: true,
+            reason: "cm text",
+          },
+          "2026-09-07T13:02:00.000Z",
+        ),
       (error: unknown) => error instanceof PlatformError && error.code === "VALIDATION_FAILED",
     );
     assert.throws(
       () =>
-        service.guestCaptureCapMeasurement(exchanged.sessionToken, {
-          guestId: S04A_FIXTURE_IDS.guestOlufemi,
-          itemId: S04C_FIXTURE_IDS.itemCap,
-          headCircumferenceInches: 22.5,
-          consentGiven: false,
-          reason: "no consent",
-        }),
+        service.guestCaptureCapMeasurement(
+          exchanged.sessionToken,
+          {
+            guestId: S04A_FIXTURE_IDS.guestOlufemi,
+            itemId: S04C_FIXTURE_IDS.itemCap,
+            headCircumferenceInches: 22.5,
+            consentGiven: false,
+            reason: "no consent",
+          },
+          "2026-09-07T13:02:00.000Z",
+        ),
       (error: unknown) => error instanceof PlatformError && error.code === "VALIDATION_FAILED",
     );
     const other = service.issueMerchandiseGuestAccess(director(), {

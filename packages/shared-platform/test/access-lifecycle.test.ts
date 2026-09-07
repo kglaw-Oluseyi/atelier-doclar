@@ -475,13 +475,17 @@ describe("EOS-S04C guest and vendor access lifecycles", () => {
     const session = service.exchangeVendorAccess(live.token, "2026-09-07T13:00:00.000Z");
     assert.throws(
       () =>
-        service.vendorSubmitUpdate(session.sessionToken, {
-          assignmentId: S04C_FIXTURE_IDS.assignmentOther,
-          fulfilmentId: S04C_FIXTURE_IDS.fulfilmentAdewale,
-          reportedState: "DISPATCHED",
-          reason: "cross vendor",
-          expectedFulfilmentVersion: 1,
-        }),
+        service.vendorSubmitUpdate(
+          session.sessionToken,
+          {
+            assignmentId: S04C_FIXTURE_IDS.assignmentOther,
+            fulfilmentId: S04C_FIXTURE_IDS.fulfilmentAdewale,
+            reportedState: "DISPATCHED",
+            reason: "cross vendor",
+            expectedFulfilmentVersion: 1,
+          },
+          "2026-09-07T13:01:00.000Z",
+        ),
       (error: unknown) => error instanceof PlatformError && error.code === "FORBIDDEN",
     );
   });
@@ -551,13 +555,17 @@ describe("EOS-S04C durable access CAS", () => {
       reason: "race revoke",
     });
     await writerA.flush();
-    serviceB.vendorSubmitUpdate(session.sessionToken, {
-      assignmentId: created.assignment.id,
-      fulfilmentId: S04C_FIXTURE_IDS.fulfilmentOlufemiCap,
-      reportedState: "IN_PREPARATION",
-      reason: "after revoke",
-      expectedFulfilmentVersion: 1,
-    });
+    serviceB.vendorSubmitUpdate(
+      session.sessionToken,
+      {
+        assignmentId: created.assignment.id,
+        fulfilmentId: S04C_FIXTURE_IDS.fulfilmentOlufemiCap,
+        reportedState: "IN_PREPARATION",
+        reason: "after revoke",
+        expectedFulfilmentVersion: 1,
+      },
+      "2026-09-07T13:01:00.000Z",
+    );
     await assert.rejects(
       () => writerB.flush(),
       (error: unknown) => error instanceof PlatformError && error.code === "VERSION_CONFLICT",

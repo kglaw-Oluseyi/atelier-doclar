@@ -218,13 +218,17 @@ describe("EOS-S04C services", () => {
     const exchanged = service.exchangeVendorAccess(S04C_VENDOR_TOKEN, "2026-09-07T13:00:00.000Z");
     assert.throws(
       () =>
-        service.vendorSubmitUpdate(exchanged.sessionToken, {
-          assignmentId: S04C_FIXTURE_IDS.assignmentOther,
-          fulfilmentId: S04C_FIXTURE_IDS.fulfilmentAdewale,
-          reportedState: "DISPATCHED",
-          reason: "cross vendor",
-          expectedFulfilmentVersion: 1,
-        }),
+        service.vendorSubmitUpdate(
+          exchanged.sessionToken,
+          {
+            assignmentId: S04C_FIXTURE_IDS.assignmentOther,
+            fulfilmentId: S04C_FIXTURE_IDS.fulfilmentAdewale,
+            reportedState: "DISPATCHED",
+            reason: "cross vendor",
+            expectedFulfilmentVersion: 1,
+          },
+          "2026-09-07T13:01:00.000Z",
+        ),
       (error: unknown) => error instanceof PlatformError && error.code === "FORBIDDEN",
     );
     assert.throws(
