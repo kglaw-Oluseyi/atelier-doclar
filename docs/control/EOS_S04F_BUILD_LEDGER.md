@@ -3,7 +3,7 @@
 **Slice ID:** `EOS-S04F`  
 **Prompt Control ID:** `MD-PR-S026`  
 **Starting baseline:** `2663f4363ad311f486f05c70e8e8411d5e9830bb`  
-**Status:** `IN_PROGRESS` (implementation ledger; not acceptance)  
+**Status:** `IN_REVIEW / NOT READY` (implementation ledger; not acceptance)
 **Production:** unauthorised  
 **Next slices:** EOS-S05 not started; not authorised by this overlay
 
@@ -42,3 +42,7 @@ ACA-S04F registered at `/app/academy/ACA-S04F` and `/app/academy/aca-s04f`. Thre
 ## Verification commands
 
 Workspace `pnpm typecheck`, `pnpm test`, `pnpm programme:validate`, `pnpm --filter @maison-doclar/event-os build` and `git diff --check` are recorded in `EOS_S04F_IMPLEMENTATION.md`.
+
+## Source-supersession remediation
+
+Governed source revision (draft → review → separate-reviewer approve), transactional dependent staleness, coverage recalculation, assembly exclusion/fallback, and visible placeholder-set validation. Tests: `language-lineage.test.ts`, `s04f-lineage.spec.ts`. Control: `EOS_S04F_ACCEPTANCE_REMEDIATION.md`, `EOS_S04F_FOCUSED_CLAUDE_VERIFICATION.md`. Status remains `IN_REVIEW / NOT READY`. EOS-S05 not started.
