@@ -65,6 +65,8 @@ const COLLECTIONS: Collection[] = [
   "vendorAssignments",
   "vendorUpdates",
   "vendorSessions",
+  "merchandiseGuestGrants",
+  "merchandiseGuestSessions",
   "externalContactLinks",
   "merchandiseExceptions",
   "s04cMigrationReceipts",

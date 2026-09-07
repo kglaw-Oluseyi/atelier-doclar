@@ -313,6 +313,9 @@ html {
 
 .guest-shell {
   min-height: 100vh;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   padding: 32px 20px 64px;
 }
 

@@ -448,6 +448,9 @@ body.atelier {
 
 .atelier-meta-band,
 .atelier-panel {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   padding: 18px 20px;
   border: 1px solid var(--at-line);
   border-radius: 14px;
@@ -580,10 +583,22 @@ body.atelier {
 .atelier-shell .table-wrap,
 .atelier-shell .form,
 .atelier-shell .correction-review {
+  min-width: 0;
+  max-width: 100%;
   border: 1px solid var(--at-line);
   border-radius: 14px;
   background: rgba(252, 250, 247, 0.82);
   box-shadow: var(--at-shadow-soft);
+}
+
+.atelier-shell .table-wrap {
+  overflow-x: auto;
+}
+
+.atelier-shell .at-tabs {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .atelier-shell .card-list article,
@@ -1114,7 +1129,7 @@ body.atelier {
 
 .merchandise-readiness {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr));
   gap: 12px 18px;
   margin: 0 0 16px;
 }
@@ -1179,16 +1194,28 @@ body.atelier {
 
 .merchandise-form input,
 .merchandise-form select,
+.merchandise-form input[type="datetime-local"],
 .guest-merch-card input,
 .guest-merch-card select,
 .vendor-card input,
 .vendor-card select {
+  width: 100%;
   min-width: 0;
   max-width: 100%;
+  box-sizing: border-box;
+}
+
+.merchandise-form .check,
+.merchandise-atelier .check {
+  min-width: 0;
+  max-width: 100%;
+  align-items: flex-start;
 }
 
 .vendor-shell {
   min-height: 100vh;
+  max-width: 100%;
+  min-width: 0;
   background:
     var(--at-grain),
     linear-gradient(180deg, #f8f3eb 0%, var(--at-ivory) 28%, #efe6d8 100%);
@@ -1207,6 +1234,10 @@ body.atelier {
   letter-spacing: 0.16em;
   text-transform: uppercase;
   font-size: 0.68rem;
+}
+
+.vendor-masthead .eyebrow {
+  color: #d8c59c;
 }
 
 .vendor-masthead h1 {
@@ -1243,11 +1274,79 @@ body.atelier {
   cursor: not-allowed;
 }
 
+.merch-next,
+.merch-synthetic,
+.merch-preview,
+.merch-issued,
+.merch-access-seal {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.merch-next,
+.merch-synthetic {
+  color: var(--at-umber);
+}
+
+.merch-access-seal {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--at-champagne-functional, #8b6e38);
+  border-radius: 12px;
+  background: rgba(139, 110, 56, 0.08);
+}
+
+.merch-access-seal[data-ready="false"] {
+  border-color: var(--at-line);
+  background: rgba(252, 250, 247, 0.92);
+}
+
+.merch-issued,
+.merch-preview {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 16px 18px;
+  border: 1px solid var(--at-champagne-functional, #8b6e38);
+  border-radius: 16px;
+}
+
+.merch-actions {
+  display: grid;
+  gap: 12px;
+}
+
+.merchandise-atelier a,
+.merchandise-atelier button,
+.merchandise-atelier [role="button"],
+.merchandise-atelier input[type="submit"],
+.merchandise-atelier select,
+.merchandise-atelier .check {
+  cursor: pointer;
+}
+
+.merchandise-atelier button:disabled,
+.merchandise-atelier [aria-disabled="true"],
+.merchandise-atelier input:disabled,
+.merchandise-atelier select:disabled {
+  cursor: not-allowed;
+}
+
+.merchandise-atelier a:hover,
+.merchandise-atelier button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .merchandise-atelier *,
   .guest-merchandise *,
-  .vendor-shell * {
+  .vendor-shell *,
+  .guest-shell * {
     animation: none !important;
     transition: none !important;
+    transform: none !important;
   }
 }

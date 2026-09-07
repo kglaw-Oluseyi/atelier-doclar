@@ -511,6 +511,7 @@ export const EXTERNAL_COMMERCIAL_STATUSES = [
   "WAIVED_OR_HOST_SPONSORED",
 ] as const;
 export const VENDOR_ASSIGNMENT_STATUSES = ["ACTIVE", "EXPIRED", "REVOKED"] as const;
+export const MERCHANDISE_GUEST_GRANT_STATUSES = ["ACTIVE", "EXPIRED", "REVOKED", "SUPERSEDED"] as const;
 export const VENDOR_UPDATE_REVIEW_STATES = ["PENDING_REVIEW", "ACCEPTED", "REJECTED"] as const;
 export const MERCHANDISE_EXCEPTION_TYPES = [
   "DELAY",
@@ -529,6 +530,7 @@ export const EXTERNAL_CONTACT_CHANNELS = ["WHATSAPP", "TELEPHONE", "EMAIL", "WEB
 export const CAP_CIRCUMFERENCE_MIN_INCHES = 18 as const;
 export const CAP_CIRCUMFERENCE_MAX_INCHES = 26 as const;
 export const VENDOR_SESSION_COOKIE = "md_event_os_vendor";
+export const MERCHANDISE_GUEST_SESSION_COOKIE = "md_event_os_offers";
 export const S04C_VENDOR_PEPPER_REF = "s04c-vendor-pepper-not-for-production";
 export const PROHIBITED_MEASUREMENT_KEYS = [
   "waist",
@@ -563,6 +565,17 @@ export const PROHIBITED_PAYMENT_KEYS = [
   "refund",
   "iban",
   "paymentInstrument",
+  "deposit",
+  "settlement",
+] as const;
+export const PROHIBITED_CORE_AUTHORITY_KEYS = [
+  "invitation",
+  "invitationId",
+  "rsvpEntitlement",
+  "attendance",
+  "credential",
+  "perimeter",
+  "companion",
 ] as const;
 
 export const PROGRAMME_PHASE_TYPES = [

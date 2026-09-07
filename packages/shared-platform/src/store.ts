@@ -61,6 +61,8 @@ import type {
   VendorAssignment,
   VendorSession,
   VendorUpdate,
+  MerchandiseGuestGrant,
+  MerchandiseGuestSession,
 } from "./merchandise-schemas.js";
 import type {
   GuestDuplicateCandidate,
@@ -169,6 +171,8 @@ export interface PlatformSnapshot {
   vendorAssignments: VendorAssignment[];
   vendorUpdates: VendorUpdate[];
   vendorSessions: VendorSession[];
+  merchandiseGuestGrants: MerchandiseGuestGrant[];
+  merchandiseGuestSessions: MerchandiseGuestSession[];
   externalContactLinks: ExternalContactLink[];
   merchandiseExceptions: MerchandiseException[];
   s04cMigrationReceipts: S04CMigrationReceipt[];
@@ -272,6 +276,8 @@ export function emptySnapshot(): PlatformSnapshot {
     vendorAssignments: [],
     vendorUpdates: [],
     vendorSessions: [],
+    merchandiseGuestGrants: [],
+    merchandiseGuestSessions: [],
     externalContactLinks: [],
     merchandiseExceptions: [],
     s04cMigrationReceipts: [],
@@ -359,6 +365,8 @@ export function normalizeSnapshot(input: PlatformSnapshot): PlatformSnapshot {
     vendorAssignments: input.vendorAssignments ?? [],
     vendorUpdates: input.vendorUpdates ?? [],
     vendorSessions: input.vendorSessions ?? [],
+    merchandiseGuestGrants: input.merchandiseGuestGrants ?? [],
+    merchandiseGuestSessions: input.merchandiseGuestSessions ?? [],
     externalContactLinks: input.externalContactLinks ?? [],
     merchandiseExceptions: input.merchandiseExceptions ?? [],
     s04cMigrationReceipts: input.s04cMigrationReceipts ?? [],

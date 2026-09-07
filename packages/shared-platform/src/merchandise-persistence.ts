@@ -18,6 +18,8 @@ import {
   VendorAssignmentSchema,
   VendorSessionSchema,
   VendorUpdateSchema,
+  MerchandiseGuestGrantSchema,
+  MerchandiseGuestSessionSchema,
 } from "./merchandise-schemas.js";
 import type { PlatformSnapshot } from "./store.js";
 
@@ -40,6 +42,8 @@ const S04C_COLLECTION_SCHEMAS = {
   vendorAssignments: z.array(VendorAssignmentSchema),
   vendorUpdates: z.array(VendorUpdateSchema),
   vendorSessions: z.array(VendorSessionSchema),
+  merchandiseGuestGrants: z.array(MerchandiseGuestGrantSchema),
+  merchandiseGuestSessions: z.array(MerchandiseGuestSessionSchema),
   externalContactLinks: z.array(ExternalContactLinkSchema),
   merchandiseExceptions: z.array(MerchandiseExceptionSchema),
   s04cMigrationReceipts: z.array(S04CMigrationReceiptSchema),

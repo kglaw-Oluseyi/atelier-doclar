@@ -18,6 +18,7 @@ import {
   PARTICIPATION_CHOICES,
   PARTICIPATION_STATUSES,
   SCHEMA_VERSION,
+  MERCHANDISE_GUEST_GRANT_STATUSES,
   VENDOR_ASSIGNMENT_STATUSES,
   VENDOR_UPDATE_REVIEW_STATES,
 } from "./constants.js";
@@ -43,6 +44,8 @@ export const FulfilmentIdSchema = UuidSchema;
 export const VendorAssignmentIdSchema = UuidSchema;
 export const VendorUpdateIdSchema = UuidSchema;
 export const VendorSessionIdSchema = UuidSchema;
+export const MerchandiseGuestGrantIdSchema = UuidSchema;
+export const MerchandiseGuestSessionIdSchema = UuidSchema;
 export const ExternalContactLinkIdSchema = UuidSchema;
 export const MerchandiseExceptionIdSchema = UuidSchema;
 export const GuestIdRefSchema = UuidSchema;
@@ -237,6 +240,8 @@ export const VendorAssignmentSchema = z
     tokenPrefix: NonEmptySchema.max(8),
     status: z.enum(VENDOR_ASSIGNMENT_STATUSES),
     expiresAt: IsoDatetimeSchema,
+    issuedAt: IsoDatetimeSchema.optional(),
+    renewedAt: IsoDatetimeSchema.optional(),
     revokedAt: IsoDatetimeSchema.optional(),
     failedExchangeCount: z.number().int().nonnegative(),
     portalPermissions: z.array(z.enum(["fulfilment.view", "fulfilment.update", "exception.report"])).max(8),
@@ -267,6 +272,38 @@ export const VendorSessionSchema = z
     organisationId: OrganisationIdSchema,
     eventId: EventIdSchema,
     vendorId: NonEmptySchema.max(80),
+    issuedAt: IsoDatetimeSchema,
+    expiresAt: IsoDatetimeSchema,
+    revokedAt: IsoDatetimeSchema.optional(),
+    ...versioned,
+  })
+  .strict();
+
+export const MerchandiseGuestGrantSchema = z
+  .object({
+    id: MerchandiseGuestGrantIdSchema,
+    ...scoped,
+    guestId: GuestIdRefSchema,
+    tokenHash: NonEmptySchema.max(128),
+    tokenPrefix: NonEmptySchema.max(8),
+    status: z.enum(MERCHANDISE_GUEST_GRANT_STATUSES),
+    expiresAt: IsoDatetimeSchema,
+    issuedAt: IsoDatetimeSchema.optional(),
+    renewedAt: IsoDatetimeSchema.optional(),
+    revokedAt: IsoDatetimeSchema.optional(),
+    supersededById: MerchandiseGuestGrantIdSchema.optional(),
+    failedExchangeCount: z.number().int().nonnegative(),
+    ...versioned,
+  })
+  .strict();
+
+export const MerchandiseGuestSessionSchema = z
+  .object({
+    id: MerchandiseGuestSessionIdSchema,
+    grantId: MerchandiseGuestGrantIdSchema,
+    organisationId: OrganisationIdSchema,
+    eventId: EventIdSchema,
+    guestId: GuestIdRefSchema,
     issuedAt: IsoDatetimeSchema,
     expiresAt: IsoDatetimeSchema,
     revokedAt: IsoDatetimeSchema.optional(),
@@ -338,6 +375,8 @@ export const S04C_CANONICAL_COLLECTIONS = [
   "vendorAssignments",
   "vendorUpdates",
   "vendorSessions",
+  "merchandiseGuestGrants",
+  "merchandiseGuestSessions",
   "externalContactLinks",
   "merchandiseExceptions",
 ] as const;
@@ -419,6 +458,7 @@ export const CaptureCapMeasurementInputSchema = z
     headCircumferenceInches: HeadCircumferenceInchesSchema,
     consentGiven: z.literal(true),
     source: z.enum(CAP_MEASUREMENT_SOURCES),
+    expectedVersion: z.number().int().positive().optional(),
   })
   .strict();
 
@@ -482,6 +522,87 @@ export const RaiseMerchandiseExceptionInputSchema = z
   })
   .strict();
 
+export const UpdateMerchandiseCollectionInputSchema = z
+  .object({
+    ...mutationBase,
+    collectionId: MerchandiseCollectionIdSchema,
+    name: NonEmptySchema.max(160).optional(),
+    phaseIds: z.array(UuidSchema).max(16).optional(),
+    expectedVersion: z.number().int().positive(),
+  })
+  .strict();
+
+export const UpdateMerchandiseItemInputSchema = z
+  .object({
+    ...mutationBase,
+    itemId: MerchandiseItemIdSchema,
+    name: NonEmptySchema.max(160).optional(),
+    description: NonEmptySchema.max(400).optional(),
+    expectedVersion: z.number().int().positive(),
+  })
+  .strict();
+
+export const PreviewMerchandiseAudienceInputSchema = z
+  .object({
+    organisationId: OrganisationIdSchema,
+    eventId: EventIdSchema,
+    audienceKind: z.enum(MERCHANDISE_AUDIENCE_KINDS),
+    audienceGuestIds: z.array(GuestIdRefSchema).max(500).default([]),
+    cohortId: MerchandiseCohortIdSchema.optional(),
+    phaseId: UuidSchema.optional(),
+  })
+  .strict();
+
+export const WithdrawHostOfferRuleInputSchema = z
+  .object({
+    ...mutationBase,
+    ruleId: HostOfferRuleIdSchema,
+    expectedVersion: z.number().int().positive(),
+  })
+  .strict();
+
+export const WithdrawGuestOfferInputSchema = z
+  .object({
+    ...mutationBase,
+    offerId: GuestOfferIdSchema,
+    expectedVersion: z.number().int().positive(),
+  })
+  .strict();
+
+export const IssueMerchandiseGuestAccessInputSchema = z
+  .object({
+    ...mutationBase,
+    guestId: GuestIdRefSchema,
+    expiresAt: IsoDatetimeSchema,
+  })
+  .strict();
+
+export const RevokeMerchandiseGuestAccessInputSchema = z
+  .object({
+    ...mutationBase,
+    grantId: MerchandiseGuestGrantIdSchema,
+    expectedVersion: z.number().int().positive(),
+  })
+  .strict();
+
+export const RenewMerchandiseGuestAccessInputSchema = z
+  .object({
+    ...mutationBase,
+    grantId: MerchandiseGuestGrantIdSchema,
+    expiresAt: IsoDatetimeSchema,
+    expectedVersion: z.number().int().positive(),
+  })
+  .strict();
+
+export const RenewVendorAssignmentInputSchema = z
+  .object({
+    ...mutationBase,
+    assignmentId: VendorAssignmentIdSchema,
+    expiresAt: IsoDatetimeSchema,
+    expectedVersion: z.number().int().positive(),
+  })
+  .strict();
+
 export const CreateExternalContactLinkInputSchema = z
   .object({
     ...mutationBase,
@@ -506,19 +627,30 @@ export type Fulfilment = z.infer<typeof FulfilmentSchema>;
 export type VendorAssignment = z.infer<typeof VendorAssignmentSchema>;
 export type VendorUpdate = z.infer<typeof VendorUpdateSchema>;
 export type VendorSession = z.infer<typeof VendorSessionSchema>;
+export type MerchandiseGuestGrant = z.infer<typeof MerchandiseGuestGrantSchema>;
+export type MerchandiseGuestSession = z.infer<typeof MerchandiseGuestSessionSchema>;
 export type ExternalContactLink = z.infer<typeof ExternalContactLinkSchema>;
 export type MerchandiseException = z.infer<typeof MerchandiseExceptionSchema>;
 export type S04CMigrationReceipt = z.infer<typeof S04CMigrationReceiptSchema>;
 export type CreateMerchandiseCollectionInput = z.infer<typeof CreateMerchandiseCollectionInputSchema>;
 export type CreateMerchandiseItemInput = z.infer<typeof CreateMerchandiseItemInputSchema>;
+export type UpdateMerchandiseCollectionInput = z.infer<typeof UpdateMerchandiseCollectionInputSchema>;
+export type UpdateMerchandiseItemInput = z.infer<typeof UpdateMerchandiseItemInputSchema>;
+export type PreviewMerchandiseAudienceInput = z.infer<typeof PreviewMerchandiseAudienceInputSchema>;
 export type CreateMerchandiseCohortInput = z.infer<typeof CreateMerchandiseCohortInputSchema>;
 export type CreateHostOfferRuleInput = z.infer<typeof CreateHostOfferRuleInputSchema>;
 export type IssueHostOfferRuleInput = z.infer<typeof IssueHostOfferRuleInputSchema>;
+export type WithdrawHostOfferRuleInput = z.infer<typeof WithdrawHostOfferRuleInputSchema>;
+export type WithdrawGuestOfferInput = z.infer<typeof WithdrawGuestOfferInputSchema>;
 export type RecordGuestParticipationInput = z.infer<typeof RecordGuestParticipationInputSchema>;
 export type CaptureCapMeasurementInput = z.infer<typeof CaptureCapMeasurementInputSchema>;
 export type WithdrawCapMeasurementInput = z.infer<typeof WithdrawCapMeasurementInputSchema>;
 export type CreateVendorAssignmentInput = z.infer<typeof CreateVendorAssignmentInputSchema>;
 export type RevokeVendorAssignmentInput = z.infer<typeof RevokeVendorAssignmentInputSchema>;
+export type RenewVendorAssignmentInput = z.infer<typeof RenewVendorAssignmentInputSchema>;
+export type IssueMerchandiseGuestAccessInput = z.infer<typeof IssueMerchandiseGuestAccessInputSchema>;
+export type RevokeMerchandiseGuestAccessInput = z.infer<typeof RevokeMerchandiseGuestAccessInputSchema>;
+export type RenewMerchandiseGuestAccessInput = z.infer<typeof RenewMerchandiseGuestAccessInputSchema>;
 export type SubmitVendorUpdateInput = z.infer<typeof SubmitVendorUpdateInputSchema>;
 export type ReviewVendorUpdateInput = z.infer<typeof ReviewVendorUpdateInputSchema>;
 export type RaiseMerchandiseExceptionInput = z.infer<typeof RaiseMerchandiseExceptionInputSchema>;

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import {
+  PROHIBITED_CORE_AUTHORITY_KEYS,
   PROHIBITED_MEASUREMENT_KEYS,
   PROHIBITED_PAYMENT_KEYS,
   SCHEMA_VERSION,
@@ -17,6 +18,7 @@ import {
   MerchandiseCohortSchema,
   MerchandiseCollectionSchema,
   MerchandiseExceptionSchema,
+  MerchandiseGuestGrantSchema,
   MerchandiseItemSchema,
   VendorAssignmentSchema,
   VendorUpdateSchema,
@@ -28,15 +30,30 @@ import {
   type CreateMerchandiseItemInput,
   type CreateVendorAssignmentInput,
   type IssueHostOfferRuleInput,
+  type IssueMerchandiseGuestAccessInput,
+  type PreviewMerchandiseAudienceInput,
   type RaiseMerchandiseExceptionInput,
   type RecordGuestParticipationInput,
+  type RenewMerchandiseGuestAccessInput,
+  type RenewVendorAssignmentInput,
   type ReviewVendorUpdateInput,
+  type RevokeMerchandiseGuestAccessInput,
   type RevokeVendorAssignmentInput,
   type SubmitVendorUpdateInput,
+  type UpdateMerchandiseCollectionInput,
+  type UpdateMerchandiseItemInput,
   type WithdrawCapMeasurementInput,
+  type WithdrawGuestOfferInput,
+  type WithdrawHostOfferRuleInput,
 } from "./merchandise-schemas.js";
 import { hashVendorAssignmentToken, vendorTokenPrefix, type VendorAccessConfig } from "./merchandise-vendor-access.js";
+import {
+  hashMerchandiseGuestGrantToken,
+  merchandiseGuestTokenPrefix,
+  type MerchandiseGuestAccessConfig,
+} from "./merchandise-guest-access.js";
 import { requireScopedEvent } from "./programme-operations.js";
+import { operationalDisplayName } from "./guest-matching.js";
 import type { PlatformSnapshot } from "./store.js";
 
 function versioned(now: string) {
@@ -63,6 +80,9 @@ export function prohibitedMerchandisePayload(raw: unknown): string | undefined {
     if ((PROHIBITED_PAYMENT_KEYS as readonly string[]).some((item) => lower.includes(item.toLowerCase()))) {
       return key;
     }
+    if ((PROHIBITED_CORE_AUTHORITY_KEYS as readonly string[]).some((item) => lower.includes(item.toLowerCase()))) {
+      return key;
+    }
   }
   return undefined;
 }
@@ -77,7 +97,18 @@ export function assertNoProhibitedMerchandiseFields(raw: unknown): void {
   }
 }
 
+export function assertCapCircumferenceRaw(raw: unknown): void {
+  if (!raw || typeof raw !== "object") return;
+  const value = (raw as Record<string, unknown>).headCircumferenceInches;
+  if (typeof value === "string" && /cm|centimetre|centimeter/i.test(value)) {
+    throw new PlatformError("VALIDATION_FAILED", "cap circumference must be recorded in inches, not centimetres");
+  }
+}
+
 function requireScopedGuest(snap: PlatformSnapshot, organisationId: string, eventId: string, guestId: string) {
+  if (snap.guestHouseholds.some((item) => item.id === guestId) || snap.guestParties.some((item) => item.id === guestId)) {
+    throw new PlatformError("VALIDATION_FAILED", "household or party identifiers cannot substitute for a guest");
+  }
   const guest = snap.operationalGuests.find((item) => item.id === guestId);
   if (!guest || guest.organisationId !== organisationId || guest.eventId !== eventId) {
     throw new PlatformError("NOT_FOUND", "guest was not found");
@@ -120,7 +151,9 @@ export function resolveOfferAudience(
     if (input.audienceGuestIds.length === 0) {
       throw new PlatformError("VALIDATION_FAILED", "named-guest offers require explicit guest identifiers");
     }
-    return [...new Set(input.audienceGuestIds)];
+    const unique = [...new Set(input.audienceGuestIds)];
+    for (const guestId of unique) requireScopedGuest(snap, organisationId, eventId, guestId);
+    return unique;
   }
   if (input.audienceKind === "EXPLICIT_COHORT") {
     if (!input.cohortId) {
@@ -150,6 +183,39 @@ export function resolveOfferAudience(
         item.eventId === eventId,
     )
     .map((item) => item.subjectId);
+}
+
+export function previewOfferAudience(
+  snap: PlatformSnapshot,
+  organisationId: string,
+  eventId: string,
+  input: PreviewMerchandiseAudienceInput,
+) {
+  requireScopedEvent(snap, organisationId, eventId);
+  const guestIds = resolveOfferAudience(snap, organisationId, eventId, {
+    organisationId,
+    eventId,
+    reason: "preview",
+    collectionId: "00000000-0000-4000-8000-000000000001",
+    itemId: "00000000-0000-4000-8000-000000000001",
+    variantIds: ["00000000-0000-4000-8000-000000000001"],
+    audienceKind: input.audienceKind,
+    audienceGuestIds: input.audienceGuestIds,
+    cohortId: input.cohortId,
+    phaseId: input.phaseId,
+    hostSponsored: false,
+    priority: 0,
+    issueImmediately: false,
+    expectedCollectionVersion: 1,
+  });
+  return [...new Set(guestIds)].map((guestId) => {
+    requireScopedGuest(snap, organisationId, eventId, guestId);
+    const guest = snap.operationalGuests.find((item) => item.id === guestId);
+    return {
+      guestId,
+      displayName: guest ? operationalDisplayName(guest) : "Guest",
+    };
+  });
 }
 
 export function createMerchandiseCollectionOnSnap(
@@ -212,6 +278,34 @@ export function createMerchandiseItemOnSnap(snap: PlatformSnapshot, input: Creat
   snap.merchandiseItems.push(item);
   snap.merchandiseItemVariants.push(variant);
   return { item, variant };
+}
+
+export function updateMerchandiseCollectionOnSnap(
+  snap: PlatformSnapshot,
+  input: UpdateMerchandiseCollectionInput,
+  now: string,
+) {
+  const collection = requireCollection(snap, input.organisationId, input.eventId, input.collectionId);
+  bump(collection, now, input.expectedVersion);
+  if (input.phaseIds) {
+    for (const phaseId of input.phaseIds) {
+      const phase = snap.programmePhases.find((item) => item.id === phaseId);
+      if (!phase || phase.eventId !== collection.eventId) {
+        throw new PlatformError("NOT_FOUND", "programme phase was not found");
+      }
+    }
+    collection.phaseIds = input.phaseIds;
+  }
+  if (input.name) collection.name = input.name;
+  return collection;
+}
+
+export function updateMerchandiseItemOnSnap(snap: PlatformSnapshot, input: UpdateMerchandiseItemInput, now: string) {
+  const item = requireItem(snap, input.organisationId, input.eventId, input.itemId);
+  bump(item, now, input.expectedVersion);
+  if (input.name) item.name = input.name;
+  if (input.description) item.description = input.description;
+  return item;
 }
 
 export function createMerchandiseCohortOnSnap(snap: PlatformSnapshot, input: CreateMerchandiseCohortInput, now: string) {
@@ -400,6 +494,44 @@ export function issueHostOfferRuleOnSnap(snap: PlatformSnapshot, input: IssueHos
   return rule;
 }
 
+export function withdrawHostOfferRuleOnSnap(snap: PlatformSnapshot, input: WithdrawHostOfferRuleInput, now: string) {
+  requireScopedEvent(snap, input.organisationId, input.eventId);
+  const rule = snap.hostOfferRules.find((item) => item.id === input.ruleId);
+  if (!rule || rule.organisationId !== input.organisationId || rule.eventId !== input.eventId) {
+    throw new PlatformError("NOT_FOUND", "host offer rule was not found");
+  }
+  bump(rule, now, input.expectedVersion);
+  rule.status = "WITHDRAWN";
+  for (const offer of snap.guestOffers.filter((item) => item.sourceRuleId === rule.id && item.state !== "WITHDRAWN")) {
+    offer.state = "WITHDRAWN";
+    offer.version += 1;
+    offer.updatedAt = now;
+    const fulfilment = snap.merchandiseFulfilments.find((item) => item.guestOfferId === offer.id);
+    if (fulfilment && fulfilment.milestoneStatus !== "CANCELLED") {
+      fulfilment.milestoneStatus = "CANCELLED";
+      fulfilment.version += 1;
+      fulfilment.updatedAt = now;
+    }
+  }
+  return rule;
+}
+
+export function withdrawGuestOfferOnSnap(snap: PlatformSnapshot, input: WithdrawGuestOfferInput, now: string) {
+  const offer = snap.guestOffers.find((item) => item.id === input.offerId);
+  if (!offer || offer.organisationId !== input.organisationId || offer.eventId !== input.eventId) {
+    throw new PlatformError("NOT_FOUND", "guest offer was not found");
+  }
+  bump(offer, now, input.expectedVersion);
+  offer.state = "WITHDRAWN";
+  const fulfilment = snap.merchandiseFulfilments.find((item) => item.guestOfferId === offer.id);
+  if (fulfilment) {
+    fulfilment.milestoneStatus = "CANCELLED";
+    fulfilment.version += 1;
+    fulfilment.updatedAt = now;
+  }
+  return offer;
+}
+
 export function recordGuestParticipationOnSnap(snap: PlatformSnapshot, input: RecordGuestParticipationInput, now: string) {
   const offer = snap.guestOffers.find((item) => item.id === input.guestOfferId);
   if (!offer || offer.organisationId !== input.organisationId || offer.eventId !== input.eventId) {
@@ -461,9 +593,11 @@ export function captureCapMeasurementOnSnap(snap: PlatformSnapshot, input: Captu
     return existing;
   }
   if (existing) {
+    if (input.expectedVersion === undefined) {
+      throw new PlatformError("VERSION_CONFLICT", "this merchandise record changed while you were editing");
+    }
+    bump(existing, now, input.expectedVersion);
     existing.status = "CORRECTED";
-    existing.updatedAt = now;
-    existing.version += 1;
   }
   const measurement = CapMeasurementSchema.parse({
     id: randomUUID(),
@@ -522,6 +656,7 @@ export function createVendorAssignmentOnSnap(
     tokenPrefix: vendorTokenPrefix(token),
     status: "ACTIVE",
     expiresAt: input.expiresAt,
+    issuedAt: now,
     failedExchangeCount: 0,
     portalPermissions: ["fulfilment.view", "fulfilment.update", "exception.report"],
     ...versioned(now),
@@ -544,6 +679,145 @@ export function revokeVendorAssignmentOnSnap(snap: PlatformSnapshot, input: Revo
     session.version += 1;
   }
   return assignment;
+}
+
+export function renewVendorAssignmentOnSnap(
+  snap: PlatformSnapshot,
+  input: RenewVendorAssignmentInput,
+  now: string,
+  token: string,
+  config: VendorAccessConfig,
+) {
+  const assignment = snap.vendorAssignments.find((item) => item.id === input.assignmentId);
+  if (!assignment || assignment.organisationId !== input.organisationId || assignment.eventId !== input.eventId) {
+    throw new PlatformError("NOT_FOUND", "vendor assignment was not found");
+  }
+  if (assignment.status === "REVOKED") {
+    throw new PlatformError("FORBIDDEN", "a revoked vendor assignment cannot be renewed");
+  }
+  bump(assignment, now, input.expectedVersion);
+  assignment.tokenHash = hashVendorAssignmentToken(token, config);
+  assignment.tokenPrefix = vendorTokenPrefix(token);
+  assignment.status = "ACTIVE";
+  assignment.expiresAt = input.expiresAt;
+  assignment.renewedAt = now;
+  assignment.issuedAt = now;
+  assignment.failedExchangeCount = 0;
+  assignment.revokedAt = undefined;
+  for (const session of snap.vendorSessions.filter((item) => item.assignmentId === assignment.id && !item.revokedAt)) {
+    session.revokedAt = now;
+    session.updatedAt = now;
+    session.version += 1;
+  }
+  return assignment;
+}
+
+export function issueMerchandiseGuestGrantOnSnap(
+  snap: PlatformSnapshot,
+  input: IssueMerchandiseGuestAccessInput,
+  now: string,
+  token: string,
+  config: MerchandiseGuestAccessConfig,
+): { grant: ReturnType<typeof MerchandiseGuestGrantSchema.parse>; replayed: boolean } {
+  const event = requireScopedEvent(snap, input.organisationId, input.eventId);
+  requireScopedGuest(snap, event.organisationId, event.id, input.guestId);
+  const permitted = snap.guestOffers.some(
+    (item) =>
+      item.guestId === input.guestId &&
+      item.eventId === event.id &&
+      item.state !== "WITHDRAWN" &&
+      item.state !== "CONFLICT_HOLD",
+  );
+  if (!permitted) {
+    throw new PlatformError(
+      "VALIDATION_FAILED",
+      "private guest access requires an issued merchandise offer for this guest",
+    );
+  }
+  const active = snap.merchandiseGuestGrants.find(
+    (item) => item.guestId === input.guestId && item.eventId === event.id && item.status === "ACTIVE",
+  );
+  if (active) {
+    return { grant: active, replayed: true };
+  }
+  const grant = MerchandiseGuestGrantSchema.parse({
+    id: randomUUID(),
+    organisationId: event.organisationId,
+    clientId: event.clientId,
+    eventId: event.id,
+    guestId: input.guestId,
+    tokenHash: hashMerchandiseGuestGrantToken(token, config),
+    tokenPrefix: merchandiseGuestTokenPrefix(token),
+    status: "ACTIVE",
+    expiresAt: input.expiresAt,
+    issuedAt: now,
+    failedExchangeCount: 0,
+    ...versioned(now),
+  });
+  snap.merchandiseGuestGrants.push(grant);
+  return { grant, replayed: false };
+}
+
+export function renewMerchandiseGuestGrantOnSnap(
+  snap: PlatformSnapshot,
+  input: RenewMerchandiseGuestAccessInput,
+  now: string,
+  token: string,
+  config: MerchandiseGuestAccessConfig,
+) {
+  const previous = snap.merchandiseGuestGrants.find((item) => item.id === input.grantId);
+  if (!previous || previous.organisationId !== input.organisationId || previous.eventId !== input.eventId) {
+    throw new PlatformError("NOT_FOUND", "merchandise guest access was not found");
+  }
+  if (previous.status === "REVOKED") {
+    throw new PlatformError("FORBIDDEN", "revoked merchandise guest access cannot be renewed");
+  }
+  bump(previous, now, input.expectedVersion);
+  previous.status = "SUPERSEDED";
+  previous.renewedAt = now;
+  for (const session of snap.merchandiseGuestSessions.filter((item) => item.grantId === previous.id && !item.revokedAt)) {
+    session.revokedAt = now;
+    session.updatedAt = now;
+    session.version += 1;
+  }
+  const grant = MerchandiseGuestGrantSchema.parse({
+    id: randomUUID(),
+    organisationId: previous.organisationId,
+    clientId: previous.clientId,
+    eventId: previous.eventId,
+    guestId: previous.guestId,
+    tokenHash: hashMerchandiseGuestGrantToken(token, config),
+    tokenPrefix: merchandiseGuestTokenPrefix(token),
+    status: "ACTIVE",
+    expiresAt: input.expiresAt,
+    issuedAt: now,
+    renewedAt: now,
+    failedExchangeCount: 0,
+    ...versioned(now),
+  });
+  previous.supersededById = grant.id;
+  snap.merchandiseGuestGrants.push(grant);
+  return grant;
+}
+
+export function revokeMerchandiseGuestGrantOnSnap(
+  snap: PlatformSnapshot,
+  input: RevokeMerchandiseGuestAccessInput,
+  now: string,
+) {
+  const grant = snap.merchandiseGuestGrants.find((item) => item.id === input.grantId);
+  if (!grant || grant.organisationId !== input.organisationId || grant.eventId !== input.eventId) {
+    throw new PlatformError("NOT_FOUND", "merchandise guest access was not found");
+  }
+  bump(grant, now, input.expectedVersion);
+  grant.status = "REVOKED";
+  grant.revokedAt = now;
+  for (const session of snap.merchandiseGuestSessions.filter((item) => item.grantId === grant.id && !item.revokedAt)) {
+    session.revokedAt = now;
+    session.updatedAt = now;
+    session.version += 1;
+  }
+  return grant;
 }
 
 export function assignmentCoversFulfilment(

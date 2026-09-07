@@ -116,6 +116,7 @@ import {
 } from "./programme-schemas.js";
 import {
   assertNoProhibitedMerchandiseFields,
+  assertCapCircumferenceRaw,
   captureCapMeasurementOnSnap,
   createExternalContactLinkOnSnap,
   createHostOfferRuleOnSnap,
@@ -124,12 +125,21 @@ import {
   createMerchandiseItemOnSnap,
   createVendorAssignmentOnSnap,
   issueHostOfferRuleOnSnap,
+  issueMerchandiseGuestGrantOnSnap,
+  previewOfferAudience,
   raiseMerchandiseExceptionOnSnap,
   recordGuestParticipationOnSnap,
+  renewMerchandiseGuestGrantOnSnap,
+  renewVendorAssignmentOnSnap,
   reviewVendorUpdateOnSnap,
+  revokeMerchandiseGuestGrantOnSnap,
   revokeVendorAssignmentOnSnap,
   submitVendorUpdateOnSnap,
+  updateMerchandiseCollectionOnSnap,
+  updateMerchandiseItemOnSnap,
   withdrawCapMeasurementOnSnap,
+  withdrawGuestOfferOnSnap,
+  withdrawHostOfferRuleOnSnap,
 } from "./merchandise-operations.js";
 import {
   buildEventMerchandiseWorkspace,
@@ -150,19 +160,31 @@ import {
   CreateMerchandiseItemInputSchema,
   CreateVendorAssignmentInputSchema,
   IssueHostOfferRuleInputSchema,
+  IssueMerchandiseGuestAccessInputSchema,
+  PreviewMerchandiseAudienceInputSchema,
   RaiseMerchandiseExceptionInputSchema,
   RecordGuestParticipationInputSchema,
+  RenewMerchandiseGuestAccessInputSchema,
+  RenewVendorAssignmentInputSchema,
   ReviewVendorUpdateInputSchema,
+  RevokeMerchandiseGuestAccessInputSchema,
   RevokeVendorAssignmentInputSchema,
   SubmitVendorUpdateInputSchema,
+  UpdateMerchandiseCollectionInputSchema,
+  UpdateMerchandiseItemInputSchema,
   WithdrawCapMeasurementInputSchema,
+  WithdrawGuestOfferInputSchema,
+  WithdrawHostOfferRuleInputSchema,
   type CapMeasurement,
   type CreateVendorAssignmentInput,
   type ExternalContactLink,
+  type GuestOffer,
   type GuestParticipation,
   type HostOfferRule,
   type MerchandiseCollection,
   type MerchandiseException,
+  type MerchandiseGuestGrant,
+  type MerchandiseItem,
   type VendorAssignment,
   type VendorUpdate,
 } from "./merchandise-schemas.js";
@@ -177,6 +199,17 @@ import {
   type VendorAccessConfig,
   type VendorSessionActor,
 } from "./merchandise-vendor-access.js";
+import {
+  DEFAULT_NON_PRODUCTION_MERCHANDISE_GUEST_ACCESS,
+  assertMerchandiseGuestAccessConfig,
+  generateMerchandiseGuestGrantToken,
+  hashMerchandiseGuestGrantToken,
+  issueMerchandiseGuestSession,
+  merchandiseGuestAccessUnavailable,
+  readMerchandiseGuestSession,
+  type MerchandiseGuestAccessConfig,
+  type MerchandiseGuestSessionActor,
+} from "./merchandise-guest-access.js";
 import {
   applyGuestAmendment,
   buildOperationalGuest,
@@ -384,6 +417,7 @@ export interface PlatformServiceOptions {
   rsvpAccess?: RsvpAccessConfig;
   staffSession?: SessionConfig;
   vendorAccess?: VendorAccessConfig;
+  merchandiseGuestAccess?: MerchandiseGuestAccessConfig;
 }
 
 export interface IssuedRsvpInvitation {
@@ -450,6 +484,23 @@ export class PlatformService {
     const production = this.store.productionStatus === PRODUCTION_STORE_STATUS;
     const config = this.options.vendorAccess ?? DEFAULT_NON_PRODUCTION_VENDOR_ACCESS;
     assertVendorAccessConfig(config, production);
+    return config;
+  }
+
+  merchandiseGuestAccessConfig(): MerchandiseGuestAccessConfig {
+    const production = this.store.productionStatus === PRODUCTION_STORE_STATUS;
+    const rsvp = this.options.rsvpAccess ?? this.rsvpAccessConfig();
+    const config =
+      this.options.merchandiseGuestAccess ??
+      ({
+        grantPepper: rsvp.invitationPepper,
+        sessionSecret: rsvp.sessionSecret,
+        currentKeyId: rsvp.currentKeyId,
+        grantTtlSeconds: DEFAULT_NON_PRODUCTION_MERCHANDISE_GUEST_ACCESS.grantTtlSeconds,
+        sessionTtlSeconds: rsvp.sessionTtlSeconds ?? DEFAULT_NON_PRODUCTION_MERCHANDISE_GUEST_ACCESS.sessionTtlSeconds,
+        maxExchangeFailures: rsvp.maxExchangeFailures ?? DEFAULT_NON_PRODUCTION_MERCHANDISE_GUEST_ACCESS.maxExchangeFailures,
+      } satisfies MerchandiseGuestAccessConfig);
+    assertMerchandiseGuestAccessConfig(config, production);
     return config;
   }
 
@@ -1613,6 +1664,7 @@ export class PlatformService {
       organisationId,
       eventId,
       this.s04cCapabilities(ctx.actor, { organisationId, eventId }),
+      ctx.now,
     );
     if (!workspace) throw new PlatformError("NOT_FOUND", "merchandise workspace was not found");
     return workspace;
@@ -1661,6 +1713,49 @@ export class PlatformService {
       payloadHash: stableHash(input),
       run: (snap, ctx) => createMerchandiseItemOnSnap(snap, input, ctx.now).item,
     });
+  }
+
+  updateMerchandiseCollection(actor: ActorContext, raw: unknown): MerchandiseCollection {
+    assertNoProhibitedMerchandiseFields(raw);
+    const input = parseStrict(UpdateMerchandiseCollectionInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "merch.collection.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "merch.collection.updated",
+      resourceType: "merchandise_collection",
+      resourceId: input.collectionId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => updateMerchandiseCollectionOnSnap(snap, input, ctx.now),
+    });
+  }
+
+  updateMerchandiseItem(actor: ActorContext, raw: unknown): MerchandiseItem {
+    assertNoProhibitedMerchandiseFields(raw);
+    const input = parseStrict(UpdateMerchandiseItemInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "merch.collection.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "merch.item.updated",
+      resourceType: "merchandise_item",
+      resourceId: input.itemId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => updateMerchandiseItemOnSnap(snap, input, ctx.now),
+    });
+  }
+
+  previewMerchandiseAudience(actor: ActorContext, raw: unknown) {
+    assertNoProhibitedMerchandiseFields(raw);
+    const input = parseStrict(PreviewMerchandiseAudienceInputSchema, raw);
+    const { snap } = this.authorizeQuery(actor, "merch.offer.view", {
+      organisationId: input.organisationId,
+      eventId: input.eventId,
+    });
+    this.requireEvent(snap, input.organisationId, input.eventId);
+    return previewOfferAudience(snap, input.organisationId, input.eventId, input);
   }
 
   createMerchandiseCohort(actor: ActorContext, raw: unknown) {
@@ -1714,6 +1809,36 @@ export class PlatformService {
     });
   }
 
+  withdrawHostOfferRule(actor: ActorContext, raw: unknown): HostOfferRule {
+    const input = parseStrict(WithdrawHostOfferRuleInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "merch.offer.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "merch.offer.rule.withdrawn",
+      resourceType: "host_offer_rule",
+      resourceId: input.ruleId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => withdrawHostOfferRuleOnSnap(snap, input, ctx.now),
+    });
+  }
+
+  withdrawGuestOffer(actor: ActorContext, raw: unknown): GuestOffer {
+    const input = parseStrict(WithdrawGuestOfferInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "merch.offer.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "merch.offer.withdrawn",
+      resourceType: "guest_offer",
+      resourceId: input.offerId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => withdrawGuestOfferOnSnap(snap, input, ctx.now),
+    });
+  }
+
   recordGuestParticipation(actor: ActorContext, raw: unknown): GuestParticipation {
     assertNoProhibitedMerchandiseFields(raw);
     const input = parseStrict(RecordGuestParticipationInputSchema, raw);
@@ -1731,6 +1856,7 @@ export class PlatformService {
 
   captureCapMeasurement(actor: ActorContext, raw: unknown): CapMeasurement {
     assertNoProhibitedMerchandiseFields(raw);
+    assertCapCircumferenceRaw(raw);
     const input = parseStrict(CaptureCapMeasurementInputSchema, raw);
     return this.mutate(actor, {
       permission: "merch.capMeasurement.manage",
@@ -1762,7 +1888,7 @@ export class PlatformService {
   createVendorAssignment(actor: ActorContext, raw: unknown): { assignment: VendorAssignment; token: string } {
     assertNoProhibitedMerchandiseFields(raw);
     const input = parseStrict<CreateVendorAssignmentInput>(CreateVendorAssignmentInputSchema, raw);
-    const token = generateVendorAssignmentToken();
+    let token = "";
     const assignment = this.mutate(actor, {
       permission: "merch.vendorAssignment.manage",
       scope: { organisationId: input.organisationId, eventId: input.eventId },
@@ -1771,7 +1897,30 @@ export class PlatformService {
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash({ ...input, token: undefined }),
-      run: (snap, ctx) => createVendorAssignmentOnSnap(snap, input, ctx.now, token, this.vendorAccessConfig()),
+      run: (snap, ctx) => {
+        token = generateVendorAssignmentToken();
+        return createVendorAssignmentOnSnap(snap, input, ctx.now, token, this.vendorAccessConfig());
+      },
+    });
+    return { assignment, token };
+  }
+
+  renewVendorAssignment(actor: ActorContext, raw: unknown): { assignment: VendorAssignment; token: string } {
+    const input = parseStrict(RenewVendorAssignmentInputSchema, raw);
+    let token = "";
+    const assignment = this.mutate(actor, {
+      permission: "merch.vendorAssignment.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "merch.vendorAssignment.renewed",
+      resourceType: "vendor_assignment",
+      resourceId: input.assignmentId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        token = generateVendorAssignmentToken();
+        return renewVendorAssignmentOnSnap(snap, input, ctx.now, token, this.vendorAccessConfig());
+      },
     });
     return { assignment, token };
   }
@@ -1788,6 +1937,68 @@ export class PlatformService {
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash(input),
       run: (snap, ctx) => revokeVendorAssignmentOnSnap(snap, input, ctx.now),
+    });
+  }
+
+  issueMerchandiseGuestAccess(
+    actor: ActorContext,
+    raw: unknown,
+  ): { grant: MerchandiseGuestGrant; token: string; replayed: boolean } {
+    assertNoProhibitedMerchandiseFields(raw);
+    const input = parseStrict(IssueMerchandiseGuestAccessInputSchema, raw);
+    let token = "";
+    let replayed = false;
+    const grant = this.mutate(actor, {
+      permission: "merch.offer.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "merch.guestAccess.issued",
+      resourceType: "merchandise_guest_grant",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        token = generateMerchandiseGuestGrantToken();
+        const issued = issueMerchandiseGuestGrantOnSnap(snap, input, ctx.now, token, this.merchandiseGuestAccessConfig());
+        replayed = issued.replayed;
+        if (issued.replayed) token = "";
+        return issued.grant;
+      },
+    });
+    return { grant, token, replayed };
+  }
+
+  renewMerchandiseGuestAccess(actor: ActorContext, raw: unknown): { grant: MerchandiseGuestGrant; token: string } {
+    const input = parseStrict(RenewMerchandiseGuestAccessInputSchema, raw);
+    let token = "";
+    const grant = this.mutate(actor, {
+      permission: "merch.offer.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "merch.guestAccess.renewed",
+      resourceType: "merchandise_guest_grant",
+      resourceId: input.grantId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        token = generateMerchandiseGuestGrantToken();
+        return renewMerchandiseGuestGrantOnSnap(snap, input, ctx.now, token, this.merchandiseGuestAccessConfig());
+      },
+    });
+    return { grant, token };
+  }
+
+  revokeMerchandiseGuestAccess(actor: ActorContext, raw: unknown): MerchandiseGuestGrant {
+    const input = parseStrict(RevokeMerchandiseGuestAccessInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "merch.offer.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "merch.guestAccess.revoked",
+      resourceType: "merchandise_guest_grant",
+      resourceId: input.grantId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => revokeMerchandiseGuestGrantOnSnap(snap, input, ctx.now),
     });
   }
 
@@ -1836,14 +2047,14 @@ export class PlatformService {
   }
 
   guestMerchandiseView(sessionToken: string, now?: string): GuestMerchandiseProjection {
-    const capability = this.requireGuestCapability(sessionToken, now ?? new Date().toISOString());
+    const capability = this.resolveGuestMerchandiseCapability(sessionToken, now ?? new Date().toISOString());
     const snap = this.store.snapshot();
     return buildGuestMerchandiseProjection(snap, capability.eventId, capability.guestId);
   }
 
   guestRecordParticipation(sessionToken: string, raw: unknown, now?: string): GuestParticipation {
     assertNoProhibitedMerchandiseFields(raw);
-    const capability = this.requireGuestCapability(sessionToken, now ?? new Date().toISOString());
+    const capability = this.resolveGuestMerchandiseCapability(sessionToken, now ?? new Date().toISOString());
     const input = parseStrict(RecordGuestParticipationInputSchema, {
       ...(typeof raw === "object" && raw ? raw : {}),
       organisationId: capability.organisationId,
@@ -1873,7 +2084,8 @@ export class PlatformService {
 
   guestCaptureCapMeasurement(sessionToken: string, raw: unknown, now?: string): CapMeasurement {
     assertNoProhibitedMerchandiseFields(raw);
-    const capability = this.requireGuestCapability(sessionToken, now ?? new Date().toISOString());
+    assertCapCircumferenceRaw(raw);
+    const capability = this.resolveGuestMerchandiseCapability(sessionToken, now ?? new Date().toISOString());
     const input = parseStrict(CaptureCapMeasurementInputSchema, {
       ...(typeof raw === "object" && raw ? raw : {}),
       organisationId: capability.organisationId,
@@ -1900,7 +2112,7 @@ export class PlatformService {
   }
 
   guestWithdrawCapMeasurement(sessionToken: string, raw: unknown, now?: string): CapMeasurement {
-    const capability = this.requireGuestCapability(sessionToken, now ?? new Date().toISOString());
+    const capability = this.resolveGuestMerchandiseCapability(sessionToken, now ?? new Date().toISOString());
     const input = parseStrict(WithdrawCapMeasurementInputSchema, {
       ...(typeof raw === "object" && raw ? raw : {}),
       organisationId: capability.organisationId,
@@ -1926,6 +2138,99 @@ export class PlatformService {
     });
     this.store.replace(snap);
     return result;
+  }
+
+  exchangeMerchandiseGuestAccess(
+    token: string,
+    now?: string,
+    correlationId = "merch-guest-access",
+  ): { sessionToken: string; view: GuestMerchandiseProjection } {
+    const config = this.merchandiseGuestAccessConfig();
+    const snap = this.store.snapshot();
+    const occurredAt = now ?? new Date().toISOString();
+    const tokenHash = hashMerchandiseGuestGrantToken(token, config);
+    const grant = snap.merchandiseGuestGrants.find((item) => item.tokenHash === tokenHash);
+    if (!grant || grant.status !== "ACTIVE" || Date.parse(grant.expiresAt) <= Date.parse(occurredAt)) {
+      this.writeAudit(snap, {
+        action: "merch.guestAccess.denied",
+        outcome: "DENIED",
+        resourceType: "merchandise_guest_grant",
+        correlationId,
+        reason: "merchandise_guest_access_unavailable",
+        occurredAt,
+        actorType: "GUEST_CAPABILITY",
+      });
+      this.store.replace(snap);
+      throw merchandiseGuestAccessUnavailable();
+    }
+    if (grant.failedExchangeCount >= (config.maxExchangeFailures ?? 8)) {
+      grant.status = "REVOKED";
+      grant.revokedAt = occurredAt;
+      grant.version += 1;
+      grant.updatedAt = occurredAt;
+      this.writeAudit(snap, {
+        action: "merch.guestAccess.denied",
+        outcome: "DENIED",
+        organisationId: grant.organisationId,
+        eventId: grant.eventId,
+        resourceType: "merchandise_guest_grant",
+        resourceId: grant.id,
+        correlationId,
+        reason: "merchandise_guest_access_unavailable",
+        occurredAt,
+        actorType: "GUEST_CAPABILITY",
+      });
+      this.store.replace(snap);
+      throw merchandiseGuestAccessUnavailable();
+    }
+    const sessionId = randomUUID();
+    const issued = issueMerchandiseGuestSession(
+      {
+        sessionId,
+        grantId: grant.id,
+        guestId: grant.guestId,
+        eventId: grant.eventId,
+        organisationId: grant.organisationId,
+        now: occurredAt,
+      },
+      config,
+    );
+    snap.merchandiseGuestSessions.push({
+      id: sessionId,
+      grantId: grant.id,
+      organisationId: grant.organisationId,
+      eventId: grant.eventId,
+      guestId: grant.guestId,
+      issuedAt: issued.actor.issuedAt,
+      expiresAt: issued.actor.expiresAt,
+      schemaVersion: SCHEMA_VERSION,
+      version: 1,
+      createdAt: occurredAt,
+      updatedAt: occurredAt,
+    });
+    this.writeAudit(snap, {
+      action: "merch.guestAccess.exchanged",
+      outcome: "SUCCESS",
+      organisationId: grant.organisationId,
+      eventId: grant.eventId,
+      resourceType: "merchandise_guest_grant",
+      resourceId: grant.id,
+      correlationId,
+      occurredAt,
+      actorType: "GUEST_CAPABILITY",
+    });
+    this.store.replace(snap);
+    return {
+      sessionToken: issued.token,
+      view: buildGuestMerchandiseProjection(snap, grant.eventId, grant.guestId),
+    };
+  }
+
+  guestAttemptCoreMutation(): never {
+    throw new PlatformError(
+      "FORBIDDEN",
+      "merchandise guest sessions cannot create invitation, RSVP, companion, attendance, credential or payment records",
+    );
   }
 
   exchangeVendorAccess(token: string, now?: string, correlationId = "vendor-access"): { sessionToken: string; view: VendorPortalProjection } {
@@ -4276,6 +4581,57 @@ export class PlatformService {
     return actor;
   }
 
+  private tryMerchandiseGuestCapability(
+    sessionToken: string,
+    now: string,
+  ): MerchandiseGuestSessionActor | undefined {
+    try {
+      const actor = readMerchandiseGuestSession(sessionToken, this.merchandiseGuestAccessConfig(), now);
+      const snap = this.store.snapshot();
+      const session = snap.merchandiseGuestSessions.find((item) => item.id === actor.sessionId);
+      const grant = snap.merchandiseGuestGrants.find((item) => item.id === actor.grantId);
+      if (
+        !session ||
+        session.revokedAt ||
+        Date.parse(session.expiresAt) <= Date.parse(now) ||
+        session.guestId !== actor.guestId ||
+        session.eventId !== actor.eventId ||
+        !grant ||
+        grant.status !== "ACTIVE" ||
+        grant.guestId !== actor.guestId ||
+        grant.eventId !== actor.eventId ||
+        Date.parse(grant.expiresAt) <= Date.parse(now)
+      ) {
+        return undefined;
+      }
+      return actor;
+    } catch {
+      return undefined;
+    }
+  }
+
+  private resolveGuestMerchandiseCapability(
+    sessionToken: string,
+    now: string,
+  ): { guestId: string; eventId: string; organisationId: string; sessionId: string } {
+    const merch = this.tryMerchandiseGuestCapability(sessionToken, now);
+    if (merch) {
+      return {
+        guestId: merch.guestId,
+        eventId: merch.eventId,
+        organisationId: merch.organisationId,
+        sessionId: merch.sessionId,
+      };
+    }
+    const rsvp = this.requireGuestCapability(sessionToken, now);
+    return {
+      guestId: rsvp.guestId,
+      eventId: rsvp.eventId,
+      organisationId: rsvp.organisationId,
+      sessionId: rsvp.sessionId,
+    };
+  }
+
   private guestSelfServiceViewFromSnap(
     snap: PlatformSnapshot,
     capability: GuestSessionActor,
@@ -4634,6 +4990,8 @@ export class PlatformService {
       snap.vendorAssignments,
       snap.vendorUpdates,
       snap.vendorSessions,
+      snap.merchandiseGuestGrants,
+      snap.merchandiseGuestSessions,
       snap.externalContactLinks,
       snap.merchandiseExceptions,
     ];
@@ -4755,6 +5113,8 @@ export class PlatformService {
       snap.vendorAssignments,
       snap.vendorUpdates,
       snap.vendorSessions,
+      snap.merchandiseGuestGrants,
+      snap.merchandiseGuestSessions,
       snap.externalContactLinks,
       snap.merchandiseExceptions,
       snap.guestDuplicateCandidates,

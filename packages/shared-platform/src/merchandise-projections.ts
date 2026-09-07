@@ -1,4 +1,5 @@
 import { operationalDisplayName } from "./guest-matching.js";
+import { describeMerchandiseAccessState } from "./merchandise-access-state.js";
 import { safeVendorContactUrl } from "./merchandise-operations.js";
 import type { PermissionKey } from "./schemas.js";
 import type { PlatformSnapshot } from "./store.js";
@@ -59,6 +60,7 @@ export function buildEventMerchandiseWorkspace(
   organisationId: string,
   eventId: string,
   capabilities: MerchandiseCapabilities,
+  now = new Date().toISOString(),
 ) {
   const event = snap.events.find((item) => item.id === eventId && item.organisationId === organisationId);
   if (!event) return undefined;
@@ -80,6 +82,10 @@ export function buildEventMerchandiseWorkspace(
       windowEndsAt: collection.windowEndsAt,
       version: collection.version,
       itemCount: snap.merchandiseItems.filter((item) => item.collectionId === collection.id).length,
+      nextAction:
+        snap.merchandiseItems.filter((item) => item.collectionId === collection.id).length === 0
+          ? "Add the first item to this collection"
+          : undefined,
     })),
     items: snap.merchandiseItems
       .filter((item) => item.eventId === eventId)
@@ -88,11 +94,21 @@ export function buildEventMerchandiseWorkspace(
         collectionId: item.collectionId,
         name: item.name,
         type: item.type,
+        description: item.description,
         madeToMeasureCap: item.madeToMeasureCap,
+        version: item.version,
         variants: snap.merchandiseItemVariants
           .filter((variant) => variant.itemId === item.id)
           .map((variant) => ({ id: variant.id, label: variant.label })),
       })),
+    directoryGuests: capabilities.canManageOffer
+      ? snap.operationalGuests
+          .filter((item) => item.eventId === eventId && item.organisationId === organisationId)
+          .map((item) => ({ id: item.id, displayName: operationalDisplayName(item) }))
+      : [],
+    phases: snap.programmePhases
+      .filter((item) => item.eventId === eventId && item.organisationId === organisationId)
+      .map((item) => ({ id: item.id, name: item.name })),
     cohorts: snap.merchandiseCohorts
       .filter((item) => item.eventId === eventId)
       .map((cohort) => ({
@@ -149,14 +165,56 @@ export function buildEventMerchandiseWorkspace(
     vendorAssignments: capabilities.canViewVendorAssignment
       ? snap.vendorAssignments
           .filter((item) => item.eventId === eventId)
-          .map((item) => ({
-            id: item.id,
-            vendorDisplayName: item.vendorDisplayName,
-            status: item.status,
-            expiresAt: item.expiresAt,
-            version: item.version,
-            tokenPrefix: item.tokenPrefix,
-          }))
+          .map((item) => {
+            const access = describeMerchandiseAccessState({
+              status: item.status,
+              expiresAt: item.expiresAt,
+              revokedAt: item.revokedAt,
+              renewedAt: item.renewedAt,
+              now,
+              hasUsableIssuedLink: false,
+            });
+            return {
+              id: item.id,
+              vendorId: item.vendorId,
+              vendorDisplayName: item.vendorDisplayName,
+              status: item.status,
+              accessState: access.state,
+              accessLabel: access.label,
+              ready: false,
+              expiresAt: item.expiresAt,
+              version: item.version,
+              tokenPrefix: item.tokenPrefix,
+              collectionIds: item.collectionIds,
+              itemIds: item.itemIds,
+            };
+          })
+      : [],
+    guestGrants: capabilities.canViewOffer
+      ? snap.merchandiseGuestGrants
+          .filter((item) => item.eventId === eventId)
+          .map((item) => {
+            const access = describeMerchandiseAccessState({
+              status: item.status,
+              expiresAt: item.expiresAt,
+              revokedAt: item.revokedAt,
+              renewedAt: item.renewedAt,
+              now,
+              hasUsableIssuedLink: false,
+            });
+            return {
+              id: item.id,
+              guestId: item.guestId,
+              guestDisplayName: guestName(snap, item.guestId),
+              status: item.status,
+              accessState: access.state,
+              accessLabel: access.label,
+              ready: false,
+              expiresAt: item.expiresAt,
+              version: item.version,
+              tokenPrefix: item.tokenPrefix,
+            };
+          })
       : [],
     vendorUpdates: capabilities.canReviewException || capabilities.canViewFulfilment
       ? updates.map((item) => ({
@@ -258,15 +316,28 @@ export function buildVendorPortalProjection(
     vendorDisplayName: assignment.vendorDisplayName,
     eventId: assignment.eventId,
     expiresAt: assignment.expiresAt,
-    fulfilments: fulfilments.map((item) => ({
-      id: item.id,
-      displayName: guestName(snap, item.guestId),
-      itemName: itemName(snap, item.itemId),
-      variantLabel: snap.merchandiseItemVariants.find((variant) => variant.id === item.variantId)?.label,
-      vendorReference: item.vendorReference,
-      milestoneStatus: item.milestoneStatus,
-      version: item.version,
-    })),
+    fulfilments: fulfilments.map((item) => {
+      const merchItem = snap.merchandiseItems.find((record) => record.id === item.itemId);
+      const cap =
+        merchItem?.madeToMeasureCap
+          ? snap.capMeasurements.find(
+              (record) =>
+                record.guestId === item.guestId &&
+                record.itemId === item.itemId &&
+                record.status === "ACTIVE",
+            )
+          : undefined;
+      return {
+        id: item.id,
+        displayName: guestName(snap, item.guestId),
+        itemName: itemName(snap, item.itemId),
+        variantLabel: snap.merchandiseItemVariants.find((variant) => variant.id === item.variantId)?.label,
+        vendorReference: item.vendorReference,
+        milestoneStatus: item.milestoneStatus,
+        version: item.version,
+        headCircumferenceInches: cap?.headCircumferenceInches,
+      };
+    }),
     guestListRestricted: true,
     rsvpHidden: true,
     coreMutationForbidden: true,

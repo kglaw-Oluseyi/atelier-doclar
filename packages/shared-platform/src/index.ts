@@ -10,6 +10,7 @@ export {
   SESSION_COOKIE,
   RSVP_SESSION_COOKIE,
   VENDOR_SESSION_COOKIE,
+  MERCHANDISE_GUEST_SESSION_COOKIE,
   STAFF_SESSION_REVOCATION_REASONS,
   STAFF_SESSION_DENIAL_STATUSES,
   type StaffSessionDenialStatus,
@@ -270,8 +271,11 @@ export {
   migrateEosS04C,
   rollbackEosS04C,
   applyEosS04CToSnapshot,
+  migrateEosS04CGuestGrants,
   EOS_S04C_MIGRATION_ID,
   EOS_S04C_MIGRATION_CHECKSUM,
+  EOS_S04C_GUEST_GRANT_MIGRATION_ID,
+  EOS_S04C_GUEST_GRANT_MIGRATION_CHECKSUM,
   type S04CMigrationResult,
 } from "./merchandise-migration.js";
 export {
@@ -287,7 +291,13 @@ export {
 export {
   assertNoProhibitedMerchandiseFields,
   prohibitedMerchandisePayload,
+  assertCapCircumferenceRaw,
 } from "./merchandise-operations.js";
+export {
+  describeMerchandiseAccessState,
+  MERCHANDISE_ACCESS_DISPLAY_STATES,
+  type MerchandiseAccessDisplayState,
+} from "./merchandise-access-state.js";
 export {
   buildEventMerchandiseWorkspace,
   buildGuestMerchandiseProjection,
@@ -326,6 +336,13 @@ export {
   type VendorAccessConfig,
   type VendorSessionActor,
 } from "./merchandise-vendor-access.js";
+export {
+  DEFAULT_NON_PRODUCTION_MERCHANDISE_GUEST_ACCESS,
+  assertMerchandiseGuestAccessConfig,
+  readMerchandiseGuestSession,
+  type MerchandiseGuestAccessConfig,
+  type MerchandiseGuestSessionActor,
+} from "./merchandise-guest-access.js";
 export {
   ProgrammePhaseSchema,
   PhaseEntitlementSchema,

@@ -1,10 +1,10 @@
-import { PlatformError, S04C_VENDOR_TOKEN } from "@maison-doclar/shared-platform";
+import { PlatformError } from "@maison-doclar/shared-platform";
 import { AtelierPageHeader } from "../../../../../components/atelier-page-header";
 import { AtelierOperationalState } from "../../../../../components/atelier-operational-state";
 import { AtelierSectionTabs } from "../../../../../components/atelier-section-tabs";
 import { MerchandiseWorkspace } from "../../../../../components/merchandise-workspace";
 import { AppShell } from "../../../../../components/shell";
-import { readActionFlash } from "../../../../../server/action-flash";
+import { readActionFlash, readAudiencePreviewFlash, readIssuedAccessFlash } from "../../../../../server/action-flash";
 import { operationalStateFromCode, operationalStateFromQuery } from "../../../../../server/operational-state";
 import { guardedActor } from "../../../../../server/guard";
 import { merchandisePermissions, resolveMerchandiseEvent } from "../../../../../server/merchandise-scope";
@@ -12,7 +12,17 @@ import { getRuntime } from "../../../../../server/runtime";
 
 function successCopy(ok: string): string {
   if (ok === "collection") return "The merchandise collection was recorded.";
+  if (ok === "item") return "The merchandise item was recorded.";
   if (ok === "cohort") return "The host-assigned cohort was recorded. Identities were not merged.";
+  if (ok === "preview") return "The resolved target set is shown below. Identities were not merged.";
+  if (ok === "offer") return "The merchandise offer was recorded.";
+  if (ok === "issue") return "The merchandise offer was issued to independent guests.";
+  if (ok === "withdraw") return "The merchandise offer was withdrawn.";
+  if (ok === "guest-access") return "Private merchandise guest access was issued or already active.";
+  if (ok === "guest-revoke") return "Private merchandise guest access was revoked.";
+  if (ok === "vendor") return "Synthetic vendor access was issued.";
+  if (ok === "vendor-renew") return "Synthetic vendor access was renewed. Prior sessions lost authority.";
+  if (ok === "vendor-revoke") return "Vendor access was revoked and fails closed.";
   if (ok === "review") return "The vendor report was reviewed as attributed evidence.";
   if (ok === "exception") return "The merchandise exception was recorded without payment data.";
   if (ok === "choice") return "The private guest choice was recorded.";
@@ -61,6 +71,8 @@ export default async function MerchandisePage({
     );
   }
   const flash = await readActionFlash();
+  const issued = await readIssuedAccessFlash();
+  const previewNames = await readAudiencePreviewFlash();
   const stateQuery = typeof query.state === "string" ? query.state : undefined;
   const errorQuery = typeof query.error === "string" ? query.error : undefined;
   const ok = typeof query.ok === "string" ? query.ok : undefined;
@@ -85,8 +97,10 @@ export default async function MerchandisePage({
         items={[
           { href: "#merchandise-overview", label: "Readiness" },
           { href: "#collections", label: "Collections" },
-          { href: "#cohorts", label: "Cohorts" },
+          { href: "#items", label: "Items" },
+          { href: "#cohorts", label: "Audience" },
           { href: "#offers", label: "Offers" },
+          { href: "#guest-access", label: "Guest access" },
           { href: "#fulfilment", label: "Fulfilment" },
           { href: "#vendor-handoff", label: "Vendor" },
         ]}
@@ -94,7 +108,7 @@ export default async function MerchandisePage({
       {flash ? <AtelierOperationalState state={operationalStateFromCode(flash.code, flash.message)} /> : null}
       {queryState ? <AtelierOperationalState state={queryState} /> : null}
       {success ? <AtelierOperationalState state={success} /> : null}
-      <MerchandiseWorkspace workspace={workspace} vendorToken={S04C_VENDOR_TOKEN} />
+      <MerchandiseWorkspace workspace={workspace} issued={issued} previewNames={previewNames} />
     </AppShell>
   );
 }

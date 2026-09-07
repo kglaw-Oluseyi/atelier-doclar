@@ -10,7 +10,7 @@ import {
   type Honorific,
 } from "@maison-doclar/shared-platform";
 import { fixturesAllowed } from "./config";
-import { consumeActionFlash, writeActionFlash, writeRecoveredMarker } from "./action-flash";
+import { consumeActionFlash, writeActionFlash, writeAudiencePreviewFlash, writeIssuedAccessFlash, writeRecoveredMarker } from "./action-flash";
 import { classifyActionError } from "./operational-state";
 import { getRuntime, withDurable } from "./runtime";
 import { clearStaffSessionCookie, readStaffSessionCookie, writeStaffSessionCookie } from "./staff-session-cookie";
@@ -1605,6 +1605,17 @@ async function merchandiseFail(eventId: string, error: unknown): Promise<never> 
   redirect(`/app/events/${encodeURIComponent(eventId)}/merchandise?${failQuery(error)}`);
 }
 
+function merchExpiry(formData: FormData, name = "expiresAt"): string {
+  return toIso(String(formData.get(name) ?? "")) ?? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+}
+
+async function withMerchandiseActor(eventId: string) {
+  const { actor } = await requireActor().catch((error) => merchandiseFail(eventId, error));
+  const organisation = getRuntime().service.listOrganisations(actor)[0];
+  if (!organisation) return await merchandiseFail(eventId, new Error("No organisation assignment is available."));
+  return { actor, organisation };
+}
+
 export async function createMerchandiseCollectionAction(formData: FormData): Promise<void> {
   return await withDurable(async () => {
     const eventId = String(formData.get("eventId") ?? "");
@@ -1617,6 +1628,7 @@ export async function createMerchandiseCollectionAction(formData: FormData): Pro
         eventId,
         name: String(formData.get("name") ?? ""),
         hostOwnerLabel: String(formData.get("hostOwnerLabel") ?? ""),
+        phaseIds: formData.getAll("phaseIds").map((item) => String(item)).filter(Boolean),
         windowStartsAt: toIso(String(formData.get("windowStartsAt") ?? "")) ?? String(formData.get("windowStartsAt") ?? ""),
         windowEndsAt: toIso(String(formData.get("windowEndsAt") ?? "")) ?? String(formData.get("windowEndsAt") ?? ""),
         reason: String(formData.get("reason") ?? "Create merchandise collection"),
@@ -1640,8 +1652,9 @@ export async function createMerchandiseCohortAction(formData: FormData): Promise
         organisationId: organisation.id,
         eventId,
         label: String(formData.get("label") ?? ""),
-        guestIds: String(formData.get("guestIds") ?? "")
-          .split(",")
+        guestIds: formData
+          .getAll("guestIds")
+          .flatMap((item) => String(item).split(","))
           .map((item) => item.trim())
           .filter(Boolean),
         reason: String(formData.get("reason") ?? "Create host-assigned merchandise cohort"),
@@ -1773,10 +1786,333 @@ export async function vendorLogoutAction(): Promise<void> {
   redirect("/vendor/unavailable");
 }
 
+export async function createMerchandiseItemAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor, organisation } = await withMerchandiseActor(eventId);
+    const type = String(formData.get("type") ?? "");
+    try {
+      getRuntime().service.createMerchandiseItem(actor, {
+        organisationId: organisation.id,
+        eventId,
+        collectionId: String(formData.get("collectionId") ?? ""),
+        type,
+        name: String(formData.get("name") ?? ""),
+        description: String(formData.get("description") ?? "Host-coordinated merchandise item"),
+        madeToMeasureCap: type === "MADE_TO_MEASURE_CAP",
+        variantLabel: String(formData.get("variantLabel") ?? "Standard"),
+        reason: String(formData.get("reason") ?? "Create merchandise item"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await merchandiseFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/merchandise?ok=item`);
+  });
+}
+
+export async function updateMerchandiseItemAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor, organisation } = await withMerchandiseActor(eventId);
+    try {
+      getRuntime().service.updateMerchandiseItem(actor, {
+        organisationId: organisation.id,
+        eventId,
+        itemId: String(formData.get("itemId") ?? ""),
+        name: optionalFormValue(formData, "name"),
+        description: optionalFormValue(formData, "description"),
+        expectedVersion: Number(formData.get("expectedVersion")),
+        reason: String(formData.get("reason") ?? "Update merchandise item"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await merchandiseFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/merchandise?ok=item`);
+  });
+}
+
+export async function updateMerchandiseCollectionAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor, organisation } = await withMerchandiseActor(eventId);
+    try {
+      getRuntime().service.updateMerchandiseCollection(actor, {
+        organisationId: organisation.id,
+        eventId,
+        collectionId: String(formData.get("collectionId") ?? ""),
+        phaseIds: formData.getAll("phaseIds").map((item) => String(item)).filter(Boolean),
+        expectedVersion: Number(formData.get("expectedVersion")),
+        reason: String(formData.get("reason") ?? "Set collection phase applicability"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await merchandiseFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/merchandise?ok=collection`);
+  });
+}
+
+export async function previewMerchandiseAudienceAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor, organisation } = await withMerchandiseActor(eventId);
+    try {
+      const preview = getRuntime().service.previewMerchandiseAudience(actor, {
+        organisationId: organisation.id,
+        eventId,
+        audienceKind: String(formData.get("audienceKind") ?? "NAMED_GUESTS"),
+        audienceGuestIds: formData.getAll("audienceGuestIds").map((item) => String(item)).filter(Boolean),
+        cohortId: optionalFormValue(formData, "cohortId"),
+        phaseId: optionalFormValue(formData, "phaseId"),
+      });
+      await writeAudiencePreviewFlash(preview.map((item) => item.displayName));
+    } catch (error) {
+      await merchandiseFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/merchandise?ok=preview`);
+  });
+}
+
+export async function createHostOfferRuleAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor, organisation } = await withMerchandiseActor(eventId);
+    try {
+      getRuntime().service.createHostOfferRule(actor, {
+        organisationId: organisation.id,
+        eventId,
+        collectionId: String(formData.get("collectionId") ?? ""),
+        itemId: String(formData.get("itemId") ?? ""),
+        variantIds: formData.getAll("variantIds").map((item) => String(item)).filter(Boolean),
+        audienceKind: String(formData.get("audienceKind") ?? "NAMED_GUESTS"),
+        audienceGuestIds: formData.getAll("audienceGuestIds").map((item) => String(item)).filter(Boolean),
+        cohortId: optionalFormValue(formData, "cohortId"),
+        phaseId: optionalFormValue(formData, "phaseId"),
+        hostSponsored: formData.get("hostSponsored") === "1",
+        issueImmediately: formData.get("issueImmediately") === "1",
+        expectedCollectionVersion: Number(
+          formData.get(`collectionVersion-${String(formData.get("collectionId") ?? "")}`) ||
+            formData.get("expectedCollectionVersion"),
+        ),
+        reason: String(formData.get("reason") ?? "Create merchandise offer"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await merchandiseFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/merchandise?ok=offer`);
+  });
+}
+
+export async function issueHostOfferRuleAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor, organisation } = await withMerchandiseActor(eventId);
+    try {
+      getRuntime().service.issueHostOfferRule(actor, {
+        organisationId: organisation.id,
+        eventId,
+        ruleId: String(formData.get("ruleId") ?? ""),
+        expectedRuleVersion: Number(formData.get("expectedRuleVersion")),
+        reason: String(formData.get("reason") ?? "Issue merchandise offer"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await merchandiseFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/merchandise?ok=issue`);
+  });
+}
+
+export async function withdrawGuestOfferAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor, organisation } = await withMerchandiseActor(eventId);
+    try {
+      getRuntime().service.withdrawGuestOffer(actor, {
+        organisationId: organisation.id,
+        eventId,
+        offerId: String(formData.get("offerId") ?? ""),
+        expectedVersion: Number(formData.get("expectedVersion")),
+        reason: String(formData.get("reason") ?? "Withdraw merchandise offer"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await merchandiseFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/merchandise?ok=withdraw`);
+  });
+}
+
+export async function issueMerchandiseGuestAccessAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor, organisation } = await withMerchandiseActor(eventId);
+    try {
+      const issued = getRuntime().service.issueMerchandiseGuestAccess(actor, {
+        organisationId: organisation.id,
+        eventId,
+        guestId: String(formData.get("guestId") ?? ""),
+        expiresAt: merchExpiry(formData),
+        reason: String(formData.get("reason") ?? "Issue private merchandise guest access"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+      if (issued.token) {
+        await writeIssuedAccessFlash({ kind: "guest", token: issued.token, subjectId: issued.grant.id });
+      }
+    } catch (error) {
+      await merchandiseFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/merchandise?ok=guest-access`);
+  });
+}
+
+export async function renewMerchandiseGuestAccessAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor, organisation } = await withMerchandiseActor(eventId);
+    try {
+      const issued = getRuntime().service.renewMerchandiseGuestAccess(actor, {
+        organisationId: organisation.id,
+        eventId,
+        grantId: String(formData.get("grantId") ?? ""),
+        expiresAt: merchExpiry(formData),
+        expectedVersion: Number(formData.get("expectedVersion")),
+        reason: String(formData.get("reason") ?? "Renew private merchandise guest access"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+      if (issued.token) {
+        await writeIssuedAccessFlash({ kind: "guest", token: issued.token, subjectId: issued.grant.id });
+      }
+    } catch (error) {
+      await merchandiseFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/merchandise?ok=guest-access`);
+  });
+}
+
+export async function revokeMerchandiseGuestAccessAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor, organisation } = await withMerchandiseActor(eventId);
+    try {
+      getRuntime().service.revokeMerchandiseGuestAccess(actor, {
+        organisationId: organisation.id,
+        eventId,
+        grantId: String(formData.get("grantId") ?? ""),
+        expectedVersion: Number(formData.get("expectedVersion")),
+        reason: String(formData.get("reason") ?? "Revoke private merchandise guest access"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await merchandiseFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/merchandise?ok=guest-revoke`);
+  });
+}
+
+export async function createVendorAssignmentAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor, organisation } = await withMerchandiseActor(eventId);
+    try {
+      const issued = getRuntime().service.createVendorAssignment(actor, {
+        organisationId: organisation.id,
+        eventId,
+        vendorId: String(formData.get("vendorId") ?? ""),
+        vendorDisplayName: String(formData.get("vendorDisplayName") ?? ""),
+        collectionIds: formData.getAll("collectionIds").map((item) => String(item)).filter(Boolean),
+        itemIds: formData.getAll("itemIds").map((item) => String(item)).filter(Boolean),
+        expiresAt: merchExpiry(formData),
+        reason: String(formData.get("reason") ?? "Issue synthetic vendor assignment"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+      if (issued.token) {
+        await writeIssuedAccessFlash({ kind: "vendor", token: issued.token, subjectId: issued.assignment.id });
+      }
+    } catch (error) {
+      await merchandiseFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/merchandise?ok=vendor`);
+  });
+}
+
+export async function renewVendorAssignmentAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor, organisation } = await withMerchandiseActor(eventId);
+    try {
+      const issued = getRuntime().service.renewVendorAssignment(actor, {
+        organisationId: organisation.id,
+        eventId,
+        assignmentId: String(formData.get("assignmentId") ?? ""),
+        expiresAt: merchExpiry(formData),
+        expectedVersion: Number(formData.get("expectedVersion")),
+        reason: String(formData.get("reason") ?? "Renew synthetic vendor access"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+      if (issued.token) {
+        await writeIssuedAccessFlash({ kind: "vendor", token: issued.token, subjectId: issued.assignment.id });
+      }
+    } catch (error) {
+      await merchandiseFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/merchandise?ok=vendor-renew`);
+  });
+}
+
+export async function revokeVendorAssignmentAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor, organisation } = await withMerchandiseActor(eventId);
+    try {
+      getRuntime().service.revokeVendorAssignment(actor, {
+        organisationId: organisation.id,
+        eventId,
+        assignmentId: String(formData.get("assignmentId") ?? ""),
+        expectedVersion: Number(formData.get("expectedVersion")),
+        reason: String(formData.get("reason") ?? "Revoke vendor access"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await merchandiseFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/merchandise?ok=vendor-revoke`);
+  });
+}
+
+export async function exchangeMerchandiseGuestAccessAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const token = String(formData.get("token") ?? "").trim();
+    try {
+      const { ensureRuntime } = await import("./runtime");
+      await ensureRuntime();
+      const exchanged = getRuntime().service.exchangeMerchandiseGuestAccess(token);
+      const { setMerchandiseGuestSessionCookie } = await import("./merchandise-guest-access");
+      await setMerchandiseGuestSessionCookie(exchanged.sessionToken);
+    } catch {
+      redirect("/offers/unavailable");
+    }
+    redirect("/offers");
+  });
+}
+
+export async function merchandiseGuestLogoutAction(): Promise<void> {
+  const { clearMerchandiseGuestSessionCookie } = await import("./merchandise-guest-access");
+  await clearMerchandiseGuestSessionCookie();
+  redirect("/offers/unavailable");
+}
+
 export async function guestRecordParticipationAction(formData: FormData): Promise<void> {
   return await withDurable(async () => {
-    const token = await (await import("./guest-access")).readGuestSessionCookie();
-    if (!token) redirect("/rsvp/unavailable");
+    const surface = String(formData.get("surface") ?? "rsvp") === "offers" ? "offers" : "rsvp";
+    const token =
+      surface === "offers"
+        ? await (await import("./merchandise-guest-access")).readMerchandiseGuestSessionCookie()
+        : await (await import("./guest-access")).readGuestSessionCookie();
+    if (!token) redirect(surface === "offers" ? "/offers/unavailable" : "/rsvp/unavailable");
     try {
       getRuntime().service.guestRecordParticipation(token, {
         guestOfferId: String(formData.get("guestOfferId") ?? ""),
@@ -1790,37 +2126,47 @@ export async function guestRecordParticipationAction(formData: FormData): Promis
         idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
       });
     } catch (error) {
-      redirect("/rsvp?error=" + encodeURIComponent(actionError(error)));
+      redirect(`/${surface}?error=` + encodeURIComponent(actionError(error)));
     }
-    redirect("/rsvp?ok=merchandise");
+    redirect(`/${surface}?ok=merchandise`);
   });
 }
 
 export async function guestCaptureCapAction(formData: FormData): Promise<void> {
   return await withDurable(async () => {
-    const token = await (await import("./guest-access")).readGuestSessionCookie();
-    if (!token) redirect("/rsvp/unavailable");
+    const surface = String(formData.get("surface") ?? "rsvp") === "offers" ? "offers" : "rsvp";
+    const token =
+      surface === "offers"
+        ? await (await import("./merchandise-guest-access")).readMerchandiseGuestSessionCookie()
+        : await (await import("./guest-access")).readGuestSessionCookie();
+    if (!token) redirect(surface === "offers" ? "/offers/unavailable" : "/rsvp/unavailable");
+    const inchesRaw = String(formData.get("headCircumferenceInches") ?? "");
     try {
       getRuntime().service.guestCaptureCapMeasurement(token, {
         guestId: String(formData.get("guestId") ?? ""),
         itemId: String(formData.get("itemId") ?? ""),
-        headCircumferenceInches: Number(formData.get("headCircumferenceInches")),
+        headCircumferenceInches: /cm|centimetre|centimeter/i.test(inchesRaw) ? inchesRaw : Number(inchesRaw),
         consentGiven: formData.get("consent") === "on",
+        expectedVersion: Number(formData.get("expectedVersion") || 0) || undefined,
         reason: String(formData.get("reason") ?? "Consented cap circumference"),
         organisationId: "00000000-0000-4000-8000-000000000001",
         eventId: "00000000-0000-4000-8000-000000000021",
       });
     } catch (error) {
-      redirect("/rsvp?error=" + encodeURIComponent(actionError(error)));
+      redirect(`/${surface}?error=` + encodeURIComponent(actionError(error)));
     }
-    redirect("/rsvp?ok=cap");
+    redirect(`/${surface}?ok=cap`);
   });
 }
 
 export async function guestWithdrawCapAction(formData: FormData): Promise<void> {
   return await withDurable(async () => {
-    const token = await (await import("./guest-access")).readGuestSessionCookie();
-    if (!token) redirect("/rsvp/unavailable");
+    const surface = String(formData.get("surface") ?? "rsvp") === "offers" ? "offers" : "rsvp";
+    const token =
+      surface === "offers"
+        ? await (await import("./merchandise-guest-access")).readMerchandiseGuestSessionCookie()
+        : await (await import("./guest-access")).readGuestSessionCookie();
+    if (!token) redirect(surface === "offers" ? "/offers/unavailable" : "/rsvp/unavailable");
     try {
       getRuntime().service.guestWithdrawCapMeasurement(token, {
         measurementId: String(formData.get("measurementId") ?? ""),
@@ -1830,8 +2176,8 @@ export async function guestWithdrawCapAction(formData: FormData): Promise<void> 
         eventId: "00000000-0000-4000-8000-000000000021",
       });
     } catch (error) {
-      redirect("/rsvp?error=" + encodeURIComponent(actionError(error)));
+      redirect(`/${surface}?error=` + encodeURIComponent(actionError(error)));
     }
-    redirect("/rsvp?ok=cap-withdrawn");
+    redirect(`/${surface}?ok=cap-withdrawn`);
   });
 }
