@@ -624,12 +624,12 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 | Evidence | `apps/event-os/src/components/programme-workspace.tsx`; `packages/shared-platform/src/programme-schemas.ts` |
 | Affected surface or contract | Multi-day grouping, zone assignment, exception workspace |
 | Reason for deferral | First complete vertical authorised; remaining pack prompts are not this milestone |
-| Blocking | NON_BLOCKING for this milestone; required before slice acceptance |
-| Current owner | EOS-S04B remaining prompts |
+| Blocking | NON_BLOCKING. Accepted as known first-vertical debt; does not reopen EOS-S04B. |
+| Current owner | Later Event OS / successor prompts if required |
 | Required regression coverage | Days, zones and restricted exception rationale stay event-scoped and projection-controlled |
-| Latest safe remediation milestone | EOS-S04B P11 / independent review |
-| Current status | OPEN |
-| Resolution evidence | |
+| Latest safe remediation milestone | Successor work if separately authorised; not an S04B reopening |
+| Current status | OPEN — carried forward |
+| Resolution evidence | EOS-S04B accepted 2026-09-07 on the authorised first vertical; remaining pack UI was outside that milestone |
 
 ---
 
@@ -653,7 +653,7 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 - `TDR-S04A-019` — conflict recovery lock. Closed by focused remediation II plus 2026-09-07 Claude focused evidence.
 - `TDR-S04A-020` — Access Administration exposure. Closed by focused remediation II plus 2026-09-07 Claude focused evidence.
 
-EOS-S04 remains CLOSED / ACCEPTED and is not reopened. EOS-S04A is ACCEPTED and is not reopened.
+EOS-S04 remains CLOSED / ACCEPTED and is not reopened. EOS-S04A is ACCEPTED and is not reopened. EOS-S04B is ACCEPTED and is not reopened.
 
 ## Final acceptance observations (2026-09-07)
 
@@ -682,4 +682,6 @@ These do not reopen EOS-S04A and do not create new blocking IDs.
 | EOS-S04A final focused remediation II | Entered blocking TDR-S04A-018, TDR-S04A-019 and TDR-S04A-020 from Claude’s focused findings. Implemented RETAIN exact-value preservation and display, one-click conflict recovery, and `assignment.manage` Access Administration. TDR-S04A-012 reclassified as a tool/client artefact after Railway HTTP-log correlation (0 origin 503; 499 client-abort). TDR-S04A-011 remains blocking before client onboarding. EOS-S04A remains IN_REVIEW / not ACCEPTED. |
 | EOS-S04A formal technical acceptance 2026-09-07 | ChatGPT accepted EOS-S04A at SHA `8f1957d2353db539449d9bcce62f9e4d71eb31af` after Claude-in-Chrome focused verification (zero BLOCKER, zero MAJOR). Closed TDR-S04A-016–020. TDR-S04A-011 remains blocking before real client onboarding and is not blocking successor development. TDR-S04A-015, permanent IdP, synthetic-data cleanup, inactive providers and local Next.js E2E memory pressure remain carried forward. EOS-S04A is ACCEPTED. Catalogue accepted-slice count remains 4. Historical closeout text that S04B–F remain unauthorised is superseded for S04B only by MD-PR-S018. |
 | EOS-S04B ratification MD-PR-S018 2026-09-07 | George Lawson ratifies the EOS-S04B Cursor prompt pack and authorises implementation. Status RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS. TDR-S04A-011 remains blocking before real client onboarding and is not blocking S04B. EOS-S04C–F and EOS-S05 remain unauthorised. Production remains unauthorised. |
-| EOS-S04B first complete vertical 2026-09-07 | Implemented event-scoped phases, arrival routing, checkpoints, credential resolution, vehicles and signed Slice 8 projections. Entered TDR-S04B-001–004. Slice remains IN_PROGRESS / not ACCEPTED. Control Tower not redeployed. EOS-S04C–F and EOS-S05 not started. |
+| EOS-S04B first complete vertical 2026-09-07 | Implemented event-scoped phases, arrival routing, checkpoints, credential resolution, vehicles and signed Slice 8 projections. Entered TDR-S04B-001–004. Historical status: IN_PROGRESS / not ACCEPTED. Control Tower not redeployed. EOS-S04C–F and EOS-S05 not started. |
+| EOS-S04B accessibility/responsive remediation 2026-09-07 | Functional champagne `#8B6E38` on light surfaces; Playwright 360/768/1440/200% evidence. Historical status: IN_REVIEW. |
+| EOS-S04B formal technical acceptance 2026-09-07 | ChatGPT accepted EOS-S04B at SHA `f9f218c9d3e357ba82e6c04e7409138267a94396`. No further S04B verification required. TDR-S04B-001–004 remain carried forward and do not reopen the slice. Catalogue accepted-slice count remains 4. EOS-S04C–F and EOS-S05 remain unauthorised. Production remains unauthorised. |

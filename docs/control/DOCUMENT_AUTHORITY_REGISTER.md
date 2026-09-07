@@ -62,5 +62,16 @@ This addendum does not rewrite the B0 row set or the S04A acceptance addendum.
 | Title | Path | Current programme status | Notes |
 |-------|------|--------------------------|-------|
 | EOS-S04B CEO ratification overlay | `docs/control/EOS_S04B_RATIFICATION.md` | CANONICAL AUTHORITY RECORD | Changes S04B from DRAFT / NOT AUTHORISED to RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS. Does not authorise EOS-S04C–F, EOS-S05 or production. |
-| EOS-S04B first-vertical Claude prompt | `docs/control/EOS_S04B_CLAUDE_IN_CHROME_FIRST_VERTICAL.md` | INDEPENDENT VERIFICATION PROMPT | Claude verifies; Claude does not accept the slice. |
+| EOS-S04B first-vertical Claude prompt | `docs/control/EOS_S04B_CLAUDE_IN_CHROME_FIRST_VERTICAL.md` | INDEPENDENT VERIFICATION PROMPT | Historical. Claude verifies; Claude does not accept the slice. |
+
+## Addendum — 2026-09-07 EOS-S04B acceptance (`MD-PR-S019`)
+
+This addendum does not rewrite the B0 row set or the earlier S04A/S04B addenda. Historical `IN_REVIEW` and ratification rows above remain dated history.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| EOS-S04B Formal Technical Acceptance | `docs/control/EOS_S04B_ACCEPTANCE.md` | CANONICAL ACCEPTANCE RECORD | Status `ACCEPTED` at SHA `f9f218c9d3e357ba82e6c04e7409138267a94396`. Not catalogue-slice acceptance. |
+| EOS-S04B accessibility/responsive remediation | `docs/control/EOS_S04B_ACCESSIBILITY_RESPONSIVE_REMEDIATION.md` | HISTORICAL REMEDIATION EVIDENCE | Written while the slice was `IN_REVIEW`. Now part of accepted evidence. |
+| EOS-S04C Controlled Slice Pack v1.0 DRAFT | `docs/control/Maison_Doclar_EOS-S04C_Controlled_Slice_Pack_v1.0_DRAFT.docx` | DRAFT FOR CEO RATIFICATION — implementation not authorised | Sequential successor after accepted S04B. Filename retained. |
+| EOS-S04C Cursor Prompt Pack v1.0 | `docs/control/Maison_Doclar_EOS-S04C_Cursor_Prompt_Pack_v1.0.docx` | DRAFT / NOT IMPLEMENTATION AUTHORITY | P00–P11 prepared; issue only after separate CEO ratification. |
 

@@ -313,18 +313,36 @@ ACCEPTED on `2026-09-07` by `ChatGPT / AI CTO` after Claude-in-Chrome focused ve
 **Prompt Control ID:** `MD-PR-S018`
 **Slice ID:** `EOS-S04B`
 **Title:** Multi-Phase Events, Arrival Routing & Perimeter Access
-**Status:** `RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS`
+**Status:** `ACCEPTED`
 **Catalogue slice:** `NO` — accepted-slice count remains 4
 
 | ID | Kind | Summary | Location |
 |----|------|---------|----------|
-| EV-EOS-S04B-RATIFY | DOCUMENT | CEO ratification and implementation authority | `docs/control/EOS_S04B_RATIFICATION.md` |
+| EV-EOS-S04B-ACCEPT | DOCUMENT | Formal technical acceptance record | `docs/control/EOS_S04B_ACCEPTANCE.md` |
+| EV-EOS-S04B-RATIFY | DOCUMENT | CEO ratification and implementation authority (historical IN_PROGRESS) | `docs/control/EOS_S04B_RATIFICATION.md` |
 | EV-EOS-S04B-LEDGER | DOCUMENT | Cumulative S04B build ledger | `docs/control/EOS_S04B_BUILD_LEDGER.md` |
 | EV-EOS-S04B-PACK | DOCUMENT | Controlling Cursor prompt pack v1.0 | `docs/control/Maison_Doclar_EOS-S04B_Cursor_Prompt_Pack_v1.0.docx` |
 | EV-EOS-S04B-SLICE | DOCUMENT | Requirements source (historical DRAFT filename retained) | `docs/control/Maison_Doclar_EOS-S04B_Controlled_Slice_Pack_v1.0_DRAFT.docx` |
 | EV-EOS-S04B-UNIT | TEST | Programme contracts, services and persistence | `packages/shared-platform/test/programme-*.test.ts` |
 | EV-EOS-S04B-E2E | TEST | Event OS first-vertical Playwright | `apps/event-os/e2e/s04b-vertical.spec.ts` |
+| EV-EOS-S04B-A11Y | TEST | Responsive and contrast Playwright | `apps/event-os/e2e/s04b-responsive-a11y.spec.ts` |
+| EV-EOS-S04B-REMEDIATE | DOCUMENT | Accessibility/responsive remediation (historical IN_REVIEW) | `docs/control/EOS_S04B_ACCESSIBILITY_RESPONSIVE_REMEDIATION.md` |
 | EV-EOS-S04B-CLAUDE | DOCUMENT | Independent Claude-in-Chrome verification prompt | `docs/control/EOS_S04B_CLAUDE_IN_CHROME_FIRST_VERTICAL.md` |
+| EV-EOS-S04B-COMMIT | COMMIT | Accepted implementation SHA | `git:f9f218c9d3e357ba82e6c04e7409138267a94396` |
+
+ACCEPTED on `2026-09-07` by `ChatGPT / AI CTO` after Claude-in-Chrome first-vertical verification and accessibility/responsive remediation. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised` remains false. Decorative `#B89A62` remains intentionally non-functional on ivory. Functional light-surface accent is `#8B6E38`. Railway restart CLI hang is a tooling limitation. Does not authorise EOS-S04C–F, EOS-S05, real data, providers or production.
+
+## EOS-S04C
+
+**Slice ID:** `EOS-S04C`
+**Title:** Aso-Ebi, Aso-Oke & Event Merchandise Coordination
+**Status:** `DRAFT FOR CEO RATIFICATION — implementation not authorised`
+**Position:** after EOS-S04B and before EOS-S05
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-EOS-S04C-PACK | DOCUMENT | Controlled slice pack v1.0 draft | `docs/control/Maison_Doclar_EOS-S04C_Controlled_Slice_Pack_v1.0_DRAFT.docx` |
+| EV-EOS-S04C-PROMPTS | DOCUMENT | Controlled Cursor prompt pack v1.0 (P00–P11) | `docs/control/Maison_Doclar_EOS-S04C_Cursor_Prompt_Pack_v1.0.docx` |
 
 ## EOS-S04F
 

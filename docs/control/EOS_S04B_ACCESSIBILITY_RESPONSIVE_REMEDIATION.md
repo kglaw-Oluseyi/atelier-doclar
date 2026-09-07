@@ -1,6 +1,11 @@
 # EOS-S04B accessibility and responsive remediation
 
-**Authority:** MD-PR-S018. This record is evidence for final acceptance. It does not accept the slice.  
+**Authority:** MD-PR-S018. This record is evidence for final acceptance. Historical status when written: the slice remained `IN_REVIEW`.
+
+## Dated decision — 2026-09-07
+
+ChatGPT independently accepted EOS-S04B after this remediation and the earlier first-vertical evidence against SHA `f9f218c9d3e357ba82e6c04e7409138267a94396`. Canonical acceptance: `docs/control/EOS_S04B_ACCEPTANCE.md`. The body below is retained as dated remediation history.
+
 **Date:** 2026-09-07  
 **Repository:** `kglaw-Oluseyi/atelier-doclar` · `main`  
 **Starting SHA:** `5fd7fbda224699b1d820de1aa8b3876f8594da5a`  

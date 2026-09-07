@@ -1,8 +1,8 @@
 # EOS-S04B Cumulative Build Ledger
 
 **Authority:** EOS-S04B implementation authority (George Lawson, CEO) — `MD-PR-S018`  
-**Created:** 2026-09-07  
-**Status:** OPEN — first complete vertical in progress; slice not ACCEPTED  
+**Created:** 2026-09-07
+**Status:** ACCEPTED — first complete vertical and accessibility/responsive remediation closed; historical `IN_PROGRESS` / `IN_REVIEW` entries below are dated history
 **Production:** `productionAuthorised=false`; protected gates remain UNSIGNED / `NOT_READY`  
 **Railway:** project `atelier-doclar` only, under `docs/control/DEPLOYMENT_AND_PRODUCTION_REALISM_POLICY.md`
 
@@ -82,7 +82,7 @@ Starting baseline: `40d65fa97fc9f2f0424757b7abd27872c0644f21`.
 
 ## Accessibility and responsive remediation — 2026-09-07
 
-Starting SHA: `5fd7fbda224699b1d820de1aa8b3876f8594da5a`. Slice remains `IN_REVIEW`. Control Tower and EOS-S04C–F / EOS-S05 untouched.
+Starting SHA: `5fd7fbda224699b1d820de1aa8b3876f8594da5a`. Historical status at this entry: `IN_REVIEW`. Control Tower and EOS-S04C–F / EOS-S05 untouched.
 
 | Change | Detail |
 |--------|--------|
@@ -110,3 +110,19 @@ Starting SHA: `5fd7fbda224699b1d820de1aa8b3876f8594da5a`. Slice remains `IN_REVI
 ### Not started
 
 EOS-S04C, EOS-S04D, EOS-S04E, EOS-S04F, EOS-S05. Academy P10 and whole-slice P11 are outside this milestone. Control Tower was not changed.
+
+## Formal technical acceptance — 2026-09-07
+
+ChatGPT / AI CTO accepted EOS-S04B at SHA `f9f218c9d3e357ba82e6c04e7409138267a94396`. No further EOS-S04B verification is required. Documentation-only acceptance commit does not replace that SHA and does not redeploy Event OS.
+
+| Field | Value |
+|-------|-------|
+| Status | `ACCEPTED` |
+| Acceptance record | `docs/control/EOS_S04B_ACCEPTANCE.md` |
+| Prompt Control ID | `MD-PR-S019` |
+| Decorative champagne | `#B89A62` remains intentionally non-functional on ivory |
+| Functional light-surface accent | `#8B6E38` |
+| Visual language | Command Atelier |
+| Railway restart CLI hang | Tooling limitation; not an application failure |
+| `productionAuthorised` | `false` |
+| Catalogue slice | NO — accepted-slice count remains 4 |
