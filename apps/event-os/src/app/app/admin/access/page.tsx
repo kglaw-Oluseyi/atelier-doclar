@@ -1,11 +1,44 @@
+import { authorize, PlatformError, type Person } from "@maison-doclar/shared-platform";
 import { AssignmentForm } from "../../../../components/assignment-form";
 import { AtelierPageHeader } from "../../../../components/atelier-page-header";
+import { AtelierOperationalState } from "../../../../components/atelier-operational-state";
 import { AppShell } from "../../../../components/shell";
 import { guardedActor } from "../../../../server/guard";
+import { operationalStateFromCode } from "../../../../server/operational-state";
 import { getRuntime } from "../../../../server/runtime";
 
-export default async function AccessPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
-  const error = (await searchParams).error;
+function isAccessDenied(error: unknown): boolean {
+  if (error instanceof PlatformError) {
+    return error.code === "FORBIDDEN" || error.code === "ACCESS_PENDING";
+  }
+  if (!error || typeof error !== "object" || !("code" in error)) return false;
+  const code = (error as { code?: unknown }).code;
+  return code === "FORBIDDEN" || code === "ACCESS_PENDING";
+}
+
+function AccessDenied({
+  person,
+  organisationName,
+}: {
+  person: Person;
+  organisationName?: string;
+}) {
+  return (
+    <AppShell person={person} organisationName={organisationName} current="/app/admin/access">
+      <h1>Access administration</h1>
+      <AtelierOperationalState
+        state={operationalStateFromCode("FORBIDDEN", "This assignment cannot administer access.")}
+      />
+    </AppShell>
+  );
+}
+
+export default async function AccessPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string; state?: string }>;
+}) {
+  const params = await searchParams;
   const { actor, person } = await guardedActor();
   const runtime = getRuntime();
   const organisation = runtime.service.listOrganisations(actor)[0];
@@ -17,34 +50,51 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
       </AppShell>
     );
   }
-  const assignments = runtime.service.listAssignments(actor, organisation.id);
-  const events = runtime.service.listEvents(actor, organisation.id);
-  let people: Array<{ id: string; displayName: string }> = [];
-  try {
-    people = runtime.service.listPersons(actor, organisation.id);
-  } catch {
-    people = [];
+
+  const actorSnap = runtime.service.resolveActor(person.id);
+  const canManage = authorize({
+    actor: actorSnap,
+    permission: "assignment.manage",
+    scope: { organisationId: organisation.id },
+  }).allow;
+
+  if (!canManage) {
+    try {
+      runtime.service.getAccessAdministration(actor, organisation.id);
+    } catch (error) {
+      if (!isAccessDenied(error)) throw error;
+    }
+    return <AccessDenied person={person} organisationName={organisation.displayName} />;
   }
 
-  return (
-    <AppShell person={person} organisationName={organisation.displayName} current="/app/admin/access">
-      <AtelierPageHeader
-        eyebrow="Governance"
-        title="Access administration"
-        lede="Technical administration is not CEO or Event Director business authority."
-      />
-      <ul className="atelier-ledger">
-        {assignments.map((item) => (
-          <li key={item.id}>
-            {item.personId} · {item.status} · {item.eventId ?? "organisation"}
-          </li>
-        ))}
-      </ul>
-      {people.length > 0 ? (
-        <AssignmentForm people={people} events={events} error={error} />
-      ) : (
-        <p className="empty">Assignment administration is not available for this role.</p>
-      )}
-    </AppShell>
-  );
+  try {
+    const administration = runtime.service.getAccessAdministration(actor, organisation.id);
+    return (
+      <AppShell person={person} organisationName={organisation.displayName} current="/app/admin/access">
+        <AtelierPageHeader
+          eyebrow="Governance"
+          title="Access administration"
+          lede="Technical administration is not CEO or Event Director business authority."
+        />
+        {params.state === "FORBIDDEN" ? (
+          <AtelierOperationalState
+            state={operationalStateFromCode("FORBIDDEN", "This assignment cannot grant or revoke access.")}
+          />
+        ) : null}
+        <ul className="atelier-ledger">
+          {administration.assignments.map((item) => (
+            <li key={item.id}>
+              {item.personId} · {item.status} · {item.eventId ?? "organisation"}
+            </li>
+          ))}
+        </ul>
+        <AssignmentForm people={administration.people} events={administration.events} error={params.error} />
+      </AppShell>
+    );
+  } catch (error) {
+    if (isAccessDenied(error)) {
+      return <AccessDenied person={person} organisationName={organisation.displayName} />;
+    }
+    throw error;
+  }
 }

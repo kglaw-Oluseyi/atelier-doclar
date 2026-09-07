@@ -10,7 +10,7 @@ export function AssignmentForm({
   error?: string;
 }) {
   return (
-    <form className="form" action={grantAssignmentAction}>
+    <form className="form" action={grantAssignmentAction} data-testid="grant-assignment-form">
       <label>
         Person
         <select name="personId" required>
