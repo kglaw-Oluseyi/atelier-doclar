@@ -21,8 +21,30 @@ describe("EOS-S04B persistence", () => {
     const receipt = store.snapshot().s04bMigrationReceipts[0];
     assert.ok(receipt);
     assert.equal(receipt?.checksum, EOS_S04B_MIGRATION_CHECKSUM);
+    const permissionCount = store.snapshot().permissions.length;
+    const replayed = await applySyntheticSeedIfNeeded(store, db);
+    await store.flush();
+    assert.equal(replayed.seed.replayed, true);
+    assert.equal(store.snapshot().permissions.length, permissionCount);
     const reopened = await PostgresPlatformStore.open(db);
     assert.ok(reopened.snapshot().programmePhases.length >= store.snapshot().programmePhases.length);
+  });
+
+  it("replays without rewriting accepted permission bodies that already exist", async () => {
+    const db = new MemoryPlatformPg();
+    const store = await PostgresPlatformStore.open(db);
+    await applySyntheticSeedIfNeeded(store, db);
+    await store.flush();
+    const row = db.documents.find((item) => item.collection === "permissions");
+    assert.ok(row);
+    const body = row.body as Record<string, unknown>;
+    body.extraHistoricalField = true;
+    const reopened = await PostgresPlatformStore.open(db);
+    const replayed = await applySyntheticSeedIfNeeded(reopened, db);
+    await reopened.flush();
+    assert.equal(replayed.seed.replayed, true);
+    const kept = reopened.snapshot().permissions.find((item) => item.id === row.id) as { extraHistoricalField?: boolean } | undefined;
+    assert.equal(kept?.extraHistoricalField, true);
   });
 
   it("refuses rollback after later entitlements and never truncates accepted events", () => {

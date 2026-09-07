@@ -2,6 +2,7 @@ import { applyS04AFixturesIfMissing } from "./addressing-fixtures.js";
 import { applyS04BFixturesIfMissing } from "./programme-fixtures.js";
 import { applyEosS04BToSnapshot } from "./programme-migration.js";
 import { loadNonProductionFixtures } from "./bootstrap.js";
+import { seededPermissions, seededRoles } from "./catalog.js";
 import type { PgQueryable } from "./postgres-schema.js";
 import { PlatformService, type PlatformServiceOptions } from "./service.js";
 import type { PlatformSnapshot, PlatformStore } from "./store.js";
@@ -78,6 +79,25 @@ function applyS04BLayer(store: PlatformStore, now = "2026-09-07T10:00:00.000Z"):
   if (withFixtures !== snap) store.replace(withFixtures);
 }
 
+/** Replay-safe: insert missing catalogue rows only. Never rewrite accepted permission bodies. */
+export function ensureMissingCatalogueRecords(store: PlatformStore): void {
+  const snap = store.snapshot();
+  const permissionIds = new Set(snap.permissions.map((item) => item.id));
+  const roleIds = new Set(snap.roles.map((item) => item.id));
+  let changed = false;
+  for (const permission of seededPermissions()) {
+    if (permissionIds.has(permission.id)) continue;
+    snap.permissions.push(permission);
+    changed = true;
+  }
+  for (const role of seededRoles()) {
+    if (roleIds.has(role.id)) continue;
+    snap.roles.push(role);
+    changed = true;
+  }
+  if (changed) store.replace(snap);
+}
+
 export function applySyntheticSnapshot(store: PlatformStore, options: PlatformServiceOptions = {}): PlatformService {
   const service =
     store.snapshot().organisations.length > 0 ? new PlatformService(store, options) : loadNonProductionFixtures(store, options);
@@ -96,7 +116,7 @@ export async function applySyntheticSeedIfNeeded(
   const existing = await readSeedLedger(client);
   if (existing?.seedVersion === SYNTHETIC_SEED_VERSION) {
     const service = new PlatformService(store, options);
-    service.seedCatalogue();
+    ensureMissingCatalogueRecords(store);
     applyS04BLayer(store);
     return {
       service,

@@ -69,6 +69,7 @@ Starting baseline: `40d65fa97fc9f2f0424757b7abd27872c0644f21`.
 3. `getByRole("heading", { name: "Perimeter" })` also matched the page title.
 4. `resolveCheckpointAction` caught Next.js `redirect()` and rendered a false server-failure state.
 5. Railway `next build` rejected `result` as possibly undefined after `programmeFail` (local tsc did not).
+6. Replay `seedCatalogue()` rewrote accepted permission bodies at version 1 and failed closed on Railway Postgres. Replay now inserts missing catalogue rows only.
 
 ### Gates
 
