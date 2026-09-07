@@ -1,6 +1,6 @@
 {
   "scheme": "MD-PR-SNNN successor accountability IDs; historical MD-PR-NNNN remain intact",
-  "generated_at": "2026-09-05T21:20:00Z",
+  "generated_at": "2026-09-07T00:00:00Z",
   "notes": "Do not impersonate historical Control Tower prompt IDs. MD-PR-0011 is already used. Historical authorising_instruction values that say do not deploy or no Railway remain slice history. Current deploy-by-default rule is docs/control/DEPLOYMENT_AND_PRODUCTION_REALISM_POLICY.md (6 September 2026). Real operations and other Railway projects remain gated.",
   "entries": [
     {
@@ -122,6 +122,14 @@
       "product": "EVENT_OS",
       "title": "EOS-S04 Formal Technical Acceptance Record",
       "authorising_instruction": "Record formal technical acceptance of EOS-S04 after independent AI CTO review; do not deploy, start EOS-S05, or authorise production"
+    },
+    {
+      "prompt_control_id": "MD-PR-S017",
+      "native_id": "S04A-ACCEPT",
+      "slice_id": "EOS-S04A",
+      "product": "EVENT_OS",
+      "title": "EOS-S04A Formal Technical Acceptance Record",
+      "authorising_instruction": "Record formal technical acceptance of EOS-S04A after independent AI CTO review and Claude-in-Chrome focused verification; do not start EOS-S04B–F or EOS-S05, invent catalogue acceptance, or authorise production"
     }
   ]
 }

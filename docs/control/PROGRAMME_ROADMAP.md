@@ -70,8 +70,8 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 
 | Band | Content |
 |------|---------|
-| Now | Event OS S01–S03 accepted; EOS-S04 CLOSED / ACCEPTED; production unsigned; no real communication provider |
-| Next | EOS-S04A only under separate implementation authority; do not implement EOS-S05 |
+| Now | Event OS S01–S03 accepted; EOS-S04 CLOSED / ACCEPTED; EOS-S04A ACCEPTED (not a catalogue slice); production unsigned; no real communication provider |
+| Next | Successor after EOS-S04A requires a separate CEO implementation-authority decision; do not implement EOS-S04B–F or EOS-S05 without that authority |
 | Later | Event OS S01 after a new authorised instruction; Runtime after Event OS foundations |
 | Held | All 693 product/recon prompts except CT0/CT1 wrappers; EOS-S04F Cursor prompt pack (P00–P11) |
 | External | Independent, specialist, venue, CEO gates — unsigned |

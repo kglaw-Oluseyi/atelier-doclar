@@ -64,3 +64,15 @@ Historical Claude-role sentences stay in the source files.
 | No Railway mutation (historical slice closeouts) | Historical evidence of those slices. Not a current stop for `atelier-doclar` Event OS |
 
 Safeguards retained: real client/guest data; live communications; payments; other repositories or Railway projects; force-push; history rewrite; destructive database resets; protected-gate signatures.
+
+## Addendum — 2026-09-07 EOS-S04A acceptance and successor hold
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| EOS-S04A IN_REVIEW / not ACCEPTED | SUPERSEDED by `docs/control/EOS_S04A_ACCEPTANCE.md`. Status is `ACCEPTED` at SHA `8f1957d2353db539449d9bcce62f9e4d71eb31af`. |
+| EOS-S04B after EOS-S04A and before EOS-S05 | Sequential recommendation only. The S04B controlled pack remains `DRAFT FOR CEO RATIFICATION — implementation not authorised`. |
+| S04B Cursor pack “Railway / no action or deployment” and “Push held” | Historical pack wording. Deploy-by-default remains the current `atelier-doclar` rule **if** S04B is later authorised. It is not itself S04B implementation authority. |
+| EOS-S05 technically eligible | Dependency-law eligibility only. Implementation remains `NO`. |
+| EOS-S04F RATIFIED / HELD | Retained. Execution remains after EOS-S04E. |
+
+Successor implementation after EOS-S04A requires a separate CEO decision. Cursor must not start EOS-S04B–F or EOS-S05 from this acceptance record.

@@ -291,6 +291,23 @@ Native pack extracted from `MDOS/slice4/Maison_Doclar_Slice_4_Cursor_Prompt_Pack
 
 CLOSED / ACCEPTED under hosted verification `MD-EOS-S04-R3-05` with classification `PASS WITH OBSERVATIONS`. Earlier technical acceptance under `MD-PR-S016` by `ChatGPT / AI CTO` at `2026-09-06T04:10:00Z` remains historical evidence. Accepted implementation remains `8d87dc13ce87ab1431783d0e6649b34807eeb7ab`. Accepted-slice count remains 4. S4-61 satisfied for technical review only. S4-62 satisfied for controlled technical acceptance/handover only. Production not authorised. EOS-S05 is not authorised for implementation.
 
+## EOS-S04A
+
+**Prompt Control ID:** `MD-PR-S017`
+**Slice ID:** `EOS-S04A`
+**Title:** Guest Addressing, Relationships & Party Entitlements
+**Status:** `ACCEPTED`
+**Catalogue slice:** `NO` — accepted-slice count remains 4
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-EOS-S04A-ACCEPT | DOCUMENT | Formal technical acceptance record | `docs/control/EOS_S04A_ACCEPTANCE.md` |
+| EV-EOS-S04A-REVIEW | DOCUMENT | Whole-slice independent review (historical IN_REVIEW plus 2026-09-07 decision) | `docs/control/EOS_S04A_WHOLE_SLICE_REVIEW.md` |
+| EV-EOS-S04A-LEDGER | DOCUMENT | Cumulative S04A build ledger | `docs/control/EOS_S04A_BUILD_LEDGER.md` |
+| EV-EOS-S04A-COMMIT | COMMIT | Accepted implementation SHA | `git:8f1957d2353db539449d9bcce62f9e4d71eb31af` |
+
+ACCEPTED on `2026-09-07` by `ChatGPT / AI CTO` after Claude-in-Chrome focused verification (zero BLOCKER, zero MAJOR). Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised` remains false. Does not authorise EOS-S04B–F, EOS-S05, real data, providers or production.
+
 ## EOS-S04F
 
 **Slice ID:** `EOS-S04F`

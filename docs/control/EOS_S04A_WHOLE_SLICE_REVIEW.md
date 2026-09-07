@@ -167,3 +167,19 @@ Event OS in Railway project `atelier-doclar` is deployed after this commit is pu
 ## Acceptance recommendation
 
 **Recommend independent review proceed.** Cursor recommendation is **IN_REVIEW**, not ACCEPTED. Production remains unauthorised. EOS-S04B, EOS-S04F and EOS-S05 were not started.
+
+## Dated decision — 2026-09-07 formal acceptance
+
+This section does not rewrite the historical IN_REVIEW recommendation above. It records the later independent decision.
+
+| Field | Value |
+|-------|-------|
+| Decision date | `2026-09-07` |
+| Status | `ACCEPTED` |
+| Accepted implementation SHA | `8f1957d2353db539449d9bcce62f9e4d71eb31af` |
+| Reviewer | `ChatGPT / AI CTO` |
+| Browser evidence | Claude-in-Chrome final focused verification: zero BLOCKER, zero MAJOR |
+| Canonical record | `docs/control/EOS_S04A_ACCEPTANCE.md` |
+| Prompt Control ID | `MD-PR-S017` |
+
+Acceptance closes the EOS-S04A implementation/review gate only. It does not increment catalogue accepted-slice count, authorise EOS-S04B–F or EOS-S05, or authorise production.

@@ -45,3 +45,13 @@ Slice implementation specifications, Academy numbered specs 3–16/20, ushering 
 
 Independent Acceptance Pack (`MDOS/Maison_Doclar_Independent_Acceptance_Pack_v1.0.docx`) contains the word SUPERSEDED in extract; this is **not** treated as a document-level supersession of the pack itself without a clearer statement. Flagged, not resolved.
 
+## Addendum — 2026-09-07 EOS-S04A acceptance
+
+This addendum does not rewrite the B0 row set.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| EOS-S04A Formal Technical Acceptance | `docs/control/EOS_S04A_ACCEPTANCE.md` | CANONICAL ACCEPTANCE RECORD | Status `ACCEPTED` at SHA `8f1957d2353db539449d9bcce62f9e4d71eb31af`. Not catalogue-slice acceptance. |
+| EOS-S04B Controlled Slice Pack v1.0 DRAFT | `docs/control/Maison_Doclar_EOS-S04B_Controlled_Slice_Pack_v1.0_DRAFT.docx` | DRAFT FOR CEO RATIFICATION — implementation not authorised | Logical successor after EOS-S04A; not executable without a separate CEO implementation-authority decision. |
+| EOS-S04B Cursor Prompt Pack v1.0 | `docs/control/Maison_Doclar_EOS-S04B_Cursor_Prompt_Pack_v1.0.docx` | SUPPORTING / NOT IMPLEMENTATION AUTHORITY | Converts a ratified S04B pack; the controlling slice pack remains DRAFT. |
+

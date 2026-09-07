@@ -466,3 +466,24 @@ EOS-S04A Milestone 1 work-state at the time this policy was established:
 | Status | IN_REVIEW / not ACCEPTED |
 | Residual limitations | TDR-S04A-011; TDR-S04A-012 pending origin-log classification; TDR-S04A-016–020 close only after deployed evidence; TDR-S04A-015; IdP unselected; synthetic data; providers off. |
 | Railway / production / providers / later slices | Event OS deployed after push. Control Tower not deployed. EOS-S04B / S04F / S05 not started. |
+
+---
+
+## EOS-S04A formal technical acceptance — 2026-09-07
+
+| Field | Value |
+|-------|-------|
+| Starting HEAD | `8f1957d2353db539449d9bcce62f9e4d71eb31af` |
+| Ending HEAD | this acceptance commit |
+| Commit | this acceptance commit `docs(control): accept EOS-S04A guest intelligence` |
+| Accepted implementation SHA | `8f1957d2353db539449d9bcce62f9e4d71eb31af` |
+| Status | `ACCEPTED` |
+| Prompt Control ID | `MD-PR-S017` |
+| Files changed | Canonical acceptance record and control registers only. No Event OS runtime change. |
+| Schema / migration | None. Persistence remains `POSTGRES`. Migrations remain `APPLIED`. `SCHEMA_VERSION` remains `1`. |
+| Verification | `pnpm programme:validate`; `git diff --check`. Documentation-only; Event OS was not redeployed for this record. |
+| Browser evidence | Claude-in-Chrome final focused verification 2026-09-07: zero BLOCKER, zero MAJOR; RETAIN/UPDATE, audit agreement, conflict recovery, duplicate-submit idempotency, Planner/Auditor denial, CEO access authority, origin RSC, persistence, keyboard recovery all PASS. |
+| Closed | TDR-S04A-016, TDR-S04A-017, TDR-S04A-018, TDR-S04A-019, TDR-S04A-020 |
+| Brought forward | TDR-S04A-011 (blocking before real client onboarding, not successor development); TDR-S04A-015; permanent IdP; synthetic-data cleanup; inactive providers; local Next.js E2E memory pressure |
+| Residual observations | Claude viewport could not go below 1054px (P08/P09 already covered 360px/tablet/200%); admin-denial alert focus not separately repeated; one unconfirmed intake-name automation-timing miss; RSC 503 remains a monitoring artefact |
+| Railway / production / providers / later slices | No Event OS redeploy for this documentation-only record. `productionAuthorised` remains false. EOS-S04B–F and EOS-S05 remain unauthorised. |

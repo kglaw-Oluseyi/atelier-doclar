@@ -35,3 +35,9 @@ Staff sign-in: `/sign-in` with `ceo@maison-doclar.test`, `planner@maison-doclar.
 ## Return
 
 For each check: role, route, action, expected, actual, PASS / FAIL / UNTESTABLE. Note SHA, `productionAuthorised`, persistence, and any network status evidence for prefetch. Do not mark EOS-S04A accepted.
+
+## Dated decision — 2026-09-07
+
+This historical verification prompt is retained. It is not rewritten.
+
+ChatGPT independently accepted EOS-S04A after the Claude-in-Chrome final focused session returned zero BLOCKER and zero MAJOR findings against SHA `8f1957d2353db539449d9bcce62f9e4d71eb31af`. Canonical acceptance: `docs/control/EOS_S04A_ACCEPTANCE.md`.
