@@ -46,7 +46,7 @@ async function exerciseMerchandise(page: Page, slug: string, overflowAllowance =
   await assertNoDocumentOverflow(page, overflowAllowance);
 
   await page.getByRole("navigation", { name: "Merchandise sections" }).getByRole("link", { name: "Offers" }).click();
-  await expect(page.getByRole("heading", { name: "Independent guest offers" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "4. Offers" })).toBeVisible();
   const yoruba = page.locator(".guest-name").filter({ hasText: /Bàbátúndé|Ọmọ́tọ́lá|Folákẹ́/ }).first();
   await expect(yoruba).toBeVisible();
   expect(await yoruba.evaluate((node) => getComputedStyle(node).wordBreak)).not.toBe("break-all");
@@ -63,6 +63,14 @@ async function exerciseMerchandise(page: Page, slug: string, overflowAllowance =
 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(page.getByRole("heading", { name: "Merchandise coordination" })).toBeVisible();
+
+  await page.goto("/offers/unavailable");
+  await expect(page.getByText("expired, revoked or no longer available")).toBeVisible();
+  await assertNoDocumentOverflow(page, overflowAllowance);
+
+  await page.goto("/vendor/unavailable");
+  await expect(page.getByText("expired, revoked or no longer available")).toBeVisible();
+  await assertNoDocumentOverflow(page, overflowAllowance);
 }
 
 test.describe.configure({ timeout: 180_000 });

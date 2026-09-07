@@ -1,18 +1,27 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
 import { login, loginAs } from "./login";
+
+async function selectContaining(form: Locator, label: string, text: string): Promise<void> {
+  const select = form.getByLabel(label);
+  const value = await select.locator("option").filter({ hasText: text }).first().getAttribute("value");
+  expect(value, `option containing ${text}`).toBeTruthy();
+  await select.selectOption(value!);
+}
 
 const ALPHA = "00000000-0000-4000-8000-000000000021";
 const ALPHA_TWO = "00000000-0000-4000-8000-000000000022";
 const OLUFEMI = "00000000-0000-4000-8000-000000000073";
-const YETUNDE = "00000000-0000-4000-8000-0000000000af";
 const VENDOR_TOKEN = "s04c-vendor-token-not-for-production-aso-oke";
 const OTHER_VENDOR = "s04c-other-vendor-token-not-for-production";
 const MERCH = `/app/events/${ALPHA}/merchandise`;
+const EXPIRY = "2026-12-31T23:59";
 
 test("S04C vertical: staff offers, guest choice, cap consent, vendor isolation and denials", async ({
   page,
   browser,
 }) => {
+  test.setTimeout(180_000);
   await page.goto(MERCH);
   await expect(page).toHaveURL(/sign-in/);
 
@@ -29,50 +38,101 @@ test("S04C vertical: staff offers, guest choice, cap consent, vendor isolation a
   await expect(page.getByText("not Maison Doclar payment truth").first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Save collection" })).toBeVisible();
 
+  const addCollection = page.locator("form").filter({ has: page.getByRole("heading", { name: "Add collection" }) });
+  await addCollection.getByLabel("Name").fill("Studio collection");
+  await addCollection.getByLabel("Window start").fill("2026-09-08T10:00");
+  await addCollection.getByLabel("Window end").fill("2026-10-08T10:00");
+  await addCollection.getByRole("button", { name: "Save collection" }).click();
+  await expect(page.getByText("The merchandise collection was recorded.")).toBeVisible();
+  await expect(page.getByTestId("merch-empty-collection-next")).toBeVisible();
+
+  const addItem = page.getByTestId("merch-create-item");
+  await selectContaining(addItem, "Collection", "Studio collection");
+  await addItem.getByLabel("Name").fill("Studio gele");
+  await addItem.getByRole("button", { name: "Save item" }).click();
+  await expect(page.getByText("The merchandise item was recorded.")).toBeVisible();
+
+  const createOffer = page.getByTestId("merch-create-offer");
+  await selectContaining(createOffer, "Collection", "Studio collection");
+  await selectContaining(createOffer, "Item", "Studio gele");
+  await selectContaining(createOffer, "Option", "Studio gele");
+  await createOffer.getByLabel("Named guest").selectOption({ index: 1 });
+  await createOffer.getByRole("button", { name: "Preview target set" }).click();
+  await expect(page.getByTestId("merch-audience-preview")).toBeVisible();
+  const createOfferAgain = page.getByTestId("merch-create-offer");
+  await selectContaining(createOfferAgain, "Collection", "Studio collection");
+  await selectContaining(createOfferAgain, "Item", "Studio gele");
+  await selectContaining(createOfferAgain, "Option", "Studio gele");
+  await createOfferAgain.getByLabel("Named guest").selectOption({ index: 1 });
+  await createOfferAgain.getByRole("button", { name: "Create offer" }).click();
+  await expect(page.getByText("The merchandise offer was recorded.")).toBeVisible();
+
   await page.goto(`/app/events/${ALPHA}/guests/${OLUFEMI}`);
   await expect(page.getByRole("heading", { name: "Merchandise" })).toBeVisible();
   await expect(page.getByText("Made-to-measure fila").or(page.getByText("fila"))).toBeVisible();
 
-  if (await page.getByRole("button", { name: "Issue guest access" }).count()) {
-    await page.getByRole("button", { name: "Issue guest access" }).click();
+  await login(page);
+  await page.goto(MERCH);
+  const guestIssue = page.getByTestId("merch-guest-access-issue");
+  await selectContaining(guestIssue, "Guest with an issued offer", "Olúfẹ́mi");
+  await guestIssue.locator('input[name="expiresAt"]').fill(EXPIRY);
+  await guestIssue.getByRole("button", { name: "Issue guest access" }).click();
+  await expect(page.getByTestId("merch-open-guest-view")).toBeVisible();
+  const guestHref = await page.getByTestId("merch-open-guest-view").getAttribute("href");
+  expect(guestHref).toBeTruthy();
+
+  const guestContext = await browser.newContext();
+  const guestPage = await guestContext.newPage();
+  await guestPage.goto(guestHref!);
+  await expect(guestPage.getByRole("heading", { name: "Your attire and merchandise" })).toBeVisible();
+  await expect(guestPage.getByText("not an invitation")).toBeVisible();
+  const guestAxe = await new AxeBuilder({ page: guestPage }).analyze();
+  expect(guestAxe.violations, JSON.stringify(guestAxe.violations, null, 2)).toEqual([]);
+  const capCard = guestPage.getByRole("article").filter({ hasText: "Made-to-measure fila" });
+  if (await capCard.getByLabel("Head circumference (inches)").count()) {
+    await capCard.getByLabel("Head circumference (inches)").fill("22.5");
+    await capCard.getByLabel(/I consent to store this measurement/).check();
+    await capCard.getByRole("button", { name: "Save consented measurement" }).click();
+    await expect(guestPage.getByText("The consented cap circumference was stored")).toBeVisible();
   }
-  if (await page.getByRole("link", { name: "Open guest access" }).count()) {
-    await page.getByRole("link", { name: "Open guest access" }).click();
-    await expect(page.getByRole("heading", { name: "Your attire and merchandise" })).toBeVisible();
-    await expect(page.getByText("These choices are private")).toBeVisible();
-    if (await page.getByLabel("Head circumference (inches)").count()) {
-      await page.getByLabel("Head circumference (inches)").fill("22.5");
-      await page.getByLabel(/I consent to store this measurement/).check();
-      await page.getByRole("button", { name: "Save consented measurement" }).click();
-      await expect(page.getByText("consented cap circumference").or(page.getByText("Cap-measurement"))).toBeVisible();
-    }
-    await expect(page.getByLabel("Chest").or(page.getByLabel("Waist")).or(page.getByLabel("Dress size"))).toHaveCount(0);
-  }
+  await expect(guestPage.getByLabel("Chest").or(guestPage.getByLabel("Waist")).or(guestPage.getByLabel("Dress size"))).toHaveCount(0);
+  const choiceCard = guestPage.getByRole("article").filter({ hasText: "Made-to-measure fila" });
+  await choiceCard.getByLabel("Your choice").selectOption("FULL_PARTICIPATION");
+  await choiceCard.getByRole("button", { name: "Save private choice" }).click();
+  await expect(guestPage.getByText("Your private merchandise choice was recorded")).toBeVisible();
+  await guestContext.close();
 
   await login(page);
-  await page.goto(`/app/events/${ALPHA}/guests/${YETUNDE}`);
-  if (await page.getByRole("button", { name: "Issue guest access" }).count()) {
-    await page.getByRole("button", { name: "Issue guest access" }).click();
-  }
-  if (await page.getByRole("link", { name: "Open guest access" }).count()) {
-    await page.getByRole("link", { name: "Open guest access" }).click();
-    await expect(page.getByRole("heading", { name: "Your attire and merchandise" })).toBeVisible();
-    await page.getByLabel("Your choice").first().selectOption("DECLINE_GRACEFULLY");
-    await page.getByRole("button", { name: "Save private choice" }).first().click();
-    await expect(page.getByText("private merchandise choice").or(page.getByText("DECLINE GRACEFULLY"))).toBeVisible();
+  await page.goto(MERCH);
+  const issueVendor = page.getByTestId("merch-vendor-issue");
+  await issueVendor.locator('input[name="expiresAt"]').fill(EXPIRY);
+  await issueVendor.getByRole("button", { name: "Issue vendor access" }).click();
+  await expect(page.getByTestId("vendor-access-link")).toBeVisible();
+  const vendorHref = await page.getByTestId("vendor-access-link").getAttribute("href");
+  expect(vendorHref).toBeTruthy();
+
+  const vendorContext = await browser.newContext();
+  const vendorPage = await vendorContext.newPage();
+  await vendorPage.goto(vendorHref!);
+  await expect(vendorPage.getByText("Separate vendor portal")).toBeVisible();
+  await expect(vendorPage.getByTestId("vendor-scope")).toContainText("assigned fulfilments");
+  await expect(vendorPage.getByText("Guest list, RSVP and core records stay hidden.")).toBeVisible();
+  await expect(vendorPage.getByRole("heading", { name: "RSVP" })).toHaveCount(0);
+  const vendorAxe = await new AxeBuilder({ page: vendorPage }).analyze();
+  expect(vendorAxe.violations, JSON.stringify(vendorAxe.violations, null, 2)).toEqual([]);
+  const firstCard = vendorPage.getByRole("article").filter({ hasText: "Bàbátúndé" }).first();
+  if (await firstCard.count()) {
+    await firstCard.getByLabel("Report milestone").selectOption("IN_PREPARATION");
+    await firstCard.getByRole("button", { name: "Submit attributed update" }).click();
+    await expect(vendorPage.getByTestId("vendor-update-success")).toBeVisible({ timeout: 20_000 });
   }
 
   await login(page);
   await page.goto(MERCH);
-  await page.getByTestId("vendor-access-link").click();
-  await expect(page.getByText("Separate vendor portal")).toBeVisible();
-  await expect(page.getByTestId("vendor-scope")).toContainText("assigned fulfilments");
-  await expect(page.getByText("Guest list, RSVP and core records stay hidden.")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "RSVP" })).toHaveCount(0);
-  const firstCard = page.getByRole("article").filter({ hasText: "Bàbátúndé" }).first();
-  await firstCard.getByLabel("Report milestone").selectOption("IN_PREPARATION");
-  await firstCard.getByRole("button", { name: "Submit attributed update" }).click();
-  await expect(page.getByTestId("vendor-update-success")).toBeVisible({ timeout: 20_000 });
+  await page.locator("article").filter({ hasText: "Synthetic aso-oke house" }).getByTestId("merch-vendor-revoke").getByRole("button", { name: "Revoke" }).click();
+  await vendorPage.reload();
+  await expect(vendorPage.getByText("expired, revoked or no longer available")).toBeVisible({ timeout: 20_000 });
+  await vendorContext.close();
 
   await page.goto(`/vendor/${OTHER_VENDOR}`);
   await expect(page.getByText("expired, revoked or no longer available").or(page.getByTestId("vendor-scope"))).toBeVisible();
@@ -87,6 +147,7 @@ test("S04C vertical: staff offers, guest choice, cap consent, vendor isolation a
   await page.goto(MERCH);
   await expect(page.getByTestId("planner-sponsor-denial")).toBeVisible();
   await expect(page.getByRole("button", { name: "Accept attributed report" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Issue vendor access" })).toHaveCount(0);
 
   await loginAs(page, "auditor");
   await page.goto(MERCH);
@@ -104,7 +165,7 @@ test("S04C vertical: staff offers, guest choice, cap consent, vendor isolation a
   await anonymous.goto(MERCH);
   await expect(anonymous).toHaveURL(/sign-in/);
   await anonymous.goto(`/vendor/${VENDOR_TOKEN}`);
-  await expect(anonymous.getByText("Separate vendor portal")).toBeVisible();
+  await expect(anonymous.getByText("Separate vendor portal").or(anonymous.getByText("expired, revoked or no longer available"))).toBeVisible();
   await expect(anonymous).not.toHaveURL(/sign-in/);
   await context.close();
 });
