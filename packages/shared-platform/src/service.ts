@@ -286,11 +286,13 @@ import {
   createContentWorkOnSnap,
   createCulturalSourceTextOnSnap,
   createDependentEditionOnSnap,
+  createSourceRevisionOnSnap,
   createTerminologyEntryOnSnap,
   decideCulturalTextOnSnap,
+  decideSourceEditionOnSnap,
   decideTranslationOnSnap,
   recordLanguagePreferenceOnSnap,
-  supersedeSourceEditionOnSnap,
+  submitSourceRevisionOnSnap,
 } from "./language-operations.js";
 import {
   buildEventLanguageWorkspace,
@@ -302,10 +304,13 @@ import {
   CreateContentWorkInputSchema,
   CreateCulturalSourceTextInputSchema,
   CreateDependentEditionInputSchema,
+  CreateSourceRevisionInputSchema,
   CreateTerminologyEntryInputSchema,
   DecideCulturalTextInputSchema,
+  DecideSourceEditionInputSchema,
   DecideTranslationInputSchema,
   RecordLanguagePreferenceInputSchema,
+  SubmitSourceRevisionInputSchema,
   SupersedeSourceEditionInputSchema,
   type ContentEdition,
   type ContentWork,
@@ -2869,19 +2874,70 @@ export class PlatformService {
     });
   }
 
-  supersedeSourceEdition(actor: ActorContext, raw: unknown): ContentEdition {
-    const input = parseStrict(SupersedeSourceEditionInputSchema, raw);
+  createSourceRevision(actor: ActorContext, raw: unknown): ContentEdition {
+    const input = parseStrict(CreateSourceRevisionInputSchema, raw);
     return this.mutate(actor, {
-      permission: "language.edition.publish",
+      permission: "language.edition.manage",
       scope: { organisationId: input.organisationId, eventId: input.eventId },
-      action: "language.source.superseded",
+      action: "language.source.revised",
       resourceType: "content_edition",
       resourceId: input.sourceEditionId,
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash(input),
-      run: (snap, ctx) => supersedeSourceEditionOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+      alreadyApplied: (snap) =>
+        snap.contentEditions.find(
+          (item) =>
+            item.workId === input.workId &&
+            item.kind === "PRIMARY" &&
+            item.supersedesEditionId === input.sourceEditionId &&
+            (item.status === "DRAFT" || item.status === "IN_REVIEW") &&
+            item.authorPersonId === actor.personId &&
+            item.changeSummary === input.changeSummary,
+        ),
+      replayIfAlreadyApplied: Boolean(input.idempotencyKey),
+      run: (snap, ctx) => createSourceRevisionOnSnap(snap, input, ctx.now, ctx.actor.person.id),
     });
+  }
+
+  submitSourceRevision(actor: ActorContext, raw: unknown): ContentEdition {
+    const input = parseStrict(SubmitSourceRevisionInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "language.edition.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "language.source.submitted",
+      resourceType: "content_edition",
+      resourceId: input.editionId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      alreadyApplied: (snap) => {
+        const edition = snap.contentEditions.find((item) => item.id === input.editionId && item.status === "IN_REVIEW");
+        return edition;
+      },
+      replayIfAlreadyApplied: Boolean(input.idempotencyKey),
+      run: (snap, ctx) => submitSourceRevisionOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  decideSourceEdition(actor: ActorContext, raw: unknown): ContentEdition {
+    const input = parseStrict(DecideSourceEditionInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "language.edition.publish",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "language.source.decided",
+      resourceType: "content_edition",
+      resourceId: input.editionId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => decideSourceEditionOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  supersedeSourceEdition(actor: ActorContext, raw: unknown): ContentEdition {
+    const input = parseStrict(SupersedeSourceEditionInputSchema, raw);
+    return this.createSourceRevision(actor, { ...input, submitForReview: true });
   }
 
   createTerminologyEntry(actor: ActorContext, raw: unknown): TerminologyEntry {

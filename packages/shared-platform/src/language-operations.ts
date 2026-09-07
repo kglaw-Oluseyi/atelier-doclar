@@ -10,13 +10,14 @@ import { PlatformError } from "./errors.js";
 import { requireScopedGuest } from "./addressing-operations.js";
 import { requireScopedEvent } from "./programme-operations.js";
 import { accentInsensitiveSearchKey, canonicalDisplayText } from "./language-unicode.js";
-import { assertPlaceholderSetsMatch, extractPlaceholderNames, renderPlaceholders } from "./language-placeholders.js";
+import { assertPlaceholderSetsMatch, extractPlaceholderNames, extractPlaceholderOccurrences, renderPlaceholders } from "./language-placeholders.js";
 import {
   AssembleRecipientContentInputSchema,
   ContentBlockSchema,
   ContentEditionSchema,
   ContentWorkSchema,
   CulturalSourceTextSchema,
+  LanguageCoverageSnapshotSchema,
   LanguagePreferenceHistorySchema,
   LanguageProfileSchema,
   RecipientAssemblySchema,
@@ -31,15 +32,18 @@ import {
   type CreateContentWorkInput,
   type CreateCulturalSourceTextInput,
   type CreateDependentEditionInput,
+  type CreateSourceRevisionInput,
   type CreateTerminologyEntryInput,
   type CulturalSourceText,
   type DecideCulturalTextInput,
+  type DecideSourceEditionInput,
   type DecideTranslationInput,
+  type SubmitSourceRevisionInput,
+  type LanguageCoverageSnapshot,
   type LanguageProfile,
   type LanguageTag,
   type RecordLanguagePreferenceInput,
   type RecipientAssembly,
-  type SupersedeSourceEditionInput,
   type TerminologyEntry,
 } from "./language-schemas.js";
 import { stableHash } from "./redaction.js";
@@ -358,8 +362,11 @@ export function createDependentEditionOnSnap(
   const event = requireScopedEvent(snap, input.organisationId, input.eventId);
   const work = requireWork(snap, input.organisationId, input.eventId, input.workId);
   const source = requireEdition(snap, work.id, input.sourceEditionId);
-  if (source.status !== "APPROVED") {
-    throw new PlatformError("TRANSITION_INVALID", "translations may only be drafted from an approved source edition");
+  if (source.status !== "APPROVED" || source.coverageStatus === "STALE") {
+    throw new PlatformError("TRANSITION_INVALID", "translations may only be drafted from the current approved source edition");
+  }
+  if (work.primaryEditionId !== source.id) {
+    throw new PlatformError("TRANSITION_INVALID", "re-review must reference the new source edition");
   }
   if (input.sourceType === "MACHINE_SUGGESTED" || input.sourceType === "AI_SUGGESTED") {
     // Machine/AI output remains draft-only; approval is a later distinct-human action.
@@ -452,6 +459,15 @@ export function decideTranslationOnSnap(
   if (links.some((item) => item.stale)) {
     throw new PlatformError("TRANSITION_INVALID", "stale source invalidates this translation until it is re-drafted");
   }
+  const sourceEdition = edition.sourceEditionId ? snap.contentEditions.find((item) => item.id === edition.sourceEditionId) : undefined;
+  if (sourceEdition && (sourceEdition.status === "SUPERSEDED" || sourceEdition.status !== "APPROVED")) {
+    throw new PlatformError("TRANSITION_INVALID", "re-review must reference the current approved source edition");
+  }
+  for (const link of links) {
+    const sourceBlock = snap.contentBlocks.find((item) => item.id === link.sourceBlockId);
+    const targetBlock = snap.contentBlocks.find((item) => item.id === link.targetBlockId);
+    if (sourceBlock && targetBlock) assertPlaceholderSetsMatch(sourceBlock.exactText, targetBlock.exactText);
+  }
   if (input.decision === "APPROVED" && (edition.syntheticUnvalidated && (links.some((item) => item.sourceType === "AI_SUGGESTED" || item.sourceType === "MACHINE_SUGGESTED")))) {
     // Approval is human and explicit; machine/AI remains labelled unvalidated.
   }
@@ -496,9 +512,94 @@ export function decideTranslationOnSnap(
   return ContentEditionSchema.parse(edition);
 }
 
-export function supersedeSourceEditionOnSnap(
+function openSourceRevision(snap: PlatformSnapshot, workId: string, sourceEditionId: string): ContentEdition | undefined {
+  return snap.contentEditions.find(
+    (item) =>
+      item.workId === workId &&
+      item.kind === "PRIMARY" &&
+      item.supersedesEditionId === sourceEditionId &&
+      (item.status === "DRAFT" || item.status === "IN_REVIEW"),
+  );
+}
+
+function markDependentsStaleForSource(snap: PlatformSnapshot, source: ContentEdition, now: string): void {
+  const seenTargets = new Set<string>();
+  for (const link of snap.translationLinks.filter((item) => item.sourceEditionId === source.id)) {
+    if (link.stale && link.reviewStatus === "STALE") continue;
+    link.stale = true;
+    link.reviewStatus = "STALE";
+    link.updatedAt = now;
+    link.version += 1;
+    if (seenTargets.has(link.targetEditionId)) continue;
+    seenTargets.add(link.targetEditionId);
+    const dependent = snap.contentEditions.find((item) => item.id === link.targetEditionId);
+    if (!dependent || dependent.status === "SUPERSEDED" || dependent.status === "WITHDRAWN") continue;
+    dependent.reviewRequired = true;
+    dependent.coverageStatus = "STALE";
+    dependent.updatedAt = now;
+    dependent.version += 1;
+  }
+}
+
+function supersedeAffectedAssemblies(snap: PlatformSnapshot, workId: string, now: string): void {
+  for (const assembly of snap.recipientAssemblies.filter((item) => item.workId === workId && item.status === "READY_FOR_COMMS_REVIEW")) {
+    assembly.status = "SUPERSEDED";
+    assembly.updatedAt = now;
+    assembly.version += 1;
+  }
+}
+
+export function recalculateLanguageCoverageOnSnap(
   snap: PlatformSnapshot,
-  input: SupersedeSourceEditionInput,
+  workId: string,
+  now: string,
+): LanguageCoverageSnapshot {
+  const work = snap.contentWorks.find((item) => item.id === workId);
+  if (!work) throw new PlatformError("NOT_FOUND", "content work was not found");
+  const editions = snap.contentEditions.filter((item) => item.workId === workId);
+  const stale = editions.some((item) => item.coverageStatus === "STALE");
+  const approvedComplete = editions.filter((item) => item.status === "APPROVED" && item.kind === "COMPLETE" && item.coverageStatus !== "STALE").length;
+  const partial = editions.some((item) => (item.coverageStatus === "PARTIAL" || item.kind === "PARTIAL") && item.coverageStatus !== "STALE");
+  const unresolved = snap.languageProfiles.filter((item) => item.eventId === work.eventId && item.unknown).length;
+  const targetCounts = Object.fromEntries(
+    [...new Set(editions.map((item) => item.languageTag))].map((tag) => [
+      tag,
+      editions.filter((item) => item.languageTag === tag && item.status === "APPROVED" && item.coverageStatus !== "STALE").length,
+    ]),
+  ) as LanguageCoverageSnapshot["targetCounts"];
+  const coverageStatus = stale ? "STALE" : approvedComplete > 0 && !partial ? "APPROVED" : partial ? "PARTIAL" : "NOT_STARTED";
+  const explanation = stale
+    ? "A source change made at least one translation stale. Re-review against the new source is required."
+    : approvedComplete > 0
+      ? "Approved complete editions exist. Partial editions remain marked partial."
+      : "Translation has not reached a complete approved edition.";
+  const existing = snap.languageCoverageSnapshots.find((item) => item.workId === workId && item.eventId === work.eventId);
+  const record = LanguageCoverageSnapshotSchema.parse({
+    id: existing?.id ?? randomUUID(),
+    organisationId: work.organisationId,
+    clientId: work.clientId,
+    eventId: work.eventId,
+    workId,
+    coverageStatus,
+    unresolvedPreferenceCount: unresolved,
+    englishOnlyCount: unresolved,
+    mixedFallbackCount: editions.filter((item) => item.kind === "PARTIAL" || item.kind === "BILINGUAL").length,
+    blockedCount: editions.filter((item) => item.coverageStatus === "STALE").length,
+    targetCounts,
+    explanation,
+    schemaVersion: SCHEMA_VERSION,
+    version: existing ? existing.version + 1 : 1,
+    createdAt: existing?.createdAt ?? now,
+    updatedAt: now,
+  });
+  if (existing) Object.assign(existing, record);
+  else snap.languageCoverageSnapshots.push(record);
+  return record;
+}
+
+export function createSourceRevisionOnSnap(
+  snap: PlatformSnapshot,
+  input: CreateSourceRevisionInput,
   now: string,
   actorPersonId: string,
 ): ContentEdition {
@@ -506,10 +607,33 @@ export function supersedeSourceEditionOnSnap(
   const work = requireWork(snap, input.organisationId, input.eventId, input.workId);
   const source = requireEdition(snap, work.id, input.sourceEditionId);
   assertVersion(source.version, input.expectedVersion);
-  if (source.status !== "APPROVED") {
-    throw new PlatformError("TRANSITION_INVALID", "only an approved source can be superseded");
+  if (source.kind !== "PRIMARY" || source.status !== "APPROVED") {
+    throw new PlatformError("TRANSITION_INVALID", "only an approved source edition can be revised");
   }
-  const placeholders = extractPlaceholderNames(input.primaryText);
+  if (work.primaryEditionId !== source.id) {
+    throw new PlatformError("TRANSITION_INVALID", "only the current approved source can start a revision");
+  }
+  const sourceBlock = blocksForEdition(snap, source.id)[0];
+  if (!sourceBlock) throw new PlatformError("NOT_FOUND", "current source text was not found");
+  const previousPlaceholders = extractPlaceholderOccurrences(sourceBlock.exactText);
+  const nextPlaceholders = extractPlaceholderOccurrences(input.primaryText);
+  if (previousPlaceholders.some((name) => !nextPlaceholders.includes(name))) {
+    throw new PlatformError("VALIDATION_FAILED", "required placeholders from the current source must be preserved", {
+      details: previousPlaceholders.filter((name) => !nextPlaceholders.includes(name)).map((name) => `missing:${name}`),
+    });
+  }
+  const existing = openSourceRevision(snap, work.id, source.id);
+  if (existing) {
+    const existingBlock = blocksForEdition(snap, existing.id)[0];
+    if (
+      existing.authorPersonId === actorPersonId &&
+      existingBlock?.exactText === input.primaryText &&
+      existing.changeSummary === input.changeSummary
+    ) {
+      return existing;
+    }
+    throw new PlatformError("VERSION_CONFLICT", "a source revision is already in progress for this edition");
+  }
   const editionId = randomUUID();
   const block = ContentBlockSchema.parse({
     id: randomUUID(),
@@ -517,58 +641,144 @@ export function supersedeSourceEditionOnSnap(
     workId: work.id,
     editionId,
     languageTag: source.languageTag,
-    purpose: "PRIMARY",
+    purpose: sourceBlock.purpose,
     sortOrder: 0,
     exactText: input.primaryText,
-    placeholderNames: placeholders,
+    placeholderNames: extractPlaceholderNames(input.primaryText),
     ...stamp(now),
   });
-  const next = ContentEditionSchema.parse({
+  const revision = ContentEditionSchema.parse({
     id: editionId,
     ...scopedOf(event),
     workId: work.id,
     languageTag: source.languageTag,
     kind: "PRIMARY",
-    status: "APPROVED",
+    status: input.submitForReview ? "IN_REVIEW" : "DRAFT",
     authorPersonId: actorPersonId,
-    approvedByPersonId: actorPersonId,
-    approvedAt: now,
     supersedesEditionId: source.id,
-    reviewRequired: false,
-    coverageStatus: "APPROVED",
+    reviewRequired: true,
+    coverageStatus: "NOT_STARTED",
     culturallyAuthoritative: false,
     syntheticUnvalidated: true,
+    changeSummary: input.changeSummary,
+    purposeContext: input.purposeContext,
     ...stamp(now),
   });
-  source.status = "SUPERSEDED";
-  source.updatedAt = now;
-  source.version += 1;
-  for (const link of snap.translationLinks.filter((item) => item.sourceEditionId === source.id)) {
-    link.stale = true;
-    link.reviewStatus = "STALE";
-    link.updatedAt = now;
-    link.version += 1;
-    const dependent = snap.contentEditions.find((item) => item.id === link.targetEditionId);
-    if (dependent && dependent.status !== "SUPERSEDED" && dependent.status !== "WITHDRAWN") {
-      dependent.reviewRequired = true;
-      dependent.coverageStatus = "STALE";
-      if (dependent.status === "APPROVED") dependent.status = "IN_REVIEW";
-      dependent.updatedAt = now;
-      dependent.version += 1;
+  snap.contentEditions.push(revision);
+  snap.contentBlocks.push(block);
+  return revision;
+}
+
+export function decideSourceEditionOnSnap(
+  snap: PlatformSnapshot,
+  input: DecideSourceEditionInput,
+  now: string,
+  actorPersonId: string,
+): ContentEdition {
+  const event = requireScopedEvent(snap, input.organisationId, input.eventId);
+  const revision = snap.contentEditions.find((item) => item.id === input.editionId);
+  if (!revision || revision.eventId !== event.id) throw new PlatformError("NOT_FOUND", "source revision was not found");
+  if (revision.kind !== "PRIMARY") {
+    throw new PlatformError("TRANSITION_INVALID", "this action is only for source-language editions");
+  }
+  assertVersion(revision.version, input.expectedVersion);
+  if (revision.status === "APPROVED") {
+    throw new PlatformError("TRANSITION_INVALID", "an approved source edition cannot be edited in place");
+  }
+  if (revision.status === "SUPERSEDED" || revision.status === "WITHDRAWN") {
+    throw new PlatformError("TRANSITION_INVALID", "withdrawn or superseded source editions cannot be approved");
+  }
+  if (revision.authorPersonId === actorPersonId) {
+    throw new PlatformError("FORBIDDEN", "the author cannot approve the same source edition");
+  }
+  if (input.decision === "APPROVED" && revision.status !== "IN_REVIEW") {
+    throw new PlatformError("TRANSITION_INVALID", "submit the source revision for review before it can be approved");
+  }
+  const prior = revision.supersedesEditionId ? requireEdition(snap, revision.workId, revision.supersedesEditionId) : undefined;
+  if (input.decision === "APPROVED" && prior && prior.status !== "APPROVED") {
+    throw new PlatformError("VERSION_CONFLICT", "the current source changed while this revision was waiting");
+  }
+  const revisionBlock = blocksForEdition(snap, revision.id)[0];
+  if (input.decision === "APPROVED" && prior) {
+    const priorBlock = blocksForEdition(snap, prior.id)[0];
+    if (priorBlock && revisionBlock) {
+      const previousPlaceholders = extractPlaceholderOccurrences(priorBlock.exactText);
+      const nextPlaceholders = extractPlaceholderOccurrences(revisionBlock.exactText);
+      if (previousPlaceholders.some((name) => !nextPlaceholders.includes(name))) {
+        throw new PlatformError("VALIDATION_FAILED", "required placeholders from the current source must be preserved");
+      }
     }
   }
-  work.primaryEditionId = next.id;
-  work.currentEditionId = next.id;
-  work.updatedAt = now;
-  work.version += 1;
-  snap.contentEditions.push(next);
-  snap.contentBlocks.push(block);
-  for (const assembly of snap.recipientAssemblies.filter((item) => item.workId === work.id && item.status === "READY_FOR_COMMS_REVIEW")) {
-    assembly.status = "SUPERSEDED";
-    assembly.updatedAt = now;
-    assembly.version += 1;
+  revision.status = input.decision === "APPROVED" ? "APPROVED" : "DRAFT";
+  revision.reviewerPersonId = actorPersonId;
+  revision.approvedByPersonId = input.decision === "APPROVED" ? actorPersonId : undefined;
+  revision.approvedAt = input.decision === "APPROVED" ? now : undefined;
+  revision.reviewRequired = input.decision !== "APPROVED";
+  revision.coverageStatus = input.decision === "APPROVED" ? "APPROVED" : revision.coverageStatus;
+  revision.updatedAt = now;
+  revision.version += 1;
+  snap.reviewAssignments.push(
+    ReviewAssignmentSchema.parse({
+      id: randomUUID(),
+      ...scopedOf(event),
+      kind: "EDITION",
+      subjectType: "CONTENT_EDITION",
+      subjectId: revision.id,
+      reviewerPersonId: actorPersonId,
+      proposerPersonId: revision.authorPersonId,
+      decision: input.decision,
+      decidedAt: now,
+      notes: input.notes,
+      ...stamp(now),
+    }),
+  );
+  if (input.decision === "APPROVED") {
+    const work = requireWork(snap, input.organisationId, input.eventId, revision.workId);
+    if (prior) {
+      prior.status = "SUPERSEDED";
+      prior.updatedAt = now;
+      prior.version += 1;
+      markDependentsStaleForSource(snap, prior, now);
+    }
+    work.primaryEditionId = revision.id;
+    work.currentEditionId = revision.id;
+    work.updatedAt = now;
+    work.version += 1;
+    supersedeAffectedAssemblies(snap, work.id, now);
+    recalculateLanguageCoverageOnSnap(snap, work.id, now);
   }
-  return next;
+  return ContentEditionSchema.parse(revision);
+}
+
+export function submitSourceRevisionOnSnap(
+  snap: PlatformSnapshot,
+  input: SubmitSourceRevisionInput,
+  now: string,
+  _actorPersonId: string,
+): ContentEdition {
+  const event = requireScopedEvent(snap, input.organisationId, input.eventId);
+  const revision = snap.contentEditions.find((item) => item.id === input.editionId);
+  if (!revision || revision.eventId !== event.id || revision.kind !== "PRIMARY") {
+    throw new PlatformError("NOT_FOUND", "source revision was not found");
+  }
+  assertVersion(revision.version, input.expectedVersion);
+  if (revision.status === "IN_REVIEW") return revision;
+  if (revision.status !== "DRAFT") {
+    throw new PlatformError("TRANSITION_INVALID", "only a draft source revision can be submitted for review");
+  }
+  revision.status = "IN_REVIEW";
+  revision.updatedAt = now;
+  revision.version += 1;
+  return ContentEditionSchema.parse(revision);
+}
+
+export function supersedeSourceEditionOnSnap(
+  snap: PlatformSnapshot,
+  input: CreateSourceRevisionInput,
+  now: string,
+  actorPersonId: string,
+): ContentEdition {
+  return createSourceRevisionOnSnap(snap, { ...input, submitForReview: true }, now, actorPersonId);
 }
 
 export function createTerminologyEntryOnSnap(
@@ -630,6 +840,11 @@ export function assembleRecipientContentOnSnap(
   const requested = profile?.unknown ? undefined : profile?.preferredLanguageTag;
   const primary = snap.contentEditions.find((item) => item.id === work.primaryEditionId && item.status === "APPROVED");
   if (!primary) throw new PlatformError("DEPENDENCY_UNAVAILABLE", "an approved primary edition is required before assembly");
+  const staleTarget = requested
+    ? snap.contentEditions.find(
+        (item) => item.workId === work.id && item.languageTag === requested && (item.coverageStatus === "STALE" || item.reviewRequired),
+      )
+    : undefined;
   const target = requested
     ? snap.contentEditions.find(
         (item) =>
@@ -640,9 +855,12 @@ export function assembleRecipientContentOnSnap(
           item.coverageStatus !== "STALE",
       )
     : undefined;
-  const selected = target ?? (primary.languageTag === DEFAULT_FALLBACK_LANGUAGE_TAG || primary.status === "APPROVED" ? primary : undefined);
-  if (!selected || selected.status !== "APPROVED") {
+  const selected = target ?? (primary.languageTag === DEFAULT_FALLBACK_LANGUAGE_TAG && primary.status === "APPROVED" && primary.coverageStatus !== "STALE" ? primary : undefined);
+  if (!selected || selected.status !== "APPROVED" || selected.coverageStatus === "STALE") {
     throw new PlatformError("VALIDATION_FAILED", "neither approved target content nor permitted approved fallback exists");
+  }
+  if (staleTarget && target && staleTarget.id === target.id) {
+    throw new PlatformError("TRANSITION_INVALID", "stale translation cannot be newly assembled");
   }
   if (selected.eventId !== event.id) {
     throw new PlatformError("SCOPE_MISMATCH", "cross-event content cannot be assembled");
@@ -670,6 +888,10 @@ export function assembleRecipientContentOnSnap(
     if (usedFallback && primary.status !== "APPROVED") {
       throw new PlatformError("VALIDATION_FAILED", "fallback to draft or unapproved text is not permitted");
     }
+    if (usedFallback && (primary.coverageStatus === "STALE" || sourceBlock.editionId !== primary.id)) {
+      throw new PlatformError("VALIDATION_FAILED", "no fallback to stale or draft content");
+    }
+    assertPlaceholderSetsMatch(sourceBlock.exactText, block.exactText);
     const rendered = renderPlaceholders(block.exactText, { guestName: displayNameForGuest(snap, guest.id) }, block.placeholderNames.length > 0 ? block.placeholderNames : ["guestName"]);
     return {
       blockId: sourceBlock.id,
@@ -678,7 +900,16 @@ export function assembleRecipientContentOnSnap(
       selectedEditionId: block.editionId,
       selectedBlockId: block.id,
       fallbackUsed: Boolean(requested && usedFallback),
-      fallbackReason: requested && usedFallback ? (target ? "PARTIAL_COVERAGE" : "MISSING_APPROVED_TARGET") : requested ? undefined : "NO_PREFERENCE",
+      fallbackReason:
+        requested && usedFallback
+          ? staleTarget
+            ? "STALE_TRANSLATION"
+            : target
+              ? "PARTIAL_COVERAGE"
+              : "MISSING_APPROVED_TARGET"
+          : requested
+            ? undefined
+            : "NO_PREFERENCE",
       approvalStatus: selected.status,
       renderedText: rendered,
     } as const;

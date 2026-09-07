@@ -468,10 +468,13 @@ export {
   CreateContentWorkInputSchema,
   CreateCulturalSourceTextInputSchema,
   CreateDependentEditionInputSchema,
+  CreateSourceRevisionInputSchema,
   CreateTerminologyEntryInputSchema,
   DecideCulturalTextInputSchema,
+  DecideSourceEditionInputSchema,
   DecideTranslationInputSchema,
   RecordLanguagePreferenceInputSchema,
+  SubmitSourceRevisionInputSchema,
   SupersedeSourceEditionInputSchema,
   type ContentEdition,
   type ContentWork,
@@ -479,6 +482,14 @@ export {
   type LanguageProfile,
   type RecipientAssembly,
 } from "./language-schemas.js";
+export {
+  PLACEHOLDER_POLICY,
+  assertPlaceholderSetsMatch,
+  comparePlaceholderSets,
+  extractPlaceholderNames,
+  extractPlaceholderOccurrences,
+  renderPlaceholders,
+} from "./language-placeholders.js";
 export {
   accentInsensitiveSearchKey,
   authoredTextsEqual,

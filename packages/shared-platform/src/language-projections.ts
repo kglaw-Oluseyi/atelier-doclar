@@ -1,6 +1,7 @@
 import { LANGUAGE_REGISTER, type LANGUAGE_TAGS as LanguageTags } from "./constants.js";
 import type { PermissionKey } from "./schemas.js";
 import type { ContentBlock, ContentEdition, ContentWork, CulturalSourceText, LanguageProfile, RecipientAssembly } from "./language-schemas.js";
+import { extractPlaceholderOccurrences } from "./language-placeholders.js";
 import { languageRegisterEntry } from "./language-operations.js";
 import type { PlatformSnapshot } from "./store.js";
 
@@ -93,7 +94,40 @@ export interface EditionCard {
   reviewRequired: boolean;
   syntheticUnvalidated: boolean;
   version: number;
-  blocks: readonly { id: string; languageTag: string; htmlLang: string; purpose: string; exactText: string }[];
+  authorPersonId: string;
+  authorName: string;
+  reviewerPersonId?: string;
+  reviewerName?: string;
+  changeSummary?: string;
+  purposeContext?: string;
+  sourceEditionId?: string;
+  supersedesEditionId?: string;
+  current: boolean;
+  expectedPlaceholders: readonly string[];
+  blocks: readonly {
+    id: string;
+    languageTag: string;
+    htmlLang: string;
+    purpose: string;
+    exactText: string;
+    placeholderNames: readonly string[];
+  }[];
+}
+
+export interface SourceLineageCard {
+  workId: string;
+  workTitle: string;
+  current: EditionCard;
+  openRevision?: EditionCard;
+  history: readonly EditionCard[];
+  dependentImpact: readonly {
+    editionId: string;
+    languageName: string;
+    languageTag: string;
+    status: string;
+    coverageStatus: string;
+    willBecomeStale: boolean;
+  }[];
 }
 
 export interface CoverageCard {
@@ -139,6 +173,7 @@ export interface EventLanguageWorkspace {
   culturalTexts: readonly CulturalTextCard[];
   works: readonly ContentWork[];
   editions: readonly EditionCard[];
+  sourceLineage: readonly SourceLineageCard[];
   coverage: readonly CoverageCard[];
   assemblies: readonly AssemblyPreviewCard[];
   glossary: readonly { id: string; term: string; approvedDisplayForm: string; policy: string; languageTag: string }[];
@@ -171,12 +206,25 @@ function editionCard(snap: PlatformSnapshot, edition: ContentEdition, work: Cont
     reviewRequired: edition.reviewRequired,
     syntheticUnvalidated: edition.syntheticUnvalidated,
     version: edition.version,
+    authorPersonId: edition.authorPersonId,
+    authorName: snap.persons.find((person) => person.id === edition.authorPersonId)?.displayName ?? "Staff",
+    reviewerPersonId: edition.reviewerPersonId,
+    reviewerName: edition.reviewerPersonId
+      ? snap.persons.find((person) => person.id === edition.reviewerPersonId)?.displayName
+      : undefined,
+    changeSummary: edition.changeSummary,
+    purposeContext: edition.purposeContext,
+    sourceEditionId: edition.sourceEditionId,
+    supersedesEditionId: edition.supersedesEditionId,
+    current: work.primaryEditionId === edition.id && edition.status === "APPROVED",
+    expectedPlaceholders: [...new Set(blocks.flatMap((block) => extractPlaceholderOccurrences(block.exactText)))],
     blocks: blocks.map((block) => ({
       id: block.id,
       languageTag: block.languageTag,
       htmlLang: languageRegisterEntry(block.languageTag).htmlLang,
       purpose: block.purpose,
       exactText: block.exactText,
+      placeholderNames: block.placeholderNames,
     })),
   };
 }
@@ -197,6 +245,28 @@ export function buildEventLanguageWorkspace(
       return work ? editionCard(snap, edition, work) : undefined;
     })
     .filter((item): item is EditionCard => Boolean(item));
+  const sourceLineage = works.map((work) => {
+    const workEditions = editions.filter((item) => item.workId === work.id && item.kind === "PRIMARY");
+    const current = workEditions.find((item) => item.current) ?? workEditions.find((item) => item.status === "APPROVED");
+    if (!current) return undefined;
+    const openRevision = workEditions.find((item) => item.status === "DRAFT" || item.status === "IN_REVIEW");
+    const dependents = editions.filter((item) => item.workId === work.id && item.kind !== "PRIMARY" && item.sourceEditionId === current.id);
+    return {
+      workId: work.id,
+      workTitle: work.title,
+      current,
+      openRevision,
+      history: workEditions,
+      dependentImpact: dependents.map((item) => ({
+        editionId: item.id,
+        languageName: item.languageName,
+        languageTag: item.languageTag,
+        status: item.status,
+        coverageStatus: item.coverageStatus,
+        willBecomeStale: item.status === "APPROVED" && item.coverageStatus !== "STALE",
+      })),
+    };
+  }).filter((item): item is NonNullable<typeof item> => Boolean(item));
   const preferences = snap.operationalGuests
     .filter((guest) => guest.eventId === eventId)
     .map((guest) => {
@@ -271,6 +341,7 @@ export function buildEventLanguageWorkspace(
     culturalTexts,
     works,
     editions,
+    sourceLineage,
     coverage,
     assemblies,
     glossary: snap.terminologyEntries

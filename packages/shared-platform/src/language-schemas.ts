@@ -187,6 +187,8 @@ export const ContentEditionSchema = z
     coverageStatus: z.enum(TRANSLATION_COVERAGE_STATES),
     culturallyAuthoritative: z.boolean().default(false),
     syntheticUnvalidated: z.boolean().default(false),
+    changeSummary: NonEmptySchema.max(400).optional(),
+    purposeContext: NonEmptySchema.max(400).optional(),
     ...versioned,
   })
   .strict()
@@ -436,15 +438,38 @@ export const CreateTerminologyEntryInputSchema = z
   })
   .strict();
 
-export const SupersedeSourceEditionInputSchema = z
+export const CreateSourceRevisionInputSchema = z
   .object({
     ...mutationBase,
     workId: ContentWorkIdSchema,
     sourceEditionId: ContentEditionIdSchema,
     primaryText: CanonicalTextSchema,
+    purposeContext: NonEmptySchema.max(400),
+    changeSummary: NonEmptySchema.max(400),
+    submitForReview: z.boolean().default(false),
     expectedVersion: z.number().int().positive(),
   })
   .strict();
+
+export const SubmitSourceRevisionInputSchema = z
+  .object({
+    ...mutationBase,
+    editionId: ContentEditionIdSchema,
+    expectedVersion: z.number().int().positive(),
+  })
+  .strict();
+
+export const DecideSourceEditionInputSchema = z
+  .object({
+    ...mutationBase,
+    editionId: ContentEditionIdSchema,
+    decision: z.enum(REVIEW_DECISIONS),
+    expectedVersion: z.number().int().positive(),
+    notes: OptionalCanonicalTextSchema.optional(),
+  })
+  .strict();
+
+export const SupersedeSourceEditionInputSchema = CreateSourceRevisionInputSchema;
 
 export const AssembleRecipientContentInputSchema = z
   .object({
@@ -476,5 +501,8 @@ export type CreateContentWorkInput = z.infer<typeof CreateContentWorkInputSchema
 export type CreateDependentEditionInput = z.infer<typeof CreateDependentEditionInputSchema>;
 export type DecideTranslationInput = z.infer<typeof DecideTranslationInputSchema>;
 export type CreateTerminologyEntryInput = z.infer<typeof CreateTerminologyEntryInputSchema>;
+export type CreateSourceRevisionInput = z.infer<typeof CreateSourceRevisionInputSchema>;
+export type SubmitSourceRevisionInput = z.infer<typeof SubmitSourceRevisionInputSchema>;
+export type DecideSourceEditionInput = z.infer<typeof DecideSourceEditionInputSchema>;
 export type SupersedeSourceEditionInput = z.infer<typeof SupersedeSourceEditionInputSchema>;
 export type AssembleRecipientContentInput = z.infer<typeof AssembleRecipientContentInputSchema>;
