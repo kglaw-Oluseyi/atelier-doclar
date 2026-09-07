@@ -3,7 +3,7 @@
 **Slice ID:** `EOS-S04C`  
 **Prompt Control ID:** `MD-PR-S020`  
 **Starting baseline:** `9a79a443b7f08e727db12c9ea8dc4da8a557d8c0`  
-**Status:** `RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS`  
+**Status:** `IN_REVIEW / NOT READY`
 **Production:** unauthorised  
 **Next slices:** EOS-S04D–F and EOS-S05 not started  
 
@@ -58,3 +58,7 @@ Staff `/merchandise`, guest-access offer form, vendor `/vendor` portal, dossier/
 `ACA-S04C` course-id union, assignment, Event OS academy surface. Thresholds unchanged: distinction ≥90, pass 80–89, retake <80. Completion never grants authority. Independent Claude-in-Chrome prompt prepared after deployment.
 
 EOS-S04D–F and EOS-S05 were not started.
+
+## Primary-journey remediation
+
+Entered blocking TDR-S04C-001–003 from Claude’s whole-slice findings. Implemented complete staff creation, merchandise-only guest grants (`/offers`), and vendor issue/renew/revoke. Status `IN_REVIEW / NOT READY`. Not accepted. EOS-S04D–F and EOS-S05 not started.

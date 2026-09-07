@@ -2,7 +2,7 @@
 
 **Slice ID:** `EOS-S04C`  
 **Prompt Control ID:** `MD-PR-S020`  
-**Status:** `RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS`  
+**Status:** `IN_REVIEW / NOT READY`
 **Catalogue slice:** no  
 **Production:** unauthorised (`productionAuthorised` remains false)  
 **Starting baseline:** `9a79a443b7f08e727db12c9ea8dc4da8a557d8c0`
@@ -36,6 +36,10 @@ Vendor User is `VENDOR_CAPABILITY` on `/vendor`, not a staff role. Vendors canno
 ## First-run verification
 
 Workspace `pnpm typecheck`, `pnpm test`, `pnpm programme:validate` and `pnpm --filter @maison-doclar/event-os build` passed after product fixes (client-bundle `node:crypto` isolation; datetime-local → ISO). Playwright first-run failures were locator strict-mode assertions, not product defects; the suite then passed 3/3.
+
+## Primary-journey remediation
+
+Claude blocked acceptance on incomplete staff item/offer creation, RSVP-bound guest access, and a fixture vendor link. The merchandise studio now completes collection → item → audience preview → offer, issues merchandise-only guest grants on `/offers`, and issues/renews/revokes vendor assignments with accurate usability seals. Additive migration `EOS-S04C-MERCHANDISE-GUEST-GRANTS-V2`. Focused re-verification: `docs/control/EOS_S04C_FOCUSED_CLAUDE_REVERIFICATION.md`.
 
 ## Not accepted
 

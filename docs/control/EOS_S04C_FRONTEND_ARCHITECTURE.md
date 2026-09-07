@@ -11,7 +11,9 @@
 | Staff merchandise workspace | `/app/events/[eventId]/merchandise` | Staff cookie `md_event_os_session` | `merch.*` permissions |
 | Guest dossier adjacent card | `/app/events/[eventId]/guests/[guestId]` | Staff | `merch.offer.view` |
 | Guest directory badge | `/app/events/[eventId]/guests` | Staff | `merch.collection.view` |
-| Guest-access offers | `/rsvp` (after S03 exchange) | Guest capability cookie | Own offers only |
+| Guest-access offers (RSVP-adjacent, not the primary S04C path) | `/rsvp` (after S03 exchange) | Guest RSVP cookie `md_event_os_guest_rsvp` | Own offers only |
+| Private merchandise guest view | `/offers/[token]` → `/offers` | Separate cookie `md_event_os_offers` | Issued merch grant only |
+| Merchandise guest unavailable | `/offers/unavailable` | None | Expired, revoked or forged |
 | Vendor portal | `/vendor/[token]` → `/vendor` | Separate cookie `md_event_os_vendor` | Assignment-scoped `VENDOR_CAPABILITY` |
 | Vendor unavailable | `/vendor/unavailable` | None | Expired, revoked or forged |
 
@@ -26,7 +28,7 @@ Vendor routes are public to the staff middleware in the same way as `/rsvp`. The
 
 ## States
 
-Staff and vendor forms use existing operational-state and live-region patterns: success, validation, conflict, forbidden, not-found, session-required. Vendor expiry and revocation resolve to `/vendor/unavailable`. Guest merchandise success returns to `/rsvp` without changing RSVP intent.
+Staff, guest-merchandise and vendor forms use existing operational-state and live-region patterns: success, validation, conflict, forbidden, not-found, session-required. Issued staff tokens are shown once via a short-lived httpOnly flash cookie, never as canonical plaintext. Vendor expiry and revocation resolve to `/vendor/unavailable`. Merchandise guest expiry and revocation resolve to `/offers/unavailable`. Access is never labelled ready unless the presented synthetic link is currently usable.
 
 ## Responsive and access
 

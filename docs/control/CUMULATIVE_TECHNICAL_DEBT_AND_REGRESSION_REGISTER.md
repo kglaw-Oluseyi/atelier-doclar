@@ -631,6 +631,63 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 | Current status | OPEN — carried forward |
 | Resolution evidence | EOS-S04B accepted 2026-09-07 on the authorised first vertical; remaining pack UI was outside that milestone |
 
+### TDR-S04C-001 — Staff item-and-offer creation journey incomplete
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04C-001` |
+| Source slice | EOS-S04C |
+| Description | Claude confirmed the staff merchandise workspace could persist a collection but could not complete item creation, phase applicability, named/cohort targeting with preview, offer issue/amend/withdraw, or empty-collection next actions. This blocked EOS-S04C acceptance. |
+| Classification | Blocking acceptance defect |
+| Severity | BLOCKER |
+| Evidence | Claude whole-slice verification; pre-remediation merchandise workspace |
+| Affected surface or contract | Staff merchandise studio |
+| Reason for deferral | None. Remediated in the primary-journey batch. |
+| Blocking | BLOCKING until focused Claude re-verification of the repaired staff journey |
+| Current owner | EOS-S04C focused re-verification |
+| Required regression coverage | Create collection → item → preview → issue offer without seeded fixtures; empty collection is not a dead end |
+| Latest safe remediation milestone | EOS-S04C primary-journey remediation |
+| Current status | REMEDIATED / AWAITING_FOCUSED_REVERIFICATION |
+| Resolution evidence | `docs/control/EOS_S04C_PRIMARY_JOURNEY_REMEDIATION.md` |
+
+### TDR-S04C-002 — Merchandise guest access required RSVP invitation
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04C-002` |
+| Source slice | EOS-S04C |
+| Description | Claude confirmed private merchandise guest access could only be established by issuing an S03 RSVP invitation. That is a blocking acceptance defect, not a verification inconvenience. |
+| Classification | Blocking acceptance defect |
+| Severity | BLOCKER |
+| Evidence | Claude whole-slice verification; guest merch on `/rsvp` via RSVP capability |
+| Affected surface or contract | Merchandise guest grant/session |
+| Reason for deferral | None. Remediated in the primary-journey batch. |
+| Blocking | BLOCKING until focused Claude re-verification of direct guest-access issuance |
+| Current owner | EOS-S04C focused re-verification |
+| Required regression coverage | Issue/renew/revoke from merchandise workspace; `/offers` private view; no invitation/RSVP write |
+| Latest safe remediation milestone | EOS-S04C primary-journey remediation |
+| Current status | REMEDIATED / AWAITING_FOCUSED_REVERIFICATION |
+| Resolution evidence | `docs/control/EOS_S04C_PRIMARY_JOURNEY_REMEDIATION.md` |
+
+### TDR-S04C-003 — Vendor access was a dead fixture link
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04C-003` |
+| Source slice | EOS-S04C |
+| Description | Claude confirmed vendor portal handoff presented a fixture token as ready instead of an authorised assignment/issue/renew/revoke lifecycle with accurate usability states. |
+| Classification | Blocking acceptance defect |
+| Severity | BLOCKER |
+| Evidence | Claude whole-slice verification; fixture vendor token labelled ready in staff UI |
+| Affected surface or contract | Vendor assignment and session |
+| Reason for deferral | None. Remediated in the primary-journey batch. |
+| Blocking | BLOCKING until focused Claude re-verification of vendor issue/revoke |
+| Current owner | EOS-S04C focused re-verification |
+| Required regression coverage | Issue usable synthetic vendor link; revoke kills an open session; never label ready unless currently usable |
+| Latest safe remediation milestone | EOS-S04C primary-journey remediation |
+| Current status | REMEDIATED / AWAITING_FOCUSED_REVERIFICATION |
+| Resolution evidence | `docs/control/EOS_S04C_PRIMARY_JOURNEY_REMEDIATION.md` |
+
 ---
 
 ## Closed items
@@ -686,3 +743,4 @@ These do not reopen EOS-S04A and do not create new blocking IDs.
 | EOS-S04B accessibility/responsive remediation 2026-09-07 | Functional champagne `#8B6E38` on light surfaces; Playwright 360/768/1440/200% evidence. Historical status: IN_REVIEW. |
 | EOS-S04B formal technical acceptance 2026-09-07 | ChatGPT accepted EOS-S04B at SHA `f9f218c9d3e357ba82e6c04e7409138267a94396`. No further S04B verification required. TDR-S04B-001–004 remain carried forward and do not reopen the slice. Catalogue accepted-slice count remains 4. EOS-S04C–F and EOS-S05 remain unauthorised. Production remains unauthorised. |
 | EOS-S04C ratification MD-PR-S020 2026-09-07 | George Lawson ratifies the EOS-S04C packs and authorises P00–P11. Status RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS. EOS-S04D–F and EOS-S05 remain unauthorised. Production remains unauthorised. |
+| EOS-S04C primary-journey remediation 2026-09-07 | Entered blocking TDR-S04C-001–003 from Claude’s whole-slice findings. Remediated staff creation, merchandise-only guest grants, and vendor assignment/session lifecycle. Status IN_REVIEW / NOT READY. EOS-S04D–F and EOS-S05 not started. |
