@@ -229,6 +229,8 @@ describe("EOS-S04A acceptance remediation", () => {
     });
     assert.equal(retained.guest.honorific, "Professor");
     assert.equal(retained.guest.preferredFormalSalutation, "Dr (Mrs) Kẹ́hìndé Adéwálé");
+    assert.equal(retained.guest.formalSalutation.text, "Dr (Mrs) Kẹ́hìndé Adéwálé");
+    assert.equal(retained.guest.formalSalutation.usedPreferredFormal, true);
     assert.equal(retained.guest.preferredFormalSalutationGovernance?.decision, "RETAINED");
     assert.equal(retained.guest.formalSalutation.inferredTitle, false);
 

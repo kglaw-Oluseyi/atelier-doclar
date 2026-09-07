@@ -20,8 +20,6 @@ export interface RenderedSalutation {
   inferredTitle: false;
 }
 
-const CONFIRMED_ADDRESSING = new Set(["GUEST_CONFIRMED", "HOST_CONFIRMED", "PROTOCOL_CONFIRMED"]);
-
 const ENTITLEMENT_TRANSITIONS: Record<CompanionEntitlementStatus, readonly CompanionEntitlementStatus[]> = {
   AVAILABLE: ["NOMINATED", "DECLINED", "EXPIRED", "REVOKED", "EXCEPTION_REVIEW"],
   NOMINATED: ["CONFIRMED", "DECLINED", "WITHDRAWN", "EXPIRED", "REVOKED", "EXCEPTION_REVIEW"],
@@ -73,8 +71,8 @@ export function composeStoredName(input: {
 
 export function renderGuestSalutation(guest: Pick<OperationalGuest, "givenName" | "familyName" | "preferredName" | "addressing">): RenderedSalutation {
   const addressing = guest.addressing;
-  const preferredFormal = addressing?.preferredFormalSalutation?.trim();
-  if (preferredFormal && addressing && CONFIRMED_ADDRESSING.has(addressing.addressingStatus)) {
+  const preferredFormal = addressing?.preferredFormalSalutation;
+  if (preferredFormal) {
     return {
       kind: "FORMAL",
       text: preferredFormal,

@@ -36,6 +36,7 @@ import {
   type ResponsibleAdultLink,
   type UpdateGuestAddressingInput,
 } from "./addressing-schemas.js";
+import { retainedSalutationInvariant } from "./addressing-invariant.js";
 import { refreshGuestChildReadiness } from "./addressing-projections.js";
 import {
   addressingTitles,
@@ -100,16 +101,18 @@ export function applyGuestAddressing(
   const postNominals = input.postNominals !== undefined ? input.postNominals.filter((item) => item.trim()) : previous?.postNominals;
   const preferredDisplayName =
     input.preferredDisplayName !== undefined ? optionalText(input.preferredDisplayName) : previous?.preferredDisplayName;
+  const previousSalutation = previous?.preferredFormalSalutation;
   const preferredFormalSalutation =
-    input.preferredFormalSalutation !== undefined
-      ? optionalText(input.preferredFormalSalutation)
-      : previous?.preferredFormalSalutation;
+    input.salutationDecision === "RETAIN"
+      ? previousSalutation
+      : input.preferredFormalSalutation !== undefined
+        ? optionalText(input.preferredFormalSalutation)
+        : previousSalutation;
   const mismatch = detectSalutationTitleMismatch({
     previousTitles: addressingTitles(previous),
     nextTitles: proposedAddressingTitles(previous, input),
-    salutation: previous?.preferredFormalSalutation,
+    salutation: previousSalutation,
   });
-  const previousSalutation = previous?.preferredFormalSalutation;
   const salutationTextChanged = (preferredFormalSalutation ?? "") !== (previousSalutation ?? "");
   let preferredFormalSalutationGovernance = previous?.preferredFormalSalutationGovernance;
   if (mismatch) {
@@ -119,7 +122,12 @@ export function applyGuestAddressing(
         formerTitles: mismatch.formerTitles,
         recordedAt: now,
       };
-    } else if (input.salutationDecision === "RETAIN" && !salutationTextChanged) {
+    } else if (input.salutationDecision === "RETAIN") {
+      retainedSalutationInvariant.assert({
+        decision: "RETAIN",
+        persisted: preferredFormalSalutation,
+        previous: previousSalutation,
+      });
       preferredFormalSalutationGovernance = {
         decision: "RETAINED",
         formerTitles: mismatch.formerTitles,
@@ -136,6 +144,12 @@ export function applyGuestAddressing(
         },
       );
     }
+  } else if (input.salutationDecision === "RETAIN") {
+    retainedSalutationInvariant.assert({
+      decision: "RETAIN",
+      persisted: preferredFormalSalutation,
+      previous: previousSalutation,
+    });
   }
   const jointAddressForm =
     input.jointAddressForm !== undefined ? optionalText(input.jointAddressForm) : previous?.jointAddressForm;
@@ -164,6 +178,11 @@ export function applyGuestAddressing(
     ...(pronunciationNote ? { pronunciationNote } : {}),
     addressingStatus: input.addressingStatus ?? previous?.addressingStatus ?? "UNVERIFIED",
     addressingSource: input.addressingSource,
+  });
+  retainedSalutationInvariant.assert({
+    decision: input.salutationDecision,
+    persisted: addressing.preferredFormalSalutation,
+    previous: previousSalutation,
   });
   guest.addressing = addressing;
   if (input.ageBand) guest.ageBand = input.ageBand;

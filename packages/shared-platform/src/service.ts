@@ -14,6 +14,7 @@ import { emptyMasterEventFile } from "./mef.js";
 import { authorize, canSeeClient, canSeeEvent, singleCoveringRoleKey, type ActorSnapshot, type PolicyDecision } from "./policy.js";
 import { parseCanonicalCsv, rowToIntakeFields } from "./guest-intake.js";
 import { dateOfBirthForbidden, requiresResponsibleAdult } from "./addressing.js";
+import { RETAINED_SALUTATION_INVARIANT, retainedSalutationInvariant } from "./addressing-invariant.js";
 import { attentionRequiredFor, operationalDisplayName } from "./guest-matching.js";
 import {
   addressingAlreadyApplied,
@@ -1376,7 +1377,13 @@ export class PlatformService {
             throw new PlatformError("FORBIDDEN", "child age band requires child management authority");
           }
         }
+        const previousSalutation = guest.addressing?.preferredFormalSalutation;
         applyGuestAddressing(guest, input, ctx.now);
+        retainedSalutationInvariant.assert({
+          decision: input.salutationDecision,
+          persisted: guest.addressing?.preferredFormalSalutation,
+          previous: previousSalutation,
+        });
         syncChildReadiness(snap, guest);
         return buildGuestAddressingWorkspace(
           snap,
@@ -2429,6 +2436,31 @@ export class PlatformService {
     });
   }
 
+  getAccessAdministration(
+    actor: ActorContext,
+    organisationId: string,
+  ): {
+    people: Array<{ id: string; displayName: string }>;
+    events: Array<{ id: string; name: string }>;
+    assignments: Assignment[];
+  } {
+    const { snap, ctx } = this.authorizeQuery(actor, "assignment.manage", { organisationId });
+    const memberIds = new Set(
+      snap.memberships
+        .filter((item) => item.organisationId === organisationId && item.status === "ACTIVE")
+        .map((item) => item.personId),
+    );
+    return {
+      people: snap.persons
+        .filter((item) => memberIds.has(item.id))
+        .map((item) => ({ id: item.id, displayName: item.displayName })),
+      events: snap.events
+        .filter((item) => item.organisationId === organisationId && canSeeEvent(ctx.actor, item, ctx.now))
+        .map((item) => ({ id: item.id, name: item.name })),
+      assignments: snap.assignments.filter((item) => item.organisationId === organisationId),
+    };
+  }
+
   searchAudit(actor: ActorContext, organisationId: string): AuditEvent[] {
     const { snap } = this.authorizeQuery(actor, "audit.view", { organisationId });
     return snap.audit.filter((item) => item.organisationId === organisationId);
@@ -3437,7 +3469,13 @@ export class PlatformService {
         const reused = input.alreadyApplied(this.store.snapshot());
         if (reused) return reused;
       }
-      if (error instanceof PlatformError && (error.code === "VERSION_CONFLICT" || error.code === "TRANSITION_INVALID" || error.code === "CAPABILITY_NOT_ENABLED")) {
+      if (
+        error instanceof PlatformError &&
+        (error.code === "VERSION_CONFLICT" ||
+          error.code === "TRANSITION_INVALID" ||
+          error.code === "CAPABILITY_NOT_ENABLED" ||
+          (error.code === "VALIDATION_FAILED" && error.details?.includes(RETAINED_SALUTATION_INVARIANT)))
+      ) {
         const failed = this.store.snapshot();
         this.writeAudit(failed, {
           action: input.action,

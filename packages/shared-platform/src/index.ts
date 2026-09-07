@@ -190,6 +190,11 @@ export {
   proposedAddressingTitles,
 } from "./addressing-salutation.js";
 export {
+  assertRetainedSalutationInvariant,
+  retainedSalutationInvariant,
+  RETAINED_SALUTATION_INVARIANT,
+} from "./addressing-invariant.js";
+export {
   guestAmendmentAlreadyApplied,
   addressingAlreadyApplied,
 } from "./mutation-replay.js";

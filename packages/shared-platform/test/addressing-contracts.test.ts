@@ -150,6 +150,21 @@ describe("EOS-S04A domain contracts", () => {
     const formal = renderGuestSalutation(confirmed);
     assert.equal(formal.usedPreferredFormal, true);
     assert.equal(formal.kind, "FORMAL");
+    const unverifiedAuthored = guest({
+      id: GUEST_B,
+      given: "Adérónkẹ́",
+      family: "Concurrency-Test-Q7F3",
+      addressing: {
+        honorific: "Mr",
+        preferredFormalSalutation: "Dr Adérónkẹ́ Concurrency-Test-Q7F3",
+        addressingStatus: "UNVERIFIED",
+        addressingSource: "STAFF",
+      },
+    });
+    const retainedDisplay = renderGuestSalutation(unverifiedAuthored);
+    assert.equal(retainedDisplay.text, "Dr Adérónkẹ́ Concurrency-Test-Q7F3");
+    assert.equal(retainedDisplay.usedPreferredFormal, true);
+    assert.doesNotMatch(retainedDisplay.text, /^Mr /);
     const unverifiedImport = GuestAddressingSchema.safeParse({
       preferredFormalSalutation: "Mr Something",
       addressingStatus: "HOST_CONFIRMED",
