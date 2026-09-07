@@ -93,6 +93,19 @@ This addendum does not rewrite the B0 row set or the earlier S04A/S04B/S04C adde
 | EOS-S04C primary-journey remediation | `docs/control/EOS_S04C_PRIMARY_JOURNEY_REMEDIATION.md` | HISTORICAL REMEDIATION EVIDENCE | Written while the slice was `IN_REVIEW / NOT READY`. |
 | EOS-S04C vendor lifecycle remediation | `docs/control/EOS_S04C_VENDOR_LIFECYCLE_REMEDIATION.md` | HISTORICAL REMEDIATION EVIDENCE | Written while the slice was `IN_REVIEW / NOT READY`. |
 | EOS-S04C guest-renewal false-success remediation | `docs/control/EOS_S04C_GUEST_RENEWAL_FALSE_SUCCESS_REMEDIATION.md` | HISTORICAL REMEDIATION EVIDENCE | Written while the slice was `IN_REVIEW / NOT READY`. |
-| EOS-S04D Controlled Slice Pack v1.0 DRAFT | `docs/control/Maison_Doclar_EOS-S04D_Controlled_Slice_Pack_v1.0_DRAFT.docx` | DRAFT FOR CEO RATIFICATION — implementation not authorised | Sequential successor after accepted S04C. Filename contains DRAFT. |
-| EOS-S04D Cursor Prompt Pack v1.0 | `docs/control/Maison_Doclar_EOS-S04D_Cursor_Prompt_Pack_v1.0.docx` | REQUIREMENTS / IMPLEMENTATION PACK — NOT AUTHORISED | Historical pack wording holds push/deploy. Acceptance of S04C does not authorise S04D. |
+| EOS-S04D Controlled Slice Pack v1.0 DRAFT | `docs/control/Maison_Doclar_EOS-S04D_Controlled_Slice_Pack_v1.0_DRAFT.docx` | RATIFIED REQUIREMENTS SOURCE — filename retained | Sequential successor after accepted S04C. Filename contains DRAFT. |
+| EOS-S04D Cursor Prompt Pack v1.0 | `docs/control/Maison_Doclar_EOS-S04D_Cursor_Prompt_Pack_v1.0.docx` | CONTROLLING IMPLEMENTATION PACK — subject to overlay | Historical pack wording that holds push/deploy is superseded for this authorised slice. |
+
+## Addendum — 2026-09-07 EOS-S04D ratification (`MD-PR-S022`)
+
+This addendum does not rewrite the B0 row set or the earlier S04A/S04B/S04C addenda.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| EOS-S04D CEO ratification overlay | `docs/control/EOS_S04D_RATIFICATION.md` | CANONICAL AUTHORITY RECORD | Changes S04D from DRAFT / NOT AUTHORISED to RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS. Does not authorise EOS-S04E–F, EOS-S05 or production. |
+| EOS-S04D canonical record mapping | `docs/control/EOS_S04D_CANONICAL_RECORD_MAPPING.md` | CANONICAL MAPPING | One concept, one collection. |
+| EOS-S04D implementation record | `docs/control/EOS_S04D_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | P00–P11; not acceptance. |
+| EOS-S04D frontend architecture | `docs/control/EOS_S04D_FRONTEND_ARCHITECTURE.md` | IMPLEMENTATION EVIDENCE | Command Atelier forecast surfaces. |
+| EOS-S04D build ledger | `docs/control/EOS_S04D_BUILD_LEDGER.md` | IMPLEMENTATION EVIDENCE | Prompt-by-prompt ledger. |
+| EOS-S04D Claude-in-Chrome verification | `docs/control/EOS_S04D_CLAUDE_IN_CHROME_VERIFICATION.md` | INDEPENDENT REVIEW PACKAGE | Claude verifies; Claude does not accept. |
 

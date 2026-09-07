@@ -119,3 +119,12 @@ Successor implementation after EOS-S04B requires a separate CEO decision. Cursor
 | EOS-S04E–F and EOS-S05 | Retained unauthorised. This acceptance does not start them. |
 
 Successor implementation after EOS-S04C requires a separate CEO decision. Cursor must not start EOS-S04D–F or EOS-S05 from this acceptance record.
+
+## Addendum — 2026-09-07 EOS-S04D ratification (`MD-PR-S022`)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| EOS-S04D `DRAFT / IMPLEMENTATION NOT AUTHORISED` | SUPERSEDED by `docs/control/EOS_S04D_RATIFICATION.md`. Status is `RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS`. |
+| S04D Cursor pack wording that holds routine commits, pushes or Railway deployment | SUPERSEDED for this authorised slice by deploy-by-default and the CEO overlay. Push and deploy Event OS in `atelier-doclar`. Deployment is not acceptance. |
+| EOS-S04E–F and EOS-S05 | Retained unauthorised. This overlay does not start them. |
+| Control Tower | Compatibility-only unless a ratified contract requires a genuine change. Not a deploy target for this slice. |
