@@ -24,9 +24,24 @@ test("S04E vertical: staff publish, host exchange, receipt, replay denial and ro
     await expect(page.getByText(/Atelier was published|recorded|published/i).first()).toBeVisible();
   }
   await expect(page.getByTestId("atelier-publication-state")).toContainText("PUBLISHED");
+  await expect(page.getByTestId("atelier-narrative-editor")).toBeVisible();
+  await expect(page.getByTestId("editor-source")).toContainText(/DRAFT|PUBLISHED/);
+  const staffStory = await page.locator('textarea[name="story"]').inputValue();
+  const staffAtmosphere = await page.locator('textarea[name="atmosphere"]').inputValue();
+  const staffCultural = await page.locator('input[name="culturalIntent"]').inputValue();
+  const staffDesign = await page.locator('input[name="designDirection"]').inputValue();
+  expect(staffStory.length).toBeGreaterThan(8);
+  expect(staffAtmosphere).not.toBe("Warm ivory rooms and considered language.");
+  await page.locator('input[name="provenance"]').fill("CLAUDE-S04E-A2 — governed second synthetic edition");
+  await page.locator('input[name="changeSummary"]').fill("Second published telling derived from the current edition.");
+  await page.getByRole("button", { name: "Publish a new narrative edition" }).click();
+  await expect(page.getByText(/first published narrative edition|earlier published edition/i).first()).toBeVisible();
+  await expect(page.getByTestId("atelier-edition-history")).toBeVisible();
+  await expect(page.getByTestId("earlier-published-count")).toContainText(/Earlier published editions: [1-9]/);
 
   await page.getByRole("button", { name: "Issue principal host invitation" }).click();
   await expect(page.getByText(/single-use host invitation was issued/i)).toBeVisible();
+  await expect(page.getByTestId("atelier-grant-authority").first()).toContainText("May decide");
   await expect(page.getByTestId("atelier-access-link")).toBeVisible();
   const hostHref = await page.getByTestId("atelier-access-link").getAttribute("href");
   expect(hostHref).toMatch(/^\/atelier\/.+/);
@@ -37,6 +52,11 @@ test("S04E vertical: staff publish, host exchange, receipt, replay denial and ro
   await expect(hostPage).toHaveURL(/\/atelier\/?(\?|$)/, { timeout: 20_000 });
   await expect(hostPage.getByTestId("host-atelier-story")).toBeVisible();
   await expect(hostPage.getByTestId("host-chapter-vision")).toBeVisible();
+  await expect(hostPage.getByTestId("host-vision-story")).toHaveText(staffStory);
+  await expect(hostPage.getByTestId("host-vision-atmosphere")).toHaveText(staffAtmosphere);
+  await expect(hostPage.getByTestId("host-vision-cultural-intent")).toHaveText(staffCultural);
+  await expect(hostPage.getByTestId("host-vision-design-direction")).toHaveText(staffDesign);
+  await expect(hostPage.getByTestId("host-vision-provenance")).toContainText("CLAUDE-S04E-A2");
   await expect(hostPage.getByTestId("host-chapter-journey")).toBeVisible();
   await expect(hostPage.getByTestId("host-chapter-assurance")).toBeVisible();
   await expect(hostPage.getByText("probability")).toHaveCount(0);
