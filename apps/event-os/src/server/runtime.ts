@@ -10,7 +10,7 @@ import {
   type PgQueryable,
   type PlatformStore,
 } from "@maison-doclar/shared-platform";
-import { databaseUrl, fixturesAllowed, rsvpAccessConfig, sessionConfig } from "./config";
+import { databaseUrl, fixturesAllowed, rsvpAccessConfig, sessionConfig, vendorAccessConfig } from "./config";
 import { FileBackedPlatformStore } from "./file-store";
 
 export type PersistenceLabel = "POSTGRES" | "MEMORY_NON_PRODUCTION" | "UNAVAILABLE";
@@ -36,7 +36,7 @@ function storePath(): string {
 
 function fileRuntime(): Runtime {
   const store = new FileBackedPlatformStore(storePath());
-  const options = { rsvpAccess: rsvpAccessConfig(), staffSession: sessionConfig() };
+  const options = { rsvpAccess: rsvpAccessConfig(), staffSession: sessionConfig(), vendorAccess: vendorAccessConfig() };
   const service = applySyntheticSnapshot(store, options);
   return {
     service,
@@ -76,7 +76,7 @@ async function postgresRuntime(): Promise<Runtime> {
     },
   };
   const store = await PostgresPlatformStore.open(client);
-  const options = { rsvpAccess: rsvpAccessConfig(), staffSession: sessionConfig() };
+  const options = { rsvpAccess: rsvpAccessConfig(), staffSession: sessionConfig(), vendorAccess: vendorAccessConfig() };
   const seeded = fixturesAllowed()
     ? await applySyntheticSeedIfNeeded(store, client, options)
     : { service: new PlatformService(store, options), seed: undefined };

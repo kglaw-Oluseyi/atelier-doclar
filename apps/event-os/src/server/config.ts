@@ -3,8 +3,11 @@ import {
   assertRsvpAccessConfig,
   assertSessionConfig,
   DEFAULT_NON_PRODUCTION_RSVP_ACCESS,
+  DEFAULT_NON_PRODUCTION_VENDOR_ACCESS,
+  assertVendorAccessConfig,
   type RsvpAccessConfig,
   type SessionConfig,
+  type VendorAccessConfig,
 } from "@maison-doclar/shared-platform";
 
 const DEV_TOKEN = "event-os-access-token-not-for-production";
@@ -67,6 +70,18 @@ export function rsvpAccessConfig(): RsvpAccessConfig {
 
 export function rsvpSessionTtlSeconds(): number {
   return rsvpAccessConfig().sessionTtlSeconds ?? 2 * 60 * 60;
+}
+
+export function vendorAccessConfig(): VendorAccessConfig {
+  const config: VendorAccessConfig = {
+    assignmentPepper: runtimeEnv("EVENT_OS_VENDOR_PEPPER") ?? DEFAULT_NON_PRODUCTION_VENDOR_ACCESS.assignmentPepper,
+    sessionSecret: runtimeEnv("EVENT_OS_VENDOR_SESSION_SECRET") ?? DEFAULT_NON_PRODUCTION_VENDOR_ACCESS.sessionSecret,
+    currentKeyId: runtimeEnv("EVENT_OS_VENDOR_KEY_ID") ?? DEFAULT_NON_PRODUCTION_VENDOR_ACCESS.currentKeyId,
+    sessionTtlSeconds: DEFAULT_NON_PRODUCTION_VENDOR_ACCESS.sessionTtlSeconds,
+    maxExchangeFailures: DEFAULT_NON_PRODUCTION_VENDOR_ACCESS.maxExchangeFailures,
+  };
+  assertVendorAccessConfig(config, productionAuthorised());
+  return config;
 }
 
 export function cookieSecure(): boolean {

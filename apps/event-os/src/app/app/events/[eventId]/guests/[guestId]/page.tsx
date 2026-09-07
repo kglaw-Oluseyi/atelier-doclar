@@ -7,6 +7,7 @@ import {
   type ActorContext,
 } from "@maison-doclar/shared-platform";
 import { GuestAddressingWorkspace } from "../../../../../../components/guest-addressing-form";
+import { GuestMerchandisePanel } from "../../../../../../components/guest-merchandise-panel";
 import { GuestPhasePanel } from "../../../../../../components/guest-phase-panel";
 import { DuplicateResolveForm, GuestAmendForm } from "../../../../../../components/guest-amend-form";
 import { GuestAccessLink } from "../../../../../../components/guest-access-link";
@@ -163,6 +164,17 @@ export default async function GuestDetailPage({
   } catch {
     phaseProjection = undefined;
   }
+  let merchandiseProjection;
+  try {
+    merchandiseProjection = runtime.service.getGuestMerchandiseProjection(
+      actor,
+      scoped.organisation.id,
+      scoped.event.id,
+      guest.id,
+    );
+  } catch {
+    merchandiseProjection = undefined;
+  }
   const policy = permissions.rsvpView
     ? runtime.service.getRsvpPolicy(actor, scoped.organisation.id, scoped.event.id)
     : undefined;
@@ -242,6 +254,7 @@ export default async function GuestDetailPage({
               { href: "#addressing-heading", label: "Addressing" },
               { href: "#party-heading", label: "Party" },
               { href: "#guest-amendment", label: "Amendment" },
+              { href: "#guest-merchandise", label: "Merchandise" },
             ]}
           />
           <AtelierRecordRefresh
@@ -366,6 +379,7 @@ export default async function GuestDetailPage({
               />
             ) : null}
             {phaseProjection ? <GuestPhasePanel projection={phaseProjection} /> : null}
+            {merchandiseProjection ? <GuestMerchandisePanel projection={merchandiseProjection} /> : null}
             {duplicates.length > 0 ? (
               <section className="atelier-panel">
                 <h2>Duplicate and identity review</h2>

@@ -81,6 +81,8 @@ export default async function RsvpOverviewPage({
       ) : null}
       <p>
         <Link href={`/app/events/${scoped.event.id}/guests`}>Guest directory</Link>
+        {" · "}
+        <Link href={`/app/events/${scoped.event.id}/merchandise`}>Merchandise (adjacent, not RSVP)</Link>
         {permissions.rsvpManage ? (
           <>
             {" · "}

@@ -1593,3 +1593,245 @@ export async function resolveCheckpointAction(formData: FormData): Promise<void>
     );
   });
 }
+
+async function merchandiseFail(eventId: string, error: unknown): Promise<never> {
+  sessionOrAssignmentRedirect(error, `/app/events/${eventId}/merchandise`);
+  const classified = classifyActionError(error);
+  await writeActionFlash({
+    code: classified.code,
+    message: classified.message,
+    eventId,
+  });
+  redirect(`/app/events/${encodeURIComponent(eventId)}/merchandise?${failQuery(error)}`);
+}
+
+export async function createMerchandiseCollectionAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor } = await requireActor().catch((error) => merchandiseFail(eventId, error));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await merchandiseFail(eventId, new Error("No organisation assignment is available."));
+    try {
+      getRuntime().service.createMerchandiseCollection(actor, {
+        organisationId: organisation.id,
+        eventId,
+        name: String(formData.get("name") ?? ""),
+        hostOwnerLabel: String(formData.get("hostOwnerLabel") ?? ""),
+        windowStartsAt: toIso(String(formData.get("windowStartsAt") ?? "")) ?? String(formData.get("windowStartsAt") ?? ""),
+        windowEndsAt: toIso(String(formData.get("windowEndsAt") ?? "")) ?? String(formData.get("windowEndsAt") ?? ""),
+        reason: String(formData.get("reason") ?? "Create merchandise collection"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await merchandiseFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/merchandise?ok=collection`);
+  });
+}
+
+export async function createMerchandiseCohortAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor } = await requireActor().catch((error) => merchandiseFail(eventId, error));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await merchandiseFail(eventId, new Error("No organisation assignment is available."));
+    try {
+      getRuntime().service.createMerchandiseCohort(actor, {
+        organisationId: organisation.id,
+        eventId,
+        label: String(formData.get("label") ?? ""),
+        guestIds: String(formData.get("guestIds") ?? "")
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean),
+        reason: String(formData.get("reason") ?? "Create host-assigned merchandise cohort"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await merchandiseFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/merchandise?ok=cohort`);
+  });
+}
+
+export async function reviewVendorUpdateAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor } = await requireActor().catch((error) => merchandiseFail(eventId, error));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await merchandiseFail(eventId, new Error("No organisation assignment is available."));
+    try {
+      getRuntime().service.reviewVendorUpdate(actor, {
+        organisationId: organisation.id,
+        eventId,
+        updateId: String(formData.get("updateId") ?? ""),
+        accept: String(formData.get("accept") ?? "") === "1",
+        expectedUpdateVersion: Number(formData.get("expectedUpdateVersion")),
+        reason: String(formData.get("reason") ?? "Review attributed vendor update"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await merchandiseFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/merchandise?ok=review`);
+  });
+}
+
+export async function raiseMerchandiseExceptionAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor } = await requireActor().catch((error) => merchandiseFail(eventId, error));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await merchandiseFail(eventId, new Error("No organisation assignment is available."));
+    try {
+      getRuntime().service.raiseMerchandiseException(actor, {
+        organisationId: organisation.id,
+        eventId,
+        type: String(formData.get("type") ?? ""),
+        guestId: optionalFormValue(formData, "guestId"),
+        fulfilmentId: optionalFormValue(formData, "fulfilmentId"),
+        ownerLabel: String(formData.get("ownerLabel") ?? "Event Director"),
+        guestSafeMessage: optionalFormValue(formData, "guestSafeMessage"),
+        reason: String(formData.get("reason") ?? "Raise merchandise exception"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await merchandiseFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/merchandise?ok=exception`);
+  });
+}
+
+export async function recordStaffParticipationAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor } = await requireActor().catch((error) => merchandiseFail(eventId, error));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await merchandiseFail(eventId, new Error("No organisation assignment is available."));
+    try {
+      getRuntime().service.recordGuestParticipation(actor, {
+        organisationId: organisation.id,
+        eventId,
+        guestOfferId: String(formData.get("guestOfferId") ?? ""),
+        guestId: String(formData.get("guestId") ?? ""),
+        choice: String(formData.get("choice") ?? ""),
+        selectedVariantId: optionalFormValue(formData, "selectedVariantId"),
+        expectedOfferVersion: Number(formData.get("expectedOfferVersion")),
+        reason: String(formData.get("reason") ?? "Record guest merchandise choice"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await merchandiseFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/merchandise?ok=choice`);
+  });
+}
+
+export async function exchangeVendorAccessAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const token = String(formData.get("token") ?? "").trim();
+    try {
+      const { ensureRuntime } = await import("./runtime");
+      await ensureRuntime();
+      const exchanged = getRuntime().service.exchangeVendorAccess(token);
+      const { setVendorSessionCookie } = await import("./vendor-access");
+      await setVendorSessionCookie(exchanged.sessionToken);
+    } catch {
+      redirect("/vendor/unavailable");
+    }
+    redirect("/vendor");
+  });
+}
+
+export async function vendorSubmitUpdateAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { readVendorSessionCookie } = await import("./vendor-access");
+    const token = await readVendorSessionCookie();
+    if (!token) redirect("/vendor/unavailable");
+    try {
+      getRuntime().service.vendorSubmitUpdate(token, {
+        assignmentId: String(formData.get("assignmentId") ?? ""),
+        fulfilmentId: String(formData.get("fulfilmentId") ?? ""),
+        reportedState: String(formData.get("reportedState") ?? ""),
+        reason: String(formData.get("reason") ?? "Vendor milestone report"),
+        expectedFulfilmentVersion: Number(formData.get("expectedFulfilmentVersion")),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      if (error instanceof PlatformError && error.code === "VERSION_CONFLICT") {
+        redirect("/vendor?state=conflict");
+      }
+      redirect("/vendor?error=" + encodeURIComponent(actionError(error)));
+    }
+    redirect("/vendor?ok=update");
+  });
+}
+
+export async function vendorLogoutAction(): Promise<void> {
+  const { clearVendorSessionCookie } = await import("./vendor-access");
+  await clearVendorSessionCookie();
+  redirect("/vendor/unavailable");
+}
+
+export async function guestRecordParticipationAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const token = await (await import("./guest-access")).readGuestSessionCookie();
+    if (!token) redirect("/rsvp/unavailable");
+    try {
+      getRuntime().service.guestRecordParticipation(token, {
+        guestOfferId: String(formData.get("guestOfferId") ?? ""),
+        guestId: String(formData.get("guestId") ?? ""),
+        choice: String(formData.get("choice") ?? ""),
+        selectedVariantId: optionalFormValue(formData, "selectedVariantId"),
+        expectedOfferVersion: Number(formData.get("expectedOfferVersion")),
+        reason: String(formData.get("reason") ?? "Guest merchandise choice"),
+        organisationId: "00000000-0000-4000-8000-000000000001",
+        eventId: "00000000-0000-4000-8000-000000000021",
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      redirect("/rsvp?error=" + encodeURIComponent(actionError(error)));
+    }
+    redirect("/rsvp?ok=merchandise");
+  });
+}
+
+export async function guestCaptureCapAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const token = await (await import("./guest-access")).readGuestSessionCookie();
+    if (!token) redirect("/rsvp/unavailable");
+    try {
+      getRuntime().service.guestCaptureCapMeasurement(token, {
+        guestId: String(formData.get("guestId") ?? ""),
+        itemId: String(formData.get("itemId") ?? ""),
+        headCircumferenceInches: Number(formData.get("headCircumferenceInches")),
+        consentGiven: formData.get("consent") === "on",
+        reason: String(formData.get("reason") ?? "Consented cap circumference"),
+        organisationId: "00000000-0000-4000-8000-000000000001",
+        eventId: "00000000-0000-4000-8000-000000000021",
+      });
+    } catch (error) {
+      redirect("/rsvp?error=" + encodeURIComponent(actionError(error)));
+    }
+    redirect("/rsvp?ok=cap");
+  });
+}
+
+export async function guestWithdrawCapAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const token = await (await import("./guest-access")).readGuestSessionCookie();
+    if (!token) redirect("/rsvp/unavailable");
+    try {
+      getRuntime().service.guestWithdrawCapMeasurement(token, {
+        measurementId: String(formData.get("measurementId") ?? ""),
+        expectedVersion: Number(formData.get("expectedVersion")),
+        reason: String(formData.get("reason") ?? "Withdraw cap consent"),
+        organisationId: "00000000-0000-4000-8000-000000000001",
+        eventId: "00000000-0000-4000-8000-000000000021",
+      });
+    } catch (error) {
+      redirect("/rsvp?error=" + encodeURIComponent(actionError(error)));
+    }
+    redirect("/rsvp?ok=cap-withdrawn");
+  });
+}

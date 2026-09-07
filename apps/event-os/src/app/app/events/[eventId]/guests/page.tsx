@@ -75,6 +75,13 @@ export default async function GuestDirectoryPage({
     }
   }
   const rsvpByGuest = new Map(rsvpRows.map((row) => [row.guest.id, row]));
+  let merchBadges: ReturnType<typeof runtime.service.listGuestMerchandiseBadges> = [];
+  try {
+    merchBadges = runtime.service.listGuestMerchandiseBadges(actor, scoped.organisation.id, scoped.event.id);
+  } catch {
+    merchBadges = [];
+  }
+  const merchByGuest = new Map(merchBadges.map((row) => [row.guestId, row]));
   const attentionCount = guests.filter((item) => item.attentionRequired).length;
   const state = operationalStateFromQuery({
     error: query.error,
@@ -153,6 +160,9 @@ export default async function GuestDirectoryPage({
           <Link className="button secondary" href={`/app/events/${scoped.event.id}/rsvp`}>
             RSVP workspace
           </Link>
+          <Link className="button secondary" href={`/app/events/${scoped.event.id}/merchandise`}>
+            Merchandise
+          </Link>
           <Link className="button secondary" href={`/app/events/${scoped.event.id}`}>
             Event overview
           </Link>
@@ -175,6 +185,7 @@ export default async function GuestDirectoryPage({
                   <th scope="col">Attention</th>
                   <th scope="col">Email quality</th>
                   <th scope="col">RSVP</th>
+                  <th scope="col">Merchandise</th>
                   <th scope="col">Source</th>
                   <th scope="col">State</th>
                 </tr>
@@ -216,6 +227,13 @@ export default async function GuestDirectoryPage({
                       <td data-label="RSVP">
                         <span className="md-status">
                           {(rsvpByGuest.get(guest.id)?.attendanceIntent ?? "NOT_SUPPLIED").replaceAll("_", " ")}
+                        </span>
+                      </td>
+                      <td data-label="Merchandise">
+                        <span className="md-status" data-tone={merchByGuest.get(guest.id)?.risk ? "warn" : undefined}>
+                          {merchByGuest.get(guest.id)?.offerCount
+                            ? `${merchByGuest.get(guest.id)?.offerCount} offer${merchByGuest.get(guest.id)?.offerCount === 1 ? "" : "s"}`
+                            : "No offer"}
                         </span>
                       </td>
                       <td data-label="Source">{guest.intakeSource.replaceAll("_", " ")}</td>
