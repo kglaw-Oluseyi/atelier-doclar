@@ -144,6 +144,19 @@ This addendum does not rewrite the B0 row set or the earlier S04A–S04E addenda
 | Title | Path | Current programme status | Notes |
 |-------|------|--------------------------|-------|
 | EOS-S04E Formal Technical Acceptance | `docs/control/EOS_S04E_ACCEPTANCE.md` | CANONICAL ACCEPTANCE RECORD | Status `ACCEPTED` at SHA `05b91bb62dcc20357666bef4ff9bfa1d0cef11b2`. Not catalogue-slice acceptance. Does not authorise EOS-S04F, EOS-S05 or production. |
-| EOS-S04F Controlled Slice Pack v1.0 DRAFT | `docs/control/Maison_Doclar_EOS-S04F_Controlled_Slice_Pack_v1.0_DRAFT.docx` | REQUIREMENTS ARTEFACT — IMPLEMENTATION HELD | Pack-internal status `CEO REVIEW / NOT YET RATIFIED`. “This draft is not implementation authority.” |
-| EOS-S04F Cursor Prompt Pack v1.0 DRAFT | `docs/control/Maison_Doclar_EOS-S04F_Cursor_Prompt_Pack_v1.0_DRAFT.docx` | HELD — NOT IMPLEMENTATION AUTHORITY | Hold gate requires a separate CEO release of P00. No Prompt Control ID. |
+| EOS-S04F Controlled Slice Pack v1.0 DRAFT | `docs/control/Maison_Doclar_EOS-S04F_Controlled_Slice_Pack_v1.0_DRAFT.docx` | RATIFIED REQUIREMENTS SOURCE | Filename retained. Programme status superseded by `MD-PR-S026`. |
+| EOS-S04F Cursor Prompt Pack v1.0 DRAFT | `docs/control/Maison_Doclar_EOS-S04F_Cursor_Prompt_Pack_v1.0_DRAFT.docx` | CONTROLLING IMPLEMENTATION PACK | Subject to `docs/control/EOS_S04F_RATIFICATION.md`. P00–P11 released. |
+
+## Addendum — 2026-09-07 EOS-S04F ratification (`MD-PR-S026`)
+
+This addendum does not rewrite the B0 row set or the earlier S04A–S04E addenda.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| EOS-S04F CEO ratification overlay | `docs/control/EOS_S04F_RATIFICATION.md` | CANONICAL AUTHORITY RECORD | Changes S04F from HELD / NOT IMPLEMENTATION AUTHORITY to RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS. Does not authorise EOS-S05 or production. |
+| EOS-S04F canonical record mapping | `docs/control/EOS_S04F_CANONICAL_RECORD_MAPPING.md` | CANONICAL MAPPING | One concept, one collection. |
+| EOS-S04F implementation record | `docs/control/EOS_S04F_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | P00–P11; not acceptance. |
+| EOS-S04F frontend architecture | `docs/control/EOS_S04F_FRONTEND_ARCHITECTURE.md` | IMPLEMENTATION EVIDENCE | Staff Command Atelier language workspace; host multilingual edition. |
+| EOS-S04F build ledger | `docs/control/EOS_S04F_BUILD_LEDGER.md` | IMPLEMENTATION EVIDENCE | Prompt-by-prompt ledger. |
+| EOS-S04F Claude-in-Chrome verification | `docs/control/EOS_S04F_CLAUDE_IN_CHROME_VERIFICATION.md` | INDEPENDENT REVIEW PROMPT | Claude verifies; Claude does not accept. |
 

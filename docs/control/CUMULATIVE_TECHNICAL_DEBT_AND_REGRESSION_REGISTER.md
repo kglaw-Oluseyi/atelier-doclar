@@ -857,6 +857,42 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 | Latest safe remediation milestone | Optional later browser re-evidence; does not reopen EOS-S04E |
 | Current status | OPEN |
 
+### TDR-S04F-001 — Process-local action-result recall remains replica-unsafe
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04F-001` |
+| Source slice | EOS-S04F |
+| Description | Language workspace mutations use the accepted signed single-consume action-result mechanism. Recall remains process-local, as recorded in `TDR-S04D-004` and `TDR-S04E-001`. |
+| Classification | Scale-out observation |
+| Severity | LOW |
+| Evidence | `docs/control/EOS_S04F_IMPLEMENTATION.md`; inherited `TDR-S04D-004` |
+| Affected surface or contract | Staff language banners / action-result lifecycle |
+| Reason for deferral | Current Event OS is single-instance. The single-consume contract is already correct on one process. |
+| Blocking | NON_BLOCKING |
+| Current owner | Event OS shared action results |
+| Required regression coverage | Result cannot be replayed, misattributed, or shown after consume; replica-safe only after shared store |
+| Latest safe remediation milestone | Before multi-replica Event OS |
+| Current status | OPEN |
+
+### TDR-S04F-002 — External translation provider remains intentionally inactive
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04F-002` |
+| Source slice | EOS-S04F |
+| Description | No translation-provider adapter, environment variable or outbound call is activated. Machine/AI suggestions, if ever introduced later, remain draft-only and cannot auto-approve. |
+| Classification | Scope exclusion |
+| Severity | LOW |
+| Evidence | `docs/control/EOS_S04F_RATIFICATION.md`; `docs/control/EOS_S04F_IMPLEMENTATION.md` |
+| Affected surface or contract | Translation source type / provider boundary |
+| Reason for deferral | This slice forbids provider activation. Fail-closed is the required behaviour. |
+| Blocking | NON_BLOCKING |
+| Current owner | Future communications or language-provider authority |
+| Required regression coverage | No outbound translation call; unapproved machine text cannot enter recipient assembly |
+| Latest safe remediation milestone | After a separate provider-authority decision |
+| Current status | OPEN |
+
 ---
 
 ## Closed items
@@ -931,3 +967,4 @@ These do not reopen EOS-S04A and do not create new blocking IDs.
 | EOS-S04E ratification and implementation MD-PR-S024 2026-09-07 | George Lawson ratifies the EOS-S04E packs and authorises P00–P11. Status RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS. Entered TDR-S04E-001–002 (non-blocking). TDR-S04D-004 remains OPEN. EOS-S04F and EOS-S05 remain unauthorised. Production remains unauthorised. |
 | EOS-S04E edition/hydration/canDecide remediation 2026-09-07 | Live diagnosis Outcome A plus in-place reveal publish; staff editor mixed sources; principal grant persisted canDecide false. Remediated without rewriting Claude’s edition or original grant body. Status IN_REVIEW / NOT READY. TDR-S04E-001–002 remain OPEN and non-blocking for single-replica verification. EOS-S04F and EOS-S05 not started. |
 | EOS-S04E formal technical acceptance 2026-09-07 | ChatGPT accepted EOS-S04E at SHA `05b91bb62dcc20357666bef4ff9bfa1d0cef11b2`. Closed the blocking edition-history, staff-hydration and canDecide findings. Entered TDR-S04E-003–004 as non-blocking carry-forwards. TDR-S04E-001–002 and TDR-S04D-004 remain OPEN. Catalogue accepted-slice count remains 4. EOS-S04F remains HELD. EOS-S05 remains unauthorised. Production remains unauthorised. Documentation-only commit does not redeploy Event OS. |
+| EOS-S04F ratification and implementation MD-PR-S026 2026-09-07 | George Lawson ratifies the EOS-S04F packs and authorises P00–P11. Status RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS. Entered TDR-S04F-001–002 (non-blocking). TDR-S04E-001–004 and TDR-S04D-004 remain OPEN. EOS-S05 remains unauthorised. Production remains unauthorised. |
