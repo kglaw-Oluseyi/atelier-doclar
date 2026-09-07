@@ -1,61 +1,156 @@
 import "server-only";
 import { cookies } from "next/headers";
+import { cookieSecure, sessionConfig } from "./config";
+import {
+  ACTION_RESULT_COOKIE,
+  ACTION_RESULT_MAX_AGE_SECONDS,
+  buildActionResult,
+  forgetActionResult,
+  presentActionResult,
+  recallActionResult,
+  rememberActionResult,
+  sessionHashFromToken,
+  storedResultMatchesCorrelation,
+  signActionResult,
+  verifyActionResult,
+  type ActionResult,
+  type PresentedActionResult,
+} from "./action-result";
 import { parseActionFlash, type ActionFlash } from "./operational-state";
+import { readStaffSessionCookie } from "./staff-session-cookie";
 
-const ACTION_FLASH_COOKIE = "md_event_os_action_state";
-const RECOVERED_COOKIE = "md_event_os_recovered";
+export type { ActionFlash, ActionResult, PresentedActionResult };
+export { parseActionFlash, presentActionResult, sessionHashFromToken };
 
-export type { ActionFlash };
-export { parseActionFlash };
-
-export async function writeActionFlash(flash: ActionFlash): Promise<void> {
-  (await cookies()).set({
-    name: ACTION_FLASH_COOKIE,
-    value: JSON.stringify({
-      code: flash.code,
-      message: flash.message,
-      ...(flash.eventId ? { eventId: flash.eventId } : {}),
-      ...(flash.guestId ? { guestId: flash.guestId } : {}),
-    }),
-    httpOnly: true,
-    sameSite: "lax",
+export function actionResultClearCookie(secure = cookieSecure()) {
+  return {
+    name: ACTION_RESULT_COOKIE,
+    value: "",
+    httpOnly: true as const,
+    sameSite: "lax" as const,
     path: "/",
-    maxAge: 120,
-    secure: process.env.NODE_ENV === "production",
-  });
+    maxAge: 0,
+    secure,
+  };
+}
+
+function actionResultSetCookie(value: string) {
+  return {
+    name: ACTION_RESULT_COOKIE,
+    value,
+    httpOnly: true as const,
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: ACTION_RESULT_MAX_AGE_SECONDS,
+    secure: cookieSecure(),
+  };
+}
+
+export async function writeActionResult(result: ActionResult): Promise<void> {
+  rememberActionResult(result);
+  const signed = signActionResult(result, sessionConfig().sessionSecret);
+  (await cookies()).set(actionResultSetCookie(signed));
 }
 
 export async function consumeActionFlash(): Promise<void> {
-  (await cookies()).set({
-    name: ACTION_FLASH_COOKIE,
-    value: "",
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 0,
-    secure: process.env.NODE_ENV === "production",
-  });
+  const stored = await readActionResult();
+  forgetActionResult(stored?.correlationId);
+  (await cookies()).set(actionResultClearCookie());
+}
+
+export async function consumeMatchingActionResult(correlationId: string): Promise<void> {
+  const cookie = await readActionResult();
+  const stored = cookie?.correlationId === correlationId ? cookie : recallActionResult(correlationId);
+  if (!storedResultMatchesCorrelation(stored, correlationId)) return;
+  forgetActionResult(correlationId);
+  if (cookie?.correlationId === correlationId) {
+    (await cookies()).set(actionResultClearCookie());
+  }
+}
+
+export async function consumeActionResult(): Promise<void> {
+  await consumeActionFlash();
+}
+
+export async function readActionResult(): Promise<ActionResult | undefined> {
+  const raw = (await cookies()).get(ACTION_RESULT_COOKIE)?.value;
+  return verifyActionResult(raw, sessionConfig().sessionSecret);
+}
+
+export async function writeActionFlash(flash: ActionFlash & {
+  actionType: string;
+  scopePath: string;
+  correlationId: string;
+  actorPersonId: string;
+  sessionHash: string;
+  status?: "SUCCESS" | "FAILURE";
+}): Promise<void> {
+  const status: "SUCCESS" | "FAILURE" = flash.status ?? "FAILURE";
+  await writeActionResult(
+    buildActionResult({
+      sessionHash: flash.sessionHash,
+      actorPersonId: flash.actorPersonId,
+      scopePath: flash.scopePath,
+      actionType: flash.actionType,
+      correlationId: flash.correlationId,
+      status,
+      code: status === "SUCCESS" ? "SUCCESS" : flash.code,
+      message: flash.message,
+      eventId: flash.eventId,
+      guestId: flash.guestId,
+    }),
+  );
 }
 
 export async function readActionFlash(): Promise<ActionFlash | undefined> {
-  const jar = await cookies();
-  return parseActionFlash(jar.get(ACTION_FLASH_COOKIE)?.value);
+  const result = await readActionResult();
+  if (!result || result.status !== "FAILURE" || result.code === "SUCCESS") return undefined;
+  return {
+    code: result.code,
+    message: result.message,
+    ...(result.eventId ? { eventId: result.eventId } : {}),
+    ...(result.guestId ? { guestId: result.guestId } : {}),
+  };
+}
+
+export async function loadPresentedActionResult(input: {
+  requestPath: string;
+  resultId?: string;
+  actorPersonId: string;
+  eventId?: string;
+  guestId?: string;
+}): Promise<PresentedActionResult> {
+  const token = (await readStaffSessionCookie()) ?? "";
+  const cookie = await readActionResult();
+  const stored =
+    cookie && (!input.resultId || cookie.correlationId === input.resultId)
+      ? cookie
+      : recallActionResult(input.resultId);
+  return presentActionResult({
+    stored,
+    sessionHash: sessionHashFromToken(token),
+    actorPersonId: input.actorPersonId,
+    requestPath: input.requestPath,
+    resultId: input.resultId,
+    eventId: input.eventId,
+    guestId: input.guestId,
+  });
 }
 
 export async function writeRecoveredMarker(input: { eventId: string; guestId: string }): Promise<void> {
   (await cookies()).set({
-    name: RECOVERED_COOKIE,
+    name: "md_event_os_recovered",
     value: JSON.stringify({ eventId: input.eventId, guestId: input.guestId }),
     httpOnly: true,
     sameSite: "lax",
     path: "/",
     maxAge: 120,
-    secure: process.env.NODE_ENV === "production",
+    secure: cookieSecure(),
   });
 }
 
 export async function readRecoveredMarker(): Promise<{ eventId: string; guestId: string } | undefined> {
-  const raw = (await cookies()).get(RECOVERED_COOKIE)?.value;
+  const raw = (await cookies()).get("md_event_os_recovered")?.value;
   if (!raw) return undefined;
   try {
     const parsed = JSON.parse(raw) as { eventId?: unknown; guestId?: unknown };
@@ -84,7 +179,7 @@ export async function writeIssuedAccessFlash(flash: IssuedAccessFlash): Promise<
     sameSite: "lax",
     path: "/",
     maxAge: 120,
-    secure: process.env.NODE_ENV === "production",
+    secure: cookieSecure(),
   });
 }
 
@@ -110,7 +205,7 @@ export async function consumeIssuedAccessFlash(): Promise<void> {
     sameSite: "lax",
     path: "/",
     maxAge: 0,
-    secure: process.env.NODE_ENV === "production",
+    secure: cookieSecure(),
   });
 }
 
@@ -122,7 +217,7 @@ export async function writeAudiencePreviewFlash(names: string[]): Promise<void> 
     sameSite: "lax",
     path: "/",
     maxAge: 120,
-    secure: process.env.NODE_ENV === "production",
+    secure: cookieSecure(),
   });
 }
 

@@ -121,22 +121,26 @@ export function ForecastWorkspace({
                 <dd data-testid="forecast-rsvp-no-response">{workspace.rsvpAdjacent.noResponse}</dd>
               </div>
               <div>
-                <dt>Eligible people</dt>
-                <dd>{workspace.rsvpAdjacent.eligiblePeople}</dd>
+                <dt>Whole-event eligible people</dt>
+                <dd data-testid="forecast-eligible-people">{workspace.rsvpAdjacent.eligiblePeople}</dd>
               </div>
             </dl>
           </section>
           <section className="atelier-panel" aria-labelledby="forecast-phases">
             <h2 id="forecast-phases">Phase occupancy</h2>
             <table className="forecast-table">
-              <caption>Phase forecasts count a guest once per applicable phase. They must not be summed as whole-event attendance.</caption>
+              <caption>
+                Eligible people are distinct guest IDs currently entitled to the phase. Forecast centre is the model
+                estimate for that phase and is not the eligible headcount. Phase forecasts must not be summed as
+                whole-event attendance.
+              </caption>
               <thead>
                 <tr>
                   <th scope="col">Phase</th>
                   <th scope="col">People low</th>
-                  <th scope="col">People centre</th>
+                  <th scope="col">Forecast centre (people)</th>
                   <th scope="col">People high</th>
-                  <th scope="col">Eligible people</th>
+                  <th scope="col">Eligible people (distinct guest IDs)</th>
                 </tr>
               </thead>
               <tbody>
@@ -144,9 +148,9 @@ export function ForecastWorkspace({
                   <tr key={phase.id} data-testid={`forecast-phase-${phase.id}`}>
                     <th scope="row">{phase.name}</th>
                     <td>{phase.people?.low ?? "—"}</td>
-                    <td>{phase.people?.expected ?? "—"}</td>
+                    <td data-testid={`forecast-phase-${phase.id}-centre`}>{phase.people?.expected ?? "—"}</td>
                     <td>{phase.people?.high ?? "—"}</td>
-                    <td>{phase.people?.eligiblePeople ?? "—"}</td>
+                    <td data-testid={`forecast-phase-${phase.id}-eligible`}>{phase.people?.eligiblePeople ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>

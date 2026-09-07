@@ -218,6 +218,27 @@ export function buildForecastPopulation(snap: PlatformSnapshot, organisationId: 
   };
 }
 
+export function phaseEligibleGuestIds(
+  snap: PlatformSnapshot,
+  organisationId: string,
+  eventId: string,
+  phaseId: string,
+): string[] {
+  const ids = new Set<string>();
+  for (const entitlement of snap.phaseEntitlements) {
+    if (
+      entitlement.organisationId === organisationId &&
+      entitlement.eventId === eventId &&
+      entitlement.phaseId === phaseId &&
+      entitlement.subjectType === "GUEST" &&
+      entitlement.status === "ACTIVE"
+    ) {
+      ids.add(entitlement.subjectId);
+    }
+  }
+  return [...ids].sort();
+}
+
 export function coreTruthFingerprint(snap: PlatformSnapshot, eventId: string): string {
   return stableHash({
     guests: snap.operationalGuests.filter((item) => item.eventId === eventId).map((item) => ({ id: item.id, version: item.version })),

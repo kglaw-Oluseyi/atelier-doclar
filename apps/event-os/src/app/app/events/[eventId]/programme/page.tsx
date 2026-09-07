@@ -1,11 +1,12 @@
 import { PlatformError } from "@maison-doclar/shared-platform";
+import { ActionResultBanner } from "../../../../../components/action-result-banner";
 import { AtelierPageHeader } from "../../../../../components/atelier-page-header";
 import { AtelierOperationalState } from "../../../../../components/atelier-operational-state";
 import { AtelierSectionTabs } from "../../../../../components/atelier-section-tabs";
 import { ProgrammeWorkspace } from "../../../../../components/programme-workspace";
 import { AppShell } from "../../../../../components/shell";
-import { readActionFlash } from "../../../../../server/action-flash";
-import { operationalStateFromCode, operationalStateFromQuery } from "../../../../../server/operational-state";
+import { loadPresentedActionResult } from "../../../../../server/action-flash";
+import { operationalStateFromCode } from "../../../../../server/operational-state";
 import { guardedActor } from "../../../../../server/guard";
 import { programmePermissions, resolveProgrammeEvent } from "../../../../../server/programme-scope";
 import { getRuntime } from "../../../../../server/runtime";
@@ -51,13 +52,13 @@ export default async function ProgrammePage({
       </AppShell>
     );
   }
-  const flash = await readActionFlash();
-  const stateQuery = typeof query.state === "string" ? query.state : undefined;
-  const errorQuery = typeof query.error === "string" ? query.error : undefined;
-  const ok = typeof query.ok === "string" ? query.ok : undefined;
+  const presented = await loadPresentedActionResult({
+    requestPath: `/app/events/${scoped.event.id}/programme`,
+    resultId: typeof query.result === "string" ? query.result : undefined,
+    actorPersonId: person.id,
+    eventId: scoped.event.id,
+  });
   const outcome = typeof query.outcome === "string" ? query.outcome : undefined;
-  const queryState = operationalStateFromQuery({ state: stateQuery, error: errorQuery });
-  const success = ok ? operationalStateFromCode("SUCCESS", successCopy(ok)) : undefined;
 
   return (
     <AppShell
@@ -82,33 +83,8 @@ export default async function ProgrammePage({
           { href: "#handoff", label: "Handoff" },
         ]}
       />
-      {flash ? <AtelierOperationalState state={operationalStateFromCode(flash.code, flash.message)} /> : null}
-      {queryState ? <AtelierOperationalState state={queryState} /> : null}
-      {success ? <AtelierOperationalState state={success} /> : null}
+      <ActionResultBanner presented={presented} />
       <ProgrammeWorkspace workspace={workspace} outcome={outcome} />
     </AppShell>
   );
-}
-
-function successCopy(ok: string): string {
-  switch (ok) {
-    case "phase":
-      return "The ceremony was added. Guest identities were not duplicated.";
-    case "entitlement":
-      return "The guest was assigned to the selected phase only.";
-    case "checkpoint":
-      return "The checkpoint was recorded. It does not admit anyone on its own.";
-    case "route":
-      return "The arrival route was recorded. Fast-track remains routing, not authority.";
-    case "vehicle":
-      return "The vehicle was registered. Occupants remain independent identities.";
-    case "package":
-      return "A signed access plan was published. Canonical programme truth was not rewritten.";
-    case "consumed":
-      return "The offline projection was consumed. Attendance was not written.";
-    case "resolve":
-      return "Checkpoint resolution completed without writing attendance.";
-    default:
-      return "The programme change was saved.";
-  }
 }

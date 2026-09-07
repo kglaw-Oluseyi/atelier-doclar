@@ -36,6 +36,10 @@ export interface OperationalStateView {
   tone: "ok" | "warn" | "danger" | "brass";
   live: "assertive" | "polite" | "off";
   reloadRequired?: boolean;
+  actionType?: string;
+  actionLabel?: string;
+  correlationId?: string;
+  resultStatus?: "SUCCESS" | "FAILURE";
 }
 
 const KIND_BY_CODE: Record<PlatformErrorCode, OperationalStateKind> = {
@@ -343,6 +347,56 @@ export function successCopy(ok: string): string {
       return "The guest amendment was recorded.";
     case "already-applied":
       return "This amendment was already recorded. No second write was applied.";
+    case "access-granted":
+      return "The assignment was recorded.";
+    case "phase":
+      return "The ceremony was added. Guest identities were not duplicated.";
+    case "phase-assignment":
+      return "The guest was assigned to the selected phase only.";
+    case "checkpoint":
+      return "The checkpoint was recorded. It does not admit anyone on its own.";
+    case "route":
+      return "The arrival route was recorded. Fast-track remains routing, not authority.";
+    case "vehicle":
+      return "The vehicle was registered. Occupants remain independent identities.";
+    case "package":
+      return "A signed access plan was published. Canonical programme truth was not rewritten.";
+    case "consumed":
+      return "The offline projection was consumed. Attendance was not written.";
+    case "resolve":
+      return "Checkpoint resolution completed without writing attendance.";
+    case "collection":
+      return "The merchandise collection was recorded.";
+    case "item":
+      return "The merchandise item was recorded.";
+    case "cohort":
+      return "The host-assigned cohort was recorded. Identities were not merged.";
+    case "preview":
+      return "The resolved target set is shown below. Identities were not merged.";
+    case "offer":
+      return "The merchandise offer was recorded.";
+    case "issue":
+      return "The merchandise offer was issued to independent guests.";
+    case "withdraw":
+      return "The merchandise offer was withdrawn.";
+    case "guest-access":
+      return "Private merchandise guest access was issued or already active.";
+    case "guest-renew":
+      return "Private merchandise guest access was renewed. Prior sessions lost authority.";
+    case "guest-revoke":
+      return "Private merchandise guest access was revoked.";
+    case "vendor":
+      return "Synthetic vendor access was issued.";
+    case "vendor-renew":
+      return "Synthetic vendor access was renewed. Prior sessions lost authority.";
+    case "vendor-revoke":
+      return "Vendor access was revoked and fails closed.";
+    case "review":
+      return "The vendor report was reviewed as attributed evidence.";
+    case "exception":
+      return "The merchandise exception was recorded without payment data.";
+    case "choice":
+      return "The private guest choice was recorded.";
     default:
       return "The change was recorded.";
   }

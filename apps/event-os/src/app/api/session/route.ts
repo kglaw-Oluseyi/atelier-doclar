@@ -3,6 +3,7 @@ import { AuthenticateStaffInputSchema, NonProductionIdentityAdapter, SESSION_COO
 import { fixturesAllowed } from "../../../server/config";
 import { jsonError } from "../../../server/http";
 import { getRuntime, withDurable } from "../../../server/runtime";
+import { actionResultClearCookie } from "../../../server/action-flash";
 import { staffSessionClearCookie, staffSessionSetCookie } from "../../../server/staff-session-cookie";
 
 export async function POST(request: Request): Promise<Response> {
@@ -22,6 +23,7 @@ export async function POST(request: Request): Promise<Response> {
     const issued = getRuntime().service.authenticateNamedStaff(parsed.data);
     const response = NextResponse.json({ ok: true });
     response.cookies.set(staffSessionSetCookie(issued.token));
+    response.cookies.set(actionResultClearCookie());
     return response;
   } catch (error) {
     return jsonError(error);
@@ -37,10 +39,12 @@ export async function DELETE(request: NextRequest): Promise<Response> {
   } catch {
     const failed = NextResponse.json({ ok: false, code: "INTERNAL_ERROR" }, { status: 500 });
     failed.cookies.set(staffSessionClearCookie());
+    failed.cookies.set(actionResultClearCookie());
     return failed;
   }
   const response = NextResponse.json({ ok: true, status: "signed-out" });
   response.cookies.set(staffSessionClearCookie());
+  response.cookies.set(actionResultClearCookie());
   return response;
   });
 }

@@ -21,6 +21,7 @@ export function AtelierOperationalState({
       data-kind={state.kind}
       data-tone={state.tone}
       data-retry-safe={state.retrySafe ? "true" : "false"}
+      data-testid={state.correlationId ? "action-result-banner" : undefined}
       aria-labelledby={`${id}-title`}
       tabIndex={state.kind === "conflict" ? -1 : undefined}
       id={id}
@@ -36,6 +37,24 @@ export function AtelierOperationalState({
           <div>
             <dt>Server detail</dt>
             <dd>{state.message}</dd>
+          </div>
+        ) : null}
+        {state.actionLabel ? (
+          <div>
+            <dt>Action</dt>
+            <dd data-testid="action-result-name">{state.actionLabel}</dd>
+          </div>
+        ) : null}
+        {state.resultStatus ? (
+          <div>
+            <dt>Result</dt>
+            <dd data-testid="action-result-status">{state.resultStatus === "SUCCESS" ? "Succeeded" : "Not applied"}</dd>
+          </div>
+        ) : null}
+        {state.correlationId ? (
+          <div>
+            <dt>Correlation</dt>
+            <dd data-testid="action-result-correlation">{state.correlationId}</dd>
           </div>
         ) : null}
         <div>

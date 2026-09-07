@@ -1,40 +1,16 @@
 import { PlatformError } from "@maison-doclar/shared-platform";
+import { ActionResultBanner } from "../../../../../components/action-result-banner";
 import { AtelierPageHeader } from "../../../../../components/atelier-page-header";
 import { AtelierOperationalState } from "../../../../../components/atelier-operational-state";
 import { AtelierSectionTabs } from "../../../../../components/atelier-section-tabs";
-import { AtelierStateFocus } from "../../../../../components/atelier-state-focus";
 import { MerchandiseWorkspace } from "../../../../../components/merchandise-workspace";
 import { AppShell } from "../../../../../components/shell";
 import { refreshMerchandiseRecordAction } from "../../../../../server/actions";
-import { readActionFlash, readAudiencePreviewFlash, readIssuedAccessFlash } from "../../../../../server/action-flash";
-import {
-  merchandiseWorkspacePresentation,
-  operationalStateFromCode,
-  operationalStateFromQuery,
-} from "../../../../../server/operational-state";
+import { loadPresentedActionResult, readAudiencePreviewFlash, readIssuedAccessFlash } from "../../../../../server/action-flash";
+import { operationalStateFromCode } from "../../../../../server/operational-state";
 import { guardedActor } from "../../../../../server/guard";
 import { merchandisePermissions, resolveMerchandiseEvent } from "../../../../../server/merchandise-scope";
 import { getRuntime } from "../../../../../server/runtime";
-
-function successCopy(ok: string): string {
-  if (ok === "collection") return "The merchandise collection was recorded.";
-  if (ok === "item") return "The merchandise item was recorded.";
-  if (ok === "cohort") return "The host-assigned cohort was recorded. Identities were not merged.";
-  if (ok === "preview") return "The resolved target set is shown below. Identities were not merged.";
-  if (ok === "offer") return "The merchandise offer was recorded.";
-  if (ok === "issue") return "The merchandise offer was issued to independent guests.";
-  if (ok === "withdraw") return "The merchandise offer was withdrawn.";
-  if (ok === "guest-access") return "Private merchandise guest access was issued or already active.";
-  if (ok === "guest-renew") return "Private merchandise guest access was renewed. Prior sessions lost authority.";
-  if (ok === "guest-revoke") return "Private merchandise guest access was revoked.";
-  if (ok === "vendor") return "Synthetic vendor access was issued.";
-  if (ok === "vendor-renew") return "Synthetic vendor access was renewed. Prior sessions lost authority.";
-  if (ok === "vendor-revoke") return "Vendor access was revoked and fails closed.";
-  if (ok === "review") return "The vendor report was reviewed as attributed evidence.";
-  if (ok === "exception") return "The merchandise exception was recorded without payment data.";
-  if (ok === "choice") return "The private guest choice was recorded.";
-  return "Merchandise coordination was updated.";
-}
 
 export default async function MerchandisePage({
   params,
@@ -77,27 +53,14 @@ export default async function MerchandisePage({
       </AppShell>
     );
   }
-  const flash = await readActionFlash();
   const issued = await readIssuedAccessFlash();
   const previewNames = await readAudiencePreviewFlash();
-  const stateQuery = typeof query.state === "string" ? query.state : undefined;
-  const errorQuery = typeof query.error === "string" ? query.error : undefined;
-  const ok = typeof query.ok === "string" ? query.ok : undefined;
-  const refreshed = query.refreshed === "1" || query.refreshed === "true";
-  const presentation = merchandiseWorkspacePresentation({
-    flash,
-    queryState: stateQuery,
-    queryOk: ok,
-    refreshed,
-    issued,
+  const presented = await loadPresentedActionResult({
+    requestPath: `/app/events/${scoped.event.id}/merchandise`,
+    resultId: typeof query.result === "string" ? query.result : undefined,
+    actorPersonId: person.id,
+    eventId: scoped.event.id,
   });
-  const conflictState = presentation.showConflict
-    ? operationalStateFromCode("VERSION_CONFLICT", flash?.message ?? errorQuery)
-    : undefined;
-  const queryState = conflictState
-    ? undefined
-    : operationalStateFromQuery({ state: stateQuery, error: errorQuery, ok: presentation.showSuccess ? undefined : ok });
-  const success = presentation.showSuccess ? operationalStateFromCode("SUCCESS", successCopy(ok ?? "")) : undefined;
   const reloadFields = { eventId };
 
   return (
@@ -126,30 +89,16 @@ export default async function MerchandisePage({
           { href: "#vendor-handoff", label: "Vendor" },
         ]}
       />
-      {conflictState ? (
-        <>
-          <AtelierStateFocus targetId="operational-state" active />
-          <AtelierOperationalState
-            state={conflictState}
-            reloadAction={refreshMerchandiseRecordAction}
-            reloadFields={reloadFields}
-          />
-        </>
-      ) : flash ? (
-        <AtelierOperationalState state={operationalStateFromCode(flash.code, flash.message)} />
-      ) : queryState ? (
-        <AtelierOperationalState
-          state={queryState}
-          reloadHref={queryState.reloadRequired ? `/app/events/${eventId}/merchandise` : undefined}
-        />
-      ) : success ? (
-        <AtelierOperationalState state={success} />
-      ) : null}
+      <ActionResultBanner
+        presented={presented}
+        reloadAction={refreshMerchandiseRecordAction}
+        reloadFields={reloadFields}
+      />
       <MerchandiseWorkspace
         workspace={workspace}
-        issued={presentation.issued}
+        issued={presented.mutationLocked ? undefined : issued}
         previewNames={previewNames}
-        mutationLocked={presentation.mutationLocked}
+        mutationLocked={presented.mutationLocked}
       />
     </AppShell>
   );

@@ -31,8 +31,13 @@ export const S04D_FIXTURE_IDS = {
  *   NO: Adéṣínà (1)
  *   NO_RESPONSE: Kẹ́mi (1)
  * Unnamed allowance: 1 (not a person)
- * Church people: Ẹ̀bùnolúwa, Olúfẹ́mi, Adéṣínà (3)
- * Reception people: Ẹ̀bùnolúwa, Tómiwà, Kẹ́mi, Bàbátúndé (4)
+ * Church people in this seed: Ẹ̀bùnolúwa, Olúfẹ́mi, Adéṣínà (3).
+ * Reception people: Ẹ̀bùnolúwa, Tómiwà, Kẹ́mi, Bàbátúndé (4).
+ *
+ * Live durable membership may include additional governed entitlements (for example a church
+ * assignment for Tómiwà `00000000-0000-4000-8000-000000000074` created during accepted S04B
+ * verification). Do not delete legitimate membership to force church eligible = 3. Record extra
+ * entitlements as TDR-S04A-011 cleanup residue.
  * Default PARAM-SET-V1 people expected = 4*0.90 + 0.40 + 0.05 = 4.05
  */
 export const S04D_KNOWN_COUNTS = {

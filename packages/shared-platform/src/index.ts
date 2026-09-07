@@ -316,6 +316,7 @@ export {
   DEFAULT_PARAMETER_SET_ID,
   buildForecastPopulation,
   coreTruthFingerprint,
+  phaseEligibleGuestIds,
 } from "./forecast-operations.js";
 export {
   computeForecast,

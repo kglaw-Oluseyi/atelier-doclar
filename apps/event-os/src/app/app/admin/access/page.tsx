@@ -1,8 +1,10 @@
 import { authorize, PlatformError, type Person } from "@maison-doclar/shared-platform";
+import { ActionResultBanner } from "../../../../components/action-result-banner";
 import { AssignmentForm } from "../../../../components/assignment-form";
 import { AtelierPageHeader } from "../../../../components/atelier-page-header";
 import { AtelierOperationalState } from "../../../../components/atelier-operational-state";
 import { AppShell } from "../../../../components/shell";
+import { loadPresentedActionResult } from "../../../../server/action-flash";
 import { guardedActor } from "../../../../server/guard";
 import { operationalStateFromCode } from "../../../../server/operational-state";
 import { getRuntime } from "../../../../server/runtime";
@@ -36,10 +38,15 @@ function AccessDenied({
 export default async function AccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; state?: string }>;
+  searchParams: Promise<{ error?: string; state?: string; result?: string }>;
 }) {
   const params = await searchParams;
   const { actor, person } = await guardedActor();
+  const presented = await loadPresentedActionResult({
+    requestPath: "/app/admin/access",
+    resultId: params.result,
+    actorPersonId: person.id,
+  });
   const runtime = getRuntime();
   const organisation = runtime.service.listOrganisations(actor)[0];
   if (!organisation) {
@@ -76,11 +83,7 @@ export default async function AccessPage({
           title="Access administration"
           lede="Technical administration is not CEO or Event Director business authority."
         />
-        {params.state === "FORBIDDEN" ? (
-          <AtelierOperationalState
-            state={operationalStateFromCode("FORBIDDEN", "This assignment cannot grant or revoke access.")}
-          />
-        ) : null}
+        <ActionResultBanner presented={presented} />
         <ul className="atelier-ledger">
           {administration.assignments.map((item) => (
             <li key={item.id}>
