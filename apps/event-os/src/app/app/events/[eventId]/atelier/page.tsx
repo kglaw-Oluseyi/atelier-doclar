@@ -31,6 +31,18 @@ export default async function EventAtelierPage({
   let workspace;
   try {
     workspace = getRuntime().service.getEventAtelierWorkspace(actor, scoped.organisation.id, scoped.event.id);
+    if (workspace.capabilities.canPublish && workspace.atelier.currentNarrativeEditionId) {
+      try {
+        getRuntime().service.ensureAtelierNarrativeRevision(actor, {
+          organisationId: scoped.organisation.id,
+          eventId: scoped.event.id,
+          reason: "Open the staff editor from the current published or draft narrative",
+        });
+        workspace = getRuntime().service.getEventAtelierWorkspace(actor, scoped.organisation.id, scoped.event.id);
+      } catch {
+        // Genesis-only or unpublished source material stays readable without a revision draft.
+      }
+    }
   } catch (error) {
     const code = error instanceof PlatformError ? error.code : "FORBIDDEN";
     const message = error instanceof PlatformError ? error.publicMessage : "The private Atelier is not available in this assignment.";

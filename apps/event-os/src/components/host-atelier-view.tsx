@@ -35,7 +35,18 @@ export function HostAtelierView({
         <section key={chapter.type} className="host-atelier-chapter" data-testid={`host-chapter-${chapter.type.toLowerCase()}`}>
           <h2>{chapter.title}</h2>
           {chapter.type === "VISION" ? <div className="host-atelier-media" aria-hidden="true" /> : null}
-          <p>{chapter.body}</p>
+          {chapter.type === "VISION" && view.vision ? (
+            <div data-testid="host-vision-fields">
+              <p data-testid="host-vision-story">{view.vision.story}</p>
+              <p data-testid="host-vision-atmosphere">{view.vision.atmosphere}</p>
+              <p data-testid="host-vision-pillars">Pillars: {view.vision.pillars.join(" · ")}</p>
+              <p data-testid="host-vision-cultural-intent">{view.vision.culturalIntent}</p>
+              <p data-testid="host-vision-design-direction">{view.vision.designDirection}</p>
+              <p data-testid="host-vision-provenance">{view.vision.provenance}</p>
+            </div>
+          ) : (
+            <p>{chapter.body}</p>
+          )}
         </section>
       ))}
       {view.canDecide && view.decisions.length > 0 ? (
@@ -70,6 +81,7 @@ export function HostAtelierView({
           <p data-testid="host-receipt-canonical">Canonical data changed: no.</p>
           <p>Review: {receipt.reviewStatus}.</p>
           <p>Next: {receipt.nextOwner}</p>
+          {receipt.correlationId ? <p data-testid="host-receipt-correlation">Correlation {receipt.correlationId}</p> : null}
           <p>{receipt.finalOutcome}</p>
         </section>
       ))}
