@@ -553,6 +553,86 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 
 ---
 
+## EOS-S04B first-vertical debt
+
+### TDR-S04B-001 — Pack protocol/security/transport/gate roles are not system roles
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04B-001` |
+| Source slice | EOS-S04B |
+| Description | The S04B pack names Protocol, Security, Transport and Gate roles. The first vertical maps onto current canonical system roles only. Missing roles fail closed. Gate runtime admission remains Slice 8. |
+| Classification | In-slice debt |
+| Severity | MEDIUM |
+| Evidence | `docs/control/EOS_S04B_RATIFICATION.md`; `packages/shared-platform/src/catalog.ts` |
+| Affected surface or contract | Role matrix vs pack named roles |
+| Reason for deferral | Inventing system roles would expand authority beyond the current permission model |
+| Blocking | NON_BLOCKING |
+| Current owner | EOS-S04B later prompts / Slice 8 |
+| Required regression coverage | Unmapped pack roles continue to fail closed; Planner cannot publish or grant protected access |
+| Latest safe remediation milestone | EOS-S04B whole-slice review or Slice 8 |
+| Current status | OPEN |
+| Resolution evidence | |
+
+### TDR-S04B-002 — Offline HMAC uses a non-production key
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04B-002` |
+| Source slice | EOS-S04B |
+| Description | Signed offline packages use `s04b-offline-hmac-non-production-v1` / `s04b-offline-v1`. No new Railway secret was introduced. |
+| Classification | In-slice debt |
+| Severity | HIGH |
+| Evidence | `packages/shared-platform/src/constants.ts` `S04B_NON_PRODUCTION_HMAC_KEY` |
+| Affected surface or contract | Offline access package authenticity |
+| Reason for deferral | Synthetic-only; productionAuthorised remains false; live events are not authorised |
+| Blocking | BLOCKING before real event operations |
+| Current owner | Production credential owner (George Lawson) before live use |
+| Required regression coverage | Production key rotation fails closed on stale keyRef; consume verifies HMAC |
+| Latest safe remediation milestone | Protected production gate / live-event approval |
+| Current status | OPEN |
+| Resolution evidence | |
+
+### TDR-S04B-003 — Auditor can consume an offline projection
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04B-003` |
+| Source slice | EOS-S04B |
+| Description | `consumeOfflineAccessPackage` is authorised with `programme.view`, so a read-only auditor can mark a projection consumed. Consume does not write attendance or entitlements. |
+| Classification | In-slice debt |
+| Severity | LOW |
+| Evidence | `packages/shared-platform/src/service.ts` `consumeOfflineAccessPackage` |
+| Affected surface or contract | Command-handoff consume control |
+| Reason for deferral | Consume is not an attendance write; publish remains Director/CEO |
+| Blocking | NON_BLOCKING |
+| Current owner | EOS-S04B later prompts |
+| Required regression coverage | Auditor still cannot publish, add phases or grant protected access |
+| Latest safe remediation milestone | EOS-S04B whole-slice review |
+| Current status | OPEN |
+| Resolution evidence | |
+
+### TDR-S04B-004 — Pack days/zones/exception-review UI is incomplete
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04B-004` |
+| Source slice | EOS-S04B |
+| Description | Persistence includes programme days, access zones and access exceptions, but the first vertical UI is phase/route/checkpoint/vehicle/handoff. Exception review is Director/CEO server-side only. |
+| Classification | In-slice debt |
+| Severity | MEDIUM |
+| Evidence | `apps/event-os/src/components/programme-workspace.tsx`; `packages/shared-platform/src/programme-schemas.ts` |
+| Affected surface or contract | Multi-day grouping, zone assignment, exception workspace |
+| Reason for deferral | First complete vertical authorised; remaining pack prompts are not this milestone |
+| Blocking | NON_BLOCKING for this milestone; required before slice acceptance |
+| Current owner | EOS-S04B remaining prompts |
+| Required regression coverage | Days, zones and restricted exception rationale stay event-scoped and projection-controlled |
+| Latest safe remediation milestone | EOS-S04B P11 / independent review |
+| Current status | OPEN |
+| Resolution evidence | |
+
+---
+
 ## Closed items
 
 - `TDR-S04A-007` — unsafe collection-clearing rollback. Closed by Milestone 1 scoped-receipt rollback.
@@ -602,3 +682,4 @@ These do not reopen EOS-S04A and do not create new blocking IDs.
 | EOS-S04A final focused remediation II | Entered blocking TDR-S04A-018, TDR-S04A-019 and TDR-S04A-020 from Claude’s focused findings. Implemented RETAIN exact-value preservation and display, one-click conflict recovery, and `assignment.manage` Access Administration. TDR-S04A-012 reclassified as a tool/client artefact after Railway HTTP-log correlation (0 origin 503; 499 client-abort). TDR-S04A-011 remains blocking before client onboarding. EOS-S04A remains IN_REVIEW / not ACCEPTED. |
 | EOS-S04A formal technical acceptance 2026-09-07 | ChatGPT accepted EOS-S04A at SHA `8f1957d2353db539449d9bcce62f9e4d71eb31af` after Claude-in-Chrome focused verification (zero BLOCKER, zero MAJOR). Closed TDR-S04A-016–020. TDR-S04A-011 remains blocking before real client onboarding and is not blocking successor development. TDR-S04A-015, permanent IdP, synthetic-data cleanup, inactive providers and local Next.js E2E memory pressure remain carried forward. EOS-S04A is ACCEPTED. Catalogue accepted-slice count remains 4. Historical closeout text that S04B–F remain unauthorised is superseded for S04B only by MD-PR-S018. |
 | EOS-S04B ratification MD-PR-S018 2026-09-07 | George Lawson ratifies the EOS-S04B Cursor prompt pack and authorises implementation. Status RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS. TDR-S04A-011 remains blocking before real client onboarding and is not blocking S04B. EOS-S04C–F and EOS-S05 remain unauthorised. Production remains unauthorised. |
+| EOS-S04B first complete vertical 2026-09-07 | Implemented event-scoped phases, arrival routing, checkpoints, credential resolution, vehicles and signed Slice 8 projections. Entered TDR-S04B-001–004. Slice remains IN_PROGRESS / not ACCEPTED. Control Tower not redeployed. EOS-S04C–F and EOS-S05 not started. |

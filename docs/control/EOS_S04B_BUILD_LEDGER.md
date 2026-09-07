@@ -50,3 +50,34 @@ Read-only. No product code changed in the ratification commit.
 ## Prompt account (this milestone)
 
 The CEO overlay authorises continuous execution through the first complete deployable vertical. Focused commits are at engineering boundaries, not a stop after each pack prompt number. Academy delta (P10) and whole-slice independent-review package (P11) are **not** this milestone.
+
+## First complete vertical — 2026-09-07
+
+| Commit | SHA | Boundary |
+|--------|-----|----------|
+| Ratification / control records | `bbf75b6c99c664940f5c35a2456b05e956b197f6` | MD-PR-S018 authority overlay |
+| Contracts, persistence, services, fixtures | `3eac4d191405df4b35c85a4f9c95695f376fb977` | shared-platform |
+| Event OS Command Atelier workspace | `f1142af08069dca8c860ffb9a6098cb5555981f7` | frontend / server actions |
+| Unit, Postgres-memory and Playwright | `c6bde2d5b75e1e40ec50036d000fd5f0999060fc` | tests |
+
+Starting baseline: `40d65fa97fc9f2f0424757b7abd27872c0644f21`.
+
+### First-run product failures (corrected in-batch)
+
+1. Offline consume of a superseded package with stale `expectedVersion` is `VERSION_CONFLICT`, not `VALIDATION_FAILED`.
+2. Playwright `getByText("Estate main gate")` matched SVG, type option and checkpoint option.
+3. `getByRole("heading", { name: "Perimeter" })` also matched the page title.
+4. `resolveCheckpointAction` caught Next.js `redirect()` and rendered a false server-failure state.
+
+### Gates
+
+- `pnpm typecheck` PASS (8 packages)
+- `pnpm test` PASS: academy 7, design-system 3, shared-platform 199, programme-domain 155, programme-ingestion 46, event-os 45, programme-tower 42, control-tower 3 (500 pass / 0 fail)
+- `pnpm programme:validate` PASS (84 slices, 0 cycles)
+- `pnpm --filter @maison-doclar/event-os build` PASS (`/app/events/[eventId]/programme` present)
+- `git diff --check` clean
+- Playwright `e2e/s04b-vertical.spec.ts` PASS after in-batch locator and redirect fixes
+
+### Not started
+
+EOS-S04C, EOS-S04D, EOS-S04E, EOS-S04F, EOS-S05. Academy P10 and whole-slice P11 are outside this milestone. Control Tower was not changed.

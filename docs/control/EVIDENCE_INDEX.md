@@ -322,6 +322,9 @@ ACCEPTED on `2026-09-07` by `ChatGPT / AI CTO` after Claude-in-Chrome focused ve
 | EV-EOS-S04B-LEDGER | DOCUMENT | Cumulative S04B build ledger | `docs/control/EOS_S04B_BUILD_LEDGER.md` |
 | EV-EOS-S04B-PACK | DOCUMENT | Controlling Cursor prompt pack v1.0 | `docs/control/Maison_Doclar_EOS-S04B_Cursor_Prompt_Pack_v1.0.docx` |
 | EV-EOS-S04B-SLICE | DOCUMENT | Requirements source (historical DRAFT filename retained) | `docs/control/Maison_Doclar_EOS-S04B_Controlled_Slice_Pack_v1.0_DRAFT.docx` |
+| EV-EOS-S04B-UNIT | TEST | Programme contracts, services and persistence | `packages/shared-platform/test/programme-*.test.ts` |
+| EV-EOS-S04B-E2E | TEST | Event OS first-vertical Playwright | `apps/event-os/e2e/s04b-vertical.spec.ts` |
+| EV-EOS-S04B-CLAUDE | DOCUMENT | Independent Claude-in-Chrome verification prompt | `docs/control/EOS_S04B_CLAUDE_IN_CHROME_FIRST_VERTICAL.md` |
 
 ## EOS-S04F
 

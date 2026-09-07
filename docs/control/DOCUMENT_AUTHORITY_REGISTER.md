@@ -62,4 +62,5 @@ This addendum does not rewrite the B0 row set or the S04A acceptance addendum.
 | Title | Path | Current programme status | Notes |
 |-------|------|--------------------------|-------|
 | EOS-S04B CEO ratification overlay | `docs/control/EOS_S04B_RATIFICATION.md` | CANONICAL AUTHORITY RECORD | Changes S04B from DRAFT / NOT AUTHORISED to RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS. Does not authorise EOS-S04C–F, EOS-S05 or production. |
+| EOS-S04B first-vertical Claude prompt | `docs/control/EOS_S04B_CLAUDE_IN_CHROME_FIRST_VERTICAL.md` | INDEPENDENT VERIFICATION PROMPT | Claude verifies; Claude does not accept the slice. |
 
