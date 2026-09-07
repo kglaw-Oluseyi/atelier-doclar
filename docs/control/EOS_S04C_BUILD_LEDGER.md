@@ -1,11 +1,11 @@
 # EOS-S04C Build Ledger
 
-**Slice ID:** `EOS-S04C`  
-**Prompt Control ID:** `MD-PR-S020`  
-**Starting baseline:** `9a79a443b7f08e727db12c9ea8dc4da8a557d8c0`  
+**Slice ID:** `EOS-S04C`
+**Prompt Control ID:** `MD-PR-S020`
+**Starting baseline:** `3854405c3cf4aa6d387e0bd1cc066166c8feca50`
 **Status:** `IN_REVIEW / NOT READY`
-**Production:** unauthorised  
-**Next slices:** EOS-S04D–F and EOS-S05 not started  
+**Production:** unauthorised
+**Next slices:** EOS-S04D–F and EOS-S05 not started
 
 ## P00 — Controlled reconnaissance
 
@@ -62,3 +62,7 @@ EOS-S04D–F and EOS-S05 were not started.
 ## Primary-journey remediation
 
 Entered blocking TDR-S04C-001–003 from Claude’s whole-slice findings. Implemented complete staff creation, merchandise-only guest grants (`/offers`), and vendor issue/renew/revoke. Status `IN_REVIEW / NOT READY`. Not accepted. EOS-S04D–F and EOS-S05 not started.
+
+## Final vendor-access and lifecycle-concurrency remediation
+
+Hosted vendor mint failed because Postgres `productionStatus` was treated as production-authorised, so fixture-default vendor secrets were rejected on a synthetic Railway runtime. Guest and vendor renewal lacked durable compare-and-swap / already-applied replay. Remediation: explicit access-authority (`productionAuthorised` vs production build), Railway-only configured vendor HMAC/session secrets, persist-boundary CAS, identical-submit replay, lifecycle form locking, and a new dedicated synthetic verification assignment path that retains the Aso-Oke House revocation audit. Status remains `IN_REVIEW / NOT READY`. Not accepted. Record: `docs/control/EOS_S04C_VENDOR_LIFECYCLE_REMEDIATION.md`. Final focused verification: `docs/control/EOS_S04C_FINAL_FOCUSED_CLAUDE_VERIFICATION.md`.
