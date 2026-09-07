@@ -60,17 +60,68 @@ export function isPlatformErrorCode(value: string | undefined): value is Platfor
   return Boolean(value && (PLATFORM_ERROR_CODES as readonly string[]).includes(value));
 }
 
-export function parseActionFlash(raw: string | undefined): { code: PlatformErrorCode; message: string } | undefined {
+export interface ActionFlash {
+  code: PlatformErrorCode;
+  message: string;
+  eventId?: string;
+  guestId?: string;
+}
+
+function scopedId(value: unknown): string | undefined {
+  return typeof value === "string" && value.length > 0 && value.length <= 80 && !value.includes("\n")
+    ? value
+    : undefined;
+}
+
+export function parseActionFlash(raw: string | undefined): ActionFlash | undefined {
   if (!raw) return undefined;
   try {
-    const parsed = JSON.parse(raw) as { code?: unknown; message?: unknown };
+    const parsed = JSON.parse(raw) as { code?: unknown; message?: unknown; eventId?: unknown; guestId?: unknown };
     if (typeof parsed.code !== "string" || !isPlatformErrorCode(parsed.code)) return undefined;
     if (typeof parsed.message !== "string" || parsed.message.length > 400) return undefined;
     if (parsed.message.includes("    at ")) return undefined;
-    return { code: parsed.code, message: parsed.message };
+    const eventId = scopedId(parsed.eventId);
+    const guestId = scopedId(parsed.guestId);
+    return {
+      code: parsed.code,
+      message: parsed.message,
+      ...(eventId ? { eventId } : {}),
+      ...(guestId ? { guestId } : {}),
+    };
   } catch {
     return undefined;
   }
+}
+
+export function flashAppliesToDossier(
+  flash: ActionFlash | undefined,
+  eventId: string,
+  guestId: string,
+): ActionFlash | undefined {
+  if (!flash) return undefined;
+  if (flash.guestId && flash.guestId !== guestId) return undefined;
+  if (flash.eventId && flash.eventId !== eventId) return undefined;
+  return flash;
+}
+
+export function guestDossierConflictDecision(input: {
+  eventId: string;
+  guestId: string;
+  flash?: ActionFlash;
+  recovered?: { eventId: string; guestId: string };
+  refreshed?: boolean;
+  queryState?: string;
+}): { mutationLocked: boolean; showConflict: boolean } {
+  const recoveredHere = input.recovered?.eventId === input.eventId && input.recovered?.guestId === input.guestId;
+  const scoped = flashAppliesToDossier(input.flash, input.eventId, input.guestId);
+  if (scoped?.code === "VERSION_CONFLICT") {
+    return { mutationLocked: true, showConflict: true };
+  }
+  if (input.refreshed || recoveredHere) {
+    return { mutationLocked: false, showConflict: false };
+  }
+  const showConflict = input.queryState === "VERSION_CONFLICT";
+  return { mutationLocked: showConflict, showConflict };
 }
 
 function isPlatformErrorLike(error: unknown): error is PlatformError {

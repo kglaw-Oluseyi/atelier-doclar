@@ -10,7 +10,7 @@ import {
   type Honorific,
 } from "@maison-doclar/shared-platform";
 import { fixturesAllowed } from "./config";
-import { consumeActionFlash, writeActionFlash } from "./action-flash";
+import { consumeActionFlash, writeActionFlash, writeRecoveredMarker } from "./action-flash";
 import { classifyActionError } from "./operational-state";
 import { getRuntime, withDurable } from "./runtime";
 import { clearStaffSessionCookie, readStaffSessionCookie, writeStaffSessionCookie } from "./staff-session-cookie";
@@ -194,6 +194,9 @@ export async function grantAssignmentAction(formData: FormData): Promise<void> {
       ...(clientId ? { clientId } : {}),
     });
   } catch (error) {
+    if (error instanceof PlatformError && error.code === "FORBIDDEN") {
+      redirect("/app/admin/access?state=FORBIDDEN");
+    }
     redirect(`/app/admin/access?error=${encodeURIComponent(actionError(error))}`);
   }
   redirect("/app/admin/access");
@@ -1026,14 +1029,29 @@ export async function applySyntheticCallbackAction(formData: FormData): Promise<
 export async function refreshGuestRecordAction(formData: FormData): Promise<void> {
   const eventId = String(formData.get("eventId") ?? "");
   const guestId = String(formData.get("guestId") ?? "");
+  try {
+    await requireActor();
+  } catch (error) {
+    await consumeActionFlash();
+    sessionOrAssignmentRedirect(error, `/app/events/${eventId}/guests/${guestId}`);
+    throw error;
+  }
   await consumeActionFlash();
-  redirect(`/app/events/${encodeURIComponent(eventId)}/guests/${encodeURIComponent(guestId)}`);
+  await writeRecoveredMarker({ eventId, guestId });
+  redirect(
+    `/app/events/${encodeURIComponent(eventId)}/guests/${encodeURIComponent(guestId)}?refreshed=1`,
+  );
 }
 
 async function guestFail(eventId: string, guestId: string, error: unknown): Promise<never> {
   sessionOrAssignmentRedirect(error, `/app/events/${eventId}/guests/${guestId}`);
   const classified = classifyActionError(error);
-  await writeActionFlash({ code: classified.code, message: classified.message });
+  await writeActionFlash({
+    code: classified.code,
+    message: classified.message,
+    eventId,
+    guestId,
+  });
   const permissionChanged = classified.code === "FORBIDDEN" ? "&hint=permission" : "";
   redirect(
     `/app/events/${encodeURIComponent(eventId)}/guests/${encodeURIComponent(guestId)}?${failQuery(error)}${permissionChanged}`,

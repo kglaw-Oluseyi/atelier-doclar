@@ -1,3 +1,4 @@
+import { unstable_noStore as noStore } from "next/cache";
 import Link from "next/link";
 import {
   CHILD_AGE_BANDS,
@@ -12,13 +13,19 @@ import { IssueInvitationForm, StaffRsvpForm } from "../../../../../../components
 import { AtelierSectionTabs } from "../../../../../../components/atelier-section-tabs";
 import { AtelierOperationalState } from "../../../../../../components/atelier-operational-state";
 import { AtelierRecordRefresh } from "../../../../../../components/atelier-record-refresh";
+import { AtelierDossierRecovery } from "../../../../../../components/atelier-dossier-recovery";
 import { AtelierStateFocus } from "../../../../../../components/atelier-state-focus";
 import { AppShell } from "../../../../../../components/shell";
 import { refreshGuestRecordAction } from "../../../../../../server/actions";
-import { readActionFlash } from "../../../../../../server/action-flash";
+import { readActionFlash, readRecoveredMarker } from "../../../../../../server/action-flash";
 import { guestChoicesFromRecords } from "../../../../../../server/guest-name-display";
 import { guestPermissions, resolveScopedEvent } from "../../../../../../server/guest-scope";
-import { operationalStateFromCode, operationalStateFromQuery } from "../../../../../../server/operational-state";
+import {
+  flashAppliesToDossier,
+  guestDossierConflictDecision,
+  operationalStateFromCode,
+  operationalStateFromQuery,
+} from "../../../../../../server/operational-state";
 import { guardedActor } from "../../../../../../server/guard";
 import { getRuntime } from "../../../../../../server/runtime";
 
@@ -82,10 +89,23 @@ export default async function GuestDetailPage({
     refreshed?: string;
   }>;
 }) {
+  noStore();
   const { eventId, guestId } = await params;
   const paramsQuery = await searchParams;
   const explicitRefresh = paramsQuery.refreshed === "1";
   const flash = await readActionFlash();
+  const recovered = await readRecoveredMarker();
+  const conflictDecision = guestDossierConflictDecision({
+    eventId,
+    guestId,
+    flash,
+    recovered,
+    refreshed: explicitRefresh,
+    queryState: paramsQuery.state,
+  });
+  const recoveredHere = recovered?.eventId === eventId && recovered?.guestId === guestId;
+  const recordRefreshed = explicitRefresh || recoveredHere;
+  const scopedFlash = flashAppliesToDossier(flash, eventId, guestId);
   const { actor, person } = await guardedActor();
   const scoped = resolveScopedEvent(actor, eventId);
   if (!scoped) {
@@ -147,19 +167,28 @@ export default async function GuestDetailPage({
   const adultChoices = guestChoices.filter(
     (item) => item.id !== guest.id && (!item.ageBand || !(CHILD_AGE_BANDS as readonly string[]).includes(item.ageBand)),
   );
-  const appliedFlash = explicitRefresh ? undefined : flash;
-  const conflictPreserved = paramsQuery.state === "VERSION_CONFLICT" || appliedFlash?.code === "VERSION_CONFLICT";
+  const appliedFlash = scopedFlash;
+  const conflictPreserved = conflictDecision.showConflict;
   const queryState = operationalStateFromQuery({
-    error: paramsQuery.error ?? appliedFlash?.message,
+    error: conflictPreserved
+      ? paramsQuery.error ?? appliedFlash?.message
+      : recordRefreshed && paramsQuery.state === "VERSION_CONFLICT"
+        ? undefined
+        : paramsQuery.error ?? appliedFlash?.message,
     state:
       paramsQuery.hint === "permission" && paramsQuery.state === "FORBIDDEN"
         ? "PERMISSION_CHANGED"
-        : paramsQuery.state ?? appliedFlash?.code,
+        : conflictPreserved
+          ? paramsQuery.state ?? appliedFlash?.code
+          : paramsQuery.state === "VERSION_CONFLICT"
+            ? undefined
+            : paramsQuery.state ?? appliedFlash?.code,
     ok: conflictPreserved ? undefined : paramsQuery.ok,
     demo: paramsQuery.demo,
   });
-  const mutationLocked = queryState?.kind === "conflict";
+  const mutationLocked = conflictDecision.mutationLocked;
   const recordReloadFields = { eventId, guestId };
+  const canonicalPath = `/app/events/${eventId}/guests/${guestId}`;
   const partialState =
     workspacePartial || rsvpPartial
       ? operationalStateFromCode(
@@ -178,6 +207,7 @@ export default async function GuestDetailPage({
       current="/app/events"
     >
       <div className="atelier-dossier at-scope">
+        <AtelierDossierRecovery active={recordRefreshed} canonicalPath={canonicalPath} />
         <header className="atelier-dossier-header atelier-masthead">
           <p className="eyebrow">Operational dossier · {scoped.event.name}</p>
           <span className="at-thread" aria-hidden="true" />
@@ -215,6 +245,14 @@ export default async function GuestDetailPage({
         <p>
           <Link href={`/app/events/${scoped.event.id}/guests`}>Back to directory</Link>
         </p>
+        {recordRefreshed && !mutationLocked ? (
+          <>
+            <AtelierStateFocus targetId="record-refreshed" active />
+            <p id="record-refreshed" role="status" tabIndex={-1} data-testid="record-refreshed">
+              The current record was reloaded. Forms are available again.
+            </p>
+          </>
+        ) : null}
         {queryState ? (
           <>
             <AtelierStateFocus targetId="operational-state" active={queryState.kind === "conflict"} />
