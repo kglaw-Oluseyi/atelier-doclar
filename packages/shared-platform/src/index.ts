@@ -40,6 +40,10 @@ export {
   MSG_PURPOSES,
   MSG_CAMPAIGN_STATUSES,
   MSG_MESSAGE_STATUSES,
+  PROGRAMME_PHASE_TYPES,
+  CHECKPOINT_TYPES,
+  ARRIVAL_ROUTE_KINDS,
+  VEHICLE_CLASSES,
   type StoreProductionStatus,
 } from "./constants.js";
 export { PlatformError, PLATFORM_ERROR_CODES, publicMessageFor, type PlatformErrorCode } from "./errors.js";
@@ -229,6 +233,59 @@ export {
   type S04AMigrationResult,
   type S04ARollbackResult,
 } from "./addressing-migration.js";
+export {
+  migrateEosS04B,
+  rollbackEosS04B,
+  applyEosS04BToSnapshot,
+  EOS_S04B_MIGRATION_ID,
+  EOS_S04B_MIGRATION_CHECKSUM,
+  type S04BMigrationResult,
+} from "./programme-migration.js";
+export {
+  applyS04BFixturesIfMissing,
+  S04B_FIXTURE_IDS,
+} from "./programme-fixtures.js";
+export {
+  validateS04BPersistedCollections,
+  S04B_STORE_COLLECTIONS,
+} from "./programme-persistence.js";
+export {
+  wholeEventAttendanceUnion,
+  phaseGuestCount,
+  verifyOfflinePackage,
+  signOfflinePackageBody,
+} from "./programme-operations.js";
+export {
+  buildEventProgrammeWorkspace,
+  buildGuestPhaseProjection,
+  programmePermissionAllowed,
+  type EventProgrammeWorkspace,
+  type ProgrammeCapabilities,
+} from "./programme-projections.js";
+export {
+  ProgrammePhaseSchema,
+  PhaseEntitlementSchema,
+  ArrivalRouteSchema,
+  PerimeterCheckpointSchema,
+  CredentialProjectionSchema,
+  OperationalVehicleSchema,
+  OfflineAccessPackageSchema,
+  CreateProgrammePhaseInputSchema,
+  AssignPhaseEntitlementInputSchema,
+  CreateCheckpointInputSchema,
+  CreateArrivalRouteInputSchema,
+  CreateVehicleInputSchema,
+  PublishOfflinePackageInputSchema,
+  ConsumeOfflinePackageInputSchema,
+  ResolveCheckpointInputSchema,
+  type ProgrammePhase,
+  type PhaseEntitlement,
+  type ArrivalRoute,
+  type PerimeterCheckpoint,
+  type CredentialProjection,
+  type OperationalVehicle,
+  type OfflineAccessPackage,
+} from "./programme-schemas.js";
 export {
   applyS04AFixtures,
   applyS04AFixturesIfMissing,

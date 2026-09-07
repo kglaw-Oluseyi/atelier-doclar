@@ -80,6 +80,41 @@ import {
   type UpdateGuestAddressingInput,
 } from "./addressing-schemas.js";
 import {
+  assignPhaseEntitlementOnSnap,
+  consumeOfflinePackageOnSnap,
+  createArrivalRouteOnSnap,
+  createCheckpointOnSnap,
+  createProgrammePhaseOnSnap,
+  createVehicleOnSnap,
+  ensureDefaultPhaseOnSnap,
+  publishOfflinePackageOnSnap,
+  raiseAccessExceptionOnSnap,
+  resolveCheckpointOnSnap,
+} from "./programme-operations.js";
+import {
+  buildEventProgrammeWorkspace,
+  buildGuestPhaseProjection,
+  programmePermissionAllowed,
+  type EventProgrammeWorkspace,
+} from "./programme-projections.js";
+import {
+  AssignPhaseEntitlementInputSchema,
+  ConsumeOfflinePackageInputSchema,
+  CreateArrivalRouteInputSchema,
+  CreateCheckpointInputSchema,
+  CreateProgrammePhaseInputSchema,
+  CreateVehicleInputSchema,
+  PublishOfflinePackageInputSchema,
+  RaiseAccessExceptionInputSchema,
+  ResolveCheckpointInputSchema,
+  type ArrivalRoute,
+  type ConsumeOfflinePackageInput,
+  type OfflineAccessPackage,
+  type PerimeterCheckpoint,
+  type PhaseEntitlement,
+  type ProgrammePhase,
+} from "./programme-schemas.js";
+import {
   applyGuestAmendment,
   buildOperationalGuest,
   compareGuests,
@@ -734,6 +769,7 @@ export class PlatformService {
             at: ctx.now,
           }),
         );
+        ensureDefaultPhaseOnSnap(snap, record, ctx.now, randomUUID());
         snap.phaseHistory.push({
           id: randomUUID(),
           organisationId: record.organisationId,
@@ -1336,6 +1372,165 @@ export class PlatformService {
     }
     const guest = requireScopedGuest(snap, organisationId, eventId, guestId);
     return buildGuestAddressingWorkspace(snap, guest, this.s04aCapabilities(ctx.actor, { organisationId, eventId }));
+  }
+
+  getEventProgrammeWorkspace(
+    actor: ActorContext,
+    organisationId: string,
+    eventId: string,
+  ): EventProgrammeWorkspace {
+    const { snap, ctx } = this.authorizeQuery(actor, "programme.view", { organisationId, eventId });
+    const event = this.requireEvent(snap, organisationId, eventId);
+    if (!canSeeEvent(ctx.actor, event, ctx.now)) {
+      throw new PlatformError("NOT_FOUND", "event was not found");
+    }
+    const workspace = buildEventProgrammeWorkspace(
+      snap,
+      organisationId,
+      eventId,
+      this.s04bCapabilities(ctx.actor, { organisationId, eventId }),
+    );
+    if (!workspace) throw new PlatformError("NOT_FOUND", "programme was not found");
+    return workspace;
+  }
+
+  getGuestPhaseProjection(actor: ActorContext, organisationId: string, eventId: string, guestId: string) {
+    const { snap, ctx } = this.authorizeQuery(actor, "programme.view", { organisationId, eventId });
+    this.requireEvent(snap, organisationId, eventId);
+    requireScopedGuest(snap, organisationId, eventId, guestId);
+    void ctx;
+    return buildGuestPhaseProjection(snap, eventId, guestId);
+  }
+
+  createProgrammePhase(actor: ActorContext, raw: unknown): ProgrammePhase {
+    const input = parseStrict(CreateProgrammePhaseInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "programme.phase.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "programme.phase.created",
+      resourceType: "programme_phase",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => createProgrammePhaseOnSnap(snap, input, ctx.now),
+    });
+  }
+
+  assignPhaseEntitlement(actor: ActorContext, raw: unknown): PhaseEntitlement {
+    const input = parseStrict(AssignPhaseEntitlementInputSchema, raw);
+    const protectedGrant = Boolean(input.protectedAccess);
+    return this.mutate(actor, {
+      permission: protectedGrant ? "programme.protectedAccess.grant" : "programme.entitlement.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "programme.entitlement.assigned",
+      resourceType: "phase_entitlement",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) =>
+        assignPhaseEntitlementOnSnap(snap, input, ctx.now, {
+          allowProtected: this.permissionAllowed(ctx.actor, "programme.protectedAccess.grant", {
+            organisationId: input.organisationId,
+            eventId: input.eventId,
+          }),
+        }),
+    });
+  }
+
+  createPerimeterCheckpoint(actor: ActorContext, raw: unknown): PerimeterCheckpoint {
+    const input = parseStrict(CreateCheckpointInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "programme.checkpoint.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "programme.checkpoint.created",
+      resourceType: "perimeter_checkpoint",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => createCheckpointOnSnap(snap, input, ctx.now),
+    });
+  }
+
+  createArrivalRoute(actor: ActorContext, raw: unknown): ArrivalRoute {
+    const input = parseStrict(CreateArrivalRouteInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "programme.route.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "programme.route.created",
+      resourceType: "arrival_route",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => createArrivalRouteOnSnap(snap, input, ctx.now),
+    });
+  }
+
+  createOperationalVehicle(actor: ActorContext, raw: unknown) {
+    const input = parseStrict(CreateVehicleInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "programme.vehicle.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "programme.vehicle.created",
+      resourceType: "operational_vehicle",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => createVehicleOnSnap(snap, input, ctx.now).vehicle,
+    });
+  }
+
+  publishOfflineAccessPackage(actor: ActorContext, raw: unknown): OfflineAccessPackage {
+    const input = parseStrict(PublishOfflinePackageInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "programme.accessPlan.publish",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "programme.accessPlan.published",
+      resourceType: "offline_access_package",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => publishOfflinePackageOnSnap(snap, input, ctx.now),
+    });
+  }
+
+  consumeOfflineAccessPackage(actor: ActorContext, raw: unknown): OfflineAccessPackage {
+    const input = parseStrict<ConsumeOfflinePackageInput>(ConsumeOfflinePackageInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "programme.view",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "programme.accessPlan.consumed",
+      resourceType: "offline_access_package",
+      resourceId: input.packageId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => consumeOfflinePackageOnSnap(snap, input, ctx.now),
+    });
+  }
+
+  resolveCheckpointAccess(actor: ActorContext, raw: unknown) {
+    const input = parseStrict(ResolveCheckpointInputSchema, raw);
+    const { snap, ctx } = this.authorizeQuery(actor, "programme.view", {
+      organisationId: input.organisationId,
+      eventId: input.eventId,
+    });
+    this.requireEvent(snap, input.organisationId, input.eventId);
+    void ctx;
+    return resolveCheckpointOnSnap(snap, input);
+  }
+
+  raiseAccessException(actor: ActorContext, raw: unknown) {
+    const input = parseStrict(RaiseAccessExceptionInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "programme.exception.review",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "programme.exception.raised",
+      resourceType: "access_exception",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => raiseAccessExceptionOnSnap(snap, input, ctx.now),
+    });
   }
 
   updateGuestAddressing(actor: ActorContext, raw: unknown): GuestAddressingWorkspace {
@@ -3780,6 +3975,10 @@ export class PlatformService {
     };
   }
 
+  private s04bCapabilities(actorSnap: ActorSnapshot, scope: ScopeInput) {
+    return programmePermissionAllowed((permission) => this.permissionAllowed(actorSnap, permission, scope));
+  }
+
   private assertVersion(actual: number, expected: number): void {
     if (actual !== expected) {
       throw new PlatformError("VERSION_CONFLICT", `expected version ${expected} but found ${actual}`);
@@ -3861,7 +4060,20 @@ export class PlatformService {
       snap.eventSeriesMembers,
       snap.addressingReconciliationItems,
     ];
-    for (const table of s04aTables) {
+    const s04bTables = [
+      snap.programmeDays,
+      snap.programmePhases,
+      snap.phaseEntitlements,
+      snap.arrivalRoutes,
+      snap.perimeterCheckpoints,
+      snap.accessZones,
+      snap.credentialProjections,
+      snap.operationalVehicles,
+      snap.vehicleAssociations,
+      snap.offlineAccessPackages,
+      snap.accessExceptions,
+    ];
+    for (const table of [...s04aTables, ...s04bTables]) {
       const record = table.find((item) => item.id === id);
       if (record && "organisationId" in record) {
         return {
@@ -3955,6 +4167,17 @@ export class PlatformService {
       snap.eventSeries,
       snap.eventSeriesMembers,
       snap.addressingReconciliationItems,
+      snap.programmeDays,
+      snap.programmePhases,
+      snap.phaseEntitlements,
+      snap.arrivalRoutes,
+      snap.perimeterCheckpoints,
+      snap.accessZones,
+      snap.credentialProjections,
+      snap.operationalVehicles,
+      snap.vehicleAssociations,
+      snap.offlineAccessPackages,
+      snap.accessExceptions,
       snap.guestDuplicateCandidates,
       snap.guestIntakeBatches,
       snap.rsvpPolicies,

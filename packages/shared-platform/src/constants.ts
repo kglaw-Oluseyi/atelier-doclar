@@ -74,6 +74,17 @@ export const SHARED_PLATFORM_OWNERSHIP = {
   audit: PLATFORM_PACKAGE,
   masterEventFile: PLATFORM_PACKAGE,
   identifiers: PLATFORM_PACKAGE,
+  programmeDay: PLATFORM_PACKAGE,
+  programmePhase: PLATFORM_PACKAGE,
+  phaseEntitlement: PLATFORM_PACKAGE,
+  arrivalRoute: PLATFORM_PACKAGE,
+  perimeterCheckpoint: PLATFORM_PACKAGE,
+  accessZone: PLATFORM_PACKAGE,
+  credentialProjection: PLATFORM_PACKAGE,
+  operationalVehicle: PLATFORM_PACKAGE,
+  vehicleAssociation: PLATFORM_PACKAGE,
+  offlineAccessPackage: PLATFORM_PACKAGE,
+  accessException: PLATFORM_PACKAGE,
 } as const;
 
 /** Parallel product-owned truth stores are forbidden. Product projections may exist. */
@@ -100,6 +111,11 @@ export const FORBIDDEN_PARALLEL_TRUTH = [
   "EventOSGuest",
   "CommunicationsGuest",
   "ConciergeGuest",
+  "S04BAttendanceLedger",
+  "EventDayAttendanceWriter",
+  "CheckpointScanner",
+  "OfflineAdmissionOutbox",
+  "ParallelGuestCredential",
 ] as const;
 
 export const DEFAULT_TIMEZONE = "Africa/Lagos";
@@ -213,6 +229,15 @@ export const PERMISSION_KEYS = [
   "msg.task.manage",
   "msg.contactCorrection.review",
   "msg.analytics.view",
+  "programme.view",
+  "programme.phase.manage",
+  "programme.route.manage",
+  "programme.checkpoint.manage",
+  "programme.entitlement.manage",
+  "programme.protectedAccess.grant",
+  "programme.vehicle.manage",
+  "programme.accessPlan.publish",
+  "programme.exception.review",
 ] as const;
 
 export const SYSTEM_ROLE_KEYS = [
@@ -379,6 +404,105 @@ export const S04A_SENSITIVE_PERMISSIONS = [
   "guest.protocolNote.view",
   "guest.child.manage",
 ] as const;
+
+export const S04B_SENSITIVE_PERMISSIONS = [
+  "programme.protectedAccess.grant",
+  "programme.accessPlan.publish",
+  "programme.exception.review",
+] as const;
+
+export const PROGRAMME_PHASE_TYPES = [
+  "PRIMARY",
+  "REGISTRY",
+  "TRADITIONAL",
+  "CHURCH",
+  "RECEPTION",
+  "AFTER_PARTY",
+  "BRUNCH",
+  "OTHER",
+] as const;
+export const PROGRAMME_PHASE_STATUSES = [
+  "DRAFT",
+  "READY",
+  "PUBLISHED",
+  "ACTIVE",
+  "CLOSED",
+  "CANCELLED",
+  "SUPERSEDED",
+] as const;
+export const PROGRAMME_DAY_STATUSES = ["DRAFT", "READY", "ACTIVE", "CLOSED"] as const;
+export const CHECKPOINT_TYPES = [
+  "ESTATE_MAIN_GATE",
+  "SECONDARY_GATE",
+  "VIP_PRIVATE_GATE",
+  "SERVICE_VENDOR_GATE",
+  "VEHICLE_SCREENING",
+  "PARKING_GENERAL",
+  "PARKING_ACCESSIBLE",
+  "PARKING_STAFF",
+  "CHAUFFEUR_HOLDING",
+  "VENUE_GENERAL",
+  "VENUE_FAST_TRACK",
+  "VENUE_ACCESSIBLE",
+  "VENUE_FAMILY",
+  "RECEPTION",
+  "STAFF_SERVICE",
+] as const;
+export const CHECKPOINT_STATUSES = ["DRAFT", "READY", "ACTIVE", "CLOSED"] as const;
+export const ARRIVAL_ROUTE_KINDS = [
+  "GENERAL",
+  "DISCREET_FAST_TRACK",
+  "ACCESSIBLE",
+  "FAMILY_PRIVATE",
+  "SERVICE",
+  "CONVOY",
+] as const;
+export const ARRIVAL_ROUTE_STATUSES = ["DRAFT", "READY", "ACTIVE", "SUPERSEDED"] as const;
+export const ACCESS_ZONE_KINDS = [
+  "GENERAL_FLOOR",
+  "VIP_LOUNGE",
+  "BACKSTAGE",
+  "FAMILY_PRIVATE",
+  "SERVICE_AREA",
+  "PARKING",
+] as const;
+export const PHASE_ENTITLEMENT_SUBJECT_TYPES = [
+  "GUEST",
+  "OPERATIONAL_PERSON",
+  "VEHICLE",
+] as const;
+export const PHASE_ENTITLEMENT_STATUSES = [
+  "DRAFT",
+  "ACTIVE",
+  "SUSPENDED",
+  "REVOKED",
+  "EXPIRED",
+  "REPLACED",
+] as const;
+export const CREDENTIAL_PROJECTION_STATUSES = [
+  "DRAFT",
+  "ACTIVE",
+  "SUPERSEDED",
+  "REVOKED",
+  "EXPIRED",
+] as const;
+export const VEHICLE_CLASSES = ["SALOON", "SUV", "VAN", "COACH", "OTHER"] as const;
+export const VEHICLE_STATUSES = ["REGISTERED", "SUBSTITUTED", "REVOKED"] as const;
+export const VEHICLE_ASSOCIATION_ROLES = ["DRIVER", "PROTECTION", "ENTOURAGE", "PASSENGER"] as const;
+export const OFFLINE_PACKAGE_STATUSES = ["ACTIVE", "SUPERSEDED", "EXPIRED", "REVOKED"] as const;
+export const ACCESS_EXCEPTION_STATUSES = ["OPEN", "APPROVED", "REFUSED", "SUPERSEDED"] as const;
+export const CHECKPOINT_RESOLUTION_OUTCOMES = [
+  "AUTHORISED",
+  "REFER",
+  "INSUFFICIENT",
+  "REVOKED",
+  "STALE",
+  "WRONG_CHECKPOINT",
+  "WRONG_EVENT",
+  "WRONG_PHASE",
+] as const;
+export const S04B_OFFLINE_HMAC_KEY_REF = "s04b-offline-v1" as const;
+export const S04B_NON_PRODUCTION_HMAC_KEY = "s04b-offline-hmac-non-production-v1" as const;
 
 export const CEO_RESERVED_ACTIONS: readonly string[] = [
   "organisation.manage",

@@ -2,6 +2,7 @@ import {
   BUSINESS_PERMISSIONS,
   PERMISSION_KEYS,
   S04A_SENSITIVE_PERMISSIONS,
+  S04B_SENSITIVE_PERMISSIONS,
   SCHEMA_VERSION,
   SYSTEM_ROLE_KEYS,
 } from "./constants.js";
@@ -74,6 +75,15 @@ const PERMISSION_IDS: Record<PermissionKey, string> = {
   "msg.task.manage": "11111111-1111-4111-8111-111111111051",
   "msg.contactCorrection.review": "11111111-1111-4111-8111-111111111052",
   "msg.analytics.view": "11111111-1111-4111-8111-111111111053",
+  "programme.view": "11111111-1111-4111-8111-111111111065",
+  "programme.phase.manage": "11111111-1111-4111-8111-111111111066",
+  "programme.route.manage": "11111111-1111-4111-8111-111111111067",
+  "programme.checkpoint.manage": "11111111-1111-4111-8111-111111111068",
+  "programme.entitlement.manage": "11111111-1111-4111-8111-111111111069",
+  "programme.protectedAccess.grant": "11111111-1111-4111-8111-111111111070",
+  "programme.vehicle.manage": "11111111-1111-4111-8111-111111111071",
+  "programme.accessPlan.publish": "11111111-1111-4111-8111-111111111072",
+  "programme.exception.review": "11111111-1111-4111-8111-111111111073",
 };
 
 const ROLE_IDS: Record<(typeof SYSTEM_ROLE_KEYS)[number], string> = {
@@ -161,6 +171,15 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "msg.task.manage",
     "msg.contactCorrection.review",
     "msg.analytics.view",
+    "programme.view",
+    "programme.phase.manage",
+    "programme.route.manage",
+    "programme.checkpoint.manage",
+    "programme.entitlement.manage",
+    "programme.protectedAccess.grant",
+    "programme.vehicle.manage",
+    "programme.accessPlan.publish",
+    "programme.exception.review",
   ],
   CLIENT_LEAD: [
     "organisation.view",
@@ -220,6 +239,12 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "msg.inbox.view",
     "msg.inbox.respond",
     "msg.analytics.view",
+    "programme.view",
+    "programme.phase.manage",
+    "programme.route.manage",
+    "programme.checkpoint.manage",
+    "programme.entitlement.manage",
+    "programme.vehicle.manage",
   ],
   SYSTEM_ADMINISTRATOR: [
     "organisation.view",
@@ -248,6 +273,7 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "guest.child.view",
     "rsvp.directory.view",
     "msg.analytics.view",
+    "programme.view",
   ],
 };
 
@@ -262,7 +288,8 @@ function permissionRecord(key: PermissionKey): Permission {
     sensitivity:
       BUSINESS_PERMISSIONS.includes(key) ||
       key.startsWith("audit.") ||
-      (S04A_SENSITIVE_PERMISSIONS as readonly string[]).includes(key)
+      (S04A_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
+      (S04B_SENSITIVE_PERMISSIONS as readonly string[]).includes(key)
         ? "SENSITIVE"
         : "NORMAL",
     schemaVersion: SCHEMA_VERSION,

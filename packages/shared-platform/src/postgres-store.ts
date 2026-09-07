@@ -4,6 +4,7 @@ import { PRODUCTION_STORE_STATUS, type StoreProductionStatus } from "./constants
 import type { AuditEvent } from "./schemas.js";
 import { emptySnapshot, normalizeSnapshot, type IdempotencyRecord, type PlatformSnapshot, type PlatformStore } from "./store.js";
 import { validateS04APersistedCollections } from "./addressing-persistence.js";
+import { validateS04BPersistedCollections } from "./programme-persistence.js";
 import type { PgQueryable, PgQueryResult, PgTransactor } from "./postgres-schema.js";
 
 type Collection = keyof Omit<PlatformSnapshot, "audit" | "idempotency">;
@@ -38,6 +39,18 @@ const COLLECTIONS: Collection[] = [
   "eventSeriesMembers",
   "addressingReconciliationItems",
   "s04aMigrationReceipts",
+  "programmeDays",
+  "programmePhases",
+  "phaseEntitlements",
+  "arrivalRoutes",
+  "perimeterCheckpoints",
+  "accessZones",
+  "credentialProjections",
+  "operationalVehicles",
+  "vehicleAssociations",
+  "offlineAccessPackages",
+  "accessExceptions",
+  "s04bMigrationReceipts",
   "rsvpPolicies",
   "rsvpQuestionnaires",
   "rsvpInvitations",
@@ -118,6 +131,7 @@ export class PostgresPlatformStore implements PlatformStore {
   replace(next: PlatformSnapshot): void {
     const normalised = normalizeSnapshot(next);
     validateS04APersistedCollections(normalised);
+    validateS04BPersistedCollections(normalised);
     const previous = this.snapshot();
     this.state = structuredClone(normalised);
     this.pending = this.pending
@@ -258,6 +272,7 @@ export class PostgresPlatformStore implements PlatformStore {
     next.idempotency = idem.rows.map((row) => asBody<IdempotencyRecord>(row.body));
     const normalised = normalizeSnapshot(next);
     validateS04APersistedCollections(normalised);
+    validateS04BPersistedCollections(normalised);
     this.state = normalised;
   }
 }

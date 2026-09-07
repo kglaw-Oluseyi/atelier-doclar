@@ -31,6 +31,20 @@ import type {
   S04AMigrationReceipt,
 } from "./addressing-schemas.js";
 import type {
+  AccessException,
+  AccessZone,
+  ArrivalRoute,
+  CredentialProjection,
+  OfflineAccessPackage,
+  OperationalVehicle,
+  PerimeterCheckpoint,
+  PhaseEntitlement,
+  ProgrammeDay,
+  ProgrammePhase,
+  S04BMigrationReceipt,
+  VehicleAssociation,
+} from "./programme-schemas.js";
+import type {
   GuestDuplicateCandidate,
   GuestHousehold,
   GuestIntakeBatch,
@@ -112,6 +126,18 @@ export interface PlatformSnapshot {
   eventSeriesMembers: EventSeriesMember[];
   addressingReconciliationItems: AddressingReconciliationItem[];
   s04aMigrationReceipts: S04AMigrationReceipt[];
+  programmeDays: ProgrammeDay[];
+  programmePhases: ProgrammePhase[];
+  phaseEntitlements: PhaseEntitlement[];
+  arrivalRoutes: ArrivalRoute[];
+  perimeterCheckpoints: PerimeterCheckpoint[];
+  accessZones: AccessZone[];
+  credentialProjections: CredentialProjection[];
+  operationalVehicles: OperationalVehicle[];
+  vehicleAssociations: VehicleAssociation[];
+  offlineAccessPackages: OfflineAccessPackage[];
+  accessExceptions: AccessException[];
+  s04bMigrationReceipts: S04BMigrationReceipt[];
   rsvpPolicies: RsvpPolicy[];
   rsvpQuestionnaires: RsvpQuestionnaire[];
   rsvpInvitations: RsvpInvitation[];
@@ -187,6 +213,18 @@ export function emptySnapshot(): PlatformSnapshot {
     eventSeriesMembers: [],
     addressingReconciliationItems: [],
     s04aMigrationReceipts: [],
+    programmeDays: [],
+    programmePhases: [],
+    phaseEntitlements: [],
+    arrivalRoutes: [],
+    perimeterCheckpoints: [],
+    accessZones: [],
+    credentialProjections: [],
+    operationalVehicles: [],
+    vehicleAssociations: [],
+    offlineAccessPackages: [],
+    accessExceptions: [],
+    s04bMigrationReceipts: [],
     rsvpPolicies: [],
     rsvpQuestionnaires: [],
     rsvpInvitations: [],
@@ -246,6 +284,18 @@ export function normalizeSnapshot(input: PlatformSnapshot): PlatformSnapshot {
     eventSeriesMembers: input.eventSeriesMembers ?? [],
     addressingReconciliationItems: input.addressingReconciliationItems ?? [],
     s04aMigrationReceipts: input.s04aMigrationReceipts ?? [],
+    programmeDays: input.programmeDays ?? [],
+    programmePhases: input.programmePhases ?? [],
+    phaseEntitlements: input.phaseEntitlements ?? [],
+    arrivalRoutes: input.arrivalRoutes ?? [],
+    perimeterCheckpoints: input.perimeterCheckpoints ?? [],
+    accessZones: input.accessZones ?? [],
+    credentialProjections: input.credentialProjections ?? [],
+    operationalVehicles: input.operationalVehicles ?? [],
+    vehicleAssociations: input.vehicleAssociations ?? [],
+    offlineAccessPackages: input.offlineAccessPackages ?? [],
+    accessExceptions: input.accessExceptions ?? [],
+    s04bMigrationReceipts: input.s04bMigrationReceipts ?? [],
     rsvpPolicies: input.rsvpPolicies ?? [],
     rsvpQuestionnaires: input.rsvpQuestionnaires ?? [],
     rsvpInvitations: input.rsvpInvitations ?? [],
