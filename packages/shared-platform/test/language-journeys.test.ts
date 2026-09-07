@@ -154,22 +154,48 @@ describe("EOS-S04F language journeys", () => {
     );
   });
 
-  it("marks dependent translations stale when the source changes", () => {
+  it("marks dependent translations stale when a separate reviewer approves a source revision", () => {
     const { service } = seeded();
-    const stale = service.supersedeSourceEdition(director(), {
+    const revision = service.createSourceRevision(planner(), {
       organisationId: FIXTURE_IDS.orgMaison,
       eventId: FIXTURE_IDS.eventAlphaOne,
       workId: S04F_FIXTURE_IDS.workInvitation,
       sourceEditionId: S04F_FIXTURE_IDS.editionEnGb,
       primaryText: "Updated English source for {{guestName}}.",
+      purposeContext: "Invitation source",
+      changeSummary: "Clarify the English greeting.",
+      submitForReview: true,
       expectedVersion: 1,
       reason: "Source change",
     });
-    assert.equal(stale.status, "APPROVED");
+    assert.equal(revision.status, "IN_REVIEW");
+    assert.throws(
+      () =>
+        service.decideSourceEdition(planner(), {
+          organisationId: FIXTURE_IDS.orgMaison,
+          eventId: FIXTURE_IDS.eventAlphaOne,
+          editionId: revision.id,
+          decision: "APPROVED",
+          expectedVersion: revision.version,
+          reason: "self approve source",
+        }),
+      (error: unknown) => error instanceof PlatformError && error.code === "FORBIDDEN",
+    );
+    const approved = service.decideSourceEdition(director(), {
+      organisationId: FIXTURE_IDS.orgMaison,
+      eventId: FIXTURE_IDS.eventAlphaOne,
+      editionId: revision.id,
+      decision: "APPROVED",
+      expectedVersion: revision.version,
+      reason: "Separate reviewer approval",
+    });
+    assert.equal(approved.status, "APPROVED");
     const workspace = service.getEventLanguageWorkspace(director(), FIXTURE_IDS.orgMaison, FIXTURE_IDS.eventAlphaOne);
     const yo = workspace.editions.find((item) => item.id === S04F_FIXTURE_IDS.editionYo);
     assert.equal(yo?.coverageStatus, "STALE");
     assert.equal(yo?.reviewRequired, true);
+    const previous = workspace.editions.find((item) => item.id === S04F_FIXTURE_IDS.editionEnGb);
+    assert.equal(previous?.status, "SUPERSEDED");
   });
 
   it("assembles by guestId with fallback, no dispatch, and no RSVP mutation", () => {

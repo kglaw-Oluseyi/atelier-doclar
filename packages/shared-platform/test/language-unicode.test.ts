@@ -52,8 +52,8 @@ describe("EOS-S04F Unicode policy", () => {
       (error: unknown) => error instanceof PlatformError,
     );
     assert.throws(
-      () => extractPlaceholderNames("{{guestName}} and {{guestName}}"),
-      (error: unknown) => error instanceof PlatformError,
+      () => assertPlaceholderSetsMatch("Hello {{guestName}}", "{{guestName}} and {{guestName}}"),
+      (error: unknown) => error instanceof PlatformError && /duplicated/i.test(error.message),
     );
     const rendered = renderPlaceholders("Dear {{guestName}}", { guestName: "<script>alert(1)</script>" }, ["guestName"]);
     assert.equal(rendered.includes("<script>"), false);
