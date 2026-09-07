@@ -2,6 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { Pool } from "pg";
 import {
+  ACADEMY_CATALOGUE,
   AcademyLearnerRecordSchema,
   type AcademyAttemptRecord,
   type AcademyLearnerRecord,
@@ -17,6 +18,23 @@ CREATE TABLE IF NOT EXISTS event_os_academy_delta (
   updated_at TIMESTAMPTZ NOT NULL,
   UNIQUE (person_id, course_id)
 );
+`;
+
+const CATALOGUE_TABLE = `
+CREATE TABLE IF NOT EXISTS event_os_academy_catalogue (
+  course_id TEXT PRIMARY KEY,
+  slug TEXT NOT NULL UNIQUE,
+  version TEXT NOT NULL,
+  title TEXT NOT NULL,
+  registered_at TIMESTAMPTZ NOT NULL
+);
+`;
+
+const CATALOGUE_SEED = `
+INSERT INTO event_os_academy_catalogue (course_id, slug, version, title, registered_at)
+VALUES ${ACADEMY_CATALOGUE.map((_, index) => `($${index * 4 + 1}, $${index * 4 + 2}, $${index * 4 + 3}, $${index * 4 + 4}, NOW())`).join(", ")}
+ON CONFLICT (course_id) DO UPDATE
+SET slug = EXCLUDED.slug, version = EXCLUDED.version, title = EXCLUDED.title;
 `;
 
 function filePath(): string {
@@ -64,6 +82,11 @@ export async function ensureAcademyStore(): Promise<void> {
   const client = postgresPool();
   if (!client) return;
   await client.query(TABLE);
+  await client.query(CATALOGUE_TABLE);
+  await client.query(
+    CATALOGUE_SEED,
+    ACADEMY_CATALOGUE.flatMap((item) => [item.id, item.slug, item.version, item.title]),
+  );
 }
 
 export async function loadAcademyRecord(personId: string, courseId: string): Promise<AcademyLearnerRecord | undefined> {

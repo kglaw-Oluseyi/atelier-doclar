@@ -63,8 +63,11 @@ export default async function HomeAppPage() {
                 <Link className="button secondary" href={`/app/events/${featured.event.id}`}>
                   Event overview
                 </Link>
-                <Link className="button secondary" href="/app/academy/aca-s04a">
+                <Link className="button secondary" href="/app/academy/ACA-S04A">
                   ACA-S04A training
+                </Link>
+                <Link className="button secondary" href="/app/academy/ACA-S04D">
+                  ACA-S04D training
                 </Link>
               </p>
             </article>

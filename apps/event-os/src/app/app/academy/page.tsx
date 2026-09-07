@@ -1,29 +1,28 @@
 import Link from "next/link";
 import {
-  ACA_S04A_COURSE_ID,
-  ACA_S04C_COURSE_ID,
-  ACA_S04D_COURSE_ID,
+  ACADEMY_CATALOGUE,
   AUTHORITY_DISCLAIMER,
-  acaS04ACourse,
-  acaS04CCourse,
-  acaS04DCourse,
+  academyCourseFor,
 } from "@maison-doclar/academy";
 import { AtelierOperationalState } from "../../../components/atelier-operational-state";
 import { AtelierPageHeader } from "../../../components/atelier-page-header";
 import { AppShell } from "../../../components/shell";
 import { academyAssignmentForPerson } from "../../../server/academy-access";
-import { loadAcademyRecord } from "../../../server/academy-store";
+import { ensureAcademyStore, loadAcademyRecord } from "../../../server/academy-store";
 import { guardedActor } from "../../../server/guard";
 import { operationalStateFromCode } from "../../../server/operational-state";
 
 export default async function AcademyIndexPage() {
   const { person } = await guardedActor();
-  const assignmentA = academyAssignmentForPerson(person.id, ACA_S04A_COURSE_ID);
-  const assignmentC = academyAssignmentForPerson(person.id, ACA_S04C_COURSE_ID);
-  const assignmentD = academyAssignmentForPerson(person.id, ACA_S04D_COURSE_ID);
-  const recordA = assignmentA ? await loadAcademyRecord(person.id, ACA_S04A_COURSE_ID) : undefined;
-  const recordC = assignmentC ? await loadAcademyRecord(person.id, ACA_S04C_COURSE_ID) : undefined;
-  const recordD = assignmentD ? await loadAcademyRecord(person.id, ACA_S04D_COURSE_ID) : undefined;
+  await ensureAcademyStore();
+  const assigned = await Promise.all(
+    ACADEMY_CATALOGUE.map(async (entry) => {
+      const assignment = academyAssignmentForPerson(person.id, entry.id);
+      const record = assignment ? await loadAcademyRecord(person.id, entry.id) : undefined;
+      return { entry, assignment, record, course: academyCourseFor(entry.id) };
+    }),
+  );
+  const visible = assigned.filter((item) => item.assignment);
   return (
     <AppShell person={person} current="/app/academy">
       <AtelierPageHeader
@@ -34,61 +33,30 @@ export default async function AcademyIndexPage() {
       <p className="atelier-academy-authority" role="note">
         {AUTHORITY_DISCLAIMER}
       </p>
-      {!assignmentA && !assignmentC && !assignmentD ? (
+      {visible.length === 0 ? (
         <AtelierOperationalState
           state={operationalStateFromCode("FORBIDDEN", "No Academy learning path is assigned to this role.")}
         />
       ) : (
-        <>
-          {assignmentA ? (
-            <article className="atelier-panel">
-              <p className="eyebrow">{assignmentA.learningPath.replaceAll("_", " ")}</p>
-              <h2>{acaS04ACourse.title}</h2>
-              <p>{acaS04ACourse.lede}</p>
-              <p>
-                Latest evidence:{" "}
-                {recordA?.latestOutcome ? recordA.latestOutcome.replaceAll("_", " ") : "No attempt recorded"}
-              </p>
-              <p className="actions">
-                <Link className="button" href="/app/academy/aca-s04a">
-                  Open ACA-S04A
-                </Link>
-              </p>
-            </article>
-          ) : null}
-          {assignmentC ? (
-            <article className="atelier-panel">
-              <p className="eyebrow">{assignmentC.learningPath.replaceAll("_", " ")}</p>
-              <h2>{acaS04CCourse.title}</h2>
-              <p>{acaS04CCourse.lede}</p>
-              <p>
-                Latest evidence:{" "}
-                {recordC?.latestOutcome ? recordC.latestOutcome.replaceAll("_", " ") : "No attempt recorded"}
-              </p>
-              <p className="actions">
-                <Link className="button" href="/app/academy/aca-s04c">
-                  Open ACA-S04C
-                </Link>
-              </p>
-            </article>
-          ) : null}
-          {assignmentD ? (
-            <article className="atelier-panel">
-              <p className="eyebrow">{assignmentD.learningPath.replaceAll("_", " ")}</p>
-              <h2>{acaS04DCourse.title}</h2>
-              <p>{acaS04DCourse.lede}</p>
-              <p>
-                Latest evidence:{" "}
-                {recordD?.latestOutcome ? recordD.latestOutcome.replaceAll("_", " ") : "No attempt recorded"}
-              </p>
-              <p className="actions">
-                <Link className="button" href="/app/academy/aca-s04d">
-                  Open ACA-S04D
-                </Link>
-              </p>
-            </article>
-          ) : null}
-        </>
+        visible.map(({ entry, assignment, record, course }) => (
+          <article className="atelier-panel" key={entry.id} data-testid={`academy-index-${entry.id}`}>
+            <p className="eyebrow">
+              {assignment?.learningPath.replaceAll("_", " ")} · {entry.id} · v{entry.version}
+            </p>
+            <h2>{course.title}</h2>
+            <p>{course.lede}</p>
+            <p data-testid={`academy-index-version-${entry.id}`}>Version {entry.version}</p>
+            <p>
+              Latest evidence:{" "}
+              {record?.latestOutcome ? record.latestOutcome.replaceAll("_", " ") : "No attempt recorded"}
+            </p>
+            <p className="actions">
+              <Link className="button" href={entry.href}>
+                Open {entry.id}
+              </Link>
+            </p>
+          </article>
+        ))
       )}
     </AppShell>
   );

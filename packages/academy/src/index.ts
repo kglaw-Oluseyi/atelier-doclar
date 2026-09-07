@@ -38,3 +38,14 @@ export { assignAcaS04A, assignAcaS04C, assignAcaS04D, learningPathForRole, prefe
 export { acaS04ACourse, acaS04AQuestionsFor } from "./course-aca-s04a.js";
 export { acaS04CCourse, acaS04CQuestionsFor } from "./course-aca-s04c.js";
 export { acaS04DCourse, acaS04DQuestionsFor } from "./course-aca-s04d.js";
+export {
+  ACADEMY_CATALOGUE,
+  ACA_S04A_COURSE_VERSION,
+  ACA_S04C_COURSE_VERSION,
+  ACA_S04D_COURSE_VERSION,
+  academyCourseFor,
+  applyAcademyCatalogueSeed,
+  resolveAcademyCourseRef,
+  type AcademyCatalogueEntry,
+  type AcademyCourseId,
+} from "./catalogue.js";
