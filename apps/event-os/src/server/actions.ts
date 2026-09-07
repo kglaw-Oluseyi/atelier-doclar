@@ -10,7 +10,7 @@ import {
   type Honorific,
 } from "@maison-doclar/shared-platform";
 import { fixturesAllowed } from "./config";
-import { consumeActionFlash, writeActionFlash, writeAudiencePreviewFlash, writeIssuedAccessFlash, writeRecoveredMarker } from "./action-flash";
+import { consumeActionFlash, consumeIssuedAccessFlash, writeActionFlash, writeAudiencePreviewFlash, writeIssuedAccessFlash, writeRecoveredMarker } from "./action-flash";
 import { classifyActionError } from "./operational-state";
 import { getRuntime, withDurable } from "./runtime";
 import { clearStaffSessionCookie, readStaffSessionCookie, writeStaffSessionCookie } from "./staff-session-cookie";
@@ -97,6 +97,19 @@ function optionalList(value: string): string[] | undefined {
     .map((item) => item.trim())
     .filter(Boolean);
   return items.length ? items : undefined;
+}
+
+function isNextRedirect(error: unknown): boolean {
+  return Boolean(
+    error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      String((error as { digest: unknown }).digest).startsWith("NEXT_REDIRECT"),
+  );
+}
+
+function rethrowRedirect(error: unknown): void {
+  if (isNextRedirect(error)) throw error;
 }
 
 function sessionOrAssignmentRedirect(error: unknown, nextPath: string): void {
@@ -1026,6 +1039,21 @@ export async function applySyntheticCallbackAction(formData: FormData): Promise<
   });
 }
 
+export async function refreshMerchandiseRecordAction(formData: FormData): Promise<void> {
+  const eventId = String(formData.get("eventId") ?? "");
+  try {
+    await requireActor();
+  } catch (error) {
+    await consumeActionFlash();
+    await consumeIssuedAccessFlash();
+    sessionOrAssignmentRedirect(error, `/app/events/${eventId}/merchandise`);
+    throw error;
+  }
+  await consumeActionFlash();
+  await consumeIssuedAccessFlash();
+  redirect(`/app/events/${encodeURIComponent(eventId)}/merchandise?refreshed=1`);
+}
+
 export async function refreshGuestRecordAction(formData: FormData): Promise<void> {
   const eventId = String(formData.get("eventId") ?? "");
   const guestId = String(formData.get("guestId") ?? "");
@@ -1595,6 +1623,7 @@ export async function resolveCheckpointAction(formData: FormData): Promise<void>
 }
 
 async function merchandiseFail(eventId: string, error: unknown): Promise<never> {
+  rethrowRedirect(error);
   sessionOrAssignmentRedirect(error, `/app/events/${eventId}/merchandise`);
   const classified = classifyActionError(error);
   await writeActionFlash({
@@ -1970,11 +1999,12 @@ export async function issueMerchandiseGuestAccessAction(formData: FormData): Pro
 }
 
 export async function renewMerchandiseGuestAccessAction(formData: FormData): Promise<void> {
-  return await withDurable(async () => {
-    const eventId = String(formData.get("eventId") ?? "");
-    const { actor, organisation } = await withMerchandiseActor(eventId);
-    try {
-      const issued = getRuntime().service.renewMerchandiseGuestAccess(actor, {
+  const eventId = String(formData.get("eventId") ?? "");
+  let issued: { grant: { id: string }; token: string } | undefined;
+  try {
+    await withDurable(async () => {
+      const { actor, organisation } = await withMerchandiseActor(eventId);
+      issued = getRuntime().service.renewMerchandiseGuestAccess(actor, {
         organisationId: organisation.id,
         eventId,
         grantId: String(formData.get("grantId") ?? ""),
@@ -1983,14 +2013,15 @@ export async function renewMerchandiseGuestAccessAction(formData: FormData): Pro
         reason: String(formData.get("reason") ?? "Renew private merchandise guest access"),
         idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
       });
-      if (issued.token) {
-        await writeIssuedAccessFlash({ kind: "guest", token: issued.token, subjectId: issued.grant.id });
-      }
-    } catch (error) {
-      await merchandiseFail(eventId, error);
-    }
-    redirect(`/app/events/${eventId}/merchandise?ok=guest-access`);
-  });
+    });
+  } catch (error) {
+    rethrowRedirect(error);
+    await merchandiseFail(eventId, error);
+  }
+  if (issued?.token) {
+    await writeIssuedAccessFlash({ kind: "guest", token: issued.token, subjectId: issued.grant.id });
+  }
+  redirect(`/app/events/${eventId}/merchandise?ok=guest-renew`);
 }
 
 export async function revokeMerchandiseGuestAccessAction(formData: FormData): Promise<void> {

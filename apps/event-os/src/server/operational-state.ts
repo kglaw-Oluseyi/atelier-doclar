@@ -124,6 +124,41 @@ export function guestDossierConflictDecision(input: {
   return { mutationLocked: showConflict, showConflict };
 }
 
+export function merchandiseConflictDecision(input: {
+  flash?: ActionFlash;
+  queryState?: string;
+  refreshed?: boolean;
+}): { mutationLocked: boolean; showConflict: boolean } {
+  if (input.flash?.code === "VERSION_CONFLICT") {
+    return { mutationLocked: true, showConflict: true };
+  }
+  if (input.refreshed) {
+    return { mutationLocked: false, showConflict: false };
+  }
+  const showConflict = input.queryState === "VERSION_CONFLICT";
+  return { mutationLocked: showConflict, showConflict };
+}
+
+export function merchandiseWorkspacePresentation<T>(input: {
+  flash?: ActionFlash;
+  queryState?: string;
+  queryOk?: string;
+  refreshed?: boolean;
+  issued?: T;
+}): {
+  mutationLocked: boolean;
+  showConflict: boolean;
+  showSuccess: boolean;
+  issued: T | undefined;
+} {
+  const decision = merchandiseConflictDecision(input);
+  return {
+    ...decision,
+    showSuccess: Boolean(input.queryOk) && !decision.showConflict,
+    issued: decision.showConflict ? undefined : input.issued,
+  };
+}
+
 export function isPlatformErrorLike(error: unknown): error is PlatformError {
   if (error instanceof PlatformError) return true;
   if (!error || typeof error !== "object" || !("code" in error)) return false;

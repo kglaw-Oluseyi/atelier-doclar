@@ -2,10 +2,16 @@ import { PlatformError } from "@maison-doclar/shared-platform";
 import { AtelierPageHeader } from "../../../../../components/atelier-page-header";
 import { AtelierOperationalState } from "../../../../../components/atelier-operational-state";
 import { AtelierSectionTabs } from "../../../../../components/atelier-section-tabs";
+import { AtelierStateFocus } from "../../../../../components/atelier-state-focus";
 import { MerchandiseWorkspace } from "../../../../../components/merchandise-workspace";
 import { AppShell } from "../../../../../components/shell";
+import { refreshMerchandiseRecordAction } from "../../../../../server/actions";
 import { readActionFlash, readAudiencePreviewFlash, readIssuedAccessFlash } from "../../../../../server/action-flash";
-import { operationalStateFromCode, operationalStateFromQuery } from "../../../../../server/operational-state";
+import {
+  merchandiseWorkspacePresentation,
+  operationalStateFromCode,
+  operationalStateFromQuery,
+} from "../../../../../server/operational-state";
 import { guardedActor } from "../../../../../server/guard";
 import { merchandisePermissions, resolveMerchandiseEvent } from "../../../../../server/merchandise-scope";
 import { getRuntime } from "../../../../../server/runtime";
@@ -19,6 +25,7 @@ function successCopy(ok: string): string {
   if (ok === "issue") return "The merchandise offer was issued to independent guests.";
   if (ok === "withdraw") return "The merchandise offer was withdrawn.";
   if (ok === "guest-access") return "Private merchandise guest access was issued or already active.";
+  if (ok === "guest-renew") return "Private merchandise guest access was renewed. Prior sessions lost authority.";
   if (ok === "guest-revoke") return "Private merchandise guest access was revoked.";
   if (ok === "vendor") return "Synthetic vendor access was issued.";
   if (ok === "vendor-renew") return "Synthetic vendor access was renewed. Prior sessions lost authority.";
@@ -76,8 +83,22 @@ export default async function MerchandisePage({
   const stateQuery = typeof query.state === "string" ? query.state : undefined;
   const errorQuery = typeof query.error === "string" ? query.error : undefined;
   const ok = typeof query.ok === "string" ? query.ok : undefined;
-  const queryState = operationalStateFromQuery({ state: stateQuery, error: errorQuery });
-  const success = ok ? operationalStateFromCode("SUCCESS", successCopy(ok)) : undefined;
+  const refreshed = query.refreshed === "1" || query.refreshed === "true";
+  const presentation = merchandiseWorkspacePresentation({
+    flash,
+    queryState: stateQuery,
+    queryOk: ok,
+    refreshed,
+    issued,
+  });
+  const conflictState = presentation.showConflict
+    ? operationalStateFromCode("VERSION_CONFLICT", flash?.message ?? errorQuery)
+    : undefined;
+  const queryState = conflictState
+    ? undefined
+    : operationalStateFromQuery({ state: stateQuery, error: errorQuery, ok: presentation.showSuccess ? undefined : ok });
+  const success = presentation.showSuccess ? operationalStateFromCode("SUCCESS", successCopy(ok ?? "")) : undefined;
+  const reloadFields = { eventId };
 
   return (
     <AppShell
@@ -105,20 +126,31 @@ export default async function MerchandisePage({
           { href: "#vendor-handoff", label: "Vendor" },
         ]}
       />
-      {flash ? (
-        <AtelierOperationalState
-          state={operationalStateFromCode(flash.code, flash.message)}
-          reloadHref={flash.code === "VERSION_CONFLICT" ? `/app/events/${eventId}/merchandise` : undefined}
-        />
-      ) : null}
-      {queryState ? (
+      {conflictState ? (
+        <>
+          <AtelierStateFocus targetId="operational-state" active />
+          <AtelierOperationalState
+            state={conflictState}
+            reloadAction={refreshMerchandiseRecordAction}
+            reloadFields={reloadFields}
+          />
+        </>
+      ) : flash ? (
+        <AtelierOperationalState state={operationalStateFromCode(flash.code, flash.message)} />
+      ) : queryState ? (
         <AtelierOperationalState
           state={queryState}
           reloadHref={queryState.reloadRequired ? `/app/events/${eventId}/merchandise` : undefined}
         />
+      ) : success ? (
+        <AtelierOperationalState state={success} />
       ) : null}
-      {success ? <AtelierOperationalState state={success} /> : null}
-      <MerchandiseWorkspace workspace={workspace} issued={issued} previewNames={previewNames} />
+      <MerchandiseWorkspace
+        workspace={workspace}
+        issued={presentation.issued}
+        previewNames={previewNames}
+        mutationLocked={presentation.mutationLocked}
+      />
     </AppShell>
   );
 }
