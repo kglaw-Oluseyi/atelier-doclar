@@ -65,6 +65,13 @@ export function actionLabel(actionType: string): string {
     "academy.submit": "Submit academy assessment",
     "programme.mutate": "Update programme",
     "merchandise.mutate": "Update merchandise",
+    "atelier.publish": "Publish private Atelier",
+    "atelier.narrative.publish": "Publish narrative edition",
+    "atelier.decision.publish": "Publish host decision",
+    "atelier.access.issue": "Issue host access",
+    "atelier.access.revoke": "Revoke host access",
+    "atelier.decision.review": "Review host decision",
+    "atelier.update.publish": "Publish host update",
   };
   return labels[actionType] ?? actionType.replaceAll(".", " ");
 }

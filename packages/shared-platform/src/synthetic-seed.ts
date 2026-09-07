@@ -5,6 +5,8 @@ import { applyS04CFixturesIfMissing } from "./merchandise-fixtures.js";
 import { applyEosS04CToSnapshot } from "./merchandise-migration.js";
 import { applyS04DFixturesIfMissing } from "./forecast-fixtures.js";
 import { applyEosS04DToSnapshot } from "./forecast-migration.js";
+import { applyS04EFixturesIfMissing } from "./atelier-fixtures.js";
+import { applyEosS04EToSnapshot } from "./atelier-migration.js";
 import { loadNonProductionFixtures } from "./bootstrap.js";
 import { seededPermissions, seededRoles } from "./catalog.js";
 import type { PgQueryable } from "./postgres-schema.js";
@@ -97,6 +99,13 @@ function applyS04DLayer(store: PlatformStore, now = "2026-09-07T16:00:00.000Z"):
   if (withFixtures !== snap) store.replace(withFixtures);
 }
 
+function applyS04ELayer(store: PlatformStore, now = "2026-09-07T18:00:00.000Z"): void {
+  const snap = store.snapshot();
+  const migrated = applyEosS04EToSnapshot(snap, now);
+  const withFixtures = applyS04EFixturesIfMissing(migrated);
+  if (withFixtures !== snap) store.replace(withFixtures);
+}
+
 /** Replay-safe: insert missing catalogue rows only. Never rewrite accepted permission bodies. */
 export function ensureMissingCatalogueRecords(store: PlatformStore): void {
   const snap = store.snapshot();
@@ -125,6 +134,7 @@ export function applySyntheticSnapshot(store: PlatformStore, options: PlatformSe
   applyS04BLayer(store);
   applyS04CLayer(store);
   applyS04DLayer(store);
+  applyS04ELayer(store);
   return service;
 }
 
@@ -140,6 +150,7 @@ export async function applySyntheticSeedIfNeeded(
     applyS04BLayer(store);
     applyS04CLayer(store);
     applyS04DLayer(store);
+  applyS04ELayer(store);
     return {
       service,
       seed: {
@@ -159,6 +170,7 @@ export async function applySyntheticSeedIfNeeded(
   applyS04BLayer(store);
   applyS04CLayer(store);
   applyS04DLayer(store);
+  applyS04ELayer(store);
   const durable = store as { flush?: () => Promise<void> };
   if (typeof durable.flush === "function") await durable.flush();
   const recordCount = countableRecords(store.snapshot());

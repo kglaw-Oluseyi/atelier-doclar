@@ -5,6 +5,7 @@ import {
   S04B_SENSITIVE_PERMISSIONS,
   S04C_SENSITIVE_PERMISSIONS,
   S04D_SENSITIVE_PERMISSIONS,
+  S04E_SENSITIVE_PERMISSIONS,
   SCHEMA_VERSION,
   SYSTEM_ROLE_KEYS,
 } from "./constants.js";
@@ -113,6 +114,13 @@ const PERMISSION_IDS: Record<PermissionKey, string> = {
   "model.parameters.manage": "11111111-1111-4111-8111-111111111098",
   "model.evaluate": "11111111-1111-4111-8111-111111111099",
   "forecast.audit.view": "11111111-1111-4111-8111-111111111100",
+  "atelier.view": "11111111-1111-4111-8111-111111111101",
+  "atelier.manage": "11111111-1111-4111-8111-111111111102",
+  "atelier.publish": "11111111-1111-4111-8111-111111111103",
+  "atelier.access.manage": "11111111-1111-4111-8111-111111111104",
+  "atelier.decision.publish": "11111111-1111-4111-8111-111111111105",
+  "atelier.decision.review": "11111111-1111-4111-8111-111111111106",
+  "atelier.audit.view": "11111111-1111-4111-8111-111111111107",
 };
 
 const ROLE_IDS: Record<(typeof SYSTEM_ROLE_KEYS)[number], string> = {
@@ -236,6 +244,13 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "model.parameters.manage",
     "model.evaluate",
     "forecast.audit.view",
+    "atelier.view",
+    "atelier.manage",
+    "atelier.publish",
+    "atelier.access.manage",
+    "atelier.decision.publish",
+    "atelier.decision.review",
+    "atelier.audit.view",
   ],
   CLIENT_LEAD: [
     "organisation.view",
@@ -254,6 +269,7 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "msg.analytics.view",
     "forecast.hostProjection.view",
     "forecast.detail.view",
+    "atelier.view",
   ],
   DEPARTMENT_LEAD: [
     "organisation.view",
@@ -268,6 +284,7 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "msg.task.manage",
     "forecast.detail.view",
     "provision.propose",
+    "atelier.view",
   ],
   PLANNER: [
     "organisation.view",
@@ -318,6 +335,11 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "forecast.hostProjection.view",
     "forecast.override.propose",
     "provision.propose",
+    "atelier.view",
+    "atelier.manage",
+    "atelier.publish",
+    "atelier.access.manage",
+    "atelier.decision.publish",
   ],
   SYSTEM_ADMINISTRATOR: [
     "organisation.view",
@@ -355,6 +377,8 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "forecast.detail.view",
     "forecast.hostProjection.view",
     "forecast.audit.view",
+    "atelier.view",
+    "atelier.audit.view",
   ],
 };
 
@@ -372,7 +396,8 @@ function permissionRecord(key: PermissionKey): Permission {
       (S04A_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
       (S04B_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
       (S04C_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
-      (S04D_SENSITIVE_PERMISSIONS as readonly string[]).includes(key)
+      (S04D_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
+      (S04E_SENSITIVE_PERMISSIONS as readonly string[]).includes(key)
         ? "SENSITIVE"
         : "NORMAL",
     schemaVersion: SCHEMA_VERSION,

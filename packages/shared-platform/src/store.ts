@@ -79,6 +79,26 @@ import type {
   UncertaintyDriver,
 } from "./forecast-schemas.js";
 import type {
+  ApprovedAssetEdition,
+  AtelierAccessGrant,
+  AtelierChapter,
+  AtelierSession,
+  BlueprintGenesis,
+  BudgetAssuranceProjection,
+  ContingencyAssuranceProjection,
+  CuratedMediaSet,
+  CuratedUpdate,
+  EventAtelier,
+  EventNarrativeEdition,
+  GuestJourneyProjection,
+  HostDecisionReceipt,
+  HostDecisionRequest,
+  HostMilestoneProjection,
+  MagicLinkChallenge,
+  S04EMigrationReceipt,
+  VendorEnsembleProjection,
+} from "./atelier-schemas.js";
+import type {
   GuestDuplicateCandidate,
   GuestHousehold,
   GuestIntakeBatch,
@@ -202,6 +222,24 @@ export interface PlatformSnapshot {
   calibrationObservations: CalibrationObservation[];
   forecastEvaluations: ForecastEvaluation[];
   s04dMigrationReceipts: S04DMigrationReceipt[];
+  eventAteliers: EventAtelier[];
+  blueprintGenesises: BlueprintGenesis[];
+  atelierChapters: AtelierChapter[];
+  eventNarrativeEditions: EventNarrativeEdition[];
+  curatedMediaSets: CuratedMediaSet[];
+  approvedAssetEditions: ApprovedAssetEdition[];
+  guestJourneyProjections: GuestJourneyProjection[];
+  hostMilestoneProjections: HostMilestoneProjection[];
+  budgetAssuranceProjections: BudgetAssuranceProjection[];
+  vendorEnsembleProjections: VendorEnsembleProjection[];
+  contingencyAssuranceProjections: ContingencyAssuranceProjection[];
+  hostDecisionRequests: HostDecisionRequest[];
+  hostDecisionReceipts: HostDecisionReceipt[];
+  curatedUpdates: CuratedUpdate[];
+  atelierAccessGrants: AtelierAccessGrant[];
+  magicLinkChallenges: MagicLinkChallenge[];
+  atelierSessions: AtelierSession[];
+  s04eMigrationReceipts: S04EMigrationReceipt[];
   rsvpPolicies: RsvpPolicy[];
   rsvpQuestionnaires: RsvpQuestionnaire[];
   rsvpInvitations: RsvpInvitation[];
@@ -319,6 +357,24 @@ export function emptySnapshot(): PlatformSnapshot {
     calibrationObservations: [],
     forecastEvaluations: [],
     s04dMigrationReceipts: [],
+    eventAteliers: [],
+    blueprintGenesises: [],
+    atelierChapters: [],
+    eventNarrativeEditions: [],
+    curatedMediaSets: [],
+    approvedAssetEditions: [],
+    guestJourneyProjections: [],
+    hostMilestoneProjections: [],
+    budgetAssuranceProjections: [],
+    vendorEnsembleProjections: [],
+    contingencyAssuranceProjections: [],
+    hostDecisionRequests: [],
+    hostDecisionReceipts: [],
+    curatedUpdates: [],
+    atelierAccessGrants: [],
+    magicLinkChallenges: [],
+    atelierSessions: [],
+    s04eMigrationReceipts: [],
     rsvpPolicies: [],
     rsvpQuestionnaires: [],
     rsvpInvitations: [],
@@ -420,6 +476,24 @@ export function normalizeSnapshot(input: PlatformSnapshot): PlatformSnapshot {
     calibrationObservations: input.calibrationObservations ?? [],
     forecastEvaluations: input.forecastEvaluations ?? [],
     s04dMigrationReceipts: input.s04dMigrationReceipts ?? [],
+    eventAteliers: input.eventAteliers ?? [],
+    blueprintGenesises: input.blueprintGenesises ?? [],
+    atelierChapters: input.atelierChapters ?? [],
+    eventNarrativeEditions: input.eventNarrativeEditions ?? [],
+    curatedMediaSets: input.curatedMediaSets ?? [],
+    approvedAssetEditions: input.approvedAssetEditions ?? [],
+    guestJourneyProjections: input.guestJourneyProjections ?? [],
+    hostMilestoneProjections: input.hostMilestoneProjections ?? [],
+    budgetAssuranceProjections: input.budgetAssuranceProjections ?? [],
+    vendorEnsembleProjections: input.vendorEnsembleProjections ?? [],
+    contingencyAssuranceProjections: input.contingencyAssuranceProjections ?? [],
+    hostDecisionRequests: input.hostDecisionRequests ?? [],
+    hostDecisionReceipts: input.hostDecisionReceipts ?? [],
+    curatedUpdates: input.curatedUpdates ?? [],
+    atelierAccessGrants: input.atelierAccessGrants ?? [],
+    magicLinkChallenges: input.magicLinkChallenges ?? [],
+    atelierSessions: input.atelierSessions ?? [],
+    s04eMigrationReceipts: input.s04eMigrationReceipts ?? [],
     rsvpPolicies: input.rsvpPolicies ?? [],
     rsvpQuestionnaires: input.rsvpQuestionnaires ?? [],
     rsvpInvitations: input.rsvpInvitations ?? [],

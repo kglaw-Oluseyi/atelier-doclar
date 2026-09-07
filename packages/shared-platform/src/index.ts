@@ -11,6 +11,9 @@ export {
   RSVP_SESSION_COOKIE,
   VENDOR_SESSION_COOKIE,
   MERCHANDISE_GUEST_SESSION_COOKIE,
+  ATELIER_SESSION_COOKIE,
+  ATELIER_CHAPTER_TYPES,
+  ATELIER_HOST_ROLES,
   STAFF_SESSION_REVOCATION_REASONS,
   STAFF_SESSION_DENIAL_STATUSES,
   type StaffSessionDenialStatus,
@@ -420,6 +423,45 @@ export {
   type VendorAccessConfig,
   type VendorSessionActor,
 } from "./merchandise-vendor-access.js";
+export {
+  DEFAULT_NON_PRODUCTION_ATELIER_ACCESS,
+  assertAtelierAccessConfig,
+  readAtelierSession,
+  resolveAtelierAccessFromEnv,
+  usesKnownFixtureAtelierSecrets,
+  atelierSecretFingerprint,
+  type AtelierAccessConfig,
+  type AtelierSessionActor,
+} from "./atelier-access.js";
+export {
+  migrateEosS04E,
+  applyEosS04EToSnapshot,
+  rollbackEosS04E,
+  EOS_S04E_MIGRATION_ID,
+  EOS_S04E_MIGRATION_CHECKSUM,
+} from "./atelier-migration.js";
+export { applyS04EFixturesIfMissing, S04E_FIXTURE_IDS } from "./atelier-fixtures.js";
+export { validateS04EPersistedCollections } from "./atelier-persistence.js";
+export {
+  buildEventAtelierWorkspace,
+  buildHostAtelierProjection,
+  atelierPermissionAllowed,
+  type EventAtelierWorkspace,
+  type HostAtelierProjection,
+} from "./atelier-projections.js";
+export {
+  IssueAtelierAccessInputSchema,
+  PublishAtelierInputSchema,
+  PublishDecisionRequestInputSchema,
+  PublishNarrativeEditionInputSchema,
+  ReviewHostDecisionInputSchema,
+  RevokeAtelierAccessInputSchema,
+  SubmitHostDecisionInputSchema,
+  type AtelierAccessGrant,
+  type EventAtelier,
+  type HostDecisionReceipt,
+  type HostDecisionRequest,
+} from "./atelier-schemas.js";
 export {
   DEFAULT_NON_PRODUCTION_MERCHANDISE_GUEST_ACCESS,
   assertMerchandiseGuestAccessConfig,

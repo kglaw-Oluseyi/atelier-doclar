@@ -7,10 +7,12 @@ import {
   ACA_S04A_COURSE_ID,
   ACA_S04C_COURSE_ID,
   ACA_S04D_COURSE_ID,
+  ACA_S04E_COURSE_ID,
   AcademyAttemptInputSchema,
   acaS04ACourse,
   acaS04CCourse,
   acaS04DCourse,
+  acaS04ECourse,
   evaluateAcademyAttempt,
   resolveAcademyCourseRef,
   uniqueAnswers,
@@ -86,7 +88,13 @@ async function submitAcademyCourse(courseId: AcademyCourseId, formData: FormData
     });
   }
   const course =
-    courseId === ACA_S04D_COURSE_ID ? acaS04DCourse : courseId === ACA_S04C_COURSE_ID ? acaS04CCourse : acaS04ACourse;
+    courseId === ACA_S04E_COURSE_ID
+      ? acaS04ECourse
+      : courseId === ACA_S04D_COURSE_ID
+        ? acaS04DCourse
+        : courseId === ACA_S04C_COURSE_ID
+          ? acaS04CCourse
+          : acaS04ACourse;
   const answers = course.questions
     .filter((question) => question.paths.includes(assignment.learningPath))
     .map((question) => ({
@@ -156,5 +164,15 @@ export async function submitAcaS04DAction(formData: FormData): Promise<void> {
     if (isNextRedirect(error)) throw error;
     const { actor } = await requireActor().catch(() => ({ actor: { personId: "unsigned", correlationId: randomUUID() } }));
     await finishAcademy({ courseId: ACA_S04D_COURSE_ID, actorPersonId: actor.personId, correlationId: actor.correlationId, error });
+  }
+}
+
+export async function submitAcaS04EAction(formData: FormData): Promise<void> {
+  try {
+    await submitAcademyCourse(ACA_S04E_COURSE_ID, formData);
+  } catch (error) {
+    if (isNextRedirect(error)) throw error;
+    const { actor } = await requireActor().catch(() => ({ actor: { personId: "unsigned", correlationId: randomUUID() } }));
+    await finishAcademy({ courseId: ACA_S04E_COURSE_ID, actorPersonId: actor.personId, correlationId: actor.correlationId, error });
   }
 }

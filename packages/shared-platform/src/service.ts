@@ -234,6 +234,48 @@ import {
   type OperationalProvisionRecommendation,
 } from "./forecast-schemas.js";
 import {
+  DEFAULT_NON_PRODUCTION_ATELIER_ACCESS,
+  assertAtelierAccessConfig,
+  hashAtelierLinkToken,
+  issueAtelierSession,
+  readAtelierSession,
+  atelierAccessUnavailable,
+  type AtelierAccessConfig,
+  type AtelierSessionActor,
+} from "./atelier-access.js";
+import {
+  issueAtelierAccessOnSnap,
+  publishAtelierOnSnap,
+  publishCuratedUpdateOnSnap,
+  publishDecisionRequestOnSnap,
+  publishNarrativeEditionOnSnap,
+  reviewHostDecisionOnSnap,
+  revokeAtelierAccessOnSnap,
+  submitHostDecisionOnSnap,
+} from "./atelier-operations.js";
+import {
+  atelierPermissionAllowed,
+  buildEventAtelierWorkspace,
+  buildHostAtelierProjection,
+  type EventAtelierWorkspace,
+  type HostAtelierProjection,
+} from "./atelier-projections.js";
+import {
+  IssueAtelierAccessInputSchema,
+  PublishAtelierInputSchema,
+  PublishCuratedUpdateInputSchema,
+  PublishDecisionRequestInputSchema,
+  PublishNarrativeEditionInputSchema,
+  ReviewHostDecisionInputSchema,
+  RevokeAtelierAccessInputSchema,
+  SubmitHostDecisionInputSchema,
+  type AtelierAccessGrant,
+  type EventAtelier,
+  type EventNarrativeEdition,
+  type HostDecisionReceipt,
+  type HostDecisionRequest,
+} from "./atelier-schemas.js";
+import {
   DEFAULT_NON_PRODUCTION_VENDOR_ACCESS,
   assertVendorAccessConfig,
   generateVendorAssignmentToken,
@@ -463,6 +505,7 @@ export interface PlatformServiceOptions {
   staffSession?: SessionConfig;
   vendorAccess?: VendorAccessConfig;
   merchandiseGuestAccess?: MerchandiseGuestAccessConfig;
+  atelierAccess?: AtelierAccessConfig;
   accessAuthority?: AccessAuthority;
 }
 
@@ -532,6 +575,12 @@ export class PlatformService {
   vendorAccessConfig(): VendorAccessConfig {
     const config = this.options.vendorAccess ?? DEFAULT_NON_PRODUCTION_VENDOR_ACCESS;
     assertVendorAccessConfig(config, this.accessAuthority());
+    return config;
+  }
+
+  atelierAccessConfig(): AtelierAccessConfig {
+    const config = this.options.atelierAccess ?? DEFAULT_NON_PRODUCTION_ATELIER_ACCESS;
+    assertAtelierAccessConfig(config, this.accessAuthority());
     return config;
   }
 
@@ -2427,6 +2476,311 @@ export class PlatformService {
 
   vendorAttemptCoreMutation(): never {
     throw new PlatformError("FORBIDDEN", "vendor sessions cannot mutate Guest, Invitation, RSVP, Party, Credential or Attendance records");
+  }
+
+  getEventAtelierWorkspace(actor: ActorContext, organisationId: string, eventId: string): EventAtelierWorkspace {
+    const { snap, ctx } = this.authorizeQuery(actor, "atelier.view", { organisationId, eventId });
+    this.requireEvent(snap, organisationId, eventId);
+    const capabilities = atelierPermissionAllowed(
+      (["atelier.view", "atelier.manage", "atelier.publish", "atelier.access.manage", "atelier.decision.publish", "atelier.decision.review", "atelier.audit.view"] as const).filter((key) =>
+        this.permissionAllowed(ctx.actor, key, { organisationId, eventId }),
+      ),
+    );
+    const workspace = buildEventAtelierWorkspace(
+      snap,
+      eventId,
+      Object.entries(capabilities)
+        .filter(([, allowed]) => allowed)
+        .map(([key]) =>
+          key === "canView"
+            ? "atelier.view"
+            : key === "canManage"
+              ? "atelier.manage"
+              : key === "canPublish"
+                ? "atelier.publish"
+                : key === "canManageAccess"
+                  ? "atelier.access.manage"
+                  : key === "canPublishDecision"
+                    ? "atelier.decision.publish"
+                    : key === "canReviewDecision"
+                      ? "atelier.decision.review"
+                      : "atelier.audit.view",
+        ),
+    );
+    if (!workspace) throw new PlatformError("NOT_FOUND", "atelier was not found");
+    return workspace;
+  }
+
+  publishEventAtelier(actor: ActorContext, raw: unknown): EventAtelier {
+    const input = parseStrict(PublishAtelierInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "atelier.publish",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "atelier.published",
+      resourceType: "event_atelier",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => publishAtelierOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  publishAtelierNarrative(actor: ActorContext, raw: unknown): EventNarrativeEdition {
+    const input = parseStrict(PublishNarrativeEditionInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "atelier.publish",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "atelier.narrative.published",
+      resourceType: "event_narrative_edition",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => publishNarrativeEditionOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  publishAtelierDecision(actor: ActorContext, raw: unknown): HostDecisionRequest {
+    const input = parseStrict(PublishDecisionRequestInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "atelier.decision.publish",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "atelier.decision.published",
+      resourceType: "host_decision_request",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => publishDecisionRequestOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  publishAtelierUpdate(actor: ActorContext, raw: unknown): { id: string } {
+    const input = parseStrict(PublishCuratedUpdateInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "atelier.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "atelier.update.published",
+      resourceType: "curated_update",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        publishCuratedUpdateOnSnap(snap, input, ctx.now, ctx.actor.person.id);
+        return snap.curatedUpdates[snap.curatedUpdates.length - 1]!;
+      },
+    });
+  }
+
+  issueAtelierAccess(actor: ActorContext, raw: unknown): { grant: AtelierAccessGrant; token: string } {
+    const input = parseStrict(IssueAtelierAccessInputSchema, raw);
+    let token = "";
+    const grant = this.mutate(actor, {
+      permission: "atelier.access.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "atelier.access.issued",
+      resourceType: "atelier_access_grant",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash({ ...input, token: undefined }),
+      run: (snap, ctx) => {
+        const issued = issueAtelierAccessOnSnap(snap, input, ctx.now, ctx.actor.person.id, this.atelierAccessConfig());
+        token = issued.token;
+        return issued.grant;
+      },
+    });
+    return { grant, token };
+  }
+
+  revokeAtelierAccess(actor: ActorContext, raw: unknown): AtelierAccessGrant {
+    const input = parseStrict(RevokeAtelierAccessInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "atelier.access.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "atelier.access.revoked",
+      resourceType: "atelier_access_grant",
+      resourceId: input.grantId,
+      reason: input.reason,
+      run: (snap, ctx) => revokeAtelierAccessOnSnap(snap, input, ctx.now),
+    });
+  }
+
+  reviewAtelierDecision(actor: ActorContext, raw: unknown): HostDecisionReceipt {
+    const input = parseStrict(ReviewHostDecisionInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "atelier.decision.review",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "atelier.decision.reviewed",
+      resourceType: "host_decision_receipt",
+      resourceId: input.receiptId,
+      reason: input.reason,
+      run: (snap, ctx) => reviewHostDecisionOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  exchangeAtelierAccess(token: string, now?: string, correlationId = "atelier-access"): { sessionToken: string; view: HostAtelierProjection } {
+    const config = this.atelierAccessConfig();
+    const snap = this.store.snapshot();
+    const occurredAt = now ?? new Date().toISOString();
+    const tokenHash = hashAtelierLinkToken(token, config);
+    const challenge = snap.magicLinkChallenges.find((item) => item.tokenHash === tokenHash);
+    const deny = (grantId?: string): never => {
+      const grantRef = grantId ? snap.atelierAccessGrants.find((item) => item.id === grantId) : undefined;
+      if (grantRef) {
+        grantRef.failedExchangeCount += 1;
+        grantRef.updatedAt = occurredAt;
+        if (grantRef.failedExchangeCount >= (config.maxExchangeFailures ?? 8)) {
+          grantRef.status = "REVOKED";
+          grantRef.revokedAt = occurredAt;
+          grantRef.version += 1;
+        }
+      }
+      this.writeAudit(snap, {
+        action: "atelier.access.denied",
+        outcome: "DENIED",
+        resourceType: "magic_link_challenge",
+        correlationId,
+        reason: "atelier_access_unavailable",
+        occurredAt,
+        actorType: "HOST_CAPABILITY",
+      });
+      this.store.replace(snap);
+      throw atelierAccessUnavailable();
+    };
+    if (!challenge || challenge.status !== "ISSUED" || Date.parse(challenge.expiresAt) <= Date.parse(occurredAt)) {
+      if (challenge && challenge.status === "ISSUED" && Date.parse(challenge.expiresAt) <= Date.parse(occurredAt)) {
+        challenge.status = "EXPIRED";
+        challenge.version += 1;
+        challenge.updatedAt = occurredAt;
+      }
+      return deny(challenge?.grantId);
+    }
+    const grant = snap.atelierAccessGrants.find((item) => item.id === challenge.grantId);
+    if (!grant || grant.status !== "ACTIVE" || Date.parse(grant.expiresAt) <= Date.parse(occurredAt)) {
+      return deny(challenge.grantId);
+    }
+    if (grant.failedExchangeCount >= (config.maxExchangeFailures ?? 8)) {
+      grant.status = "REVOKED";
+      grant.revokedAt = occurredAt;
+      grant.version += 1;
+      grant.updatedAt = occurredAt;
+      return deny(grant.id);
+    }
+    challenge.status = "REDEEMED";
+    challenge.redeemedAt = occurredAt;
+    challenge.version += 1;
+    challenge.updatedAt = occurredAt;
+    const sessionId = randomUUID();
+    const idle = config.idleTtlSeconds ?? 1800;
+    const issued = issueAtelierSession(
+      {
+        sessionId,
+        grantId: grant.id,
+        personId: grant.personId,
+        eventId: grant.eventId,
+        organisationId: grant.organisationId,
+        atelierId: grant.atelierId,
+        hostRole: grant.hostRole,
+        now: occurredAt,
+      },
+      config,
+    );
+    const elevatedUntil =
+      challenge.purpose === "STEP_UP" || challenge.purpose === "ATELIER_ENTRY"
+        ? new Date(Date.parse(occurredAt) + (config.stepUpTtlSeconds ?? 900) * 1000).toISOString()
+        : undefined;
+    snap.atelierSessions.push({
+      id: sessionId,
+      organisationId: grant.organisationId,
+      clientId: grant.clientId,
+      eventId: grant.eventId,
+      atelierId: grant.atelierId,
+      grantId: grant.id,
+      personId: grant.personId,
+      hostRole: grant.hostRole,
+      status: "ACTIVE",
+      issuedAt: issued.actor.issuedAt,
+      lastSeenAt: occurredAt,
+      idleExpiresAt: new Date(Date.parse(occurredAt) + idle * 1000).toISOString(),
+      absoluteExpiresAt: issued.actor.expiresAt,
+      elevatedUntil,
+      schemaVersion: SCHEMA_VERSION,
+      version: 1,
+      createdAt: occurredAt,
+      updatedAt: occurredAt,
+    });
+    this.writeAudit(snap, {
+      action: "atelier.access.exchanged",
+      outcome: "SUCCESS",
+      organisationId: grant.organisationId,
+      eventId: grant.eventId,
+      resourceType: "atelier_access_grant",
+      resourceId: grant.id,
+      correlationId,
+      occurredAt,
+      actorType: "HOST_CAPABILITY",
+    });
+    this.store.replace(snap);
+    const view = buildHostAtelierProjection(snap, grant.id, occurredAt);
+    if (!view) throw atelierAccessUnavailable();
+    return { sessionToken: issued.token, view };
+  }
+
+  hostAtelierView(sessionToken: string, now?: string): HostAtelierProjection {
+    const occurredAt = now ?? new Date().toISOString();
+    const actor = this.requireHostCapability(sessionToken, occurredAt);
+    const snap = this.store.snapshot();
+    const view = buildHostAtelierProjection(snap, actor.grantId, occurredAt);
+    if (!view) throw atelierAccessUnavailable();
+    return view;
+  }
+
+  submitHostAtelierDecision(sessionToken: string, raw: unknown, now?: string): HostDecisionReceipt {
+    const occurredAt = now ?? new Date().toISOString();
+    const actor = this.requireHostCapability(sessionToken, occurredAt);
+    const input = parseStrict(SubmitHostDecisionInputSchema, raw);
+    const snap = this.store.snapshot();
+    const grant = snap.atelierAccessGrants.find((item) => item.id === actor.grantId);
+    const session = snap.atelierSessions.find((item) => item.id === actor.sessionId);
+    if (!grant || !session) throw atelierAccessUnavailable();
+    try {
+      const receipt = submitHostDecisionOnSnap(snap, input, occurredAt, grant, session);
+      this.writeAudit(snap, {
+        action: "atelier.decision.submitted",
+        outcome: "SUCCESS",
+        organisationId: grant.organisationId,
+        eventId: grant.eventId,
+        resourceType: "host_decision_receipt",
+        resourceId: receipt.id,
+        correlationId: "atelier-decision",
+        occurredAt,
+        actorType: "HOST_CAPABILITY",
+        actorPersonId: grant.personId,
+      });
+      this.store.replace(snap);
+      return receipt;
+    } catch (error) {
+      this.writeAudit(snap, {
+        action: "atelier.decision.submitted",
+        outcome: "DENIED",
+        organisationId: grant.organisationId,
+        eventId: grant.eventId,
+        resourceType: "host_decision_request",
+        resourceId: input.requestId,
+        correlationId: "atelier-decision",
+        occurredAt,
+        actorType: "HOST_CAPABILITY",
+        actorPersonId: grant.personId,
+        reason: error instanceof PlatformError ? error.code : "FAILED",
+      });
+      this.store.replace(snap);
+      throw error;
+    }
+  }
+
+  hostAttemptCoreMutation(): never {
+    throw new PlatformError(
+      "FORBIDDEN",
+      "host atelier sessions cannot assign staff, edit RSVP, change forecast parameters, send campaigns or sign protected gates",
+    );
   }
 
   getEventForecastWorkspace(actor: ActorContext, organisationId: string, eventId: string): EventForecastWorkspace {
@@ -5134,6 +5488,45 @@ export class PlatformService {
     return actor;
   }
 
+  private requireHostCapability(sessionToken: string, now: string): AtelierSessionActor {
+    const config = this.atelierAccessConfig();
+    const actor = readAtelierSession(sessionToken, config, now);
+    const snap = this.store.snapshot();
+    const grant = snap.atelierAccessGrants.find((item) => item.id === actor.grantId);
+    const session = snap.atelierSessions.find((item) => item.id === actor.sessionId);
+    if (
+      !grant ||
+      grant.status !== "ACTIVE" ||
+      grant.revokedAt ||
+      Date.parse(grant.expiresAt) <= Date.parse(now) ||
+      grant.eventId !== actor.eventId ||
+      !session ||
+      session.status !== "ACTIVE" ||
+      Date.parse(session.idleExpiresAt) <= Date.parse(now) ||
+      Date.parse(session.absoluteExpiresAt) <= Date.parse(now)
+    ) {
+      this.writeAudit(snap, {
+        action: "atelier.access.denied",
+        outcome: "DENIED",
+        organisationId: actor.organisationId,
+        eventId: actor.eventId,
+        resourceType: "atelier_access_grant",
+        resourceId: actor.grantId,
+        correlationId: actor.sessionId,
+        reason: "atelier_access_unavailable",
+        occurredAt: now,
+        actorType: "HOST_CAPABILITY",
+      });
+      this.store.replace(snap);
+      throw atelierAccessUnavailable();
+    }
+    session.lastSeenAt = now;
+    session.idleExpiresAt = new Date(Date.parse(now) + (config.idleTtlSeconds ?? 1800) * 1000).toISOString();
+    session.updatedAt = now;
+    this.store.replace(snap);
+    return actor;
+  }
+
   private assertVersion(actual: number, expected: number): void {
     if (actual !== expected) {
       throw new PlatformError("VERSION_CONFLICT", `expected version ${expected} but found ${actual}`);
@@ -5380,6 +5773,15 @@ export class PlatformService {
       snap.operationalProvisionRecommendations,
       snap.calibrationObservations,
       snap.forecastEvaluations,
+      snap.eventAteliers,
+      snap.blueprintGenesises,
+      snap.atelierChapters,
+      snap.eventNarrativeEditions,
+      snap.hostDecisionRequests,
+      snap.hostDecisionReceipts,
+      snap.atelierAccessGrants,
+      snap.magicLinkChallenges,
+      snap.atelierSessions,
       snap.guestDuplicateCandidates,
       snap.guestIntakeBatches,
       snap.rsvpPolicies,

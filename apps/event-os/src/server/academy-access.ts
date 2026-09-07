@@ -3,9 +3,11 @@ import {
   ACA_S04A_COURSE_ID,
   ACA_S04C_COURSE_ID,
   ACA_S04D_COURSE_ID,
+  ACA_S04E_COURSE_ID,
   assignAcaS04A,
   assignAcaS04C,
   assignAcaS04D,
+  assignAcaS04E,
   preferredRoleKey,
   type AcademyAssignment,
   type AcademySystemRoleKey,
@@ -14,7 +16,7 @@ import { getRuntime } from "./runtime";
 
 export function academyAssignmentForPerson(
   personId: string,
-  courseId: typeof ACA_S04A_COURSE_ID | typeof ACA_S04C_COURSE_ID | typeof ACA_S04D_COURSE_ID = ACA_S04A_COURSE_ID,
+  courseId: typeof ACA_S04A_COURSE_ID | typeof ACA_S04C_COURSE_ID | typeof ACA_S04D_COURSE_ID | typeof ACA_S04E_COURSE_ID = ACA_S04A_COURSE_ID,
 ): AcademyAssignment | undefined {
   const resolved = getRuntime().service.resolveActor(personId);
   const now = new Date().toISOString();
@@ -26,5 +28,6 @@ export function academyAssignmentForPerson(
   if (!preferred) return undefined;
   if (courseId === ACA_S04C_COURSE_ID) return assignAcaS04C(preferred);
   if (courseId === ACA_S04D_COURSE_ID) return assignAcaS04D(preferred);
+  if (courseId === ACA_S04E_COURSE_ID) return assignAcaS04E(preferred);
   return assignAcaS04A(preferred);
 }

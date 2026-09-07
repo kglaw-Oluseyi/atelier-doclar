@@ -11,7 +11,7 @@ function withPrivateCache(response: NextResponse): NextResponse {
 
 export function middleware(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
-  if (PUBLIC.has(pathname) || pathname.startsWith("/api/health/") || pathname.startsWith("/rsvp") || pathname.startsWith("/vendor") || pathname.startsWith("/offers")) {
+  if (PUBLIC.has(pathname) || pathname.startsWith("/api/health/") || pathname.startsWith("/rsvp") || pathname.startsWith("/vendor") || pathname.startsWith("/offers") || pathname.startsWith("/atelier")) {
     return withPrivateCache(NextResponse.next());
   }
   if (pathname === "/") {
@@ -38,5 +38,5 @@ export function middleware(request: NextRequest): NextResponse {
 }
 
 export const config = {
-  matcher: ["/", "/app/:path*", "/access-:path*", "/api/:path*", "/sign-in", "/rsvp", "/rsvp/:path*", "/vendor", "/vendor/:path*", "/offers", "/offers/:path*"],
+  matcher: ["/", "/app/:path*", "/access-:path*", "/api/:path*", "/sign-in", "/rsvp", "/rsvp/:path*", "/vendor", "/vendor/:path*", "/offers", "/offers/:path*", "/atelier", "/atelier/:path*"],
 };

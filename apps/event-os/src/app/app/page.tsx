@@ -69,6 +69,9 @@ export default async function HomeAppPage() {
                 <Link className="button secondary" href="/app/academy/ACA-S04D">
                   ACA-S04D training
                 </Link>
+                <Link className="button secondary" href="/app/academy/ACA-S04E">
+                  ACA-S04E training
+                </Link>
               </p>
             </article>
             <div className="atelier-side-stack">

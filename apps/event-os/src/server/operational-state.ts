@@ -397,6 +397,16 @@ export function successCopy(ok: string): string {
       return "The merchandise exception was recorded without payment data.";
     case "choice":
       return "The private guest choice was recorded.";
+    case "atelier-published":
+      return "The private Atelier was published. Canonical Event OS records were not rewritten.";
+    case "narrative-published":
+      return "A new narrative edition was published. Earlier editions remain preserved.";
+    case "atelier-access":
+      return "A single-use host invitation was issued. Staff, guest and vendor sessions were not reused.";
+    case "atelier-revoked":
+      return "Host Atelier access was revoked and fails closed.";
+    case "decision-reviewed":
+      return "The host decision was reviewed. Canonical Event OS records remain unchanged.";
     default:
       return "The change was recorded.";
   }

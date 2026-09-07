@@ -7,6 +7,7 @@ import { validateS04APersistedCollections } from "./addressing-persistence.js";
 import { validateS04BPersistedCollections } from "./programme-persistence.js";
 import { validateS04CPersistedCollections } from "./merchandise-persistence.js";
 import { validateS04DPersistedCollections } from "./forecast-persistence.js";
+import { validateS04EPersistedCollections } from "./atelier-persistence.js";
 import type { PgQueryable, PgQueryResult, PgTransactor } from "./postgres-schema.js";
 
 type Collection = keyof Omit<PlatformSnapshot, "audit" | "idempotency">;
@@ -83,6 +84,24 @@ const COLLECTIONS: Collection[] = [
   "calibrationObservations",
   "forecastEvaluations",
   "s04dMigrationReceipts",
+  "eventAteliers",
+  "blueprintGenesises",
+  "atelierChapters",
+  "eventNarrativeEditions",
+  "curatedMediaSets",
+  "approvedAssetEditions",
+  "guestJourneyProjections",
+  "hostMilestoneProjections",
+  "budgetAssuranceProjections",
+  "vendorEnsembleProjections",
+  "contingencyAssuranceProjections",
+  "hostDecisionRequests",
+  "hostDecisionReceipts",
+  "curatedUpdates",
+  "atelierAccessGrants",
+  "magicLinkChallenges",
+  "atelierSessions",
+  "s04eMigrationReceipts",
   "rsvpPolicies",
   "rsvpQuestionnaires",
   "rsvpInvitations",
@@ -166,6 +185,7 @@ export class PostgresPlatformStore implements PlatformStore {
     validateS04BPersistedCollections(normalised);
     validateS04CPersistedCollections(normalised);
     validateS04DPersistedCollections(normalised);
+    validateS04EPersistedCollections(normalised);
     const previous = this.snapshot();
     this.state = structuredClone(normalised);
     this.pending = this.pending
@@ -309,6 +329,7 @@ export class PostgresPlatformStore implements PlatformStore {
     validateS04BPersistedCollections(normalised);
     validateS04CPersistedCollections(normalised);
     validateS04DPersistedCollections(normalised);
+    validateS04EPersistedCollections(normalised);
     this.state = normalised;
   }
 }

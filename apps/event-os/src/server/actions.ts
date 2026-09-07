@@ -2590,3 +2590,198 @@ export async function createEventForecastParameterSetAction(formData: FormData):
     await forecastOk(eventId, actor, "forecast.parameters.create", "forecast-parameters");
   });
 }
+
+async function atelierFail(
+  eventId: string,
+  error: unknown,
+  actor?: { correlationId: string; personId: string },
+  actionType = "atelier.mutate",
+): Promise<never> {
+  const bind = actor
+    ? actorBind(actor, `/app/events/${eventId}/atelier`, actionType, eventId)
+    : unsignedBind(`/app/events/${eventId}/atelier`, actionType, eventId);
+  return finishAction(bind, { error });
+}
+
+async function atelierOk(
+  eventId: string,
+  actor: { correlationId: string; personId: string },
+  actionType: string,
+  ok: string,
+): Promise<never> {
+  return finishAction(actorBind(actor, `/app/events/${eventId}/atelier`, actionType, eventId), { ok });
+}
+
+export async function publishEventAtelierAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const actionType = "atelier.publish";
+    const { actor } = await requireActor().catch((error) => atelierFail(eventId, error, undefined, actionType));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await atelierFail(eventId, new Error("No organisation assignment is available."), actor, actionType);
+    try {
+      getRuntime().service.publishEventAtelier(actor, {
+        organisationId: organisation.id,
+        eventId,
+        reason: String(formData.get("reason") ?? "Publish private Event Atelier"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await atelierFail(eventId, error, actor, actionType);
+    }
+    await atelierOk(eventId, actor, actionType, "atelier-published");
+  });
+}
+
+export async function publishAtelierNarrativeAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const actionType = "atelier.narrative.publish";
+    const { actor } = await requireActor().catch((error) => atelierFail(eventId, error, undefined, actionType));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await atelierFail(eventId, new Error("No organisation assignment is available."), actor, actionType);
+    try {
+      getRuntime().service.publishAtelierNarrative(actor, {
+        organisationId: organisation.id,
+        eventId,
+        story: String(formData.get("story") ?? ""),
+        atmosphere: String(formData.get("atmosphere") ?? ""),
+        pillars: String(formData.get("pillars") ?? "")
+          .split("·")
+          .map((item) => item.trim())
+          .filter(Boolean),
+        culturalIntent: String(formData.get("culturalIntent") ?? ""),
+        designDirection: String(formData.get("designDirection") ?? ""),
+        provenance: String(formData.get("provenance") ?? "Staff-published narrative edition"),
+        reason: String(formData.get("reason") ?? "Publish narrative edition"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await atelierFail(eventId, error, actor, actionType);
+    }
+    await atelierOk(eventId, actor, actionType, "narrative-published");
+  });
+}
+
+export async function issueAtelierAccessAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const actionType = "atelier.access.issue";
+    const { actor } = await requireActor().catch((error) => atelierFail(eventId, error, undefined, actionType));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await atelierFail(eventId, new Error("No organisation assignment is available."), actor, actionType);
+    try {
+      const issued = getRuntime().service.issueAtelierAccess(actor, {
+        organisationId: organisation.id,
+        eventId,
+        personId: String(formData.get("personId") ?? ""),
+        hostRole: String(formData.get("hostRole") ?? "READ_ONLY_HOST"),
+        chapters: String(formData.get("chapters") ?? "TODAY,VISION,JOURNEY,BLUEPRINT,ASSURANCE,EDITIONS,UPDATES")
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean),
+        canDecide: formData.get("canDecide") === "on",
+        canExport: false,
+        reason: String(formData.get("reason") ?? "Issue host Atelier access"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+      await writeIssuedAccessFlash({ kind: "atelier", token: issued.token, subjectId: issued.grant.id });
+    } catch (error) {
+      await atelierFail(eventId, error, actor, actionType);
+    }
+    await atelierOk(eventId, actor, actionType, "atelier-access");
+  });
+}
+
+export async function revokeAtelierAccessAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const actionType = "atelier.access.revoke";
+    const { actor } = await requireActor().catch((error) => atelierFail(eventId, error, undefined, actionType));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await atelierFail(eventId, new Error("No organisation assignment is available."), actor, actionType);
+    try {
+      getRuntime().service.revokeAtelierAccess(actor, {
+        organisationId: organisation.id,
+        eventId,
+        grantId: String(formData.get("grantId") ?? ""),
+        expectedVersion: Number(formData.get("expectedVersion")),
+        reason: String(formData.get("reason") ?? "Revoke host Atelier access"),
+      });
+    } catch (error) {
+      await atelierFail(eventId, error, actor, actionType);
+    }
+    await atelierOk(eventId, actor, actionType, "atelier-revoked");
+  });
+}
+
+export async function reviewAtelierDecisionAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const actionType = "atelier.decision.review";
+    const { actor } = await requireActor().catch((error) => atelierFail(eventId, error, undefined, actionType));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await atelierFail(eventId, new Error("No organisation assignment is available."), actor, actionType);
+    try {
+      getRuntime().service.reviewAtelierDecision(actor, {
+        organisationId: organisation.id,
+        eventId,
+        requestId: String(formData.get("requestId") ?? ""),
+        receiptId: String(formData.get("receiptId") ?? ""),
+        expectedVersion: Number(formData.get("expectedVersion")),
+        approve: formData.get("approve") === "yes",
+        reason: String(formData.get("reason") ?? "Review host decision"),
+      });
+    } catch (error) {
+      await atelierFail(eventId, error, actor, actionType);
+    }
+    await atelierOk(eventId, actor, actionType, "decision-reviewed");
+  });
+}
+
+export async function exchangeAtelierAccessAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const token = String(formData.get("token") ?? "").trim();
+    try {
+      const { ensureRuntime } = await import("./runtime");
+      await ensureRuntime();
+      const { hostClockNow } = await import("./atelier-host-access");
+      const exchanged = getRuntime().service.exchangeAtelierAccess(token, hostClockNow());
+      const { setAtelierSessionCookie } = await import("./atelier-host-access");
+      await setAtelierSessionCookie(exchanged.sessionToken);
+    } catch {
+      redirect("/atelier/unavailable");
+    }
+    redirect("/atelier");
+  });
+}
+
+export async function submitHostAtelierDecisionAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { readAtelierSessionCookie } = await import("./atelier-host-access");
+    const token = await readAtelierSessionCookie();
+    if (!token) redirect("/atelier/unavailable");
+    try {
+      const { hostClockNow } = await import("./atelier-host-access");
+      getRuntime().service.submitHostAtelierDecision(
+        token,
+        {
+          requestId: String(formData.get("requestId") ?? ""),
+          choice: String(formData.get("choice") ?? ""),
+          expectedVersion: Number(formData.get("expectedVersion")),
+          idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+        },
+        hostClockNow(),
+      );
+    } catch (error) {
+      if (error instanceof PlatformError && error.code === "VERSION_CONFLICT") {
+        redirect("/atelier?state=conflict");
+      }
+      if (error instanceof PlatformError && error.code === "FORBIDDEN") {
+        redirect("/atelier?state=step-up");
+      }
+      redirect("/atelier?state=unavailable");
+    }
+    redirect("/atelier?state=received");
+  });
+}

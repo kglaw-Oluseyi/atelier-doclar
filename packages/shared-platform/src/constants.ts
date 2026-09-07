@@ -100,6 +100,23 @@ export const SHARED_PLATFORM_OWNERSHIP = {
   vendorSession: PLATFORM_PACKAGE,
   externalContactLink: PLATFORM_PACKAGE,
   merchandiseException: PLATFORM_PACKAGE,
+  eventAtelier: PLATFORM_PACKAGE,
+  blueprintGenesis: PLATFORM_PACKAGE,
+  atelierChapter: PLATFORM_PACKAGE,
+  eventNarrativeEdition: PLATFORM_PACKAGE,
+  curatedMediaSet: PLATFORM_PACKAGE,
+  approvedAssetEdition: PLATFORM_PACKAGE,
+  guestJourneyProjection: PLATFORM_PACKAGE,
+  hostMilestoneProjection: PLATFORM_PACKAGE,
+  budgetAssuranceProjection: PLATFORM_PACKAGE,
+  vendorEnsembleProjection: PLATFORM_PACKAGE,
+  contingencyAssuranceProjection: PLATFORM_PACKAGE,
+  hostDecisionRequest: PLATFORM_PACKAGE,
+  hostDecisionReceipt: PLATFORM_PACKAGE,
+  curatedUpdate: PLATFORM_PACKAGE,
+  atelierAccessGrant: PLATFORM_PACKAGE,
+  magicLinkChallenge: PLATFORM_PACKAGE,
+  atelierSession: PLATFORM_PACKAGE,
 } as const;
 
 /** Parallel product-owned truth stores are forbidden. Product projections may exist. */
@@ -136,6 +153,11 @@ export const FORBIDDEN_PARALLEL_TRUTH = [
   "VendorStaffSession",
   "ParallelMeasurementStore",
   "HouseholdMerchandiseIdentity",
+  "HostOsEvent",
+  "ParallelAtelierLedger",
+  "HostAssurancePortal",
+  "ParallelRsvpAtelier",
+  "ParallelFinanceAtelier",
 ] as const;
 
 export const DEFAULT_TIMEZONE = "Africa/Lagos";
@@ -157,7 +179,7 @@ export const STAFF_SESSION_DENIAL_STATUSES = [
 export type StaffSessionDenialStatus = (typeof STAFF_SESSION_DENIAL_STATUSES)[number];
 export const ASSIGNMENT_STATUSES = ["PENDING", "ACTIVE", "SUSPENDED", "REVOKED", "EXPIRED"] as const;
 export const AUDIT_OUTCOMES = ["SUCCESS", "DENIED", "FAILED"] as const;
-export const ACTOR_TYPES = ["USER", "SERVICE", "SYSTEM", "GUEST_CAPABILITY", "VENDOR_CAPABILITY"] as const;
+export const ACTOR_TYPES = ["USER", "SERVICE", "SYSTEM", "GUEST_CAPABILITY", "VENDOR_CAPABILITY", "HOST_CAPABILITY"] as const;
 export const ROLE_EFFECTS = ["ALLOW", "DENY"] as const;
 export const CONSENT_STATUSES = ["RECORDED", "WITHDRAWN", "EXPIRED"] as const;
 export const VERIFICATION_STATES = ["UNVERIFIED", "HUMAN_VERIFIED", "SPECIALIST_REQUIRED"] as const;
@@ -285,6 +307,13 @@ export const PERMISSION_KEYS = [
   "model.parameters.manage",
   "model.evaluate",
   "forecast.audit.view",
+  "atelier.view",
+  "atelier.manage",
+  "atelier.publish",
+  "atelier.access.manage",
+  "atelier.decision.publish",
+  "atelier.decision.review",
+  "atelier.audit.view",
 ] as const;
 
 export const SYSTEM_ROLE_KEYS = [
@@ -473,6 +502,60 @@ export const S04D_SENSITIVE_PERMISSIONS = [
   "model.evaluate",
   "forecast.audit.view",
 ] as const;
+
+export const S04E_SENSITIVE_PERMISSIONS = [
+  "atelier.publish",
+  "atelier.access.manage",
+  "atelier.decision.review",
+  "atelier.audit.view",
+] as const;
+
+export const ATELIER_SESSION_COOKIE = "md_event_os_atelier";
+export const ATELIER_CHAPTER_TYPES = [
+  "TODAY",
+  "VISION",
+  "JOURNEY",
+  "BLUEPRINT",
+  "ENSEMBLE",
+  "DECISIONS",
+  "ASSURANCE",
+  "EDITIONS",
+  "UPDATES",
+] as const;
+export const ATELIER_LIFECYCLE_STATES = [
+  "GENESIS",
+  "REVEAL",
+  "PLANNING",
+  "PRODUCTION",
+  "LIVE",
+  "AFTER",
+] as const;
+export const ATELIER_PUBLICATION_STATES = ["DRAFT", "PUBLISHED", "WITHDRAWN", "SUPERSEDED"] as const;
+export const ATELIER_HOST_ROLES = [
+  "PRINCIPAL_HOST",
+  "CO_HOST",
+  "FAMILY_REPRESENTATIVE",
+  "EXECUTIVE_ASSISTANT",
+  "CORPORATE_REPRESENTATIVE",
+  "READ_ONLY_HOST",
+  "MAISON_LIAISON",
+  "AUDITOR",
+] as const;
+export const ATELIER_GRANT_STATUSES = ["ACTIVE", "REVOKED", "EXPIRED", "SUPERSEDED"] as const;
+export const MAGIC_LINK_PURPOSES = ["ATELIER_ENTRY", "STEP_UP"] as const;
+export const MAGIC_LINK_STATUSES = ["ISSUED", "REDEEMED", "EXPIRED", "REVOKED", "FAILED"] as const;
+export const ATELIER_SESSION_STATUSES = ["ACTIVE", "REVOKED", "EXPIRED"] as const;
+export const HOST_DECISION_STATUSES = [
+  "PUBLISHED",
+  "SUBMITTED",
+  "REVIEW_PENDING",
+  "APPROVED",
+  "REJECTED",
+  "EXPIRED",
+  "WITHDRAWN",
+] as const;
+export const HOST_DECISION_KINDS = ["HOST_PREFERENCE", "REQUIRES_STAFF_REVIEW", "CONVERSATION_REQUEST"] as const;
+export const ATELIER_DECORATIVE_METAL = "#B79F85" as const;
 
 export const FORECAST_MODEL_VERSION = "FORECAST-MODEL-V1" as const;
 export const FORECAST_POLICY_VERSION = "FORECAST-POLICY-V1" as const;

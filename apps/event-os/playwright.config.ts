@@ -42,6 +42,12 @@ export default defineConfig({
       EVENT_OS_RSVP_SESSION_SECRET: productionLike
         ? (process.env.EVENT_OS_RSVP_SESSION_SECRET ?? "ci-event-os-rsvp-session-secret-32")
         : "rsvp-guest-session-secret-not-for-production-32",
+      EVENT_OS_ATELIER_LINK_PEPPER: productionLike
+        ? (process.env.EVENT_OS_ATELIER_LINK_PEPPER ?? "ci-event-os-atelier-link-pepper-32b")
+        : "s04e-atelier-link-pepper-not-for-production-32",
+      EVENT_OS_ATELIER_SESSION_SECRET: productionLike
+        ? (process.env.EVENT_OS_ATELIER_SESSION_SECRET ?? "ci-event-os-atelier-session-secret-32")
+        : "s04e-atelier-session-secret-not-for-production",
     },
   },
 });

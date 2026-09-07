@@ -1506,3 +1506,96 @@ body.atelier {
     display: block;
   }
 }
+
+.host-atelier {
+  min-height: 100vh;
+  padding: 32px 20px 72px;
+  background:
+    radial-gradient(1200px 480px at 12% -10%, rgba(183, 159, 133, 0.18), transparent 58%),
+    linear-gradient(180deg, #f7f1e6 0%, #f3eadc 42%, #ebe1d0 100%);
+  color: #191714;
+  box-shadow: inset 0 0 0 12px #191714;
+}
+
+.host-atelier-masthead {
+  max-width: 42rem;
+  margin: 0 auto 40px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid rgba(183, 159, 133, 0.35);
+}
+
+.host-atelier-eyebrow,
+.host-atelier-host {
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  color: #5a534b;
+}
+
+.host-atelier-mark {
+  font-family: var(--at-editorial), "Iowan Old Style", serif;
+  font-size: clamp(2rem, 6vw, 3.4rem);
+  line-height: 1.1;
+  margin: 12px 0 8px;
+}
+
+.host-atelier-stage,
+.host-atelier-story {
+  max-width: 42rem;
+  margin: 0 auto;
+}
+
+.host-atelier-chapter,
+.host-atelier-receipt {
+  margin: 40px 0;
+  padding: 28px 0;
+  border-top: 1px solid rgba(183, 159, 133, 0.28);
+}
+
+.host-atelier-media {
+  min-height: 160px;
+  margin: 20px 0;
+  border: 1px solid rgba(183, 159, 133, 0.4);
+  background:
+    linear-gradient(180deg, rgba(247, 241, 230, 0.4), rgba(235, 225, 208, 0.9));
+}
+
+.host-atelier-chapter h2,
+.host-atelier-receipt h2 {
+  font-family: var(--at-editorial), "Iowan Old Style", serif;
+  font-size: 1.8rem;
+  font-weight: 400;
+  margin-bottom: 12px;
+}
+
+.host-atelier-form,
+.host-atelier-option {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.host-atelier a,
+.host-atelier button,
+.host-atelier [role="button"] {
+  cursor: pointer;
+}
+
+.host-atelier button:disabled,
+.host-atelier [aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+.host-atelier a:focus-visible,
+.host-atelier button:focus-visible,
+.host-atelier input:focus-visible {
+  outline: 2px solid #8b6e38;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .host-atelier * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

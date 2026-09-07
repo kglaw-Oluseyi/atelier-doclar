@@ -8,6 +8,7 @@ export {
   ACA_S04A_COURSE_ID,
   ACA_S04C_COURSE_ID,
   ACA_S04D_COURSE_ID,
+  ACA_S04E_COURSE_ID,
   ACADEMY_COURSE_IDS,
   AUTHORITY_DISCLAIMER,
   AUTHORITY_NEVER_GRANTED,
@@ -34,15 +35,17 @@ export {
   type AcademyWarning,
 } from "./schemas.js";
 export { evaluateAcademyAttempt, outcomeForPercent, questionsForPath, retakeRequired, uniqueAnswers } from "./assessment.js";
-export { assignAcaS04A, assignAcaS04C, assignAcaS04D, learningPathForRole, preferredRoleKey } from "./assignment.js";
+export { assignAcaS04A, assignAcaS04C, assignAcaS04D, assignAcaS04E, learningPathForRole, preferredRoleKey } from "./assignment.js";
 export { acaS04ACourse, acaS04AQuestionsFor } from "./course-aca-s04a.js";
 export { acaS04CCourse, acaS04CQuestionsFor } from "./course-aca-s04c.js";
 export { acaS04DCourse, acaS04DQuestionsFor } from "./course-aca-s04d.js";
+export { acaS04ECourse, acaS04EQuestionsFor } from "./course-aca-s04e.js";
 export {
   ACADEMY_CATALOGUE,
   ACA_S04A_COURSE_VERSION,
   ACA_S04C_COURSE_VERSION,
   ACA_S04D_COURSE_VERSION,
+  ACA_S04E_COURSE_VERSION,
   academyCourseFor,
   applyAcademyCatalogueSeed,
   resolveAcademyCourseRef,

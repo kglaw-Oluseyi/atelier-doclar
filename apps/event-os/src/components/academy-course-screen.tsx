@@ -10,7 +10,7 @@ import { AcademyS04AExperience } from "./academy-s04a-experience";
 import { AtelierOperationalState } from "./atelier-operational-state";
 import { AtelierPageHeader } from "./atelier-page-header";
 import { AppShell } from "./shell";
-import { submitAcaS04AAction, submitAcaS04CAction, submitAcaS04DAction } from "../server/academy-actions";
+import { submitAcaS04AAction, submitAcaS04CAction, submitAcaS04DAction, submitAcaS04EAction } from "../server/academy-actions";
 import { academyAssignmentForPerson } from "../server/academy-access";
 import { loadAcademyRecord } from "../server/academy-store";
 import { loadPresentedActionResult } from "../server/action-flash";
@@ -30,6 +30,23 @@ const S04C_PRACTICE = (
       <li>Capture and withdraw consented cap circumference in inches only.</li>
       <li>Submit an attributed vendor milestone and review it without storing money.</li>
       <li>Attempt a forged or cross-vendor update and confirm the server fails closed.</li>
+    </ol>
+  </>
+);
+
+const S04E_PRACTICE = (
+  <>
+    <p>
+      Use the synthetic Alpha One Atelier only. Hosts are projections of Event OS truth, not a second operating system.
+      Escalation: if a host write is refused, reload the receipt and ask an authorised staff checker — do not invent RSVP
+      answers, forecast parameters or vendor instructions.
+    </p>
+    <ol>
+      <li>Publish the Atelier, then exchange a host invitation once and confirm the token leaves the URL.</li>
+      <li>Read Vision, Blueprint, Journey and Assurance without seeing person-level probabilities.</li>
+      <li>Submit a host decision and confirm the receipt says canonical data did not change.</li>
+      <li>Have a different staff role review the decision. The publisher must not check their own request.</li>
+      <li>Issue read-only host access and confirm that role cannot decide.</li>
     </ol>
   </>
 );
@@ -84,7 +101,13 @@ export async function AcademyCourseScreen({
   const record = await loadAcademyRecord(person.id, entry.id);
   const questions = questionsForPath(course.questions, assignment.learningPath);
   const action =
-    entry.id === "ACA-S04D" ? submitAcaS04DAction : entry.id === "ACA-S04C" ? submitAcaS04CAction : submitAcaS04AAction;
+    entry.id === "ACA-S04E"
+      ? submitAcaS04EAction
+      : entry.id === "ACA-S04D"
+        ? submitAcaS04DAction
+        : entry.id === "ACA-S04C"
+          ? submitAcaS04CAction
+          : submitAcaS04AAction;
   return (
     <AppShell person={person} current="/app/academy">
       <AtelierPageHeader
@@ -107,7 +130,16 @@ export async function AcademyCourseScreen({
           outcome={query.outcome}
           percent={query.percent}
           action={action}
-          practice={practice ?? (entry.id === "ACA-S04D" ? S04D_PRACTICE : entry.id === "ACA-S04C" ? S04C_PRACTICE : undefined)}
+          practice={
+            practice ??
+            (entry.id === "ACA-S04E"
+              ? S04E_PRACTICE
+              : entry.id === "ACA-S04D"
+                ? S04D_PRACTICE
+                : entry.id === "ACA-S04C"
+                  ? S04C_PRACTICE
+                  : undefined)
+          }
         />
       )}
     </AppShell>

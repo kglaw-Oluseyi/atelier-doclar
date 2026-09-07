@@ -4,8 +4,10 @@ import {
   assertSessionConfig,
   DEFAULT_NON_PRODUCTION_RSVP_ACCESS,
   resolveAccessAuthority,
+  resolveAtelierAccessFromEnv,
   resolveVendorAccessFromEnv,
   type AccessAuthority,
+  type AtelierAccessConfig,
   type RsvpAccessConfig,
   type SessionConfig,
   type VendorAccessConfig,
@@ -83,6 +85,10 @@ export function rsvpSessionTtlSeconds(): number {
 
 export function vendorAccessConfig(): VendorAccessConfig {
   return resolveVendorAccessFromEnv(process.env, accessAuthority());
+}
+
+export function atelierAccessConfig(): AtelierAccessConfig {
+  return resolveAtelierAccessFromEnv(process.env, accessAuthority());
 }
 
 export function cookieSecure(): boolean {

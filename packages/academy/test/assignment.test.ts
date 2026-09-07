@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { assignAcaS04A, assignAcaS04C, assignAcaS04D, preferredRoleKey } from "../src/index.js";
+import { assignAcaS04A, assignAcaS04C, assignAcaS04D, assignAcaS04E, preferredRoleKey } from "../src/index.js";
 
 describe("ACA-S04A assignment", () => {
   it("assigns a learning path from the existing role model and never grants authority", () => {
@@ -15,6 +15,8 @@ describe("ACA-S04A assignment", () => {
     assert.equal(assignAcaS04D("PLANNER").courseId, "ACA-S04D");
     assert.equal(assignAcaS04D("CEO").grantsOperationalAuthority, false);
     assert.equal(assignAcaS04D("SYSTEM_ADMINISTRATOR").learningPath, "OPERATIONAL_AWARENESS");
+    assert.equal(assignAcaS04E("PLANNER").courseId, "ACA-S04E");
+    assert.equal(assignAcaS04E("CEO").grantsOperationalAuthority, false);
   });
 
   it("prefers CEO then director then planner then auditor", () => {
