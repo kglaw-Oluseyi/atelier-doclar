@@ -2,7 +2,7 @@
 
 **Slice ID:** `EOS-S04E`  
 **Prompt Control ID:** `MD-PR-S024`  
-**Status:** `IN_REVIEW / NOT READY`  
+**Status:** `ACCEPTED` (historical implementation record; see `docs/control/EOS_S04E_ACCEPTANCE.md`)
 **Catalogue slice:** no  
 **Production:** unauthorised (`productionAuthorised` remains false)  
 **Starting baseline:** `3463590e5b3f6f2b4070140c73ee803386542c39`
@@ -60,10 +60,10 @@ Maker/checker: the staff publisher of a decision cannot review the resulting rec
 
 Workspace `pnpm typecheck`, `pnpm test` (593 pass / 0 fail after acceptance remediation), `pnpm programme:validate` and `pnpm --filter @maison-doclar/event-os build` passed. `git diff --check` clean.
 
-Later acceptance remediation is recorded in `docs/control/EOS_S04E_ACCEPTANCE_REMEDIATION.md`. Current status is `IN_REVIEW / NOT READY`. This implementation record is not acceptance.
+Later acceptance remediation is recorded in `docs/control/EOS_S04E_ACCEPTANCE_REMEDIATION.md`. Formal acceptance is `docs/control/EOS_S04E_ACCEPTANCE.md` at SHA `05b91bb62dcc20357666bef4ff9bfa1d0cef11b2`. This implementation record remains historical evidence.
 
 `packages/shared-platform/test/atelier-journeys.test.ts` first run: 3 passed / 1 failed (idempotent replay with a stale expected version was treated as the same choice). Product behaviour was correct; the test was tightened. Second run: 4 passed.
 
 Playwright `e2e/s04e-vertical.spec.ts` and `e2e/s04e-responsive-a11y.spec.ts`: first run 1 passed / 3 failed (issued-access flash omitted `atelier`, a DRAFT assertion after a prior publish, and 360px `loginAs` identity in the hidden staff nav). After those test/flash fixes, the vertical host journey and ACA-S04E passed. A later isolated axe login hit the known Next.js local memory restart; axe was folded into the vertical journey and then passed. These were test and flash-read defects, not host-journey product failures.
 
-See `docs/control/CUMULATIVE_TECHNICAL_DEBT_AND_REGRESSION_REGISTER.md` items `TDR-S04E-001`–`002` and carried `TDR-S04D-004`.
+See `docs/control/CUMULATIVE_TECHNICAL_DEBT_AND_REGRESSION_REGISTER.md` items `TDR-S04E-001`–`004` and carried `TDR-S04D-004`.

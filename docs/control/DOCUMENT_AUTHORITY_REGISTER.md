@@ -134,6 +134,16 @@ This addendum does not rewrite the B0 row set or the earlier S04A–S04D addenda
 | EOS-S04E frontend architecture | `docs/control/EOS_S04E_FRONTEND_ARCHITECTURE.md` | IMPLEMENTATION EVIDENCE | Staff Command Atelier; host editorial Atelier. |
 | EOS-S04E build ledger | `docs/control/EOS_S04E_BUILD_LEDGER.md` | IMPLEMENTATION EVIDENCE | Prompt-by-prompt ledger. |
 | EOS-S04E Claude-in-Chrome verification | `docs/control/EOS_S04E_CLAUDE_IN_CHROME_VERIFICATION.md` | HISTORICAL INDEPENDENT REVIEW | Whole-slice prompt. Passed surfaces are not re-tested. |
-| EOS-S04E acceptance remediation | `docs/control/EOS_S04E_ACCEPTANCE_REMEDIATION.md` | CURRENT REMEDIATION EVIDENCE | Edition lineage, staff hydration and host `canDecide`. Status `IN_REVIEW / NOT READY`. |
-| EOS-S04E focused Claude verification | `docs/control/EOS_S04E_FOCUSED_CLAUDE_VERIFICATION.md` | INDEPENDENT REVIEW PACKAGE | Claude verifies; Claude does not accept. |
+| EOS-S04E acceptance remediation | `docs/control/EOS_S04E_ACCEPTANCE_REMEDIATION.md` | HISTORICAL REMEDIATION EVIDENCE | Edition lineage, staff hydration and host `canDecide`. Written while `IN_REVIEW / NOT READY`. |
+| EOS-S04E focused Claude verification | `docs/control/EOS_S04E_FOCUSED_CLAUDE_VERIFICATION.md` | HISTORICAL INDEPENDENT REVIEW | Claude verifies; Claude does not accept. |
+
+## Addendum — 2026-09-07 EOS-S04E acceptance (`MD-PR-S025`)
+
+This addendum does not rewrite the B0 row set or the earlier S04A–S04E addenda. Historical `IN_REVIEW` and ratification rows above remain dated history.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| EOS-S04E Formal Technical Acceptance | `docs/control/EOS_S04E_ACCEPTANCE.md` | CANONICAL ACCEPTANCE RECORD | Status `ACCEPTED` at SHA `05b91bb62dcc20357666bef4ff9bfa1d0cef11b2`. Not catalogue-slice acceptance. Does not authorise EOS-S04F, EOS-S05 or production. |
+| EOS-S04F Controlled Slice Pack v1.0 DRAFT | `docs/control/Maison_Doclar_EOS-S04F_Controlled_Slice_Pack_v1.0_DRAFT.docx` | REQUIREMENTS ARTEFACT — IMPLEMENTATION HELD | Pack-internal status `CEO REVIEW / NOT YET RATIFIED`. “This draft is not implementation authority.” |
+| EOS-S04F Cursor Prompt Pack v1.0 DRAFT | `docs/control/Maison_Doclar_EOS-S04F_Cursor_Prompt_Pack_v1.0_DRAFT.docx` | HELD — NOT IMPLEMENTATION AUTHORITY | Hold gate requires a separate CEO release of P00. No Prompt Control ID. |
 

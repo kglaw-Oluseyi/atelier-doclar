@@ -821,6 +821,42 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 | Latest safe remediation milestone | After a finance-authority slice |
 | Current status | OPEN |
 
+### TDR-S04E-003 — Atelier magic-link and session secrets must rotate before production identity
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04E-003` |
+| Source slice | EOS-S04E |
+| Description | Host Atelier link pepper and session secret are configured on Railway Event OS for synthetic development. They must be rotated before permanent identity transition or protected real-production authorisation. Values are never committed. |
+| Classification | Operational hygiene |
+| Severity | LOW |
+| Evidence | Railway variable names `EVENT_OS_ATELIER_LINK_PEPPER`, `EVENT_OS_ATELIER_SESSION_SECRET`; `docs/control/EOS_S04E_ACCEPTANCE.md` |
+| Affected surface or contract | Host magic-link exchange and Atelier session cookies |
+| Reason for deferral | Current environment is synthetic-only. `productionAuthorised` remains false. |
+| Blocking | NON_BLOCKING |
+| Current owner | Event OS host access |
+| Required regression coverage | Rotation invalidates outstanding links and sessions; forged/replay still fail closed |
+| Latest safe remediation milestone | Before permanent IdP or protected production authorisation |
+| Current status | OPEN |
+
+### TDR-S04E-004 — Claude-browser concurrency and forged-decision paths rely on automated evidence
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04E-004` |
+| Source slice | EOS-S04E |
+| Description | Raw forged decision replay and true dual-host-session concurrency were not independently reproduced in Claude’s browser. Service tests and Playwright cover those paths. |
+| Classification | Independent-review coverage observation |
+| Severity | LOW |
+| Evidence | `packages/shared-platform/test/atelier-journeys.test.ts`; `apps/event-os/e2e/s04e-vertical.spec.ts`; Claude-in-Chrome focused review |
+| Affected surface or contract | Host decision submit / session isolation |
+| Reason for deferral | Automated evidence already exists; browser reproduction is not required to accept the slice. |
+| Blocking | NON_BLOCKING |
+| Current owner | Event OS Atelier decisions |
+| Required regression coverage | Forged/stale/duplicate host submits fail closed; revoked capability cannot win |
+| Latest safe remediation milestone | Optional later browser re-evidence; does not reopen EOS-S04E |
+| Current status | OPEN |
+
 ---
 
 ## Closed items
@@ -894,3 +930,4 @@ These do not reopen EOS-S04A and do not create new blocking IDs.
 | EOS-S04D formal technical acceptance 2026-09-07 | ChatGPT accepted EOS-S04D at SHA `64683a853ead39c62caeb2d2e9f26bcb9d1dca21`. Closed the blocking banner, ACA-S04D delivery and phase-labelling findings. Entered TDR-S04D-003–004 as non-blocking carry-forwards. TDR-S04D-001–002 remain OPEN. Catalogue accepted-slice count remains 4. EOS-S04E–F and EOS-S05 remain unauthorised. Production remains unauthorised. Documentation-only commit does not redeploy Event OS. |
 | EOS-S04E ratification and implementation MD-PR-S024 2026-09-07 | George Lawson ratifies the EOS-S04E packs and authorises P00–P11. Status RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS. Entered TDR-S04E-001–002 (non-blocking). TDR-S04D-004 remains OPEN. EOS-S04F and EOS-S05 remain unauthorised. Production remains unauthorised. |
 | EOS-S04E edition/hydration/canDecide remediation 2026-09-07 | Live diagnosis Outcome A plus in-place reveal publish; staff editor mixed sources; principal grant persisted canDecide false. Remediated without rewriting Claude’s edition or original grant body. Status IN_REVIEW / NOT READY. TDR-S04E-001–002 remain OPEN and non-blocking for single-replica verification. EOS-S04F and EOS-S05 not started. |
+| EOS-S04E formal technical acceptance 2026-09-07 | ChatGPT accepted EOS-S04E at SHA `05b91bb62dcc20357666bef4ff9bfa1d0cef11b2`. Closed the blocking edition-history, staff-hydration and canDecide findings. Entered TDR-S04E-003–004 as non-blocking carry-forwards. TDR-S04E-001–002 and TDR-S04D-004 remain OPEN. Catalogue accepted-slice count remains 4. EOS-S04F remains HELD. EOS-S05 remains unauthorised. Production remains unauthorised. Documentation-only commit does not redeploy Event OS. |

@@ -157,3 +157,11 @@ Successor implementation after EOS-S04D requires a separate CEO decision. Cursor
 |---------------------------|---------------------------|
 | EOS-S04E `RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS` | SUPERSEDED for current programme language by `IN_REVIEW / NOT READY` after independent review blocked edition lineage, staff hydration and host `canDecide`. Implementation authority for the remediation remains. The slice is not accepted. |
 | “0 earlier editions preserved” as proof of data loss | Rejected. Live diagnosis is Outcome A plus a later in-place reveal publish. See `docs/control/EOS_S04E_ACCEPTANCE_REMEDIATION.md`. |
+
+## Addendum — 2026-09-07 EOS-S04E acceptance (`MD-PR-S025`)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| EOS-S04E `IN_REVIEW / NOT READY` | SUPERSEDED by `docs/control/EOS_S04E_ACCEPTANCE.md`. Status is `ACCEPTED` at SHA `05b91bb62dcc20357666bef4ff9bfa1d0cef11b2`. |
+| EOS-S04F programme line `RATIFIED / NOT_STARTED` | Requirements artefact only. Packs still say `CEO REVIEW / NOT YET RATIFIED` and `HELD — NOT IMPLEMENTATION AUTHORITY`. Acceptance of S04E does not start S04F. |
+| EOS-S04F Cursor pack “No push or deployment in P00–P11” | Historical pack hold. Deploy-by-default remains the current `atelier-doclar` rule **if** S04F is later authorised. It is not itself S04F implementation authority. |

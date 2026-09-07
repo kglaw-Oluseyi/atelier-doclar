@@ -387,7 +387,7 @@ ACCEPTED on `2026-09-07` by `ChatGPT / AI CTO` after Claude-in-Chrome verificati
 **Product:** `EVENT_OS`
 **Prompt Control ID:** `MD-PR-S024`
 **Title:** Maison Doclar Private Event Atelier — Event Blueprint, Journey & Host Experience
-**Status:** `IN_REVIEW / NOT READY`
+**Status:** `ACCEPTED`
 
 | Evidence ID | Type | Description | Location |
 |-------------|------|-------------|----------|
@@ -401,21 +401,22 @@ ACCEPTED on `2026-09-07` by `ChatGPT / AI CTO` after Claude-in-Chrome verificati
 | EV-EOS-S04E-CLAUDE | DOCUMENT | Independent Claude-in-Chrome verification prompt | `docs/control/EOS_S04E_CLAUDE_IN_CHROME_VERIFICATION.md` |
 | EV-EOS-S04E-REMEDIATE | DOCUMENT | Acceptance remediation for edition lineage, hydration and canDecide | `docs/control/EOS_S04E_ACCEPTANCE_REMEDIATION.md` |
 | EV-EOS-S04E-FOCUSED | DOCUMENT | Focused Claude re-verification prompt | `docs/control/EOS_S04E_FOCUSED_CLAUDE_VERIFICATION.md` |
+| EV-EOS-S04E-ACCEPT | DOCUMENT | Formal technical acceptance | `docs/control/EOS_S04E_ACCEPTANCE.md` |
 
-Not accepted. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised` remains false. Does not authorise EOS-S04F, EOS-S05, real data, providers or production.
+ACCEPTED on `2026-09-07` by `ChatGPT / AI CTO` after Claude-in-Chrome verification and edition-lineage / hydration / `canDecide` remediation. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised` remains false. TDR-S04E-001–004 remain carried forward. Does not authorise EOS-S04F, EOS-S05, real data, providers or production.
 
 ## EOS-S04F
 
 **Slice ID:** `EOS-S04F`
 **Title:** Language, Cultural Text & Multilingual Editions
-**Status:** `RATIFIED / NOT_STARTED`
+**Status:** `HELD` — implementation not authorised
 **Position:** after EOS-S04E and before EOS-S05
 **Execution authority:** `HELD`
 
 | ID | Kind | Summary | Location |
 |----|------|---------|----------|
-| EV-EOS-S04F-PACK | DOCUMENT | Controlled slice pack v1.0 draft (ratified artefact; filename retained) | `docs/control/Maison_Doclar_EOS-S04F_Controlled_Slice_Pack_v1.0_DRAFT.docx` |
+| EV-EOS-S04F-PACK | DOCUMENT | Controlled slice pack v1.0 draft (requirements artefact; filename retained; pack says not yet ratified) | `docs/control/Maison_Doclar_EOS-S04F_Controlled_Slice_Pack_v1.0_DRAFT.docx` |
 | EV-EOS-S04F-PROMPTS | DOCUMENT | Controlled Cursor prompt pack v1.0 draft (P00–P11; HELD) | `docs/control/Maison_Doclar_EOS-S04F_Cursor_Prompt_Pack_v1.0_DRAFT.docx` |
 
-Ratification does not authorise implementation. Dependency: implementation follows completion of EOS-S04A through EOS-S04E. `PROMPT_REGISTER.md` was not updated; adding P00–P11 would require a separate governed Prompt Control ID decision.
+Acceptance of EOS-S04E satisfies the sequencing condition only. The S04F packs still say they are not implementation authority and require a separate CEO release of P00. No Prompt Control ID is assigned. `PROMPT_REGISTER.md` was not updated. Recommended next implementation ID, if the CEO authorises S04F, is `MD-PR-S026`.
 

@@ -3,7 +3,7 @@
 **Slice ID:** `EOS-S04E`  
 **Prompt Control ID:** `MD-PR-S024`  
 **Starting baseline:** `3463590e5b3f6f2b4070140c73ee803386542c39`  
-**Status:** `IN_REVIEW / NOT READY`  
+**Status:** `ACCEPTED` (implementation ledger; acceptance record is `docs/control/EOS_S04E_ACCEPTANCE.md`)
 **Production:** unauthorised  
 **Next slices:** EOS-S04F and EOS-S05 not started; not authorised by this overlay
 
@@ -40,4 +40,4 @@ ACA-S04E registered at `/app/academy/ACA-S04E`. Thresholds 80 / 90. Completion g
 
 ## Acceptance remediation
 
-Edition lineage, staff-editor hydration and host `canDecide` were remediated from live Alpha One diagnosis. Reveal no longer publishes narrative drafts in place. Publishing supersedes all other published editions. The staff editor hydrates every edition-owned field from one draft or published source. Host decision authority is explicit, durable and renewable without rewriting the original grant. See `docs/control/EOS_S04E_ACCEPTANCE_REMEDIATION.md`.
+Edition lineage, staff-editor hydration and host `canDecide` were remediated from live Alpha One diagnosis. Reveal no longer publishes narrative drafts in place. Publishing supersedes all other published editions. The staff editor hydrates every edition-owned field from one draft or published source. Host decision authority is explicit, durable and renewable without rewriting the original grant. See `docs/control/EOS_S04E_ACCEPTANCE_REMEDIATION.md`. Formal acceptance: `docs/control/EOS_S04E_ACCEPTANCE.md` under `MD-PR-S025`.
