@@ -1,11 +1,14 @@
 # EOS-S04D Build Ledger
 
 **Slice ID:** `EOS-S04D`
-**Prompt Control ID:** `MD-PR-S022`
+**Prompt Control ID:** `MD-PR-S022` / `MD-PR-S023`
 **Starting baseline:** `2f86fee762678d01e502a23a026511cafb4e3f57`
-**Status:** `RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS`
+**Accepted implementation SHA:** `64683a853ead39c62caeb2d2e9f26bcb9d1dca21`
+**Status:** `ACCEPTED`
 **Production:** unauthorised
 **Next slices:** EOS-S04E, EOS-S04F and EOS-S05 not started; not authorised by this overlay
+
+Historical statuses `RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS` and `IN_REVIEW / NOT READY` remain dated records. Formal acceptance is `docs/control/EOS_S04D_ACCEPTANCE.md`.
 
 ## P00 — Controlled reconnaissance
 
@@ -46,4 +49,8 @@ EOS-S04E, EOS-S04F and EOS-S05 were not started.
 
 ## Action-result and ACA-S04D delivery remediation
 
-Signed, action-scoped, single-consume results. Canonical `/app/academy/ACA-S04D`. Phase eligible vs centre labels. Status remains `IN_REVIEW / NOT READY`. Focused prompt: `EOS_S04D_FOCUSED_CLAUDE_VERIFICATION.md`.
+Signed, action-scoped, single-consume results. Canonical `/app/academy/ACA-S04D`. Phase eligible vs centre labels. Historical status at this remediation was `IN_REVIEW / NOT READY`. Focused prompt: `EOS_S04D_FOCUSED_CLAUDE_VERIFICATION.md`.
+
+## Formal technical acceptance (`MD-PR-S023`)
+
+Status `ACCEPTED` on `2026-09-07` at SHA `64683a853ead39c62caeb2d2e9f26bcb9d1dca21`. Live Event OS already at that SHA (`f42d82ba-5ace-43b6-86de-3714952ffe33`). Persistence `POSTGRES`; migrations `APPLIED`; `productionAuthorised=false`. Documentation-only acceptance commit does not redeploy Event OS. EOS-S04E–F and EOS-S05 remain unauthorised.

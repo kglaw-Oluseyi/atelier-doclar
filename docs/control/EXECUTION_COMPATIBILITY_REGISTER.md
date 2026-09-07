@@ -128,3 +128,16 @@ Successor implementation after EOS-S04C requires a separate CEO decision. Cursor
 | S04D Cursor pack wording that holds routine commits, pushes or Railway deployment | SUPERSEDED for this authorised slice by deploy-by-default and the CEO overlay. Push and deploy Event OS in `atelier-doclar`. Deployment is not acceptance. |
 | EOS-S04E–F and EOS-S05 | Retained unauthorised. This overlay does not start them. |
 | Control Tower | Compatibility-only unless a ratified contract requires a genuine change. Not a deploy target for this slice. |
+
+## Addendum — 2026-09-07 EOS-S04D acceptance (`MD-PR-S023`)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| EOS-S04D `RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS` | SUPERSEDED by `docs/control/EOS_S04D_ACCEPTANCE.md`. Status is `ACCEPTED` at SHA `64683a853ead39c62caeb2d2e9f26bcb9d1dca21`. |
+| EOS-S04D `IN_REVIEW / NOT READY` after action-result / ACA-S04D / labelling remediation | HISTORICAL. Remediation evidence stands; no further S04D verification is required. |
+| Documentation-only acceptance commit | Does not replace the accepted implementation SHA. Event OS is not redeployed. |
+| EOS-S04E `DRAFT FOR CEO RATIFICATION — implementation not authorised` | RETAINED. Acceptance of S04D does not authorise S04E. |
+| S04E Cursor pack “Railway / no action or deployment” and “Push held” | Historical pack wording. Deploy-by-default remains the current `atelier-doclar` rule **if** S04E is later authorised. It is not itself S04E implementation authority. |
+| EOS-S04F and EOS-S05 | Retained unauthorised / HELD. This acceptance does not start them. |
+
+Successor implementation after EOS-S04D requires a separate CEO decision. Cursor must not start EOS-S04E–F or EOS-S05 from this acceptance record.

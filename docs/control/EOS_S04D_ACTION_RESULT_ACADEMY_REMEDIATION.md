@@ -45,6 +45,8 @@ S04D seed church entitlements remain Ẹ̀bùnolúwa `...072`, Olúfẹ́mi `...
 
 If live durable church eligible is 4, retain that membership. The likely fourth guest is Tómiwà `...074` from accepted S04B verification residue, not a seed rewrite. Record it under `TDR-S04A-011` / `TDR-S04D-002`. The UI now labels **Eligible people (distinct guest IDs)** separately from **Forecast centre (people)**.
 
-## Not accepted
+## Historical closeout (not acceptance)
 
-Independent focused Claude verification is `docs/control/EOS_S04D_FOCUSED_CLAUDE_VERIFICATION.md`.
+Written while the slice was `IN_REVIEW / NOT READY`. Independent focused Claude verification is `docs/control/EOS_S04D_FOCUSED_CLAUDE_VERIFICATION.md`.
+
+Formal technical acceptance on `2026-09-07` closed the three remediated findings and is recorded in `docs/control/EOS_S04D_ACCEPTANCE.md` (`MD-PR-S023`, SHA `64683a853ead39c62caeb2d2e9f26bcb9d1dca21`). This remediation record is retained as dated evidence and is not rewritten.

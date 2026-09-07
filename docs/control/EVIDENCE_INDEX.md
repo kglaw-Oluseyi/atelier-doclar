@@ -355,7 +355,31 @@ ACCEPTED on `2026-09-07` by `ChatGPT / AI CTO` after Claude-in-Chrome first-vert
 | EV-EOS-S04C-ACCEPT | DOCUMENT | Formal technical acceptance record | `docs/control/EOS_S04C_ACCEPTANCE.md` |
 | EV-EOS-S04C-COMMIT | COMMIT | Accepted implementation SHA | `git:b378fa4f092e4fa5237894975738e3f22b530d73` |
 
-ACCEPTED on `2026-09-07` by `ChatGPT / AI CTO` after Claude-in-Chrome verification through the guest-renewal false-success correction. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised` remains false. TDR-S04C-001–004 CLOSED. Does not authorise EOS-S04D–F, EOS-S05, real data, providers or production.
+ACCEPTED on `2026-09-07` by `ChatGPT / AI CTO` after Claude-in-Chrome verification through the guest-renewal false-success correction. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised` remains false. TDR-S04C-001–004 CLOSED. Historical sentence that acceptance does not authorise EOS-S04D is superseded by `MD-PR-S022`. Does not authorise EOS-S04E–F, EOS-S05, real data, providers or production.
+
+## EOS-S04D
+
+**Slice ID:** `EOS-S04D`
+**Product:** `EVENT_OS`
+**Prompt Control ID:** `MD-PR-S022` / `MD-PR-S023`
+**Title:** Attendance Forecasting & Planning Intelligence
+**Status:** `ACCEPTED`
+
+| Evidence ID | Type | Description | Location |
+|-------------|------|-------------|----------|
+| EV-EOS-S04D-PACK | DOCUMENT | Controlled slice pack v1.0 (filename retained DRAFT) | `docs/control/Maison_Doclar_EOS-S04D_Controlled_Slice_Pack_v1.0_DRAFT.docx` |
+| EV-EOS-S04D-PROMPTS | DOCUMENT | Controlled Cursor prompt pack v1.0 (P00–P11) | `docs/control/Maison_Doclar_EOS-S04D_Cursor_Prompt_Pack_v1.0.docx` |
+| EV-EOS-S04D-RATIFY | DOCUMENT | CEO ratification and implementation authority (historical IN_PROGRESS) | `docs/control/EOS_S04D_RATIFICATION.md` |
+| EV-EOS-S04D-LEDGER | DOCUMENT | Slice build ledger | `docs/control/EOS_S04D_BUILD_LEDGER.md` |
+| EV-EOS-S04D-FRONTEND | DOCUMENT | Frontend architecture | `docs/control/EOS_S04D_FRONTEND_ARCHITECTURE.md` |
+| EV-EOS-S04D-IMPL | DOCUMENT | Implementation record | `docs/control/EOS_S04D_IMPLEMENTATION.md` |
+| EV-EOS-S04D-CLAUDE | DOCUMENT | Independent Claude-in-Chrome verification prompt | `docs/control/EOS_S04D_CLAUDE_IN_CHROME_VERIFICATION.md` |
+| EV-EOS-S04D-REMEDIATE | DOCUMENT | Action-result / ACA-S04D / labelling remediation (historical IN_REVIEW) | `docs/control/EOS_S04D_ACTION_RESULT_ACADEMY_REMEDIATION.md` |
+| EV-EOS-S04D-FOCUSED | DOCUMENT | Focused Claude-in-Chrome verification (historical; Claude does not accept) | `docs/control/EOS_S04D_FOCUSED_CLAUDE_VERIFICATION.md` |
+| EV-EOS-S04D-ACCEPT | DOCUMENT | Formal technical acceptance record | `docs/control/EOS_S04D_ACCEPTANCE.md` |
+| EV-EOS-S04D-COMMIT | COMMIT | Accepted implementation SHA | `git:64683a853ead39c62caeb2d2e9f26bcb9d1dca21` |
+
+ACCEPTED on `2026-09-07` by `ChatGPT / AI CTO` after Claude-in-Chrome verification and action-result / ACA-S04D / phase-labelling remediation. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised` remains false. TDR-S04D-001–004 remain carried forward. Does not authorise EOS-S04E–F, EOS-S05, real data, providers or production.
 
 ## EOS-S04F
 

@@ -747,6 +747,46 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 
 ---
 
+### TDR-S04D-003 — Provision-version visibility after a superseded forecast
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04D-003` |
+| Source slice | EOS-S04D |
+| Description | Clarify whether approved or proposed provision recommendations from a superseded forecast should appear as historical/stale context beside the newest run. They must never be silently carried forward as the current approval. |
+| Classification | In-slice related observation |
+| Severity | LOW |
+| Evidence | Versioned forecast runs; provision maker/checker receipts; acceptance carry-forward 2026-09-07 |
+| Affected surface or contract | Forecast provision visibility vs current-run approval |
+| Reason for deferral | Current product does not silently reuse a superseded approval as current. Presentation of stale historical context is a later UX/governance enhancement. |
+| Blocking | NON_BLOCKING |
+| Current owner | Event OS forecasting |
+| Required regression coverage | Newest run is the only current approval; superseded receipts are not treated as live |
+| Latest safe remediation milestone | A later authorised forecasting or host-atelier slice, if any |
+| Current status | OPEN |
+
+---
+
+### TDR-S04D-004 — Process-local action-result recall is not replica-safe
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04D-004` |
+| Source slice | EOS-S04D |
+| Description | Signed, action-scoped, single-consume action results currently use process-local recall. Before Event OS runs multiple replicas, replace that recall with shared storage or an equivalent cross-instance-safe mechanism. |
+| Classification | Scale-out observation |
+| Severity | LOW |
+| Evidence | Action-result integrity remediation at SHA `64683a853ead39c62caeb2d2e9f26bcb9d1dca21` |
+| Affected surface or contract | Post-write banners / action-result lifecycle |
+| Reason for deferral | Current Event OS is single-instance. The single-consume, action-scoped contract is already correct on one process. |
+| Blocking | NON_BLOCKING |
+| Current owner | Event OS shared action results |
+| Required regression coverage | Result cannot be replayed, misattributed, or shown after consume; replica-safe only after shared store |
+| Latest safe remediation milestone | Before multi-replica Event OS |
+| Current status | OPEN |
+
+---
+
 ## Closed items
 
 - `TDR-S04A-007` — unsafe collection-clearing rollback. Closed by Milestone 1 scoped-receipt rollback.
@@ -771,7 +811,13 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 - `TDR-S04C-003` — Vendor access was a dead fixture link. Closed by vendor issue/renew/revoke plus 2026-09-07 acceptance at the same SHA.
 - `TDR-S04C-004` — Guest-access renewal false success. Closed by persist-before-flash conflict UI plus 2026-09-07 acceptance at SHA `b378fa4f092e4fa5237894975738e3f22b530d73` (Railway `22ac7b6e-93d2-4ba4-8913-a2564b427d8d`).
 
-EOS-S04 remains CLOSED / ACCEPTED and is not reopened. EOS-S04A is ACCEPTED and is not reopened. EOS-S04B is ACCEPTED and is not reopened. EOS-S04C is ACCEPTED and is not reopened. EOS-S04D is IN_PROGRESS and is not accepted.
+EOS-S04 remains CLOSED / ACCEPTED and is not reopened. EOS-S04A is ACCEPTED and is not reopened. EOS-S04B is ACCEPTED and is not reopened. EOS-S04C is ACCEPTED and is not reopened. EOS-S04D is ACCEPTED and is not reopened. TDR-S04D-001–004 remain OPEN and do not reopen the slice.
+
+The following EOS-S04D blocking findings were remediated at SHA `64683a853ead39c62caeb2d2e9f26bcb9d1dca21` and are closed by acceptance; they were never separate TDR IDs:
+
+- Stale / misattributed action banners — closed by signed, action-scoped, single-consume results.
+- Missing ACA-S04D delivery — closed by canonical `/app/academy/ACA-S04D` route, catalogue href and additive seed.
+- Ambiguous phase eligible-people vs forecast-centre labelling — closed by distinct labels. Church membership residue remains `TDR-S04D-002`.
 
 ## Final acceptance observations (2026-09-07)
 
@@ -808,4 +854,5 @@ These do not reopen EOS-S04A and do not create new blocking IDs.
 | EOS-S04C guest-renewal false-success remediation 2026-09-07 | Entered and remediated TDR-S04C-004. Persist-before-flash, shared conflict alert, lock-until-reload. Historical status IN_REVIEW / NOT READY. |
 | EOS-S04C formal technical acceptance 2026-09-07 | ChatGPT accepted EOS-S04C at SHA `b378fa4f092e4fa5237894975738e3f22b530d73`. Closed TDR-S04C-001–004. Catalogue accepted-slice count remains 4. EOS-S04D–F and EOS-S05 remain unauthorised. Production remains unauthorised. Documentation-only commit does not redeploy Event OS. |
 | EOS-S04D ratification MD-PR-S022 2026-09-07 | George Lawson ratifies the EOS-S04D packs and authorises P00–P11. Status RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS. Entered TDR-S04D-001 (non-blocking). EOS-S04E–F and EOS-S05 remain unauthorised. Production remains unauthorised. |
-| EOS-S04D action-result and ACA-S04D delivery remediation 2026-09-07 | Signed single-consume action results; canonical ACA-S04D route and catalogue seed; eligible vs forecast-centre labels. Entered TDR-S04D-002. Status remains IN_REVIEW / NOT READY. EOS-S04E–F and EOS-S05 not started. |
+| EOS-S04D action-result and ACA-S04D delivery remediation 2026-09-07 | Signed single-consume action results; canonical ACA-S04D route and catalogue seed; eligible vs forecast-centre labels. Entered TDR-S04D-002. Historical status IN_REVIEW / NOT READY. EOS-S04E–F and EOS-S05 not started. |
+| EOS-S04D formal technical acceptance 2026-09-07 | ChatGPT accepted EOS-S04D at SHA `64683a853ead39c62caeb2d2e9f26bcb9d1dca21`. Closed the blocking banner, ACA-S04D delivery and phase-labelling findings. Entered TDR-S04D-003–004 as non-blocking carry-forwards. TDR-S04D-001–002 remain OPEN. Catalogue accepted-slice count remains 4. EOS-S04E–F and EOS-S05 remain unauthorised. Production remains unauthorised. Documentation-only commit does not redeploy Event OS. |

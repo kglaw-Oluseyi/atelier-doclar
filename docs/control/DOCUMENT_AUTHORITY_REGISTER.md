@@ -102,10 +102,23 @@ This addendum does not rewrite the B0 row set or the earlier S04A/S04B/S04C adde
 
 | Title | Path | Current programme status | Notes |
 |-------|------|--------------------------|-------|
-| EOS-S04D CEO ratification overlay | `docs/control/EOS_S04D_RATIFICATION.md` | CANONICAL AUTHORITY RECORD | Changes S04D from DRAFT / NOT AUTHORISED to RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS. Does not authorise EOS-S04E–F, EOS-S05 or production. |
+| EOS-S04D CEO ratification overlay | `docs/control/EOS_S04D_RATIFICATION.md` | CANONICAL AUTHORITY RECORD | Changes S04D from DRAFT / NOT AUTHORISED to RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS. Does not authorise EOS-S04E–F, EOS-S05 or production. Historical IN_PROGRESS; superseded for status by MD-PR-S023. |
 | EOS-S04D canonical record mapping | `docs/control/EOS_S04D_CANONICAL_RECORD_MAPPING.md` | CANONICAL MAPPING | One concept, one collection. |
 | EOS-S04D implementation record | `docs/control/EOS_S04D_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | P00–P11; not acceptance. |
 | EOS-S04D frontend architecture | `docs/control/EOS_S04D_FRONTEND_ARCHITECTURE.md` | IMPLEMENTATION EVIDENCE | Command Atelier forecast surfaces. |
 | EOS-S04D build ledger | `docs/control/EOS_S04D_BUILD_LEDGER.md` | IMPLEMENTATION EVIDENCE | Prompt-by-prompt ledger. |
-| EOS-S04D Claude-in-Chrome verification | `docs/control/EOS_S04D_CLAUDE_IN_CHROME_VERIFICATION.md` | INDEPENDENT REVIEW PACKAGE | Claude verifies; Claude does not accept. |
+| EOS-S04D Claude-in-Chrome verification | `docs/control/EOS_S04D_CLAUDE_IN_CHROME_VERIFICATION.md` | INDEPENDENT REVIEW PACKAGE | Claude verifies; Claude does not accept. Historical; superseded for status by MD-PR-S023. |
+
+## Addendum — 2026-09-07 EOS-S04D acceptance (`MD-PR-S023`)
+
+This addendum does not rewrite the B0 row set or the earlier S04A–S04D addenda. Historical `IN_REVIEW`, `NOT READY` and ratification rows above remain dated history.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| EOS-S04D Formal Technical Acceptance | `docs/control/EOS_S04D_ACCEPTANCE.md` | CANONICAL ACCEPTANCE RECORD | Status `ACCEPTED` at SHA `64683a853ead39c62caeb2d2e9f26bcb9d1dca21`. Not catalogue-slice acceptance. |
+| EOS-S04D action-result / ACA-S04D remediation | `docs/control/EOS_S04D_ACTION_RESULT_ACADEMY_REMEDIATION.md` | HISTORICAL REMEDIATION EVIDENCE | Written while the slice was `IN_REVIEW / NOT READY`. |
+| EOS-S04D focused Claude verification | `docs/control/EOS_S04D_FOCUSED_CLAUDE_VERIFICATION.md` | HISTORICAL INDEPENDENT REVIEW | Claude verifies; Claude does not accept. |
+| EOS-S04D implementation record | `docs/control/EOS_S04D_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | Historical not-accepted closeout retained; status superseded by this acceptance. |
+| EOS-S04E Controlled Slice Pack v1.0 DRAFT | `docs/control/Maison_Doclar_EOS-S04E_Controlled_Slice_Pack_v1.0_DRAFT.docx` | DRAFT REQUIREMENTS SOURCE — not authorised | Sequential successor after accepted S04D. Status `DRAFT FOR CEO RATIFICATION — implementation not authorised`. |
+| EOS-S04E Cursor Prompt Pack v1.0 | `docs/control/Maison_Doclar_EOS-S04E_Cursor_Prompt_Pack_v1.0.docx` | DRAFT IMPLEMENTATION PACK — not authorised | Historical pack wording holds push/deploy. Acceptance of S04D does not authorise S04E. |
 

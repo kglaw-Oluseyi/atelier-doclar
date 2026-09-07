@@ -2,7 +2,7 @@
 
 **Slice ID:** `EOS-S04D`  
 **Prompt Control ID:** `MD-PR-S022`  
-**Status:** `IN_REVIEW / NOT READY` (implementation plus action-result/ACA-S04D remediation; not accepted)
+**Status:** `ACCEPTED` (historical `IN_REVIEW / NOT READY` superseded by `docs/control/EOS_S04D_ACCEPTANCE.md`; this record remains implementation evidence)
 **Catalogue slice:** no  
 **Production:** unauthorised (`productionAuthorised` remains false)  
 **Starting baseline:** `2f86fee762678d01e502a23a026511cafb4e3f57`
@@ -65,6 +65,8 @@ Playwright `e2e/s04d-vertical.spec.ts` and `e2e/s04d-responsive-a11y.spec.ts`: f
 
 See `docs/control/CUMULATIVE_TECHNICAL_DEBT_AND_REGRESSION_REGISTER.md` item `TDR-S04D-001`. Event-scoped parameter creation is dual-control-role gated but is not a separate proposer/checker workflow. Existing forecast runs remain immutable.
 
-## Not accepted
+## Historical closeout (not acceptance)
 
-Independent focused Claude verification after this remediation is `docs/control/EOS_S04D_FOCUSED_CLAUDE_VERIFICATION.md`. Whole-slice prompt remains `docs/control/EOS_S04D_CLAUDE_IN_CHROME_VERIFICATION.md` and must not be re-run for already passed journeys.
+Written while the slice was `IN_REVIEW / NOT READY`. Independent focused Claude verification after remediation is `docs/control/EOS_S04D_FOCUSED_CLAUDE_VERIFICATION.md`. Whole-slice prompt remains `docs/control/EOS_S04D_CLAUDE_IN_CHROME_VERIFICATION.md` and must not be re-run for already passed journeys.
+
+Formal technical acceptance is `docs/control/EOS_S04D_ACCEPTANCE.md` (`MD-PR-S023`, SHA `64683a853ead39c62caeb2d2e9f26bcb9d1dca21`).

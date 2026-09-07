@@ -1,8 +1,8 @@
 # Current State
 
-**Updated:** EOS-S04D action-result integrity and ACA-S04D delivery remediation (`MD-PR-S022`, 2026-09-07)
-**Prompt Control ID:** MD-PR-S022
-**Milestone:** `EOS-S04D` IN_REVIEW / NOT READY; successor to accepted EOS-S04C; catalogue accepted-slice count remains 4
+**Updated:** EOS-S04D formal technical acceptance (`MD-PR-S023`, 2026-09-07)
+**Prompt Control ID:** MD-PR-S023
+**Milestone:** `EOS-S04D` ACCEPTED; successor to accepted EOS-S04C; catalogue accepted-slice count remains 4
 
 MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is ACCEPTED. EOS-S02 is ACCEPTED. EOS-S03 is ACCEPTED. EOS-S04 is CLOSED / ACCEPTED (`PASS WITH OBSERVATIONS`). Accepted count remains 4. Native coverage is 62/62. S4-61 is satisfied for technical review only. S4-62 is satisfied for controlled technical acceptance/handover only. Independent, specialist and CEO production gates remain unsigned.
 
@@ -54,9 +54,10 @@ MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is A
 **EOS-S04C CONTROLLING PACK: docs/control/Maison_Doclar_EOS-S04C_Cursor_Prompt_Pack_v1.0.docx**
 **EOS-S04C CATALOGUE SLICE: NO**
 **EOS-S04D IMPLEMENTATION AUTHORISED: YES**
-**EOS-S04D ACCEPTED: NO**
-**EOS-S04D STATUS: IN_REVIEW / NOT READY**
-**EOS-S04D PROMPT CONTROL ID: MD-PR-S022**
+**EOS-S04D ACCEPTED: YES**
+**EOS-S04D STATUS: ACCEPTED**
+**EOS-S04D ACCEPTED IMPLEMENTATION SHA: 64683a853ead39c62caeb2d2e9f26bcb9d1dca21**
+**EOS-S04D PROMPT CONTROL ID: MD-PR-S022 / MD-PR-S023**
 **EOS-S04D CONTROLLING PACK: docs/control/Maison_Doclar_EOS-S04D_Cursor_Prompt_Pack_v1.0.docx**
 **EOS-S04D CATALOGUE SLICE: NO**
 **EOS-S04E IMPLEMENTATION AUTHORISED: NO**
@@ -93,9 +94,11 @@ Event OS S01–S03 remain formally accepted. EOS-S04 is CLOSED / ACCEPTED after 
 
 **EOS-S04C:** `ACCEPTED` on `2026-09-07` at accepted implementation SHA `b378fa4f092e4fa5237894975738e3f22b530d73`. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised: false`. Command Atelier remains the approved Event OS visual language. Acceptance covers P00–P11 and all remediation through the guest-renewal false-success correction. TDR-S04C-001–004 are CLOSED. Vendor HMAC/session-secret rotation, permanent IdP, synthetic-data cleanup, Railway restart/private-network tooling limitations, and the documented multi-instance persist observation remain carried forward and do not reopen the slice. Catalogue accepted-slice count remains 4; EOS-S04C is not a catalogue slice. Acceptance record: `docs/control/EOS_S04C_ACCEPTANCE.md`. Historical ratification: `docs/control/EOS_S04C_RATIFICATION.md`. Historical `IN_REVIEW` / remediation: `docs/control/EOS_S04C_PRIMARY_JOURNEY_REMEDIATION.md`, `docs/control/EOS_S04C_VENDOR_LIFECYCLE_REMEDIATION.md`, `docs/control/EOS_S04C_GUEST_RENEWAL_FALSE_SUCCESS_REMEDIATION.md`.
 
-**EOS-S04D–E, EOS-S04F, EOS-S05:** EOS-S04D is `IN_REVIEW / NOT READY` after action-result integrity and ACA-S04D delivery remediation. It is not accepted. EOS-S04E remains unauthorised. EOS-S04F remains RATIFIED / NOT_STARTED and HELD. EOS-S05 remains unauthorised. Production operations are not authorised (`productionAuthorised=false`).
+**EOS-S04D:** `ACCEPTED` on `2026-09-07` at accepted implementation SHA `64683a853ead39c62caeb2d2e9f26bcb9d1dca21`. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised: false`. Command Atelier remains the approved Event OS visual language. Acceptance covers P00–P11, deterministic forecasting, RSVP/forecast/provision separation, maker/checker, host projection, calibration, ACA-S04D, action-result integrity and phase eligible/centre labelling. TDR-S04D-001–004 remain carried forward and do not reopen the slice. Catalogue accepted-slice count remains 4; EOS-S04D is not a catalogue slice. Acceptance record: `docs/control/EOS_S04D_ACCEPTANCE.md`. Historical ratification: `docs/control/EOS_S04D_RATIFICATION.md`. Historical `IN_REVIEW` / remediation: `docs/control/EOS_S04D_ACTION_RESULT_ACADEMY_REMEDIATION.md`.
 
-Historical sentence “Implementation of EOS-S04A–F is not authorised as a product slice” applied before CEO S04A/S04B/S04C/S04D implementation authority. For S04A, S04B, S04C and S04D that sentence is superseded. S04E–F remain unauthorised for implementation (S04F remains held). The EOS-S04D controlled slice pack filename still contains `DRAFT`; current programme status for S04D is `IN_REVIEW / NOT READY`.
+**EOS-S04E, EOS-S04F, EOS-S05:** EOS-S04E remains `DRAFT FOR CEO RATIFICATION — implementation not authorised`. EOS-S04F remains RATIFIED / NOT_STARTED and HELD. EOS-S05 remains unauthorised. Production operations are not authorised (`productionAuthorised=false`).
+
+Historical sentence “Implementation of EOS-S04A–F is not authorised as a product slice” applied before CEO S04A/S04B/S04C/S04D implementation authority. For S04A, S04B, S04C and S04D that sentence is superseded. S04E remains unauthorised for implementation. S04F remains held. The EOS-S04D controlled slice pack filename still contains `DRAFT`; current programme status for S04D is `ACCEPTED`.
 
 ## Supersession — deploy-by-default (6 September 2026)
 
