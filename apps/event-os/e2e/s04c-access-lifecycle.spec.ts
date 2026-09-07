@@ -32,7 +32,11 @@ test("guest and vendor access issue, renew, revoke and forged denial", async ({ 
   const guestCard = page.locator("article").filter({ has: page.getByTestId("merch-guest-renew") }).first();
   await guestCard.locator('input[name="expiresAt"]').fill("2027-01-15T23:59");
   await guestCard.getByRole("button", { name: "Renew" }).click();
-  await expect(page.getByText("Private merchandise guest access was issued or already active.").or(page.getByText("The change was recorded."))).toBeVisible();
+  await expect(
+    page
+      .getByText("Private merchandise guest access was renewed. Prior sessions lost authority.")
+      .or(page.getByText("The change was recorded.")),
+  ).toBeVisible();
 
   const issueVendor = page.getByTestId("merch-vendor-issue");
   await issueVendor.getByLabel("Vendor identifier").fill("playwright-lifecycle-vendor");

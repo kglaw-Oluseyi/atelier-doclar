@@ -52,6 +52,10 @@ function successAudits(store: { snapshot: () => { audit: Array<{ action: string;
   return store.snapshot().audit.filter((item) => item.action === action && item.outcome === "SUCCESS");
 }
 
+function failedAudits(store: { snapshot: () => { audit: Array<{ action: string; outcome: string }> } }, action: string) {
+  return store.snapshot().audit.filter((item) => item.action === action && item.outcome === "FAILED");
+}
+
 function containsRaw(value: unknown, token: string): boolean {
   return JSON.stringify(value).includes(token);
 }
@@ -211,6 +215,7 @@ describe("EOS-S04C guest and vendor access lifecycles", () => {
       idempotencyKey: "guest-renew-1",
     });
     const before = successAudits(store, "merch.guestAccess.renewed").length;
+    const failedBefore = failedAudits(store, "merch.guestAccess.renewed").length;
     assert.throws(
       () =>
         service.renewMerchandiseGuestAccess(director(), {
@@ -232,6 +237,7 @@ describe("EOS-S04C guest and vendor access lifecycles", () => {
     assert.equal(active[0]?.id, renewed.grant.id);
     assert.equal(active[0]?.expiresAt, EXPIRY_A);
     assert.equal(successAudits(store, "merch.guestAccess.renewed").length, before);
+    assert.equal(failedAudits(store, "merch.guestAccess.renewed").length, failedBefore + 1);
   });
 
   it("rejects a stale different-value vendor renewal without minting another token", () => {
@@ -607,5 +613,56 @@ describe("EOS-S04C durable access CAS", () => {
     );
     const durable = await PostgresPlatformStore.open(db);
     assert.equal(durable.snapshot().vendorAssignments.find((item) => item.id === created.assignment.id)?.expiresAt, EXPIRY_A);
+  });
+
+  it("conflicts a stale guest renewal at the persistence boundary", async () => {
+    const db = new MemoryPlatformPg();
+    const writerA = await PostgresPlatformStore.open(db);
+    const seeded = s04cService();
+    await writerA.replaceAsync(seeded.store.snapshot());
+    const serviceA = new PlatformService(writerA);
+    const issued = serviceA.issueMerchandiseGuestAccess(director(), {
+      ...ALPHA,
+      guestId: S04A_FIXTURE_IDS.guestOlufemi,
+      expiresAt: EXPIRY_A,
+      reason: "cas guest issue",
+    });
+    await writerA.flush();
+    const writerB = await PostgresPlatformStore.open(db);
+    const serviceB = new PlatformService(writerB);
+    const first = serviceA.renewMerchandiseGuestAccess(director(), {
+      ...ALPHA,
+      grantId: issued.grant.id,
+      expiresAt: EXPIRY_A,
+      expectedVersion: issued.grant.version,
+      reason: "first persist guest renew",
+      idempotencyKey: "persist-guest-renew-a",
+    });
+    await writerA.flush();
+    serviceB.renewMerchandiseGuestAccess(director(), {
+      ...ALPHA,
+      grantId: issued.grant.id,
+      expiresAt: EXPIRY_B,
+      expectedVersion: issued.grant.version,
+      reason: "stale persist guest renew",
+      idempotencyKey: "persist-guest-renew-b",
+    });
+    await assert.rejects(
+      () => writerB.flush(),
+      (error: unknown) => error instanceof PlatformError && error.code === "VERSION_CONFLICT",
+    );
+    const durable = await PostgresPlatformStore.open(db);
+    const active = durable
+      .snapshot()
+      .merchandiseGuestGrants.filter(
+        (item) => item.guestId === S04A_FIXTURE_IDS.guestOlufemi && item.status === "ACTIVE",
+      );
+    assert.equal(active.length, 1);
+    assert.equal(active[0]?.id, first.grant.id);
+    assert.equal(active[0]?.expiresAt, EXPIRY_A);
+    assert.equal(
+      durable.snapshot().merchandiseGuestGrants.some((item) => item.expiresAt === EXPIRY_B),
+      false,
+    );
   });
 });
