@@ -1586,7 +1586,7 @@ export async function resolveCheckpointAction(formData: FormData): Promise<void>
         presentationReference: String(formData.get("presentationReference") ?? ""),
       });
     } catch (error) {
-      await programmeFail(eventId, error);
+      return await programmeFail(eventId, error);
     }
     redirect(
       `/app/events/${eventId}/programme?ok=resolve&outcome=${encodeURIComponent(result.outcome)}&verification=${result.verificationRequired ? "required" : "not-required"}`,

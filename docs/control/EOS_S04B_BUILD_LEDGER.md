@@ -68,6 +68,7 @@ Starting baseline: `40d65fa97fc9f2f0424757b7abd27872c0644f21`.
 2. Playwright `getByText("Estate main gate")` matched SVG, type option and checkpoint option.
 3. `getByRole("heading", { name: "Perimeter" })` also matched the page title.
 4. `resolveCheckpointAction` caught Next.js `redirect()` and rendered a false server-failure state.
+5. Railway `next build` rejected `result` as possibly undefined after `programmeFail` (local tsc did not).
 
 ### Gates
 
