@@ -40,7 +40,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
       <AtelierPageHeader
         eyebrow={`Event brief · ${client.displayName}`}
         title={event.name}
-        lede="Operational event overview. Guest intake, RSVP, programme routing, merchandise coordination and attendance forecasting are available for this event."
+        lede="Operational event overview. Guest intake, RSVP, programme routing, merchandise, forecasting, language and the private Atelier are available for this event."
       />
       <p>
         <span className="md-status" data-tone="brass">
@@ -63,6 +63,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
         </Link>
         <Link className="button secondary" href={`/app/events/${event.id}/atelier`}>
           Private Atelier
+        </Link>
+        <Link className="button secondary" href={`/app/events/${event.id}/language`}>
+          Language and editions
         </Link>
         <Link className="button secondary" href={`/app/events/${event.id}/rsvp`}>
           RSVP

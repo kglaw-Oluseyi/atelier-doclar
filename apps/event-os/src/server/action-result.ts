@@ -75,6 +75,12 @@ export function actionLabel(actionType: string): string {
     "atelier.access.revoke": "Revoke host access",
     "atelier.decision.review": "Review host decision",
     "atelier.update.publish": "Publish host update",
+    "language.preference.record": "Record language preference",
+    "language.cultural.create": "Create cultural source text",
+    "language.cultural.decide": "Decide cultural source text",
+    "language.translation.create": "Draft translation",
+    "language.translation.decide": "Review translation",
+    "language.assembly.preview": "Preview recipient assembly",
   };
   return labels[actionType] ?? actionType.replaceAll(".", " ");
 }

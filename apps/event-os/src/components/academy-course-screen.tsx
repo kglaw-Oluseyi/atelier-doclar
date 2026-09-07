@@ -10,7 +10,7 @@ import { AcademyS04AExperience } from "./academy-s04a-experience";
 import { AtelierOperationalState } from "./atelier-operational-state";
 import { AtelierPageHeader } from "./atelier-page-header";
 import { AppShell } from "./shell";
-import { submitAcaS04AAction, submitAcaS04CAction, submitAcaS04DAction, submitAcaS04EAction } from "../server/academy-actions";
+import { submitAcaS04AAction, submitAcaS04CAction, submitAcaS04DAction, submitAcaS04EAction, submitAcaS04FAction } from "../server/academy-actions";
 import { academyAssignmentForPerson } from "../server/academy-access";
 import { loadAcademyRecord } from "../server/academy-store";
 import { loadPresentedActionResult } from "../server/action-flash";
@@ -30,6 +30,23 @@ const S04C_PRACTICE = (
       <li>Capture and withdraw consented cap circumference in inches only.</li>
       <li>Submit an attributed vendor milestone and review it without storing money.</li>
       <li>Attempt a forged or cross-vendor update and confirm the server fails closed.</li>
+    </ol>
+  </>
+);
+
+const S04F_PRACTICE = (
+  <>
+    <p>
+      Use synthetic Alpha One language fixtures only: Olúfẹ́mi Alákíjà, Ẹ̀bùnolúwa, Ìjèbú marks, French, German compounds and
+      Simplified Chinese. Do not use real recipients or a translation provider. Escalation: if approval is refused, ask a
+      separately authorised reviewer — do not infer a language or send a message.
+    </p>
+    <ol>
+      <li>Leave Ẹ̀bùnolúwa’s preference unknown. Do not store English as consent.</li>
+      <li>Translate only a selected Yorùbá greeting and keep the edition marked partial.</li>
+      <li>Have a different staff role approve the French edition. Self-approval must fail.</li>
+      <li>Change the English source and confirm the French edition becomes stale.</li>
+      <li>Preview Olúfẹ́mi’s assembly and confirm it is not dispatched.</li>
     </ol>
   </>
 );
@@ -101,7 +118,9 @@ export async function AcademyCourseScreen({
   const record = await loadAcademyRecord(person.id, entry.id);
   const questions = questionsForPath(course.questions, assignment.learningPath);
   const action =
-    entry.id === "ACA-S04E"
+    entry.id === "ACA-S04F"
+      ? submitAcaS04FAction
+      : entry.id === "ACA-S04E"
       ? submitAcaS04EAction
       : entry.id === "ACA-S04D"
         ? submitAcaS04DAction
@@ -132,7 +151,9 @@ export async function AcademyCourseScreen({
           action={action}
           practice={
             practice ??
-            (entry.id === "ACA-S04E"
+            (entry.id === "ACA-S04F"
+              ? S04F_PRACTICE
+              : entry.id === "ACA-S04E"
               ? S04E_PRACTICE
               : entry.id === "ACA-S04D"
                 ? S04D_PRACTICE

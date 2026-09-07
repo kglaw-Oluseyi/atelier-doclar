@@ -1599,3 +1599,60 @@ body.atelier {
     animation: none !important;
   }
 }
+
+.language-atelier {
+  display: grid;
+  gap: 24px;
+}
+
+.language-preference-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+}
+
+.language-preference-card,
+.language-source-card,
+.language-assembly-card {
+  border-top: 1px solid color-mix(in srgb, var(--at-rule, #d7cbb8) 80%, transparent);
+  padding-top: 12px;
+}
+
+.language-source-text {
+  font-size: 1.4rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.language-compare {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+  margin-bottom: 24px;
+}
+
+.language-compare-source,
+.language-compare-target {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.language-editor,
+.language-inline-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.language-fallback {
+  display: inline-block;
+  margin-inline-start: 8px;
+  font-size: 0.9rem;
+}
+
+@media (min-width: 900px) {
+  .language-compare {
+    grid-template-columns: 1fr 1fr;
+  }
+}

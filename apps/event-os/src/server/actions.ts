@@ -2921,3 +2921,189 @@ export async function submitHostAtelierDecisionAction(formData: FormData): Promi
     redirect("/atelier?state=received");
   });
 }
+
+async function languageFail(
+  eventId: string,
+  error: unknown,
+  actor?: { correlationId: string; personId: string },
+  actionType = "language.mutate",
+): Promise<never> {
+  const bind = actor
+    ? actorBind(actor, `/app/events/${eventId}/language`, actionType, eventId)
+    : unsignedBind(`/app/events/${eventId}/language`, actionType, eventId);
+  return finishAction(bind, { error });
+}
+
+async function languageOk(
+  eventId: string,
+  actor: { correlationId: string; personId: string },
+  actionType: string,
+  ok: string,
+): Promise<never> {
+  return finishAction(actorBind(actor, `/app/events/${eventId}/language`, actionType, eventId), { ok });
+}
+
+export async function recordLanguagePreferenceAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const actionType = "language.preference.record";
+    const { actor } = await requireActor().catch((error) => languageFail(eventId, error, undefined, actionType));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await languageFail(eventId, new Error("No organisation assignment is available."), actor, actionType);
+    const tag = String(formData.get("preferredLanguageTag") ?? "").trim();
+    try {
+      getRuntime().service.recordLanguagePreference(actor, {
+        organisationId: organisation.id,
+        eventId,
+        guestId: String(formData.get("guestId") ?? ""),
+        preferredLanguageTag: tag || undefined,
+        source: tag ? "STAFF_RECORDED" : "UNKNOWN",
+        expectedVersion: Number(formData.get("expectedVersion") || 1),
+        reason: String(formData.get("reason") ?? "Record explicit language preference"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await languageFail(eventId, error, actor, actionType);
+    }
+    await languageOk(eventId, actor, actionType, "language-preference");
+  });
+}
+
+export async function createCulturalSourceTextAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const actionType = "language.cultural.create";
+    const { actor } = await requireActor().catch((error) => languageFail(eventId, error, undefined, actionType));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await languageFail(eventId, new Error("No organisation assignment is available."), actor, actionType);
+    try {
+      getRuntime().service.createCulturalSourceText(actor, {
+        organisationId: organisation.id,
+        eventId,
+        exactText: String(formData.get("exactText") ?? ""),
+        languageTag: String(formData.get("languageTag") ?? "yo"),
+        purpose: String(formData.get("purpose") ?? "Cultural source"),
+        culturalMeaning: String(formData.get("culturalMeaning") ?? "Recorded meaning"),
+        usageNote: String(formData.get("usageNote") ?? "Staff-authored draft. Not automatically approved."),
+        provenance: String(formData.get("provenance") ?? "Staff entry"),
+        reason: String(formData.get("reason") ?? "Create cultural source text"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await languageFail(eventId, error, actor, actionType);
+    }
+    await languageOk(eventId, actor, actionType, "language-cultural");
+  });
+}
+
+export async function decideCulturalTextAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const actionType = "language.cultural.decide";
+    const { actor } = await requireActor().catch((error) => languageFail(eventId, error, undefined, actionType));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await languageFail(eventId, new Error("No organisation assignment is available."), actor, actionType);
+    try {
+      getRuntime().service.decideCulturalText(actor, {
+        organisationId: organisation.id,
+        eventId,
+        culturalSourceTextId: String(formData.get("culturalSourceTextId") ?? ""),
+        decision: String(formData.get("decision") ?? "") === "REJECTED" ? "REJECTED" : "APPROVED",
+        expectedVersion: Number(formData.get("expectedVersion")),
+        notes: optionalFormValue(formData, "notes"),
+        reason: String(formData.get("reason") ?? "Decide cultural source text"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await languageFail(eventId, error, actor, actionType);
+    }
+    await languageOk(eventId, actor, actionType, "language-cultural-decide");
+  });
+}
+
+export async function createDependentEditionAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const actionType = "language.translation.create";
+    const { actor } = await requireActor().catch((error) => languageFail(eventId, error, undefined, actionType));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await languageFail(eventId, new Error("No organisation assignment is available."), actor, actionType);
+    try {
+      getRuntime().service.createDependentEdition(actor, {
+        organisationId: organisation.id,
+        eventId,
+        workId: String(formData.get("workId") ?? ""),
+        sourceEditionId: String(formData.get("sourceEditionId") ?? ""),
+        targetLanguageTag: String(formData.get("targetLanguageTag") ?? ""),
+        kind: String(formData.get("kind") ?? "PARTIAL"),
+        sourceType: "HUMAN_AUTHORED",
+        blocks: [
+          {
+            sourceBlockId: String(formData.get("sourceBlockId") ?? ""),
+            exactText: String(formData.get("exactText") ?? ""),
+          },
+        ],
+        reason: String(formData.get("reason") ?? "Draft translation"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await languageFail(eventId, error, actor, actionType);
+    }
+    await languageOk(eventId, actor, actionType, "language-translation");
+  });
+}
+
+export async function decideTranslationAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const actionType = "language.translation.decide";
+    const { actor } = await requireActor().catch((error) => languageFail(eventId, error, undefined, actionType));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await languageFail(eventId, new Error("No organisation assignment is available."), actor, actionType);
+    try {
+      getRuntime().service.decideTranslation(actor, {
+        organisationId: organisation.id,
+        eventId,
+        editionId: String(formData.get("editionId") ?? ""),
+        decision: String(formData.get("decision") ?? "") === "REJECTED" ? "REJECTED" : "APPROVED",
+        expectedVersion: Number(formData.get("expectedVersion")),
+        notes: optionalFormValue(formData, "notes"),
+        reason: String(formData.get("reason") ?? "Review translation"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await languageFail(eventId, error, actor, actionType);
+    }
+    await languageOk(eventId, actor, actionType, "language-translation-decide");
+  });
+}
+
+export async function assembleRecipientContentAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const actionType = "language.assembly.preview";
+    const { actor } = await requireActor().catch((error) => languageFail(eventId, error, undefined, actionType));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await languageFail(eventId, new Error("No organisation assignment is available."), actor, actionType);
+    try {
+      getRuntime().service.assembleRecipientContent(actor, {
+        organisationId: organisation.id,
+        eventId,
+        guestId: String(formData.get("guestId") ?? ""),
+        workId: String(formData.get("workId") ?? ""),
+        reason: String(formData.get("reason") ?? "Preview recipient assembly"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await languageFail(eventId, error, actor, actionType);
+    }
+    await languageOk(eventId, actor, actionType, "language-assembly");
+  });
+}
+
+export async function refreshLanguageRecordAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    redirect(`/app/events/${eventId}/language`);
+  });
+}

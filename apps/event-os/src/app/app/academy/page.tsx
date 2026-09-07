@@ -26,7 +26,7 @@ export default async function AcademyIndexPage() {
   return (
     <AppShell person={person} current="/app/academy">
       <AtelierPageHeader
-        eyebrow="Academy delta · ACA-S04A / ACA-S04C / ACA-S04D / ACA-S04E"
+        eyebrow="Academy delta · ACA-S04A / ACA-S04C / ACA-S04D / ACA-S04E / ACA-S04F"
         title="Assigned training"
         lede="Learning follows your Event OS role. Completing a course never grants system authority."
       />

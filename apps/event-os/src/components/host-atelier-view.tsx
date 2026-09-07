@@ -44,6 +44,17 @@ export function HostAtelierView({
               <p data-testid="host-vision-design-direction">{view.vision.designDirection}</p>
               <p data-testid="host-vision-provenance">{view.vision.provenance}</p>
             </div>
+          ) : chapter.type === "EDITIONS" && view.multilingualEdition ? (
+            <div data-testid="host-multilingual-edition" lang={view.multilingualEdition.htmlLang}>
+              <p className="eyebrow">
+                {view.multilingualEdition.languageName} · synthetic unvalidated host edition
+              </p>
+              {view.multilingualEdition.blocks.map((block, index) => (
+                <p key={`${block.languageTag}-${index}`} lang={block.htmlLang}>
+                  {block.text}
+                </p>
+              ))}
+            </div>
           ) : (
             <p>{chapter.body}</p>
           )}
