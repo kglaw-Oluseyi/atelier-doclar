@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { AtelierPageHeader } from "../../../../../components/atelier-page-header";
 import { AppShell } from "../../../../../components/shell";
+import { ForecastStrip } from "../../../../../components/forecast-workspace";
 import { PrepareRsvpForm } from "../../../../../components/staff-rsvp-forms";
+import { forecastPermissions } from "../../../../../server/forecast-scope";
 import { guestPermissions, resolveScopedEvent } from "../../../../../server/guest-scope";
 import { guardedActor } from "../../../../../server/guard";
 import { getRuntime } from "../../../../../server/runtime";
@@ -66,6 +68,10 @@ export default async function RsvpOverviewPage({
             : undefined,
       })
     : [];
+  const canViewForecast = forecastPermissions(person, scoped.organisation.id, scoped.event.id).view;
+  const forecastStrip = canViewForecast
+    ? runtime.service.getForecastOverviewStrip(actor, scoped.organisation.id, scoped.event.id)
+    : undefined;
 
   return (
     <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
@@ -92,6 +98,7 @@ export default async function RsvpOverviewPage({
         {" · "}
         <Link href={`/app/events/${scoped.event.id}/rsvp/exceptions`}>Review queue</Link>
       </p>
+      {forecastStrip ? <ForecastStrip eventId={scoped.event.id} strip={forecastStrip} /> : null}
       {!policy && permissions.rsvpManage ? (
         <section>
           <h2>Prepare this event</h2>

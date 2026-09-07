@@ -321,6 +321,24 @@ export function successCopy(ok: string): string {
       return "Free-text companion names were recorded without creating guests.";
     case "academy":
       return "Training evidence was recorded. Course completion does not grant Event OS authority.";
+    case "forecast-run":
+      return "The attendance forecast was recorded. RSVP and guest records were not changed.";
+    case "forecast-override":
+      return "The forecast override was proposed. The original model result is preserved.";
+    case "forecast-override-decided":
+      return "The forecast override was decided. History was not rewritten.";
+    case "provision-proposed":
+      return "The operational provision recommendation was proposed. It is not attendance truth.";
+    case "provision-decided":
+      return "The operational provision recommendation was decided. No vendor order was placed.";
+    case "host-projection":
+      return "The calm host projection was approved.";
+    case "calibration":
+      return "The shadow observation was recorded. The original forecast was preserved.";
+    case "evaluation":
+      return "Forecast evaluation was recorded without automated model release.";
+    case "forecast-parameters":
+      return "A new event-scoped parameter set was recorded. Existing forecast runs were not rewritten.";
     case "amend":
       return "The guest amendment was recorded.";
     case "already-applied":

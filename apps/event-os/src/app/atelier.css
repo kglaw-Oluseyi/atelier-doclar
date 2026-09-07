@@ -1363,9 +1363,146 @@ body.atelier {
   .merchandise-atelier *,
   .guest-merchandise *,
   .vendor-shell *,
-  .guest-shell * {
+  .guest-shell *,
+  .forecast-atelier *,
+  .forecast-host * {
     animation: none !important;
     transition: none !important;
     transform: none !important;
+  }
+}
+
+.forecast-atelier,
+.forecast-host,
+.forecast-strip {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.forecast-products {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.forecast-products li {
+  border-left: 3px solid #8b6e38;
+  padding: 8px 0 8px 14px;
+}
+
+.forecast-readiness {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr));
+  gap: 12px 18px;
+}
+
+.forecast-readiness dt {
+  color: var(--at-umber);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.forecast-readiness dd {
+  margin: 4px 0 0;
+  font-family: var(--at-editorial);
+  font-size: 1.6rem;
+}
+
+.forecast-range-track {
+  position: relative;
+  height: 18px;
+  margin: 12px 0 8px;
+  background: #efe6d8;
+  border-radius: 999px;
+}
+
+.forecast-range-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: #8b6e38;
+  opacity: 0.35;
+  border-radius: 999px;
+}
+
+.forecast-range-marker {
+  position: absolute;
+  top: -4px;
+  width: 4px;
+  height: 26px;
+  margin-left: -2px;
+  background: var(--at-onyx);
+}
+
+.forecast-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.forecast-table th,
+.forecast-table td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(139, 110, 56, 0.2);
+}
+
+.forecast-form {
+  display: grid;
+  gap: 12px;
+  max-width: 28rem;
+}
+
+.forecast-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.forecast-card-list {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.forecast-card {
+  background: #fffdf8;
+  border: 1px solid rgba(139, 110, 56, 0.22);
+  padding: 14px 16px;
+}
+
+.forecast-atelier a,
+.forecast-atelier button,
+.forecast-host a,
+.forecast-host button {
+  cursor: pointer;
+}
+
+.forecast-atelier button:disabled,
+.forecast-atelier [aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+.forecast-atelier a:focus-visible,
+.forecast-atelier button:focus-visible,
+.forecast-host a:focus-visible,
+.forecast-host button:focus-visible {
+  outline: 2px solid #8b6e38;
+  outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+  .forecast-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .forecast-table tr,
+  .forecast-table td,
+  .forecast-table th {
+    display: block;
   }
 }

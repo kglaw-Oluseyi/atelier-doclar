@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { AtelierPageHeader } from "../../../../components/atelier-page-header";
+import { ForecastStrip } from "../../../../components/forecast-workspace";
 import { AppShell } from "../../../../components/shell";
+import { forecastPermissions } from "../../../../server/forecast-scope";
 import { guardedActor } from "../../../../server/guard";
 import { getRuntime } from "../../../../server/runtime";
 
@@ -23,6 +25,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
   const client = runtime.service.getClient(actor, organisation.id, event.clientId);
   const mef = runtime.service.getMasterEventFile(actor, organisation.id, event.id);
   const composed = mef.slots.filter((slot) => slot.status !== "NOT_COMPOSED").length;
+  const canViewForecast = forecastPermissions(person, organisation.id, event.id).view;
+  const forecastStrip = canViewForecast
+    ? runtime.service.getForecastOverviewStrip(actor, organisation.id, event.id)
+    : undefined;
 
   return (
     <AppShell
@@ -34,7 +40,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
       <AtelierPageHeader
         eyebrow={`Event brief · ${client.displayName}`}
         title={event.name}
-        lede="Operational event overview. Guest intake, RSVP, programme routing and merchandise coordination are available for this event."
+        lede="Operational event overview. Guest intake, RSVP, programme routing, merchandise coordination and attendance forecasting are available for this event."
       />
       <p>
         <span className="md-status" data-tone="brass">
@@ -52,6 +58,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
         <Link className="button secondary" href={`/app/events/${event.id}/merchandise`}>
           Merchandise
         </Link>
+        <Link className="button secondary" href={`/app/events/${event.id}/forecast`}>
+          Attendance forecast
+        </Link>
         <Link className="button secondary" href={`/app/events/${event.id}/rsvp`}>
           RSVP
         </Link>
@@ -62,6 +71,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
           Event settings
         </Link>
       </p>
+      {forecastStrip ? <ForecastStrip eventId={event.id} strip={forecastStrip} /> : null}
       <section className="atelier-panel">
         <h2>Master Event File</h2>
         <p>

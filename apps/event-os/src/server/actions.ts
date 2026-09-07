@@ -2212,3 +2212,238 @@ export async function guestWithdrawCapAction(formData: FormData): Promise<void> 
     redirect(`/${surface}?ok=cap-withdrawn`);
   });
 }
+
+async function forecastFail(eventId: string, error: unknown): Promise<never> {
+  rethrowRedirect(error);
+  sessionOrAssignmentRedirect(error, `/app/events/${eventId}/forecast`);
+  const classified = classifyActionError(error);
+  await writeActionFlash({
+    code: classified.code,
+    message: classified.message,
+    eventId,
+  });
+  redirect(`/app/events/${encodeURIComponent(eventId)}/forecast?${failQuery(error)}`);
+}
+
+export async function runAttendanceForecastAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor } = await requireActor().catch((error) => forecastFail(eventId, error));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await forecastFail(eventId, new Error("No organisation assignment is available."));
+    try {
+      getRuntime().service.runAttendanceForecast(actor, {
+        organisationId: organisation.id,
+        eventId,
+        reason: String(formData.get("reason") ?? "Run governed attendance forecast"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await forecastFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/forecast?ok=forecast-run`);
+  });
+}
+
+export async function proposeForecastOverrideAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor } = await requireActor().catch((error) => forecastFail(eventId, error));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await forecastFail(eventId, new Error("No organisation assignment is available."));
+    try {
+      getRuntime().service.proposeForecastOverride(actor, {
+        organisationId: organisation.id,
+        eventId,
+        forecastRunId: String(formData.get("forecastRunId") ?? ""),
+        estimateId: String(formData.get("estimateId") ?? ""),
+        proposedLow: Number(formData.get("proposedLow")),
+        proposedExpected: Number(formData.get("proposedExpected")),
+        proposedHigh: Number(formData.get("proposedHigh")),
+        evidence: String(formData.get("evidence") ?? ""),
+        reason: String(formData.get("reason") ?? "Propose forecast override"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await forecastFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/forecast?ok=forecast-override`);
+  });
+}
+
+export async function decideForecastOverrideAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor } = await requireActor().catch((error) => forecastFail(eventId, error));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await forecastFail(eventId, new Error("No organisation assignment is available."));
+    try {
+      getRuntime().service.decideForecastOverride(actor, {
+        organisationId: organisation.id,
+        eventId,
+        overrideId: String(formData.get("overrideId") ?? ""),
+        decision: String(formData.get("decision") ?? "") === "REJECT" ? "REJECT" : "APPROVE",
+        expectedVersion: Number(formData.get("expectedVersion")),
+        decisionReason: String(formData.get("decisionReason") ?? ""),
+        reason: String(formData.get("reason") ?? "Decide forecast override"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await forecastFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/forecast?ok=forecast-override-decided`);
+  });
+}
+
+export async function proposeProvisionRecommendationAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor } = await requireActor().catch((error) => forecastFail(eventId, error));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await forecastFail(eventId, new Error("No organisation assignment is available."));
+    try {
+      getRuntime().service.proposeProvisionRecommendation(actor, {
+        organisationId: organisation.id,
+        eventId,
+        forecastRunId: String(formData.get("forecastRunId") ?? ""),
+        domain: String(formData.get("domain") ?? "CATERING"),
+        proposedQuantity: Number(formData.get("proposedQuantity")),
+        buffer: Number(formData.get("buffer")),
+        rationale: String(formData.get("rationale") ?? ""),
+        ownerLabel: String(formData.get("ownerLabel") ?? ""),
+        reason: String(formData.get("reason") ?? "Propose operational provision"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await forecastFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/forecast?ok=provision-proposed`);
+  });
+}
+
+export async function decideProvisionRecommendationAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor } = await requireActor().catch((error) => forecastFail(eventId, error));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await forecastFail(eventId, new Error("No organisation assignment is available."));
+    try {
+      getRuntime().service.decideProvisionRecommendation(actor, {
+        organisationId: organisation.id,
+        eventId,
+        provisionId: String(formData.get("provisionId") ?? ""),
+        decision: String(formData.get("decision") ?? "") === "REJECT" ? "REJECT" : "APPROVE",
+        expectedVersion: Number(formData.get("expectedVersion")),
+        decisionReason: String(formData.get("decisionReason") ?? ""),
+        reason: String(formData.get("reason") ?? "Decide operational provision"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await forecastFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/forecast?ok=provision-decided`);
+  });
+}
+
+export async function approveHostForecastProjectionAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor } = await requireActor().catch((error) => forecastFail(eventId, error));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await forecastFail(eventId, new Error("No organisation assignment is available."));
+    try {
+      getRuntime().service.approveHostForecastProjection(actor, {
+        organisationId: organisation.id,
+        eventId,
+        forecastRunId: String(formData.get("forecastRunId") ?? ""),
+        expectedVersion: Number(formData.get("expectedVersion")),
+        reason: String(formData.get("reason") ?? "Approve host projection"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await forecastFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/forecast?ok=host-projection`);
+  });
+}
+
+export async function recordForecastCalibrationAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor } = await requireActor().catch((error) => forecastFail(eventId, error));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await forecastFail(eventId, new Error("No organisation assignment is available."));
+    try {
+      getRuntime().service.recordForecastCalibration(actor, {
+        organisationId: organisation.id,
+        eventId,
+        forecastRunId: String(formData.get("forecastRunId") ?? ""),
+        estimateId: String(formData.get("estimateId") ?? ""),
+        evidenceKind: "SYNTHETIC_SHADOW",
+        completeness: "ACCEPTED",
+        observedCount: Number(formData.get("observedCount")),
+        sourceLedger: "synthetic-shadow",
+        notes: String(formData.get("notes") ?? ""),
+        reason: String(formData.get("reason") ?? "Record shadow calibration"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await forecastFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/forecast?ok=calibration`);
+  });
+}
+
+export async function evaluateForecastAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor } = await requireActor().catch((error) => forecastFail(eventId, error));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await forecastFail(eventId, new Error("No organisation assignment is available."));
+    try {
+      getRuntime().service.evaluateForecast(actor, {
+        organisationId: organisation.id,
+        eventId,
+        observationId: String(formData.get("observationId") ?? ""),
+        reason: String(formData.get("reason") ?? "Evaluate forecast without rewriting history"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await forecastFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/forecast?ok=evaluation`);
+  });
+}
+
+export async function createEventForecastParameterSetAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor } = await requireActor().catch((error) => forecastFail(eventId, error));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await forecastFail(eventId, new Error("No organisation assignment is available."));
+    try {
+      getRuntime().service.createEventForecastParameterSet(actor, {
+        organisationId: organisation.id,
+        eventId,
+        yesLow: Number(formData.get("yesLow")),
+        yesCentral: Number(formData.get("yesCentral")),
+        yesHigh: Number(formData.get("yesHigh")),
+        noResponseLow: Number(formData.get("noResponseLow")),
+        noResponseCentral: Number(formData.get("noResponseCentral")),
+        noResponseHigh: Number(formData.get("noResponseHigh")),
+        noLow: Number(formData.get("noLow")),
+        noCentral: Number(formData.get("noCentral")),
+        noHigh: Number(formData.get("noHigh")),
+        unnamedLow: Number(formData.get("unnamedLow")),
+        unnamedCentral: Number(formData.get("unnamedCentral")),
+        unnamedHigh: Number(formData.get("unnamedHigh")),
+        explanation: String(formData.get("explanation") ?? ""),
+        reason: String(formData.get("reason") ?? "Create event-scoped forecast parameter set"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await forecastFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/forecast?ok=forecast-parameters`);
+  });
+}
