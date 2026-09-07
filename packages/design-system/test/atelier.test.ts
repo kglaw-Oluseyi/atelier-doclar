@@ -17,6 +17,7 @@ describe("Command Atelier language", () => {
     assert.equal(ATELIER_TOKENS.color.onyx, "#11100F");
     assert.equal(ATELIER_TOKENS.color.ivory, "#F5F0E8");
     assert.equal(ATELIER_TOKENS.color.champagne, "#B89A62");
+    assert.equal(ATELIER_TOKENS.color.champagneFunctional, "#8B6E38");
     assert.notEqual(ATELIER_TOKENS.color.onyx, "#000000");
     assert.notEqual(ATELIER_TOKENS.color.champagne, "#D4AF37");
     assert.match(css, /--at-onyx:/);

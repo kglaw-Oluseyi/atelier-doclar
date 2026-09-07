@@ -9,6 +9,7 @@ export const ATELIER_TOKENS = {
     umber: "#5A534B",
     champagne: "#B89A62",
     champagnePale: "#D8C59C",
+    champagneFunctional: "#8B6E38",
     oxblood: "#65352F",
     success: "#2F5D3A",
     warning: "#8A6A1F",
@@ -25,4 +26,11 @@ export const ATELIER_TOKENS = {
     operational: '"Inter", "Helvetica Neue", Helvetica, Arial, sans-serif',
     editorial: 'var(--font-editorial), "Iowan Old Style", Palatino, "Times New Roman", serif',
   },
+} as const;
+
+/** Decorative champagne remains the approved brand thread. Functional light-surface accent is darker. */
+export const ATELIER_ACCENT = {
+  decorative: ATELIER_TOKENS.color.champagne,
+  decorativePale: ATELIER_TOKENS.color.champagnePale,
+  functionalLight: ATELIER_TOKENS.color.champagneFunctional,
 } as const;

@@ -401,21 +401,37 @@ function PerimeterDiagram({ workspace }: { workspace: EventProgrammeWorkspace })
   return (
     <section className="atelier-panel" aria-labelledby="perimeter-heading">
       <h2 id="perimeter-heading">Perimeter</h2>
-      <svg className="programme-perimeter" viewBox="0 0 640 160" role="img" aria-label="Ordered perimeter checkpoints">
-        <rect x="8" y="24" width="624" height="112" rx="18" fill="#1c1916" />
-        <line x1="40" y1="80" x2="600" y2="80" stroke="#d8c59c" strokeWidth="2" />
-        {nodes.map((node, index) => {
-          const x = 80 + (index * 480) / Math.max(nodes.length - 1, 1);
-          return (
-            <g key={node.id}>
-              <circle cx={x} cy="80" r="16" fill="#f4efe6" stroke="#d8c59c" />
-              <text x={x} y="124" textAnchor="middle" fill="#f4efe6" fontSize="11">
-                {node.name}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
+      <figure className="programme-perimeter-figure">
+        <svg
+          className="programme-perimeter"
+          viewBox="0 0 640 160"
+          preserveAspectRatio="xMidYMid meet"
+          role="img"
+          aria-label="Ordered perimeter checkpoints"
+        >
+          <rect x="8" y="24" width="624" height="112" rx="18" fill="#1c1916" />
+          <line x1="40" y1="80" x2="600" y2="80" stroke="#d8c59c" strokeWidth="2" />
+          {nodes.map((node, index) => {
+            const x = 80 + (index * 480) / Math.max(nodes.length - 1, 1);
+            return (
+              <g key={node.id}>
+                <circle cx={x} cy="80" r="16" fill="#f4efe6" stroke="#d8c59c" />
+                <text x={x} y="124" textAnchor="middle" fill="#f4efe6" fontSize="11">
+                  {index + 1}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+        <ol className="programme-perimeter-legend">
+          {nodes.map((node, index) => (
+            <li key={node.id}>
+              <span className="programme-perimeter-index">{index + 1}</span>
+              <span className="guest-name">{node.name}</span>
+            </li>
+          ))}
+        </ol>
+      </figure>
     </section>
   );
 }

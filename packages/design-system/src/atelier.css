@@ -8,6 +8,12 @@
   --at-umber: #5a534b;
   --at-champagne: #b89a62;
   --at-champagne-pale: #d8c59c;
+  --at-champagne-functional: #8b6e38;
+  --at-champagne-functional-rgb: 139, 110, 56;
+  --at-accent-decorative: var(--at-champagne);
+  --at-accent-functional: var(--at-champagne-functional);
+  --at-focus-light: var(--at-champagne-functional);
+  --at-focus-dark: var(--at-champagne);
   --at-oxblood: #65352f;
   --at-success: #2f5d3a;
   --at-warning: #8a6a1f;
@@ -68,7 +74,7 @@
 .at-seal[data-tone="danger"]::before,
 .at-scope .md-status[data-tone="danger"]::before { background: var(--at-error); }
 .at-seal[data-tone="brass"]::before,
-.at-scope .md-status[data-tone="brass"]::before { background: var(--at-champagne); }
+.at-scope .md-status[data-tone="brass"]::before { background: var(--at-accent-functional); }
 .at-seal[data-tone="info"]::before,
 .at-scope .md-status[data-tone="info"]::before { background: var(--at-info); }
 
@@ -148,7 +154,7 @@
 .at-scope .button.secondary:hover,
 .at-scope button.secondary:hover {
   background: var(--at-porcelain);
-  border-color: var(--at-champagne);
+  border-color: var(--at-accent-functional);
   transform: translateY(-1px);
 }
 
@@ -224,8 +230,8 @@
 
 .at-scope input[type="checkbox"]:not(.at-switch):checked,
 .at-scope input[type="radio"]:checked {
-  border-color: var(--at-champagne);
-  background: linear-gradient(180deg, var(--at-champagne-pale), var(--at-champagne));
+  border-color: var(--at-accent-functional);
+  background: linear-gradient(180deg, var(--at-champagne), var(--at-accent-functional));
   box-shadow: inset 0 0 0 3px var(--at-porcelain);
 }
 
@@ -248,20 +254,20 @@
 .at-scope .form textarea:focus-visible,
 .at-scope .filter-bar input:focus-visible,
 .at-scope .filter-bar select:focus-visible {
-  border-color: var(--at-champagne);
-  box-shadow: 0 0 0 3px rgba(184, 154, 98, 0.22);
+  border-color: var(--at-focus-light);
+  box-shadow: 0 0 0 3px rgba(var(--at-champagne-functional-rgb), 0.28);
   outline: none;
 }
 
 .at-scope :focus-visible {
-  outline: 2px solid var(--at-champagne);
+  outline: 2px solid var(--at-focus-light);
   outline-offset: 3px;
 }
 
 .at-scope .alert {
   border-radius: var(--at-radius);
   background: rgba(252, 250, 247, 0.86);
-  box-shadow: inset 3px 0 0 var(--at-champagne);
+  box-shadow: inset 3px 0 0 var(--at-accent-functional);
 }
 
 .at-scope .alert[data-tone="danger"] {
@@ -329,8 +335,8 @@
   left: 14px;
   right: 14px;
   bottom: 6px;
-  height: 1.5px;
-  background: linear-gradient(90deg, var(--at-champagne), var(--at-champagne-pale));
+  height: 2px;
+  background: var(--at-accent-functional);
   transition: left var(--at-panel) var(--at-ease), right var(--at-panel) var(--at-ease);
 }
 
@@ -361,11 +367,11 @@
 }
 
 .at-switch:hover {
-  box-shadow: 0 0 0 4px rgba(184, 154, 98, 0.16);
+  box-shadow: 0 0 0 4px rgba(var(--at-champagne-functional-rgb), 0.2);
 }
 
 .at-switch:checked {
-  background: linear-gradient(180deg, var(--at-champagne-pale), var(--at-champagne));
+  background: linear-gradient(180deg, var(--at-champagne), var(--at-accent-functional));
 }
 
 .at-switch:checked::after {
@@ -373,7 +379,7 @@
 }
 
 .at-switch:focus-visible {
-  outline: 2px solid var(--at-champagne);
+  outline: 2px solid var(--at-focus-light);
   outline-offset: 3px;
 }
 
