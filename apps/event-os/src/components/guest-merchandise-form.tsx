@@ -5,9 +5,11 @@ import { IdempotencyField, PendingSubmit } from "./atelier-pending-submit";
 export function GuestMerchandiseForm({
   projection,
   guestId,
+  surface = "rsvp",
 }: {
   projection: GuestMerchandiseProjection;
   guestId: string;
+  surface?: "rsvp" | "offers";
 }) {
   if (projection.offers.length === 0) {
     return (
@@ -35,6 +37,7 @@ export function GuestMerchandiseForm({
             </p>
           ) : null}
           <form action={guestRecordParticipationAction}>
+            <input type="hidden" name="surface" value={surface} />
             <input type="hidden" name="guestOfferId" value={offer.id} />
             <input type="hidden" name="guestId" value={guestId} />
             <input type="hidden" name="expectedOfferVersion" value={offer.version} />
@@ -65,11 +68,15 @@ export function GuestMerchandiseForm({
           </form>
           {offer.madeToMeasureCap ? (
             <form action={guestCaptureCapAction}>
+              <input type="hidden" name="surface" value={surface} />
               <input type="hidden" name="guestId" value={guestId} />
               <input type="hidden" name="itemId" value={offer.itemId} />
+              {offer.capMeasurement ? (
+                <input type="hidden" name="expectedVersion" value={offer.capMeasurement.version} />
+              ) : null}
               <fieldset>
                 <legend>Optional male-cap circumference</legend>
-                <p>Only inches for this cap. No other measurements are collected.</p>
+                <p>Only inches for this cap. No other measurements are collected. Consent is not preselected.</p>
                 <label>
                   Head circumference (inches)
                   <input
@@ -83,8 +90,8 @@ export function GuestMerchandiseForm({
                   />
                 </label>
                 <label className="check">
-                  <input type="checkbox" name="consent" required defaultChecked={Boolean(offer.capMeasurement)} />I
-                  consent to store this measurement only for the named cap.
+                  <input type="checkbox" name="consent" required />I consent to store this measurement only for the named
+                  cap.
                 </label>
                 <PendingSubmit>Save consented measurement</PendingSubmit>
               </fieldset>
@@ -92,6 +99,7 @@ export function GuestMerchandiseForm({
           ) : null}
           {offer.capMeasurement ? (
             <form action={guestWithdrawCapAction}>
+              <input type="hidden" name="surface" value={surface} />
               <input type="hidden" name="measurementId" value={offer.capMeasurement.id} />
               <input type="hidden" name="expectedVersion" value={offer.capMeasurement.version} />
               <PendingSubmit>Withdraw cap-measurement consent</PendingSubmit>
