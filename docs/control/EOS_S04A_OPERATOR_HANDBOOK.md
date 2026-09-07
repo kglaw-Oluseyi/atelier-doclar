@@ -125,7 +125,7 @@ See `docs/control/EOS_S04A_HUMAN_VERIFICATION.md` and the Claude-in-Chrome whole
 ## Current limitations
 
 - `TDR-S04A-011` — browser-created residue is not fully attributable for global cleanup. Blocking before client onboarding.
-- `TDR-S04A-012` — RSC prefetch 503: local and sequential origin fetches are controlled; classify against Railway/Event OS logs before treating browser-monitor 503s as origin defects.
+- `TDR-S04A-012` — RSC prefetch 503 reclassified as a browser-monitor artefact. Railway HTTP logs in Claude’s window show origin 200/303 and client-aborted 499, not 503.
 - `TDR-S04A-016` / `TDR-S04A-017` — Claude MAJOR acceptance defects; implemented; close only with deployed evidence.
 - `TDR-S04A-018` / `TDR-S04A-019` / `TDR-S04A-020` — RETAIN display corruption, one-click recovery lock, and Access Administration exposure; implemented; close only with deployed evidence.
 - Preferred formal salutation is authored. Title change never silently rewrites it; mismatch requires update or explicit retention. Access administration requires `assignment.manage`. `/app/admin/system` is an intentional non-secret readiness projection for assigned staff.

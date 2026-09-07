@@ -152,7 +152,7 @@ Event OS in Railway project `atelier-doclar` is deployed after this commit is pu
 ## Residual risks and items brought forward
 
 - `TDR-S04A-011` blocking before client onboarding
-- `TDR-S04A-012` RSC prefetch 503 — locally contained; classify deployed monitor 503s against origin logs
+- `TDR-S04A-012` RSC prefetch 503 — **reclassified as a tool/client artefact**. Railway HTTP logs for Claude’s window show 200/303/499 and **no origin 503**; 499s are client-aborted requests.
 - `TDR-S04A-016` / `TDR-S04A-017` Claude MAJOR acceptance defects — implemented; close only with deployed evidence
 - `TDR-S04A-018` / `TDR-S04A-019` / `TDR-S04A-020` RETAIN display, recovery lock, Access Administration — implemented; close only with deployed evidence
 - `TDR-S04A-013` adjacent Auditor controls (in coverage)

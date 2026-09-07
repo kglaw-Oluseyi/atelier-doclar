@@ -63,7 +63,7 @@ Railway project: `atelier-doclar` only.
 
 Event OS S01–S03 remain formally accepted. EOS-S04 is CLOSED / ACCEPTED after hosted verification `MD-EOS-S04-R3-05` (`PASS WITH OBSERVATIONS`). Accepted-slice count remains 4. S4-61 and S4-62 are satisfied only for technical review and controlled handover.
 
-**EOS-S04A:** Implemented through P00–P11 plus final-acceptance remediations. Status is **IN_REVIEW**. It is **not ACCEPTED**. Blocking acceptance items TDR-S04A-016–020 stay open until deployed Claude evidence is attached. TDR-S04A-011 remains blocking before client onboarding. Independent, specialist and CEO production gates remain unsigned. Academy delta ACA-S04A is training evidence only and does not grant operational authority. Review record: `docs/control/EOS_S04A_WHOLE_SLICE_REVIEW.md`. Focused re-verification: `docs/control/EOS_S04A_CLAUDE_IN_CHROME_FOCUSED_ACCEPTANCE_REMEDIATION.md`.
+**EOS-S04A:** Implemented through P00–P11 plus final-acceptance remediations. Status is **IN_REVIEW**. It is **not ACCEPTED**. Blocking acceptance items TDR-S04A-016–020 stay open until deployed Claude evidence is attached. TDR-S04A-012 is reclassified as a tool/client artefact after Railway origin-log correlation. TDR-S04A-011 remains blocking before client onboarding. Independent, specialist and CEO production gates remain unsigned. Academy delta ACA-S04A is training evidence only and does not grant operational authority. Review record: `docs/control/EOS_S04A_WHOLE_SLICE_REVIEW.md`. Focused re-verification: `docs/control/EOS_S04A_CLAUDE_IN_CHROME_FOCUSED_ACCEPTANCE_REMEDIATION.md`.
 
 **EOS-S04B, EOS-S04F, EOS-S05:** Not started. EOS-S04F remains RATIFIED / NOT_STARTED and HELD. Production operations are not authorised (`productionAuthorised=false`).
 
