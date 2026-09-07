@@ -37,7 +37,7 @@ Save addressing with source and reason. Confirmation is a separate permission (`
 
 ## Formal and familiar rendering
 
-Confirmed formal form is used only when addressing is confirmed and a preferred formal salutation exists. Familiar form uses preferred display name or given name. Directory and communications use these projections. Do not concatenate honorifics by hand.
+An authored preferred formal salutation is used for the formal projection whenever it exists, including after a retained title change while addressing remains unverified. Familiar form uses preferred display name or given name. Directory and communications use these projections. Do not concatenate honorifics by hand. A title change never rewrites a retained salutation.
 
 ## Parties and membership
 
@@ -125,9 +125,10 @@ See `docs/control/EOS_S04A_HUMAN_VERIFICATION.md` and the Claude-in-Chrome whole
 ## Current limitations
 
 - `TDR-S04A-011` — browser-created residue is not fully attributable for global cleanup. Blocking before client onboarding.
-- `TDR-S04A-012` — RSC prefetch 503 locally contained (layout no longer throws; Planner audit is a controlled FORBIDDEN). Deployed classification pending.
+- `TDR-S04A-012` — RSC prefetch 503: local and sequential origin fetches are controlled; classify against Railway/Event OS logs before treating browser-monitor 503s as origin defects.
 - `TDR-S04A-016` / `TDR-S04A-017` — Claude MAJOR acceptance defects; implemented; close only with deployed evidence.
-- Preferred formal salutation is authored. Title change never silently rewrites it; mismatch requires update or explicit retention.
+- `TDR-S04A-018` / `TDR-S04A-019` / `TDR-S04A-020` — RETAIN display corruption, one-click recovery lock, and Access Administration exposure; implemented; close only with deployed evidence.
+- Preferred formal salutation is authored. Title change never silently rewrites it; mismatch requires update or explicit retention. Access administration requires `assignment.manage`. `/app/admin/system` is an intentional non-secret readiness projection for assigned staff.
 - `TDR-S04A-015` — no physical offline-browser matrix.
 - Permanent IdP is not selected.
 - Synthetic data is still present.

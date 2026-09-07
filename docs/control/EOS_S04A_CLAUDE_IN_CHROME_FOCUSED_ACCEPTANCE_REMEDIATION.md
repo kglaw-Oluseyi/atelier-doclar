@@ -1,4 +1,4 @@
-# Claude-in-Chrome — EOS-S04A focused final-acceptance re-verification
+# Claude-in-Chrome — EOS-S04A final focused acceptance evidence
 
 Use this prompt only. Do **not** repeat the already-passed whole-slice journeys. Return one short report. Do not accept the slice.
 
@@ -12,19 +12,26 @@ Use this prompt only. Do **not** repeat the already-passed whole-slice journeys.
 - Synthetic data only. Do not use real guest or client data. Do not send messages or take payments.
 - Do not enter credentials independently. Ask the human operator to sign in, or stop.
 - Do not approve EOS-S04A.
+- Do not mutate fixture Adéṣínà or cycle Ebun entitlement.
+- Create **new** synthetic guests for RETAIN, UPDATE and recovery. The earlier synthetic guest `6d16f61c-2eaf-4f17-acfd-7896e183848a` may be inspected; do not rewrite its append-only `2026-09-07T00:39:25.865Z` audit.
 
-Staff sign-in: `/sign-in` with `ceo@maison-doclar.test`, `planner@maison-doclar.test`, `auditor@maison-doclar.test` and the operator-supplied access token. Event `00000000-0000-4000-8000-000000000021`. Create **new** synthetic guests. Do not mutate fixture Adéṣínà or cycle Ebun entitlement.
+Staff sign-in: `/sign-in` with `ceo@maison-doclar.test`, `planner@maison-doclar.test`, `auditor@maison-doclar.test` and the operator-supplied access token. Event `00000000-0000-4000-8000-000000000021`.
 
 ## Checks
 
-1. **Stale two-tab amendment.** Open one new guest in two tabs. Tab A saves a preferred-name change. Tab B submits a different preferred name against the stale version. Tab B must show a conflict alert: the record changed elsewhere; the attempted edit was not saved. No success message. Rejected values must not appear as persisted. Reload/refresh is required; retry without refresh is disabled or discouraged. Use **Reload the current record**. After reload, durable truth is tab A and Save amendment is enabled again.
-2. **Identical rapid double-submit.** On a new guest, double-click Save Amendment with the same values. One version increment. Field must not be `CONFLICTING`. Guest attention must stay clear. No duplicate success write.
-3. **Different-value concurrency.** Two tabs submit different preferred names against the same version. One write wins. The loser shows the same visible conflict workflow as (1).
-4. **Guest-level attention.** Create a genuine field conflict (sequential different dietary values is enough). Dossier and directory both show Attention required. After resolving the field to the same value, attention clears on both. Auditor may see the attention flag and field quality only — no extra private values in the summary.
-5. **Explicit salutation.** Create a guest with honorific `Dr (Mrs)` and preferred formal salutation containing that title. Change honorific to Professor without a decision: save must fail closed and leave the authored salutation unchanged. Then retain it explicitly (recorded RETAINED). On a second guest, change title and update the salutation yourself (recorded UPDATED). The system must not invent replacement wording. Blank title remains blank; no inferred title.
-6. **Authenticated RSC prefetch.** As CEO, Planner and Auditor, request `?_rsc=1` (or equivalent browser prefetch) for `/app`, `/app/clients`, `/app/events`, `/app/my-work`, `/app/admin/audit`, `/app/admin/system` and the guest directory. Authorised prefetch must not be an unexplained 503. Unauthorised routes fail closed. No private payload (`DATABASE_URL`, bearer secrets, passwords).
-7. **Accessibility.** Conflict uses an alert/live region; focus moves to the conflict summary. In-progress save shows a busy/disabled control. Persistence survives reload and sign-out/sign-in.
+1. **RETAIN exact-value preservation.** As CEO, create a guest with honorific `Dr` and preferred formal salutation `Dr Adérónkẹ́ …` including Yorùbá diacritics. Change honorific to `Mr`. Choose **Keep this salutation unchanged**. Save once. Formal preview (`data-testid="formal-salutation"`) and the preferred-formal field must remain the authored `Dr …` text byte-for-byte. Honorific may be `Mr`. The preview must not become `Mr Adérónkẹ́ …`.
+2. **UPDATE exact authored value.** On a second new guest, start with honorific `Professor` and an authored `Professor …` salutation. Change honorific to `Dr`. Type an explicit replacement salutation. Choose **I am updating this salutation**. Save once. Persist and display exactly that authored replacement. Do not accept inferred wording.
+3. **Audit/value agreement.** After (1) and (2), confirm the last governed choice is `RETAINED` or `UPDATED` respectively, and that the stored/displayed salutation agrees with that decision. A `RETAINED` audit must not accompany a changed salutation.
+4. **One-click conflict recovery.** Open one new guest in two tabs. Tab A saves a preferred-name change. Tab B submits a different preferred name against the stale version. Tab B must show the conflict alert and locked mutation controls. Activate **Reload the current record** once. The conflict banner must clear, forms must unlock, Save amendment must be enabled, and focus should land on the refreshed status or a usable form. Do not use F5 as a second recovery step.
+5. **Repeated conflict recovery.** After (4), cause a second conflict on the same guest and activate **Reload the current record** once again. The form must unlock again without a full browser reload.
+6. **Planner Access denial.** Sign in as Planner. Open `/app/admin/access`. The destination may remain in navigation. The page must be a controlled denial. No enabled Grant assignment form. No person, role, assignment or event catalogue for granting.
+7. **Auditor Access denial.** Sign in as Auditor. Repeat (6). Same controlled denial. No enabled grant form.
+8. **Direct assignment-mutation denial.** Where safely testable (browser request / DevTools against the same origin, still as Planner or Auditor), submit a grant-assignment mutation. It must fail closed. The response must not echo the attempted person, role or scope as a success payload.
+9. **Authorised CEO access workflow.** As CEO, `/app/admin/access` must show the Grant assignment form enabled. Do not grant a standing production role unless the operator asks. Confirm the form is present and permitted.
+10. **RSC-prefetch status with network evidence.** As CEO, Planner and Auditor, capture DevTools/network for ordinary navigation and `?_rsc=1` (or equivalent prefetch) of `/app`, `/app/admin/access`, `/app/admin/audit` and `/app/admin/system`. Record status codes. Authorised routes must not be unexplained origin 503s. Denied routes must be controlled denials. If the browser monitor reports 503, correlate cancelled/aborted prefetch vs a completed origin 503. Do not treat an aborted prefetch as an application defect without that distinction.
+11. **Absence of sensitive system data.** Open `/app/admin/system` as Planner and Auditor. Deployed SHA and the non-secret Railway project name `atelier-doclar` may appear. There must be no database URL, credential, token, secret environment value, or sensitive infrastructure control.
+12. **Persistence after reload / sign-out / sign-in.** After a successful RETAIN or UPDATE, reload the dossier. Sign out and sign in again. The authored salutation and honorific must still agree with the governed decision.
 
 ## Return
 
-For each check: role, route, action, expected, actual, PASS / FAIL / UNTESTABLE. Note SHA, `productionAuthorised`, persistence. Do not mark EOS-S04A accepted.
+For each check: role, route, action, expected, actual, PASS / FAIL / UNTESTABLE. Note SHA, `productionAuthorised`, persistence, and any network status evidence for prefetch. Do not mark EOS-S04A accepted.

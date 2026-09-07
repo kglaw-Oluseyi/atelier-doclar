@@ -396,8 +396,8 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 | Current owner | Event OS runtime hardening |
 | Required regression coverage | Prefetch of guest routes while runtime is down must not leak secrets or show another event's data |
 | Latest safe remediation milestone | Later Event OS runtime prompt |
-| Current status | IN_COVERAGE — locally contained; deployed classification pending |
-| Resolution evidence | Root layout no longer throws `ensureRuntime()` into Next.js `?_rsc=` 503. Boot unreadiness is not treated as session expiry. Planner `/app/admin/audit` prefetch is a controlled `FORBIDDEN` with no audit payload. Local CEO/Planner/Auditor prefetch of `/app`, clients, events, my-work, admin and guest directory is not an unexplained 503. Do not mark CLOSED until a clean deployed prefetch reproduction is recorded. |
+| Current status | IN_COVERAGE — locally contained; origin-log classification required on the deployed SHA |
+| Resolution evidence | Root layout no longer throws `ensureRuntime()` into Next.js `?_rsc=` 503. Boot unreadiness is not treated as session expiry. Planner `/app/admin/audit` and `/app/admin/access` prefetch is a controlled `FORBIDDEN` with no catalogue or audit payload. Local CEO/Planner/Auditor prefetch is not an unexplained 503. Sequential and concurrent `fetch()` of authorised routes has succeeded without origin 503. Do not mark CLOSED, and do not treat a Chrome-monitor 503 as an origin defect, until Railway/Event OS access logs for the verification window are correlated. |
 
 ### TDR-S04A-016 — Stale two-tab amendment was silent in the UI
 
@@ -436,6 +436,63 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 | Latest safe remediation milestone | This remediation + deployed focused verification |
 | Current status | IMPLEMENTED_PENDING_DEPLOYED_EVIDENCE |
 | Resolution evidence | Implementation present. Close only after deployed identical double-submit evidence against the deployed SHA. |
+
+### TDR-S04A-018 — RETAIN recomposed the formal salutation from the new title
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04A-018` |
+| Source slice | EOS-S04A final focused acceptance remediation II / Claude |
+| Description | Guest `6d16f61c-2eaf-4f17-acfd-7896e183848a` version 6: operator submitted `Dr Adérónkẹ́ Concurrency-Test-Q7F3`, chose RETAIN while changing title to `Mr`. Durable `preferredFormalSalutation` stayed `Dr …`. Formal preview showed `Mr Adérónkẹ́ Concurrency-Test-Q7F3`. Audit `2026-09-07T00:39:25.865Z` recorded RETAINED. The append-only audit is preserved. |
+| Classification | Blocking acceptance defect |
+| Severity | MAJOR |
+| Evidence | Claude focused verification; `renderGuestSalutation` used authored preferred formal only when addressing was confirmed; unverified records recomposed from honorific + names. |
+| Affected surface or contract | Formal salutation projection, addressing workspace, communications salutation, RETAIN/UPDATE governance |
+| Reason for deferral | Not deferred. Implemented in final focused remediation II. Remains blocking until deployed RETAIN/UPDATE evidence exists. |
+| Blocking | `BLOCKING` for EOS-S04A acceptance |
+| Current owner | EOS-S04A final focused remediation II |
+| Required regression coverage | Professor→Dr UPDATED; Dr→Mr RETAINED; Unicode/diacritic and whitespace/punctuation preservation; no-decision refusal; blank title; concurrent title/salutation conflict; API/server-action parity; audit/result agreement; invariant rollback |
+| Latest safe remediation milestone | This remediation + deployed focused verification |
+| Current status | IMPLEMENTED_PENDING_DEPLOYED_EVIDENCE |
+| Resolution evidence | Implementation present. Do not rewrite the 00:39:25.865Z audit. Correct the synthetic record through the governed workflow and add a compensating audit after deploy. |
+
+### TDR-S04A-019 — Conflict recovery left forms locked until a full browser reload
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04A-019` |
+| Source slice | EOS-S04A final focused acceptance remediation II / Claude |
+| Description | After a visible conflict, one activation of Reload the current record loaded fresh data but left the stale conflict banner and every mutation form locked (`Reload before retrying`). Only a full browser reload cleared the state. |
+| Classification | Blocking acceptance defect |
+| Severity | MAJOR |
+| Evidence | Claude focused verification; recovery redirected to the same canonical URL so stale `?state=VERSION_CONFLICT` could survive; flash was not guest-scoped; recovered state was not distinguished from a later live conflict. |
+| Affected surface or contract | Guest dossier recovery action, conflict banner, mutation form lock |
+| Reason for deferral | Not deferred. Implemented in final focused remediation II. Remains blocking until deployed one-click recovery evidence exists. |
+| Blocking | `BLOCKING` for EOS-S04A acceptance |
+| Current owner | EOS-S04A final focused remediation II |
+| Required regression coverage | Conflict→reload unlock; repeat conflict→reload unlock; direct refresh; back/forward; distinct flash across guests/tabs; expired session; keyboard-only; mobile/narrow |
+| Latest safe remediation milestone | This remediation + deployed focused verification |
+| Current status | IMPLEMENTED_PENDING_DEPLOYED_EVIDENCE |
+| Resolution evidence | Implementation present. Close only after deployed one-click recovery evidence against the deployed SHA. |
+
+### TDR-S04A-020 — Access Administration grant form exposed to Planner and Auditor
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S04A-020` |
+| Source slice | EOS-S04A final focused acceptance remediation II / Claude |
+| Description | `/app/admin/access` rendered an enabled organisation-wide Grant assignment form for Planner and Read-Only Auditor. Claude did not submit the form. Canonical grant permission is `assignment.manage`; both roles have only `assignment.view`. |
+| Classification | Blocking acceptance defect |
+| Severity | MAJOR |
+| Evidence | Claude focused verification; access page used `listPersons` (`assignment.view`) as the form gate. |
+| Affected surface or contract | Access administration route, grant assignment server action and API, person/role/event catalogue |
+| Reason for deferral | Not deferred. Implemented in final focused remediation II. Remains blocking until deployed Planner/Auditor denial evidence exists. |
+| Blocking | `BLOCKING` for EOS-S04A acceptance |
+| Current owner | EOS-S04A final focused remediation II |
+| Required regression coverage | Route loader denies unauthorised actors before any catalogue; mutation independently authorises; forged POST fails; Planner/Auditor cannot grant or self-escalate; CEO and Event Director follow `assignment.manage`; System Administrator gains no extra business authority; denial audited without leaking the attempted assignment |
+| Latest safe remediation milestone | This remediation + deployed focused verification |
+| Current status | IMPLEMENTED_PENDING_DEPLOYED_EVIDENCE |
+| Resolution evidence | Implementation present. Close only after deployed denial and authorised-CEO workflow evidence against the deployed SHA. |
 
 ### TDR-S04A-013 — Auditor-visible out-of-scope mutation controls
 
@@ -528,3 +585,4 @@ EOS-S04 remains CLOSED / ACCEPTED and is not reopened.
 | EOS-S04A-P10 | Academy delta ACA-S04A and operator handover. Closed TDR-S04A-002 and TDR-S04A-003. TDR-S04A-011 remains blocking before client onboarding. EOS-S04A remains not accepted. |
 | EOS-S04A-P11 | Whole-slice hardening and independent-review package. EOS-S04A set to IN_REVIEW / not ACCEPTED. TDR-S04A-011 remains blocking before client onboarding. EOS-S04B / S04F / S05 not started. |
 | EOS-S04A final-acceptance remediation | Entered blocking TDR-S04A-016 and TDR-S04A-017 from Claude’s MAJOR findings. Implemented visible conflict, identical-replay idempotency, derived attention, explicit salutation retain/update, and local RSC-prefetch containment. TDR-S04A-012 moved to IN_COVERAGE pending deployed prefetch classification. EOS-S04A remains IN_REVIEW / not ACCEPTED. |
+| EOS-S04A final focused remediation II | Entered blocking TDR-S04A-018, TDR-S04A-019 and TDR-S04A-020 from Claude’s focused findings. Implemented RETAIN exact-value preservation and display, one-click conflict recovery, and `assignment.manage` Access Administration. TDR-S04A-011 remains blocking before client onboarding. TDR-S04A-012 remains IN_COVERAGE pending origin-log correlation. EOS-S04A remains IN_REVIEW / not ACCEPTED. |

@@ -17,7 +17,19 @@ Contract decision (structured addressing, not a redesign):
 
 > A manually supplied preferred formal salutation is explicit authored data and must not be silently recomputed when an honorific or title changes. If the stored salutation still contains a title being removed, the operator must **update** it or **explicitly retain** it. The system does not infer replacement wording. If the salutation contains no detectable former title, no mismatch is invented.
 
-RSC prefetch (`TDR-S04A-012`): root-layout `ensureRuntime()` throw became Next.js `?_rsc=` 503. Layout now fails closed without crashing the shell; `requireActor` maps boot failure to `DEPENDENCY_UNAVAILABLE` and `guardedActor` sends that to `/access-denied`, not a false session expiry. Planner prefetch of `/app/admin/audit` renders a controlled `FORBIDDEN` instead of throwing. Local CEO/Planner/Auditor prefetch is not an unexplained 503. Do not close TDR-S04A-012 until a clean **deployed** prefetch reproduction is recorded.
+RSC prefetch (`TDR-S04A-012`): root-layout `ensureRuntime()` throw became Next.js `?_rsc=` 503. Layout now fails closed without crashing the shell; `requireActor` maps boot failure to `DEPENDENCY_UNAVAILABLE` and `guardedActor` sends that to `/access-denied`, not a false session expiry. Planner prefetch of `/app/admin/audit` and `/app/admin/access` renders a controlled `FORBIDDEN` instead of throwing. Local CEO/Planner/Auditor prefetch is not an unexplained 503. Classify deployed Chrome-monitor 503s against Railway/Event OS origin logs before treating them as application defects.
+
+## Final focused remediation II (Claude acceptance defects)
+
+Claude’s focused re-verification found three further **blocking acceptance** defects. They remain blocking until implementation **and** deployed evidence are both present.
+
+| ID | Finding | Root cause | Remediation | Acceptance status |
+|----|---------|------------|-------------|-------------------|
+| TDR-S04A-018 | After `RETAINED`, the formal preview showed `Mr Adérónkẹ́ …` although the authored `Dr Adérónkẹ́ …` was stored | `renderGuestSalutation` used authored preferred formal only when addressing was confirmed; unverified records recomposed from the new honorific. The form could also submit a composed salutation with `RETAIN` | `RETAIN` ignores submitted text and keeps the previous preferred formal byte-for-byte; display uses authored preferred whenever present; service/domain invariant; fail closed + FAILED audit if violated | Implemented; close only after deployed RETAIN/UPDATE evidence |
+| TDR-S04A-019 | `Reload the current record` loaded fresh data but left the conflict banner and locked forms until a full browser reload | Recovery redirected to the same canonical URL, so stale `?state=VERSION_CONFLICT` and a global flash could survive; recovered state was not scoped | Recovery action consumes flash, writes a guest-scoped recovered marker, redirects to `?refreshed=1`, then client `replaceState`; live flash still wins for a later conflict | Implemented; close only after deployed one-click recovery evidence |
+| TDR-S04A-020 | Planner and Read-Only Auditor saw an enabled organisation-wide Grant assignment form | `/app/admin/access` authorised the catalogue with `assignment.view` (Planner/Auditor have it) and rendered the form whenever `listPersons` succeeded | Route and query require catalogue permission `assignment.manage`; no person/role/assignment catalogue before denial; mutation already required `assignment.manage`; UI renders controlled FORBIDDEN | Implemented; close only after deployed Planner/Auditor denial evidence |
+
+`/app/admin/system` remains intentionally visible to authenticated assigned staff. It shows persistence label, deployed SHA, `productionAuthorised`, and the non-secret Railway project name `atelier-doclar`. `system.health.view` remains the privileged health/export permission. No database URL, credential, token or secret environment value is projected.
 
 ## Ratified requirements matrix
 
@@ -140,8 +152,9 @@ Event OS in Railway project `atelier-doclar` is deployed after this commit is pu
 ## Residual risks and items brought forward
 
 - `TDR-S04A-011` blocking before client onboarding
-- `TDR-S04A-012` RSC prefetch 503 — locally contained; deployed classification pending
+- `TDR-S04A-012` RSC prefetch 503 — locally contained; classify deployed monitor 503s against origin logs
 - `TDR-S04A-016` / `TDR-S04A-017` Claude MAJOR acceptance defects — implemented; close only with deployed evidence
+- `TDR-S04A-018` / `TDR-S04A-019` / `TDR-S04A-020` RETAIN display, recovery lock, Access Administration — implemented; close only with deployed evidence
 - `TDR-S04A-013` adjacent Auditor controls (in coverage)
 - `TDR-S04A-015` physical offline matrix
 - Permanent IdP unselected

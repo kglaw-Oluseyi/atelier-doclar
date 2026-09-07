@@ -447,3 +447,22 @@ EOS-S04A Milestone 1 work-state at the time this policy was established:
 | Status | IN_REVIEW / not ACCEPTED |
 | Residual limitations | TDR-S04A-011; TDR-S04A-012 pending deployed prefetch classification; TDR-S04A-016/017 close only after deployed evidence; TDR-S04A-015; IdP unselected; synthetic data; providers off. |
 | Railway / production / providers / later slices | Event OS deployed after push. Control Tower not deployed. EOS-S04B / S04F / S05 not started. |
+
+---
+
+## EOS-S04A final focused remediation II — RETAIN, recovery, access administration
+
+| Field | Value |
+|-------|-------|
+| Starting HEAD | `4daec3830672ef41c9e6ee1e1b5a2808f7b6256d` |
+| Ending HEAD | this remediation commit chain |
+| Commits | `fix(event-os): preserve retained guest salutations`; `fix(event-os): complete conflict recovery`; `fix(event-os): secure access administration`; `docs(control): record final EOS-S04A acceptance remediation` |
+| Files changed | Addressing retain invariant and authored-formal display; guest-scoped flash/recovered recovery; Access Administration `assignment.manage`; focused tests; control docs |
+| Schema / migration | None. `SCHEMA_VERSION` remains `1`. |
+| API / permission / transaction / audit | `getAccessAdministration` requires `assignment.manage`. RETAIN invariant failure rolls back and audits `FAILED`, not `RETAINED`. Grant denial is audited without the attempted assignment. |
+| Frontend | Formal preview uses authored preferred salutation whenever present. One-click recovery unlocks forms. Planner/Auditor Access Administration is a controlled FORBIDDEN. System health remains an intentional non-secret readiness projection. |
+| Verification | `pnpm typecheck` PASS. `pnpm test` PASS. `pnpm programme:validate` PASS. Event OS build PASS. `git diff --check` clean. First focused e2e: 11 passed / 3 product failures (Access page threw `PlatformError` to the RSC boundary because `instanceof` failed across bundles; recovered cookie hid a later live conflict). After duck-typed denial and live-flash-wins recovery: focused 7 passed. First full Event OS e2e: 48 passed / 2 failed, both immediately after Next.js memory restart (Home heading timeout after sign-in; staff logout sign-in heading). Isolated retry of those two: 2 passed. |
+| Failures found | First focused run product defects: Access Administration uncaught denial; recovered cookie suppressed a second conflict. Fixed before commit. Full-suite P11/session failures classified as memory-restart infrastructure after isolated green retry. |
+| Status | IN_REVIEW / not ACCEPTED |
+| Residual limitations | TDR-S04A-011; TDR-S04A-012 pending origin-log classification; TDR-S04A-016–020 close only after deployed evidence; TDR-S04A-015; IdP unselected; synthetic data; providers off. |
+| Railway / production / providers / later slices | Event OS deployed after push. Control Tower not deployed. EOS-S04B / S04F / S05 not started. |

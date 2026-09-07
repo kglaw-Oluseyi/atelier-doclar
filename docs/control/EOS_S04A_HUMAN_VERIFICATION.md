@@ -42,6 +42,8 @@ Use a newly created synthetic guest. Do not mutate fixture Adéṣínà or cycle
 6. **Authenticated RSC prefetch.** As CEO, Planner and Auditor, confirm `?_rsc=` on `/app`, `/app/clients`, `/app/events`, `/app/my-work`, `/app/admin/audit`, `/app/admin/system` and the guest directory is not an unexplained 503. Unauthorised routes fail closed. No private payload.
 7. **Accessibility.** Conflict is an alert/live region; focus moves to the summary; in-progress controls are disabled and announced. Persistence survives reload and sign-out/sign-in.
 
+The final focused Claude prompt in `docs/control/EOS_S04A_CLAUDE_IN_CHROME_FOCUSED_ACCEPTANCE_REMEDIATION.md` supersedes the list above for the current evidence pass. It adds RETAIN exact-value preservation, one-click recovery without F5, Planner/Auditor Access Administration denial, and origin-correlated RSC classification.
+
 ## Responsive and accessibility
 
 360px, tablet, desktop, 200% zoom or 640px equivalent, keyboard, reduced motion, long Yorùbá names wrapping by word.
