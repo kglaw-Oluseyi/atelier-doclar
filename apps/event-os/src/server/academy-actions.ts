@@ -5,9 +5,11 @@ import { redirect } from "next/navigation";
 import {
   ACA_S04A_COURSE_ID,
   ACA_S04C_COURSE_ID,
+  ACA_S04D_COURSE_ID,
   AcademyAttemptInputSchema,
   acaS04ACourse,
   acaS04CCourse,
+  acaS04DCourse,
   evaluateAcademyAttempt,
   uniqueAnswers,
 } from "@maison-doclar/academy";
@@ -99,6 +101,51 @@ export async function submitAcaS04CAction(formData: FormData): Promise<void> {
     const current = await loadAcademyRecord(person.id, ACA_S04C_COURSE_ID);
     await saveAcademyRecord(appendAttempt(current, attempt));
     redirect(`/app/academy/aca-s04c?ok=academy&outcome=${result.outcome}&percent=${result.percent}`);
+  } catch (error) {
+    if (error && typeof error === "object" && "digest" in error) throw error;
+    const classified = classifyActionError(error);
+    redirect(`${fail}${classified.code}&error=${encodeURIComponent(classified.message)}`);
+  }
+}
+
+export async function submitAcaS04DAction(formData: FormData): Promise<void> {
+  const fail = "/app/academy/aca-s04d?state=";
+  try {
+    const { person } = await requireActor();
+    const assignment = academyAssignmentForPerson(person.id, ACA_S04D_COURSE_ID);
+    if (!assignment) {
+      redirect(`${fail}FORBIDDEN&error=${encodeURIComponent("No Academy assignment exists for this role.")}`);
+    }
+    const answers = acaS04DCourse.questions
+      .filter((question) => question.paths.includes(assignment.learningPath))
+      .map((question) => ({
+        questionId: question.id,
+        optionId: String(formData.get(`answer-${question.id}`) ?? "").trim(),
+      }))
+      .filter((answer) => answer.optionId.length > 0);
+    const parsed = AcademyAttemptInputSchema.safeParse({
+      courseId: ACA_S04D_COURSE_ID,
+      learningPath: assignment.learningPath,
+      answers: uniqueAnswers(answers),
+      idempotencyKey: String(formData.get("idempotencyKey") ?? "").trim() || undefined,
+    });
+    if (!parsed.success) {
+      redirect(`${fail}VALIDATION_FAILED&error=${encodeURIComponent("Answer every question before submitting.")}`);
+    }
+    const result = evaluateAcademyAttempt(parsed.data, acaS04DCourse.questions);
+    const attempt = {
+      id: randomUUID(),
+      personId: person.id,
+      courseId: ACA_S04D_COURSE_ID,
+      learningPath: assignment.learningPath,
+      answers: parsed.data.answers,
+      result,
+      submittedAt: new Date().toISOString(),
+      ...(parsed.data.idempotencyKey ? { idempotencyKey: parsed.data.idempotencyKey } : {}),
+    };
+    const current = await loadAcademyRecord(person.id, ACA_S04D_COURSE_ID);
+    await saveAcademyRecord(appendAttempt(current, attempt));
+    redirect(`/app/academy/aca-s04d?ok=academy&outcome=${result.outcome}&percent=${result.percent}`);
   } catch (error) {
     if (error && typeof error === "object" && "digest" in error) throw error;
     const classified = classifyActionError(error);

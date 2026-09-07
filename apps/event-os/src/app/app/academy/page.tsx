@@ -2,9 +2,11 @@ import Link from "next/link";
 import {
   ACA_S04A_COURSE_ID,
   ACA_S04C_COURSE_ID,
+  ACA_S04D_COURSE_ID,
   AUTHORITY_DISCLAIMER,
   acaS04ACourse,
   acaS04CCourse,
+  acaS04DCourse,
 } from "@maison-doclar/academy";
 import { AtelierOperationalState } from "../../../components/atelier-operational-state";
 import { AtelierPageHeader } from "../../../components/atelier-page-header";
@@ -18,19 +20,21 @@ export default async function AcademyIndexPage() {
   const { person } = await guardedActor();
   const assignmentA = academyAssignmentForPerson(person.id, ACA_S04A_COURSE_ID);
   const assignmentC = academyAssignmentForPerson(person.id, ACA_S04C_COURSE_ID);
+  const assignmentD = academyAssignmentForPerson(person.id, ACA_S04D_COURSE_ID);
   const recordA = assignmentA ? await loadAcademyRecord(person.id, ACA_S04A_COURSE_ID) : undefined;
   const recordC = assignmentC ? await loadAcademyRecord(person.id, ACA_S04C_COURSE_ID) : undefined;
+  const recordD = assignmentD ? await loadAcademyRecord(person.id, ACA_S04D_COURSE_ID) : undefined;
   return (
     <AppShell person={person} current="/app/academy">
       <AtelierPageHeader
-        eyebrow="Academy delta · ACA-S04A / ACA-S04C"
+        eyebrow="Academy delta · ACA-S04A / ACA-S04C / ACA-S04D"
         title="Assigned training"
         lede="Learning follows your Event OS role. Completing a course never grants system authority."
       />
       <p className="atelier-academy-authority" role="note">
         {AUTHORITY_DISCLAIMER}
       </p>
-      {!assignmentA && !assignmentC ? (
+      {!assignmentA && !assignmentC && !assignmentD ? (
         <AtelierOperationalState
           state={operationalStateFromCode("FORBIDDEN", "No Academy learning path is assigned to this role.")}
         />
@@ -64,6 +68,22 @@ export default async function AcademyIndexPage() {
               <p className="actions">
                 <Link className="button" href="/app/academy/aca-s04c">
                   Open ACA-S04C
+                </Link>
+              </p>
+            </article>
+          ) : null}
+          {assignmentD ? (
+            <article className="atelier-panel">
+              <p className="eyebrow">{assignmentD.learningPath.replaceAll("_", " ")}</p>
+              <h2>{acaS04DCourse.title}</h2>
+              <p>{acaS04DCourse.lede}</p>
+              <p>
+                Latest evidence:{" "}
+                {recordD?.latestOutcome ? recordD.latestOutcome.replaceAll("_", " ") : "No attempt recorded"}
+              </p>
+              <p className="actions">
+                <Link className="button" href="/app/academy/aca-s04d">
+                  Open ACA-S04D
                 </Link>
               </p>
             </article>

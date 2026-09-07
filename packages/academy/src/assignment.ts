@@ -1,4 +1,4 @@
-import { ACA_S04A_COURSE_ID, ACA_S04C_COURSE_ID } from "./constants.js";
+import { ACA_S04A_COURSE_ID, ACA_S04C_COURSE_ID, ACA_S04D_COURSE_ID } from "./constants.js";
 import {
   AcademyAssignmentSchema,
   AcademySystemRoleKeySchema,
@@ -35,6 +35,16 @@ export function assignAcaS04A(roleKey: string): AcademyAssignment {
 export function assignAcaS04C(roleKey: string): AcademyAssignment {
   return AcademyAssignmentSchema.parse({
     courseId: ACA_S04C_COURSE_ID,
+    learningPath: learningPathForRole(roleKey),
+    roleKey,
+    assigned: true,
+    grantsOperationalAuthority: false,
+  });
+}
+
+export function assignAcaS04D(roleKey: string): AcademyAssignment {
+  return AcademyAssignmentSchema.parse({
+    courseId: ACA_S04D_COURSE_ID,
     learningPath: learningPathForRole(roleKey),
     roleKey,
     assigned: true,
