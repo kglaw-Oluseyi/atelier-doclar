@@ -34,7 +34,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
       <AtelierPageHeader
         eyebrow={`Event brief · ${client.displayName}`}
         title={event.name}
-        lede="Operational event overview. Guest intake and RSVP are available for this event. Later Event OS domains remain unbuilt."
+        lede="Operational event overview. Guest intake, RSVP and programme routing are available for this event."
       />
       <p>
         <span className="md-status" data-tone="brass">
@@ -45,6 +45,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
         <p className="actions">
         <Link className="button" href={`/app/events/${event.id}/guests`}>
           Guest directory
+        </Link>
+        <Link className="button secondary" href={`/app/events/${event.id}/programme`}>
+          Programme and arrival
         </Link>
         <Link className="button secondary" href={`/app/events/${event.id}/rsvp`}>
           RSVP

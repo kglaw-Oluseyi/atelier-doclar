@@ -978,3 +978,83 @@ body.atelier {
     transform: none;
   }
 }
+
+.programme-atelier {
+  display: grid;
+  gap: 22px;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.programme-attendance {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 12px 0 8px;
+}
+
+.programme-attendance dt {
+  color: var(--at-umber);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+}
+
+.programme-attendance dd {
+  margin: 4px 0 0;
+  font-family: var(--at-editorial);
+  font-size: 2rem;
+}
+
+.programme-law {
+  margin: 0;
+  color: var(--at-umber);
+}
+
+.programme-ribbon {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(180px, 1fr);
+  gap: 12px;
+  overflow-x: auto;
+  margin: 0;
+  padding: 4px 2px 12px;
+  list-style: none;
+}
+
+.programme-bead {
+  min-width: 180px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: var(--at-onyx);
+  color: var(--at-porcelain);
+  box-shadow: var(--at-shadow-soft);
+}
+
+.programme-bead h3 {
+  margin: 4px 0 8px;
+  font-family: var(--at-editorial);
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+
+.programme-perimeter {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  border-radius: 16px;
+}
+
+.programme-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+@media (max-width: 720px) {
+  .programme-attendance,
+  .programme-ribbon {
+    grid-auto-flow: row;
+    grid-template-columns: 1fr;
+  }
+}

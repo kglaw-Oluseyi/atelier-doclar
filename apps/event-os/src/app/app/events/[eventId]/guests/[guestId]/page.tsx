@@ -7,6 +7,7 @@ import {
   type ActorContext,
 } from "@maison-doclar/shared-platform";
 import { GuestAddressingWorkspace } from "../../../../../../components/guest-addressing-form";
+import { GuestPhasePanel } from "../../../../../../components/guest-phase-panel";
 import { DuplicateResolveForm, GuestAmendForm } from "../../../../../../components/guest-amend-form";
 import { GuestAccessLink } from "../../../../../../components/guest-access-link";
 import { IssueInvitationForm, StaffRsvpForm } from "../../../../../../components/staff-rsvp-forms";
@@ -155,6 +156,12 @@ export default async function GuestDetailPage({
   } catch {
     rsvpPartial = permissions.rsvpView;
     rsvp = undefined;
+  }
+  let phaseProjection;
+  try {
+    phaseProjection = runtime.service.getGuestPhaseProjection(actor, scoped.organisation.id, scoped.event.id, guest.id);
+  } catch {
+    phaseProjection = undefined;
   }
   const policy = permissions.rsvpView
     ? runtime.service.getRsvpPolicy(actor, scoped.organisation.id, scoped.event.id)
@@ -358,6 +365,7 @@ export default async function GuestDetailPage({
                 guestId={guest.id}
               />
             ) : null}
+            {phaseProjection ? <GuestPhasePanel projection={phaseProjection} /> : null}
             {duplicates.length > 0 ? (
               <section className="atelier-panel">
                 <h2>Duplicate and identity review</h2>

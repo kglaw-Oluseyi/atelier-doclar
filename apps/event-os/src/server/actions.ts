@@ -1380,3 +1380,216 @@ export async function administerGuestRelationshipAction(formData: FormData): Pro
     redirect(`/app/events/${eventId}/guests/${guestId}?ok=relationship`);
   });
 }
+
+async function programmeFail(eventId: string, error: unknown): Promise<never> {
+  sessionOrAssignmentRedirect(error, `/app/events/${eventId}/programme`);
+  const classified = classifyActionError(error);
+  await writeActionFlash({
+    code: classified.code,
+    message: classified.message,
+    eventId,
+  });
+  redirect(`/app/events/${encodeURIComponent(eventId)}/programme?${failQuery(error)}`);
+}
+
+export async function createProgrammePhaseAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor } = await requireActor().catch((error) => programmeFail(eventId, error));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await programmeFail(eventId, new Error("No organisation assignment is available."));
+    try {
+      getRuntime().service.createProgrammePhase(actor, {
+        organisationId: organisation.id,
+        eventId,
+        name: String(formData.get("name") ?? ""),
+        type: String(formData.get("type") ?? ""),
+        startsAt: String(formData.get("startsAt") ?? ""),
+        endsAt: String(formData.get("endsAt") ?? ""),
+        locationLabel: String(formData.get("locationLabel") ?? ""),
+        locationGuestSafe: optionalFormValue(formData, "locationGuestSafe"),
+        overlapAcknowledged: formData.get("overlapAcknowledged") === "on",
+        overlapAcknowledgementReason: optionalFormValue(formData, "overlapAcknowledgementReason"),
+        reason: String(formData.get("reason") ?? "Add programme phase"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await programmeFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/programme?ok=phase`);
+  });
+}
+
+export async function assignPhaseEntitlementAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor } = await requireActor().catch((error) => programmeFail(eventId, error));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await programmeFail(eventId, new Error("No organisation assignment is available."));
+    try {
+      getRuntime().service.assignPhaseEntitlement(actor, {
+        organisationId: organisation.id,
+        eventId,
+        phaseId: String(formData.get("phaseId") ?? "").split("::")[0] ?? "",
+        guestId: String(formData.get("guestId") ?? ""),
+        routeId: optionalFormValue(formData, "routeId"),
+        protectedAccess: formData.get("protectedAccess") === "on",
+        fastTrackRouting: formData.get("fastTrackRouting") === "on",
+        expectedPhaseVersion: Number(String(formData.get("phaseId") ?? "").split("::")[1] ?? formData.get("expectedPhaseVersion")),
+        reason: String(formData.get("reason") ?? "Assign guest to phase"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await programmeFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/programme?ok=entitlement`);
+  });
+}
+
+export async function createCheckpointAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor } = await requireActor().catch((error) => programmeFail(eventId, error));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await programmeFail(eventId, new Error("No organisation assignment is available."));
+    try {
+      getRuntime().service.createPerimeterCheckpoint(actor, {
+        organisationId: organisation.id,
+        eventId,
+        name: String(formData.get("name") ?? ""),
+        type: String(formData.get("type") ?? ""),
+        phaseId: optionalFormValue(formData, "phaseId"),
+        sharedPerimeter: formData.get("sharedPerimeter") === "on",
+        verificationRequired: formData.get("verificationRequired") !== "off",
+        reason: String(formData.get("reason") ?? "Configure checkpoint"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await programmeFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/programme?ok=checkpoint`);
+  });
+}
+
+export async function createArrivalRouteAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor } = await requireActor().catch((error) => programmeFail(eventId, error));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await programmeFail(eventId, new Error("No organisation assignment is available."));
+    try {
+      const checkpointIds = String(formData.get("checkpointIds") ?? "")
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+      getRuntime().service.createArrivalRoute(actor, {
+        organisationId: organisation.id,
+        eventId,
+        name: String(formData.get("name") ?? ""),
+        kind: String(formData.get("kind") ?? ""),
+        phaseId: optionalFormValue(formData, "phaseId"),
+        checkpointIds,
+        guestFacingCode: optionalFormValue(formData, "guestFacingCode"),
+        discreetMarker: optionalFormValue(formData, "discreetMarker"),
+        hostApprovedVipLanguage: formData.get("hostApprovedVipLanguage") === "on",
+        reason: String(formData.get("reason") ?? "Configure arrival route"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await programmeFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/programme?ok=route`);
+  });
+}
+
+export async function createVehicleAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor } = await requireActor().catch((error) => programmeFail(eventId, error));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await programmeFail(eventId, new Error("No organisation assignment is available."));
+    try {
+      getRuntime().service.createOperationalVehicle(actor, {
+        organisationId: organisation.id,
+        eventId,
+        plate: String(formData.get("plate") ?? ""),
+        vehicleClass: String(formData.get("vehicleClass") ?? ""),
+        colour: optionalFormValue(formData, "colour"),
+        assignedRouteId: optionalFormValue(formData, "assignedRouteId"),
+        assignedParkingCheckpointId: optionalFormValue(formData, "assignedParkingCheckpointId"),
+        driverGuestId: optionalFormValue(formData, "driverGuestId"),
+        reason: String(formData.get("reason") ?? "Register operational vehicle"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await programmeFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/programme?ok=vehicle`);
+  });
+}
+
+export async function publishOfflinePackageAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor } = await requireActor().catch((error) => programmeFail(eventId, error));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await programmeFail(eventId, new Error("No organisation assignment is available."));
+    try {
+      getRuntime().service.publishOfflineAccessPackage(actor, {
+        organisationId: organisation.id,
+        eventId,
+        validUntil: String(formData.get("validUntil") ?? ""),
+        reason: String(formData.get("reason") ?? "Publish signed access plan"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await programmeFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/programme?ok=package`);
+  });
+}
+
+export async function consumeOfflinePackageAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor } = await requireActor().catch((error) => programmeFail(eventId, error));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await programmeFail(eventId, new Error("No organisation assignment is available."));
+    try {
+      getRuntime().service.consumeOfflineAccessPackage(actor, {
+        organisationId: organisation.id,
+        eventId,
+        packageId: String(formData.get("packageId") ?? ""),
+        expectedVersion: Number(formData.get("expectedVersion")),
+        reason: String(formData.get("reason") ?? "Consume offline projection without mutating programme truth"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await programmeFail(eventId, error);
+    }
+    redirect(`/app/events/${eventId}/programme?ok=consumed`);
+  });
+}
+
+export async function resolveCheckpointAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const { actor } = await requireActor().catch((error) => programmeFail(eventId, error));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await programmeFail(eventId, new Error("No organisation assignment is available."));
+    let result;
+    try {
+      result = getRuntime().service.resolveCheckpointAccess(actor, {
+        organisationId: organisation.id,
+        eventId,
+        checkpointId: String(formData.get("checkpointId") ?? ""),
+        presentationReference: String(formData.get("presentationReference") ?? ""),
+      });
+    } catch (error) {
+      await programmeFail(eventId, error);
+    }
+    redirect(
+      `/app/events/${eventId}/programme?ok=resolve&outcome=${encodeURIComponent(result.outcome)}&verification=${result.verificationRequired ? "required" : "not-required"}`,
+    );
+  });
+}
