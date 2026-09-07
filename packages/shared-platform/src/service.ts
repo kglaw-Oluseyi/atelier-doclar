@@ -281,6 +281,40 @@ import {
   type HostDecisionRequest,
 } from "./atelier-schemas.js";
 import {
+  assembleRecipientContentOnSnap,
+  assertNoLanguageInference,
+  createContentWorkOnSnap,
+  createCulturalSourceTextOnSnap,
+  createDependentEditionOnSnap,
+  createTerminologyEntryOnSnap,
+  decideCulturalTextOnSnap,
+  decideTranslationOnSnap,
+  recordLanguagePreferenceOnSnap,
+  supersedeSourceEditionOnSnap,
+} from "./language-operations.js";
+import {
+  buildEventLanguageWorkspace,
+  languagePermissionAllowed,
+  type EventLanguageWorkspace,
+} from "./language-projections.js";
+import {
+  AssembleRecipientContentInputSchema,
+  CreateContentWorkInputSchema,
+  CreateCulturalSourceTextInputSchema,
+  CreateDependentEditionInputSchema,
+  CreateTerminologyEntryInputSchema,
+  DecideCulturalTextInputSchema,
+  DecideTranslationInputSchema,
+  RecordLanguagePreferenceInputSchema,
+  SupersedeSourceEditionInputSchema,
+  type ContentEdition,
+  type ContentWork,
+  type CulturalSourceText,
+  type LanguageProfile,
+  type RecipientAssembly,
+  type TerminologyEntry,
+} from "./language-schemas.js";
+import {
   DEFAULT_NON_PRODUCTION_VENDOR_ACCESS,
   assertVendorAccessConfig,
   generateVendorAssignmentToken,
@@ -2686,6 +2720,205 @@ export class PlatformService {
       resourceId: input.receiptId,
       reason: input.reason,
       run: (snap, ctx) => reviewHostDecisionOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  getEventLanguageWorkspace(actor: ActorContext, organisationId: string, eventId: string): EventLanguageWorkspace {
+    const { snap, ctx } = this.authorizeQuery(actor, "language.preference.view", { organisationId, eventId });
+    this.requireEvent(snap, organisationId, eventId);
+    const capabilities = languagePermissionAllowed(
+      (
+        [
+          "language.preference.view",
+          "language.preference.manage",
+          "language.cultural.create",
+          "language.cultural.review",
+          "language.cultural.approve",
+          "language.translation.create",
+          "language.translation.review",
+          "language.translation.approve",
+          "language.edition.manage",
+          "language.edition.publish",
+          "language.assembly.preview",
+          "language.glossary.manage",
+          "language.audit.view",
+        ] as const
+      ).filter((key) => this.permissionAllowed(ctx.actor, key, { organisationId, eventId })),
+    );
+    const workspace = buildEventLanguageWorkspace(
+      snap,
+      eventId,
+      Object.entries(capabilities)
+        .filter(([, allowed]) => allowed)
+        .map(([key]) =>
+          key === "canViewPreference"
+            ? "language.preference.view"
+            : key === "canManagePreference"
+              ? "language.preference.manage"
+              : key === "canCreateCultural"
+                ? "language.cultural.create"
+                : key === "canReviewCultural"
+                  ? "language.cultural.review"
+                  : key === "canApproveCultural"
+                    ? "language.cultural.approve"
+                    : key === "canCreateTranslation"
+                      ? "language.translation.create"
+                      : key === "canReviewTranslation"
+                        ? "language.translation.review"
+                        : key === "canApproveTranslation"
+                          ? "language.translation.approve"
+                          : key === "canManageEdition"
+                            ? "language.edition.manage"
+                            : key === "canPublishEdition"
+                              ? "language.edition.publish"
+                              : key === "canPreviewAssembly"
+                                ? "language.assembly.preview"
+                                : key === "canManageGlossary"
+                                  ? "language.glossary.manage"
+                                  : "language.audit.view",
+        ),
+    );
+    if (!workspace) throw new PlatformError("NOT_FOUND", "language workspace was not found");
+    return workspace;
+  }
+
+  recordLanguagePreference(actor: ActorContext, raw: unknown): LanguageProfile {
+    assertNoLanguageInference(raw);
+    const input = parseStrict(RecordLanguagePreferenceInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "language.preference.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "language.preference.recorded",
+      resourceType: "language_profile",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => recordLanguagePreferenceOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  createCulturalSourceText(actor: ActorContext, raw: unknown): CulturalSourceText {
+    const input = parseStrict(CreateCulturalSourceTextInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "language.cultural.create",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "language.cultural.created",
+      resourceType: "cultural_source_text",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => createCulturalSourceTextOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  decideCulturalText(actor: ActorContext, raw: unknown): CulturalSourceText {
+    const input = parseStrict(DecideCulturalTextInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "language.cultural.approve",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "language.cultural.decided",
+      resourceType: "cultural_source_text",
+      resourceId: input.culturalSourceTextId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => decideCulturalTextOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  createContentWork(actor: ActorContext, raw: unknown): ContentWork {
+    const input = parseStrict(CreateContentWorkInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "language.edition.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "language.work.created",
+      resourceType: "content_work",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => createContentWorkOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  createDependentEdition(actor: ActorContext, raw: unknown): ContentEdition {
+    const input = parseStrict(CreateDependentEditionInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "language.translation.create",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "language.translation.created",
+      resourceType: "content_edition",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => createDependentEditionOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  decideTranslation(actor: ActorContext, raw: unknown): ContentEdition {
+    const input = parseStrict(DecideTranslationInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "language.translation.approve",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "language.translation.decided",
+      resourceType: "content_edition",
+      resourceId: input.editionId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => decideTranslationOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  supersedeSourceEdition(actor: ActorContext, raw: unknown): ContentEdition {
+    const input = parseStrict(SupersedeSourceEditionInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "language.edition.publish",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "language.source.superseded",
+      resourceType: "content_edition",
+      resourceId: input.sourceEditionId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => supersedeSourceEditionOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  createTerminologyEntry(actor: ActorContext, raw: unknown): TerminologyEntry {
+    const input = parseStrict(CreateTerminologyEntryInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "language.glossary.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "language.glossary.created",
+      resourceType: "terminology_entry",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => createTerminologyEntryOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  assembleRecipientContent(actor: ActorContext, raw: unknown): RecipientAssembly {
+    assertNoLanguageInference(raw);
+    const input = parseStrict(AssembleRecipientContentInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "language.assembly.preview",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "language.assembly.previewed",
+      resourceType: "recipient_assembly",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      alreadyApplied: (snap) =>
+        snap.recipientAssemblies.find(
+          (item) =>
+            item.guestId === input.guestId &&
+            item.workId === input.workId &&
+            item.eventId === input.eventId &&
+            item.status === "READY_FOR_COMMS_REVIEW",
+        ),
+      replayIfAlreadyApplied: Boolean(input.idempotencyKey),
+      run: (snap, ctx) => assembleRecipientContentOnSnap(snap, input, ctx.now, ctx.actor.person.id),
     });
   }
 
@@ -5855,6 +6088,18 @@ export class PlatformService {
       snap.atelierAccessGrants,
       snap.magicLinkChallenges,
       snap.atelierSessions,
+      snap.languageProfiles,
+      snap.languagePreferenceHistories,
+      snap.culturalSourceTexts,
+      snap.contentWorks,
+      snap.contentEditions,
+      snap.contentBlocks,
+      snap.translationLinks,
+      snap.terminologyEntries,
+      snap.reviewAssignments,
+      snap.recipientEditionRules,
+      snap.recipientAssemblies,
+      snap.languageCoverageSnapshots,
       snap.guestDuplicateCandidates,
       snap.guestIntakeBatches,
       snap.rsvpPolicies,

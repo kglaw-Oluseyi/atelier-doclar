@@ -99,6 +99,21 @@ import type {
   VendorEnsembleProjection,
 } from "./atelier-schemas.js";
 import type {
+  ContentBlock,
+  ContentEdition,
+  ContentWork,
+  CulturalSourceText,
+  LanguageCoverageSnapshot,
+  LanguagePreferenceHistory,
+  LanguageProfile,
+  RecipientAssembly,
+  RecipientEditionRule,
+  ReviewAssignment,
+  S04FMigrationReceipt,
+  TerminologyEntry,
+  TranslationLink,
+} from "./language-schemas.js";
+import type {
   GuestDuplicateCandidate,
   GuestHousehold,
   GuestIntakeBatch,
@@ -240,6 +255,19 @@ export interface PlatformSnapshot {
   magicLinkChallenges: MagicLinkChallenge[];
   atelierSessions: AtelierSession[];
   s04eMigrationReceipts: S04EMigrationReceipt[];
+  languageProfiles: LanguageProfile[];
+  languagePreferenceHistories: LanguagePreferenceHistory[];
+  culturalSourceTexts: CulturalSourceText[];
+  contentWorks: ContentWork[];
+  contentEditions: ContentEdition[];
+  contentBlocks: ContentBlock[];
+  translationLinks: TranslationLink[];
+  terminologyEntries: TerminologyEntry[];
+  reviewAssignments: ReviewAssignment[];
+  recipientEditionRules: RecipientEditionRule[];
+  recipientAssemblies: RecipientAssembly[];
+  languageCoverageSnapshots: LanguageCoverageSnapshot[];
+  s04fMigrationReceipts: S04FMigrationReceipt[];
   rsvpPolicies: RsvpPolicy[];
   rsvpQuestionnaires: RsvpQuestionnaire[];
   rsvpInvitations: RsvpInvitation[];
@@ -375,6 +403,19 @@ export function emptySnapshot(): PlatformSnapshot {
     magicLinkChallenges: [],
     atelierSessions: [],
     s04eMigrationReceipts: [],
+    languageProfiles: [],
+    languagePreferenceHistories: [],
+    culturalSourceTexts: [],
+    contentWorks: [],
+    contentEditions: [],
+    contentBlocks: [],
+    translationLinks: [],
+    terminologyEntries: [],
+    reviewAssignments: [],
+    recipientEditionRules: [],
+    recipientAssemblies: [],
+    languageCoverageSnapshots: [],
+    s04fMigrationReceipts: [],
     rsvpPolicies: [],
     rsvpQuestionnaires: [],
     rsvpInvitations: [],
@@ -494,6 +535,19 @@ export function normalizeSnapshot(input: PlatformSnapshot): PlatformSnapshot {
     magicLinkChallenges: input.magicLinkChallenges ?? [],
     atelierSessions: input.atelierSessions ?? [],
     s04eMigrationReceipts: input.s04eMigrationReceipts ?? [],
+    languageProfiles: input.languageProfiles ?? [],
+    languagePreferenceHistories: input.languagePreferenceHistories ?? [],
+    culturalSourceTexts: input.culturalSourceTexts ?? [],
+    contentWorks: input.contentWorks ?? [],
+    contentEditions: input.contentEditions ?? [],
+    contentBlocks: input.contentBlocks ?? [],
+    translationLinks: input.translationLinks ?? [],
+    terminologyEntries: input.terminologyEntries ?? [],
+    reviewAssignments: input.reviewAssignments ?? [],
+    recipientEditionRules: input.recipientEditionRules ?? [],
+    recipientAssemblies: input.recipientAssemblies ?? [],
+    languageCoverageSnapshots: input.languageCoverageSnapshots ?? [],
+    s04fMigrationReceipts: input.s04fMigrationReceipts ?? [],
     rsvpPolicies: input.rsvpPolicies ?? [],
     rsvpQuestionnaires: input.rsvpQuestionnaires ?? [],
     rsvpInvitations: input.rsvpInvitations ?? [],

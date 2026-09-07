@@ -7,6 +7,8 @@ import { applyS04DFixturesIfMissing } from "./forecast-fixtures.js";
 import { applyEosS04DToSnapshot } from "./forecast-migration.js";
 import { applyS04EFixturesIfMissing } from "./atelier-fixtures.js";
 import { applyEosS04EToSnapshot } from "./atelier-migration.js";
+import { applyS04FFixturesIfMissing } from "./language-fixtures.js";
+import { applyEosS04FToSnapshot } from "./language-migration.js";
 import { loadNonProductionFixtures } from "./bootstrap.js";
 import { seededPermissions, seededRoles } from "./catalog.js";
 import type { PgQueryable } from "./postgres-schema.js";
@@ -106,6 +108,13 @@ function applyS04ELayer(store: PlatformStore, now = "2026-09-07T18:00:00.000Z"):
   if (withFixtures !== snap) store.replace(withFixtures);
 }
 
+function applyS04FLayer(store: PlatformStore, now = "2026-09-07T20:00:00.000Z"): void {
+  const snap = store.snapshot();
+  const migrated = applyEosS04FToSnapshot(snap, now);
+  const withFixtures = applyS04FFixturesIfMissing(migrated);
+  if (withFixtures !== snap) store.replace(withFixtures);
+}
+
 /** Replay-safe: insert missing catalogue rows only. Never rewrite accepted permission bodies. */
 export function ensureMissingCatalogueRecords(store: PlatformStore): void {
   const snap = store.snapshot();
@@ -135,6 +144,7 @@ export function applySyntheticSnapshot(store: PlatformStore, options: PlatformSe
   applyS04CLayer(store);
   applyS04DLayer(store);
   applyS04ELayer(store);
+  applyS04FLayer(store);
   return service;
 }
 
@@ -150,7 +160,8 @@ export async function applySyntheticSeedIfNeeded(
     applyS04BLayer(store);
     applyS04CLayer(store);
     applyS04DLayer(store);
-  applyS04ELayer(store);
+    applyS04ELayer(store);
+    applyS04FLayer(store);
     return {
       service,
       seed: {
@@ -171,6 +182,7 @@ export async function applySyntheticSeedIfNeeded(
   applyS04CLayer(store);
   applyS04DLayer(store);
   applyS04ELayer(store);
+  applyS04FLayer(store);
   const durable = store as { flush?: () => Promise<void> };
   if (typeof durable.flush === "function") await durable.flush();
   const recordCount = countableRecords(store.snapshot());

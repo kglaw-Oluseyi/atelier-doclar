@@ -26,7 +26,14 @@ export const ACA_S04A_COURSE_ID = "ACA-S04A" as const;
 export const ACA_S04C_COURSE_ID = "ACA-S04C" as const;
 export const ACA_S04D_COURSE_ID = "ACA-S04D" as const;
 export const ACA_S04E_COURSE_ID = "ACA-S04E" as const;
-export const ACADEMY_COURSE_IDS = [ACA_S04A_COURSE_ID, ACA_S04C_COURSE_ID, ACA_S04D_COURSE_ID, ACA_S04E_COURSE_ID] as const;
+export const ACA_S04F_COURSE_ID = "ACA-S04F" as const;
+export const ACADEMY_COURSE_IDS = [
+  ACA_S04A_COURSE_ID,
+  ACA_S04C_COURSE_ID,
+  ACA_S04D_COURSE_ID,
+  ACA_S04E_COURSE_ID,
+  ACA_S04F_COURSE_ID,
+] as const;
 
 export const AUTHORITY_DISCLAIMER =
   "Course completion, a pass or a distinction records training evidence only. It does not grant Event OS permissions, assign a role, sign a protected gate, authorise production or replace an event briefing.";

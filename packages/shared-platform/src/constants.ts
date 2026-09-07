@@ -314,6 +314,19 @@ export const PERMISSION_KEYS = [
   "atelier.decision.publish",
   "atelier.decision.review",
   "atelier.audit.view",
+  "language.preference.view",
+  "language.preference.manage",
+  "language.cultural.create",
+  "language.cultural.review",
+  "language.cultural.approve",
+  "language.translation.create",
+  "language.translation.review",
+  "language.translation.approve",
+  "language.edition.manage",
+  "language.edition.publish",
+  "language.assembly.preview",
+  "language.glossary.manage",
+  "language.audit.view",
 ] as const;
 
 export const SYSTEM_ROLE_KEYS = [
@@ -508,6 +521,110 @@ export const S04E_SENSITIVE_PERMISSIONS = [
   "atelier.access.manage",
   "atelier.decision.review",
   "atelier.audit.view",
+] as const;
+
+export const S04F_SENSITIVE_PERMISSIONS = [
+  "language.cultural.approve",
+  "language.translation.approve",
+  "language.edition.publish",
+  "language.audit.view",
+] as const;
+
+export const LANGUAGE_TAGS = ["en-GB", "en-US", "yo", "ig", "ha", "fr", "de-DE", "zh-Hans"] as const;
+export const DEFAULT_FALLBACK_LANGUAGE_TAG = "en-GB" as const;
+export const UNICODE_NORMALISATION_FORM = "NFC" as const;
+export const LANGUAGE_PREFERENCE_SOURCES = ["GUEST_SUPPLIED", "HOST_SUPPLIED", "STAFF_RECORDED", "UNKNOWN"] as const;
+export const LANGUAGE_PRESENTATION_MODES = [
+  "PRIMARY_ONLY",
+  "PRIMARY_PLUS_SUMMARY",
+  "BILINGUAL",
+  "TARGET_ONLY_WITH_FALLBACK",
+] as const;
+export const CULTURAL_TEXT_STATES = ["DRAFT", "IN_REVIEW", "APPROVED", "REJECTED", "SUPERSEDED"] as const;
+export const CONTENT_EDITION_STATES = ["DRAFT", "IN_REVIEW", "APPROVED", "SUPERSEDED", "WITHDRAWN"] as const;
+export const TRANSLATION_SOURCE_TYPES = [
+  "HUMAN_AUTHORED",
+  "MACHINE_SUGGESTED",
+  "AI_SUGGESTED",
+  "IMPORTED",
+  "SYNTHETIC_FIXTURE",
+] as const;
+export const TRANSLATION_COVERAGE_STATES = [
+  "NOT_STARTED",
+  "PARTIAL",
+  "COMPLETE",
+  "APPROVED",
+  "STALE",
+  "SUPERSEDED",
+] as const;
+export const TRANSLATION_REVIEW_STATUSES = ["NOT_REVIEWED", "IN_REVIEW", "APPROVED", "REJECTED", "STALE"] as const;
+export const CONTENT_BLOCK_PURPOSES = [
+  "PRIMARY",
+  "SELECTION",
+  "SUMMARY",
+  "GREETING",
+  "INSTRUCTION",
+  "CULTURAL",
+  "CLOSING",
+] as const;
+export const CONTENT_WORK_PURPOSES = [
+  "INVITATION_COPY",
+  "PROGRAMME_NOTE",
+  "ATELIER_NARRATIVE",
+  "MERCHANDISE_DESCRIPTION",
+  "CULTURAL_TEXT",
+  "GUEST_MESSAGE",
+] as const;
+export const CONTENT_EDITION_KINDS = ["PRIMARY", "PARTIAL", "SUMMARY", "BILINGUAL", "COMPLETE"] as const;
+export const ENGLISH_CONVENTIONS = ["en-GB", "en-US"] as const;
+export const TERMINOLOGY_POLICIES = ["RETAIN", "TRANSLITERATE", "EXPLAIN", "CONTEXT_SPECIFIC"] as const;
+export const FALLBACK_REASONS = [
+  "NO_PREFERENCE",
+  "UNSUPPORTED_LANGUAGE",
+  "MISSING_APPROVED_TARGET",
+  "PARTIAL_COVERAGE",
+  "STALE_TRANSLATION",
+  "EXPLICIT_FALLBACK_RULE",
+  "TERMINAL_EN_GB",
+] as const;
+export const ASSEMBLY_STATUSES = ["READY_FOR_COMMS_REVIEW", "BLOCKED", "SUPERSEDED"] as const;
+export const REVIEW_KINDS = ["LINGUISTIC", "CULTURAL", "EDITION"] as const;
+export const REVIEW_DECISIONS = ["APPROVED", "REJECTED"] as const;
+export const LANGUAGE_REGISTER: readonly {
+  tag: (typeof LANGUAGE_TAGS)[number];
+  displayName: string;
+  htmlLang: string;
+  englishConvention?: "en-GB" | "en-US";
+}[] = [
+  { tag: "en-GB", displayName: "English (United Kingdom)", htmlLang: "en-GB", englishConvention: "en-GB" },
+  { tag: "en-US", displayName: "English (United States)", htmlLang: "en-US", englishConvention: "en-US" },
+  { tag: "yo", displayName: "Yorùbá", htmlLang: "yo" },
+  { tag: "ig", displayName: "Igbo", htmlLang: "ig" },
+  { tag: "ha", displayName: "Hausa", htmlLang: "ha" },
+  { tag: "fr", displayName: "French", htmlLang: "fr" },
+  { tag: "de-DE", displayName: "German", htmlLang: "de" },
+  { tag: "zh-Hans", displayName: "Simplified Chinese", htmlLang: "zh-Hans" },
+];
+export const PROHIBITED_LANGUAGE_INFERENCE_KEYS = [
+  "name",
+  "surname",
+  "familyName",
+  "givenName",
+  "title",
+  "honorific",
+  "ethnicity",
+  "ethnic",
+  "religion",
+  "faith",
+  "nationality",
+  "national",
+  "address",
+  "household",
+  "party",
+  "phoneCountryCode",
+  "countryCode",
+  "previousAttendance",
+  "appearance",
 ] as const;
 
 export const ATELIER_SESSION_COOKIE = "md_event_os_atelier";

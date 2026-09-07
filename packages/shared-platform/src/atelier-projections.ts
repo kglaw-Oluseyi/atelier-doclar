@@ -2,6 +2,7 @@ import type { AtelierHostRole } from "./atelier-access.js";
 import type { AtelierChapter, EventAtelier, HostDecisionReceipt, HostDecisionRequest } from "./atelier-schemas.js";
 import { ATELIER_CHAPTER_TYPES, type ATELIER_CHAPTER_TYPES as ChapterTypes } from "./constants.js";
 import { buildHostForecastProjection } from "./forecast-projections.js";
+import { buildHostMultilingualEdition, type HostMultilingualEditionView } from "./language-projections.js";
 import type { PlatformSnapshot } from "./store.js";
 
 export type AtelierChapterType = (typeof ChapterTypes)[number];
@@ -119,6 +120,7 @@ export interface HostAtelierProjection {
   canDecide: boolean;
   stepUpRequired: boolean;
   vision?: AtelierNarrativeFields & { editionId: string; version: number; publishedAt?: string };
+  multilingualEdition?: HostMultilingualEditionView;
 }
 
 const CHAPTER_TITLES: Record<AtelierChapterType, string> = {
@@ -375,11 +377,19 @@ export function buildHostAtelierProjection(
           .filter(Boolean)
           .join(" "),
       });
-    } else if (type === "EDITIONS" && editions.length > 0) {
+    } else if (type === "EDITIONS" && (editions.length > 0 || buildHostMultilingualEdition(snap, grant.eventId))) {
+      const multilingual = buildHostMultilingualEdition(snap, grant.eventId);
       chapters.push({
         type,
         title: CHAPTER_TITLES[type],
-        body: editions.map((item) => `${item.title}: ${item.summary}`).join(" "),
+        body: [
+          ...editions.map((item) => `${item.title}: ${item.summary}`),
+          multilingual
+            ? `${multilingual.workTitle} (${multilingual.languageName}). Synthetic unvalidated host edition.`
+            : "",
+        ]
+          .filter(Boolean)
+          .join(" "),
       });
     } else if (type === "UPDATES" && updates.length > 0) {
       chapters.push({
@@ -458,5 +468,6 @@ export function buildHostAtelierProjection(
           publishedAt: narrative.publishedAt,
         }
       : undefined,
+    multilingualEdition: buildHostMultilingualEdition(snap, grant.eventId),
   };
 }

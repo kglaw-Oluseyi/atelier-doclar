@@ -56,6 +56,10 @@ export {
   DEFAULT_PARAMETER_SET_VERSION,
   PROVISION_DOMAINS,
   FORECAST_CONFIDENCE_LEVELS,
+  LANGUAGE_TAGS,
+  LANGUAGE_REGISTER,
+  DEFAULT_FALLBACK_LANGUAGE_TAG,
+  UNICODE_NORMALISATION_FORM,
   type StoreProductionStatus,
 } from "./constants.js";
 export { PlatformError, PLATFORM_ERROR_CODES, publicMessageFor, type PlatformErrorCode } from "./errors.js";
@@ -442,6 +446,53 @@ export {
 } from "./atelier-migration.js";
 export { applyS04EFixturesIfMissing, S04E_FIXTURE_IDS } from "./atelier-fixtures.js";
 export { validateS04EPersistedCollections } from "./atelier-persistence.js";
+export {
+  migrateEosS04F,
+  applyEosS04FToSnapshot,
+  rollbackEosS04F,
+  EOS_S04F_MIGRATION_ID,
+  EOS_S04F_MIGRATION_CHECKSUM,
+} from "./language-migration.js";
+export { applyS04FFixturesIfMissing, S04F_FIXTURE_IDS } from "./language-fixtures.js";
+export { validateS04FPersistedCollections } from "./language-persistence.js";
+export {
+  buildEventLanguageWorkspace,
+  buildHostMultilingualEdition,
+  languagePermissionAllowed,
+  type EventLanguageWorkspace,
+  type HostMultilingualEditionView,
+  type LanguageCapabilities,
+} from "./language-projections.js";
+export {
+  AssembleRecipientContentInputSchema,
+  CreateContentWorkInputSchema,
+  CreateCulturalSourceTextInputSchema,
+  CreateDependentEditionInputSchema,
+  CreateTerminologyEntryInputSchema,
+  DecideCulturalTextInputSchema,
+  DecideTranslationInputSchema,
+  RecordLanguagePreferenceInputSchema,
+  SupersedeSourceEditionInputSchema,
+  type ContentEdition,
+  type ContentWork,
+  type CulturalSourceText,
+  type LanguageProfile,
+  type RecipientAssembly,
+} from "./language-schemas.js";
+export {
+  accentInsensitiveSearchKey,
+  authoredTextsEqual,
+  canonicalDisplayText,
+  graphemeCount,
+  graphemeSafeTruncate,
+  UNICODE_POLICY,
+} from "./language-unicode.js";
+export {
+  assertNoLanguageInference,
+  findTerminologyDisplayForm,
+  isSupportedLanguageTag,
+  languageRegisterEntry,
+} from "./language-operations.js";
 export {
   buildEventAtelierWorkspace,
   buildHostAtelierProjection,

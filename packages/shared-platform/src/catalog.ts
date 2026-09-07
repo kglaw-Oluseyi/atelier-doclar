@@ -6,6 +6,7 @@ import {
   S04C_SENSITIVE_PERMISSIONS,
   S04D_SENSITIVE_PERMISSIONS,
   S04E_SENSITIVE_PERMISSIONS,
+  S04F_SENSITIVE_PERMISSIONS,
   SCHEMA_VERSION,
   SYSTEM_ROLE_KEYS,
 } from "./constants.js";
@@ -121,6 +122,19 @@ const PERMISSION_IDS: Record<PermissionKey, string> = {
   "atelier.decision.publish": "11111111-1111-4111-8111-111111111105",
   "atelier.decision.review": "11111111-1111-4111-8111-111111111106",
   "atelier.audit.view": "11111111-1111-4111-8111-111111111107",
+  "language.preference.view": "11111111-1111-4111-8111-111111111108",
+  "language.preference.manage": "11111111-1111-4111-8111-111111111109",
+  "language.cultural.create": "11111111-1111-4111-8111-111111111110",
+  "language.cultural.review": "11111111-1111-4111-8111-111111111111",
+  "language.cultural.approve": "11111111-1111-4111-8111-111111111112",
+  "language.translation.create": "11111111-1111-4111-8111-111111111113",
+  "language.translation.review": "11111111-1111-4111-8111-111111111114",
+  "language.translation.approve": "11111111-1111-4111-8111-111111111115",
+  "language.edition.manage": "11111111-1111-4111-8111-111111111116",
+  "language.edition.publish": "11111111-1111-4111-8111-111111111117",
+  "language.assembly.preview": "11111111-1111-4111-8111-111111111118",
+  "language.glossary.manage": "11111111-1111-4111-8111-111111111119",
+  "language.audit.view": "11111111-1111-4111-8111-111111111120",
 };
 
 const ROLE_IDS: Record<(typeof SYSTEM_ROLE_KEYS)[number], string> = {
@@ -251,6 +265,19 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "atelier.decision.publish",
     "atelier.decision.review",
     "atelier.audit.view",
+    "language.preference.view",
+    "language.preference.manage",
+    "language.cultural.create",
+    "language.cultural.review",
+    "language.cultural.approve",
+    "language.translation.create",
+    "language.translation.review",
+    "language.translation.approve",
+    "language.edition.manage",
+    "language.edition.publish",
+    "language.assembly.preview",
+    "language.glossary.manage",
+    "language.audit.view",
   ],
   CLIENT_LEAD: [
     "organisation.view",
@@ -270,6 +297,8 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "forecast.hostProjection.view",
     "forecast.detail.view",
     "atelier.view",
+    "language.preference.view",
+    "language.assembly.preview",
   ],
   DEPARTMENT_LEAD: [
     "organisation.view",
@@ -285,6 +314,7 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "forecast.detail.view",
     "provision.propose",
     "atelier.view",
+    "language.preference.view",
   ],
   PLANNER: [
     "organisation.view",
@@ -340,6 +370,13 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "atelier.publish",
     "atelier.access.manage",
     "atelier.decision.publish",
+    "language.preference.view",
+    "language.preference.manage",
+    "language.cultural.create",
+    "language.translation.create",
+    "language.edition.manage",
+    "language.assembly.preview",
+    "language.glossary.manage",
   ],
   SYSTEM_ADMINISTRATOR: [
     "organisation.view",
@@ -379,6 +416,9 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "forecast.audit.view",
     "atelier.view",
     "atelier.audit.view",
+    "language.preference.view",
+    "language.assembly.preview",
+    "language.audit.view",
   ],
 };
 
@@ -397,7 +437,8 @@ function permissionRecord(key: PermissionKey): Permission {
       (S04B_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
       (S04C_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
       (S04D_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
-      (S04E_SENSITIVE_PERMISSIONS as readonly string[]).includes(key)
+      (S04E_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
+      (S04F_SENSITIVE_PERMISSIONS as readonly string[]).includes(key)
         ? "SENSITIVE"
         : "NORMAL",
     schemaVersion: SCHEMA_VERSION,
