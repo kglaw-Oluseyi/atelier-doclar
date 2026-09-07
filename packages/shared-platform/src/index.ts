@@ -330,9 +330,22 @@ export {
   type VendorAssignment,
 } from "./merchandise-schemas.js";
 export {
+  SYNTHETIC_RAILWAY_PROJECT_NAME,
+  hostedRuntimeFromEnv,
+  resolveAccessAuthority,
+  localFixtureAccessAuthority,
+  coerceAccessAuthority,
+  type AccessAuthority,
+  type HostedRuntime,
+  type IdentityAdapterKind,
+} from "./access-authority.js";
+export {
   DEFAULT_NON_PRODUCTION_VENDOR_ACCESS,
   assertVendorAccessConfig,
   readVendorSession,
+  resolveVendorAccessFromEnv,
+  usesKnownFixtureVendorSecrets,
+  vendorSecretFingerprint,
   type VendorAccessConfig,
   type VendorSessionActor,
 } from "./merchandise-vendor-access.js";
@@ -392,6 +405,7 @@ export {
 } from "./synthetic-seed.js";
 export {
   SYNTHETIC_CLEANUP_CONFIRMATION,
+  ACCESS_LIFECYCLE_PROBE_VENDOR_ID,
   EVENT_OS_CLEANUP_PROJECT_ID,
   EVENT_OS_CLEANUP_PROJECT_NAME,
   applySyntheticCleanup,
@@ -400,6 +414,7 @@ export {
   classifySyntheticCleanupAttribution,
   previewSyntheticCleanup,
   recordCleanupAudit,
+  cleanupAccessLifecycleProbe,
 } from "./synthetic-cleanup.js";
 export {
   PlatformService,

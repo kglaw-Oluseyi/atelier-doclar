@@ -1,11 +1,11 @@
 import { randomUUID } from "node:crypto";
 import {
   DEFAULT_TIMEZONE,
-  PRODUCTION_STORE_STATUS,
   SCHEMA_VERSION,
   STAFF_SESSION_REVOCATION_REASONS,
   SYSTEM_ROLE_KEYS,
 } from "./constants.js";
+import { localFixtureAccessAuthority, type AccessAuthority } from "./access-authority.js";
 import { permissionIdForKey, roleIdForKey, seededPermissions, seededRoles } from "./catalog.js";
 import { PlatformError } from "./errors.js";
 import { assertNamedHuman } from "./identity.js";
@@ -27,6 +27,14 @@ import {
   nominationAlreadyApplied,
   relationshipAlreadyApplied,
 } from "./mutation-replay.js";
+import {
+  merchandiseGuestGrantAlreadyIssued,
+  merchandiseGuestGrantAlreadyRenewed,
+  merchandiseGuestGrantAlreadyRevoked,
+  vendorAssignmentAlreadyIssued,
+  vendorAssignmentAlreadyRenewed,
+  vendorAssignmentAlreadyRevoked,
+} from "./merchandise-access-replay.js";
 import {
   addPartyMemberOnSnap,
   administerCompanionEntitlementOnSnap,
@@ -418,6 +426,7 @@ export interface PlatformServiceOptions {
   staffSession?: SessionConfig;
   vendorAccess?: VendorAccessConfig;
   merchandiseGuestAccess?: MerchandiseGuestAccessConfig;
+  accessAuthority?: AccessAuthority;
 }
 
 export interface IssuedRsvpInvitation {
@@ -473,22 +482,23 @@ export class PlatformService {
     private readonly options: PlatformServiceOptions = {},
   ) {}
 
+  private accessAuthority(): AccessAuthority {
+    return this.options.accessAuthority ?? localFixtureAccessAuthority();
+  }
+
   rsvpAccessConfig(): RsvpAccessConfig {
-    const production = this.store.productionStatus === PRODUCTION_STORE_STATUS;
     const config = this.options.rsvpAccess ?? DEFAULT_NON_PRODUCTION_RSVP_ACCESS;
-    assertRsvpAccessConfig(config, production);
+    assertRsvpAccessConfig(config, this.accessAuthority().productionAuthorised);
     return config;
   }
 
   vendorAccessConfig(): VendorAccessConfig {
-    const production = this.store.productionStatus === PRODUCTION_STORE_STATUS;
     const config = this.options.vendorAccess ?? DEFAULT_NON_PRODUCTION_VENDOR_ACCESS;
-    assertVendorAccessConfig(config, production);
+    assertVendorAccessConfig(config, this.accessAuthority());
     return config;
   }
 
   merchandiseGuestAccessConfig(): MerchandiseGuestAccessConfig {
-    const production = this.store.productionStatus === PRODUCTION_STORE_STATUS;
     const rsvp = this.options.rsvpAccess ?? this.rsvpAccessConfig();
     const config =
       this.options.merchandiseGuestAccess ??
@@ -500,14 +510,13 @@ export class PlatformService {
         sessionTtlSeconds: rsvp.sessionTtlSeconds ?? DEFAULT_NON_PRODUCTION_MERCHANDISE_GUEST_ACCESS.sessionTtlSeconds,
         maxExchangeFailures: rsvp.maxExchangeFailures ?? DEFAULT_NON_PRODUCTION_MERCHANDISE_GUEST_ACCESS.maxExchangeFailures,
       } satisfies MerchandiseGuestAccessConfig);
-    assertMerchandiseGuestAccessConfig(config, production);
+    assertMerchandiseGuestAccessConfig(config, this.accessAuthority());
     return config;
   }
 
   staffSessionConfig(): SessionConfig {
-    const production = this.store.productionStatus === PRODUCTION_STORE_STATUS;
     const config = this.options.staffSession ?? DEFAULT_NON_PRODUCTION_STAFF_SESSION;
-    assertSessionConfig(config, production);
+    assertSessionConfig(config, this.accessAuthority().productionAuthorised);
     return config;
   }
 
@@ -1897,6 +1906,8 @@ export class PlatformService {
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash({ ...input, token: undefined }),
+      alreadyApplied: (fresh) => vendorAssignmentAlreadyIssued(fresh, input),
+      replayIfAlreadyApplied: true,
       run: (snap, ctx) => {
         token = generateVendorAssignmentToken();
         return createVendorAssignmentOnSnap(snap, input, ctx.now, token, this.vendorAccessConfig());
@@ -1917,6 +1928,8 @@ export class PlatformService {
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash(input),
+      alreadyApplied: (fresh) => vendorAssignmentAlreadyRenewed(fresh, input),
+      replayIfAlreadyApplied: true,
       run: (snap, ctx) => {
         token = generateVendorAssignmentToken();
         return renewVendorAssignmentOnSnap(snap, input, ctx.now, token, this.vendorAccessConfig());
@@ -1936,6 +1949,8 @@ export class PlatformService {
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash(input),
+      alreadyApplied: (fresh) => vendorAssignmentAlreadyRevoked(fresh, input),
+      replayIfAlreadyApplied: true,
       run: (snap, ctx) => revokeVendorAssignmentOnSnap(snap, input, ctx.now),
     });
   }
@@ -1956,6 +1971,12 @@ export class PlatformService {
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash(input),
+      alreadyApplied: (fresh) => {
+        const existing = merchandiseGuestGrantAlreadyIssued(fresh, input);
+        if (existing) replayed = true;
+        return existing;
+      },
+      replayIfAlreadyApplied: true,
       run: (snap, ctx) => {
         token = generateMerchandiseGuestGrantToken();
         const issued = issueMerchandiseGuestGrantOnSnap(snap, input, ctx.now, token, this.merchandiseGuestAccessConfig());
@@ -1979,6 +2000,8 @@ export class PlatformService {
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash(input),
+      alreadyApplied: (fresh) => merchandiseGuestGrantAlreadyRenewed(fresh, input),
+      replayIfAlreadyApplied: true,
       run: (snap, ctx) => {
         token = generateMerchandiseGuestGrantToken();
         return renewMerchandiseGuestGrantOnSnap(snap, input, ctx.now, token, this.merchandiseGuestAccessConfig());
@@ -1998,6 +2021,8 @@ export class PlatformService {
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash(input),
+      alreadyApplied: (fresh) => merchandiseGuestGrantAlreadyRevoked(fresh, input),
+      replayIfAlreadyApplied: true,
       run: (snap, ctx) => revokeMerchandiseGuestGrantOnSnap(snap, input, ctx.now),
     });
   }
@@ -2328,20 +2353,39 @@ export class PlatformService {
     const input = parseStrict(SubmitVendorUpdateInputSchema, raw);
     const snap = this.store.snapshot();
     const occurredAt = now ?? new Date().toISOString();
-    const result = submitVendorUpdateOnSnap(snap, input, occurredAt, actor);
-    this.writeAudit(snap, {
-      action: "merch.vendorUpdate.submitted",
-      outcome: "SUCCESS",
-      organisationId: actor.organisationId,
-      eventId: actor.eventId,
-      resourceType: "vendor_update",
-      resourceId: result.id,
-      correlationId: actor.sessionId,
-      occurredAt,
-      actorType: "VENDOR_CAPABILITY",
-    });
-    this.store.replace(snap);
-    return result;
+    try {
+      const result = submitVendorUpdateOnSnap(snap, input, occurredAt, actor);
+      this.writeAudit(snap, {
+        action: "merch.vendorUpdate.submitted",
+        outcome: "SUCCESS",
+        organisationId: actor.organisationId,
+        eventId: actor.eventId,
+        resourceType: "vendor_update",
+        resourceId: result.id,
+        correlationId: actor.sessionId,
+        occurredAt,
+        actorType: "VENDOR_CAPABILITY",
+      });
+      this.store.replace(snap);
+      return result;
+    } catch (error) {
+      if (error instanceof PlatformError && (error.code === "VERSION_CONFLICT" || error.code === "FORBIDDEN")) {
+        const failed = this.store.snapshot();
+        this.writeAudit(failed, {
+          action: "merch.vendorUpdate.submitted",
+          outcome: "FAILED",
+          organisationId: actor.organisationId,
+          eventId: actor.eventId,
+          resourceType: "vendor_update",
+          correlationId: actor.sessionId,
+          reason: error.code,
+          occurredAt,
+          actorType: "VENDOR_CAPABILITY",
+        });
+        this.store.replace(failed);
+      }
+      throw error;
+    }
   }
 
   vendorAttemptCoreMutation(): never {
@@ -4406,6 +4450,7 @@ export class PlatformService {
       idempotencyKey?: string;
       payloadHash?: string;
       alreadyApplied?: (snap: PlatformSnapshot) => T | undefined;
+      replayIfAlreadyApplied?: boolean;
       run: (snap: PlatformSnapshot, ctx: { now: string; actor: ActorSnapshot }) => T;
     },
   ): T {
@@ -4443,6 +4488,10 @@ export class PlatformService {
       });
       this.store.replace(snap);
       throw this.denyError(decision.reason);
+    }
+    if (input.replayIfAlreadyApplied && input.alreadyApplied) {
+      const reused = input.alreadyApplied(snap);
+      if (reused) return reused;
     }
     try {
       const before = input.resourceId ? this.lookupByRef(snap, input.resourceType, input.resourceId) : undefined;

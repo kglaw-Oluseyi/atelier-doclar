@@ -1,4 +1,5 @@
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { coerceAccessAuthority, type AccessAuthority } from "./access-authority.js";
 import { PlatformError } from "./errors.js";
 
 export const DEFAULT_NON_PRODUCTION_MERCHANDISE_GUEST_ACCESS: MerchandiseGuestAccessConfig = {
@@ -44,9 +45,19 @@ function hmac(secret: string, value: string): string {
   return createHmac("sha256", secret).update(value).digest("base64url");
 }
 
-export function assertMerchandiseGuestAccessConfig(config: MerchandiseGuestAccessConfig, production: boolean): void {
-  if (production && /not-for-production|not-prod/i.test(`${config.grantPepper}${config.sessionSecret}`)) {
-    throw new PlatformError("PRODUCTION_ADAPTER_FORBIDDEN", "synthetic merchandise guest secrets cannot be used in production");
+export function assertMerchandiseGuestAccessConfig(
+  config: MerchandiseGuestAccessConfig,
+  authority: AccessAuthority | boolean,
+): void {
+  const ctx = coerceAccessAuthority(authority);
+  if (
+    ctx.productionAuthorised &&
+    /not-for-production|not-prod/i.test(`${config.grantPepper}${config.sessionSecret}`)
+  ) {
+    throw new PlatformError(
+      "PRODUCTION_ADAPTER_FORBIDDEN",
+      "synthetic merchandise guest secrets cannot be used when production is authorised",
+    );
   }
   if (config.grantPepper.length < 24 || config.sessionSecret.length < 24) {
     throw new PlatformError("VALIDATION_FAILED", "merchandise guest access secrets are too short");

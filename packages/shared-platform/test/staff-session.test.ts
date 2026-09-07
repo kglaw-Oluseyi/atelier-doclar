@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
 import { describe, it } from "node:test";
 import { NonProductionIdentityAdapter } from "../src/identity.js";
-import { PRODUCTION_STORE_STATUS } from "../src/constants.js";
 import { PlatformError } from "../src/errors.js";
 import { MemoryPlatformStore } from "../src/memory-store.js";
 import { DEFAULT_NON_PRODUCTION_STAFF_SESSION, issueSession } from "../src/session.js";
@@ -193,8 +192,13 @@ describe("revocable staff sessions", () => {
       (error: unknown) => error instanceof PlatformError && error.code === "FIXTURE_FORBIDDEN",
     );
     const store = new MemoryPlatformStore();
-    Object.defineProperty(store, "productionStatus", { value: PRODUCTION_STORE_STATUS });
-    const service = new PlatformService(store);
+    const service = new PlatformService(store, {
+      accessAuthority: {
+        productionAuthorised: true,
+        identityAdapter: "OIDC_COMPATIBLE",
+        hostedRuntime: "LOCAL",
+      },
+    });
     assert.throws(() => service.staffSessionConfig(), PlatformError);
   });
 

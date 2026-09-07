@@ -3,8 +3,9 @@ import {
   assertRsvpAccessConfig,
   assertSessionConfig,
   DEFAULT_NON_PRODUCTION_RSVP_ACCESS,
-  DEFAULT_NON_PRODUCTION_VENDOR_ACCESS,
-  assertVendorAccessConfig,
+  resolveAccessAuthority,
+  resolveVendorAccessFromEnv,
+  type AccessAuthority,
   type RsvpAccessConfig,
   type SessionConfig,
   type VendorAccessConfig,
@@ -47,6 +48,14 @@ export function productionAuthorised(): false {
   return false;
 }
 
+export function accessAuthority(): AccessAuthority {
+  return resolveAccessAuthority({
+    productionAuthorised: productionAuthorised(),
+    fixturesAllowed: fixturesAllowed(),
+    env: process.env,
+  });
+}
+
 export function deployedSha(): string {
   return (
     runtimeEnv("RAILWAY_GIT_COMMIT_SHA") ??
@@ -73,15 +82,7 @@ export function rsvpSessionTtlSeconds(): number {
 }
 
 export function vendorAccessConfig(): VendorAccessConfig {
-  const config: VendorAccessConfig = {
-    assignmentPepper: runtimeEnv("EVENT_OS_VENDOR_PEPPER") ?? DEFAULT_NON_PRODUCTION_VENDOR_ACCESS.assignmentPepper,
-    sessionSecret: runtimeEnv("EVENT_OS_VENDOR_SESSION_SECRET") ?? DEFAULT_NON_PRODUCTION_VENDOR_ACCESS.sessionSecret,
-    currentKeyId: runtimeEnv("EVENT_OS_VENDOR_KEY_ID") ?? DEFAULT_NON_PRODUCTION_VENDOR_ACCESS.currentKeyId,
-    sessionTtlSeconds: DEFAULT_NON_PRODUCTION_VENDOR_ACCESS.sessionTtlSeconds,
-    maxExchangeFailures: DEFAULT_NON_PRODUCTION_VENDOR_ACCESS.maxExchangeFailures,
-  };
-  assertVendorAccessConfig(config, productionAuthorised());
-  return config;
+  return resolveVendorAccessFromEnv(process.env, accessAuthority());
 }
 
 export function cookieSecure(): boolean {

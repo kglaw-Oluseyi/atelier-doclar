@@ -1,4 +1,9 @@
-import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import {
+  coerceAccessAuthority,
+  SYNTHETIC_RAILWAY_PROJECT_NAME,
+  type AccessAuthority,
+} from "./access-authority.js";
 import { PlatformError } from "./errors.js";
 
 export const DEFAULT_NON_PRODUCTION_VENDOR_ACCESS: VendorAccessConfig = {
@@ -39,12 +44,83 @@ function hmac(secret: string, value: string): string {
   return createHmac("sha256", secret).update(value).digest("base64url");
 }
 
-export function assertVendorAccessConfig(config: VendorAccessConfig, production: boolean): void {
-  if (production && /not-for-production/i.test(`${config.assignmentPepper}${config.sessionSecret}`)) {
-    throw new PlatformError("PRODUCTION_ADAPTER_FORBIDDEN", "synthetic vendor secrets cannot be used in production");
+const RAILWAY_VENDOR_SECRET_MIN_LENGTH = 32;
+const LOCAL_VENDOR_SECRET_MIN_LENGTH = 24;
+
+export function usesKnownFixtureVendorSecrets(config: VendorAccessConfig): boolean {
+  return (
+    safeEqual(config.assignmentPepper, DEFAULT_NON_PRODUCTION_VENDOR_ACCESS.assignmentPepper) ||
+    safeEqual(config.sessionSecret, DEFAULT_NON_PRODUCTION_VENDOR_ACCESS.sessionSecret) ||
+    /not-for-production/i.test(`${config.assignmentPepper}${config.sessionSecret}`)
+  );
+}
+
+export function vendorSecretFingerprint(value: string): string {
+  return createHash("sha256").update(value).digest("hex").slice(0, 12);
+}
+
+export function resolveVendorAccessFromEnv(
+  env: Record<string, string | undefined>,
+  authority: AccessAuthority,
+): VendorAccessConfig {
+  const assignmentPepper = env.EVENT_OS_VENDOR_PEPPER;
+  const sessionSecret = env.EVENT_OS_VENDOR_SESSION_SECRET;
+  if (authority.hostedRuntime === "RAILWAY") {
+    if (!assignmentPepper || !sessionSecret) {
+      throw new PlatformError(
+        "PRODUCTION_ADAPTER_FORBIDDEN",
+        "Railway vendor access requires configured EVENT_OS_VENDOR_PEPPER and EVENT_OS_VENDOR_SESSION_SECRET",
+      );
+    }
   }
-  if (config.assignmentPepper.length < 24 || config.sessionSecret.length < 24) {
+  const config: VendorAccessConfig = {
+    assignmentPepper: assignmentPepper ?? DEFAULT_NON_PRODUCTION_VENDOR_ACCESS.assignmentPepper,
+    sessionSecret: sessionSecret ?? DEFAULT_NON_PRODUCTION_VENDOR_ACCESS.sessionSecret,
+    currentKeyId: env.EVENT_OS_VENDOR_KEY_ID ?? DEFAULT_NON_PRODUCTION_VENDOR_ACCESS.currentKeyId,
+    sessionTtlSeconds: DEFAULT_NON_PRODUCTION_VENDOR_ACCESS.sessionTtlSeconds,
+    maxExchangeFailures: DEFAULT_NON_PRODUCTION_VENDOR_ACCESS.maxExchangeFailures,
+  };
+  assertVendorAccessConfig(config, authority);
+  return config;
+}
+
+export function assertVendorAccessConfig(config: VendorAccessConfig, authority: AccessAuthority | boolean): void {
+  const ctx = coerceAccessAuthority(authority);
+  const minLength = ctx.hostedRuntime === "RAILWAY" ? RAILWAY_VENDOR_SECRET_MIN_LENGTH : LOCAL_VENDOR_SECRET_MIN_LENGTH;
+  if (config.assignmentPepper.length < minLength || config.sessionSecret.length < minLength) {
     throw new PlatformError("VALIDATION_FAILED", "vendor access secrets are too short");
+  }
+  const fixtureSecrets = usesKnownFixtureVendorSecrets(config);
+
+  if (ctx.productionAuthorised) {
+    if (fixtureSecrets || ctx.identityAdapter === "NON_PRODUCTION_FIXTURE") {
+      throw new PlatformError(
+        "PRODUCTION_ADAPTER_FORBIDDEN",
+        "fixture vendor identity/session configuration cannot be used when production is authorised",
+      );
+    }
+    return;
+  }
+
+  if (ctx.hostedRuntime !== "RAILWAY") return;
+
+  if (ctx.identityAdapter !== "NON_PRODUCTION_FIXTURE") {
+    throw new PlatformError(
+      "PRODUCTION_ADAPTER_FORBIDDEN",
+      "synthetic vendor access requires the explicit non-production identity adapter",
+    );
+  }
+  if (ctx.railwayProjectName !== SYNTHETIC_RAILWAY_PROJECT_NAME) {
+    throw new PlatformError(
+      "PRODUCTION_ADAPTER_FORBIDDEN",
+      "synthetic vendor access is limited to the atelier-doclar Railway project",
+    );
+  }
+  if (fixtureSecrets) {
+    throw new PlatformError(
+      "PRODUCTION_ADAPTER_FORBIDDEN",
+      "synthetic vendor secrets cannot be used on Railway; configure EVENT_OS_VENDOR_PEPPER and EVENT_OS_VENDOR_SESSION_SECRET",
+    );
   }
 }
 
