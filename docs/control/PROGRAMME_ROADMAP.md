@@ -12,7 +12,7 @@ Percent complete is not used. Unknown is not healthy. Documented ≠ implemented
 | Code | Name | Route | Implementation reality |
 |------|------|-------|------------------------|
 | FOUNDATION | Shared Foundation / Control Tower | `/programme` | Control Tower implemented; Foundation closeout IN_REVIEW; production unsigned |
-| EVENT_OS | Event OS | `/programme/event-os` | S01–S03 accepted; S04 CLOSED / ACCEPTED; S04A ACCEPTED (not catalogue); S04B ACCEPTED (not catalogue); S04C IN_REVIEW / NOT READY (not catalogue); S04F ratified and held; S05 not authorised |
+| EVENT_OS | Event OS | `/programme/event-os` | S01–S03 accepted; S04 CLOSED / ACCEPTED; S04A ACCEPTED (not catalogue); S04B ACCEPTED (not catalogue); S04C ACCEPTED (not catalogue); S04F ratified and held; S05 not authorised |
 | EVENT_DAY | Event-Day Runtime | `/programme/event-day` | Specs + contracts; no app |
 | ACADEMY | Academy | `/programme/academy` | Specified/prompted; no app |
 | MARKETING | Marketing OS | `/programme/marketing` | Specified/prompted; no app |
@@ -65,7 +65,7 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 | EOS-S04 | CLOSED / ACCEPTED — guest communications and concierge; `PASS WITH OBSERVATIONS`; hosted verification `MD-EOS-S04-R3-05`; production unsigned |
 | EOS-S04A | ACCEPTED — guest addressing, relationships and party entitlements; not a catalogue slice; SHA `8f1957d2353db539449d9bcce62f9e4d71eb31af` |
 | EOS-S04B | ACCEPTED — multi-phase events, arrival routing and perimeter access; not a catalogue slice; SHA `f9f218c9d3e357ba82e6c04e7409138267a94396` |
-| EOS-S04C | IN_REVIEW / NOT READY — Aso-Ebi, Aso-Oke & Event Merchandise Coordination; after EOS-S04B and before EOS-S05; `MD-PR-S020` |
+| EOS-S04C | ACCEPTED — Aso-Ebi, Aso-Oke & Event Merchandise Coordination; not a catalogue slice; SHA `b378fa4f092e4fa5237894975738e3f22b530d73` |
 | EOS-S04F | RATIFIED / NOT_STARTED — Language, Cultural Text & Multilingual Editions; after EOS-S04E and before EOS-S05; execution HELD; implementation follows EOS-S04A–E |
 | All others | NOT_STARTED, READY, or BLOCKED only by valid Event OS / Event-Day dependencies |
 
@@ -73,8 +73,8 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 
 | Band | Content |
 |------|---------|
-| Now | Event OS S01–S03 accepted; EOS-S04 CLOSED / ACCEPTED; EOS-S04A ACCEPTED; EOS-S04B ACCEPTED; EOS-S04C IN_REVIEW / NOT READY (not a catalogue slice); production unsigned; no real communication provider |
-| Next | Focused independent re-verification of EOS-S04C primary journeys; do not implement EOS-S04D–F or EOS-S05 without separate CEO authority |
+| Now | Event OS S01–S03 accepted; EOS-S04 CLOSED / ACCEPTED; EOS-S04A ACCEPTED; EOS-S04B ACCEPTED; EOS-S04C ACCEPTED (not a catalogue slice); production unsigned; no real communication provider |
+| Next | EOS-S04D remains DRAFT FOR CEO RATIFICATION; do not implement EOS-S04D–F or EOS-S05 without separate CEO authority |
 | Later | Event OS S01 after a new authorised instruction; Runtime after Event OS foundations |
 | Held | All 693 product/recon prompts except CT0/CT1 wrappers; EOS-S04F Cursor prompt pack (P00–P11) |
 | External | Independent, specialist, venue, CEO gates — unsigned |

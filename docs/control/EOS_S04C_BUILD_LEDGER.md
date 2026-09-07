@@ -1,11 +1,11 @@
 # EOS-S04C Build Ledger
 
 **Slice ID:** `EOS-S04C`
-**Prompt Control ID:** `MD-PR-S020`
+**Prompt Control ID:** `MD-PR-S020` / `MD-PR-S021`
 **Starting baseline:** `3854405c3cf4aa6d387e0bd1cc066166c8feca50`
-**Status:** `IN_REVIEW / NOT READY`
+**Status:** `ACCEPTED`
 **Production:** unauthorised
-**Next slices:** EOS-S04D–F and EOS-S05 not started
+**Next slices:** EOS-S04D–F and EOS-S05 not started; not authorised by this acceptance
 
 ## P00 — Controlled reconnaissance
 
@@ -69,4 +69,8 @@ Hosted vendor mint failed because Postgres `productionStatus` was treated as pro
 
 ## Guest-access renewal false-success remediation
 
-A stale different-value guest renewal was refused durably but the losing operator could still see a usable success state (leftover success copy and/or an issued link) because persist happened after the success redirect and merchandise conflict UI did not suppress success or lock retry. Guest renewal now flushes before any issued-link flash or success redirect, reuses the shared conflict alert/reload pattern, and does not present the rejected expiry or a new link. Vendor domain behaviour was not reopened. Record: `docs/control/EOS_S04C_GUEST_RENEWAL_FALSE_SUCCESS_REMEDIATION.md`. One-journey verification: `docs/control/EOS_S04C_FINAL_FOCUSED_CLAUDE_VERIFICATION.md`. Status remains `IN_REVIEW / NOT READY`. Not accepted.
+A stale different-value guest renewal was refused durably but the losing operator could still see a usable success state (leftover success copy and/or an issued link) because persist happened after the success redirect and merchandise conflict UI did not suppress success or lock retry. Guest renewal now flushes before any issued-link flash or success redirect, reuses the shared conflict alert/reload pattern, and does not present the rejected expiry or a new link. Vendor domain behaviour was not reopened. Record: `docs/control/EOS_S04C_GUEST_RENEWAL_FALSE_SUCCESS_REMEDIATION.md`. One-journey verification: `docs/control/EOS_S04C_FINAL_FOCUSED_CLAUDE_VERIFICATION.md`. Historical status: `IN_REVIEW / NOT READY`. Not then accepted.
+
+## Formal technical acceptance
+
+ChatGPT / AI CTO accepted EOS-S04C on `2026-09-07` at SHA `b378fa4f092e4fa5237894975738e3f22b530d73`. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised=false`. TDR-S04C-001–004 CLOSED. Catalogue accepted-slice count remains 4. EOS-S04D–F and EOS-S05 remain unauthorised. Record: `docs/control/EOS_S04C_ACCEPTANCE.md`. The documentation-only acceptance commit does not replace the accepted implementation SHA and does not redeploy Event OS.

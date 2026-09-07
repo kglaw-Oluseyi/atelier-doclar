@@ -336,19 +336,26 @@ ACCEPTED on `2026-09-07` by `ChatGPT / AI CTO` after Claude-in-Chrome first-vert
 
 **Slice ID:** `EOS-S04C`
 **Title:** Aso-Ebi, Aso-Oke & Event Merchandise Coordination
-**Status:** `RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS`
-**Prompt Control ID:** `MD-PR-S020`
+**Status:** `ACCEPTED`
+**Prompt Control ID:** `MD-PR-S020` / `MD-PR-S021`
 **Position:** after EOS-S04B and before EOS-S05
 
 | ID | Kind | Summary | Location |
 |----|------|---------|----------|
 | EV-EOS-S04C-PACK | DOCUMENT | Controlled slice pack v1.0 (filename retained DRAFT) | `docs/control/Maison_Doclar_EOS-S04C_Controlled_Slice_Pack_v1.0_DRAFT.docx` |
 | EV-EOS-S04C-PROMPTS | DOCUMENT | Controlled Cursor prompt pack v1.0 (P00–P11) | `docs/control/Maison_Doclar_EOS-S04C_Cursor_Prompt_Pack_v1.0.docx` |
-| EV-EOS-S04C-RATIFY | DOCUMENT | CEO ratification and implementation authority | `docs/control/EOS_S04C_RATIFICATION.md` |
+| EV-EOS-S04C-RATIFY | DOCUMENT | CEO ratification and implementation authority (historical IN_PROGRESS) | `docs/control/EOS_S04C_RATIFICATION.md` |
 | EV-EOS-S04C-LEDGER | DOCUMENT | Slice build ledger | `docs/control/EOS_S04C_BUILD_LEDGER.md` |
 | EV-EOS-S04C-FRONTEND | DOCUMENT | Frontend architecture | `docs/control/EOS_S04C_FRONTEND_ARCHITECTURE.md` |
 | EV-EOS-S04C-IMPL | DOCUMENT | Implementation record | `docs/control/EOS_S04C_IMPLEMENTATION.md` |
 | EV-EOS-S04C-CLAUDE | DOCUMENT | Independent Claude-in-Chrome verification prompt | `docs/control/EOS_S04C_CLAUDE_IN_CHROME_VERIFICATION.md` |
+| EV-EOS-S04C-PRIMARY | DOCUMENT | Primary-journey remediation (historical IN_REVIEW) | `docs/control/EOS_S04C_PRIMARY_JOURNEY_REMEDIATION.md` |
+| EV-EOS-S04C-VENDOR | DOCUMENT | Vendor lifecycle remediation (historical IN_REVIEW) | `docs/control/EOS_S04C_VENDOR_LIFECYCLE_REMEDIATION.md` |
+| EV-EOS-S04C-GUEST-RENEW | DOCUMENT | Guest-renewal false-success remediation (historical IN_REVIEW) | `docs/control/EOS_S04C_GUEST_RENEWAL_FALSE_SUCCESS_REMEDIATION.md` |
+| EV-EOS-S04C-ACCEPT | DOCUMENT | Formal technical acceptance record | `docs/control/EOS_S04C_ACCEPTANCE.md` |
+| EV-EOS-S04C-COMMIT | COMMIT | Accepted implementation SHA | `git:b378fa4f092e4fa5237894975738e3f22b530d73` |
+
+ACCEPTED on `2026-09-07` by `ChatGPT / AI CTO` after Claude-in-Chrome verification through the guest-renewal false-success correction. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised` remains false. TDR-S04C-001–004 CLOSED. Does not authorise EOS-S04D–F, EOS-S05, real data, providers or production.
 
 ## EOS-S04F
 

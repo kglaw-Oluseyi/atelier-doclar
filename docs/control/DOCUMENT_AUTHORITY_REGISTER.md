@@ -81,5 +81,18 @@ This addendum does not rewrite the B0 row set or the earlier S04A/S04B addenda.
 
 | Title | Path | Current programme status | Notes |
 |-------|------|--------------------------|-------|
-| EOS-S04C CEO ratification overlay | `docs/control/EOS_S04C_RATIFICATION.md` | CANONICAL AUTHORITY RECORD | Changes S04C from DRAFT / NOT AUTHORISED to RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS. Does not authorise EOS-S04D–F, EOS-S05 or production. |
+| EOS-S04C CEO ratification overlay | `docs/control/EOS_S04C_RATIFICATION.md` | CANONICAL AUTHORITY RECORD | Changes S04C from DRAFT / NOT AUTHORISED to RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS. Does not authorise EOS-S04D–F, EOS-S05 or production. Historical IN_PROGRESS; superseded for status by MD-PR-S021. |
+
+## Addendum — 2026-09-07 EOS-S04C acceptance (`MD-PR-S021`)
+
+This addendum does not rewrite the B0 row set or the earlier S04A/S04B/S04C addenda. Historical `IN_REVIEW`, `NOT READY` and ratification rows above remain dated history.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| EOS-S04C Formal Technical Acceptance | `docs/control/EOS_S04C_ACCEPTANCE.md` | CANONICAL ACCEPTANCE RECORD | Status `ACCEPTED` at SHA `b378fa4f092e4fa5237894975738e3f22b530d73`. Not catalogue-slice acceptance. |
+| EOS-S04C primary-journey remediation | `docs/control/EOS_S04C_PRIMARY_JOURNEY_REMEDIATION.md` | HISTORICAL REMEDIATION EVIDENCE | Written while the slice was `IN_REVIEW / NOT READY`. |
+| EOS-S04C vendor lifecycle remediation | `docs/control/EOS_S04C_VENDOR_LIFECYCLE_REMEDIATION.md` | HISTORICAL REMEDIATION EVIDENCE | Written while the slice was `IN_REVIEW / NOT READY`. |
+| EOS-S04C guest-renewal false-success remediation | `docs/control/EOS_S04C_GUEST_RENEWAL_FALSE_SUCCESS_REMEDIATION.md` | HISTORICAL REMEDIATION EVIDENCE | Written while the slice was `IN_REVIEW / NOT READY`. |
+| EOS-S04D Controlled Slice Pack v1.0 DRAFT | `docs/control/Maison_Doclar_EOS-S04D_Controlled_Slice_Pack_v1.0_DRAFT.docx` | DRAFT FOR CEO RATIFICATION — implementation not authorised | Sequential successor after accepted S04C. Filename contains DRAFT. |
+| EOS-S04D Cursor Prompt Pack v1.0 | `docs/control/Maison_Doclar_EOS-S04D_Cursor_Prompt_Pack_v1.0.docx` | REQUIREMENTS / IMPLEMENTATION PACK — NOT AUTHORISED | Historical pack wording holds push/deploy. Acceptance of S04C does not authorise S04D. |
 
