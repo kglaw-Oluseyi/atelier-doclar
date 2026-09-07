@@ -28,6 +28,9 @@
 | `EVENT_OS_RSVP_KEY_ID` | Current RSVP key ring identifier |
 | `EVENT_OS_PUBLIC_URL` / `EVENT_OS_BASE_URL` | Public origin for secure cookies |
 | `EVENT_OS_COOKIE_SECURE` | `1` / `0` override |
+| `EVENT_OS_VENDOR_PEPPER` | Vendor assignment hashing material |
+| `EVENT_OS_VENDOR_SESSION_SECRET` | Vendor session HMAC |
+| `EVENT_OS_VENDOR_KEY_ID` | Current vendor key ring identifier |
 
 ## Persistence
 
