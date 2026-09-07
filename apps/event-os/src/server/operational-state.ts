@@ -401,10 +401,22 @@ export function successCopy(ok: string): string {
       return "The private Atelier was published. Canonical Event OS records were not rewritten.";
     case "narrative-published":
       return "A new narrative edition was published. Earlier editions remain preserved.";
+    case "narrative-first":
+      return "This is the first published narrative edition. No earlier published edition existed.";
+    case "narrative-superseded":
+      return "A new narrative edition was published. The earlier published edition remains preserved.";
+    case "narrative-revision":
+      return "A revision draft was opened from the current published edition.";
     case "atelier-access":
       return "A single-use host invitation was issued. Staff, guest and vendor sessions were not reused.";
+    case "atelier-step-up":
+      return "A single-use step-up confirmation was issued. It cannot be reused for another action.";
+    case "atelier-renewed":
+      return "Host Atelier access was renewed. The prior grant remains as history and lost authority.";
     case "atelier-revoked":
       return "Host Atelier access was revoked and fails closed.";
+    case "decision-published":
+      return "A host decision request was published. Canonical Event OS records were not rewritten.";
     case "decision-reviewed":
       return "The host decision was reviewed. Canonical Event OS records remain unchanged.";
     default:

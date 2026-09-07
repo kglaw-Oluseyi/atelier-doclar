@@ -125,7 +125,7 @@ function actorBind(
 
 async function finishAction(
   bind: ActionBind,
-  outcome: { ok: string; extra?: Record<string, string> } | { error: unknown },
+  outcome: { ok: string; extra?: Record<string, string>; message?: string } | { error: unknown },
 ): Promise<never> {
   if ("error" in outcome) {
     rethrowRedirect(outcome.error);
@@ -156,7 +156,7 @@ async function finishAction(
       correlationId: bind.correlationId,
       status: "SUCCESS",
       code: "SUCCESS",
-      message: successMessageForOk(outcome.ok),
+      message: (outcome.message ?? successMessageForOk(outcome.ok)).slice(0, 400),
       eventId: bind.eventId,
       guestId: bind.guestId,
     }),
@@ -2603,13 +2603,22 @@ async function atelierFail(
   return finishAction(bind, { error });
 }
 
+function parseCanDecide(formData: FormData): boolean {
+  const values = formData.getAll("canDecide").map(String);
+  if (values.includes("true")) return true;
+  if (values.includes("false")) return false;
+  return values.includes("on");
+}
+
 async function atelierOk(
   eventId: string,
   actor: { correlationId: string; personId: string },
   actionType: string,
   ok: string,
+  extra?: Record<string, string>,
+  message?: string,
 ): Promise<never> {
-  return finishAction(actorBind(actor, `/app/events/${eventId}/atelier`, actionType, eventId), { ok });
+  return finishAction(actorBind(actor, `/app/events/${eventId}/atelier`, actionType, eventId), { ok, extra, message });
 }
 
 export async function publishEventAtelierAction(formData: FormData): Promise<void> {
@@ -2641,7 +2650,7 @@ export async function publishAtelierNarrativeAction(formData: FormData): Promise
     const organisation = getRuntime().service.listOrganisations(actor)[0];
     if (!organisation) return await atelierFail(eventId, new Error("No organisation assignment is available."), actor, actionType);
     try {
-      getRuntime().service.publishAtelierNarrative(actor, {
+      const edition = getRuntime().service.publishAtelierNarrative(actor, {
         organisationId: organisation.id,
         eventId,
         story: String(formData.get("story") ?? ""),
@@ -2653,13 +2662,86 @@ export async function publishAtelierNarrativeAction(formData: FormData): Promise
         culturalIntent: String(formData.get("culturalIntent") ?? ""),
         designDirection: String(formData.get("designDirection") ?? ""),
         provenance: String(formData.get("provenance") ?? "Staff-published narrative edition"),
+        changeSummary: optionalFormValue(formData, "changeSummary"),
+        expectedAtelierVersion: Number(formData.get("expectedAtelierVersion") || 0) || undefined,
         reason: String(formData.get("reason") ?? "Publish narrative edition"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+      if (edition.supersedesEditionId) {
+        await atelierOk(
+          eventId,
+          actor,
+          actionType,
+          "narrative-superseded",
+          { prior: edition.supersedesEditionId },
+          `A new narrative edition was published. Earlier published edition ${edition.supersedesEditionId} remains preserved.`,
+        );
+      }
+      await atelierOk(
+        eventId,
+        actor,
+        actionType,
+        "narrative-first",
+        undefined,
+        "This is the first published narrative edition. No earlier published edition existed.",
+      );
+    } catch (error) {
+      await atelierFail(eventId, error, actor, actionType);
+    }
+    await atelierOk(eventId, actor, actionType, "narrative-published");
+  });
+}
+
+export async function startAtelierNarrativeRevisionAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const actionType = "atelier.narrative.revise";
+    const { actor } = await requireActor().catch((error) => atelierFail(eventId, error, undefined, actionType));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await atelierFail(eventId, new Error("No organisation assignment is available."), actor, actionType);
+    try {
+      getRuntime().service.ensureAtelierNarrativeRevision(actor, {
+        organisationId: organisation.id,
+        eventId,
+        reason: String(formData.get("reason") ?? "Start a narrative revision from the current published edition"),
         idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
       });
     } catch (error) {
       await atelierFail(eventId, error, actor, actionType);
     }
-    await atelierOk(eventId, actor, actionType, "narrative-published");
+    await atelierOk(eventId, actor, actionType, "narrative-revision");
+  });
+}
+
+export async function publishAtelierDecisionAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const actionType = "atelier.decision.publish";
+    const { actor } = await requireActor().catch((error) => atelierFail(eventId, error, undefined, actionType));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await atelierFail(eventId, new Error("No organisation assignment is available."), actor, actionType);
+    try {
+      getRuntime().service.publishAtelierDecision(actor, {
+        organisationId: organisation.id,
+        eventId,
+        kind: String(formData.get("kind") ?? "REQUIRES_STAFF_REVIEW"),
+        title: String(formData.get("title") ?? ""),
+        question: String(formData.get("question") ?? ""),
+        consequence: String(formData.get("consequence") ?? ""),
+        options: String(formData.get("options") ?? "")
+          .split("·")
+          .map((item) => item.trim())
+          .filter(Boolean),
+        deadlineAt: String(formData.get("deadlineAt") ?? "2026-09-21T18:00:00.000Z"),
+        requiresReview: formData.get("requiresReview") === "true" || formData.get("requiresReview") === "on",
+        requiresStepUp: formData.get("requiresStepUp") === "true" || formData.get("requiresStepUp") === "on",
+        reason: String(formData.get("reason") ?? "Publish host decision request"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await atelierFail(eventId, error, actor, actionType);
+    }
+    await atelierOk(eventId, actor, actionType, "decision-published");
   });
 }
 
@@ -2680,8 +2762,9 @@ export async function issueAtelierAccessAction(formData: FormData): Promise<void
           .split(",")
           .map((item) => item.trim())
           .filter(Boolean),
-        canDecide: formData.get("canDecide") === "on",
+        canDecide: parseCanDecide(formData),
         canExport: false,
+        purpose: optionalFormValue(formData, "purpose") as "ATELIER_ENTRY" | "STEP_UP" | undefined,
         reason: String(formData.get("reason") ?? "Issue host Atelier access"),
         idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
       });
@@ -2712,6 +2795,59 @@ export async function revokeAtelierAccessAction(formData: FormData): Promise<voi
       await atelierFail(eventId, error, actor, actionType);
     }
     await atelierOk(eventId, actor, actionType, "atelier-revoked");
+  });
+}
+
+export async function issueAtelierStepUpAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const actionType = "atelier.access.step-up";
+    const { actor } = await requireActor().catch((error) => atelierFail(eventId, error, undefined, actionType));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await atelierFail(eventId, new Error("No organisation assignment is available."), actor, actionType);
+    try {
+      const issued = getRuntime().service.issueAtelierStepUp(actor, {
+        organisationId: organisation.id,
+        eventId,
+        grantId: String(formData.get("grantId") ?? ""),
+        expectedVersion: Number(formData.get("expectedVersion") || 1),
+        reason: String(formData.get("reason") ?? "Issue step-up confirmation for a reserved host action"),
+      });
+      await writeIssuedAccessFlash({ kind: "atelier", token: issued.token, subjectId: issued.grant.id });
+    } catch (error) {
+      await atelierFail(eventId, error, actor, actionType);
+    }
+    await atelierOk(eventId, actor, actionType, "atelier-step-up");
+  });
+}
+
+export async function renewAtelierAccessAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const actionType = "atelier.access.renew";
+    const { actor } = await requireActor().catch((error) => atelierFail(eventId, error, undefined, actionType));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await atelierFail(eventId, new Error("No organisation assignment is available."), actor, actionType);
+    try {
+      const renewed = getRuntime().service.renewAtelierAccess(actor, {
+        organisationId: organisation.id,
+        eventId,
+        grantId: String(formData.get("grantId") ?? ""),
+        expectedVersion: Number(formData.get("expectedVersion")),
+        canDecide: parseCanDecide(formData),
+        canExport: false,
+        purpose: optionalFormValue(formData, "purpose") as "ATELIER_ENTRY" | "STEP_UP" | undefined,
+        reason: String(
+          formData.get("reason") ??
+            `Renew host access with canDecide=${parseCanDecide(formData) ? "true" : "false"}`,
+        ),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+      await writeIssuedAccessFlash({ kind: "atelier", token: renewed.token, subjectId: renewed.grant.id });
+    } catch (error) {
+      await atelierFail(eventId, error, actor, actionType);
+    }
+    await atelierOk(eventId, actor, actionType, "atelier-renewed");
   });
 }
 
