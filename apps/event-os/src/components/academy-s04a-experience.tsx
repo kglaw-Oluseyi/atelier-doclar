@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import type { AcademyAssignment, AcademyCourse, AcademyLearnerRecord, AcademyQuestion } from "@maison-doclar/academy";
 import { AUTHORITY_DISCLAIMER } from "@maison-doclar/academy";
@@ -8,6 +9,23 @@ import { IdempotencyField, PendingSubmit } from "./atelier-pending-submit";
 
 const STEPS = ["objectives", "learn", "warnings", "practice", "assess", "evidence"] as const;
 
+const S04A_PRACTICE = (
+  <>
+    <p>
+      Use Event OS with synthetic Yorùbá identities only: Ọmọ́tọ́lá, Adéṣínà, Kọ́ládé, Ẹ̀bùnolúwa, Fọláṣadé. Do
+      not use real guest data. Escalation: if a write is refused, reload the projection and ask an authorised
+      role — do not invent a title, household or companion.
+    </p>
+    <ol>
+      <li>Create a titled adult and a blank-title adult.</li>
+      <li>Create a child with an age band and responsible adult — no date of birth.</li>
+      <li>Create a household and an entourage of independent guests.</li>
+      <li>Issue, accept, decline, expire and revoke a plus-one, then materialise exactly once.</li>
+      <li>Correct a title and a responsible-adult relationship through governed amend.</li>
+    </ol>
+  </>
+);
+
 export function AcademyS04AExperience({
   course,
   questions,
@@ -15,6 +33,8 @@ export function AcademyS04AExperience({
   record,
   outcome,
   percent,
+  action = submitAcaS04AAction,
+  practice = S04A_PRACTICE,
 }: {
   course: AcademyCourse;
   questions: AcademyQuestion[];
@@ -22,6 +42,8 @@ export function AcademyS04AExperience({
   record?: AcademyLearnerRecord;
   outcome?: string;
   percent?: string;
+  action?: (formData: FormData) => Promise<void>;
+  practice?: ReactNode;
 }) {
   const initial = outcome ? "evidence" : "objectives";
   const [step, setStep] = useState<(typeof STEPS)[number]>(initial);
@@ -137,18 +159,7 @@ export function AcademyS04AExperience({
       {step === "practice" ? (
         <section className="atelier-panel" aria-labelledby="academy-practice">
           <h2 id="academy-practice">Synthetic practice before assessment</h2>
-          <p>
-            Use Event OS with synthetic Yorùbá identities only: Ọmọ́tọ́lá, Adéṣínà, Kọ́ládé, Ẹ̀bùnolúwa, Fọláṣadé. Do
-            not use real guest data. Escalation: if a write is refused, reload the projection and ask an authorised
-            role — do not invent a title, household or companion.
-          </p>
-          <ol>
-            <li>Create a titled adult and a blank-title adult.</li>
-            <li>Create a child with an age band and responsible adult — no date of birth.</li>
-            <li>Create a household and an entourage of independent guests.</li>
-            <li>Issue, accept, decline, expire and revoke a plus-one, then materialise exactly once.</li>
-            <li>Correct a title and a responsible-adult relationship through governed amend.</li>
-          </ol>
+          {practice}
           <button type="button" onClick={() => setStep("assess")}>
             Open assessment
           </button>
@@ -162,7 +173,7 @@ export function AcademyS04AExperience({
             Distinction 90% or above. Pass 80–89%. Below 80% requires a retake after reviewing missed items. This score
             is not an Event OS permission.
           </p>
-          <form className="form atelier-intake" action={submitAcaS04AAction}>
+          <form className="form atelier-intake" action={action}>
             <IdempotencyField />
             {questions.map((question, index) => (
               <fieldset key={question.id}>

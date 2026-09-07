@@ -3,13 +3,13 @@ import {
   ACADEMY_LEARNING_PATHS,
   ACADEMY_OUTCOMES,
   ACADEMY_SYSTEM_ROLE_KEYS,
-  ACA_S04A_COURSE_ID,
+  ACADEMY_COURSE_IDS,
 } from "./constants.js";
 
 export const AcademyLearningPathSchema = z.enum(ACADEMY_LEARNING_PATHS);
 export const AcademyOutcomeSchema = z.enum(ACADEMY_OUTCOMES);
 export const AcademySystemRoleKeySchema = z.enum(ACADEMY_SYSTEM_ROLE_KEYS);
-export const AcademyCourseIdSchema = z.literal(ACA_S04A_COURSE_ID);
+export const AcademyCourseIdSchema = z.enum(ACADEMY_COURSE_IDS);
 
 export const AcademyQuestionOptionSchema = z
   .object({

@@ -1,0 +1,405 @@
+import { ACA_S04C_COURSE_ID, AUTHORITY_DISCLAIMER } from "./constants.js";
+import { AcademyCourseSchema, type AcademyCourse, type AcademyLearningPath } from "./schemas.js";
+
+const ALL: AcademyLearningPath[] = [
+  "CEO_OVERSIGHT",
+  "EVENT_DIRECTOR",
+  "PLANNER",
+  "OPERATIONAL_AWARENESS",
+  "AUDITOR_READ_ONLY",
+];
+const OPERATORS: AcademyLearningPath[] = ["EVENT_DIRECTOR", "PLANNER", "OPERATIONAL_AWARENESS"];
+const GOVERNORS: AcademyLearningPath[] = ["CEO_OVERSIGHT", "EVENT_DIRECTOR", "AUDITOR_READ_ONLY"];
+
+export const acaS04CCourse: AcademyCourse = AcademyCourseSchema.parse({
+  id: ACA_S04C_COURSE_ID,
+  title: "Aso-ebi, aso-oke and merchandise coordination",
+  lede: "Learn how Event OS coordinates host offers, private guest choices and vendor fulfilment without becoming a payment, invitation or identity system. Passing this course is training evidence only.",
+  objectives: [
+    "Keep EOS-S03 invitation and RSVP authority separate from merchandise offers.",
+    "Issue one offer per independent guest. A household or party never substitutes for a guest ID.",
+    "Use host-assigned cohorts for targeting without merging identities or inferring family.",
+    "Collect only optional male-cap circumference in inches, with explicit consent.",
+    "Treat vendor commercial status as attributed evidence, never Maison Doclar payment truth.",
+    "Give vendors a separate least-privilege session that cannot mutate Guest, RSVP, Party or Attendance.",
+    "Correct delays and disputes through exceptions, not invented fulfilment or payment results.",
+    "Explain why course completion is not operational authorisation.",
+  ],
+  modules: [
+    {
+      id: "objectives",
+      title: "What this course is — and is not",
+      objective: "Separate training evidence from Event OS merchandise authority.",
+      instruction:
+        "ACA-S04C teaches the Event OS merchandise rules already implemented in the platform. Enrolment follows your existing assignment role. A pass (80–89%) or distinction (90%+) is recorded against your person. It does not open merch permissions, assign a vendor, sign a protected gate or authorise production. Completing this course never lets you contact a real vendor or guest.",
+      practice: "State one thing a distinction gives you, and one thing it never gives you.",
+      feedback: "A distinction is training evidence. Merchandise permission still comes only from an active Event OS assignment.",
+    },
+    {
+      id: "authority",
+      title: "Merchandise is not invitation, RSVP or admission",
+      objective: "Keep S03, S04, S04A and S04B authorities intact.",
+      instruction:
+        "EOS-S03 remains invitation and RSVP entitlement. EOS-S04 remains governed communications. EOS-S04A remains guests, parties, relationships and responsible-adult links. EOS-S04B remains phases, ceremonies and perimeter access. A merchandise offer never creates an invitation, attendance mark or phase eligibility. Selecting fabric does not mean the guest is attending church.",
+      practice: "Name the authority that still owns RSVP if a parent accepts a host-sponsored aso-oke set.",
+      feedback: "RSVP stays on S03. The offer is adjacent coordination only.",
+    },
+    {
+      id: "identity",
+      title: "Independent guests and host-assigned cohorts",
+      objective: "Target offers without collapsing people.",
+      instruction:
+        "Bàbátúndé, Folákẹ́, Adéwálé, Yétúndé and Ọmọ́tọ́lá each keep a guest ID. A household or party never substitutes for that ID. Cohorts such as Parents, Friends and Family exist only when the host assigns them. Do not infer a spouse, parent or family from a shared Yorùbá name. Cohort membership may target an offer. It must never merge identities or imply a relationship that S04A did not record.",
+      practice: "Issue a parent-set offer to Bàbátúndé without making Folákẹ́ the same person.",
+      feedback: "Two guest IDs, two offers if both are assigned. The cohort label is not a person.",
+    },
+    {
+      id: "privacy",
+      title: "Consented cap circumference only",
+      objective: "Collect one optional measurement and reject every other body field.",
+      instruction:
+        "The only permitted body measurement is male cap circumference in inches. It is optional, purpose-limited and stored only after explicit consent. It is absent from ordinary guest, communications and vendor projections unless strictly required. Do not infer size from age, title, sex, household, photograph or previous orders. No chest, waist, dress size, shoe size, height, weight, biometric or health field is permitted. Olúfẹ́mi may store 22.5 inches for the named fila and later withdraw consent.",
+      practice: "On the made-to-measure fila, look for inches and a consent box. Confirm there is no dress-size field.",
+      feedback: "Inches plus consent is the entire measurement surface. Withdrawal must remain possible.",
+    },
+    {
+      id: "money",
+      title: "No payment truth in Event OS",
+      objective: "Coordinate fulfilment without collecting money.",
+      instruction:
+        "Maison Doclar does not receive guest cards, bank details, receipts or balances. Vendor-reported commercial status is attributed evidence for review. Guest-safe copy must never say Maison Doclar confirmed payment. A READY_FOR_COLLECTION milestone is not settlement and not admission.",
+      practice: "Accept an attributed vendor report and confirm no amount field appeared.",
+      feedback: "The review queue stores a milestone, not a payment.",
+    },
+    {
+      id: "vendor",
+      title: "Separate vendor portal",
+      objective: "Keep vendor access assignment-scoped and fail-closed.",
+      instruction:
+        "Vendor users receive a third session on /vendor. Staff cookies are not reused. The vendor sees only assigned fulfilments: a display name, item, variant, vendor reference and milestone. They cannot open unrestricted guest dossiers or mutate Guest, Invitation, RSVP, Party, Credential or Attendance. Forged identifiers, expired sessions, revoked assignments and cross-event or cross-vendor IDs fail closed. Hiding a button in the browser is not security.",
+      practice: "Open the synthetic aso-oke vendor portal and confirm RSVP and core records are absent.",
+      feedback: "Assignment scope is enforced on the server. Another vendor’s fulfilment is not found.",
+    },
+    {
+      id: "exceptions",
+      title: "Exceptions and private choices",
+      objective: "Record delays and private opt-outs without fabricating results.",
+      instruction:
+        "Guests record private choices: full participation, fabric only, accessory only, alternative, host-sponsored, decline gracefully or undecided. Another adult in a household cannot see those choices. Staff may assist with permission. Delays, replacements, non-collection and vendor disputes are exceptions. Planner may coordinate routine offers but cannot grant sponsorship, vendor assignments or exception review. Auditor is read-only.",
+      practice: "Record Yétúndé declining gracefully and a delay exception without writing a payment.",
+      feedback: "The decline is private. The exception is operational. Neither is RSVP or money.",
+    },
+    {
+      id: "warnings",
+      title: "Why these failures are operationally dangerous",
+      objective: "Recognise prohibited shortcuts before they reach a live aso-ebi list.",
+      instruction:
+        "Treating an offer as an invitation marks people as invited who are not. Substituting a household for a guest leaks another adult’s private choice. Inferring family from a cohort invents S04A relationships. Collecting dress size or inferring cap size from a photograph overcollects the body. Treating a vendor report as Maison Doclar payment creates a false financial record. Letting a vendor mutate RSVP or using CSS to hide staff navigation imitates security. Treating this course as authority puts an unassigned person on a live merchandise programme.",
+      practice: "For each warning, name the first safe action if you see it happening.",
+      feedback: "Stop, reload the approved projection, and use the governed action — or escalate.",
+    },
+  ],
+  warnings: [
+    {
+      id: "offer-is-not-invitation",
+      title: "A merchandise offer is not an invitation",
+      whyItFails: "Issuing aso-oke does not invite anyone and does not mark attendance.",
+      whatToDo: "Keep invitation and RSVP on EOS-S03. Treat the offer as adjacent coordination only.",
+    },
+    {
+      id: "household-substitution",
+      title: "A household never substitutes for a guest",
+      whyItFails: "Recording a choice against a party ID leaks another adult’s private preference.",
+      whatToDo: "Every offer and choice must name a guest ID. Open the individual dossier.",
+    },
+    {
+      id: "inferred-family",
+      title: "Do not infer family from a cohort or Yorùbá name",
+      whyItFails: "Parents or Family labels are host targeting, not S04A relationships.",
+      whatToDo: "Assign cohorts explicitly. Do not merge Bàbátúndé and Folákẹ́ because they share a family name.",
+    },
+    {
+      id: "prohibited-measurement",
+      title: "Do not collect any measurement except consented cap inches",
+      whyItFails: "Dress size, chest, waist or inferred sizing is forbidden body data.",
+      whatToDo: "Offer only optional inches with a consent box. Reject every other measurement key.",
+    },
+    {
+      id: "inferred-size",
+      title: "Do not infer a measurement",
+      whyItFails: "Age, title, sex, household, photograph or previous orders are not a size.",
+      whatToDo: "Leave the cap field empty unless the guest or authorised staff entered inches with consent.",
+    },
+    {
+      id: "payment-truth",
+      title: "Do not treat vendor commercial status as Maison Doclar payment",
+      whyItFails: "Attributed READY or PAID-looking language invents settlement Event OS does not own.",
+      whatToDo: "Review the vendor report as external evidence. Never store cards, receipts or balances.",
+    },
+    {
+      id: "vendor-core-mutation",
+      title: "Vendors must not mutate core guest records",
+      whyItFails: "A tailor updating RSVP or attendance creates a parallel identity system.",
+      whatToDo: "Vendor methods stay on assigned fulfilments. Core mutation attempts fail closed and are audited.",
+    },
+    {
+      id: "imitated-separation",
+      title: "Hiding staff navigation is not a vendor portal",
+      whyItFails: "CSS or route hiding still carries staff session authority.",
+      whatToDo: "Use the separate /vendor session, cookie and assignment token. Staff cookies must not work there.",
+    },
+    {
+      id: "cross-vendor",
+      title: "Do not allow cross-event or cross-vendor fulfilment access",
+      whyItFails: "Another event’s guest list or another vendor’s milestone is a confidentiality breach.",
+      whatToDo: "Forged, expired, revoked and out-of-scope IDs fail closed. Do not reconstruct another assignment.",
+    },
+    {
+      id: "course-is-not-authority",
+      title: "Course completion is not operational authority",
+      whyItFails: "A pass does not create a merch assignment or authorise contacting vendors.",
+      whatToDo: "Keep working only where your Event OS assignment already allows it.",
+    },
+  ],
+  questions: [
+    {
+      id: "q-not-invitation",
+      scenario: "offer-not-invitation",
+      paths: ALL,
+      prompt: "Bàbátúndé receives a host-sponsored parent aso-oke offer. What remains true?",
+      options: [
+        { id: "a", label: "He is now invited and attending because merchandise was issued." },
+        { id: "b", label: "Invitation and RSVP stay on EOS-S03. The offer does not create attendance." },
+        { id: "c", label: "Church phase access is granted because the collection lists the church phase." },
+      ],
+      correctOptionId: "b",
+      remediation: "Merchandise never creates invitation, attendance or phase eligibility.",
+    },
+    {
+      id: "q-household",
+      scenario: "household-not-guest",
+      paths: ALL,
+      prompt: "A planner wants to record one fabric choice for the whole Ọlábọ̀dé household. What is correct?",
+      options: [
+        { id: "a", label: "Use the household party ID so both adults share one private choice." },
+        { id: "b", label: "Record the choice against each independent guest ID. A household never substitutes." },
+        { id: "c", label: "Copy Folákẹ́’s choice onto Bàbátúndé because they share a family name." },
+      ],
+      correctOptionId: "b",
+      remediation: "Every offer and participation names a guest. Household is not a person.",
+    },
+    {
+      id: "q-cohort",
+      scenario: "cohort-no-merge",
+      paths: ALL,
+      prompt: "The host assigns a Parents cohort containing Bàbátúndé and Folákẹ́. What may the cohort do?",
+      options: [
+        { id: "a", label: "Target offers. It must not merge identities or imply an S04A family relationship." },
+        { id: "b", label: "Create a single parent identity so print lists stay short." },
+        { id: "c", label: "Infer that Folákẹ́ is the spouse because she is in Parents." },
+      ],
+      correctOptionId: "a",
+      remediation: "Cohorts are host-assigned targeting lists, not relationship records.",
+    },
+    {
+      id: "q-named-override",
+      scenario: "named-override",
+      paths: OPERATORS.concat(["CEO_OVERSIGHT"]),
+      prompt: "Ọmọ́tọ́lá has a named complementary gele. Does that change her invitation?",
+      options: [
+        { id: "a", label: "Yes. A named override is a special invitation." },
+        { id: "b", label: "No. The override is an individual merchandise offer only." },
+        { id: "c", label: "It also marks her attending for the church phase." },
+      ],
+      correctOptionId: "b",
+      remediation: "Named overrides stay on merchandise. S03 and S04B authorities are unchanged.",
+    },
+    {
+      id: "q-cap-only",
+      scenario: "cap-consent",
+      paths: ALL,
+      prompt: "Olúfẹ́mi is offered a made-to-measure fila. Which measurement may be stored?",
+      options: [
+        { id: "a", label: "Optional head circumference in inches after explicit consent." },
+        { id: "b", label: "Chest, neck and cap size inferred from his Otunba title." },
+        { id: "c", label: "A photograph-derived size so he does not have to type inches." },
+      ],
+      correctOptionId: "a",
+      remediation: "Only consented male-cap circumference in inches is permitted.",
+    },
+    {
+      id: "q-no-infer-size",
+      scenario: "no-inferred-size",
+      paths: ALL,
+      prompt: "A vendor asks Event OS to estimate Ọmọ́tọ́lá’s gele size from age and a household photo. What happens?",
+      options: [
+        { id: "a", label: "The server refuses. Size is never inferred from age, title, sex, household or photographs." },
+        { id: "b", label: "A planner may type a guessed size if they passed this course." },
+        { id: "c", label: "The household principal’s previous order is copied." },
+      ],
+      correctOptionId: "a",
+      remediation: "No inferred sizing. Empty is safer than a guessed body field.",
+    },
+    {
+      id: "q-no-money",
+      scenario: "no-payment",
+      paths: ALL,
+      prompt: "Which fields are forbidden on merchandise records?",
+      options: [
+        { id: "a", label: "Vendor reference and attributed milestone." },
+        { id: "b", label: "Payment cards, bank details, receipts, balances and amount fields." },
+        { id: "c", label: "Guest-safe delay copy after an exception." },
+      ],
+      correctOptionId: "b",
+      remediation: "Event OS coordinates. It does not collect or confirm money.",
+    },
+    {
+      id: "q-vendor-scope",
+      scenario: "vendor-least-privilege",
+      paths: ALL,
+      prompt: "What should an assigned aso-oke vendor see?",
+      options: [
+        { id: "a", label: "Assigned fulfilments only: display name, item, variant, reference and milestone." },
+        { id: "b", label: "The full guest dossier, RSVP and dietary notes so tailoring is easier." },
+        { id: "c", label: "Every event’s merchandise list because they are a trusted vendor." },
+      ],
+      correctOptionId: "a",
+      remediation: "Vendors receive the minimum operational projection for the assigned task.",
+    },
+    {
+      id: "q-vendor-mutation",
+      scenario: "vendor-no-core-mutation",
+      paths: GOVERNORS.concat(["PLANNER"]),
+      prompt: "A vendor session posts an RSVP or attendance change. What is correct?",
+      options: [
+        { id: "a", label: "The server refuses, audits the attempt and leaves core records unchanged." },
+        { id: "b", label: "The write succeeds if the vendor token is still active." },
+        { id: "c", label: "Staff CSS hides the RSVP form, which is sufficient enforcement." },
+      ],
+      correctOptionId: "a",
+      remediation: "Vendor capability cannot mutate Guest, Invitation, RSVP, Party, Credential or Attendance.",
+    },
+    {
+      id: "q-cross-vendor",
+      scenario: "cross-vendor",
+      paths: GOVERNORS.concat(["PLANNER"]),
+      prompt: "Vendor A submits an update using Vendor B’s fulfilment ID from another event. What happens?",
+      options: [
+        { id: "a", label: "Fail closed. Cross-vendor and cross-event identifiers are not found or forbidden." },
+        { id: "b", label: "The milestone is stored if the guest name looks familiar." },
+        { id: "c", label: "A planner can approve the cross-event write after this course." },
+      ],
+      correctOptionId: "a",
+      remediation: "Assignment, event and item scope are server-enforced.",
+    },
+    {
+      id: "q-session-expiry",
+      scenario: "vendor-session-expiry",
+      paths: ALL,
+      prompt: "A vendor assignment is revoked or the session expires. What must the portal show?",
+      options: [
+        { id: "a", label: "A controlled unavailable state. Staff cookies must not reopen the assignment." },
+        { id: "b", label: "The last cached guest list in the browser." },
+        { id: "c", label: "A sign-in form that accepts the Event OS staff token." },
+      ],
+      correctOptionId: "a",
+      remediation: "Expired and revoked vendor access fail closed on a separate session boundary.",
+    },
+    {
+      id: "q-planner-sponsor",
+      scenario: "planner-no-sponsor",
+      paths: ["PLANNER", "EVENT_DIRECTOR", "CEO_OVERSIGHT", "AUDITOR_READ_ONLY"],
+      prompt: "May a Planner grant host sponsorship or a vendor assignment?",
+      options: [
+        { id: "a", label: "Yes, after a distinction on ACA-S04C." },
+        { id: "b", label: "No. Sponsorship, vendor grant and exception review stay with authorised roles." },
+        { id: "c", label: "Yes, if the vendor asked by WhatsApp." },
+      ],
+      correctOptionId: "b",
+      remediation: "Planner coordinates routine offers and choices. Hidden buttons are not authority.",
+    },
+    {
+      id: "q-auditor",
+      scenario: "auditor-readonly",
+      paths: ["AUDITOR_READ_ONLY", "CEO_OVERSIGHT", "EVENT_DIRECTOR"],
+      prompt: "What may an Auditor do on S04C surfaces?",
+      options: [
+        { id: "a", label: "Read minimum-necessary projections. Mutations are refused even if a control is visible." },
+        { id: "b", label: "Accept vendor reports so the file looks complete." },
+        { id: "c", label: "Enter a cap measurement to finish the guest card." },
+      ],
+      correctOptionId: "a",
+      remediation: "Auditor is read-only. Server denial is the proof.",
+    },
+    {
+      id: "q-private-choice",
+      scenario: "private-choice",
+      paths: OPERATORS.concat(["CEO_OVERSIGHT"]),
+      prompt: "Yétúndé declines fabric gracefully on guest access. Can Folákẹ́ see that choice on her own access?",
+      options: [
+        { id: "a", label: "No. Choices are private to the named guest even inside a household." },
+        { id: "b", label: "Yes, because household adults share merchandise preferences." },
+        { id: "c", label: "Yes, if they are in the same Friends cohort." },
+      ],
+      correctOptionId: "a",
+      remediation: "Household membership never reveals another adult’s private merchandise choice.",
+    },
+    {
+      id: "q-exception",
+      scenario: "exception-handling",
+      paths: GOVERNORS.concat(["PLANNER"]),
+      prompt: "A vendor reports a delay. How is that recorded?",
+      options: [
+        { id: "a", label: "As an exception or reviewed attributed update. No payment or fabricated delivery is written." },
+        { id: "b", label: "As Maison Doclar confirmed refund." },
+        { id: "c", label: "By marking the guest not attending so seating is freed." },
+      ],
+      correctOptionId: "a",
+      remediation: "Exceptions coordinate delay. They are not money and not RSVP.",
+    },
+    {
+      id: "q-phase-target",
+      scenario: "phase-targeting",
+      paths: OPERATORS.concat(["CEO_OVERSIGHT"]),
+      prompt: "A collection lists the church phase. What does that mean?",
+      options: [
+        { id: "a", label: "The collection is applicable to that ceremony. It does not grant church attendance." },
+        { id: "b", label: "Anyone with an offer may enter the church perimeter." },
+        { id: "c", label: "S04B credentials are issued automatically." },
+      ],
+      correctOptionId: "a",
+      remediation: "Phase applicability is targeting, not arrival authority.",
+    },
+    {
+      id: "q-stale",
+      scenario: "optimistic-concurrency",
+      paths: OPERATORS.concat(["CEO_OVERSIGHT"]),
+      prompt: "Two staff submit different choices against the same offer version. What is correct?",
+      options: [
+        { id: "a", label: "The stale write is refused. Reload and retry. A repeated identical submission is one action." },
+        { id: "b", label: "The second write silently overwrites so the UI looks successful." },
+        { id: "c", label: "Both succeed and the guest receives two offers." },
+      ],
+      correctOptionId: "a",
+      remediation: "Optimistic concurrency and idempotency prevent false success.",
+    },
+    {
+      id: "q-course-authority",
+      scenario: "course-not-authority",
+      paths: ALL,
+      prompt: "You scored 94% on ACA-S04C. Which statement is true?",
+      options: [
+        { id: "a", label: "You may now contact vendors and collect guest measurements in production." },
+        { id: "b", label: "You have distinction evidence only. Assignment and production approval are unchanged." },
+        { id: "c", label: "Protected gates may be signed with this score." },
+      ],
+      correctOptionId: "b",
+      remediation: AUTHORITY_DISCLAIMER,
+    },
+  ],
+  authorityDisclaimer: AUTHORITY_DISCLAIMER,
+});
+
+export function acaS04CQuestionsFor(path: AcademyLearningPath) {
+  return acaS04CCourse.questions.filter((question) => question.paths.includes(path));
+}
