@@ -314,6 +314,7 @@ export function retireUnsupportedRulePricesOnSnap(snap: PlatformSnapshot, organi
     if (!serialized.includes("CONST_MONEY") || serialized.includes("PRICE_REF")) continue;
     const item = snap.costItemDefinitions.find((entry) => entry.organisationId === organisationId && entry.code === rule.costItemCode);
     rule.current = false;
+    rule.version += 1;
     rule.updatedAt = now;
     const replacement: CostRuleEdition = {
       ...rule,
@@ -335,6 +336,7 @@ export function applyQuantityRulesToCatalogue(snap: PlatformSnapshot, organisati
     if (current && JSON.stringify(current.expression).includes("PRICE_REF")) continue;
     if (current) {
       current.current = false;
+      current.version += 1;
       current.updatedAt = now;
     }
     const expression = quantityRule(item.code, item.unitKind);
@@ -367,6 +369,7 @@ export function applyQuantityRulesToCatalogue(snap: PlatformSnapshot, organisati
       };
     });
     template.contentHash = exactHash({ archetype: template.archetype, candidates: template.candidates });
+    template.version += 1;
     template.updatedAt = now;
   }
 }

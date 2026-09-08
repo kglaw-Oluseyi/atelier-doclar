@@ -227,8 +227,6 @@ export function migrateEosS05AIntelligence(input: PlatformSnapshot, now: string)
   const snap = normalizeSnapshot(structuredClone(input));
   const existing = snap.s05aIntelligenceReceipts.find((item) => item.migrationId === EOS_S05A_INTELLIGENCE_MIGRATION_ID);
   if (existing) {
-    existing.status = "REPLAYED";
-    existing.updatedAt = now;
     return { status: "REPLAYED", snapshot: snap, created: existing.createdRecords, receipt: existing };
   }
   const created: string[] = [];
