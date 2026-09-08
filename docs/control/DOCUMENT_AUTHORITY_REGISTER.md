@@ -170,3 +170,18 @@ This addendum does not rewrite the B0 row set or the earlier S04A–S04F ratific
 | EOS-S04F acceptance remediation | `docs/control/EOS_S04F_ACCEPTANCE_REMEDIATION.md` | HISTORICAL REVIEW RECORD | Dated `IN_REVIEW / NOT READY`. Superseded for current status by MD-PR-S027. |
 | EOS-S04F focused Claude verification | `docs/control/EOS_S04F_FOCUSED_CLAUDE_VERIFICATION.md` | INDEPENDENT REVIEW PROMPT | Claude verified; Claude did not accept. |
 
+## Addendum — 2026-09-08 EOS-S05 ratification (`MD-PR-S028`)
+
+This addendum does not rewrite the B0 row set or the earlier S04A–S04F addenda.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| EOS-S05 CEO ratification overlay | `docs/control/EOS_S05_RATIFICATION.md` | CANONICAL AUTHORITY RECORD | Changes S05 from unauthorised / technically eligible only to RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS. Milestone 1 only. Does not accept EOS-S05, start EOS-S06 or authorise production. |
+| Historic Slice 5 Implementation Specification v1.0 | `MDOS/slice5/Maison_Doclar_Slice_5_Implementation_Specification_and_Build_Plan_v1.0.docx` | RATIFIED REQUIREMENTS SOURCE — filename retained | Working-tree file may be absent; inventory ID MD-INV-0153. Overlay is controlling. |
+| Historic Slice 5 Cursor Prompt Pack v1.0 | `MDOS/slice5/Maison_Doclar_Slice_5_Cursor_Prompt_Pack_v1.0.docx` | RATIFIED REQUIREMENTS SOURCE — filename retained | Historic S5-01–S5-60 remain NOT_EXECUTED traceability units. |
+| EOS-S05 venue-layout ADR | `docs/control/ADR_EOS_S05_VENUE_LAYOUT.md` | CANONICAL ARCHITECTURE RECORD | Geometry, hashing, concurrency, reuse and safety-source freeze. |
+| EOS-S05 canonical record mapping | `docs/control/EOS_S05_CANONICAL_RECORD_MAPPING.md` | CANONICAL MAPPING | One concept, one collection. |
+| EOS-S05 implementation record | `docs/control/EOS_S05_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | Milestone 1; not acceptance. |
+| EOS-S05 frontend architecture | `docs/control/EOS_S05_FRONTEND_ARCHITECTURE.md` | IMPLEMENTATION EVIDENCE | Command Atelier venue and blank-layout surfaces. |
+| EOS-S05 build ledger | `docs/control/EOS_S05_BUILD_LEDGER.md` | IMPLEMENTATION EVIDENCE | Milestone evidence ledger. |
+

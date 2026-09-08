@@ -430,3 +430,25 @@ ACCEPTED on `2026-09-07` by `ChatGPT / AI CTO` after Claude-in-Chrome verificati
 
 RATIFIED on `2026-09-07` by George Lawson under `MD-PR-S026`. P00–P11 implemented. Source-supersession remediation recorded `2026-09-08`. ACCEPTED on `2026-09-08` by `ChatGPT / AI CTO` under `MD-PR-S027` at SHA `a4795e83c929bf24591f52c2224eb4b588c23ef3`. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised` remains false. TDR-S04F-001–002 remain carried forward. Does not invent catalogue acceptance, start EOS-S05, or authorise production. Claude verified; Claude did not accept. Documentation-only acceptance commit does not redeploy Event OS.
 
+## EOS-S05
+
+**Slice ID:** `EOS-S05`
+**Title:** Venue registry and spatial layout
+**Status:** `IN_PROGRESS` — Milestone 1; not accepted
+**Prompt Control ID:** `MD-PR-S028`
+**Position:** after accepted EOS-S04F
+**Execution authority:** `AUTHORISED` — Milestone 1 only
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-EOS-S05-RATIFY | DOCUMENT | CEO ratification and Milestone 1 implementation authority | `docs/control/EOS_S05_RATIFICATION.md` |
+| EV-EOS-S05-ADR | DOCUMENT | Venue-layout architecture decision | `docs/control/ADR_EOS_S05_VENUE_LAYOUT.md` |
+| EV-EOS-S05-MAP | DOCUMENT | Canonical record mapping | `docs/control/EOS_S05_CANONICAL_RECORD_MAPPING.md` |
+| EV-EOS-S05-LEDGER | DOCUMENT | Slice build ledger | `docs/control/EOS_S05_BUILD_LEDGER.md` |
+| EV-EOS-S05-FRONTEND | DOCUMENT | Frontend architecture | `docs/control/EOS_S05_FRONTEND_ARCHITECTURE.md` |
+| EV-EOS-S05-IMPL | DOCUMENT | Implementation record | `docs/control/EOS_S05_IMPLEMENTATION.md` |
+| EV-EOS-S05-HIST-SPEC | DOCUMENT | Historic Slice 5 specification (filename retained) | `MDOS/slice5/Maison_Doclar_Slice_5_Implementation_Specification_and_Build_Plan_v1.0.docx` |
+| EV-EOS-S05-HIST-PACK | DOCUMENT | Historic Slice 5 Cursor prompt pack (filename retained) | `MDOS/slice5/Maison_Doclar_Slice_5_Cursor_Prompt_Pack_v1.0.docx` |
+
+RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S028`. Milestone 1 implemented. Catalogue accepted-slice count remains 4. Independent acceptance is not granted. EOS-S06 is not authorised. Production remains unauthorised.
+

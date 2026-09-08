@@ -183,3 +183,13 @@ Successor implementation after EOS-S04D requires a separate CEO decision. Cursor
 | EOS-S05 catalogue `dependsOn: EOS-S04` / technically eligible | Dependency-law eligibility only. Historical `MDOS/slice5` packs remain `RATIFICATION DRAFT`. Implementation remains `NO`. |
 | B0 inventory `PROGRAMME_AUTHORITY_RATIFIED_UNLESS_EXPRESSLY_EXCEPTED` for Slice 5 | Not a CEO implementation overlay. Not authority to execute S5-01 or P00. |
 | Deploy-by-default (6 September 2026) | Remains the `atelier-doclar` rule **if** S05 is later authorised. It is not itself S05 implementation authority. |
+
+## Addendum — 2026-09-08 EOS-S05 ratification (`MD-PR-S028`)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| EOS-S05 implementation remains `NO` / historic packs `RATIFICATION DRAFT` | SUPERSEDED by `docs/control/EOS_S05_RATIFICATION.md`. Status is `RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS` for Milestone 1 only. Filenames remain historical evidence. |
+| Historic instruction to run sixty prompts `S5-01`–`S5-60` individually | SUPERSEDED as execution model. Those IDs remain `NOT_EXECUTED` traceability units. Milestone 1 implements S5-01–S5-13 substantively. |
+| EOS-S05 catalogue slice / accepted-slice count | Catalogue slice yes. Accepted-slice count remains 4 until independent acceptance. This prompt does not accept EOS-S05. |
+| EOS-S06 and later slices | Remain unauthorised. |
+| Deploy-by-default (6 September 2026) | Controlling for verified Event OS work on `atelier-doclar`. Deployment is not acceptance and not production authorisation. |

@@ -210,6 +210,14 @@
       "product": "EVENT_OS",
       "title": "EOS-S04F Formal Technical Acceptance Record",
       "authorising_instruction": "Record formal technical acceptance of EOS-S04F after independent AI CTO review, Claude-in-Chrome focused verification and source-lineage / staleness / placeholder remediation; do not start EOS-S05, invent catalogue acceptance, redeploy Event OS, or authorise production"
+    },
+    {
+      "prompt_control_id": "MD-PR-S028",
+      "native_id": "S05-M1",
+      "slice_id": "EOS-S05",
+      "product": "EVENT_OS",
+      "title": "EOS-S05 CEO Ratification and Milestone 1 Implementation Authority",
+      "authorising_instruction": "CEO ratification of the historic EOS-S05 Slice 5 packs as controlling requirements subject to the 2026-09-08 authority overlay; implement Milestone 1 only; push and deploy affected atelier-doclar Event OS; do not start Milestone 2 or EOS-S06, invent catalogue acceptance, or authorise production"
     }
   ]
 }
