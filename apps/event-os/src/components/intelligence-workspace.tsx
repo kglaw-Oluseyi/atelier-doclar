@@ -1,8 +1,10 @@
+import { formatMoneyMinor } from "@maison-doclar/shared-platform";
 import { CanonicalHash } from "./canonical-evidence";
 import { IdempotencyField, PendingSubmit } from "./atelier-pending-submit";
 import {
   assessChangeImpactAction,
   calculateBudgetScenarioAction,
+  compareBudgetScenariosAction,
   convertDiscoveryEngagementAction,
   createBriefDraftAction,
   createChangeProposalAction,
@@ -14,6 +16,7 @@ import {
   publishBriefEditionAction,
   recordDiscoveryObjectAction,
   submitBriefEditionAction,
+  submitBudgetScenarioAction,
 } from "../server/actions";
 
 type Intelligence = ReturnType<
@@ -21,10 +24,7 @@ type Intelligence = ReturnType<
 >;
 
 function moneyLabel(minor: string, currency = "NGN") {
-  if (minor === "redacted") return "Restricted in this projection";
-  const value = Number(minor) / 100;
-  if (!Number.isFinite(value)) return `${currency} ${minor}`;
-  return `${currency} ${value.toLocaleString("en-NG")}`;
+  return formatMoneyMinor(minor, currency);
 }
 
 export function IntelligenceWorkspaceView({
@@ -211,10 +211,15 @@ export function IntelligenceWorkspaceView({
       <section id="budget-studio" className="form programme-form">
         <h2>Planner Budget Studio</h2>
         <p className="lede">
-          Figures are deterministic forecasts, not payments. Lower-spend scenarios stay first-class. Protected lines cannot be dropped to force a total.
+          Figures are deterministic forecasts, not payments. A missing or synthetic price stays partial or blocked. Lower-spend scenarios stay first-class. Protected lines cannot be dropped to force a total.
         </p>
+        {intelligence.priceEvidence?.some((item) => item.synthetic) ? (
+          <p data-testid="budget-synthetic-warning">
+            Seeded amounts are labelled synthetic, non-production, provisional and unsupported for real-client reliance. They are not current vendor prices.
+          </p>
+        ) : null}
         {intelligence.scenarios.length === 0 ? (
-          <p className="empty">No budget scenario yet.</p>
+          <p className="empty">No budget scenario yet. Instantiate a template to review the bill of materials.</p>
         ) : (
           <ul className="atelier-queue" data-testid="budget-scenario-list">
             {intelligence.scenarios.map((scenario) => (
@@ -222,17 +227,31 @@ export function IntelligenceWorkspaceView({
                 <p>
                   <strong>{scenario.purpose.replaceAll("_", " ").toLowerCase()}</strong>{" "}
                   <span className="md-status">{scenario.status.toLowerCase()}</span>{" "}
-                  <span className="md-status">{scenario.alignment.toLowerCase()}</span>
+                  <span className="md-status">{scenario.alignment.toLowerCase()}</span>{" "}
+                  <span className="md-status">{scenario.calculationStatus.toLowerCase()}</span>
                 </p>
                 <p>
                   Expected {moneyLabel(scenario.expectedMinor, scenario.currency)} · low {moneyLabel(scenario.lowMinor, scenario.currency)} ·
                   high {moneyLabel(scenario.highMinor, scenario.currency)}
                 </p>
+                {scenario.contingencyBasis ? (
+                  <p>Contingency {moneyLabel(scenario.contingencyMinor ?? "0", scenario.currency)} · {scenario.contingencyBasis}</p>
+                ) : null}
+                {scenario.warnings?.length ? <p>{scenario.warnings[0]}</p> : null}
+                {intelligence.lines
+                  ?.filter((line) => line.scenarioId === scenario.id)
+                  .map((line) => (
+                    <p key={line.id}>
+                      {line.itemCode.replaceAll("_", " ").toLowerCase()} · {line.inclusionReason} · {moneyLabel(line.expectedMinor, line.currency)} · {line.priceSource.toLowerCase().replaceAll("_", " ")}
+                      {line.synthetic ? " · synthetic evidence" : ""}
+                      {line.stale ? " · stale" : ""}
+                    </p>
+                  ))}
                 {scenario.trace.length > 0 ? (
                   <details>
                     <summary>Calculation trace</summary>
                     <ul>
-                      {scenario.trace.slice(0, 12).map((step, index) => (
+                      {scenario.trace.slice(0, 24).map((step, index) => (
                         <li key={`${scenario.id}-${index}`}>
                           {step.op}: {step.detail} = {step.value}
                         </li>
@@ -240,7 +259,25 @@ export function IntelligenceWorkspaceView({
                     </ul>
                   </details>
                 ) : null}
-                {canDecideBudget && scenario.status === "DRAFT" ? (
+                {intelligence.sensitivity
+                  ?.filter((item) => item.scenarioId === scenario.id)
+                  .map((run) => (
+                    <p key={run.id}>Principal drivers: {run.drivers.map((item) => item.key.replaceAll("_", " ").toLowerCase()).join(", ")}</p>
+                  ))}
+                {canCalculateBudget && scenario.status === "DRAFT" ? (
+                  <form action={submitBudgetScenarioAction}>
+                    <IdempotencyField />
+                    <input type="hidden" name="organisationId" value={organisationId} />
+                    <input type="hidden" name="engagementId" value={engagementId} />
+                    <input type="hidden" name="scenarioId" value={scenario.id} />
+                    <input type="hidden" name="expectedVersion" value={scenario.version} />
+                    <input type="hidden" name="expectedHash" value={scenario.resultHash} />
+                    <PendingSubmit className="secondary" locked={mutationLocked}>
+                      Submit immutable scenario
+                    </PendingSubmit>
+                  </form>
+                ) : null}
+                {canDecideBudget && (scenario.status === "DRAFT" || scenario.status === "SUBMITTED") ? (
                   <form action={decideBudgetScenarioAction}>
                     <IdempotencyField />
                     <input type="hidden" name="organisationId" value={organisationId} />
@@ -254,6 +291,27 @@ export function IntelligenceWorkspaceView({
             ))}
           </ul>
         )}
+        {intelligence.comparisons?.length ? (
+          <div data-testid="budget-comparison">
+            {intelligence.comparisons.map((item) => (
+              <p key={item.id}>
+                Scenario movement {moneyLabel(item.totalMovementMinor)} · {item.clientExperienceConsequence} The lower-spend path is not inferior.
+              </p>
+            ))}
+          </div>
+        ) : null}
+        {canCalculateBudget && intelligence.scenarios.length >= 2 ? (
+          <form action={compareBudgetScenariosAction}>
+            <IdempotencyField />
+            <input type="hidden" name="organisationId" value={organisationId} />
+            <input type="hidden" name="engagementId" value={engagementId} />
+            <input type="hidden" name="leftScenarioId" value={intelligence.scenarios[0]!.id} />
+            <input type="hidden" name="rightScenarioId" value={intelligence.scenarios[1]!.id} />
+            <PendingSubmit className="secondary" locked={mutationLocked}>
+              Compare scenarios
+            </PendingSubmit>
+          </form>
+        ) : null}
         {canCalculateBudget ? (
           <form action={calculateBudgetScenarioAction} data-testid="budget-calculate-form">
             <IdempotencyField />
@@ -292,14 +350,22 @@ export function IntelligenceWorkspaceView({
 
       <section id="roadmap-studio" className="form programme-form">
         <h2>Planner Roadmap Studio</h2>
-        <p className="lede">Milestones are not interchangeable tasks. Cycles are rejected and critical path is deterministic.</p>
+        <p className="lede">Milestones are achieved-state outcomes. Cycles are rejected. Critical path uses earliest and latest dates and float, not a duration count.</p>
+        {intelligence.schedule?.[0] ? (
+          <p data-testid="roadmap-critical-path">
+            Critical path: {intelligence.schedule[0].critical.map((item) => item.title).join(" → ") || "insufficient information"}
+            {intelligence.schedule[0].compressionClass ? ` · ${intelligence.schedule[0].compressionClass.toLowerCase().replaceAll("_", " ")}` : ""}
+          </p>
+        ) : null}
         {intelligence.milestones.length === 0 ? (
-          <p className="empty">No roadmap yet.</p>
+          <p className="empty">No roadmap yet. Instantiating binds the current brief and budget hashes without rewriting earlier editions.</p>
         ) : (
           <ul className="atelier-queue" data-testid="roadmap-list">
             {intelligence.milestones.map((item) => (
               <li key={item.id}>
                 {item.title} · {item.layer.replaceAll("_", " ").toLowerCase()} · {item.durationDays} days
+                {item.purpose ? ` · ${item.purpose}` : ""}
+                {item.delayConsequence ? ` · delay: ${item.delayConsequence}` : ""}
                 {item.clientVisible ? "" : " · internal"}
               </li>
             ))}

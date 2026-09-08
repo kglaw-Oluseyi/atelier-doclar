@@ -60,6 +60,7 @@ export default async function DiscoveryWorkspacePage({
     resultId: typeof query.result === "string" ? query.result : undefined,
     actorPersonId: person.id,
   });
+  const clientPath = typeof query.clientPath === "string" && /^\/discover\/[0-9a-f-]{36}$/i.test(query.clientPath) ? query.clientPath : undefined;
   return (
     <AppShell person={person} organisationName={organisation.displayName} current="/app/discovery">
       <AtelierPageHeader
@@ -86,6 +87,13 @@ export default async function DiscoveryWorkspacePage({
         reloadAction={refreshDiscoveryRecordAction}
         reloadFields={{ path: `/app/discovery/${engagementId}` }}
       />
+      {clientPath ? (
+        <p>
+          <a href={clientPath} data-testid="client-conversation-link">
+            Open the one-time client conversation
+          </a>
+        </p>
+      ) : null}
       <DiscoveryWorkspaceView workspace={workspace} mutationLocked={presented.mutationLocked} />
       <IntelligenceWorkspaceView
         organisationId={organisation.id}

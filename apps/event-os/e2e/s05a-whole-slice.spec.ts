@@ -30,13 +30,29 @@ test("S05A whole slice: brief, budget, roadmap, change and command", async ({ pa
   await page.getByLabel("Guest count").fill("180");
   await page.getByRole("button", { name: "Calculate scenario" }).click();
   await expect(page.getByTestId("budget-scenario-list")).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByTestId("budget-synthetic-warning")).toContainText("synthetic");
+  await expect(page.getByTestId("budget-scenario-list")).toContainText("partial");
   await page.getByRole("button", { name: "Instantiate roadmap" }).click();
   await expect(page.getByTestId("roadmap-list")).toContainText("Confirm guest count", { timeout: 20_000 });
+  await expect(page.getByTestId("roadmap-critical-path")).toContainText("Confirm guest count");
   await page.getByLabel("What changed").fill("Guest count may move from 180 to 220");
   await page.getByRole("button", { name: "Record change" }).click();
   await expect(page.getByTestId("change-list")).toContainText("Guest count", { timeout: 20_000 });
   await page.getByRole("button", { name: "Assess impact" }).click();
   await expect(page.getByTestId("change-list")).toContainText("rsvp: none", { timeout: 20_000 });
+  await page.getByRole("button", { name: "Issue client review access" }).click();
+  const conversation = page.getByTestId("client-conversation-link");
+  await expect(conversation).toBeVisible({ timeout: 20_000 });
+  const href = (await conversation.getAttribute("href")) ?? "/";
+  const guest = await page.context().browser()!.newContext();
+  const clientPage = await guest.newPage();
+  await clientPage.goto(href);
+  await expect(clientPage.getByTestId("client-interview")).toBeVisible({ timeout: 20_000 });
+  await clientPage.getByLabel("Your words").fill("We understand the purpose of this conversation.");
+  await clientPage.getByRole("button", { name: "Save and continue" }).click();
+  await expect(clientPage.getByTestId("interview-progress")).toContainText("Saved progress", { timeout: 20_000 });
+  await clientPage.close();
+  await guest.close();
 
   await loginAs(page, "ceo");
   await page.goto("/app/discovery");
@@ -53,6 +69,7 @@ test("S05A whole slice: brief, budget, roadmap, change and command", async ({ pa
   await page.getByRole("navigation", { name: "Staff" }).getByRole("link", { name: "Event Command" }).click();
   await expect(page.getByTestId("executive-command")).toBeVisible({ timeout: 20_000 });
   await expect(page.getByTestId("command-blocking")).toBeVisible();
+  await expect(page.getByTestId("executive-command")).toContainText("Confirm guest count");
 
   await loginAs(page, "auditor");
   await page.goto("/app/command");

@@ -4274,3 +4274,69 @@ export async function resolveDiscoveryConflictAction(formData: FormData): Promis
     }
   });
 }
+
+export async function recordClientInterviewTurnAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const token = String(formData.get("token") ?? "");
+    try {
+      getRuntime().service.recordClientInterviewTurnByToken(token, {
+        answerSource: String(formData.get("answerSource") ?? "CLIENT_DIRECT") as
+          | "CLIENT_DIRECT"
+          | "UNKNOWN"
+          | "NOT_YET"
+          | "NOT_APPLICABLE"
+          | "PREFER_NOT"
+          | "CORRECTION"
+          | "PAUSE",
+        directClientText: String(formData.get("directClientText") ?? "") || undefined,
+        speakerLabel: String(formData.get("speakerLabel") ?? "") || undefined,
+        formOfAddress: String(formData.get("formOfAddress") ?? "") || undefined,
+        languagePreference: String(formData.get("languagePreference") ?? "") || undefined,
+      });
+    } catch {
+      redirect(`/discover/${token}?error=1`);
+    }
+    redirect(`/discover/${token}?ok=1`);
+  });
+}
+
+export async function compareBudgetScenariosAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const engagementId = String(formData.get("engagementId") ?? "");
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "budget.compare");
+    try {
+      getRuntime().service.compareBudgetScenarios(actor, {
+        organisationId: String(formData.get("organisationId") ?? ""),
+        leftScenarioId: String(formData.get("leftScenarioId") ?? ""),
+        rightScenarioId: String(formData.get("rightScenarioId") ?? ""),
+        reason: String(formData.get("reason") ?? "Compare scenarios").trim() || "Compare scenarios",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      });
+      await finishAction(bind, { ok: "budget.compare" });
+    } catch (error) {
+      await finishAction(bind, { error });
+    }
+  });
+}
+
+export async function submitBudgetScenarioAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const engagementId = String(formData.get("engagementId") ?? "");
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "budget.submit");
+    try {
+      getRuntime().service.submitBudgetScenario(actor, {
+        organisationId: String(formData.get("organisationId") ?? ""),
+        scenarioId: String(formData.get("scenarioId") ?? ""),
+        expectedVersion: Number(formData.get("expectedVersion") ?? 1),
+        expectedHash: String(formData.get("expectedHash") ?? "") || undefined,
+        reason: String(formData.get("reason") ?? "Submit budget scenario").trim() || "Submit budget scenario",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      });
+      await finishAction(bind, { ok: "budget.submit" });
+    } catch (error) {
+      await finishAction(bind, { error });
+    }
+  });
+}
