@@ -61,10 +61,12 @@ export const LayoutFloorPlanAssetSchema = z
     byteSize: z.number().int().min(0).max(LAYOUT_ASSET_MAX_BYTES),
     checksumSha256: NonEmptySchema.max(64),
     storageState: z.enum(LAYOUT_ASSET_STORAGE_STATES),
-    uploadAvailable: z.literal(false),
-    scanStatus: z.enum(["NOT_RUN", "FAILED_CLOSED", "SYNTHETIC_INERT"]),
+    uploadAvailable: z.boolean(),
+    scanStatus: z.enum(["NOT_RUN", "FAILED_CLOSED", "SYNTHETIC_INERT", "PENDING", "CLEAN", "REJECTED", "FAILED", "UNAVAILABLE"]),
     quarantineReason: z.string().trim().max(400).optional(),
-    derivativeKind: z.enum(["NONE", "INERT_METADATA"]).default("NONE"),
+    derivativeKind: z.enum(["NONE", "INERT_METADATA", "INERT_SVG", "RASTER_PNG", "JPEG", "PDF_SANDBOX"]).default("NONE"),
+    objectKey: z.string().trim().min(8).max(240).regex(/^layout-assets\/[A-Za-z0-9._/-]+$/).optional(),
+    derivativeObjectKey: z.string().trim().min(8).max(240).regex(/^layout-assets\/[A-Za-z0-9._/-]+$/).optional(),
     calibrated: z.boolean(),
     supersedesAssetId: UuidSchema.optional(),
     replacedByAssetId: UuidSchema.optional(),
@@ -74,8 +76,8 @@ export const LayoutFloorPlanAssetSchema = z
     ...versioned,
   })
   .strict()
-  .refine((value) => value.uploadAvailable === false, "live binary upload remains unavailable without an approved provider")
-  .refine((value) => !("signedUrl" in value) && !("storageKey" in value), "assets must not store access secrets");
+  .refine((value) => !value.uploadAvailable || value.storageState === "AVAILABLE" || value.storageState === "SUPERSEDED" || value.storageState === "RETAINED", "uploadAvailable requires a stored clean object")
+  .refine((value) => !("signedUrl" in value) && !("storageKey" in value) && !("fileBytes" in value), "assets must not store access secrets or binaries");
 
 export const LayoutAssetCalibrationSchema = z
   .object({
@@ -239,15 +241,22 @@ export const LayoutExportJobSchema = z
     id: UuidSchema,
     ...eventLayoutScoped,
     format: z.enum(["PDF", "PNG"]),
-    marking: z.enum(["DRAFT", "APPROVED", "PUBLISHED", "SUPERSEDED"]),
+    marking: z.enum(["DRAFT", "APPROVED", "PUBLISHED", "SUPERSEDED", "WITHDRAWN"]),
     status: z.enum(LAYOUT_EXPORT_STATUSES),
     contentHash: NonEmptySchema.max(64),
+    publicationNumber: z.number().int().positive().optional(),
+    revisionId: UuidSchema.optional(),
+    objectKey: z.string().trim().min(8).max(240).regex(/^layout-exports\/[A-Za-z0-9._/-]+$/).optional(),
+    byteSize: z.number().int().min(1).max(LAYOUT_ASSET_MAX_BYTES).optional(),
+    checksumSha256: NonEmptySchema.max(64).optional(),
+    generatedAt: IsoDatetimeSchema.optional(),
     notes: NonEmptySchema.max(400),
     recordedByPersonId: PersonIdSchema,
     ...versioned,
   })
   .strict()
-  .refine((value) => !("fileBytes" in value) && !("signedUrl" in value), "export jobs must not fabricate generated files");
+  .refine((value) => value.status !== "COMPLETED" || Boolean(value.objectKey && value.byteSize && value.checksumSha256 && value.generatedAt), "completed exports require durable object identity")
+  .refine((value) => !("fileBytes" in value) && !("signedUrl" in value), "export jobs must not store binaries or signed URLs");
 
 export const RecordFloorPlanIntentInputSchema = z
   .object({
@@ -260,6 +269,24 @@ export const RecordFloorPlanIntentInputSchema = z
     supersedesAssetId: UuidSchema.optional(),
     svgText: z.string().max(200_000).optional(),
     magicBytesHex: z.string().regex(/^[0-9a-f]*$/i).max(32).optional(),
+  })
+  .strict();
+
+export const RecordStoredFloorPlanInputSchema = z
+  .object({
+    ...mutationBase,
+    id: UuidSchema,
+    originalFileName: NonEmptySchema.max(240),
+    declaredMime: NonEmptySchema.max(120),
+    byteSize: z.number().int().min(1).max(LAYOUT_ASSET_MAX_BYTES),
+    checksumSha256: NonEmptySchema.max(64),
+    detectedKind: z.enum(LAYOUT_FLOOR_PLAN_KINDS),
+    objectKey: z.string().trim().min(8).max(240).regex(/^layout-assets\/[A-Za-z0-9._/-]+$/),
+    derivativeObjectKey: z.string().trim().min(8).max(240).regex(/^layout-assets\/[A-Za-z0-9._/-]+$/).optional(),
+    derivativeKind: z.enum(["INERT_SVG", "RASTER_PNG", "JPEG", "PDF_SANDBOX"]),
+    scanStatus: z.literal("CLEAN"),
+    storageState: z.literal("AVAILABLE"),
+    supersedesAssetId: UuidSchema.optional(),
   })
   .strict();
 
@@ -347,6 +374,40 @@ export const RequestLayoutExportInputSchema = z
   })
   .strict();
 
+export const CompleteLayoutExportInputSchema = z
+  .object({
+    organisationId: OrganisationIdSchema,
+    eventId: EventIdSchema,
+    layoutId: UuidSchema,
+    jobId: UuidSchema,
+    objectKey: z.string().trim().min(8).max(240).regex(/^layout-exports\/[A-Za-z0-9._/-]+$/),
+    byteSize: z.number().int().min(1).max(LAYOUT_ASSET_MAX_BYTES),
+    checksumSha256: NonEmptySchema.max(64),
+    generatedAt: IsoDatetimeSchema,
+    reason: NonEmptySchema.max(400),
+    idempotencyKey: NonEmptySchema.max(120).optional(),
+  })
+  .strict();
+
+export const FailLayoutExportInputSchema = z
+  .object({
+    organisationId: OrganisationIdSchema,
+    eventId: EventIdSchema,
+    layoutId: UuidSchema,
+    jobId: UuidSchema,
+    notes: NonEmptySchema.max(400),
+    reason: NonEmptySchema.max(400),
+    idempotencyKey: NonEmptySchema.max(120).optional(),
+  })
+  .strict();
+
+export const WithdrawLayoutAssetInputSchema = z
+  .object({
+    ...mutationBase,
+    assetId: UuidSchema,
+  })
+  .strict();
+
 export const LAYOUT_VALIDATION_RULES = [
   { id: "RULE-S05-GEOM-BOUNDS", version: "1.0.0", severity: "BLOCKING" as const, title: "Geometry outside layout bounds" },
   { id: "RULE-S05-OVERLAP-GOVERNED", version: "1.0.0", severity: "BLOCKING" as const, title: "Table or fixture overlaps a governed area" },
@@ -399,4 +460,7 @@ export type DecideLayoutApprovalInput = z.infer<typeof DecideLayoutApprovalInput
 export type PublishLayoutInput = z.infer<typeof PublishLayoutInputSchema>;
 export type WithdrawLayoutPublicationInput = z.infer<typeof WithdrawLayoutPublicationInputSchema>;
 export type RequestLayoutExportInput = z.infer<typeof RequestLayoutExportInputSchema>;
+export type CompleteLayoutExportInput = z.infer<typeof CompleteLayoutExportInputSchema>;
+export type FailLayoutExportInput = z.infer<typeof FailLayoutExportInputSchema>;
+export type WithdrawLayoutAssetInput = z.infer<typeof WithdrawLayoutAssetInputSchema>;
 export type LayoutDownstreamContractId = typeof LAYOUT_DOWNSTREAM_CONTRACT_ID;

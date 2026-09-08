@@ -6,6 +6,7 @@ import {
   SYSTEM_ROLE_KEYS,
 } from "./constants.js";
 import { localFixtureAccessAuthority, type AccessAuthority } from "./access-authority.js";
+import type { LayoutBinaryStore } from "./layout-asset-store.js";
 import { permissionIdForKey, roleIdForKey, seededPermissions, seededRoles, isSystemAdministratorRole } from "./catalog.js";
 import { PlatformError } from "./errors.js";
 import { assertNamedHuman } from "./identity.js";
@@ -344,10 +345,15 @@ import {
   publishLayoutOnSnap,
   recordFloorPlanIntentOnSnap,
   recordOperationalCapacityOnSnap,
+  completeLayoutExportOnSnap,
+  describeLayoutExportSourceFromSnap,
+  failLayoutExportOnSnap,
+  recordStoredFloorPlanOnSnap,
   requestLayoutExportOnSnap,
   restoreLayoutSnapshotOnSnap,
   runLayoutValidationOnSnap,
   submitLayoutApprovalOnSnap,
+  withdrawLayoutAssetOnSnap,
   withdrawLayoutPublicationOnSnap,
 } from "./layout-assurance-operations.js";
 import {
@@ -359,10 +365,14 @@ import {
   PublishLayoutInputSchema,
   RecordFloorPlanIntentInputSchema,
   RecordOperationalCapacityInputSchema,
+  CompleteLayoutExportInputSchema,
+  FailLayoutExportInputSchema,
+  RecordStoredFloorPlanInputSchema,
   RequestLayoutExportInputSchema,
   RestoreLayoutSnapshotInputSchema,
   RunLayoutValidationInputSchema,
   SubmitLayoutApprovalInputSchema,
+  WithdrawLayoutAssetInputSchema,
   WithdrawLayoutPublicationInputSchema,
   type LayoutApproval,
   type LayoutAssetCalibration,
@@ -642,6 +652,9 @@ export interface PlatformServiceOptions {
   merchandiseGuestAccess?: MerchandiseGuestAccessConfig;
   atelierAccess?: AtelierAccessConfig;
   accessAuthority?: AccessAuthority;
+  layoutBinaryStore?: LayoutBinaryStore;
+  layoutExportEnabled?: boolean;
+  layoutAssetStoreConfigured?: boolean;
 }
 
 export interface IssuedRsvpInvitation {
@@ -3123,7 +3136,10 @@ export class PlatformService {
   getLayoutSetupWorkspace(actor: ActorContext, organisationId: string, eventId: string, layoutId: string): LayoutSetupWorkspace {
     const { snap, ctx } = this.authorizeQuery(actor, "layout.view", { organisationId, eventId });
     this.requireEvent(snap, organisationId, eventId);
-    const workspace = buildLayoutSetupWorkspace(snap, eventId, layoutId, this.venueCapabilities(ctx.actor, organisationId, eventId));
+    const workspace = buildLayoutSetupWorkspace(snap, eventId, layoutId, this.venueCapabilities(ctx.actor, organisationId, eventId), {
+      assetProviderConfigured: Boolean(this.options.layoutAssetStoreConfigured ?? this.options.layoutBinaryStore?.configured),
+      pdfExportAvailable: Boolean(this.options.layoutExportEnabled),
+    });
     if (!workspace) throw new PlatformError("NOT_FOUND", "layout was not found");
     const mine = workspace.layout.editorHolderPersonId === ctx.actor.person.id;
     return {
@@ -3326,6 +3342,27 @@ export class PlatformService {
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash(input),
       run: (snap, ctx) => recordFloorPlanIntentOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  recordStoredFloorPlan(actor: ActorContext, raw: unknown): LayoutFloorPlanAsset {
+    assertNoVenueGuestIdentity(raw);
+    const input = parseStrict(RecordStoredFloorPlanInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "layout.asset.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "layout.asset.stored",
+      resourceType: "layout_floor_plan_asset",
+      resourceId: input.id,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      replayIfAlreadyApplied: true,
+      alreadyApplied: (snap) =>
+        snap.layoutFloorPlanAssets.find(
+          (item) => item.id === input.id || (item.layoutId === input.layoutId && item.checksumSha256 === input.checksumSha256.toLowerCase() && item.storageState === "AVAILABLE"),
+        ),
+      run: (snap, ctx) => recordStoredFloorPlanOnSnap(snap, input, ctx.now, ctx.actor.person.id),
     });
   }
 
@@ -3535,8 +3572,124 @@ export class PlatformService {
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash(input),
-      run: (snap, ctx) => requestLayoutExportOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+      run: (snap, ctx) =>
+        requestLayoutExportOnSnap(snap, input, ctx.now, ctx.actor.person.id, {
+          exportEnabled: this.options.layoutExportEnabled,
+          binaryStore: this.options.layoutBinaryStore,
+          revealSensitive: this.permissionAllowed(ctx.actor, "layout.constraint.override", {
+            organisationId: input.organisationId,
+            eventId: input.eventId,
+          }),
+        }),
     });
+  }
+
+  completeLayoutExport(actor: ActorContext, raw: unknown): LayoutExportJob {
+    const input = parseStrict(CompleteLayoutExportInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "layout.publication.view",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "layout.export.completed",
+      resourceType: "layout_export_job",
+      resourceId: input.jobId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      replayIfAlreadyApplied: true,
+      alreadyApplied: (snap) =>
+        snap.layoutExportJobs.find((item) => item.id === input.jobId && item.status === "COMPLETED"),
+      run: (snap, ctx) => completeLayoutExportOnSnap(snap, input, ctx.now),
+    });
+  }
+
+  failLayoutExport(actor: ActorContext, raw: unknown): LayoutExportJob {
+    const input = parseStrict(FailLayoutExportInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "layout.publication.view",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "layout.export.failed",
+      resourceType: "layout_export_job",
+      resourceId: input.jobId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => failLayoutExportOnSnap(snap, input, ctx.now),
+    });
+  }
+
+  withdrawLayoutAsset(actor: ActorContext, raw: unknown): LayoutFloorPlanAsset {
+    const input = parseStrict(WithdrawLayoutAssetInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "layout.asset.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "layout.asset.withdrawn",
+      resourceType: "layout_floor_plan_asset",
+      resourceId: input.assetId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => withdrawLayoutAssetOnSnap(snap, input, ctx.now),
+    });
+  }
+
+  describeLayoutExportSource(
+    actor: ActorContext,
+    organisationId: string,
+    eventId: string,
+    layoutId: string,
+    jobId: string,
+  ) {
+    const { snap, ctx } = this.authorizeQuery(actor, "layout.publication.view", { organisationId, eventId });
+    this.requireEvent(snap, organisationId, eventId);
+    return describeLayoutExportSourceFromSnap(
+      snap,
+      organisationId,
+      eventId,
+      layoutId,
+      jobId,
+      this.permissionAllowed(ctx.actor, "layout.constraint.override", { organisationId, eventId }),
+    );
+  }
+
+  getStoredLayoutAsset(
+    actor: ActorContext,
+    organisationId: string,
+    eventId: string,
+    layoutId: string,
+    assetId: string,
+  ): { objectKey: string; declaredMime: string; originalFileName: string; derivativeObjectKey?: string } {
+    const { snap } = this.authorizeQuery(actor, "layout.view", { organisationId, eventId });
+    this.requireEvent(snap, organisationId, eventId);
+    const asset = snap.layoutFloorPlanAssets.find(
+      (item) => item.id === assetId && item.layoutId === layoutId && item.organisationId === organisationId && item.eventId === eventId,
+    );
+    if (!asset?.objectKey || asset.storageState !== "AVAILABLE" || asset.scanStatus !== "CLEAN" || asset.retentionState !== "ACTIVE") {
+      throw new PlatformError("NOT_FOUND", "stored floor-plan asset is not available");
+    }
+    return {
+      objectKey: asset.objectKey,
+      declaredMime: asset.declaredMime,
+      originalFileName: asset.originalFileName,
+      derivativeObjectKey: asset.derivativeObjectKey,
+    };
+  }
+
+  getStoredLayoutExport(
+    actor: ActorContext,
+    organisationId: string,
+    eventId: string,
+    layoutId: string,
+    jobId: string,
+  ): { objectKey: string; format: "PDF" | "PNG"; marking: string; contentHash: string } {
+    const { snap } = this.authorizeQuery(actor, "layout.publication.view", { organisationId, eventId });
+    this.requireEvent(snap, organisationId, eventId);
+    const job = snap.layoutExportJobs.find(
+      (item) => item.id === jobId && item.layoutId === layoutId && item.organisationId === organisationId && item.eventId === eventId,
+    );
+    if (!job?.objectKey || job.status !== "COMPLETED") {
+      throw new PlatformError("NOT_FOUND", "completed export was not found");
+    }
+    return { objectKey: job.objectKey, format: job.format, marking: job.marking, contentHash: job.contentHash };
   }
 
   getPublishedLayoutViewer(

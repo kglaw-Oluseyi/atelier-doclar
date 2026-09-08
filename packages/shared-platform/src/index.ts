@@ -63,6 +63,7 @@ export {
   LAYOUT_ASSET_PROVIDER_CONFIGURED,
   LAYOUT_PDF_EXPORT_AVAILABLE,
   LAYOUT_ASSET_REQUIRED_VARIABLES,
+  LAYOUT_ASSET_MAX_BYTES,
   LAYOUT_DOWNSTREAM_CONTRACT_ID,
   LAYOUT_VALIDATION_ENGINE_ID,
   LAYOUT_VALIDATION_ENGINE_VERSION,
@@ -515,12 +516,23 @@ export { applyLayoutCommandOnSnap, currentLayoutObjects, replaceLayoutObjectsOnS
 export { applyS05FixturesIfMissing, S05_FIXTURE_IDS } from "./venue-fixtures.js";
 export { validateS05PersistedCollections } from "./venue-persistence.js";
 export { migrateEosS05Assurance, applyEosS05AssuranceToSnapshot, EOS_S05_ASSURANCE_MIGRATION_ID } from "./layout-assurance-migration.js";
-export { inspectFloorPlanPayload } from "./layout-assurance-assets.js";
+export { inspectFloorPlanPayload, sanitiseFloorPlanFileName } from "./layout-assurance-assets.js";
+export { renderLayoutExport } from "./layout-export-render.js";
+export {
+  MemoryLayoutBinaryStore,
+  layoutSourceObjectKey,
+  layoutDerivativeObjectKey,
+  layoutExportObjectKey,
+  assertSafeObjectKey,
+  type LayoutBinaryObject,
+  type LayoutBinaryStore,
+} from "./layout-asset-store.js";
 export { buildCapacityReport, geometricCapacityFromObjects, type CapacityReport } from "./layout-assurance-capacity.js";
 export { diffLayoutObjects } from "./layout-assurance-diff.js";
 export {
   LAYOUT_VALIDATION_RULES,
   RecordFloorPlanIntentInputSchema,
+  RecordStoredFloorPlanInputSchema,
   CalibrateFloorPlanInputSchema,
   RecordOperationalCapacityInputSchema,
   RunLayoutValidationInputSchema,
@@ -533,6 +545,9 @@ export {
   PublishLayoutInputSchema,
   WithdrawLayoutPublicationInputSchema,
   RequestLayoutExportInputSchema,
+  CompleteLayoutExportInputSchema,
+  FailLayoutExportInputSchema,
+  WithdrawLayoutAssetInputSchema,
   type LayoutApproval,
   type LayoutDownstreamContractId,
   type LayoutExportJob,

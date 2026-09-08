@@ -131,6 +131,8 @@ export type EventVenueWorkspace = {
 export type LayoutSetupWorkspace = {
   layout: {
     id: string;
+    organisationId: string;
+    eventId: string;
     name: string;
     eventVenueId: string;
     widthMm: number;
@@ -309,6 +311,7 @@ export function buildLayoutSetupWorkspace(
   eventId: string,
   layoutId: string,
   capabilities: VenueCapabilities,
+  options: { assetProviderConfigured?: boolean; pdfExportAvailable?: boolean } = {},
 ): LayoutSetupWorkspace | undefined {
   const layout = snap.layouts.find((item) => item.id === layoutId && item.eventId === eventId);
   if (!layout) return undefined;
@@ -316,21 +319,28 @@ export function buildLayoutSetupWorkspace(
     ? snap.layoutEditorLeases.find((item) => item.id === layout.editorLeaseId && item.status === "ACTIVE")
     : undefined;
   const cursor = snap.layoutDraftCursors.find((item) => item.layoutId === layout.id);
-  const assurance = buildLayoutAssuranceWorkspace(snap, layout, {
-    canManageAsset: capabilities.canManageAsset,
-    canRecordCapacity: capabilities.canRecordCapacity,
-    canRunValidation: capabilities.canRunValidation,
-    canManageSnapshot: capabilities.canManageSnapshot,
-    canSubmitApproval: capabilities.canSubmitApproval,
-    canDecideApproval: capabilities.canDecideApproval,
-    canPublish: capabilities.canPublish,
-    canViewPublication: capabilities.canViewPublication,
-    canReadDownstream: capabilities.canReadDownstream,
-    canOverrideConstraint: capabilities.canOverrideConstraint,
-  });
+  const assurance = buildLayoutAssuranceWorkspace(
+    snap,
+    layout,
+    {
+      canManageAsset: capabilities.canManageAsset,
+      canRecordCapacity: capabilities.canRecordCapacity,
+      canRunValidation: capabilities.canRunValidation,
+      canManageSnapshot: capabilities.canManageSnapshot,
+      canSubmitApproval: capabilities.canSubmitApproval,
+      canDecideApproval: capabilities.canDecideApproval,
+      canPublish: capabilities.canPublish,
+      canViewPublication: capabilities.canViewPublication,
+      canReadDownstream: capabilities.canReadDownstream,
+      canOverrideConstraint: capabilities.canOverrideConstraint,
+    },
+    options,
+  );
   return {
     layout: {
       id: layout.id,
+      organisationId: layout.organisationId,
+      eventId: layout.eventId,
       name: layout.name,
       eventVenueId: layout.eventVenueId,
       widthMm: layout.bounds.widthMm,

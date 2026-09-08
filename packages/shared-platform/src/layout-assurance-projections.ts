@@ -76,8 +76,8 @@ export type LayoutAssuranceWorkspace = {
   publications: LayoutPublication[];
   exportJobs: LayoutExportJob[];
   publicationBlocked: boolean;
-  assetProviderConfigured: false;
-  pdfExportAvailable: false;
+  assetProviderConfigured: boolean;
+  pdfExportAvailable: boolean;
   certificationClaim: "NONE";
   intelligenceMayApprove: false;
   capabilities: LayoutAssuranceCapabilities;
@@ -158,6 +158,7 @@ export function buildLayoutAssuranceWorkspace(
   snap: PlatformSnapshot,
   layout: Layout,
   capabilities: LayoutAssuranceCapabilities,
+  options: { assetProviderConfigured?: boolean; pdfExportAvailable?: boolean } = {},
 ): LayoutAssuranceWorkspace {
   const objects = currentLayoutObjects(snap, layout);
   const latestRun = [...snap.layoutValidationRuns]
@@ -183,8 +184,8 @@ export function buildLayoutAssuranceWorkspace(
     publications: snap.layoutPublications.filter((item) => item.layoutId === layout.id),
     exportJobs: snap.layoutExportJobs.filter((item) => item.layoutId === layout.id),
     publicationBlocked: Boolean(latestRun?.publicationBlocked && latestRun.contentHash === layout.contentHash),
-    assetProviderConfigured: false,
-    pdfExportAvailable: LAYOUT_PDF_EXPORT_AVAILABLE,
+    assetProviderConfigured: Boolean(options.assetProviderConfigured),
+    pdfExportAvailable: Boolean(options.pdfExportAvailable ?? LAYOUT_PDF_EXPORT_AVAILABLE),
     certificationClaim: "NONE",
     intelligenceMayApprove: false,
     capabilities,

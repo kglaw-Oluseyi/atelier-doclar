@@ -630,50 +630,64 @@ export const LAYOUT_ASSET_REQUIRED_VARIABLES = [
     name: "EVENT_OS_LAYOUT_ASSET_STORE_PROVIDER",
     service: "event-os",
     secret: false,
-    purpose: "Approved object-store provider identifier once George authorises one. Unset keeps live binary upload disabled.",
+    purpose: "Object-store provider. Production uses railway-bucket inside atelier-doclar.",
     failureBehaviour: "CONFIGURATION_REQUIRED; no bytes stored; no signed URLs.",
   },
   {
     name: "EVENT_OS_LAYOUT_ASSET_BUCKET",
     service: "event-os",
     secret: false,
-    purpose: "Bucket or container for floor-plan binaries after a provider is approved.",
+    purpose: "Private Railway S3-compatible bucket name for floor-plan binaries and exports.",
+    failureBehaviour: "CONFIGURATION_REQUIRED.",
+  },
+  {
+    name: "EVENT_OS_LAYOUT_ASSET_ENDPOINT",
+    service: "event-os",
+    secret: false,
+    purpose: "S3-compatible endpoint for the Railway bucket.",
+    failureBehaviour: "CONFIGURATION_REQUIRED.",
+  },
+  {
+    name: "EVENT_OS_LAYOUT_ASSET_REGION",
+    service: "event-os",
+    secret: false,
+    purpose: "S3-compatible region identifier.",
+    failureBehaviour: "CONFIGURATION_REQUIRED.",
+  },
+  {
+    name: "EVENT_OS_LAYOUT_ASSET_URL_STYLE",
+    service: "event-os",
+    secret: false,
+    purpose: "virtual-host or path-style addressing for the bucket.",
     failureBehaviour: "CONFIGURATION_REQUIRED.",
   },
   {
     name: "EVENT_OS_LAYOUT_ASSET_ACCESS_KEY",
     service: "event-os",
     secret: true,
-    purpose: "Provider access key. Must be supplied by George; never invented.",
+    purpose: "Railway-generated bucket access key. Never committed or logged.",
     failureBehaviour: "CONFIGURATION_REQUIRED.",
   },
   {
     name: "EVENT_OS_LAYOUT_ASSET_SECRET_KEY",
     service: "event-os",
     secret: true,
-    purpose: "Provider secret key. Must be supplied by George; never invented.",
+    purpose: "Railway-generated bucket secret key. Never committed or logged.",
     failureBehaviour: "CONFIGURATION_REQUIRED.",
   },
   {
-    name: "EVENT_OS_LAYOUT_ASSET_SCANNER_URL",
+    name: "EVENT_OS_LAYOUT_ASSET_SCANNER",
     service: "event-os",
     secret: false,
-    purpose: "Malware scanner endpoint. Required before TDR-S05-001 can close.",
-    failureBehaviour: "Scan remains NOT_RUN; production upload stays disabled.",
+    purpose: "Content-safety scanner. Production uses in-process-content-safety for allowlisted floor-plan types.",
+    failureBehaviour: "Scan remains NOT_RUN; live upload stays disabled.",
   },
   {
-    name: "EVENT_OS_LAYOUT_ASSET_SCANNER_TOKEN",
-    service: "event-os",
-    secret: true,
-    purpose: "Scanner authentication token. Must be supplied by George.",
-    failureBehaviour: "Scan remains NOT_RUN.",
-  },
-  {
-    name: "EVENT_OS_LAYOUT_ASSET_DERIVATIVE_URL",
+    name: "EVENT_OS_LAYOUT_EXPORT_ENABLED",
     service: "event-os",
     secret: false,
-    purpose: "Inert PDF/SVG/raster derivative processor endpoint.",
-    failureBehaviour: "Derivatives remain INERT_METADATA only; no generated preview files.",
+    purpose: "Enables deterministic PDF/PNG export from approved or published hashes.",
+    failureBehaviour: "Export jobs remain DISABLED; no fabricated files.",
   },
 ] as const;
 export const LAYOUT_ASSET_MAX_BYTES = 20_000_000;
@@ -689,6 +703,7 @@ export const LAYOUT_ASSET_STORAGE_STATES = [
   "SCAN_PENDING",
   "SCAN_FAILED",
   "REJECTED",
+  "AVAILABLE",
   "UNAVAILABLE",
   "SUPERSEDED",
   "RETAINED",
@@ -697,7 +712,7 @@ export const LAYOUT_FINDING_SEVERITIES = ["BLOCKING", "WARNING", "RECOMMENDATION
 export const LAYOUT_FINDING_STATUSES = ["OPEN", "ACKNOWLEDGED", "OVERRIDDEN", "RESOLVED", "STALE", "OBSOLETE"] as const;
 export const LAYOUT_APPROVAL_STATUSES = ["SUBMITTED", "APPROVED", "REJECTED", "REVOKED", "INVALIDATED"] as const;
 export const LAYOUT_PUBLICATION_STATUSES = ["CURRENT", "SUPERSEDED", "WITHDRAWN"] as const;
-export const LAYOUT_EXPORT_STATUSES = ["QUEUED_UNAVAILABLE", "DISABLED"] as const;
+export const LAYOUT_EXPORT_STATUSES = ["QUEUED_UNAVAILABLE", "DISABLED", "PENDING", "COMPLETED", "FAILED"] as const;
 export const LAYOUT_DIFF_KINDS = [
   "ADDED",
   "REMOVED",

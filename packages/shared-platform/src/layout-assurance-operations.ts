@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import {
   LAYOUT_ASSET_MAX_FILES,
   LAYOUT_ASSET_PROVIDER_CONFIGURED,
@@ -8,9 +8,15 @@ import {
   SCHEMA_VERSION,
 } from "./constants.js";
 import { PlatformError } from "./errors.js";
-import { assertNoAssetSecrets, inspectFloorPlanPayload } from "./layout-assurance-assets.js";
+import { assertNoAssetSecrets, inspectFloorPlanPayload, sanitiseFloorPlanFileName } from "./layout-assurance-assets.js";
 import { buildCapacityReport } from "./layout-assurance-capacity.js";
 import { diffLayoutObjects, summarizeDiff } from "./layout-assurance-diff.js";
+import { renderLayoutExport } from "./layout-export-render.js";
+import {
+  layoutExportObjectKey,
+  type LayoutBinaryObject,
+  type LayoutBinaryStore,
+} from "./layout-asset-store.js";
 import {
   AcknowledgeFindingInputSchema,
   CalibrateFloorPlanInputSchema,
@@ -27,12 +33,16 @@ import {
   LayoutValidationRunSchema,
   OverrideFindingInputSchema,
   PublishLayoutInputSchema,
+  CompleteLayoutExportInputSchema,
+  FailLayoutExportInputSchema,
   RecordFloorPlanIntentInputSchema,
   RecordOperationalCapacityInputSchema,
   RequestLayoutExportInputSchema,
   RestoreLayoutSnapshotInputSchema,
   RunLayoutValidationInputSchema,
+  RecordStoredFloorPlanInputSchema,
   SubmitLayoutApprovalInputSchema,
+  WithdrawLayoutAssetInputSchema,
   WithdrawLayoutPublicationInputSchema,
   type LayoutApproval,
   type LayoutAssetCalibration,
@@ -173,7 +183,7 @@ export function recordFloorPlanIntentOnSnap(
     clientId: layout.clientId,
     eventId: layout.eventId,
     layoutId: layout.id,
-    originalFileName: input.originalFileName,
+    originalFileName: sanitiseFloorPlanFileName(input.originalFileName),
     declaredMime: input.declaredMime,
     detectedKind: inspection.detectedKind,
     byteSize: input.byteSize,
@@ -193,6 +203,72 @@ export function recordFloorPlanIntentOnSnap(
   if (input.supersedesAssetId) {
     const prior = snap.layoutFloorPlanAssets.find((item) => item.id === input.supersedesAssetId && item.layoutId === layout.id);
     if (prior && !inspection.rejected) {
+      prior.replacedByAssetId = asset.id;
+      prior.retentionState = "SUPERSEDED";
+      prior.storageState = "SUPERSEDED";
+      prior.updatedAt = now;
+      prior.version += 1;
+    }
+  }
+  snap.layoutFloorPlanAssets.push(asset);
+  return asset;
+}
+
+export function recordStoredFloorPlanOnSnap(
+  snap: PlatformSnapshot,
+  raw: unknown,
+  now: string,
+  actorPersonId: string,
+): LayoutFloorPlanAsset {
+  assertNoVenueGuestIdentity(raw);
+  assertNoAssetSecrets(raw);
+  const input = RecordStoredFloorPlanInputSchema.parse(raw);
+  requireScopedEvent(snap, input.organisationId, input.eventId);
+  const layout = requireLayout(snap, input.organisationId, input.eventId, input.layoutId);
+  assertLayoutVersion(layout, input.expectedVersion, input.expectedRevisionNumber);
+  const duplicate = snap.layoutFloorPlanAssets.find(
+    (item) =>
+      item.layoutId === layout.id &&
+      item.checksumSha256 === input.checksumSha256.toLowerCase() &&
+      item.storageState === "AVAILABLE" &&
+      item.retentionState === "ACTIVE",
+  );
+  if (duplicate) return duplicate;
+  const activeCount = snap.layoutFloorPlanAssets.filter(
+    (item) => item.layoutId === layout.id && item.retentionState === "ACTIVE",
+  ).length;
+  if (activeCount >= LAYOUT_ASSET_MAX_FILES) {
+    throw new PlatformError("VALIDATION_FAILED", "floor-plan file count limit reached", {
+      publicMessage: `At most ${LAYOUT_ASSET_MAX_FILES} active floor-plan assets are allowed.`,
+    });
+  }
+  const asset = LayoutFloorPlanAssetSchema.parse({
+    id: input.id,
+    organisationId: layout.organisationId,
+    clientId: layout.clientId,
+    eventId: layout.eventId,
+    layoutId: layout.id,
+    originalFileName: sanitiseFloorPlanFileName(input.originalFileName),
+    declaredMime: input.declaredMime,
+    detectedKind: input.detectedKind,
+    byteSize: input.byteSize,
+    checksumSha256: input.checksumSha256.toLowerCase(),
+    storageState: "AVAILABLE",
+    uploadAvailable: true,
+    scanStatus: "CLEAN",
+    derivativeKind: input.derivativeKind,
+    objectKey: input.objectKey,
+    derivativeObjectKey: input.derivativeObjectKey,
+    calibrated: false,
+    supersedesAssetId: input.supersedesAssetId,
+    retentionState: "ACTIVE",
+    notes: "Private stored floor-plan. Not spatially authoritative until verified calibration.",
+    recordedByPersonId: actorPersonId,
+    ...stamp(now),
+  });
+  if (input.supersedesAssetId) {
+    const prior = snap.layoutFloorPlanAssets.find((item) => item.id === input.supersedesAssetId && item.layoutId === layout.id);
+    if (prior) {
       prior.replacedByAssetId = asset.id;
       prior.retentionState = "SUPERSEDED";
       prior.storageState = "SUPERSEDED";
@@ -622,38 +698,259 @@ export function requestLayoutExportOnSnap(
   raw: unknown,
   now: string,
   actorPersonId: string,
+  options: { exportEnabled?: boolean; binaryStore?: LayoutBinaryStore; revealSensitive?: boolean } = {},
 ): LayoutExportJob {
   const input = RequestLayoutExportInputSchema.parse(raw);
   const layout = requireLayout(snap, input.organisationId, input.eventId, input.layoutId);
   assertLayoutVersion(layout, input.expectedVersion, input.expectedRevisionNumber);
   const publication = snap.layoutPublications.find((item) => item.layoutId === layout.id && item.status === "CURRENT");
+  const sourceRevision = publication
+    ? snap.layoutRevisions.find((item) => item.id === publication.revisionId)
+    : requireRevision(snap, layout);
+  if (!sourceRevision) throw new PlatformError("NOT_FOUND", "export source revision was not found");
+  const contentHash = publication?.contentHash ?? layout.contentHash;
   const approval = snap.layoutApprovals.find(
-    (item) => item.layoutId === layout.id && item.status === "APPROVED" && item.contentHash === layout.contentHash,
+    (item) => item.layoutId === layout.id && item.status === "APPROVED" && item.contentHash === contentHash,
   );
-  const marking = publication
-    ? "PUBLISHED"
-    : approval
-      ? "APPROVED"
-      : "DRAFT";
+  const marking = publication ? "PUBLISHED" : approval ? "APPROVED" : "DRAFT";
+  const existing = snap.layoutExportJobs.find(
+    (item) =>
+      item.layoutId === layout.id &&
+      item.format === input.format &&
+      item.contentHash === contentHash &&
+      item.status === "COMPLETED",
+  );
+  if (existing && options.exportEnabled) return existing;
+  const eventName = snap.events.find((item) => item.id === layout.eventId)?.name ?? "Event";
+  const objects = sourceRevision.objects
+    .filter((item) => !item.tombstoned)
+    .map((item) => {
+      const sensitive = item.objectType === "RESTRICTED_AREA" || item.objectType === "SAFE_AREA";
+      if (sensitive && !options.revealSensitive) {
+        return { id: item.id, objectType: "MASKED", label: "Restricted layer masked", geometry: { kind: "MASKED" as const } };
+      }
+      return { id: item.id, objectType: item.objectType, label: item.label, geometry: item.geometry };
+    });
+  if (!options.exportEnabled) {
+    const job = LayoutExportJobSchema.parse({
+      id: randomUUID(),
+      organisationId: layout.organisationId,
+      clientId: layout.clientId,
+      eventId: layout.eventId,
+      layoutId: layout.id,
+      format: input.format,
+      marking,
+      status: LAYOUT_PDF_EXPORT_AVAILABLE ? "QUEUED_UNAVAILABLE" : "DISABLED",
+      contentHash,
+      publicationNumber: publication?.publicationNumber,
+      revisionId: sourceRevision.id,
+      notes:
+        marking === "DRAFT"
+          ? "DRAFT — not a publication. PDF/PNG generation is unavailable; no file was fabricated."
+          : `${marking} export for hash ${contentHash}. PDF/PNG generation is unavailable; no file was fabricated. No guest names, seating rationale, storage keys or signed URLs are included.`,
+      recordedByPersonId: actorPersonId,
+      ...stamp(now),
+    });
+    snap.layoutExportJobs.push(job);
+    return job;
+  }
+  const pending = snap.layoutExportJobs.find(
+    (item) =>
+      item.layoutId === layout.id &&
+      item.format === input.format &&
+      item.contentHash === contentHash &&
+      item.status === "PENDING",
+  );
+  if (pending) return pending;
+  if (!options.binaryStore?.configured) {
+    const job = LayoutExportJobSchema.parse({
+      id: randomUUID(),
+      organisationId: layout.organisationId,
+      clientId: layout.clientId,
+      eventId: layout.eventId,
+      layoutId: layout.id,
+      format: input.format,
+      marking,
+      status: "PENDING",
+      contentHash,
+      publicationNumber: publication?.publicationNumber,
+      revisionId: sourceRevision.id,
+      notes: `${marking} ${input.format} for hash ${contentHash} is pending private storage. Completion is recorded only after a durable object exists.`,
+      recordedByPersonId: actorPersonId,
+      ...stamp(now),
+    });
+    snap.layoutExportJobs.push(job);
+    return job;
+  }
+  const rendered = renderLayoutExport({
+    format: input.format,
+    marking,
+    eventName,
+    layoutName: layout.name,
+    contentHash,
+    publicationNumber: publication?.publicationNumber,
+    generatedAt: now,
+    widthMm: layout.bounds.widthMm,
+    heightMm: layout.bounds.heightMm,
+    objects,
+  });
+  const jobId = randomUUID();
+  const objectKey = layoutExportObjectKey({
+    organisationId: layout.organisationId,
+    eventId: layout.eventId,
+    layoutId: layout.id,
+    jobId,
+    format: input.format,
+  });
+  const put = options.binaryStore.put({
+    key: objectKey,
+    bytes: rendered.bytes,
+    contentType: rendered.contentType,
+  });
+  if (put && typeof (put as Promise<void>).then === "function") {
+    throw new PlatformError("INTERNAL_ERROR", "synchronous export store required inside snapshot mutation", {
+      publicMessage: "Export storage failed. No success was recorded.",
+    });
+  }
+  const stored = options.binaryStore.get(objectKey);
+  if (stored && typeof (stored as Promise<unknown>).then === "function") {
+    throw new PlatformError("INTERNAL_ERROR", "synchronous export store required inside snapshot mutation", {
+      publicMessage: "Export storage failed. No success was recorded.",
+    });
+  }
+  const storedBytes = stored as LayoutBinaryObject | undefined;
+  if (!storedBytes || storedBytes.bytes.byteLength !== rendered.bytes.byteLength) {
+    throw new PlatformError("INTERNAL_ERROR", "export object was not durably stored", {
+      publicMessage: "Export storage failed. No success was recorded.",
+    });
+  }
   const job = LayoutExportJobSchema.parse({
-    id: randomUUID(),
+    id: jobId,
     organisationId: layout.organisationId,
     clientId: layout.clientId,
     eventId: layout.eventId,
     layoutId: layout.id,
     format: input.format,
     marking,
-    status: LAYOUT_PDF_EXPORT_AVAILABLE ? "QUEUED_UNAVAILABLE" : "DISABLED",
-    contentHash: layout.contentHash,
-    notes:
-      marking === "DRAFT"
-        ? "DRAFT — not a publication. PDF/PNG generation is unavailable; no file was fabricated."
-        : `${marking} export for hash ${layout.contentHash}. PDF/PNG generation is unavailable; no file was fabricated. No guest names, seating rationale, storage keys or signed URLs are included.`,
+    status: "COMPLETED",
+    contentHash,
+    publicationNumber: publication?.publicationNumber,
+    revisionId: sourceRevision.id,
+    objectKey,
+    byteSize: rendered.bytes.byteLength,
+    checksumSha256: createHash("sha256").update(rendered.bytes).digest("hex"),
+    generatedAt: now,
+    notes: `${marking} ${input.format} for hash ${contentHash}. No guest names, seating rationale, storage keys or signed URLs are included.`,
     recordedByPersonId: actorPersonId,
     ...stamp(now),
   });
   snap.layoutExportJobs.push(job);
   return job;
+}
+
+export function completeLayoutExportOnSnap(snap: PlatformSnapshot, raw: unknown, now: string): LayoutExportJob {
+  const input = CompleteLayoutExportInputSchema.parse(raw);
+  const job = snap.layoutExportJobs.find(
+    (item) =>
+      item.id === input.jobId &&
+      item.layoutId === input.layoutId &&
+      item.organisationId === input.organisationId &&
+      item.eventId === input.eventId,
+  );
+  if (!job) throw new PlatformError("NOT_FOUND", "export job was not found");
+  if (job.status === "COMPLETED") return job;
+  if (job.status !== "PENDING") {
+    throw new PlatformError("TRANSITION_INVALID", "only a pending export can complete", {
+      publicMessage: "This export is not waiting for storage. No completion was recorded.",
+    });
+  }
+  if (!input.objectKey.includes(job.id)) {
+    throw new PlatformError("VALIDATION_FAILED", "export object key must belong to this job", {
+      publicMessage: "The export object does not match this job. No completion was recorded.",
+    });
+  }
+  job.status = "COMPLETED";
+  job.objectKey = input.objectKey;
+  job.byteSize = input.byteSize;
+  job.checksumSha256 = input.checksumSha256.toLowerCase();
+  job.generatedAt = input.generatedAt;
+  job.notes = `${job.marking} ${job.format} for hash ${job.contentHash}. Durable private object recorded. No guest names, seating rationale, storage keys or signed URLs are included.`;
+  job.updatedAt = now;
+  job.version += 1;
+  return LayoutExportJobSchema.parse(job);
+}
+
+export function failLayoutExportOnSnap(snap: PlatformSnapshot, raw: unknown, now: string): LayoutExportJob {
+  const input = FailLayoutExportInputSchema.parse(raw);
+  const job = snap.layoutExportJobs.find(
+    (item) =>
+      item.id === input.jobId &&
+      item.layoutId === input.layoutId &&
+      item.organisationId === input.organisationId &&
+      item.eventId === input.eventId,
+  );
+  if (!job) throw new PlatformError("NOT_FOUND", "export job was not found");
+  if (job.status === "COMPLETED") return job;
+  job.status = "FAILED";
+  job.notes = input.notes;
+  job.updatedAt = now;
+  job.version += 1;
+  return LayoutExportJobSchema.parse(job);
+}
+
+export function withdrawLayoutAssetOnSnap(snap: PlatformSnapshot, raw: unknown, now: string): LayoutFloorPlanAsset {
+  const input = WithdrawLayoutAssetInputSchema.parse(raw);
+  const layout = requireLayout(snap, input.organisationId, input.eventId, input.layoutId);
+  assertLayoutVersion(layout, input.expectedVersion, input.expectedRevisionNumber);
+  const asset = snap.layoutFloorPlanAssets.find((item) => item.id === input.assetId && item.layoutId === layout.id);
+  if (!asset) throw new PlatformError("NOT_FOUND", "floor-plan asset was not found");
+  const publicationEvidence = snap.layoutPublications.some((item) => item.layoutId === layout.id);
+  const snapshotEvidence = snap.layoutSnapshots.some((item) => item.layoutId === layout.id);
+  asset.retentionState = publicationEvidence || snapshotEvidence ? "SUPERSEDED" : "WITHDRAWN";
+  if (asset.storageState === "AVAILABLE") asset.storageState = publicationEvidence || snapshotEvidence ? "RETAINED" : "SUPERSEDED";
+  asset.uploadAvailable = asset.storageState === "RETAINED";
+  asset.updatedAt = now;
+  asset.version += 1;
+  asset.notes = publicationEvidence || snapshotEvidence
+    ? "Removed from active layout use. Private object retained because snapshot or publication evidence exists."
+    : "Removed from active layout use. The object is not served.";
+  return asset;
+}
+
+export function describeLayoutExportSourceFromSnap(
+  snap: PlatformSnapshot,
+  organisationId: string,
+  eventId: string,
+  layoutId: string,
+  jobId: string,
+  revealSensitive: boolean,
+) {
+  const job = snap.layoutExportJobs.find(
+    (item) => item.id === jobId && item.layoutId === layoutId && item.organisationId === organisationId && item.eventId === eventId,
+  );
+  if (!job) throw new PlatformError("NOT_FOUND", "export job was not found");
+  const layout = requireLayout(snap, organisationId, eventId, layoutId);
+  const revision = job.revisionId
+    ? snap.layoutRevisions.find((item) => item.id === job.revisionId)
+    : requireRevision(snap, layout);
+  if (!revision) throw new PlatformError("NOT_FOUND", "export source revision was not found");
+  const objects = revision.objects
+    .filter((item) => !item.tombstoned)
+    .map((item) => {
+      const sensitive = item.objectType === "RESTRICTED_AREA" || item.objectType === "SAFE_AREA";
+      if (sensitive && !revealSensitive) {
+        return { id: item.id, objectType: "MASKED", label: "Restricted layer masked", geometry: { kind: "MASKED" as const } };
+      }
+      return { id: item.id, objectType: item.objectType, label: item.label, geometry: item.geometry };
+    });
+  return {
+    job,
+    eventName: snap.events.find((item) => item.id === layout.eventId)?.name ?? "Event",
+    layoutName: layout.name,
+    widthMm: layout.bounds.widthMm,
+    heightMm: layout.bounds.heightMm,
+    objects,
+  };
 }
 
 export function compareLayoutSnapshots(
