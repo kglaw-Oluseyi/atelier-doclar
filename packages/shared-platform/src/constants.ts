@@ -352,6 +352,7 @@ export const PERMISSION_KEYS = [
   "layout.create",
   "layout.update",
   "layout.lease.acquire",
+  "layout.constraint.override",
 ] as const;
 
 export const SYSTEM_ROLE_KEYS = [
@@ -559,6 +560,7 @@ export const S05_SENSITIVE_PERMISSIONS = [
   "venue.fact.verify",
   "venue.adopt",
   "layout.lease.acquire",
+  "layout.constraint.override",
 ] as const;
 
 export const VENUE_RECORD_STATUSES = ["ACTIVE", "ARCHIVED"] as const;
@@ -611,13 +613,49 @@ export const VENUE_LEASE_STATUSES = ["ACTIVE", "RELEASED", "EXPIRED"] as const;
 export const VENUE_EVIDENCE_STORAGE_STATES = ["UNAVAILABLE"] as const;
 export const VENUE_ASSET_UPLOAD_AVAILABLE = false;
 export const LAYOUT_EDITOR_LEASE_TTL_SECONDS = 1800;
+export const SPATIAL_OBJECT_TYPES = [
+  "ZONE",
+  "TABLE",
+  "SEAT",
+  "FIXTURE",
+  "ROUTE",
+  "SAFE_AREA",
+  "RESTRICTED_AREA",
+  "CLEARANCE_AREA",
+  "ANNOTATION",
+  "GROUP",
+] as const;
+export const SPATIAL_COMMAND_KINDS = [
+  "CREATE_OBJECT",
+  "UPDATE_PROPERTIES",
+  "MOVE",
+  "RESIZE",
+  "ROTATE",
+  "TOMBSTONE",
+  "DUPLICATE",
+  "GROUP",
+  "UNGROUP",
+  "REORDER",
+  "SET_VISIBILITY",
+  "SET_LOCK",
+  "GENERATE_SEATS",
+  "UNDO",
+  "REDO",
+] as const;
+export const MAX_SPATIAL_OBJECTS = 2500;
+export const MAX_SEATS_PER_TABLE = 48;
+export const MAX_ROUTE_POINTS = 64;
 export const PROHIBITED_VENUE_GUEST_KEYS = [
   "guestId",
   "personId",
   "EventGuest",
   "invitationId",
+  "householdId",
+  "partyId",
+  "entitlementId",
   "seatingAssignment",
   "guestPlacement",
+  "seatingRationale",
 ] as const;
 
 export const LANGUAGE_TAGS = ["en-GB", "en-US", "yo", "ig", "ha", "fr", "de-DE", "zh-Hans"] as const;

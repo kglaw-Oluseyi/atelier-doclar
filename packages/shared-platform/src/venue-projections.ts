@@ -3,6 +3,8 @@ import type { PlatformSnapshot } from "./store.js";
 import { readAttendanceProjection, type AttendanceProjectionRead } from "./venue-attendance.js";
 import { FROZEN_COORDINATE_SYSTEM } from "./venue-geometry.js";
 import { currentReusableFacts } from "./venue-operations.js";
+import { currentLayoutObjects } from "./spatial-operations.js";
+import type { SpatialObject } from "./spatial-schemas.js";
 import type { EventVenueFact, Layout, Venue, VenueEvidenceAsset, VenueFact } from "./venue-schemas.js";
 
 export type VenueCapabilities = {
@@ -17,6 +19,7 @@ export type VenueCapabilities = {
   canCreateLayout: boolean;
   canUpdateLayout: boolean;
   canAcquireLease: boolean;
+  canOverrideConstraint: boolean;
 };
 
 export function venuePermissionAllowed(keys: readonly PermissionKey[]): VenueCapabilities {
@@ -32,6 +35,7 @@ export function venuePermissionAllowed(keys: readonly PermissionKey[]): VenueCap
     canCreateLayout: keys.includes("layout.create"),
     canUpdateLayout: keys.includes("layout.update"),
     canAcquireLease: keys.includes("layout.lease.acquire"),
+    canOverrideConstraint: keys.includes("layout.constraint.override"),
   };
 }
 
@@ -119,6 +123,18 @@ export type LayoutSetupWorkspace = {
     editorHolderPersonId?: string;
     editorExclusive: true;
   };
+  objects: SpatialObject[];
+  canUndo: boolean;
+  canRedo: boolean;
+  lease: {
+    holderPersonId?: string;
+    expiresAt?: string;
+    mine: boolean;
+    readOnly: boolean;
+  };
+  persistenceState: "saved";
+  binaryBackgroundAvailable: false;
+  validationPlaceholders: Array<{ id: string; title: string; detail: string }>;
   coordinateSystem: typeof FROZEN_COORDINATE_SYSTEM;
   pendingPixelPersistence: false;
   capabilities: VenueCapabilities;
@@ -199,7 +215,7 @@ export function buildVenueDetailWorkspace(
       .map((item) => projectFact(item, snap.venueEvidenceAssets)),
     binaryUploadAvailable: false,
     assetGap:
-      "No approved object-storage, malware-scanning or safe-derivative pipeline exists. Evidence is metadata-only until Milestone 2 or 3.",
+      "No approved object-storage, malware-scanning or safe-derivative pipeline exists. Evidence is metadata-only until Milestone 3.",
     capabilities,
   };
 }
@@ -279,6 +295,7 @@ export function buildLayoutSetupWorkspace(
   const lease = layout.editorLeaseId
     ? snap.layoutEditorLeases.find((item) => item.id === layout.editorLeaseId && item.status === "ACTIVE")
     : undefined;
+  const cursor = snap.layoutDraftCursors.find((item) => item.layoutId === layout.id);
   return {
     layout: {
       id: layout.id,
@@ -293,6 +310,24 @@ export function buildLayoutSetupWorkspace(
       editorHolderPersonId: lease?.holderPersonId,
       editorExclusive: true,
     },
+    objects: currentLayoutObjects(snap, layout),
+    canUndo: Boolean(cursor && cursor.cursor > 0),
+    canRedo: Boolean(cursor && cursor.cursor < cursor.historyCommandIds.length),
+    lease: {
+      holderPersonId: lease?.holderPersonId,
+      expiresAt: lease?.expiresAt,
+      mine: false,
+      readOnly: !capabilities.canUpdateLayout,
+    },
+    persistenceState: "saved",
+    binaryBackgroundAvailable: false,
+    validationPlaceholders: [
+      {
+        id: "m3-capacity",
+        title: "Capacity findings",
+        detail: "Milestone 3 will show capacity and spatial-conflict findings. This studio does not certify safety.",
+      },
+    ],
     coordinateSystem: FROZEN_COORDINATE_SYSTEM,
     pendingPixelPersistence: false,
     capabilities,

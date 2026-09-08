@@ -13,6 +13,7 @@ import {
   VenueFactSchema,
   VenueSchema,
 } from "./venue-schemas.js";
+import { LayoutCommandSchema, LayoutDraftCursorSchema } from "./spatial-schemas.js";
 
 export const S05_UNKNOWN_FIELDS_POLICY = "REJECT" as const;
 export const S05_JOURNAL_COLLECTION = "s05MigrationReceipts" as const;
@@ -27,6 +28,8 @@ const S05_COLLECTION_SCHEMAS = {
   layouts: z.array(LayoutSchema),
   layoutRevisions: z.array(LayoutRevisionSchema),
   layoutEditorLeases: z.array(LayoutEditorLeaseSchema),
+  layoutCommands: z.array(LayoutCommandSchema),
+  layoutDraftCursors: z.array(LayoutDraftCursorSchema),
   venueEvidenceAssets: z.array(VenueEvidenceAssetSchema),
   s05MigrationReceipts: z.array(S05MigrationReceiptSchema),
 } as const;

@@ -497,6 +497,15 @@ export {
   EOS_S05_MIGRATION_ID,
   EOS_S05_MIGRATION_CHECKSUM,
 } from "./venue-migration.js";
+export { migrateEosS05Objects, applyEosS05ObjectsToSnapshot, EOS_S05_OBJECTS_MIGRATION_ID } from "./spatial-migration.js";
+export {
+  ApplyLayoutCommandInputSchema,
+  SpatialObjectSchema,
+  type ApplyLayoutCommandInput,
+  type SpatialCommandBody,
+  type SpatialObject,
+} from "./spatial-schemas.js";
+export { applyLayoutCommandOnSnap, currentLayoutObjects, type ApplyLayoutCommandResult } from "./spatial-operations.js";
 export { applyS05FixturesIfMissing, S05_FIXTURE_IDS } from "./venue-fixtures.js";
 export { validateS05PersistedCollections } from "./venue-persistence.js";
 export {

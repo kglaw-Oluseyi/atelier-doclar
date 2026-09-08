@@ -124,6 +124,7 @@ import type {
   VenueEvidenceAsset,
   VenueFact,
 } from "./venue-schemas.js";
+import type { LayoutCommand, LayoutDraftCursor } from "./spatial-schemas.js";
 import type {
   GuestDuplicateCandidate,
   GuestHousehold,
@@ -286,6 +287,8 @@ export interface PlatformSnapshot {
   layouts: Layout[];
   layoutRevisions: LayoutRevision[];
   layoutEditorLeases: LayoutEditorLease[];
+  layoutCommands: LayoutCommand[];
+  layoutDraftCursors: LayoutDraftCursor[];
   venueEvidenceAssets: VenueEvidenceAsset[];
   s05MigrationReceipts: S05MigrationReceipt[];
   rsvpPolicies: RsvpPolicy[];
@@ -443,6 +446,8 @@ export function emptySnapshot(): PlatformSnapshot {
     layouts: [],
     layoutRevisions: [],
     layoutEditorLeases: [],
+    layoutCommands: [],
+    layoutDraftCursors: [],
     venueEvidenceAssets: [],
     s05MigrationReceipts: [],
     rsvpPolicies: [],
@@ -584,6 +589,8 @@ export function normalizeSnapshot(input: PlatformSnapshot): PlatformSnapshot {
     layouts: input.layouts ?? [],
     layoutRevisions: input.layoutRevisions ?? [],
     layoutEditorLeases: input.layoutEditorLeases ?? [],
+    layoutCommands: input.layoutCommands ?? [],
+    layoutDraftCursors: input.layoutDraftCursors ?? [],
     venueEvidenceAssets: input.venueEvidenceAssets ?? [],
     s05MigrationReceipts: input.s05MigrationReceipts ?? [],
     rsvpPolicies: input.rsvpPolicies ?? [],

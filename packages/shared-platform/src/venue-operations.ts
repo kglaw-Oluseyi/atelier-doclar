@@ -354,10 +354,12 @@ function persistRevision(
   now: string,
   revisionNumber: number,
 ): { revisionId: string; contentHash: string } {
+  const current = snap.layoutRevisions.find((item) => item.id === layout.currentRevisionId);
+  const objects = current?.objects ?? [];
   const contentHash = layoutContentHash({
     coordinateSystem: layout.coordinateSystem,
     bounds: layout.bounds,
-    objects: [],
+    objects,
   });
   const revision = LayoutRevisionSchema.parse({
     id: randomUUID(),
@@ -369,7 +371,7 @@ function persistRevision(
     contentHash,
     coordinateSystem: layout.coordinateSystem,
     bounds: layout.bounds,
-    objects: [],
+    objects,
     createdByPersonId: actorPersonId,
     immutable: true,
     ...stamp(now),
@@ -383,7 +385,7 @@ function ensureEditorLease(snap: PlatformSnapshot, layout: Layout, actorPersonId
   const current = activeLease(snap, layout.id, now);
   if (current && current.holderPersonId !== actorPersonId) {
     throw new PlatformError("FORBIDDEN", "another editor holds the layout lease", {
-      publicMessage: "Another staff member is editing this layout. Milestone 1 allows one active editor.",
+      publicMessage: "Another staff member is editing this layout. One active editor holds the lease.",
     });
   }
   if (current) {

@@ -330,6 +330,8 @@ import {
   updateLayoutSetupOnSnap,
   verifyVenueFactOnSnap,
 } from "./venue-operations.js";
+import { applyLayoutCommandOnSnap } from "./spatial-operations.js";
+import { ApplyLayoutCommandInputSchema } from "./spatial-schemas.js";
 import {
   buildEventVenueWorkspace,
   buildLayoutSetupWorkspace,
@@ -3034,6 +3036,7 @@ export class PlatformService {
           "layout.create",
           "layout.update",
           "layout.lease.acquire",
+          "layout.constraint.override",
         ] as const
       ).filter((key) => this.permissionAllowed(actor, key, scope)),
     );
@@ -3064,7 +3067,15 @@ export class PlatformService {
     this.requireEvent(snap, organisationId, eventId);
     const workspace = buildLayoutSetupWorkspace(snap, eventId, layoutId, this.venueCapabilities(ctx.actor, organisationId, eventId));
     if (!workspace) throw new PlatformError("NOT_FOUND", "layout was not found");
-    return workspace;
+    const mine = workspace.layout.editorHolderPersonId === ctx.actor.person.id;
+    return {
+      ...workspace,
+      lease: {
+        ...workspace.lease,
+        mine,
+        readOnly: !workspace.capabilities.canUpdateLayout || Boolean(workspace.layout.editorHolderPersonId && !mine),
+      },
+    };
   }
 
   readEventAttendanceProjection(actor: ActorContext, organisationId: string, eventId: string): AttendanceProjectionRead {
@@ -3182,6 +3193,33 @@ export class PlatformService {
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash(input),
       run: (snap, ctx) => updateLayoutSetupOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  applyLayoutCommand(actor: ActorContext, raw: unknown): Layout {
+    assertNoVenueGuestIdentity(raw);
+    assertNoPixelPersistence(raw);
+    const input = parseStrict(ApplyLayoutCommandInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "layout.update",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: `layout.command.${input.command.kind.toLowerCase()}`,
+      resourceType: "layout",
+      resourceId: input.layoutId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) =>
+        applyLayoutCommandOnSnap(
+          snap,
+          input,
+          ctx.now,
+          ctx.actor.person.id,
+          this.permissionAllowed(ctx.actor, "layout.constraint.override", {
+            organisationId: input.organisationId,
+            eventId: input.eventId,
+          }),
+        ).layout,
     });
   }
 
@@ -6213,6 +6251,8 @@ export class PlatformService {
       snap.layouts,
       snap.layoutRevisions,
       snap.layoutEditorLeases,
+      snap.layoutCommands,
+      snap.layoutDraftCursors,
       snap.venueEvidenceAssets,
     ];
     const s04cTables = [
@@ -6395,6 +6435,8 @@ export class PlatformService {
       snap.layouts,
       snap.layoutRevisions,
       snap.layoutEditorLeases,
+      snap.layoutCommands,
+      snap.layoutDraftCursors,
       snap.venueEvidenceAssets,
       snap.guestDuplicateCandidates,
       snap.guestIntakeBatches,

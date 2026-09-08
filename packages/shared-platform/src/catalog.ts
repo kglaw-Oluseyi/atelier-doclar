@@ -147,6 +147,7 @@ const PERMISSION_IDS: Record<PermissionKey, string> = {
   "layout.create": "11111111-1111-4111-8111-111111111129",
   "layout.update": "11111111-1111-4111-8111-111111111130",
   "layout.lease.acquire": "11111111-1111-4111-8111-111111111131",
+  "layout.constraint.override": "11111111-1111-4111-8111-111111111132",
 };
 
 const ROLE_IDS: Record<(typeof SYSTEM_ROLE_KEYS)[number], string> = {
@@ -301,6 +302,7 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "layout.create",
     "layout.update",
     "layout.lease.acquire",
+    "layout.constraint.override",
   ],
   CLIENT_LEAD: [
     "organisation.view",

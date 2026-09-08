@@ -124,6 +124,8 @@ const COLLECTIONS: Collection[] = [
   "layouts",
   "layoutRevisions",
   "layoutEditorLeases",
+  "layoutCommands",
+  "layoutDraftCursors",
   "venueEvidenceAssets",
   "s05MigrationReceipts",
   "rsvpPolicies",

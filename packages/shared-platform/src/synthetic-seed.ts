@@ -11,6 +11,7 @@ import { applyS04FFixturesIfMissing } from "./language-fixtures.js";
 import { applyEosS04FToSnapshot } from "./language-migration.js";
 import { applyS05FixturesIfMissing } from "./venue-fixtures.js";
 import { applyEosS05ToSnapshot } from "./venue-migration.js";
+import { applyEosS05ObjectsToSnapshot } from "./spatial-migration.js";
 import { loadNonProductionFixtures } from "./bootstrap.js";
 import { seededPermissions, seededRoles } from "./catalog.js";
 import type { PgQueryable } from "./postgres-schema.js";
@@ -119,7 +120,7 @@ function applyS04FLayer(store: PlatformStore, now = "2026-09-07T20:00:00.000Z"):
 
 function applyS05Layer(store: PlatformStore, now = "2026-09-08T02:00:00.000Z"): void {
   const snap = store.snapshot();
-  const migrated = applyEosS05ToSnapshot(snap, now);
+  const migrated = applyEosS05ObjectsToSnapshot(applyEosS05ToSnapshot(snap, now), now);
   const withFixtures = applyS05FixturesIfMissing(migrated);
   if (withFixtures !== snap) store.replace(withFixtures);
 }

@@ -33,6 +33,7 @@ import {
   PersonIdSchema,
   UuidSchema,
 } from "./schemas.js";
+import { SpatialObjectSchema } from "./spatial-schemas.js";
 
 export const VenueIdSchema = UuidSchema;
 export const VenueFactIdSchema = UuidSchema;
@@ -105,6 +106,8 @@ export const S05_CANONICAL_COLLECTIONS = [
   "layouts",
   "layoutRevisions",
   "layoutEditorLeases",
+  "layoutCommands",
+  "layoutDraftCursors",
   "venueEvidenceAssets",
 ] as const;
 
@@ -216,7 +219,7 @@ export const LayoutRevisionSchema = z
     contentHash: NonEmptySchema.max(64),
     coordinateSystem: CoordinateSystemSchema,
     bounds: LayoutBoundsSchema,
-    objects: z.array(z.object({ id: UuidSchema }).passthrough()).max(0),
+    objects: z.array(SpatialObjectSchema).max(2500),
     createdByPersonId: PersonIdSchema,
     immutable: z.literal(true),
     ...versioned,
@@ -280,7 +283,7 @@ export const VenueEvidenceAssetSchema = z
 export const S05MigrationReceiptSchema = z
   .object({
     id: UuidSchema,
-    migrationId: z.literal("EOS-S05-VENUE-LAYOUT-V1"),
+    migrationId: z.enum(["EOS-S05-VENUE-LAYOUT-V1", "EOS-S05-VENUE-OBJECTS-V1"]),
     checksum: NonEmptySchema.max(128),
     status: z.enum(["APPLIED", "REPLAYED", "ROLLED_BACK"]),
     createdRecords: z.array(z.object({ collection: NonEmptySchema.max(80), id: UuidSchema }).strict()),
