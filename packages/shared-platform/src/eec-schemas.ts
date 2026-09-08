@@ -432,19 +432,35 @@ export const RecordDiscoveryConsentInputSchema = z
   })
   .strict();
 
-export const SessionLifecycleInputSchema = z
+const SessionCommandBase = {
+  organisationId: OrganisationIdSchema,
+  engagementId: EngagementIdSchema,
+  expectedVersion: z.number().int().nonnegative().default(0),
+  reason: NonEmptySchema.max(400),
+  idempotencyKey: NonEmptySchema.max(120),
+};
+
+export const CreateInterviewSessionInputSchema = z
   .object({
-    organisationId: OrganisationIdSchema,
-    engagementId: EngagementIdSchema,
-    sessionId: InterviewSessionIdSchema.optional(),
+    action: z.literal("CREATE"),
     mode: z.enum(["STAFF_LED", "CLIENT_LED", "OFFLINE_NOTES", "FOLLOW_UP"]).optional(),
     language: z.string().max(32).optional(),
-    action: z.enum(["CREATE", "READY", "START", "PAUSE", "RESUME", "COMPLETE", "ABANDON", "CANCEL"]),
-    expectedVersion: z.number().int().nonnegative().default(0),
-    reason: NonEmptySchema.max(400),
-    idempotencyKey: NonEmptySchema.max(120),
+    ...SessionCommandBase,
   })
   .strict();
+
+export const TransitionInterviewSessionInputSchema = z
+  .object({
+    action: z.enum(["READY", "START", "PAUSE", "RESUME", "COMPLETE", "ABANDON", "CANCEL"]),
+    sessionId: InterviewSessionIdSchema,
+    ...SessionCommandBase,
+  })
+  .strict();
+
+export const SessionLifecycleInputSchema = z.union([
+  CreateInterviewSessionInputSchema,
+  TransitionInterviewSessionInputSchema,
+]);
 
 export const RecordSourceArtefactInputSchema = z
   .object({
@@ -455,6 +471,9 @@ export const RecordSourceArtefactInputSchema = z
     title: NonEmptySchema.max(200),
     text: NonEmptySchema.max(8000),
     language: z.string().max(32).optional(),
+    objectKey: z.string().max(240).optional(),
+    byteChecksum: z.string().max(128).optional(),
+    contentSafetyStatus: z.enum(["CLEAN", "QUARANTINED", "FAILED"]).optional(),
     speakerParticipantId: ParticipantIdSchema.optional(),
     expectedVersion: z.number().int().nonnegative().default(0),
     reason: NonEmptySchema.max(400),

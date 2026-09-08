@@ -115,7 +115,7 @@ export function updateOpportunityOnSnap(
     throw new PlatformError("VERSION_CONFLICT", "stale opportunity update");
   }
   if (input.stage === "CONVERTED") {
-    throw new PlatformError("TRANSITION_INVALID", "conversion is not authorised in Foundation Milestone A");
+    throw new PlatformError("TRANSITION_INVALID", "conversion requires the explicit convert command");
   }
   record.stage = input.stage ?? record.stage;
   record.ownerPersonId = input.ownerPersonId ?? record.ownerPersonId;
@@ -178,20 +178,32 @@ export function addParticipantOnSnap(
   return record;
 }
 
+function consentScopeMatches(item: DiscoveryConsentRecord, participantId?: string): boolean {
+  if (participantId) return item.participantId === participantId;
+  return item.participantId == null;
+}
+
 function latestConsent(
   snap: PlatformSnapshot,
   engagementId: string,
   dimension: DiscoveryConsentRecord["dimension"],
   participantId?: string,
 ): DiscoveryConsentRecord | undefined {
-  return [...snap.discoveryConsentRecords]
-    .reverse()
-    .find(
-      (item) =>
+  return snap.discoveryConsentRecords
+    .map((item, index) => ({ item, index }))
+    .filter(
+      ({ item }) =>
         item.engagementId === engagementId &&
         item.dimension === dimension &&
-        (participantId ? item.participantId === participantId : true),
-    );
+        consentScopeMatches(item, participantId),
+    )
+    .sort((left, right) => {
+      const decided = right.item.decidedAt.localeCompare(left.item.decidedAt);
+      if (decided !== 0) return decided;
+      const created = right.item.createdAt.localeCompare(left.item.createdAt);
+      if (created !== 0) return created;
+      return right.index - left.index;
+    })[0]?.item;
 }
 
 export function consentIsActive(
@@ -202,6 +214,17 @@ export function consentIsActive(
 ): boolean {
   const latest = latestConsent(snap, engagementId, dimension, participantId);
   return latest?.decision === "GRANTED";
+}
+
+function requiresParticipationConsent(mode: InterviewSession["mode"]): boolean {
+  return mode !== "OFFLINE_NOTES";
+}
+
+function assertSessionParticipationConsent(snap: PlatformSnapshot, session: InterviewSession): void {
+  if (!requiresParticipationConsent(session.mode)) return;
+  if (!consentIsActive(snap, session.engagementId, "PARTICIPATION")) {
+    throw new PlatformError("VALIDATION_FAILED", "participation consent is required before the session can start");
+  }
 }
 
 export function recordDiscoveryConsentOnSnap(
@@ -271,16 +294,14 @@ export function sessionLifecycleOnSnap(
             : input.action === "ABANDON"
               ? "ABANDONED"
               : "CANCELLED";
+  if (input.action === "START" || input.action === "RESUME") {
+    assertSessionParticipationConsent(snap, record);
+  }
   if (input.action === "RESUME" && record.status === "ACTIVE") {
     return record;
   }
   if (!SESSION_TRANSITIONS[record.status]?.includes(target)) {
     throw new PlatformError("TRANSITION_INVALID", `session cannot move from ${record.status} to ${target}`);
-  }
-  if ((input.action === "START" || input.action === "RESUME") && input.mode !== "OFFLINE_NOTES") {
-    if (!consentIsActive(snap, input.engagementId, "PARTICIPATION")) {
-      throw new PlatformError("VALIDATION_FAILED", "participation consent is required before the session can start");
-    }
   }
   record.status = target;
   if (target === "ACTIVE") record.startedAt = record.startedAt ?? now;
@@ -303,6 +324,9 @@ export function recordSourceArtefactOnSnap(
   if (input.kind === "AUDIO_METADATA" && !consentIsActive(snap, input.engagementId, "AUDIO_RECORDING")) {
     throw new PlatformError("VALIDATION_FAILED", "audio recording consent is required");
   }
+  if (input.objectKey && /^https?:\/\//i.test(input.objectKey)) {
+    throw new PlatformError("VALIDATION_FAILED", "source objects cannot be stored as public URLs");
+  }
   const text = sanitiseInertText(input.text);
   const artefact: SourceArtefact = {
     id: randomUUID(),
@@ -310,7 +334,9 @@ export function recordSourceArtefactOnSnap(
     sessionId: input.sessionId,
     kind: input.kind,
     title: nfc(input.title),
-    contentSafetyStatus: "CLEAN",
+    contentSafetyStatus: input.contentSafetyStatus ?? "CLEAN",
+    objectKey: input.objectKey,
+    byteChecksum: input.byteChecksum,
     language: input.language,
     organisationId: input.organisationId,
     version: 1,
