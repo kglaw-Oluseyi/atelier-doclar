@@ -193,3 +193,7 @@ Successor implementation after EOS-S04D requires a separate CEO decision. Cursor
 | EOS-S05 catalogue slice / accepted-slice count | Catalogue slice yes. Accepted-slice count remains 4 until independent acceptance. This prompt does not accept EOS-S05. |
 | EOS-S06 and later slices | Remain unauthorised. |
 | Deploy-by-default (6 September 2026) | Controlling for verified Event OS work on `atelier-doclar`. Deployment is not acceptance and not production authorisation. |
+
+## Addendum — 2026-09-08 EOS-S05 Milestone 2 (`MD-PR-S029`)
+
+Milestone 2 is authorised on the Milestone 1 contracts. Historic S5-14–S5-27 and S5-31–S5-38 are implemented substantively. S5-28–S5-30 remain Milestone 3. Milestone 1 is not reopened. EOS-S05 is not accepted. EOS-S06 remains unauthorised.

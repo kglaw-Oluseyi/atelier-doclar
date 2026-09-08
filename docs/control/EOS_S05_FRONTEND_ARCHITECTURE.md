@@ -1,9 +1,9 @@
 # EOS-S05 Frontend Architecture
 
 **Slice:** `EOS-S05`  
-**Prompt Control ID:** `MD-PR-S028`  
+**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029`
 **Surface:** Command Atelier staff Event OS  
-**Milestone:** 1 — venue registry and blank-layout setup
+**Milestone:** 2 — typed spatial objects and layout studio
 
 ## Routes
 
@@ -15,7 +15,7 @@
 | `/app/events/[eventId]/venue` | Event | Adopt, overrides, attendance boundary |
 | `/app/events/[eventId]/layouts` | Event | Layout list |
 | `/app/events/[eventId]/layouts/new` | Event | Blank-layout creation |
-| `/app/events/[eventId]/layouts/[layoutId]` | Event | Setup / geometry / revision |
+| `/app/events/[eventId]/layouts/[layoutId]` | Event | Setup, geometry, revision and layout studio |
 
 ## Visual language
 
@@ -27,4 +27,6 @@ Designed empty, loading, permission-denied, validation-error, persistence-failur
 
 ## Mobile
 
-Desktop is the complete precision-authoring surface. Tablet supports review and structured editing. Mobile supports venue facts, comparison, approval-adjacent viewing and published/emergency viewing later; Milestone 1 precision canvas authoring is not present and is therefore not claimed. Tables become labelled cards at 360px.
+Desktop is the complete precision-authoring surface: SVG projection, snap guides, drag move, zoom/pan/fit, undo/redo. Tablet supports touch authoring and complete review. Mobile is a labelled review surface; precision canvas editing is off by default and can be re-enabled. Keyboard-only users can search, select, inspect, move, resize, rotate, duplicate, delete and recover from conflict through the navigator and inspector. Viewport pan, zoom and selection are transient and are not hashed.
+
+Canvas technology: custom SVG projection of typed persisted objects. Konva/`react-konva` was not added so a canvas JSON blob cannot become parallel truth and Next.js 15 / React 19 server rendering stays unblocked.

@@ -185,3 +185,12 @@ This addendum does not rewrite the B0 row set or the earlier S04A–S04F addenda
 | EOS-S05 frontend architecture | `docs/control/EOS_S05_FRONTEND_ARCHITECTURE.md` | IMPLEMENTATION EVIDENCE | Command Atelier venue and blank-layout surfaces. |
 | EOS-S05 build ledger | `docs/control/EOS_S05_BUILD_LEDGER.md` | IMPLEMENTATION EVIDENCE | Milestone evidence ledger. |
 
+## Addendum — 2026-09-08 EOS-S05 Milestone 2 (`MD-PR-S029`)
+
+Milestone 2 implementation authority. Does not accept EOS-S05, start Milestone 3 or EOS-S06, or authorise production.
+
+| Document | Path | Authority class | Note |
+|----------|------|-----------------|------|
+| EOS-S05 implementation record | `docs/control/EOS_S05_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | Milestones 1–2; not acceptance. |
+| EOS-S05 frontend architecture | `docs/control/EOS_S05_FRONTEND_ARCHITECTURE.md` | IMPLEMENTATION EVIDENCE | Studio SVG projection, navigator and inspector. |
+

@@ -904,11 +904,11 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 | Severity | MEDIUM |
 | Evidence | `packages/shared-platform/src/venue-schemas.ts`; venue detail evidence panel |
 | Affected surface or contract | Venue fact evidence / asset-service contract |
-| Reason for deferral | Inventing storage, scanning or signed URLs would be false capability. Milestone 1 requires a designed unavailable state. |
-| Blocking | NON_BLOCKING for Milestone 1 |
+| Reason for deferral | Inventing storage, scanning or signed URLs would be false capability. Milestone 2 preserved the designed unavailable state. Historic S5-28–S5-30 stay in Milestone 3. |
+| Blocking | NON_BLOCKING for Milestone 2; blocking for EOS-S05 completion if background assets are required |
 | Current owner | Event OS venue assets |
 | Required regression coverage | Upload remains unavailable; metadata may be recorded; no fake success |
-| Latest safe remediation milestone | EOS-S05 Milestone 2 or 3 after an approved asset pipeline |
+| Latest safe remediation milestone | EOS-S05 Milestone 3 after an approved asset pipeline |
 | Current status | OPEN |
 
 ---
@@ -989,3 +989,4 @@ These do not reopen EOS-S04A and do not create new blocking IDs.
 | EOS-S04F source-supersession remediation 2026-09-08 | Governed source revision, dependent staleness and visible placeholder validation. Historical status IN_REVIEW / NOT READY. TDR-S04F-001–002 remain OPEN and non-blocking. EOS-S05 not started. Production remains unauthorised. |
 | EOS-S04F formal technical acceptance 2026-09-08 | ChatGPT accepted EOS-S04F at SHA `a4795e83c929bf24591f52c2224eb4b588c23ef3`. Closed the blocking source-supersession, staleness and placeholder findings. TDR-S04F-001–002 remain OPEN and non-blocking. TDR-S04E-001–004, TDR-S04D-004 and TDR-S04A-011 remain OPEN. Catalogue accepted-slice count remains 4. EOS-S05 remains unauthorised. Production remains unauthorised. Documentation-only commit does not redeploy Event OS. |
 | EOS-S05 ratification and Milestone 1 MD-PR-S028 2026-09-08 | George Lawson ratifies the historic Slice 5 packs and authorises Milestone 1 only. Status RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS. Entered TDR-S05-001 (non-blocking asset-pipeline gap). TDR-S04F-001–002 and carried earlier items remain OPEN. Catalogue accepted-slice count remains 4. EOS-S05 is not accepted. EOS-S06 remains unauthorised. Production remains unauthorised. |
+| EOS-S05 Milestone 2 MD-PR-S029 2026-09-08 | Typed spatial objects and layout studio implemented. TDR-S05-001 remains OPEN and is deferred to Milestone 3. Historic S5-28–S5-30 are not implemented. EOS-S05 is not accepted. Milestone 3 and EOS-S06 remain unauthorised. Production remains unauthorised. |

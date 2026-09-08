@@ -1,6 +1,6 @@
 # ADR — EOS-S05 venue registry and spatial contract
 
-**Status:** Selected for Milestone 1  
+**Status:** Selected for Milestones 1–2
 **Slice:** `EOS-S05`  
 **Prompt Control ID:** `MD-PR-S028`  
 **Date:** `2026-09-08`
@@ -33,4 +33,4 @@ Attendance adapter ── reads ── RSVP / Forecast / Provision / Calibration
 
 ## Consequences
 
-The database remains authoritative. A future Konva canvas is a projection. Guest placement remains EOS-S06. Publication, full object catalogue and capacity calculations remain later milestones.
+The database remains authoritative. Milestone 2 projects typed objects through SVG rather than Konva so the canvas cannot become a parallel JSON blob. Guest placement remains EOS-S06. Publication, binary assets and capacity findings remain Milestone 3.

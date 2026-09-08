@@ -1,8 +1,8 @@
 # EOS-S05 Implementation Record
 
 **Slice ID:** `EOS-S05`  
-**Prompt Control ID:** `MD-PR-S028`  
-**Status:** `IN_PROGRESS` — Milestone 1 implemented; not accepted  
+**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029`
+**Status:** `IN_PROGRESS` — Milestones 1–2 implemented; not accepted
 **Catalogue slice:** yes — accepted-slice count remains 4  
 **Production:** unauthorised (`productionAuthorised` remains false)  
 **Starting baseline:** `bb705588e0d4481802658a18d7666e28e3a18fea`
@@ -14,7 +14,7 @@
 
 Milestone 1 only: ratification, ADR, canonical mapping, additive migration `EOS-S05-VENUE-LAYOUT-V1`, venue/fact/adoption/layout persistence, Command Atelier registry and blank-layout surfaces, typed attendance read adapter, isolation/idempotency/hash tests, and Event OS deploy to Railway project `atelier-doclar` after gates.
 
-Milestone 2–4, EOS-S06, canvas authoring, publication and independent acceptance were not started. Control Tower was not a deploy target.
+Milestone 2 added typed spatial objects, one command path, SVG studio projection, navigator/inspector equivalence, draft undo/redo, lease/autosave/conflict recovery, and additive migration `EOS-S05-VENUE-OBJECTS-V1`. Historic units `S5-14`–`S5-27` and `S5-31`–`S5-38` are implemented substantively; `MD-PR-0245`–`MD-PR-0269` remain `NOT_EXECUTED`. Milestone 3–4, EOS-S06, binary assets, publication and independent acceptance were not started. Control Tower was not a deploy target.
 
 ## Product constitution
 
@@ -35,12 +35,13 @@ Canonical millimetres. Top-left origin, X right, Y down. Deterministic canonical
 | `venue.adopt` / `venue.event.override` | yes | yes | yes | no | no |
 | `layout.view` | yes | yes | yes | yes | yes |
 | `layout.create` / `update` / `lease.acquire` | yes | yes | yes | no | no |
+| `layout.constraint.override` | yes | yes | no | no | no |
 
 Historic Venue Liaison / Production Lead / Accessibility Lead / Safety Authority labels are responsibility descriptions. No new system role was added. System Administrator has view only and no operational approval.
 
 ## Object-storage status
 
-No approved object-storage, malware-scanning or safe-derivative implementation exists. Evidence is metadata-only. `uploadAvailable` is `false`. The gap is recorded for Milestone 2 or 3 as `TDR-S05-001`.
+No approved object-storage, malware-scanning or safe-derivative implementation exists. Evidence is metadata-only. `uploadAvailable` is `false`. The gap remains `TDR-S05-001` for Milestone 3.
 
 ## First-run verification
 
@@ -63,3 +64,24 @@ Second Playwright run: `getByLabel('Venue')` matched section-tab navigation `Eve
 Third Playwright run: `s05-venue-vertical` passed (24.9s). Combined rerun of both S05 specs passed (35.6s), including keyboard focus on Register venue, 360/768/720/1440 viewports, 200% zoom, and axe.
 
 See `docs/control/CUMULATIVE_TECHNICAL_DEBT_AND_REGRESSION_REGISTER.md` item `TDR-S05-001` and carried `TDR-S04F-001`–`002` / `TDR-S04E-001`–`004` / `TDR-S04D-004` / `TDR-S04A-011`. EOS-S05 is not accepted. EOS-S06 is not authorised.
+
+## Milestone 2 first-run verification
+
+Workspace `pnpm typecheck` passed after adding `canOverrideConstraint` to the venue-registry capability fallback. Focused `test/spatial-journeys.test.ts` first run: 6 passed / 1 failed before the remaining cases were added; later 8/9 then 9/9.
+
+| Failure | Class | Root cause | Correction |
+|---------|-------|------------|------------|
+| Shared-platform typecheck: `ApplyLayoutCommandResult` import | product | Result type lives in `spatial-operations`; service returns `Layout` | Service imports the input schema only and returns `.layout` |
+| Shared-platform typecheck: `actor.person.id` | product | Command actor context uses `personId` | Use `ctx.actor.person.id` inside `mutate` |
+| Spatial tests treated command results as `{ objects, layout }` | test | Public service returns `Layout`; objects are read from the workspace | Tests call `getLayoutSetupWorkspace` |
+| Planner weakening of a governed lock failed with lease denial | test | Director create ran while the planner still held the exclusive lease | Planner creates the governed area, then is denied weakening it |
+| Two-event isolation failed with `SCOPE_MISMATCH` on adopt | test | Director/planner fixtures are assigned only to Alpha One | CEO adopted Alpha Two; planner command with the wrong event id is denied |
+| Event OS typecheck: `VenueCapabilities` fallback | product | Milestone 2 added `canOverrideConstraint` | Fallback includes `canOverrideConstraint: false` |
+
+`pnpm --filter @maison-doclar/shared-platform test` passed (291). Event OS unit tests passed (72). `pnpm programme:validate` passed. Event OS build passed. `git diff --check` was clean after removing trailing spaces on new M2 doc lines.
+
+Playwright first run: `s05-responsive-a11y` and studio responsive passed. Studio authoring timed out on `getByLabel('Origin X (mm)')` after reload because focus did not reselect. Class: test. Correction: click the navigator row after search. Venue vertical timed out on the adopt select because the studio spec had already adopted Alpha One. Class: test isolation. Correction: adopt only when the select is present.
+
+Playwright second run: authoring and venue journeys reached axe. Both failed `scrollable-region-focusable` on `.studio-canvas-frame`. Class: product / accessibility. Correction: the overflow canvas is keyboard-focusable (`tabIndex={0}`) with an accessible name.
+
+Human/browser verification remains deferred until the complete EOS-S05 slice.

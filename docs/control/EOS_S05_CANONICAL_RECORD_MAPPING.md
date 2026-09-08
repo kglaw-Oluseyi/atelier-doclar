@@ -8,7 +8,7 @@
 |------|------------------|---------------------|------------------------|--------------------|-------|
 | Venue | Venue | `venues` | Venue / tenant venue | organisation-owned venue | No Tenant. Cross-client reuse denied by default. |
 | Fact | VenueFact | `venueFacts` | VenueFact / provenance | reusable venue fact | Source, applicability, verification, lineage. |
-| Evidence | VenueEvidenceAsset | `venueEvidenceAssets` | evidence / attachment | metadata-only evidence | Binary upload unavailable in Milestone 1. |
+| Evidence | VenueEvidenceAsset | `venueEvidenceAssets` | evidence / attachment | metadata-only evidence | Binary upload unavailable until Milestone 3 (`TDR-S05-001`). |
 | Adoption | EventVenue | `eventVenues` | EventVenue / event adoption | event venue snapshot | Provenance-preserving. Never mutates Venue. |
 | Override | EventVenueFact | `eventVenueFacts` | event fact / override | inherited or event-specific fact | Origin `INHERITED` or `EVENT_OVERRIDE`. |
 | Layout | Layout | `layouts` | Layout / floor plan | event-scoped layout | Current revision pointer and content hash. |
@@ -16,7 +16,10 @@
 | Lease | LayoutEditorLease | `layoutEditorLeases` | editor lock | one active editor lease | Read-only collaborators. |
 | Geometry | CoordinateSystem + LayoutBounds | embedded on layout/revision | mm / origin | canonical millimetre contract | See `ADR_EOS_S05_VENUE_LAYOUT.md`. |
 | Attendance | AttendanceProjectionRead | none — read adapter | capacity input | attendance boundary | Must not persist a second RSVP/forecast ledger. |
-| Journal | S05MigrationReceipt | `s05MigrationReceipts` | migration | migration receipt | Checksum-protected, replay-safe. ID `EOS-S05-VENUE-LAYOUT-V1`. |
+| Journal | S05MigrationReceipt | `s05MigrationReceipts` | migration | migration receipt | Checksum-protected, replay-safe. IDs `EOS-S05-VENUE-LAYOUT-V1` and `EOS-S05-VENUE-OBJECTS-V1`. |
+| Spatial object | SpatialObject | `layoutRevisions.objects` | Zone/Table/Seat/Fixture/Route/Area | typed persisted object | Not a Konva blob. Seats are physical IDs only. |
+| Command | LayoutCommand | `layoutCommands` | editor action | acknowledged draft command | Undo/redo walk this history. |
+| Draft cursor | LayoutDraftCursor | `layoutDraftCursors` | undo stack | draft undo/redo pointer | Does not rewrite snapshots. |
 
 Person, Guest, Invitation, RSVP, Forecast, Programme, Merchandise, Atelier and Language remain on accepted collections. EOS-S05 must not store `guestId`, seating assignment or guest placement on any spatial record.
 
@@ -36,4 +39,4 @@ Person, Guest, Invitation, RSVP, Forecast, Programme, Merchandise, Atelier and L
 
 ## Historic sixty-unit and acceptance-scenario traceability
 
-Historic `S5-01`–`S5-60` remain `NOT_EXECUTED` traceability units. Milestone 1 covers S5-01–S5-13. Later milestones cover S5-14–S5-60. Historic twenty acceptance scenarios are not present as working-tree files; their substantive venue, adoption, layout, isolation and false-success requirements are implemented through Milestone 1 journeys and tests.
+Historic `S5-01`–`S5-60` remain `NOT_EXECUTED` traceability units. Milestone 1 covers S5-01–S5-13. Milestone 2 covers S5-14–S5-27 and S5-31–S5-38. S5-28–S5-30 remain Milestone 3 because the approved asset pipeline does not exist. Historic twenty acceptance scenarios are not present as working-tree files; their substantive venue, adoption, layout, isolation and false-success requirements are implemented through the authorised milestones.

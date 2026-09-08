@@ -69,17 +69,17 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 | EOS-S04D | ACCEPTED — Attendance Forecasting & Planning Intelligence; not a catalogue slice; SHA `64683a853ead39c62caeb2d2e9f26bcb9d1dca21`; `MD-PR-S022` / `MD-PR-S023` |
 | EOS-S04E | ACCEPTED — Event Blueprint, Journey & Host Experience; not a catalogue slice; SHA `05b91bb62dcc20357666bef4ff9bfa1d0cef11b2`; `MD-PR-S024` / `MD-PR-S025` |
 | EOS-S04F | ACCEPTED — Language, Cultural Text & Multilingual Editions; not a catalogue slice; SHA `a4795e83c929bf24591f52c2224eb4b588c23ef3`; `MD-PR-S026` / `MD-PR-S027` |
-| EOS-S05 | IN_PROGRESS — Venue registry and spatial layout; catalogue slice; Milestone 1 implemented; `MD-PR-S028`; not accepted |
+| EOS-S05 | IN_PROGRESS — Venue registry and spatial layout; catalogue slice; Milestones 1–2 implemented; not accepted |
 | All others | NOT_STARTED, READY, or BLOCKED only by valid Event OS / Event-Day dependencies |
 
 ## Now / next / later
 
 | Band | Content |
 |------|---------|
-| Now | Event OS S01–S03 accepted; EOS-S04 CLOSED / ACCEPTED; EOS-S04A–F ACCEPTED (S04A–F are not catalogue slices); EOS-S05 Milestone 1 implemented under `MD-PR-S028` and not accepted; production unsigned; no real communication or translation provider |
-| Next | Independent verification of EOS-S05 Milestone 1; do not start Milestone 2 or EOS-S06 without a separate CEO overlay |
+| Now | Event OS S01–S03 accepted; EOS-S04 CLOSED / ACCEPTED; EOS-S04A–F ACCEPTED (S04A–F are not catalogue slices); EOS-S05 Milestones 1–2 implemented and not accepted; production unsigned; no real communication or translation provider |
+| Next | Independent AI CTO review of EOS-S05 Milestone 2; do not start Milestone 3 or EOS-S06 without a separate CEO overlay |
 | Later | Event OS S01 after a new authorised instruction; Runtime after Event OS foundations |
-| Held | All 693 product/recon prompts except CT0/CT1 wrappers; EOS-S05 Milestones 2–4; EOS-S06 |
+| Held | All 693 product/recon prompts except CT0/CT1 wrappers; EOS-S05 Milestones 3–4; EOS-S06 |
 | External | Independent, specialist, venue, CEO gates — unsigned |
 
 ## Release rule
