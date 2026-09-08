@@ -44,7 +44,7 @@ function platformOptions() {
     accessAuthority: accessAuthority(),
     layoutExportEnabled: (layoutExportEnabled() && layoutAssetEnvBound()) || fixtureExportStoreEnabled(),
     layoutAssetStoreConfigured: layoutAssetEnvBound(),
-    layoutBinaryStore: resolveLayoutBinaryStore(),
+    layoutBinaryStore: fixtureExportStoreEnabled() ? resolveLayoutBinaryStore() : undefined,
   };
 }
 

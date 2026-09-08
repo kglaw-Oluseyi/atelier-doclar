@@ -178,5 +178,6 @@ Focused `test/layout-export-provenance.test.ts` first run: 5 passed / 1 failed.
 | Local download link missing | environment | Playwright has no Railway bucket | Opt-in fixture memory store, never used when S3 is bound |
 | Local GET 404 after COMPLETED | environment | Dev HMR recreated the memory store | Hold the fixture store on `globalThis` |
 | PNG preview `onload` timed out | test | Image was already complete before the handler attached | Wait for `complete && naturalWidth` |
+| Live export refused `synchronous export store required` | product | Production S3 store was passed into snapshot mutation; `put` is async | Pass a binary store into `PlatformService` only for the opt-in fixture store |
 
 Second focused unit run: 6/6. Shared-platform tests 316. Event OS unit tests 72. Focused Playwright `s05-export-provenance` passed (14.4s). `pnpm typecheck`, `programme:validate`, Event OS build and `git diff --check` passed.
