@@ -16,6 +16,7 @@
     "node": ">=20"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1127.0",
     "@maison-doclar/academy": "workspace:*",
     "@maison-doclar/design-system": "workspace:*",
     "@maison-doclar/shared-platform": "workspace:*",

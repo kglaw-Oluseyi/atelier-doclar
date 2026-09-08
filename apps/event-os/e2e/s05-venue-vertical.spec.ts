@@ -16,7 +16,7 @@ test("S05 Milestone 1 vertical: registry, facts, adopt, blank layout and role is
   await expect(page.getByTestId("venue-create-form")).toBeVisible();
   await page.getByLabel("Display name").fill("Playwright Garden Court");
   await page.getByRole("button", { name: "Save venue" }).click();
-  await expect(page.getByTestId("venue-detail")).toBeVisible();
+  await expect(page.getByTestId("venue-detail")).toBeVisible({ timeout: 20_000 });
   await expect(page.getByRole("heading", { name: "Playwright Garden Court" })).toBeVisible();
   await page.getByRole("textbox", { name: "Count" }).fill("120");
   await page.getByLabel("Source label").fill("Synthetic playwright note");

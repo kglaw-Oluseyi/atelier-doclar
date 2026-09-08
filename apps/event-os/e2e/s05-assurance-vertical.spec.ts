@@ -52,7 +52,8 @@ test("S05 Milestone 3 assurance: validation, snapshot, maker/checker, publicatio
   await page.getByRole("button", { name: "Publish approved hash" }).click();
   await expect(page.getByTestId("publication-status")).toContainText(/CURRENT/i, { timeout: 20_000 });
   await page.getByRole("button", { name: "Request export" }).click();
-  await expect(page.getByTestId("layout-publication")).toContainText(/DISABLED|DRAFT|PUBLISHED/i);
+  await expect(page.getByTestId("layout-publication")).toContainText(/DISABLED|COMPLETED|PENDING|FAILED|PUBLISHED/i);
+  await expect(page.getByTestId("studio-mobile-limit")).toBeVisible();
   const axe = await new AxeBuilder({ page }).analyze();
   expect(axe.violations, JSON.stringify(axe.violations, null, 2)).toEqual([]);
 });

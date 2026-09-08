@@ -254,7 +254,14 @@ export function LayoutStudioWorkspace({
         </p>
         <p className="lede">
           The canvas is a deterministic millimetre projection. Typed records remain authoritative. Viewport pan, zoom and
-          selection are not persisted. Binary floor-plan upload is unavailable.
+          selection are not persisted.{" "}
+          {workspace.assurance.assetProviderConfigured
+            ? "Floor-plan files can be uploaded privately from the assets panel; they are not spatially authoritative until verified calibration."
+            : "Binary floor-plan upload is unavailable because private storage is not bound."}
+        </p>
+        <p className="lede studio-mobile-limit" data-testid="studio-mobile-limit">
+          On small screens this studio remains a review, validation and approval surface. Precise canvas authoring is limited;
+          use the labelled navigator and inspector, which stay keyboard accessible.
         </p>
         {conflict ? (
           <div className="studio-conflict" data-testid="studio-conflict">

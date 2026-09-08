@@ -12,6 +12,7 @@ import {
 } from "@maison-doclar/shared-platform";
 import { accessAuthority, atelierAccessConfig, databaseUrl, fixturesAllowed, rsvpAccessConfig, sessionConfig, vendorAccessConfig } from "./config";
 import { FileBackedPlatformStore } from "./file-store";
+import { createLayoutBinaryStoreFromEnv, layoutAssetEnvBound, layoutExportEnabled } from "./layout-s3-store";
 
 export type PersistenceLabel = "POSTGRES" | "MEMORY_NON_PRODUCTION" | "UNAVAILABLE";
 export type MigrationStatus = "APPLIED" | "FAILED" | "UNAVAILABLE";
@@ -34,15 +35,21 @@ function storePath(): string {
   return join(process.cwd(), "data", "event-os-non-production.json");
 }
 
-function fileRuntime(): Runtime {
-  const store = new FileBackedPlatformStore(storePath());
-  const options = {
+function platformOptions() {
+  return {
     rsvpAccess: rsvpAccessConfig(),
     staffSession: sessionConfig(),
     vendorAccess: vendorAccessConfig(),
     atelierAccess: atelierAccessConfig(),
     accessAuthority: accessAuthority(),
+    layoutExportEnabled: layoutExportEnabled() && layoutAssetEnvBound(),
+    layoutAssetStoreConfigured: layoutAssetEnvBound(),
   };
+}
+
+function fileRuntime(): Runtime {
+  const store = new FileBackedPlatformStore(storePath());
+  const options = platformOptions();
   const service = applySyntheticSnapshot(store, options);
   return {
     service,
@@ -82,13 +89,7 @@ async function postgresRuntime(): Promise<Runtime> {
     },
   };
   const store = await PostgresPlatformStore.open(client);
-  const options = {
-    rsvpAccess: rsvpAccessConfig(),
-    staffSession: sessionConfig(),
-    vendorAccess: vendorAccessConfig(),
-    atelierAccess: atelierAccessConfig(),
-    accessAuthority: accessAuthority(),
-  };
+  const options = platformOptions();
   const seeded = fixturesAllowed()
     ? await applySyntheticSeedIfNeeded(store, client, options)
     : { service: new PlatformService(store, options), seed: undefined };
@@ -147,6 +148,10 @@ export function getRuntime(): Runtime {
 
 export async function flushRuntime(): Promise<void> {
   if (globalStore.__eventOsRuntime) await globalStore.__eventOsRuntime.flush();
+}
+
+export function layoutBinaryStore() {
+  return createLayoutBinaryStoreFromEnv();
 }
 
 export async function withDurable<T>(fn: () => Promise<T> | T): Promise<T> {

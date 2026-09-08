@@ -14,6 +14,7 @@ import { consumeActionFlash, consumeIssuedAccessFlash, writeActionResult, writeA
 import { buildActionResult, resultHref, sessionHashFromToken, successMessageForOk } from "./action-result";
 import { classifyActionError } from "./operational-state";
 import { getRuntime, withDurable } from "./runtime";
+import { fulfillLayoutExport } from "./layout-export-fulfill";
 import { clearStaffSessionCookie, readStaffSessionCookie, writeStaffSessionCookie } from "./staff-session-cookie";
 import { requireActor } from "./with-session";
 
@@ -3655,13 +3656,39 @@ export async function withdrawLayoutPublicationAction(formData: FormData): Promi
 }
 
 export async function requestLayoutExportAction(formData: FormData): Promise<void> {
-  return withLayoutMutation(formData, "layout.export.request", ({ actor, organisationId, eventId, layoutId, formData: data }) => {
-    getRuntime().service.requestLayoutExport(actor, {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const layoutId = String(formData.get("layoutId") ?? "");
+    const path = `/app/events/${eventId}/layouts/${layoutId}`;
+    const { actor } = await requireActor().catch((error) => venueFail(path, error, undefined, "layout.export.request", eventId));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await venueFail(path, new Error("No organisation assignment is available."), actor, "layout.export.request", eventId);
+    try {
+      const job = getRuntime().service.requestLayoutExport(actor, {
+        organisationId: organisation.id,
+        eventId,
+        layoutId,
+        ...layoutCas(formData),
+        format: String(formData.get("format") ?? "PDF"),
+      });
+      if (job.status === "PENDING") {
+        await fulfillLayoutExport(actor, job);
+      }
+    } catch (error) {
+      await venueFail(path, error, actor, "layout.export.request", eventId);
+    }
+    await venueOk(path, actor, "layout.export.request", "layout.export.request", eventId);
+  });
+}
+
+export async function withdrawLayoutAssetAction(formData: FormData): Promise<void> {
+  return withLayoutMutation(formData, "layout.asset.withdraw", ({ actor, organisationId, eventId, layoutId, formData: data }) => {
+    getRuntime().service.withdrawLayoutAsset(actor, {
       organisationId,
       eventId,
       layoutId,
       ...layoutCas(data),
-      format: String(data.get("format") ?? "PDF"),
+      assetId: String(data.get("assetId") ?? ""),
     });
   });
 }

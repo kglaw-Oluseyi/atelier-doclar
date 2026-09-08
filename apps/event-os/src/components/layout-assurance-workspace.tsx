@@ -14,8 +14,10 @@ import {
   restoreLayoutSnapshotAction,
   runLayoutValidationAction,
   submitLayoutApprovalAction,
+  withdrawLayoutAssetAction,
   withdrawLayoutPublicationAction,
 } from "../server/actions";
+import { FloorPlanUploadForm } from "./floor-plan-upload";
 import { IdempotencyField, PendingSubmit } from "./atelier-pending-submit";
 
 function CasFields({ workspace, eventId }: { workspace: LayoutSetupWorkspace; eventId: string }) {
@@ -239,11 +241,22 @@ export function LayoutAssuranceWorkspace({
       <section className="atelier-panel" data-testid="floor-plan-assets">
         <h2>Floor-plan assets</h2>
         <p>
-          Live binary upload is unavailable. Provider configured: {String(assurance.assetProviderConfigured)}. Intents are metadata-only.
-          SVG scripts and active external references are rejected. An asset is not spatially authoritative until calibrated from a verified
-          measurement.
+          {assurance.assetProviderConfigured
+            ? "Private storage is bound. Files are scanned in-process, quarantined before use, and never treated as spatially authoritative until verified calibration."
+            : "Live binary upload is unavailable because private storage is not bound. Intents are metadata-only."}{" "}
+          SVG scripts and active external references are rejected. Provider configured: {String(assurance.assetProviderConfigured)}.
         </p>
-        {assurance.capabilities.canManageAsset ? (
+        {assurance.capabilities.canManageAsset && assurance.assetProviderConfigured ? (
+          <FloorPlanUploadForm
+            organisationId={layout.organisationId}
+            eventId={eventId}
+            layoutId={layout.id}
+            expectedVersion={layout.version}
+            expectedRevisionNumber={layout.currentRevisionNumber}
+            locked={mutationLocked}
+          />
+        ) : null}
+        {assurance.capabilities.canManageAsset && !assurance.assetProviderConfigured ? (
           <form action={recordFloorPlanIntentAction} className="form programme-form">
             <CasFields workspace={workspace} eventId={eventId} />
             <label>
@@ -285,6 +298,13 @@ export function LayoutAssuranceWorkspace({
               <span>
                 {asset.originalFileName} · {asset.storageState} · scan {asset.scanStatus} · {asset.calibrated ? "calibrated" : "not spatially authoritative"}
               </span>
+              {asset.uploadAvailable && asset.storageState === "AVAILABLE" && asset.retentionState === "ACTIVE" ? (
+                <p>
+                  <a href={`/api/events/${eventId}/layouts/${layout.id}/assets/${asset.id}?organisationId=${layout.organisationId}`}>
+                    Download stored floor-plan
+                  </a>
+                </p>
+              ) : null}
               {assurance.capabilities.canManageAsset && asset.retentionState === "ACTIVE" ? (
                 <form action={calibrateFloorPlanAction} className="form programme-form">
                   <CasFields workspace={workspace} eventId={eventId} />
@@ -315,6 +335,14 @@ export function LayoutAssuranceWorkspace({
                   </label>
                   <input type="hidden" name="reason" value="Calibrate floor-plan asset" />
                   <PendingSubmit locked={mutationLocked}>Calibrate</PendingSubmit>
+                </form>
+              ) : null}
+              {assurance.capabilities.canManageAsset && asset.retentionState === "ACTIVE" ? (
+                <form action={withdrawLayoutAssetAction} className="form programme-form">
+                  <CasFields workspace={workspace} eventId={eventId} />
+                  <input type="hidden" name="assetId" value={asset.id} />
+                  <input type="hidden" name="reason" value="Remove floor-plan from active layout use" />
+                  <PendingSubmit locked={mutationLocked}>Remove from layout</PendingSubmit>
                 </form>
               ) : null}
             </li>
@@ -453,11 +481,22 @@ export function LayoutAssuranceWorkspace({
           <input type="hidden" name="reason" value="Request status-marked export" />
           <PendingSubmit locked={mutationLocked}>Request export</PendingSubmit>
         </form>
-        <p>PDF/PNG generation is {assurance.pdfExportAvailable ? "queued" : "disabled"}. Files are not fabricated.</p>
+        <p>
+          {assurance.pdfExportAvailable
+            ? "PDF and PNG export is generated from the current publication hash when one exists, otherwise the approved or draft hash. Completion is recorded only after a private object exists."
+            : "PDF/PNG generation is disabled. Files are not fabricated."}
+        </p>
         <ul className="atelier-folio">
           {assurance.exportJobs.map((job) => (
             <li key={job.id}>
               {job.marking} · {job.format} · {job.status} · {job.notes}
+              {job.status === "COMPLETED" ? (
+                <p>
+                  <a href={`/api/events/${eventId}/layouts/${layout.id}/exports/${job.id}?organisationId=${layout.organisationId}`}>
+                    Download {job.format}
+                  </a>
+                </p>
+              ) : null}
             </li>
           ))}
         </ul>

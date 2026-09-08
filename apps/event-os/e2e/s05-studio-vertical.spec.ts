@@ -25,7 +25,7 @@ test("S05 Milestone 2 studio: create object, inspector edit, refresh and keyboar
   await expect(page.getByTestId("studio-navigator")).toContainText(/zone/i);
   await page.getByRole("button", { name: /Zone · zone/i }).click();
   await expect(page.getByTestId("studio-inspector")).toBeVisible();
-  await page.getByLabel("Label").fill("Ceremony garden");
+  await page.getByTestId("studio-inspector").getByRole("textbox", { name: "Label" }).fill("Ceremony garden");
   await page.getByRole("button", { name: "Save properties" }).click();
   await expect(page.getByTestId("studio-navigator")).toContainText("Ceremony garden");
   await page.reload();
