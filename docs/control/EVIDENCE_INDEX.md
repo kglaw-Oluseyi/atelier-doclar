@@ -450,5 +450,5 @@ RATIFIED on `2026-09-07` by George Lawson under `MD-PR-S026`. P00–P11 implemen
 | EV-EOS-S05-HIST-SPEC | DOCUMENT | Historic Slice 5 specification (filename retained) | `MDOS/slice5/Maison_Doclar_Slice_5_Implementation_Specification_and_Build_Plan_v1.0.docx` |
 | EV-EOS-S05-HIST-PACK | DOCUMENT | Historic Slice 5 Cursor prompt pack (filename retained) | `MDOS/slice5/Maison_Doclar_Slice_5_Cursor_Prompt_Pack_v1.0.docx` |
 
-RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S028`. Milestone 2 implemented under `MD-PR-S029`. Milestone 3 implemented under `MD-PR-S030`. Milestone 4 implemented under `MD-PR-S031`. Catalogue accepted-slice count remains 4. Independent acceptance is not granted. `TDR-S05-001` is CLOSED. Claude has not been run. EOS-S06 is not authorised. Production remains unauthorised.
+RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S028`. Milestone 2 implemented under `MD-PR-S029`. Milestone 3 implemented under `MD-PR-S030`. Milestone 4 implemented under `MD-PR-S031`. Overflow-fix SHA `e646a864b00606f7a0e6f7b66d5d62feba826b8f`. Event OS deployment `65a0bd39-548b-4377-9f86-aa5dc5e58d0d`. Catalogue accepted-slice count remains 4. Independent acceptance is not granted. `TDR-S05-001` is CLOSED. Claude has not been run. EOS-S06 is not authorised. Production remains unauthorised.
 

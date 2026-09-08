@@ -15,6 +15,7 @@
 **Milestone 4 starting SHA:** `41b40d6f4001b1c6913209cbe420b9080f64965d`
 **Milestone 4 platform commit:** `ff7b052b258d0859a30c62a7364a0087d214b445`
 **Milestone 4 Event OS commit:** `d087843d6c32ab47e94b348f30533c43edf0e270`
+**Milestone 4 overflow-fix commit:** `e646a864b00606f7a0e6f7b66d5d62feba826b8f`
 **Status:** `IN_PROGRESS` — Milestones 1–4 implemented; not accepted
 **Production:** unauthorised  
 **Next slices:** EOS-S06 not authorised

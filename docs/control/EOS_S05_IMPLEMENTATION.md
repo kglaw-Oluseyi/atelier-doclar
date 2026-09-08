@@ -15,6 +15,7 @@
 **Milestone 3 Event OS commit:** `0bec2ef166354d4ad5b55aad9f932f74cb80f2f4`
 **Milestone 4 platform commit:** `ff7b052b258d0859a30c62a7364a0087d214b445`
 **Milestone 4 Event OS commit:** `d087843d6c32ab47e94b348f30533c43edf0e270`
+**Milestone 4 overflow-fix commit:** `e646a864b00606f7a0e6f7b66d5d62feba826b8f`
 
 ## Scope delivered
 
@@ -140,12 +141,17 @@ Workspace `pnpm typecheck` passed. Focused `test/layout-assurance-journeys.test.
 | Representative layout validation could not persist | product | Route-obstruction evidence concatenated every intersecting label and exceeded the 800-character finding schema | Cap evidence, explanation, recommended action and object-id lists in the validation engine |
 | Playwright `getByLabel('Label')` matched Owner/Source label | test | Capacity fields share the layout page; Playwright treats `Label` as a substring | Scope the inspector with `getByTestId('studio-inspector').getByRole('textbox', { name: 'Label' })` |
 | Playwright `venue-detail` 5s timeout while Save showed Saving… | test / environment | Default assertion timeout during a slow first compile of the create action | Wait up to 20s; rerun passed |
+| Live 360px review scrolled horizontally | product | 64-character hashes and correlation tokens overflowed the 360px surface | Wrap hashes/`code`/`dd`; hide shell overflow-x at ≤720px |
 
 Second focused M4 unit run: 8/8. Shared-platform tests 310. Event OS unit tests 72. `pnpm programme:validate` passed. Event OS build passed. `git diff --check` clean.
 
 Playwright first combined S05 run: 4 passed / 2 failed (studio Label; venue-detail timeout). After test corrections, studio + venue rerun: 3/3 passed. Assurance vertical (including axe, 360/768/1440, 200% zoom, mobile authoring limit copy) passed on the first combined run.
 
+Live Event OS at SHA `5f423816796964a8dca77c7291a37eafe74f9412` (deployment `81670232-59e2-4bd1-894c-06a27ea295f8`): assurance journey passed (~12.9s). 360px overflow failed (`document.documentElement.scrollWidth` > clientWidth). Class: product. Root cause: 64-character content hashes and correlation tokens overflowed the 360px review surface. Correction: wrap `code`, hashes and `dd` and hide document-level overflow-x on the shell at ≤720px (`e646a864b00606f7a0e6f7b66d5d62feba826b8f`). Live rerun against deployment `65a0bd39-548b-4377-9f86-aa5dc5e58d0d` at SHA `e646a864b00606f7a0e6f7b66d5d62feba826b8f`: assurance + 360/200% passed (18.1s). Milestone 4 live smoke (upload CLEAN/AVAILABLE PNG, unverified calibration remaining non-authoritative, private no-store PDF/PNG retrieve, snapshot restore without changing publication, stale-tab `VERSION_CONFLICT`, downstream current-publication JSON without guest/seating keys, Postgres reopen) passed first run (16.8s).
+
 Measured scale budgets on a 8-zone / 24-table / 6-fixture / 6-route / 1-safe-area layout: populate under 20s, hash under 250ms, validation under 2s, snapshot under 1s, PNG export under 3s.
+
+Live ready after overflow-fix deploy: `alive`, `ready: true`, `POSTGRES`, `APPLIED`, `productionAuthorised: false`, `layoutAssetStore: READY`, `layoutExport: READY`, fixtures `NON_PRODUCTION_FIXTURE`. Control Tower remained `64642db9-db60-497b-a207-3d5d92fbcae3` and was not redeployed.
 
 ## Rollback and forward recovery
 
