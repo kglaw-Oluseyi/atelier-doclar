@@ -93,6 +93,15 @@ export function actionLabel(actionType: string): string {
     "layout.update": "Update layout setup",
     "layout.command": "Apply spatial command",
     "layout.lease": "Acquire layout lease",
+    "engagement.create": "Open enquiry",
+    "discovery.start": "Start discovery",
+    "discovery.consent": "Record consent",
+    "discovery.session": "Update interview session",
+    "discovery.source": "Record source note",
+    "discovery.extract": "Extract candidate assertions",
+    "discovery.review": "Review candidate assertion",
+    "discovery.conflict": "Resolve contradiction",
+    "discovery.participant": "Add discovery participant",
   };
   return labels[actionType] ?? actionType.replaceAll(".", " ");
 }

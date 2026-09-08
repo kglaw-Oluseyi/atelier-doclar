@@ -2099,3 +2099,33 @@ body.atelier {
 .atelier-shell [aria-disabled="true"] {
   cursor: not-allowed;
 }
+
+.discovery-workspace,
+.discovery-card {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.discovery-card {
+  display: grid;
+  gap: 8px;
+}
+
+.discovery-workspace textarea,
+.discovery-workspace input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]),
+.programme-form textarea,
+.programme-form input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]) {
+  cursor: text;
+}
+
+.discovery-workspace select,
+.programme-form select {
+  cursor: pointer;
+}
+
+@media (max-width: 720px) {
+  .discovery-card {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--md-line);
+  }
+}

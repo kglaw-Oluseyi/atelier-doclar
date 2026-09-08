@@ -63,6 +63,9 @@ export default async function HomeAppPage() {
                 <Link className="button secondary" href={`/app/events/${featured.event.id}`}>
                   Event overview
                 </Link>
+                <Link className="button secondary" href="/app/discovery">
+                  Open discovery
+                </Link>
                 <Link className="button secondary" href="/app/academy/ACA-S04A">
                   ACA-S04A training
                 </Link>
@@ -103,7 +106,16 @@ export default async function HomeAppPage() {
             </div>
           </div>
         ) : (
-          <p className="empty">No assigned events yet. Create a client or event if you are authorised.</p>
+          <>
+            <p className="empty">
+              No assigned events yet. Open discovery if this is a new enquiry, or create a client or event if you are authorised.
+            </p>
+            <p className="actions">
+              <Link className="button" href="/app/discovery">
+                Open discovery
+              </Link>
+            </p>
+          </>
         )}
         {briefs.length > 1 ? (
           <section className="atelier-folio" aria-label="Further assigned events">

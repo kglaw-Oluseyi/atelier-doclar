@@ -3716,3 +3716,198 @@ export async function refreshLayoutRecordAction(formData: FormData): Promise<voi
     redirect(layoutId ? `/app/events/${eventId}/layouts/${layoutId}` : `/app/events/${eventId}/layouts`);
   });
 }
+
+export async function createDiscoveryOpportunityAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const organisationId = String(formData.get("organisationId") ?? "");
+    const bind = actorBind(actor, "/app/discovery", "engagement.create");
+    try {
+      const opportunity = getRuntime().service.createEngagementOpportunity(actor, {
+        organisationId,
+        displayReference: String(formData.get("displayReference") ?? "").trim(),
+        enquiryChannel: String(formData.get("enquiryChannel") ?? "DIRECT"),
+        knownEventType: String(formData.get("knownEventType") ?? "").trim() || undefined,
+        reason: String(formData.get("reason") ?? "Open enquiry").trim() || "Open enquiry",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      });
+      const engagement = getRuntime().service.startDiscoveryEngagement(actor, {
+        organisationId,
+        opportunityId: opportunity.id,
+        expectedVersion: opportunity.version,
+        reason: "Start discovery from the opened enquiry",
+        idempotencyKey: `${String(formData.get("idempotencyKey") ?? opportunity.id)}-start`,
+      });
+      await finishAction(
+        { ...bind, scopePath: `/app/discovery/${engagement.id}` },
+        { ok: "discovery.start", extra: { engagementId: engagement.id } },
+      );
+    } catch (error) {
+      await finishAction(bind, { error });
+    }
+  });
+}
+
+export async function recordDiscoveryConsentAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const engagementId = String(formData.get("engagementId") ?? "");
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "discovery.consent");
+    try {
+      getRuntime().service.recordDiscoveryConsent(actor, {
+        organisationId: String(formData.get("organisationId") ?? ""),
+        engagementId,
+        dimension: String(formData.get("dimension") ?? ""),
+        decision: String(formData.get("decision") ?? ""),
+        policyVersion: "synthetic-policy-v1",
+        wordingEdition: "synthetic-wording-v1",
+        reason: String(formData.get("reason") ?? "Record consent").trim() || "Record consent",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      });
+      await finishAction(bind, { ok: "discovery.consent" });
+    } catch (error) {
+      await finishAction(bind, { error });
+    }
+  });
+}
+
+export async function changeDiscoverySessionAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const engagementId = String(formData.get("engagementId") ?? "");
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "discovery.session");
+    try {
+      getRuntime().service.changeInterviewSession(actor, {
+        organisationId: String(formData.get("organisationId") ?? ""),
+        engagementId,
+        sessionId: String(formData.get("sessionId") ?? "") || undefined,
+        action: String(formData.get("sessionAction") ?? "CREATE"),
+        expectedVersion: Number(formData.get("expectedVersion") ?? 0),
+        reason: String(formData.get("reason") ?? "Update session").trim() || "Update session",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      });
+      await finishAction(bind, { ok: "discovery.session" });
+    } catch (error) {
+      await finishAction(bind, { error });
+    }
+  });
+}
+
+export async function recordDiscoverySourceAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const engagementId = String(formData.get("engagementId") ?? "");
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "discovery.source");
+    try {
+      getRuntime().service.recordDiscoverySource(actor, {
+        organisationId: String(formData.get("organisationId") ?? ""),
+        engagementId,
+        kind: "STAFF_NOTE",
+        title: String(formData.get("title") ?? "Staff note").trim() || "Staff note",
+        text: String(formData.get("text") ?? "").trim(),
+        reason: String(formData.get("reason") ?? "Record note").trim() || "Record note",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      });
+      await finishAction(bind, { ok: "discovery.source" });
+    } catch (error) {
+      await finishAction(bind, { error });
+    }
+  });
+}
+
+export async function reviewDiscoveryAssertionAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const engagementId = String(formData.get("engagementId") ?? "");
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "discovery.review");
+    try {
+      getRuntime().service.reviewCandidateAssertion(actor, {
+        organisationId: String(formData.get("organisationId") ?? ""),
+        engagementId,
+        assertionId: String(formData.get("assertionId") ?? ""),
+        decision: String(formData.get("decision") ?? "ACCEPT_STAFF_REVIEWED"),
+        expectedVersion: Number(formData.get("expectedVersion") ?? 1),
+        reason: String(formData.get("reason") ?? "Staff review").trim() || "Staff review",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      });
+      await finishAction(bind, { ok: "discovery.review" });
+    } catch (error) {
+      await finishAction(bind, { error });
+    }
+  });
+}
+
+export async function extractDiscoveryAssertionsAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const engagementId = String(formData.get("engagementId") ?? "");
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "discovery.extract");
+    try {
+      getRuntime().service.extractCandidateAssertions(actor, {
+        organisationId: String(formData.get("organisationId") ?? ""),
+        engagementId,
+        artefactId: String(formData.get("artefactId") ?? ""),
+        reason: String(formData.get("reason") ?? "Extract proposals").trim() || "Extract proposals",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      });
+      await finishAction(bind, { ok: "discovery.extract" });
+    } catch (error) {
+      await finishAction(bind, { error });
+    }
+  });
+}
+
+export async function addDiscoveryParticipantAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const engagementId = String(formData.get("engagementId") ?? "");
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "discovery.participant");
+    try {
+      getRuntime().service.addDiscoveryParticipant(actor, {
+        organisationId: String(formData.get("organisationId") ?? ""),
+        engagementId,
+        displayName: String(formData.get("displayName") ?? "").trim(),
+        claimedRole: String(formData.get("claimedRole") ?? "Principal").trim() || "Principal",
+        authorityClaim: String(formData.get("authorityClaim") ?? "UNKNOWN"),
+        reason: String(formData.get("reason") ?? "Add participant").trim() || "Add participant",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      });
+      await finishAction(bind, { ok: "discovery.participant" });
+    } catch (error) {
+      await finishAction(bind, { error });
+    }
+  });
+}
+
+export async function refreshDiscoveryRecordAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const path = String(formData.get("path") ?? "");
+    if (path.startsWith("/app/discovery")) {
+      redirect(path);
+    }
+    redirect("/app/discovery");
+  });
+}
+
+export async function resolveDiscoveryConflictAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const engagementId = String(formData.get("engagementId") ?? "");
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "discovery.conflict");
+    try {
+      getRuntime().service.resolveAssertionConflict(actor, {
+        organisationId: String(formData.get("organisationId") ?? ""),
+        engagementId,
+        conflictId: String(formData.get("conflictId") ?? ""),
+        resolution: String(formData.get("resolution") ?? "SELECT"),
+        selectedAssertionId: String(formData.get("selectedAssertionId") ?? "") || undefined,
+        expectedVersion: Number(formData.get("expectedVersion") ?? 1),
+        reason: String(formData.get("reason") ?? "Resolve contradiction").trim() || "Resolve contradiction",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      });
+      await finishAction(bind, { ok: "discovery.conflict" });
+    } catch (error) {
+      await finishAction(bind, { error });
+    }
+  });
+}
