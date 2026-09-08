@@ -3144,6 +3144,7 @@ export class PlatformService {
       assetProviderConfigured: Boolean(this.options.layoutAssetStoreConfigured ?? this.options.layoutBinaryStore?.configured),
       pdfExportAvailable: Boolean(this.options.layoutExportEnabled),
       revealSensitive: actorRevealsSensitiveSpatial(capabilities),
+      now: ctx.now,
     });
     if (!workspace) throw new PlatformError("NOT_FOUND", "layout was not found");
     const mine = workspace.layout.editorHolderPersonId === ctx.actor.person.id;

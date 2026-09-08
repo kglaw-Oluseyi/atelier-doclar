@@ -541,11 +541,15 @@ export {
   CURRENT_LAYOUT_DRAFT,
   COUNT_FACT_GUIDANCE,
   actorRevealsSensitiveSpatial,
+  actorMayRetrieveExportJob,
   classifiedSpatialDisclosure,
   projectSpatialObjects,
   overrideApplicabilityKey,
   effectiveOverrideState,
   type ProjectedSpatialObject,
+  type OverrideDecisionRecord,
+  type LayoutFindingView,
+  type ProjectedLayoutExportJob,
 } from "./layout-spatial-disclosure.js";
 export {
   LAYOUT_VALIDATION_RULES,

@@ -12,11 +12,9 @@ import { diffLayoutObjects } from "./layout-assurance-diff.js";
 import type {
   LayoutApproval,
   LayoutDiffEntry,
-  LayoutExportJob,
   LayoutFloorPlanAsset,
   LayoutPublication,
   LayoutSnapshot,
-  LayoutValidationFinding,
   LayoutValidationRun,
 } from "./layout-assurance-schemas.js";
 import type { PermissionKey } from "./schemas.js";
@@ -27,13 +25,18 @@ import { FROZEN_COORDINATE_SYSTEM } from "./venue-geometry.js";
 import type { Layout } from "./venue-schemas.js";
 import {
   classifiedSpatialDisclosure,
+  overrideAppliesToFinding,
   projectFinding,
+  projectLayoutExportJob,
+  projectOverrideDecision,
   projectSpatialObjects,
   redactRestrictedText,
   restrictedOriginalLabels,
   runPublicationBlocked,
   selectLatestValidationRun,
   validationCounts,
+  type LayoutFindingView,
+  type ProjectedLayoutExportJob,
 } from "./layout-spatial-disclosure.js";
 
 const PROHIBITED_DOWNSTREAM_KEYS = [
@@ -79,12 +82,12 @@ export function layoutAssurancePermissionAllowed(keys: readonly PermissionKey[])
 export type LayoutAssuranceWorkspace = {
   capacity: CapacityReport;
   latestRun?: LayoutValidationRun;
-  findings: LayoutValidationFinding[];
+  findings: LayoutFindingView[];
   assets: LayoutFloorPlanAsset[];
   snapshots: Array<Pick<LayoutSnapshot, "id" | "name" | "contentHash" | "revisionNumber" | "createdAt" | "recordedByPersonId">>;
   approvals: LayoutApproval[];
   publications: LayoutPublication[];
-  exportJobs: LayoutExportJob[];
+  exportJobs: ProjectedLayoutExportJob[];
   publicationBlocked: boolean;
   rawBlockingCount: number;
   overriddenBlockingCount: number;
@@ -188,18 +191,30 @@ export function buildLayoutAssuranceWorkspace(
   snap: PlatformSnapshot,
   layout: Layout,
   capabilities: LayoutAssuranceCapabilities,
-  options: { assetProviderConfigured?: boolean; pdfExportAvailable?: boolean; revealSensitive?: boolean } = {},
+  options: { assetProviderConfigured?: boolean; pdfExportAvailable?: boolean; revealSensitive?: boolean; now?: string } = {},
 ): LayoutAssuranceWorkspace {
   const objects = currentLayoutObjects(snap, layout);
   const revealSensitive = Boolean(options.revealSensitive);
+  const now = options.now ?? layout.updatedAt;
   const latestRun = selectLatestValidationRun(snap.layoutValidationRuns, layout.id);
   const findings = latestRun ? snap.layoutValidationFindings.filter((item) => item.runId === latestRun.id) : [];
   const counts = validationCounts(findings);
   const labels = revealSensitive ? [] : layoutRestrictedLabels(snap, layout.id);
+  const projectedFindings: LayoutFindingView[] = findings.map((item) => {
+    const projected = projectFinding(item, objects, revealSensitive);
+    const candidates = snap.layoutValidationOverrides.filter((override) => overrideAppliesToFinding(override, item));
+    const recorded =
+      (item.overrideId ? candidates.find((override) => override.id === item.overrideId) : undefined) ??
+      [...candidates].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt) || right.createdAt.localeCompare(left.createdAt))[0];
+    return {
+      ...projected,
+      overrideDecision: recorded ? projectOverrideDecision(recorded, item, objects, revealSensitive, now) : undefined,
+    };
+  });
   return {
     capacity: buildCapacityReport(snap, layout, objects),
     latestRun,
-    findings: findings.map((item) => projectFinding(item, objects, revealSensitive)),
+    findings: projectedFindings,
     assets: snap.layoutFloorPlanAssets.filter((item) => item.layoutId === layout.id),
     snapshots: snap.layoutSnapshots
       .filter((item) => item.layoutId === layout.id)
@@ -224,7 +239,7 @@ export function buildLayoutAssuranceWorkspace(
             },
       ),
     publications: snap.layoutPublications.filter((item) => item.layoutId === layout.id),
-    exportJobs: snap.layoutExportJobs.filter((item) => item.layoutId === layout.id),
+    exportJobs: snap.layoutExportJobs.filter((item) => item.layoutId === layout.id).map((item) => projectLayoutExportJob(item, revealSensitive)),
     publicationBlocked: runPublicationBlocked(latestRun, layout.contentHash, findings),
     rawBlockingCount: latestRun?.blockingCount ?? counts.rawBlockingCount,
     overriddenBlockingCount: latestRun?.overriddenBlockingCount ?? counts.overriddenBlockingCount,

@@ -544,6 +544,7 @@ export function overrideFindingOnSnap(
     ruleVersion: identity.ruleVersion,
     objectIds: identity.objectIds,
     applicabilityKey: identity.applicabilityKey,
+    reason: input.reason,
     ...stamp(now),
   });
   finding.status = "OVERRIDDEN";
@@ -578,6 +579,7 @@ export function revokeLayoutOverrideOnSnap(
   if (recorded.revokedAt) return recorded;
   recorded.revokedAt = now;
   recorded.revokedByPersonId = actorPersonId;
+  recorded.revokedReason = input.reason;
   recorded.updatedAt = now;
   recorded.version += 1;
   for (const finding of snap.layoutValidationFindings) {

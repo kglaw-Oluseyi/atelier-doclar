@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { LayoutValidationFinding, LayoutValidationOverride, LayoutValidationRun } from "./layout-assurance-schemas.js";
+import type { LayoutExportJob, LayoutValidationFinding, LayoutValidationOverride, LayoutValidationRun } from "./layout-assurance-schemas.js";
 import type { SpatialObject } from "./spatial-schemas.js";
 
 export const MASKED_LAYER_LABEL = "Restricted layer masked" as const;
@@ -229,4 +229,134 @@ export function runPublicationBlocked(run: LayoutValidationRun | undefined, layo
   if (!run || run.contentHash !== layoutContentHash) return false;
   if (typeof run.unresolvedBlockingCount === "number") return run.unresolvedBlockingCount > 0;
   return validationCounts(findings).publicationBlocked;
+}
+
+export type OverrideDecisionStatus = "ACTIVE" | "EXPIRED" | "REVOKED";
+
+export type OverrideDecisionRecord = {
+  id: string;
+  status: OverrideDecisionStatus;
+  recognisedByLaterRun: boolean;
+  reason?: string;
+  evidenceLabel: string;
+  authorityKind: LayoutValidationOverride["authorityKind"];
+  expiresAt: string;
+  recordedByPersonId: string;
+  recordedAt: string;
+  ruleId?: string;
+  ruleVersion?: string;
+  contentHash?: string;
+  applicabilityKey?: string;
+  affectedObjectCount: number;
+  affectedObjectScope: string[];
+  revokedAt?: string;
+  revokedByPersonId?: string;
+  revokedReason?: string;
+};
+
+export type LayoutFindingView = LayoutValidationFinding & {
+  overrideDecision?: OverrideDecisionRecord;
+};
+
+export type ProjectedLayoutExportJob = {
+  id: string;
+  format: LayoutExportJob["format"];
+  marking: LayoutExportJob["marking"];
+  status: LayoutExportJob["status"];
+  contentHash: string;
+  publicationNumber?: number;
+  generatedAt?: string;
+  notes: string;
+  projectionMasked: boolean;
+  retrieveAllowed: boolean;
+  retrieveDeniedReason?: string;
+};
+
+export function actorMayRetrieveExportJob(job: Pick<LayoutExportJob, "status" | "projectionMasked">, revealSensitive: boolean): boolean {
+  if (job.status !== "COMPLETED") return false;
+  return revealSensitive || job.projectionMasked === true;
+}
+
+export function projectLayoutExportJob(job: LayoutExportJob, revealSensitive: boolean): ProjectedLayoutExportJob {
+  const retrieveAllowed = actorMayRetrieveExportJob(job, revealSensitive);
+  return {
+    id: job.id,
+    format: job.format,
+    marking: job.marking,
+    status: job.status,
+    contentHash: job.contentHash,
+    publicationNumber: job.publicationNumber,
+    generatedAt: job.generatedAt,
+    notes: job.notes,
+    projectionMasked: Boolean(job.projectionMasked),
+    retrieveAllowed,
+    retrieveDeniedReason: retrieveAllowed
+      ? undefined
+      : job.status === "COMPLETED"
+        ? "This export belongs to a more privileged projection and cannot be downloaded from this assignment."
+        : undefined,
+  };
+}
+
+export function overrideAppliesToFinding(override: LayoutValidationOverride, finding: LayoutValidationFinding): boolean {
+  if (
+    override.organisationId !== finding.organisationId ||
+    override.eventId !== finding.eventId ||
+    override.layoutId !== finding.layoutId
+  ) {
+    return false;
+  }
+  const key = overrideIdentityFromFinding(finding).applicabilityKey;
+  if (override.applicabilityKey) return override.applicabilityKey === key;
+  if (override.contentHash && override.ruleId && override.ruleVersion) {
+    return (
+      overrideApplicabilityKey({
+        organisationId: override.organisationId,
+        eventId: override.eventId,
+        layoutId: override.layoutId,
+        contentHash: override.contentHash,
+        ruleId: override.ruleId,
+        ruleVersion: override.ruleVersion,
+        objectIds: override.objectIds ?? [],
+      }) === key
+    );
+  }
+  return override.findingId === finding.id;
+}
+
+export function projectOverrideDecision(
+  override: LayoutValidationOverride,
+  finding: LayoutValidationFinding,
+  objects: readonly SpatialObject[],
+  revealSensitive: boolean,
+  now: string,
+): OverrideDecisionRecord {
+  const labels = restrictedOriginalLabels(objects);
+  const redact = (text: string | undefined) => (text ? (revealSensitive ? text : redactRestrictedText(text, labels)) : undefined);
+  const scope = (override.objectIds.length ? override.objectIds : finding.objectIds).map((id) => {
+    const object = objects.find((item) => item.id === id);
+    if (!object) return revealSensitive ? id : MASKED_LAYER_LABEL;
+    if (revealSensitive || classifiedSpatialDisclosure(object) === "OPERATIONAL") return object.label;
+    return MASKED_LAYER_LABEL;
+  });
+  return {
+    id: override.id,
+    status: effectiveOverrideState(override, now),
+    recognisedByLaterRun: finding.overrideRecognised === true,
+    reason: redact(override.reason),
+    evidenceLabel: redact(override.evidenceLabel) ?? MASKED_LAYER_LABEL,
+    authorityKind: override.authorityKind,
+    expiresAt: override.expiresAt,
+    recordedByPersonId: override.recordedByPersonId,
+    recordedAt: override.createdAt,
+    ruleId: override.ruleId ?? finding.ruleId,
+    ruleVersion: override.ruleVersion ?? finding.ruleVersion,
+    contentHash: override.contentHash ?? finding.contentHash,
+    applicabilityKey: override.applicabilityKey,
+    affectedObjectCount: scope.length,
+    affectedObjectScope: scope,
+    revokedAt: override.revokedAt,
+    revokedByPersonId: override.revokedByPersonId,
+    revokedReason: redact(override.revokedReason),
+  };
 }

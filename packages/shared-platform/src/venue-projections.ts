@@ -316,7 +316,7 @@ export function buildLayoutSetupWorkspace(
   eventId: string,
   layoutId: string,
   capabilities: VenueCapabilities,
-  options: { assetProviderConfigured?: boolean; pdfExportAvailable?: boolean; revealSensitive?: boolean } = {},
+  options: { assetProviderConfigured?: boolean; pdfExportAvailable?: boolean; revealSensitive?: boolean; now?: string } = {},
 ): LayoutSetupWorkspace | undefined {
   const layout = snap.layouts.find((item) => item.id === layoutId && item.eventId === eventId);
   if (!layout) return undefined;

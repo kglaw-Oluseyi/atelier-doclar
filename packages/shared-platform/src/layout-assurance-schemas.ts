@@ -180,8 +180,10 @@ export const LayoutValidationOverrideSchema = z
     ruleVersion: NonEmptySchema.max(20).optional(),
     objectIds: z.array(UuidSchema).max(200).default([]),
     applicabilityKey: NonEmptySchema.max(64).optional(),
+    reason: NonEmptySchema.max(400).optional(),
     revokedAt: IsoDatetimeSchema.optional(),
     revokedByPersonId: PersonIdSchema.optional(),
+    revokedReason: NonEmptySchema.max(400).optional(),
     ...versioned,
   })
   .strict();
