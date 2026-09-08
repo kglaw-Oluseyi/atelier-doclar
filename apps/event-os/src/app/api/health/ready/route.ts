@@ -20,7 +20,10 @@ export async function GET(): Promise<Response> {
       layoutAssetStore,
       layoutExport: layoutAssetStore === "READY" ? "READY" : layoutAssetStore,
     });
-  } catch {
+  } catch (error) {
+    const code = error instanceof Error && "code" in error ? String((error as { code?: string }).code) : "INTERNAL_ERROR";
+    const message = error instanceof Error ? error.message.slice(0, 200) : "runtime boot failed";
+    console.error("event-os ready failed", code, message);
     return NextResponse.json(
       {
         ready: false,
@@ -34,6 +37,7 @@ export async function GET(): Promise<Response> {
         deployedSha: deployedSha(),
         layoutAssetStore: "UNAVAILABLE",
         layoutExport: "UNAVAILABLE",
+        bootFailure: `${code}: ${message}`,
       },
       { status: 503 },
     );

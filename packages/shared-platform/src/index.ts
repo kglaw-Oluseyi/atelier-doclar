@@ -712,6 +712,7 @@ export {
   SYNTHETIC_SEED_VERSION,
   applySyntheticSeedIfNeeded,
   applySyntheticSnapshot,
+  ensureEosS05ACollections,
   readSeedLedger,
 } from "./synthetic-seed.js";
 export {

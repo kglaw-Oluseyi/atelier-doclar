@@ -5,9 +5,9 @@ import {
   LOCAL_STORE_PRODUCTION_STATUS,
   PlatformService,
   PostgresPlatformStore,
-  applyEosS05AToSnapshot,
   applySyntheticSeedIfNeeded,
   applySyntheticSnapshot,
+  ensureEosS05ACollections,
   type PgQueryable,
   type PlatformStore,
 } from "@maison-doclar/shared-platform";
@@ -95,8 +95,9 @@ async function postgresRuntime(): Promise<Runtime> {
   const seeded = fixturesAllowed()
     ? await applySyntheticSeedIfNeeded(store, client, options)
     : { service: new PlatformService(store, options), seed: undefined };
-  const migrated = applyEosS05AToSnapshot(store.snapshot(), new Date().toISOString());
-  store.replace(migrated);
+  if (!fixturesAllowed()) {
+    ensureEosS05ACollections(store);
+  }
   await store.flush();
   return {
     service: seeded.service,

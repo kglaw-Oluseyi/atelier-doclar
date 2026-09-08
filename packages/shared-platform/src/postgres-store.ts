@@ -393,7 +393,9 @@ export class PostgresPlatformStore implements PlatformStore {
       "SELECT collection, body FROM platform_documents",
     );
     for (const row of docs.rows) {
-      (next[row.collection] as unknown[]).push(asBody(row.body));
+      const table = next[row.collection];
+      if (!Array.isArray(table)) continue;
+      table.push(asBody(row.body));
     }
     const audit = await this.client.query<{ body: unknown }>("SELECT body FROM platform_audit");
     next.audit = audit.rows.map((row) => asBody<AuditEvent>(row.body));
