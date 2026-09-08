@@ -798,9 +798,20 @@ export {
 } from "./constants.js";
 export {
   EOS_S05A_MIGRATION_ID,
+  EOS_S05A_INTELLIGENCE_MIGRATION_ID,
   applyEosS05AToSnapshot,
   migrateEosS05A,
+  migrateEosS05AIntelligence,
 } from "./eec-migration.js";
+export {
+  evaluateBudgetExpr,
+  BUDGET_EXPR_MAX_DEPTH,
+} from "./eec-budget-engine.js";
+export {
+  calculateCriticalPath,
+  nextInterviewQuestion,
+  buildExecutiveCommand,
+} from "./eec-intelligence.js";
 export { validateS05APersistedCollections } from "./eec-persistence.js";
 export {
   CreateOpportunityInputSchema,

@@ -1,2 +1,8 @@
-/** Milestone A exports only. Brief publication is EEC-11 and later. */
-export type { BriefEditionId } from "../eec-schemas.js";
+export {
+  createBriefDraftOnSnap,
+  submitBriefEditionOnSnap,
+  decideBriefEditionOnSnap,
+  publishBriefEditionOnSnap,
+  recordClientBriefDecisionOnSnap,
+} from "../eec-intelligence.js";
+export type { EventBriefDraft, EventBriefEdition, ClientBriefDecision } from "../eec-intelligence-schemas.js";

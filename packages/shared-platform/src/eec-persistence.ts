@@ -15,6 +15,31 @@ import {
   SourceArtefactSchema,
   SourceSegmentSchema,
 } from "./eec-schemas.js";
+import {
+  AiEvaluationRunSchema,
+  AiJobSchema,
+  BudgetAssumptionSchema,
+  BudgetRecommendationEditionSchema,
+  BudgetScenarioEditionSchema,
+  BudgetTaxonomyEditionSchema,
+  BudgetTemplateEditionSchema,
+  ChangeProposalSchema,
+  ClientBriefDecisionSchema,
+  ConversionReceiptSchema,
+  CostItemDefinitionSchema,
+  CostRuleEditionSchema,
+  DiscoveryClientAccessSchema,
+  EventBriefDraftSchema,
+  EventBriefEditionSchema,
+  FinancialStateDeclarationSchema,
+  ImpactAssessmentSchema,
+  PriceEvidenceSchema,
+  RoadmapDependencySchema,
+  RoadmapEditionSchema,
+  RoadmapMilestoneSchema,
+  S05AIntelligenceReceiptSchema,
+  S05A_INTELLIGENCE_COLLECTIONS,
+} from "./eec-intelligence-schemas.js";
 import type { PlatformSnapshot } from "./store.js";
 
 export const S05A_UNKNOWN_FIELDS_POLICY = "REJECT" as const;
@@ -37,9 +62,42 @@ const S05A_COLLECTION_SCHEMAS = {
   s05aMigrationReceipts: S05AMigrationReceiptSchema.array(),
 } as const;
 
+const S05A_INTELLIGENCE_SCHEMAS = {
+  eventBriefDrafts: EventBriefDraftSchema.array(),
+  eventBriefEditions: EventBriefEditionSchema.array(),
+  clientBriefDecisions: ClientBriefDecisionSchema.array(),
+  discoveryClientAccess: DiscoveryClientAccessSchema.array(),
+  conversionReceipts: ConversionReceiptSchema.array(),
+  budgetTaxonomyEditions: BudgetTaxonomyEditionSchema.array(),
+  costItemDefinitions: CostItemDefinitionSchema.array(),
+  costRuleEditions: CostRuleEditionSchema.array(),
+  priceEvidenceRecords: PriceEvidenceSchema.array(),
+  budgetTemplateEditions: BudgetTemplateEditionSchema.array(),
+  budgetAssumptions: BudgetAssumptionSchema.array(),
+  budgetScenarioEditions: BudgetScenarioEditionSchema.array(),
+  budgetRecommendationEditions: BudgetRecommendationEditionSchema.array(),
+  financialStateDeclarations: FinancialStateDeclarationSchema.array(),
+  roadmapMilestones: RoadmapMilestoneSchema.array(),
+  roadmapEditions: RoadmapEditionSchema.array(),
+  roadmapDependencies: RoadmapDependencySchema.array(),
+  changeProposals: ChangeProposalSchema.array(),
+  impactAssessments: ImpactAssessmentSchema.array(),
+  aiJobs: AiJobSchema.array(),
+  aiEvaluationRuns: AiEvaluationRunSchema.array(),
+  s05aIntelligenceReceipts: S05AIntelligenceReceiptSchema.array(),
+} as const;
+
 export function validateS05APersistedCollections(snapshot: PlatformSnapshot): void {
   for (const collection of S05A_STORE_COLLECTIONS) {
     const parsed = S05A_COLLECTION_SCHEMAS[collection].safeParse(snapshot[collection]);
+    if (!parsed.success) {
+      throw new PlatformError("VALIDATION_FAILED", `invalid ${collection}`, {
+        details: parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`),
+      });
+    }
+  }
+  for (const collection of S05A_INTELLIGENCE_COLLECTIONS) {
+    const parsed = S05A_INTELLIGENCE_SCHEMAS[collection].safeParse(snapshot[collection]);
     if (!parsed.success) {
       throw new PlatformError("VALIDATION_FAILED", `invalid ${collection}`, {
         details: parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`),

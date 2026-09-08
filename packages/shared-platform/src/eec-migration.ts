@@ -4,9 +4,13 @@ import { SYNTHETIC_EVENT_TYPES } from "./eec-coverage.js";
 import { exactHash } from "./eec-hash.js";
 import { validateS05APersistedCollections } from "./eec-persistence.js";
 import type { CoverageCatalogueEdition, CoverageRequirement, S05AMigrationReceipt } from "./eec-schemas.js";
+import type { S05AIntelligenceReceipt } from "./eec-intelligence-schemas.js";
+import { seedBudgetCatalogueOnSnap } from "./eec-intelligence.js";
+import { exactHash as intelligenceHash } from "./eec-hash.js";
 import { normalizeSnapshot, type PlatformSnapshot } from "./store.js";
 
 export const EOS_S05A_MIGRATION_ID = "EOS-S05A-DISCOVERY-V1" as const;
+export const EOS_S05A_INTELLIGENCE_MIGRATION_ID = "EOS-S05A-INTELLIGENCE-V1" as const;
 export const EOS_S05A_MIGRATION_CHECKSUM = createHash("sha256")
   .update(`${EOS_S05A_MIGRATION_ID}:additive-discovery-collections:synthetic-coverage-catalogue`)
   .digest("hex");
@@ -16,6 +20,14 @@ export type S05AMigrationResult = {
   snapshot: PlatformSnapshot;
   created: S05AMigrationReceipt["createdRecords"];
   receipt?: S05AMigrationReceipt;
+  error?: { code: string; message: string };
+};
+
+export type S05AIntelligenceMigrationResult = {
+  status: "APPLIED" | "REPLAYED" | "FAILED";
+  snapshot: PlatformSnapshot;
+  created: S05AIntelligenceReceipt["createdRecords"];
+  receipt?: S05AIntelligenceReceipt;
   error?: { code: string; message: string };
 };
 
@@ -209,8 +221,38 @@ export function migrateEosS05A(input: PlatformSnapshot, now: string): S05AMigrat
   return { status: "APPLIED", snapshot: snap, created, receipt };
 }
 
+export function migrateEosS05AIntelligence(input: PlatformSnapshot, now: string): S05AIntelligenceMigrationResult {
+  const snap = normalizeSnapshot(structuredClone(input));
+  const existing = snap.s05aIntelligenceReceipts.find((item) => item.migrationId === EOS_S05A_INTELLIGENCE_MIGRATION_ID);
+  if (existing) {
+    existing.status = "REPLAYED";
+    existing.updatedAt = now;
+    return { status: "REPLAYED", snapshot: snap, created: existing.createdRecords, receipt: existing };
+  }
+  const created: string[] = [];
+  for (const organisation of snap.organisations) {
+    seedBudgetCatalogueOnSnap(snap, organisation.id, now);
+    created.push(`taxonomy:${organisation.id}`);
+  }
+  const receipt = {
+    id: deterministicUuid("intelligence-receipt"),
+    organisationId: snap.organisations[0]?.id ?? "00000000-0000-4000-8000-000000000001",
+    migrationId: EOS_S05A_INTELLIGENCE_MIGRATION_ID,
+    checksum: intelligenceHash({ id: EOS_S05A_INTELLIGENCE_MIGRATION_ID, created }),
+    status: "APPLIED" as const,
+    createdRecords: created,
+    schemaVersion: SCHEMA_VERSION,
+    version: 1,
+    createdAt: now,
+    updatedAt: now,
+  };
+  snap.s05aIntelligenceReceipts.push(receipt);
+  validateS05APersistedCollections(snap);
+  return { status: "APPLIED", snapshot: snap, created, receipt };
+}
+
 export function applyEosS05AToSnapshot(snap: PlatformSnapshot, now: string): PlatformSnapshot {
-  return migrateEosS05A(snap, now).snapshot;
+  return migrateEosS05AIntelligence(migrateEosS05A(snap, now).snapshot, now).snapshot;
 }
 
 export function rollbackEosS05A(input: PlatformSnapshot, now: string): S05AMigrationResult {

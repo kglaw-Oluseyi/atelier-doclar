@@ -153,6 +153,30 @@ import type {
   SourceSegment,
 } from "./eec-schemas.js";
 import type {
+  AiEvaluationRun,
+  AiJob,
+  BudgetAssumption,
+  BudgetRecommendationEdition,
+  BudgetScenarioEdition,
+  BudgetTaxonomyEdition,
+  BudgetTemplateEdition,
+  ChangeProposal,
+  ClientBriefDecision,
+  ConversionReceipt,
+  CostItemDefinition,
+  CostRuleEdition,
+  DiscoveryClientAccess,
+  EventBriefDraft,
+  EventBriefEdition,
+  FinancialStateDeclaration,
+  ImpactAssessment,
+  PriceEvidence,
+  RoadmapDependency,
+  RoadmapEdition,
+  RoadmapMilestone,
+  S05AIntelligenceReceipt,
+} from "./eec-intelligence-schemas.js";
+import type {
   GuestDuplicateCandidate,
   GuestHousehold,
   GuestIntakeBatch,
@@ -341,6 +365,28 @@ export interface PlatformSnapshot {
   coverageRequirements: CoverageRequirement[];
   coverageAssessments: CoverageAssessment[];
   s05aMigrationReceipts: S05AMigrationReceipt[];
+  eventBriefDrafts: EventBriefDraft[];
+  eventBriefEditions: EventBriefEdition[];
+  clientBriefDecisions: ClientBriefDecision[];
+  discoveryClientAccess: DiscoveryClientAccess[];
+  conversionReceipts: ConversionReceipt[];
+  budgetTaxonomyEditions: BudgetTaxonomyEdition[];
+  costItemDefinitions: CostItemDefinition[];
+  costRuleEditions: CostRuleEdition[];
+  priceEvidenceRecords: PriceEvidence[];
+  budgetTemplateEditions: BudgetTemplateEdition[];
+  budgetAssumptions: BudgetAssumption[];
+  budgetScenarioEditions: BudgetScenarioEdition[];
+  budgetRecommendationEditions: BudgetRecommendationEdition[];
+  financialStateDeclarations: FinancialStateDeclaration[];
+  roadmapMilestones: RoadmapMilestone[];
+  roadmapEditions: RoadmapEdition[];
+  roadmapDependencies: RoadmapDependency[];
+  changeProposals: ChangeProposal[];
+  impactAssessments: ImpactAssessment[];
+  aiJobs: AiJob[];
+  aiEvaluationRuns: AiEvaluationRun[];
+  s05aIntelligenceReceipts: S05AIntelligenceReceipt[];
   rsvpPolicies: RsvpPolicy[];
   rsvpQuestionnaires: RsvpQuestionnaire[];
   rsvpInvitations: RsvpInvitation[];
@@ -523,6 +569,28 @@ export function emptySnapshot(): PlatformSnapshot {
     coverageRequirements: [],
     coverageAssessments: [],
     s05aMigrationReceipts: [],
+    eventBriefDrafts: [],
+    eventBriefEditions: [],
+    clientBriefDecisions: [],
+    discoveryClientAccess: [],
+    conversionReceipts: [],
+    budgetTaxonomyEditions: [],
+    costItemDefinitions: [],
+    costRuleEditions: [],
+    priceEvidenceRecords: [],
+    budgetTemplateEditions: [],
+    budgetAssumptions: [],
+    budgetScenarioEditions: [],
+    budgetRecommendationEditions: [],
+    financialStateDeclarations: [],
+    roadmapMilestones: [],
+    roadmapEditions: [],
+    roadmapDependencies: [],
+    changeProposals: [],
+    impactAssessments: [],
+    aiJobs: [],
+    aiEvaluationRuns: [],
+    s05aIntelligenceReceipts: [],
     rsvpPolicies: [],
     rsvpQuestionnaires: [],
     rsvpInvitations: [],
@@ -689,6 +757,28 @@ export function normalizeSnapshot(input: PlatformSnapshot): PlatformSnapshot {
     coverageRequirements: input.coverageRequirements ?? [],
     coverageAssessments: input.coverageAssessments ?? [],
     s05aMigrationReceipts: input.s05aMigrationReceipts ?? [],
+    eventBriefDrafts: input.eventBriefDrafts ?? [],
+    eventBriefEditions: input.eventBriefEditions ?? [],
+    clientBriefDecisions: input.clientBriefDecisions ?? [],
+    discoveryClientAccess: input.discoveryClientAccess ?? [],
+    conversionReceipts: input.conversionReceipts ?? [],
+    budgetTaxonomyEditions: input.budgetTaxonomyEditions ?? [],
+    costItemDefinitions: input.costItemDefinitions ?? [],
+    costRuleEditions: input.costRuleEditions ?? [],
+    priceEvidenceRecords: input.priceEvidenceRecords ?? [],
+    budgetTemplateEditions: input.budgetTemplateEditions ?? [],
+    budgetAssumptions: input.budgetAssumptions ?? [],
+    budgetScenarioEditions: input.budgetScenarioEditions ?? [],
+    budgetRecommendationEditions: input.budgetRecommendationEditions ?? [],
+    financialStateDeclarations: input.financialStateDeclarations ?? [],
+    roadmapMilestones: input.roadmapMilestones ?? [],
+    roadmapEditions: input.roadmapEditions ?? [],
+    roadmapDependencies: input.roadmapDependencies ?? [],
+    changeProposals: input.changeProposals ?? [],
+    impactAssessments: input.impactAssessments ?? [],
+    aiJobs: input.aiJobs ?? [],
+    aiEvaluationRuns: input.aiEvaluationRuns ?? [],
+    s05aIntelligenceReceipts: input.s05aIntelligenceReceipts ?? [],
     rsvpPolicies: input.rsvpPolicies ?? [],
     rsvpQuestionnaires: input.rsvpQuestionnaires ?? [],
     rsvpInvitations: input.rsvpInvitations ?? [],

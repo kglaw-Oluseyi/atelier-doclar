@@ -1,2 +1,2 @@
-/** Milestone A exports only. Change intelligence is EEC-33 and later. */
-export type { ChangeEntityId } from "../eec-schemas.js";
+export { createChangeProposalOnSnap, assessChangeImpactOnSnap, decideChangeOnSnap } from "../eec-intelligence.js";
+export type { ChangeProposal, ImpactAssessment } from "../eec-intelligence-schemas.js";
