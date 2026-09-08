@@ -1,7 +1,7 @@
 # EOS-S05 Implementation Record
 
 **Slice ID:** `EOS-S05`  
-**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030` / `MD-PR-S031` / `MD-PR-S032` / `MD-PR-S033`
+**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030` / `MD-PR-S031` / `MD-PR-S032` / `MD-PR-S033` / `MD-PR-S034`
 **Status:** `IN_PROGRESS` — Milestones 1–4 implemented; not accepted
 **Catalogue slice:** yes — accepted-slice count remains 4  
 **Production:** unauthorised (`productionAuthorised` remains false)  
@@ -19,6 +19,9 @@
 **S033 starting baseline:** `c161398e817121057064faf1eafa1294e33e9108`
 **S033 platform commit:** `48a8264f65f203c803c6612fd05651505ab36e15`
 **S033 Event OS commit:** `933ab993c5bbc8abda1ac2dd9e4debeae9622000`
+**S034 starting baseline:** `566223c8741d889266805608db9be2d26e99fb35`
+**S034 platform commit:** `62ddeddecdbf7746329a121a507ae4010061ba6c`
+**S034 Event OS commit:** `5b79996325f0c3f684ba33254bb63b85ea120e70`
 
 ## Scope delivered
 
@@ -244,3 +247,25 @@ Control Tower was not a deploy target. EOS-S05 remains unaccepted. EOS-S06 was n
 ### Rollback and forward recovery
 
 Rollback Event OS application code to `c161398e817121057064faf1eafa1294e33e9108`. Do not run a destructive down-migration. `EOS-S05-OVERRIDE-LINEAGE-V1` is additive and replay-safe; existing override decision fields remain readable. Forward recovery is additive only.
+
+## Final traceability and permission-affordance remediation (`MD-PR-S034`)
+
+Authority `MD-PR-S034`. Starting SHA `566223c8741d889266805608db9be2d26e99fb35` = local HEAD = origin/main = GitHub main. Pre-remediation Event OS deployment `a1107f53-d84a-47b5-a764-238101e40415`. Cursor implements and deploys Event OS only; Cursor does not accept EOS-S05; EOS-S06 is not started. Claude will reverify only these two defects. Passed S033 behaviour is not reopened.
+
+### Override decision record
+
+The durable override row remains the source of truth. `reason` is stored on create; `revokedReason` is stored on revoke without rewriting the original decision. The finding surface projects a read-only `OverrideDecisionRecord`: status (ACTIVE / EXPIRED / REVOKED), reason, evidence, authority, expiry, recorded by/at, rule id/version, content hash, applicability key, permission-safe affected-object scope, and revocation fields where present. Same-hash revalidation redisplays the same substance and distinguishes original recording from later recognition (`recognisedByLaterRun`). Expired and revoked records never appear ACTIVE and do not grant authority. Auditor receives redacted labels/geometry and cannot revoke or edit. Event Director revokes only through the existing authorised route. System Administrator gains no operational authority. Cross-event and cross-organisation retrieval remains denied.
+
+### Export retrieval affordance
+
+`projectLayoutExportJob` / `actorMayRetrieveExportJob` use the same rule as `getStoredLayoutExport`: a COMPLETED artifact is retrievable only when the actor reveals sensitive spatial data or the job is `projectionMasked`. The UI enables Download only then. Otherwise it shows a non-clickable `not-allowed` explanation. Object keys, checksums and byte sizes are omitted from the workspace projection. Server 403 on direct privileged retrieval is preserved. Auditor retains an enabled download for an authorised masked PUBLISHED artifact. Planner and Director retain privileged DRAFT downloads.
+
+### First-run verification
+
+`pnpm typecheck` passed. Focused `test/layout-s034-remediation.test.ts` passed first run (5/5). Shared-platform tests 329/329. Event OS unit tests 72/72. `pnpm programme:validate` passed. Event OS build passed. `git diff --check` clean. Focused Playwright `s05-s034-traceability` passed first run (2/2, 43.0s). No first-run failures. Unrelated whole-slice journeys were not rerun.
+
+Control Tower was not a deploy target. EOS-S05 remains unaccepted. EOS-S06 was not started.
+
+### Rollback and forward recovery
+
+Rollback Event OS application code to `566223c8741d889266805608db9be2d26e99fb35`. Do not run a destructive down-migration. Override decision fields are additive and optional on the existing immutable row. Forward recovery is additive only.

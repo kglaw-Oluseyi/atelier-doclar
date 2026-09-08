@@ -230,3 +230,11 @@ Bounded remediation of override lineage, spatial disclosure, export authority co
 | Document | Path | Authority class | Note |
 |----------|------|-----------------|------|
 | EOS-S05 implementation record | `docs/control/EOS_S05_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | MD-PR-S033 consolidated remediation; not acceptance. |
+
+## Addendum — 2026-09-08 EOS-S05 final traceability (`MD-PR-S034`)
+
+Bounded remediation of override decision-record reviewability and Auditor export affordances. Does not accept EOS-S05, start EOS-S06, or authorise production. Whole-slice Claude-in-Chrome is not rerun; final focused verification of these two defects is required.
+
+| Document | Path | Authority class | Note |
+|----------|------|-----------------|------|
+| EOS-S05 implementation record | `docs/control/EOS_S05_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | MD-PR-S034 final traceability remediation; not acceptance. |

@@ -1,7 +1,7 @@
 # EOS-S05 Build Ledger
 
 **Slice ID:** `EOS-S05`  
-**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030` / `MD-PR-S031` / `MD-PR-S032` / `MD-PR-S033`
+**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030` / `MD-PR-S031` / `MD-PR-S032` / `MD-PR-S033` / `MD-PR-S034`
 **Starting baseline:** `bb705588e0d4481802658a18d7666e28e3a18fea`
 **Milestone 2 starting SHA:** `a7dc4d931f3c01f05354b11e68bc7c4a155e5afb`
 **Milestone 3 starting SHA:** `72830730398f6aa1b02183417ca4ac4d32801b10`
@@ -19,6 +19,9 @@
 **S033 starting SHA:** `c161398e817121057064faf1eafa1294e33e9108`
 **S033 platform commit:** `48a8264f65f203c803c6612fd05651505ab36e15`
 **S033 Event OS commit:** `933ab993c5bbc8abda1ac2dd9e4debeae9622000`
+**S034 starting SHA:** `566223c8741d889266805608db9be2d26e99fb35`
+**S034 platform commit:** `62ddeddecdbf7746329a121a507ae4010061ba6c`
+**S034 Event OS commit:** `5b79996325f0c3f684ba33254bb63b85ea120e70`
 **Status:** `IN_PROGRESS` — Milestones 1–4 implemented; not accepted
 **Production:** unauthorised  
 **Next slices:** EOS-S06 not authorised
@@ -90,5 +93,15 @@ Historic units remain `NOT_EXECUTED`. No new collections. No EOS-S06 seating.
 ## Verification
 
 Workspace `pnpm typecheck`, `pnpm --filter @maison-doclar/shared-platform test` (324), `pnpm --filter @maison-doclar/event-os test` (72), `pnpm programme:validate`, `pnpm --filter @maison-doclar/event-os build`, Event OS Playwright `s05-s033-remediation` (4), and `git diff --check` are recorded in `EOS_S05_IMPLEMENTATION.md`.
+
+## MD-PR-S034 — Final traceability and permission-affordance
+
+| Area | Decision |
+|------|----------|
+| Override review | Read-only projection of the immutable override row on the finding surface. Original vs later recognition is distinct. Expired/revoked never appear ACTIVE. |
+| Disclosure | Auditor may review permission-safe governance evidence. Restricted labels and geometry remain masked. Director revokes only via the existing audited route. |
+| Export affordance | Download is enabled only when `getStoredLayoutExport` would allow retrieval. Privileged DRAFT links are disabled with `not-allowed`. Server 403 is retained. |
+
+S034 verification (`typecheck`, shared-platform 329, Event OS 72, `programme:validate`, Event OS build, Playwright `s05-s034-traceability` 2/2, `git diff --check`) is recorded in `EOS_S05_IMPLEMENTATION.md`.
 
 Deployment of Event OS to Railway project `atelier-doclar` is implementation evidence only. It is not EOS-S05 acceptance and not production authorisation.
