@@ -171,7 +171,10 @@ export const VenueFactSchema = z
   })
   .strict()
   .refine((value) => value.unit !== "MILLIMETRE" || value.valueIntegerMm !== undefined, "millimetre facts require valueIntegerMm")
-  .refine((value) => value.unit !== "COUNT" || value.valueInteger !== undefined, "count facts require valueInteger")
+  .refine(
+    (value) => value.unit !== "COUNT" || value.valueInteger !== undefined,
+    "A count fact needs a whole number. If the count is unknown, choose Text or None instead of Count.",
+  )
   .refine((value) => value.unit !== "TEXT" || Boolean(value.valueText), "text facts require valueText")
   .refine(
     (value) =>
@@ -293,7 +296,7 @@ export const VenueEvidenceAssetSchema = z
 export const S05MigrationReceiptSchema = z
   .object({
     id: UuidSchema,
-    migrationId: z.enum(["EOS-S05-VENUE-LAYOUT-V1", "EOS-S05-VENUE-OBJECTS-V1", "EOS-S05-VENUE-ASSURANCE-V1"]),
+    migrationId: z.enum(["EOS-S05-VENUE-LAYOUT-V1", "EOS-S05-VENUE-OBJECTS-V1", "EOS-S05-VENUE-ASSURANCE-V1", "EOS-S05-OVERRIDE-LINEAGE-V1"]),
     checksum: NonEmptySchema.max(128),
     status: z.enum(["APPLIED", "REPLAYED", "ROLLED_BACK"]),
     createdRecords: z.array(z.object({ collection: NonEmptySchema.max(80), id: UuidSchema }).strict()),
@@ -335,7 +338,11 @@ export const RecordVenueFactInputSchema = z
     evidenceMimeType: z.string().trim().max(120).optional(),
     expectedVenueVersion: z.number().int().positive().optional(),
   })
-  .strict();
+  .strict()
+  .refine(
+    (value) => value.unit !== "COUNT" || value.valueInteger !== undefined,
+    "A count fact needs a whole number. If the count is unknown, choose Text or None instead of Count.",
+  );
 
 export const VerifyVenueFactInputSchema = z
   .object({

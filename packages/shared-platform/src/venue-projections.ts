@@ -4,9 +4,14 @@ import { readAttendanceProjection, type AttendanceProjectionRead } from "./venue
 import { FROZEN_COORDINATE_SYSTEM } from "./venue-geometry.js";
 import { currentReusableFacts } from "./venue-operations.js";
 import { currentLayoutObjects } from "./spatial-operations.js";
-import type { SpatialObject } from "./spatial-schemas.js";
 import type { EventVenueFact, Layout, Venue, VenueEvidenceAsset, VenueFact } from "./venue-schemas.js";
 import { buildLayoutAssuranceWorkspace, type LayoutAssuranceWorkspace } from "./layout-assurance-projections.js";
+import {
+  actorRevealsSensitiveSpatial,
+  projectFinding,
+  projectSpatialObjects,
+  type ProjectedSpatialObject,
+} from "./layout-spatial-disclosure.js";
 
 export type VenueCapabilities = {
   canViewRegistry: boolean;
@@ -144,7 +149,7 @@ export type LayoutSetupWorkspace = {
     editorHolderPersonId?: string;
     editorExclusive: true;
   };
-  objects: SpatialObject[];
+  objects: ProjectedSpatialObject[];
   canUndo: boolean;
   canRedo: boolean;
   lease: {
@@ -311,7 +316,7 @@ export function buildLayoutSetupWorkspace(
   eventId: string,
   layoutId: string,
   capabilities: VenueCapabilities,
-  options: { assetProviderConfigured?: boolean; pdfExportAvailable?: boolean } = {},
+  options: { assetProviderConfigured?: boolean; pdfExportAvailable?: boolean; revealSensitive?: boolean } = {},
 ): LayoutSetupWorkspace | undefined {
   const layout = snap.layouts.find((item) => item.id === layoutId && item.eventId === eventId);
   if (!layout) return undefined;
@@ -319,6 +324,8 @@ export function buildLayoutSetupWorkspace(
     ? snap.layoutEditorLeases.find((item) => item.id === layout.editorLeaseId && item.status === "ACTIVE")
     : undefined;
   const cursor = snap.layoutDraftCursors.find((item) => item.layoutId === layout.id);
+  const revealSensitive = options.revealSensitive ?? actorRevealsSensitiveSpatial(capabilities);
+  const objects = projectSpatialObjects(currentLayoutObjects(snap, layout), revealSensitive);
   const assurance = buildLayoutAssuranceWorkspace(
     snap,
     layout,
@@ -334,7 +341,7 @@ export function buildLayoutSetupWorkspace(
       canReadDownstream: capabilities.canReadDownstream,
       canOverrideConstraint: capabilities.canOverrideConstraint,
     },
-    options,
+    { ...options, revealSensitive },
   );
   return {
     layout: {
@@ -352,7 +359,7 @@ export function buildLayoutSetupWorkspace(
       editorHolderPersonId: lease?.holderPersonId,
       editorExclusive: true,
     },
-    objects: currentLayoutObjects(snap, layout),
+    objects,
     canUndo: Boolean(cursor && cursor.cursor > 0),
     canRedo: Boolean(cursor && cursor.cursor < cursor.historyCommandIds.length),
     lease: {
@@ -366,7 +373,7 @@ export function buildLayoutSetupWorkspace(
     validationPlaceholders: assurance.findings.slice(0, 8).map((item) => ({
       id: item.id,
       title: `${item.severity}: ${item.ruleId}`,
-      detail: item.explanation,
+      detail: projectFinding(item, currentLayoutObjects(snap, layout), revealSensitive).explanation,
     })),
     assurance,
     coordinateSystem: FROZEN_COORDINATE_SYSTEM,

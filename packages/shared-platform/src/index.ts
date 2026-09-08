@@ -515,7 +515,7 @@ export {
 export { applyLayoutCommandOnSnap, currentLayoutObjects, replaceLayoutObjectsOnSnap, type ApplyLayoutCommandResult } from "./spatial-operations.js";
 export { applyS05FixturesIfMissing, S05_FIXTURE_IDS } from "./venue-fixtures.js";
 export { validateS05PersistedCollections } from "./venue-persistence.js";
-export { migrateEosS05Assurance, applyEosS05AssuranceToSnapshot, EOS_S05_ASSURANCE_MIGRATION_ID } from "./layout-assurance-migration.js";
+export { migrateEosS05Assurance, applyEosS05AssuranceToSnapshot, EOS_S05_ASSURANCE_MIGRATION_ID, EOS_S05_OVERRIDE_LINEAGE_MIGRATION_ID, migrateEosS05OverrideLineage } from "./layout-assurance-migration.js";
 export { inspectFloorPlanPayload, sanitiseFloorPlanFileName } from "./layout-assurance-assets.js";
 export {
   renderLayoutExport,
@@ -537,6 +537,17 @@ export {
 export { buildCapacityReport, geometricCapacityFromObjects, type CapacityReport } from "./layout-assurance-capacity.js";
 export { diffLayoutObjects } from "./layout-assurance-diff.js";
 export {
+  MASKED_LAYER_LABEL,
+  CURRENT_LAYOUT_DRAFT,
+  COUNT_FACT_GUIDANCE,
+  actorRevealsSensitiveSpatial,
+  classifiedSpatialDisclosure,
+  projectSpatialObjects,
+  overrideApplicabilityKey,
+  effectiveOverrideState,
+  type ProjectedSpatialObject,
+} from "./layout-spatial-disclosure.js";
+export {
   LAYOUT_VALIDATION_RULES,
   RecordFloorPlanIntentInputSchema,
   RecordStoredFloorPlanInputSchema,
@@ -545,6 +556,7 @@ export {
   RunLayoutValidationInputSchema,
   AcknowledgeFindingInputSchema,
   OverrideFindingInputSchema,
+  RevokeLayoutOverrideInputSchema,
   CreateLayoutSnapshotInputSchema,
   RestoreLayoutSnapshotInputSchema,
   SubmitLayoutApprovalInputSchema,
@@ -562,6 +574,7 @@ export {
   type LayoutPublication,
   type LayoutSnapshot,
   type LayoutValidationFinding,
+  type LayoutValidationOverride,
   type LayoutValidationRun,
 } from "./layout-assurance-schemas.js";
 export {

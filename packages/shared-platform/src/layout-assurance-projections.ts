@@ -25,6 +25,16 @@ import type { SpatialObject } from "./spatial-schemas.js";
 import type { PlatformSnapshot } from "./store.js";
 import { FROZEN_COORDINATE_SYSTEM } from "./venue-geometry.js";
 import type { Layout } from "./venue-schemas.js";
+import {
+  classifiedSpatialDisclosure,
+  projectFinding,
+  projectSpatialObjects,
+  redactRestrictedText,
+  restrictedOriginalLabels,
+  runPublicationBlocked,
+  selectLatestValidationRun,
+  validationCounts,
+} from "./layout-spatial-disclosure.js";
 
 const PROHIBITED_DOWNSTREAM_KEYS = [
   "guestId",
@@ -76,6 +86,10 @@ export type LayoutAssuranceWorkspace = {
   publications: LayoutPublication[];
   exportJobs: LayoutExportJob[];
   publicationBlocked: boolean;
+  rawBlockingCount: number;
+  overriddenBlockingCount: number;
+  unresolvedBlockingCount: number;
+  recognisedOverrideCount: number;
   assetProviderConfigured: boolean;
   pdfExportAvailable: boolean;
   certificationClaim: "NONE";
@@ -154,21 +168,38 @@ function toDownstreamObject(object: SpatialObject): DownstreamSpatialObject {
   };
 }
 
+function layoutRestrictedLabels(snap: PlatformSnapshot, layoutId: string): string[] {
+  const labels = new Set<string>();
+  for (const revision of snap.layoutRevisions.filter((item) => item.layoutId === layoutId)) {
+    for (const label of restrictedOriginalLabels(revision.objects)) labels.add(label);
+  }
+  for (const snapshot of snap.layoutSnapshots.filter((item) => item.layoutId === layoutId)) {
+    try {
+      const objects = (JSON.parse(snapshot.canonicalPayload) as { objects: SpatialObject[] }).objects;
+      for (const label of restrictedOriginalLabels(objects)) labels.add(label);
+    } catch {
+      // Immutable snapshot payload that cannot parse is omitted from redaction, never from masking.
+    }
+  }
+  return [...labels];
+}
+
 export function buildLayoutAssuranceWorkspace(
   snap: PlatformSnapshot,
   layout: Layout,
   capabilities: LayoutAssuranceCapabilities,
-  options: { assetProviderConfigured?: boolean; pdfExportAvailable?: boolean } = {},
+  options: { assetProviderConfigured?: boolean; pdfExportAvailable?: boolean; revealSensitive?: boolean } = {},
 ): LayoutAssuranceWorkspace {
   const objects = currentLayoutObjects(snap, layout);
-  const latestRun = [...snap.layoutValidationRuns]
-    .filter((item) => item.layoutId === layout.id)
-    .sort((left, right) => right.createdAt.localeCompare(left.createdAt))[0];
+  const revealSensitive = Boolean(options.revealSensitive);
+  const latestRun = selectLatestValidationRun(snap.layoutValidationRuns, layout.id);
   const findings = latestRun ? snap.layoutValidationFindings.filter((item) => item.runId === latestRun.id) : [];
+  const counts = validationCounts(findings);
+  const labels = revealSensitive ? [] : layoutRestrictedLabels(snap, layout.id);
   return {
     capacity: buildCapacityReport(snap, layout, objects),
     latestRun,
-    findings,
+    findings: findings.map((item) => projectFinding(item, objects, revealSensitive)),
     assets: snap.layoutFloorPlanAssets.filter((item) => item.layoutId === layout.id),
     snapshots: snap.layoutSnapshots
       .filter((item) => item.layoutId === layout.id)
@@ -180,10 +211,25 @@ export function buildLayoutAssuranceWorkspace(
         createdAt: item.createdAt,
         recordedByPersonId: item.recordedByPersonId,
       })),
-    approvals: snap.layoutApprovals.filter((item) => item.layoutId === layout.id),
+    approvals: snap.layoutApprovals
+      .filter((item) => item.layoutId === layout.id)
+      .map((item) =>
+        revealSensitive
+          ? item
+          : {
+              ...item,
+              materialDiffSummary: redactRestrictedText(item.materialDiffSummary, labels),
+              capacityBasis: redactRestrictedText(item.capacityBasis, labels),
+              downstreamImpact: redactRestrictedText(item.downstreamImpact, labels),
+            },
+      ),
     publications: snap.layoutPublications.filter((item) => item.layoutId === layout.id),
     exportJobs: snap.layoutExportJobs.filter((item) => item.layoutId === layout.id),
-    publicationBlocked: Boolean(latestRun?.publicationBlocked && latestRun.contentHash === layout.contentHash),
+    publicationBlocked: runPublicationBlocked(latestRun, layout.contentHash, findings),
+    rawBlockingCount: latestRun?.blockingCount ?? counts.rawBlockingCount,
+    overriddenBlockingCount: latestRun?.overriddenBlockingCount ?? counts.overriddenBlockingCount,
+    unresolvedBlockingCount: latestRun?.unresolvedBlockingCount ?? counts.unresolvedBlockingCount,
+    recognisedOverrideCount: latestRun?.recognisedOverrideCount ?? counts.recognisedOverrideCount,
     assetProviderConfigured: Boolean(options.assetProviderConfigured),
     pdfExportAvailable: Boolean(options.pdfExportAvailable ?? LAYOUT_PDF_EXPORT_AVAILABLE),
     certificationClaim: "NONE",
@@ -193,27 +239,13 @@ export function buildLayoutAssuranceWorkspace(
 }
 
 function maskSensitive(objects: readonly SpatialObject[], revealSensitive: boolean): PublishedLayoutViewer["objects"] {
-  return objects
-    .filter((item) => !item.tombstoned)
-    .map((item) => {
-      const sensitive = item.objectType === "RESTRICTED_AREA" || item.objectType === "SAFE_AREA";
-      if (sensitive && !revealSensitive) {
-        return {
-          id: item.id,
-          objectType: "MASKED" as const,
-          label: "Restricted layer masked",
-          geometry: { kind: "MASKED" as const },
-          layer: item.layer,
-        };
-      }
-      return {
-        id: item.id,
-        objectType: item.objectType,
-        label: item.label,
-        geometry: item.geometry,
-        layer: item.layer,
-      };
-    });
+  return projectSpatialObjects(objects, revealSensitive).map((item) => ({
+    id: item.id,
+    objectType: item.objectType === "MASKED" ? "MASKED" : item.objectType,
+    label: item.label,
+    geometry: item.geometry,
+    layer: item.objectType === "MASKED" ? item.layer : item.layer,
+  }));
 }
 
 export function buildPublishedLayoutViewer(
@@ -275,10 +307,14 @@ export function buildLayoutDownstreamProjection(
   }
   const revision = snap.layoutRevisions.find((item) => item.id === publication.revisionId);
   if (!revision) throw new PlatformError("NOT_FOUND", "published revision was not found");
-  const objects = revision.objects.filter((item) => !item.tombstoned).map(toDownstreamObject);
-  const areas = objects.filter((item) =>
-    item.objectType === "CLEARANCE_AREA" || item.objectType === "SAFE_AREA" || item.objectType === "RESTRICTED_AREA",
-  );
+  const objects = revision.objects.filter((item) => !item.tombstoned);
+  const projected = revealSensitive
+    ? objects.map(toDownstreamObject)
+    : objects.flatMap((item) => {
+        const disclosure = classifiedSpatialDisclosure(item);
+        if (disclosure === "OMIT" || disclosure === "RESTRICTED_GEOMETRY") return [];
+        return [toDownstreamObject(item)];
+      });
   const run = snap.layoutValidationRuns.find((item) => item.contentHash === publication.contentHash && item.layoutId === layoutId);
   const findings = run ? snap.layoutValidationFindings.filter((item) => item.runId === run.id) : [];
   const projection: LayoutDownstreamProjection = {
@@ -294,14 +330,14 @@ export function buildLayoutDownstreamProjection(
     eventId,
     layoutId,
     coordinateSystem: FROZEN_COORDINATE_SYSTEM,
-    zones: objects.filter((item) => item.objectType === "ZONE"),
-    tables: objects.filter((item) => item.objectType === "TABLE"),
-    physicalSeats: objects.filter((item) => item.objectType === "SEAT"),
-    fixtures: objects.filter((item) => item.objectType === "FIXTURE"),
-    routes: objects.filter((item) => item.objectType === "ROUTE"),
-    areas: revealSensitive
-      ? areas
-      : areas.filter((item) => item.objectType === "CLEARANCE_AREA"),
+    zones: projected.filter((item) => item.objectType === "ZONE"),
+    tables: projected.filter((item) => item.objectType === "TABLE"),
+    physicalSeats: projected.filter((item) => item.objectType === "SEAT"),
+    fixtures: projected.filter((item) => item.objectType === "FIXTURE"),
+    routes: projected.filter((item) => item.objectType === "ROUTE"),
+    areas: projected.filter(
+      (item) => item.objectType === "CLEARANCE_AREA" || item.objectType === "SAFE_AREA" || item.objectType === "RESTRICTED_AREA",
+    ),
     validationSummary: {
       engineId: LAYOUT_VALIDATION_ENGINE_ID,
       engineVersion: LAYOUT_VALIDATION_ENGINE_VERSION,

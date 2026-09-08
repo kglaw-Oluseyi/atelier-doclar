@@ -192,7 +192,7 @@ export function replaceLayoutObjectsOnSnap(
   const layout = requireLayout(snap, input.organisationId, input.eventId, input.layoutId);
   if (layout.version !== input.expectedVersion || layout.currentRevisionNumber !== input.expectedRevisionNumber) {
     throw new PlatformError("VERSION_CONFLICT", "this layout revision changed while you were editing", {
-      publicMessage: "This layout changed while you were editing. Reload before retrying. Rejected values were not saved.",
+      publicMessage: "Reload the current layout before retrying. The attempted edit was not saved.",
     });
   }
   acquireLayoutLeaseOnSnap(
@@ -648,7 +648,7 @@ export function applyLayoutCommandOnSnap(
   const layout = requireLayout(snap, input.organisationId, input.eventId, input.layoutId);
   if (layout.version !== input.expectedVersion || layout.currentRevisionNumber !== input.expectedRevisionNumber) {
     throw new PlatformError("VERSION_CONFLICT", "this layout revision changed while you were editing", {
-      publicMessage: "This layout changed while you were editing. Reload before retrying. Rejected values were not saved.",
+      publicMessage: "Reload the current layout before retrying. The attempted edit was not saved.",
     });
   }
   acquireLayoutLeaseOnSnap(

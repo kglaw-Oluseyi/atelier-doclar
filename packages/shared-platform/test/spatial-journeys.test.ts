@@ -7,7 +7,6 @@ import {
   applySyntheticSnapshot,
   layoutContentHash,
   migrateEosS05Objects,
-  type SpatialObject,
 } from "../src/index.js";
 import { FROZEN_COORDINATE_SYSTEM } from "../src/venue-geometry.js";
 
@@ -219,7 +218,7 @@ describe("EOS-S05 Milestone 2 spatial authoring", () => {
         subtype: { shape: "RECTANGLE", declaredCapacity: 8 },
       },
     });
-    const ids = studio(service, layout.id).objects.map((item: SpatialObject) => item.id);
+    const ids = studio(service, layout.id).objects.map((item) => item.id);
     const moved = service.applyLayoutCommand(planner(), {
       organisationId: FIXTURE_IDS.orgMaison,
       eventId: FIXTURE_IDS.eventAlphaOne,
@@ -229,7 +228,7 @@ describe("EOS-S05 Milestone 2 spatial authoring", () => {
       reason: "Move both",
       command: { kind: "MOVE", objectIds: ids, deltaXMm: 200, deltaYMm: 0 },
     });
-    const t1 = studio(service, layout.id).objects.find((item: SpatialObject) => item.label === "T1");
+    const t1 = studio(service, layout.id).objects.find((item) => item.label === "T1");
     assert.equal(t1?.geometry.kind === "RECTANGLE" && t1.geometry.xMm, 5200);
     const grouped = service.applyLayoutCommand(planner(), {
       organisationId: FIXTURE_IDS.orgMaison,
@@ -240,7 +239,7 @@ describe("EOS-S05 Milestone 2 spatial authoring", () => {
       reason: "Group",
       command: { kind: "GROUP", objectIds: ids, label: "Set" },
     });
-    assert.ok(studio(service, layout.id).objects.some((item: SpatialObject) => item.objectType === "GROUP"));
+    assert.ok(studio(service, layout.id).objects.some((item) => item.objectType === "GROUP"));
     const undone = service.applyLayoutCommand(planner(), {
       organisationId: FIXTURE_IDS.orgMaison,
       eventId: FIXTURE_IDS.eventAlphaOne,
@@ -250,7 +249,7 @@ describe("EOS-S05 Milestone 2 spatial authoring", () => {
       reason: "Undo group",
       command: { kind: "UNDO" },
     });
-    assert.equal(studio(service, layout.id).objects.some((item: SpatialObject) => item.objectType === "GROUP"), false);
+    assert.equal(studio(service, layout.id).objects.some((item) => item.objectType === "GROUP"), false);
     const redone = service.applyLayoutCommand(planner(), {
       organisationId: FIXTURE_IDS.orgMaison,
       eventId: FIXTURE_IDS.eventAlphaOne,
@@ -260,7 +259,7 @@ describe("EOS-S05 Milestone 2 spatial authoring", () => {
       reason: "Redo group",
       command: { kind: "REDO" },
     });
-    assert.ok(studio(service, redone.id).objects.some((item: SpatialObject) => item.objectType === "GROUP"));
+    assert.ok(studio(service, redone.id).objects.some((item) => item.objectType === "GROUP"));
   });
 
   it("generates deterministic physical seats and warns before destructive regeneration", () => {
@@ -291,10 +290,10 @@ describe("EOS-S05 Milestone 2 spatial authoring", () => {
       reason: "Seats",
       command: { kind: "GENERATE_SEATS", tableId, seatCount: 4, confirmDestructive: false },
     });
-    const seats = studio(service, layout.id).objects.filter((item: SpatialObject) => item.objectType === "SEAT");
+    const seats = studio(service, layout.id).objects.filter((item) => item.objectType === "SEAT");
     assert.equal(seats.length, 4);
-    assert.ok(seats.every((item: SpatialObject) => "tableId" in item.subtype && !("guestId" in item)));
-    const ids = seats.map((item: SpatialObject) => item.id).sort();
+    assert.ok(seats.every((item) => "tableId" in item.subtype && !("guestId" in item)));
+    const ids = seats.map((item) => item.id).sort();
     const again = service.applyLayoutCommand(planner(), {
       organisationId: FIXTURE_IDS.orgMaison,
       eventId: FIXTURE_IDS.eventAlphaOne,
@@ -305,7 +304,7 @@ describe("EOS-S05 Milestone 2 spatial authoring", () => {
       command: { kind: "GENERATE_SEATS", tableId, seatCount: 4, confirmDestructive: false },
     });
     assert.deepEqual(
-      studio(service, layout.id).objects.filter((item: SpatialObject) => item.objectType === "SEAT").map((item: SpatialObject) => item.id).sort(),
+      studio(service, layout.id).objects.filter((item) => item.objectType === "SEAT").map((item) => item.id).sort(),
       ids,
     );
     assert.throws(

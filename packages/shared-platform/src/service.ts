@@ -351,6 +351,7 @@ import {
   recordStoredFloorPlanOnSnap,
   requestLayoutExportOnSnap,
   restoreLayoutSnapshotOnSnap,
+  revokeLayoutOverrideOnSnap,
   runLayoutValidationOnSnap,
   submitLayoutApprovalOnSnap,
   withdrawLayoutAssetOnSnap,
@@ -370,6 +371,7 @@ import {
   RecordStoredFloorPlanInputSchema,
   RequestLayoutExportInputSchema,
   RestoreLayoutSnapshotInputSchema,
+  RevokeLayoutOverrideInputSchema,
   RunLayoutValidationInputSchema,
   SubmitLayoutApprovalInputSchema,
   WithdrawLayoutAssetInputSchema,
@@ -402,6 +404,7 @@ import {
   type VenueDetailWorkspace,
   type VenueRegistryItem,
 } from "./venue-projections.js";
+import { actorRevealsSensitiveSpatial } from "./layout-spatial-disclosure.js";
 import { readAttendanceProjection, type AttendanceProjectionRead } from "./venue-attendance.js";
 import { assertNoPixelPersistence } from "./venue-geometry.js";
 import {
@@ -3136,9 +3139,11 @@ export class PlatformService {
   getLayoutSetupWorkspace(actor: ActorContext, organisationId: string, eventId: string, layoutId: string): LayoutSetupWorkspace {
     const { snap, ctx } = this.authorizeQuery(actor, "layout.view", { organisationId, eventId });
     this.requireEvent(snap, organisationId, eventId);
-    const workspace = buildLayoutSetupWorkspace(snap, eventId, layoutId, this.venueCapabilities(ctx.actor, organisationId, eventId), {
+    const capabilities = this.venueCapabilities(ctx.actor, organisationId, eventId);
+    const workspace = buildLayoutSetupWorkspace(snap, eventId, layoutId, capabilities, {
       assetProviderConfigured: Boolean(this.options.layoutAssetStoreConfigured ?? this.options.layoutBinaryStore?.configured),
       pdfExportAvailable: Boolean(this.options.layoutExportEnabled),
+      revealSensitive: actorRevealsSensitiveSpatial(capabilities),
     });
     if (!workspace) throw new PlatformError("NOT_FOUND", "layout was not found");
     const mine = workspace.layout.editorHolderPersonId === ctx.actor.person.id;
@@ -3447,6 +3452,31 @@ export class PlatformService {
     });
   }
 
+  revokeLayoutOverride(actor: ActorContext, raw: unknown): LayoutValidationOverride {
+    const input = parseStrict(RevokeLayoutOverrideInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "layout.constraint.override",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "layout.finding.override.revoked",
+      resourceType: "layout_validation_override",
+      resourceId: input.overrideId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) =>
+        revokeLayoutOverrideOnSnap(
+          snap,
+          input,
+          ctx.now,
+          ctx.actor.person.id,
+          this.permissionAllowed(ctx.actor, "layout.constraint.override", {
+            organisationId: input.organisationId,
+            eventId: input.eventId,
+          }),
+        ),
+    });
+  }
+
   createLayoutSnapshot(actor: ActorContext, raw: unknown): LayoutSnapshot {
     const input = parseStrict(CreateLayoutSnapshotInputSchema, raw);
     return this.mutate(actor, {
@@ -3477,9 +3507,11 @@ export class PlatformService {
   }
 
   compareLayoutSnapshots(actor: ActorContext, organisationId: string, eventId: string, leftId: string, rightId: string) {
-    const { snap } = this.authorizeQuery(actor, "layout.snapshot.manage", { organisationId, eventId });
+    const { snap, ctx } = this.authorizeQuery(actor, "layout.view", { organisationId, eventId });
     this.requireEvent(snap, organisationId, eventId);
-    return compareLayoutSnapshots(snap, organisationId, eventId, leftId, rightId);
+    return compareLayoutSnapshots(snap, organisationId, eventId, leftId, rightId, {
+      revealSensitive: actorRevealsSensitiveSpatial(this.venueCapabilities(ctx.actor, organisationId, eventId)),
+    });
   }
 
   submitLayoutApproval(actor: ActorContext, raw: unknown): LayoutApproval {
@@ -3576,10 +3608,9 @@ export class PlatformService {
         requestLayoutExportOnSnap(snap, input, ctx.now, ctx.actor.person.id, {
           exportEnabled: this.options.layoutExportEnabled,
           binaryStore: this.options.layoutBinaryStore,
-          revealSensitive: this.permissionAllowed(ctx.actor, "layout.constraint.override", {
-            organisationId: input.organisationId,
-            eventId: input.eventId,
-          }),
+          revealSensitive: actorRevealsSensitiveSpatial(
+            this.venueCapabilities(ctx.actor, input.organisationId, input.eventId),
+          ),
         }),
     });
   }
@@ -3647,7 +3678,7 @@ export class PlatformService {
       eventId,
       layoutId,
       jobId,
-      this.permissionAllowed(ctx.actor, "layout.constraint.override", { organisationId, eventId }),
+      actorRevealsSensitiveSpatial(this.venueCapabilities(ctx.actor, organisationId, eventId)),
     );
   }
 
@@ -3681,13 +3712,19 @@ export class PlatformService {
     layoutId: string,
     jobId: string,
   ): { objectKey: string; format: "PDF" | "PNG"; marking: string; contentHash: string } {
-    const { snap } = this.authorizeQuery(actor, "layout.publication.view", { organisationId, eventId });
+    const { snap, ctx } = this.authorizeQuery(actor, "layout.publication.view", { organisationId, eventId });
     this.requireEvent(snap, organisationId, eventId);
     const job = snap.layoutExportJobs.find(
       (item) => item.id === jobId && item.layoutId === layoutId && item.organisationId === organisationId && item.eventId === eventId,
     );
     if (!job?.objectKey || job.status !== "COMPLETED") {
       throw new PlatformError("NOT_FOUND", "completed export was not found");
+    }
+    const reveal = actorRevealsSensitiveSpatial(this.venueCapabilities(ctx.actor, organisationId, eventId));
+    if (!reveal && job.projectionMasked !== true) {
+      throw new PlatformError("FORBIDDEN", "masked export cannot reuse a privileged artifact", {
+        publicMessage: "This export was generated for a more privileged assignment and cannot be reused.",
+      });
     }
     return { objectKey: job.objectKey, format: job.format, marking: job.marking, contentHash: job.contentHash };
   }
@@ -3705,7 +3742,7 @@ export class PlatformService {
       organisationId,
       eventId,
       layoutId,
-      this.permissionAllowed(ctx.actor, "layout.constraint.override", { organisationId, eventId }),
+      actorRevealsSensitiveSpatial(this.venueCapabilities(ctx.actor, organisationId, eventId)),
     );
   }
 
@@ -3722,7 +3759,7 @@ export class PlatformService {
       organisationId,
       eventId,
       layoutId,
-      this.permissionAllowed(ctx.actor, "layout.constraint.override", { organisationId, eventId }),
+      actorRevealsSensitiveSpatial(this.venueCapabilities(ctx.actor, organisationId, eventId)),
     );
   }
 

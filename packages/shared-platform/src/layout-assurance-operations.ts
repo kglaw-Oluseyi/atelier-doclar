@@ -39,6 +39,7 @@ import {
   RecordOperationalCapacityInputSchema,
   RequestLayoutExportInputSchema,
   RestoreLayoutSnapshotInputSchema,
+  RevokeLayoutOverrideInputSchema,
   RunLayoutValidationInputSchema,
   RecordStoredFloorPlanInputSchema,
   SubmitLayoutApprovalInputSchema,
@@ -47,6 +48,7 @@ import {
   type LayoutApproval,
   type LayoutAssetCalibration,
   type LayoutCapacityStatement,
+  type LayoutDiffEntry,
   type LayoutExportJob,
   type LayoutFloorPlanAsset,
   type LayoutPublication,
@@ -63,6 +65,18 @@ import type { PlatformSnapshot } from "./store.js";
 import { canonicalSerialize, layoutContentHash } from "./venue-geometry.js";
 import { assertNoVenueGuestIdentity } from "./venue-operations.js";
 import type { Layout, LayoutRevision } from "./venue-schemas.js";
+import {
+  CURRENT_LAYOUT_DRAFT,
+  classifiedSpatialDisclosure,
+  effectiveOverrideState,
+  overrideApplicabilityKey,
+  overrideIdentityFromFinding,
+  projectExportObjects,
+  redactRestrictedText,
+  restrictedOriginalLabels,
+  selectLatestValidationRun,
+  validationCounts,
+} from "./layout-spatial-disclosure.js";
 
 function stamp(now: string) {
   return { schemaVersion: SCHEMA_VERSION, version: 1, createdAt: now, updatedAt: now } as const;
@@ -85,7 +99,7 @@ function requireRevision(snap: PlatformSnapshot, layout: Layout): LayoutRevision
 function assertLayoutVersion(layout: Layout, expectedVersion: number, expectedRevisionNumber: number): void {
   if (layout.version !== expectedVersion || layout.currentRevisionNumber !== expectedRevisionNumber) {
     throw new PlatformError("VERSION_CONFLICT", "this layout changed while you were editing", {
-      publicMessage: "This layout changed while you were editing. Reload before retrying. Rejected values were not saved.",
+      publicMessage: "Reload the current layout before retrying. The attempted edit was not saved.",
     });
   }
 }
@@ -138,11 +152,53 @@ export function afterVenueFactChange(snap: PlatformSnapshot, venueId: string, ev
 }
 
 function currentFindings(snap: PlatformSnapshot, layoutId: string, contentHash: string): LayoutValidationFinding[] {
-  const run = [...snap.layoutValidationRuns]
-    .filter((item) => item.layoutId === layoutId && item.contentHash === contentHash)
-    .sort((left, right) => right.createdAt.localeCompare(left.createdAt))[0];
+  const matching = snap.layoutValidationRuns.filter((item) => item.layoutId === layoutId && item.contentHash === contentHash);
+  const run = selectLatestValidationRun(matching, layoutId);
   if (!run) return [];
   return snap.layoutValidationFindings.filter((item) => item.runId === run.id);
+}
+
+function overrideKeyOf(override: LayoutValidationOverride, snap: PlatformSnapshot): string | undefined {
+  if (override.applicabilityKey) return override.applicabilityKey;
+  if (override.contentHash && override.ruleId && override.ruleVersion) {
+    return overrideApplicabilityKey({
+      organisationId: override.organisationId,
+      eventId: override.eventId,
+      layoutId: override.layoutId,
+      contentHash: override.contentHash,
+      ruleId: override.ruleId,
+      ruleVersion: override.ruleVersion,
+      objectIds: override.objectIds ?? [],
+    });
+  }
+  const finding = snap.layoutValidationFindings.find((item) => item.id === override.findingId);
+  if (!finding) return undefined;
+  return overrideIdentityFromFinding(finding).applicabilityKey;
+}
+
+function applyDurableOverrides(
+  snap: PlatformSnapshot,
+  findings: LayoutValidationFinding[],
+  now: string,
+): LayoutValidationFinding[] {
+  const active = snap.layoutValidationOverrides.filter((item) => effectiveOverrideState(item, now) === "ACTIVE");
+  for (const finding of findings) {
+    if (finding.severity === "RECOMMENDATION") continue;
+    const key = overrideIdentityFromFinding(finding).applicabilityKey;
+    const match = active.find(
+      (item) =>
+        item.organisationId === finding.organisationId &&
+        item.eventId === finding.eventId &&
+        item.layoutId === finding.layoutId &&
+        overrideKeyOf(item, snap) === key,
+    );
+    if (!match) continue;
+    finding.status = "OVERRIDDEN";
+    finding.overrideId = match.id;
+    finding.overrideRecognised = true;
+    finding.updatedAt = now;
+  }
+  return findings;
 }
 
 export function recordFloorPlanIntentOnSnap(
@@ -370,7 +426,12 @@ export function runLayoutValidationOnSnap(
   markFindingsStale(snap, layout.id, now);
   const drafts = evaluateLayoutValidation(snap, layout, revision);
   const runId = randomUUID();
-  const findings = stampFindings(drafts, { runId, layout, revision, actorPersonId, now });
+  const findings = applyDurableOverrides(
+    snap,
+    stampFindings(drafts, { runId, layout, revision, actorPersonId, now }),
+    now,
+  );
+  const counts = validationCounts(findings);
   const run = LayoutValidationRunSchema.parse({
     id: runId,
     organisationId: layout.organisationId,
@@ -382,11 +443,14 @@ export function runLayoutValidationOnSnap(
     revisionId: revision.id,
     revisionNumber: revision.revisionNumber,
     contentHash: revision.contentHash,
-    blockingCount: findings.filter((item) => item.severity === "BLOCKING").length,
+    blockingCount: counts.rawBlockingCount,
     warningCount: findings.filter((item) => item.severity === "WARNING").length,
     recommendationCount: findings.filter((item) => item.severity === "RECOMMENDATION").length,
     informationCount: findings.filter((item) => item.severity === "INFORMATION").length,
-    publicationBlocked: findings.some((item) => item.severity === "BLOCKING" && true),
+    overriddenBlockingCount: counts.overriddenBlockingCount,
+    unresolvedBlockingCount: counts.unresolvedBlockingCount,
+    recognisedOverrideCount: counts.recognisedOverrideCount,
+    publicationBlocked: counts.publicationBlocked,
     recordedByPersonId: actorPersonId,
     ...stamp(now),
   });
@@ -439,8 +503,30 @@ export function overrideFindingOnSnap(
   if (finding.status === "STALE" || finding.status === "OBSOLETE") {
     throw new PlatformError("VALIDATION_FAILED", "stale findings cannot be overridden");
   }
+  if (finding.severity === "RECOMMENDATION") {
+    throw new PlatformError("FORBIDDEN", "recommendations cannot create or revive overrides", {
+      publicMessage: "A recommendation cannot authorise an override.",
+    });
+  }
   if (new Date(input.expiresAt).getTime() <= new Date(now).getTime()) {
     throw new PlatformError("VALIDATION_FAILED", "override expiry must be in the future");
+  }
+  const identity = overrideIdentityFromFinding(finding);
+  const existing = snap.layoutValidationOverrides.find(
+    (item) =>
+      item.organisationId === layout.organisationId &&
+      item.eventId === layout.eventId &&
+      item.layoutId === layout.id &&
+      overrideKeyOf(item, snap) === identity.applicabilityKey &&
+      effectiveOverrideState(item, now) === "ACTIVE",
+  );
+  if (existing) {
+    finding.status = "OVERRIDDEN";
+    finding.overrideId = existing.id;
+    finding.overrideRecognised = true;
+    finding.updatedAt = now;
+    finding.version += 1;
+    return existing;
   }
   const recorded = LayoutValidationOverrideSchema.parse({
     id: randomUUID(),
@@ -453,13 +539,56 @@ export function overrideFindingOnSnap(
     evidenceLabel: input.evidenceLabel,
     expiresAt: input.expiresAt,
     recordedByPersonId: actorPersonId,
+    contentHash: identity.contentHash,
+    ruleId: identity.ruleId,
+    ruleVersion: identity.ruleVersion,
+    objectIds: identity.objectIds,
+    applicabilityKey: identity.applicabilityKey,
     ...stamp(now),
   });
   finding.status = "OVERRIDDEN";
   finding.overrideId = recorded.id;
+  finding.overrideRecognised = false;
   finding.updatedAt = now;
   finding.version += 1;
   snap.layoutValidationOverrides.push(recorded);
+  return recorded;
+}
+
+export function revokeLayoutOverrideOnSnap(
+  snap: PlatformSnapshot,
+  raw: unknown,
+  now: string,
+  actorPersonId: string,
+  canOverride: boolean,
+): LayoutValidationOverride {
+  const input = RevokeLayoutOverrideInputSchema.parse(raw);
+  if (!canOverride) {
+    throw new PlatformError("FORBIDDEN", "ordinary operators cannot revoke a governed override", {
+      publicMessage: "Revoking an override needs authorised constraint authority.",
+    });
+  }
+  const layout = requireLayout(snap, input.organisationId, input.eventId, input.layoutId);
+  assertLayoutVersion(layout, input.expectedVersion, input.expectedRevisionNumber);
+  const recorded = snap.layoutValidationOverrides.find((item) => item.id === input.overrideId && item.layoutId === layout.id);
+  if (!recorded) throw new PlatformError("NOT_FOUND", "override was not found");
+  if (recorded.organisationId !== layout.organisationId || recorded.eventId !== layout.eventId) {
+    throw new PlatformError("FORBIDDEN", "override cannot be reused across events or organisations");
+  }
+  if (recorded.revokedAt) return recorded;
+  recorded.revokedAt = now;
+  recorded.revokedByPersonId = actorPersonId;
+  recorded.updatedAt = now;
+  recorded.version += 1;
+  for (const finding of snap.layoutValidationFindings) {
+    if (finding.overrideId !== recorded.id || finding.layoutId !== layout.id) continue;
+    if (finding.status === "OVERRIDDEN") {
+      finding.status = "OPEN";
+      finding.overrideRecognised = false;
+      finding.updatedAt = now;
+      finding.version += 1;
+    }
+  }
   return recorded;
 }
 
@@ -693,6 +822,63 @@ export function withdrawLayoutPublicationOnSnap(
   return publication;
 }
 
+function resolveExportAuthority(
+  snap: PlatformSnapshot,
+  layout: Layout,
+  publicationId: string | undefined,
+): {
+  marking: LayoutExportJob["marking"];
+  publication?: LayoutPublication;
+  sourceRevision: LayoutRevision;
+  contentHash: string;
+} {
+  if (publicationId) {
+    const publication = snap.layoutPublications.find(
+      (item) => item.id === publicationId && item.layoutId === layout.id && item.organisationId === layout.organisationId && item.eventId === layout.eventId,
+    );
+    if (!publication) throw new PlatformError("NOT_FOUND", "publication was not found");
+    const sourceRevision = snap.layoutRevisions.find((item) => item.id === publication.revisionId);
+    if (!sourceRevision) throw new PlatformError("NOT_FOUND", "export source revision was not found");
+    const marking =
+      publication.status === "CURRENT"
+        ? "PUBLISHED"
+        : publication.status === "SUPERSEDED"
+          ? "SUPERSEDED"
+          : publication.status === "WITHDRAWN"
+            ? "WITHDRAWN"
+            : "DRAFT";
+    return { marking, publication, sourceRevision, contentHash: publication.contentHash };
+  }
+  const current = snap.layoutPublications.find((item) => item.layoutId === layout.id && item.status === "CURRENT");
+  if (current) {
+    const sourceRevision = snap.layoutRevisions.find((item) => item.id === current.revisionId);
+    if (!sourceRevision) throw new PlatformError("NOT_FOUND", "export source revision was not found");
+    return { marking: "PUBLISHED", publication: current, sourceRevision, contentHash: current.contentHash };
+  }
+  const matchingPublication = [...snap.layoutPublications]
+    .filter((item) => item.layoutId === layout.id && item.contentHash === layout.contentHash)
+    .sort((left, right) => right.publishedAt.localeCompare(left.publishedAt))[0];
+  if (matchingPublication?.status === "WITHDRAWN" || matchingPublication?.status === "SUPERSEDED") {
+    const sourceRevision = snap.layoutRevisions.find((item) => item.id === matchingPublication.revisionId) ?? requireRevision(snap, layout);
+    return {
+      marking: matchingPublication.status,
+      publication: matchingPublication,
+      sourceRevision,
+      contentHash: matchingPublication.contentHash,
+    };
+  }
+  const sourceRevision = requireRevision(snap, layout);
+  const approval = snap.layoutApprovals.find(
+    (item) => item.layoutId === layout.id && item.status === "APPROVED" && item.contentHash === layout.contentHash,
+  );
+  return {
+    marking: approval ? "APPROVED" : "DRAFT",
+    publication: matchingPublication,
+    sourceRevision,
+    contentHash: layout.contentHash,
+  };
+}
+
 export function requestLayoutExportOnSnap(
   snap: PlatformSnapshot,
   raw: unknown,
@@ -703,34 +889,24 @@ export function requestLayoutExportOnSnap(
   const input = RequestLayoutExportInputSchema.parse(raw);
   const layout = requireLayout(snap, input.organisationId, input.eventId, input.layoutId);
   assertLayoutVersion(layout, input.expectedVersion, input.expectedRevisionNumber);
-  const publication = snap.layoutPublications.find((item) => item.layoutId === layout.id && item.status === "CURRENT");
-  const sourceRevision = publication
-    ? snap.layoutRevisions.find((item) => item.id === publication.revisionId)
-    : requireRevision(snap, layout);
-  if (!sourceRevision) throw new PlatformError("NOT_FOUND", "export source revision was not found");
-  const contentHash = publication?.contentHash ?? layout.contentHash;
-  const approval = snap.layoutApprovals.find(
-    (item) => item.layoutId === layout.id && item.status === "APPROVED" && item.contentHash === contentHash,
-  );
-  const marking = publication ? "PUBLISHED" : approval ? "APPROVED" : "DRAFT";
+  const authority = resolveExportAuthority(snap, layout, input.publicationId);
+  const projectionMasked = !options.revealSensitive;
   const existing = snap.layoutExportJobs.find(
     (item) =>
       item.layoutId === layout.id &&
       item.format === input.format &&
-      item.contentHash === contentHash &&
+      item.contentHash === authority.contentHash &&
+      item.marking === authority.marking &&
+      item.publicationNumber === authority.publication?.publicationNumber &&
+      Boolean(item.projectionMasked) === projectionMasked &&
       item.status === "COMPLETED",
   );
   if (existing && options.exportEnabled) return existing;
   const eventName = snap.events.find((item) => item.id === layout.eventId)?.name ?? "Event";
-  const objects = sourceRevision.objects
-    .filter((item) => !item.tombstoned)
-    .map((item) => {
-      const sensitive = item.objectType === "RESTRICTED_AREA" || item.objectType === "SAFE_AREA";
-      if (sensitive && !options.revealSensitive) {
-        return { id: item.id, objectType: "MASKED", label: "Restricted layer masked", geometry: { kind: "MASKED" as const } };
-      }
-      return { id: item.id, objectType: item.objectType, label: item.label, geometry: item.geometry };
-    });
+  const objects = projectExportObjects(authority.sourceRevision.objects, Boolean(options.revealSensitive));
+  const publicationNote = authority.publication?.publicationNumber
+    ? ` publication ${authority.publication.publicationNumber}`
+    : "";
   if (!options.exportEnabled) {
     const job = LayoutExportJobSchema.parse({
       id: randomUUID(),
@@ -739,15 +915,16 @@ export function requestLayoutExportOnSnap(
       eventId: layout.eventId,
       layoutId: layout.id,
       format: input.format,
-      marking,
+      marking: authority.marking,
       status: LAYOUT_PDF_EXPORT_AVAILABLE ? "QUEUED_UNAVAILABLE" : "DISABLED",
-      contentHash,
-      publicationNumber: publication?.publicationNumber,
-      revisionId: sourceRevision.id,
+      contentHash: authority.contentHash,
+      publicationNumber: authority.publication?.publicationNumber,
+      revisionId: authority.sourceRevision.id,
+      projectionMasked,
       notes:
-        marking === "DRAFT"
+        authority.marking === "DRAFT"
           ? "DRAFT — not a publication. PDF/PNG generation is unavailable; no file was fabricated."
-          : `${marking} export for hash ${contentHash}. PDF/PNG generation is unavailable; no file was fabricated. No guest names, seating rationale, storage keys or signed URLs are included.`,
+          : `${authority.marking} export for hash ${authority.contentHash}${publicationNote}. PDF/PNG generation is unavailable; no file was fabricated. No guest names, seating rationale, storage keys or signed URLs are included.`,
       recordedByPersonId: actorPersonId,
       ...stamp(now),
     });
@@ -758,7 +935,10 @@ export function requestLayoutExportOnSnap(
     (item) =>
       item.layoutId === layout.id &&
       item.format === input.format &&
-      item.contentHash === contentHash &&
+      item.contentHash === authority.contentHash &&
+      item.marking === authority.marking &&
+      item.publicationNumber === authority.publication?.publicationNumber &&
+      Boolean(item.projectionMasked) === projectionMasked &&
       item.status === "PENDING",
   );
   if (pending) return pending;
@@ -770,12 +950,13 @@ export function requestLayoutExportOnSnap(
       eventId: layout.eventId,
       layoutId: layout.id,
       format: input.format,
-      marking,
+      marking: authority.marking,
       status: "PENDING",
-      contentHash,
-      publicationNumber: publication?.publicationNumber,
-      revisionId: sourceRevision.id,
-      notes: `${marking} ${input.format} for hash ${contentHash} is pending private storage. Completion is recorded only after a durable object exists.`,
+      contentHash: authority.contentHash,
+      publicationNumber: authority.publication?.publicationNumber,
+      revisionId: authority.sourceRevision.id,
+      projectionMasked,
+      notes: `${authority.marking} ${input.format} for hash ${authority.contentHash}${publicationNote} is pending private storage. Completion is recorded only after a durable object exists.`,
       recordedByPersonId: actorPersonId,
       ...stamp(now),
     });
@@ -784,11 +965,11 @@ export function requestLayoutExportOnSnap(
   }
   const rendered = renderLayoutExport({
     format: input.format,
-    marking,
+    marking: authority.marking,
     eventName,
     layoutName: layout.name,
-    contentHash,
-    publicationNumber: publication?.publicationNumber,
+    contentHash: authority.contentHash,
+    publicationNumber: authority.publication?.publicationNumber,
     generatedAt: now,
     widthMm: layout.bounds.widthMm,
     heightMm: layout.bounds.heightMm,
@@ -831,16 +1012,17 @@ export function requestLayoutExportOnSnap(
     eventId: layout.eventId,
     layoutId: layout.id,
     format: input.format,
-    marking,
+    marking: authority.marking,
     status: "COMPLETED",
-    contentHash,
-    publicationNumber: publication?.publicationNumber,
-    revisionId: sourceRevision.id,
+    contentHash: authority.contentHash,
+    publicationNumber: authority.publication?.publicationNumber,
+    revisionId: authority.sourceRevision.id,
     objectKey,
     byteSize: rendered.bytes.byteLength,
     checksumSha256: createHash("sha256").update(rendered.bytes).digest("hex"),
     generatedAt: now,
-    notes: `${marking} ${input.format} for hash ${contentHash}. No guest names, seating rationale, storage keys or signed URLs are included.`,
+    projectionMasked,
+    notes: `${authority.marking} ${input.format} for hash ${authority.contentHash}${publicationNote}. Generated ${now}. No guest names, seating rationale, storage keys or signed URLs are included.`,
     recordedByPersonId: actorPersonId,
     ...stamp(now),
   });
@@ -934,23 +1116,38 @@ export function describeLayoutExportSourceFromSnap(
     ? snap.layoutRevisions.find((item) => item.id === job.revisionId)
     : requireRevision(snap, layout);
   if (!revision) throw new PlatformError("NOT_FOUND", "export source revision was not found");
-  const objects = revision.objects
-    .filter((item) => !item.tombstoned)
-    .map((item) => {
-      const sensitive = item.objectType === "RESTRICTED_AREA" || item.objectType === "SAFE_AREA";
-      if (sensitive && !revealSensitive) {
-        return { id: item.id, objectType: "MASKED", label: "Restricted layer masked", geometry: { kind: "MASKED" as const } };
-      }
-      return { id: item.id, objectType: item.objectType, label: item.label, geometry: item.geometry };
-    });
+  const reveal = revealSensitive && job.projectionMasked !== true;
   return {
     job,
     eventName: snap.events.find((item) => item.id === layout.eventId)?.name ?? "Event",
     layoutName: layout.name,
     widthMm: layout.bounds.widthMm,
     heightMm: layout.bounds.heightMm,
-    objects,
+    objects: projectExportObjects(revision.objects, reveal),
   };
+}
+
+function snapshotObjects(snapshot: { canonicalPayload: string }): SpatialObject[] {
+  return (JSON.parse(snapshot.canonicalPayload) as { objects: SpatialObject[] }).objects;
+}
+
+function maskDiffEntries(
+  entries: LayoutDiffEntry[],
+  objects: readonly SpatialObject[],
+  revealSensitive: boolean,
+): LayoutDiffEntry[] {
+  if (revealSensitive) return entries;
+  const labels = restrictedOriginalLabels(objects);
+  const sensitiveIds = new Set(
+    objects.filter((item) => classifiedSpatialDisclosure(item) !== "OPERATIONAL").map((item) => item.id),
+  );
+  return entries.map((entry) => {
+    const summary = redactRestrictedText(entry.summary, labels);
+    if (entry.objectId && sensitiveIds.has(entry.objectId)) {
+      return { ...entry, summary: redactRestrictedText(summary, labels) };
+    }
+    return { ...entry, summary };
+  });
 }
 
 export function compareLayoutSnapshots(
@@ -959,15 +1156,46 @@ export function compareLayoutSnapshots(
   eventId: string,
   leftId: string,
   rightId: string,
+  options: { revealSensitive?: boolean } = {},
 ) {
+  if (leftId === rightId) {
+    throw new PlatformError("VALIDATION_FAILED", "comparison sources must be different", {
+      publicMessage: "Choose two different snapshots, or a snapshot and the current draft.",
+    });
+  }
   const left = snap.layoutSnapshots.find((item) => item.id === leftId && item.organisationId === organisationId && item.eventId === eventId);
-  const right = snap.layoutSnapshots.find((item) => item.id === rightId && item.organisationId === organisationId && item.eventId === eventId);
-  if (!left || !right) throw new PlatformError("NOT_FOUND", "snapshot was not found");
-  const leftObjects = (JSON.parse(left.canonicalPayload) as { objects: SpatialObject[] }).objects;
-  const rightObjects = (JSON.parse(right.canonicalPayload) as { objects: SpatialObject[] }).objects;
+  if (!left) throw new PlatformError("NOT_FOUND", "snapshot was not found");
+  const layout = requireLayout(snap, organisationId, eventId, left.layoutId);
+  let rightObjects: SpatialObject[];
+  let rightMeta: { id: string; name: string; contentHash: string; revisionNumber: number };
+  if (rightId === CURRENT_LAYOUT_DRAFT) {
+    rightObjects = currentLayoutObjects(snap, layout);
+    rightMeta = {
+      id: CURRENT_LAYOUT_DRAFT,
+      name: "Current draft",
+      contentHash: layout.contentHash,
+      revisionNumber: layout.currentRevisionNumber,
+    };
+  } else {
+    const right = snap.layoutSnapshots.find((item) => item.id === rightId && item.organisationId === organisationId && item.eventId === eventId);
+    if (!right) throw new PlatformError("NOT_FOUND", "snapshot was not found");
+    if (right.layoutId !== left.layoutId) {
+      throw new PlatformError("FORBIDDEN", "snapshots cannot be compared across layouts");
+    }
+    rightObjects = snapshotObjects(right);
+    rightMeta = { id: right.id, name: right.name, contentHash: right.contentHash, revisionNumber: right.revisionNumber };
+  }
+  const leftObjects = snapshotObjects(left);
+  const entries = maskDiffEntries(
+    diffLayoutObjects(leftObjects, rightObjects),
+    [...leftObjects, ...rightObjects],
+    Boolean(options.revealSensitive),
+  );
   return {
     left: { id: left.id, name: left.name, contentHash: left.contentHash, revisionNumber: left.revisionNumber },
-    right: { id: right.id, name: right.name, contentHash: right.contentHash, revisionNumber: right.revisionNumber },
-    entries: diffLayoutObjects(leftObjects, rightObjects),
+    right: rightMeta,
+    direction: `${left.name} → ${rightMeta.name}`,
+    entries,
+    noChange: entries.length === 0,
   };
 }

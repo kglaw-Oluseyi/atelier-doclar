@@ -148,6 +148,7 @@ export const GovernedAreaSubtypeSchema = z
     verificationState: z.enum(VENUE_FACT_VERIFICATION_STATES),
     thresholdUnknown: z.boolean(),
     governedLocked: z.boolean(),
+    disclosureClass: z.enum(["OPERATIONAL", "RESTRICTED_GEOMETRY", "OMIT"]).optional(),
     note: z.string().trim().max(400).optional(),
   })
   .strict();

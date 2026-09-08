@@ -130,6 +130,9 @@ export const LayoutValidationRunSchema = z
     warningCount: z.number().int().min(0),
     recommendationCount: z.number().int().min(0),
     informationCount: z.number().int().min(0),
+    overriddenBlockingCount: z.number().int().min(0).default(0),
+    unresolvedBlockingCount: z.number().int().min(0).optional(),
+    recognisedOverrideCount: z.number().int().min(0).default(0),
     publicationBlocked: z.boolean(),
     recordedByPersonId: PersonIdSchema,
     ...versioned,
@@ -156,6 +159,7 @@ export const LayoutValidationFindingSchema = z
     ownerLabel: NonEmptySchema.max(160),
     requiredAuthority: z.enum(["PLANNER", "EVENT_DIRECTOR", "QUALIFIED_AUTHORITY"]),
     overrideId: UuidSchema.optional(),
+    overrideRecognised: z.boolean().optional(),
     recordedByPersonId: PersonIdSchema,
     ...versioned,
   })
@@ -171,6 +175,13 @@ export const LayoutValidationOverrideSchema = z
     evidenceLabel: NonEmptySchema.max(240),
     expiresAt: IsoDatetimeSchema,
     recordedByPersonId: PersonIdSchema,
+    contentHash: NonEmptySchema.max(64).optional(),
+    ruleId: NonEmptySchema.max(80).optional(),
+    ruleVersion: NonEmptySchema.max(20).optional(),
+    objectIds: z.array(UuidSchema).max(200).default([]),
+    applicabilityKey: NonEmptySchema.max(64).optional(),
+    revokedAt: IsoDatetimeSchema.optional(),
+    revokedByPersonId: PersonIdSchema.optional(),
     ...versioned,
   })
   .strict();
@@ -251,6 +262,7 @@ export const LayoutExportJobSchema = z
     checksumSha256: NonEmptySchema.max(64).optional(),
     generatedAt: IsoDatetimeSchema.optional(),
     notes: NonEmptySchema.max(400),
+    projectionMasked: z.boolean().default(false),
     recordedByPersonId: PersonIdSchema,
     ...versioned,
   })
@@ -371,6 +383,14 @@ export const RequestLayoutExportInputSchema = z
   .object({
     ...mutationBase,
     format: z.enum(["PDF", "PNG"]),
+    publicationId: UuidSchema.optional(),
+  })
+  .strict();
+
+export const RevokeLayoutOverrideInputSchema = z
+  .object({
+    ...mutationBase,
+    overrideId: UuidSchema,
   })
   .strict();
 
@@ -463,4 +483,5 @@ export type RequestLayoutExportInput = z.infer<typeof RequestLayoutExportInputSc
 export type CompleteLayoutExportInput = z.infer<typeof CompleteLayoutExportInputSchema>;
 export type FailLayoutExportInput = z.infer<typeof FailLayoutExportInputSchema>;
 export type WithdrawLayoutAssetInput = z.infer<typeof WithdrawLayoutAssetInputSchema>;
+export type RevokeLayoutOverrideInput = z.infer<typeof RevokeLayoutOverrideInputSchema>;
 export type LayoutDownstreamContractId = typeof LAYOUT_DOWNSTREAM_CONTRACT_ID;
