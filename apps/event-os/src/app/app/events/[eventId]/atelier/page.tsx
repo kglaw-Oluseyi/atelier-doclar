@@ -9,6 +9,7 @@ import { operationalStateFromCode } from "../../../../../server/operational-stat
 import { resolveAtelierEvent } from "../../../../../server/atelier-scope";
 import { guardedActor } from "../../../../../server/guard";
 import { getRuntime } from "../../../../../server/runtime";
+import { staffDisplayName } from "../../../../../server/comms-display";
 
 export default async function EventAtelierPage({
   params,
@@ -61,14 +62,21 @@ export default async function EventAtelierPage({
   const issued = await readIssuedAccessFlash();
   const issuedHref = issued?.kind === "atelier" ? `/atelier/${issued.token}` : undefined;
   return (
-    <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+    <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
       <AtelierPageHeader
         eyebrow={`Private Atelier · ${scoped.event.name}`}
         title="Event Blueprint, Journey and Host Experience"
         lede="A curated projection and governed request gateway. Event OS remains the operational source of truth."
       />
       <ActionResultBanner presented={presented} />
-      <EventAtelierWorkspaceView workspace={workspace} issuedHref={issuedHref} />
+      <EventAtelierWorkspaceView
+        workspace={workspace}
+        issuedHref={issuedHref}
+        authorLabels={Object.fromEntries(
+          workspace.history
+            .flatMap((item) => (item.authorPersonId ? [[item.authorPersonId, staffDisplayName(getRuntime().service, item.authorPersonId)]] : [])),
+        )}
+      />
     </AppShell>
   );
 }

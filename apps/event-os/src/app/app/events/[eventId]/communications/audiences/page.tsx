@@ -25,8 +25,7 @@ export default async function AudiencesPage({
     <CommunicationsFrame
       person={loaded.person}
       organisationName={loaded.scoped.organisation.displayName}
-      eventName={loaded.scoped.event.name}
-      eventId={eventId}
+      eventName={loaded.scoped.event.name} eventId={loaded.scoped.event.id}
       title="Audiences"
       lede="Event-scoped, explainable, and frozen only at approval. Seating predicates return unavailable."
       error={(await searchParams).error}

@@ -28,7 +28,7 @@ export default async function RsvpExceptionsPage({
   const permissions = guestPermissions(person, actor, scoped.organisation.id, scoped.event.id);
   if (!permissions.rsvpView) {
     return (
-      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
         <h1>RSVP review</h1>
         <p className="empty">Your assignment does not include RSVP visibility.</p>
       </AppShell>
@@ -39,7 +39,7 @@ export default async function RsvpExceptionsPage({
   const assistance = runtime.service.listRsvpAssistance(actor, scoped.organisation.id, scoped.event.id);
 
   return (
-    <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+    <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
       <AtelierPageHeader
         eyebrow={`Review desk · ${scoped.event.name}`}
         title="RSVP review queue"

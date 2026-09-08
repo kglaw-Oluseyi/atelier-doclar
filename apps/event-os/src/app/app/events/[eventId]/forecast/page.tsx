@@ -35,7 +35,7 @@ export default async function ForecastPage({
   const permissions = forecastPermissions(person, scoped.organisation.id, scoped.event.id);
   if (!permissions.view) {
     return (
-      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
         <AtelierOperationalState
           state={operationalStateFromCode("FORBIDDEN", "This assignment cannot view attendance forecasting.")}
         />
@@ -48,7 +48,7 @@ export default async function ForecastPage({
   } catch (error) {
     const message = error instanceof PlatformError ? error.publicMessage : "Forecasting could not be loaded.";
     return (
-      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
         <AtelierOperationalState state={operationalStateFromCode("INTERNAL_ERROR", message)} />
       </AppShell>
     );
@@ -60,7 +60,7 @@ export default async function ForecastPage({
     eventId: scoped.event.id,
   });
   return (
-    <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+    <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
       <AtelierPageHeader
         eyebrow={`Planning intelligence · ${scoped.event.name}`}
         title="Attendance forecasting"

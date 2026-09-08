@@ -73,6 +73,14 @@ export function AppShell({
           <span>Organisation: {organisationName ?? "Not provided"}</span>
           <span>Event: {eventName ?? "Not provided"}</span>
         </div>
+        {eventId && eventName ? (
+          <nav className="event-crumb" aria-label="Event location">
+            <Link href="/app/events">Events</Link>
+            <span aria-hidden="true"> / </span>
+            <Link href={`/app/events/${eventId}`}>Event overview</Link>
+            {eventName ? <span className="event-crumb-name"> · {eventName}</span> : null}
+          </nav>
+        ) : null}
         <main id="main">{children}</main>
       </div>
       <nav className="mobile-nav" aria-label="Primary">

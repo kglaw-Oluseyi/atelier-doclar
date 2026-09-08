@@ -14,6 +14,7 @@ import { GuestAccessLink } from "../../../../../../components/guest-access-link"
 import { IssueInvitationForm, StaffRsvpForm } from "../../../../../../components/staff-rsvp-forms";
 import { ActionResultBanner } from "../../../../../../components/action-result-banner";
 import { AtelierSectionTabs } from "../../../../../../components/atelier-section-tabs";
+import { CanonicalTime } from "../../../../../../components/canonical-evidence";
 import { AtelierOperationalState } from "../../../../../../components/atelier-operational-state";
 import { AtelierRecordRefresh } from "../../../../../../components/atelier-record-refresh";
 import { AtelierDossierRecovery } from "../../../../../../components/atelier-dossier-recovery";
@@ -121,7 +122,7 @@ export default async function GuestDetailPage({
     if (caught instanceof PlatformError) {
       const code = caught.code === "FORBIDDEN" ? "FORBIDDEN" : caught.code === "SCOPE_MISMATCH" ? "SCOPE_MISMATCH" : "NOT_FOUND";
       return (
-        <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+        <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
           <h1>Guest record</h1>
           <AtelierOperationalState state={operationalStateFromCode(code, "The requested guest record is not available in this assignment.")} />
         </AppShell>
@@ -214,6 +215,7 @@ export default async function GuestDetailPage({
       person={person}
       organisationName={scoped.organisation.displayName}
       eventName={scoped.event.name}
+      eventId={scoped.event.id}
       current="/app/events"
     >
       <div className="atelier-dossier at-scope">
@@ -240,6 +242,7 @@ export default async function GuestDetailPage({
           ) : null}
           <AtelierSectionTabs
             label="Dossier sections"
+            sticky
             items={[
               { href: "#record-state", label: "Identity" },
               { href: "#addressing-heading", label: "Addressing" },
@@ -255,6 +258,8 @@ export default async function GuestDetailPage({
         </header>
         <p>
           <Link href={`/app/events/${scoped.event.id}/guests`}>Back to directory</Link>
+          {" · "}
+          <Link href={`/app/events/${scoped.event.id}`}>Event overview</Link>
         </p>
         {recordRefreshed && !mutationLocked ? (
           <>
@@ -306,14 +311,15 @@ export default async function GuestDetailPage({
             {fieldLine("Dietary", guest.dietaryRequirement.quality, guest.dietaryRequirement.value)}
             {fieldLine("Accessibility", guest.accessibilityRequirement.quality, guest.accessibilityRequirement.value)}
             <p>
-              <strong>Source</strong> {guest.intakeSource.replaceAll("_", " ")} · recorded {guest.provenance.recordedAt}
+              <strong>Source</strong> {guest.intakeSource.replaceAll("_", " ")} · recorded{" "}
+              <CanonicalTime iso={guest.provenance.recordedAt} />
             </p>
             <p>
               <strong>Person link</strong>{" "}
               {guest.personId ? "Linked to an authoritative person reference" : "Unresolved — no person created"}
             </p>
             <p data-testid="record-version">
-              <strong>Record version</strong> {guest.version} · updated {guest.updatedAt}
+              <strong>Record version</strong> {guest.version} · updated <CanonicalTime iso={guest.updatedAt} />
             </p>
           </section>
           <div className="atelier-side-stack">

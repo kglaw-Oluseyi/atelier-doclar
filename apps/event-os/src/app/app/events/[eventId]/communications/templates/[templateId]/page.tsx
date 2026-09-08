@@ -32,8 +32,7 @@ export default async function TemplateEditorPage({
     <CommunicationsFrame
       person={loaded.person}
       organisationName={loaded.scoped.organisation.displayName}
-      eventName={loaded.scoped.event.name}
-      eventId={eventId}
+      eventName={loaded.scoped.event.name} eventId={loaded.scoped.event.id}
       title="Template editor"
       lede={`Allowed variables: ${ALLOWED_TEMPLATE_VARIABLES.join(", ")}`}
       error={(await searchParams).error}

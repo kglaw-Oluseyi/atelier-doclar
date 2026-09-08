@@ -11,6 +11,8 @@ export function PendingSubmit({
   pendingLabel = "Saving…",
   locked = false,
   lockedLabel = "Reload before retrying",
+  blocked = false,
+  blockedLabel,
 }: {
   children: ReactNode;
   className?: string;
@@ -19,9 +21,11 @@ export function PendingSubmit({
   pendingLabel?: string;
   locked?: boolean;
   lockedLabel?: string;
+  blocked?: boolean;
+  blockedLabel?: string;
 }) {
   const { pending } = useFormStatus();
-  const disabled = pending || locked;
+  const disabled = pending || locked || blocked;
   return (
     <button
       type="submit"
@@ -32,7 +36,7 @@ export function PendingSubmit({
       aria-busy={pending}
       aria-disabled={disabled}
     >
-      {pending ? pendingLabel : locked ? lockedLabel : children}
+      {pending ? pendingLabel : locked ? lockedLabel : blocked ? blockedLabel ?? children : children}
     </button>
   );
 }

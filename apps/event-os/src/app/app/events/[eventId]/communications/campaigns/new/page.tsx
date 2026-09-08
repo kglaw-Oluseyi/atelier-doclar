@@ -28,8 +28,7 @@ export default async function CampaignComposerPage({
     <CommunicationsFrame
       person={loaded.person}
       organisationName={loaded.scoped.organisation.displayName}
-      eventName={loaded.scoped.event.name}
-      eventId={eventId}
+      eventName={loaded.scoped.event.name} eventId={loaded.scoped.event.id}
       title="Compose campaign"
       lede="A campaign carries a purpose. It does not become RSVP invitation authority."
       error={(await searchParams).error}

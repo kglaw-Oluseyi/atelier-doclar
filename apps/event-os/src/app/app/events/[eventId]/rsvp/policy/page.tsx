@@ -28,7 +28,7 @@ export default async function RsvpPolicyPage({
   const permissions = guestPermissions(person, actor, scoped.organisation.id, scoped.event.id);
   if (!permissions.rsvpManage) {
     return (
-      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
         <h1>RSVP policy</h1>
         <p className="empty">Your assignment does not include RSVP policy management.</p>
       </AppShell>
@@ -38,7 +38,7 @@ export default async function RsvpPolicyPage({
   const policy = runtime.service.getRsvpPolicy(actor, scoped.organisation.id, scoped.event.id);
   const questionnaire = runtime.service.getPublishedQuestionnaire(actor, scoped.organisation.id, scoped.event.id);
   return (
-    <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+    <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
       <AtelierPageHeader
         eyebrow={`Configuration · ${scoped.event.name}`}
         title="RSVP policy and form"

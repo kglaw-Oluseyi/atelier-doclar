@@ -74,6 +74,8 @@ export function LayoutStudioWorkspace({
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [precisionCanvas, setPrecisionCanvas] = useState(true);
+  const [libraryOpen, setLibraryOpen] = useState(true);
+  const [inspectorOpen, setInspectorOpen] = useState(true);
   const [pendingLabel, setPendingLabel] = useState("");
   const [pendingX, setPendingX] = useState("");
   const [pendingY, setPendingY] = useState("");
@@ -290,9 +292,18 @@ export function LayoutStudioWorkspace({
           </form>
         ) : null}
       </header>
-      <div className="layout-studio-grid">
-        <section className="atelier-panel" id="studio-library">
+      <p className="studio-toolbar">
+        <button type="button" className="button secondary" aria-pressed={libraryOpen} onClick={() => setLibraryOpen((value) => !value)}>
+          {libraryOpen ? "Hide object library" : "Show object library"}
+        </button>
+        <button type="button" className="button secondary" aria-pressed={inspectorOpen} onClick={() => setInspectorOpen((value) => !value)}>
+          {inspectorOpen ? "Hide inspector" : "Show inspector"}
+        </button>
+      </p>
+      <div className="layout-studio-grid" data-library={libraryOpen ? "open" : "collapsed"} data-inspector={inspectorOpen ? "open" : "collapsed"}>
+        <section className="atelier-panel" id="studio-library" hidden={!libraryOpen}>
           <h2>Object library</h2>
+          <p className="lede">Types are distinguished by label, line treatment and accessible name — not colour alone.</p>
           <ul className="atelier-folio">
             {PALETTE.map((item) => (
               <li key={item.objectType}>
@@ -384,6 +395,7 @@ export function LayoutStudioWorkspace({
                       key={object.id}
                       points={object.geometry.points.map((point) => `${point.xMm},${point.yMm}`).join(" ")}
                       className={active ? "studio-shape is-selected" : "studio-shape"}
+                      data-object-type={object.objectType}
                       fill="none"
                       strokeWidth={object.geometry.widthMm}
                       onClick={(event) => select(object.id, event.shiftKey)}
@@ -403,12 +415,15 @@ export function LayoutStudioWorkspace({
                         rx={object.geometry.radiusXMm}
                         ry={object.geometry.radiusYMm}
                         className={active ? "studio-shape is-selected" : "studio-shape"}
+                        data-object-type={object.objectType}
                         onClick={(event) => select(object.id, event.shiftKey)}
                         onPointerDown={() => {
                           if (!precisionCanvas || readOnly || object.locked) return;
                           dragRef.current = { id: object.id, startX: box.x, startY: box.y };
                         }}
-                      />
+                      >
+                        <title>{`${object.objectType.replaceAll("_", " ")} ${object.label}`}</title>
+                      </ellipse>
                     ) : (
                       <rect
                         x={box.x}
@@ -416,15 +431,18 @@ export function LayoutStudioWorkspace({
                         width={box.w}
                         height={box.h}
                         className={active ? "studio-shape is-selected" : "studio-shape"}
+                        data-object-type={object.objectType}
                         onClick={(event) => select(object.id, event.shiftKey)}
                         onPointerDown={() => {
                           if (!precisionCanvas || readOnly || object.locked) return;
                           dragRef.current = { id: object.id, startX: box.x, startY: box.y };
                         }}
-                      />
+                      >
+                        <title>{`${object.objectType.replaceAll("_", " ")} ${object.label}`}</title>
+                      </rect>
                     )}
                     <text x={box.x + 80} y={box.y + 280} className="studio-label">
-                      {object.label}
+                      {object.objectType.replaceAll("_", " ")} · {object.label}
                     </text>
                   </g>
                 );
@@ -464,7 +482,7 @@ export function LayoutStudioWorkspace({
             ))}
           </ul>
         </section>
-        <section className="atelier-panel" id="studio-inspector">
+        <section className="atelier-panel" id="studio-inspector" hidden={!inspectorOpen}>
           <h2>Inspector</h2>
           {!selected ? (
             <p className="empty">Select an object in the navigator or canvas. Keyboard editing does not require drag.</p>

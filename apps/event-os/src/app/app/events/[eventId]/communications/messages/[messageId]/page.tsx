@@ -24,8 +24,7 @@ export default async function MessageDetailPage({
     <CommunicationsFrame
       person={loaded.person}
       organisationName={loaded.scoped.organisation.displayName}
-      eventName={loaded.scoped.event.name}
-      eventId={eventId}
+      eventName={loaded.scoped.event.name} eventId={loaded.scoped.event.id}
       title="Message"
       lede="Provider references are synthetic. No live sender identity is stored."
       error={(await searchParams).error}

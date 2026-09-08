@@ -83,12 +83,17 @@ export default async function HomeAppPage() {
                 {attentionTotal === 0 ? (
                   <p className="empty">No attention flags are recorded on assigned events.</p>
                 ) : (
-                  <p>
-                    <span className="at-seal md-status" data-tone="warn">
-                      {attentionTotal} need attention
-                    </span>{" "}
-                    across assigned operational records.
-                  </p>
+                  <ul className="atelier-queue">
+                    {briefs
+                      .filter((item) => item.attention > 0)
+                      .map((item) => (
+                        <li key={item.event.id}>
+                          <Link href={`/app/events/${item.event.id}/guests?attention=1`}>
+                            {item.event.name}: {item.attention} need attention
+                          </Link>
+                        </li>
+                      ))}
+                  </ul>
                 )}
               </aside>
               <aside className="atelier-count" aria-label="Assigned events">

@@ -34,7 +34,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
     <AppShell
       person={person}
       organisationName={organisation.displayName}
-      eventName={event.name}
+      eventName={event.name} eventId={event.id}
       current="/app/events"
     >
       <AtelierPageHeader
@@ -43,7 +43,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
         lede="Operational event overview. Guest intake, RSVP, programme routing, merchandise, forecasting, language, venue layout and the private Atelier are available for this event."
       />
       <p>
-        <span className="md-status" data-tone="brass">
+        <span className="md-status event-phase-pill" data-tone="brass">
           {event.phase}
         </span>{" "}
         <span className="md-status">{event.status}</span> · {client.displayName} · {event.timezone}
@@ -84,9 +84,15 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
       <section className="atelier-panel">
         <h2>Master Event File</h2>
         <p>
-          Foundation completeness {composed} of {mef.slots.length} doctrine slots. Uncomposed slots remain unverified
-          and are not operational truth.
+          Event brief readiness: {composed} of {mef.slots.length} sections prepared.
         </p>
+        <p className="lede">
+          Uncomposed sections remain unverified and are not operational truth.
+        </p>
+        <details>
+          <summary>Canonical slot count</summary>
+          <p>Foundation completeness {composed} of {mef.slots.length} doctrine slots.</p>
+        </details>
       </section>
     </AppShell>
   );

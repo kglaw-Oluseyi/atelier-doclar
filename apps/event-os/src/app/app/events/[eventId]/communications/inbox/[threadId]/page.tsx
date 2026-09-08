@@ -29,8 +29,7 @@ export default async function InboxWorkspacePage({
     <CommunicationsFrame
       person={loaded.person}
       organisationName={loaded.scoped.organisation.displayName}
-      eventName={loaded.scoped.event.name}
-      eventId={eventId}
+      eventName={loaded.scoped.event.name} eventId={loaded.scoped.event.id}
       title="Conversation"
       lede="Guest-visible replies stay separate from private notes. No autonomous concierge decisions."
       error={(await searchParams).error}

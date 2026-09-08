@@ -31,7 +31,7 @@ export default async function GuestIntakePage({
     <AppShell
       person={person}
       organisationName={scoped.organisation.displayName}
-      eventName={scoped.event.name}
+      eventName={scoped.event.name} eventId={scoped.event.id}
       current="/app/events"
     >
       <AtelierPageHeader

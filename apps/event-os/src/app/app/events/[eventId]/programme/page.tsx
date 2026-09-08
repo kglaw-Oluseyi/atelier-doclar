@@ -34,7 +34,7 @@ export default async function ProgrammePage({
   const permissions = programmePermissions(person, scoped.organisation.id, scoped.event.id);
   if (!permissions.view) {
     return (
-      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
         <AtelierOperationalState
           state={operationalStateFromCode("FORBIDDEN", "This assignment cannot view programme, routing or perimeter records.")}
         />
@@ -47,7 +47,7 @@ export default async function ProgrammePage({
   } catch (error) {
     const message = error instanceof PlatformError ? error.publicMessage : "The programme could not be loaded.";
     return (
-      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
         <AtelierOperationalState state={operationalStateFromCode("INTERNAL_ERROR", message)} />
       </AppShell>
     );
@@ -64,8 +64,7 @@ export default async function ProgrammePage({
     <AppShell
       person={person}
       organisationName={scoped.organisation.displayName}
-      eventName={scoped.event.name}
-      eventId={scoped.event.id}
+      eventName={scoped.event.name} eventId={scoped.event.id}
       current="/app/events"
     >
       <AtelierPageHeader

@@ -36,8 +36,7 @@ export default async function CorrectionsPage({
     <CommunicationsFrame
       person={loaded.person}
       organisationName={loaded.scoped.organisation.displayName}
-      eventName={loaded.scoped.event.name}
-      eventId={eventId}
+      eventName={loaded.scoped.event.name} eventId={loaded.scoped.event.id}
       title="Contact corrections"
       lede="Inbound inference does not change canonical contact truth. Apply through guest amend is one governed action."
       error={query.error}

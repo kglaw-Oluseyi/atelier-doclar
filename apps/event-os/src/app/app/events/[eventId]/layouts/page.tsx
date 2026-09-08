@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PlatformError } from "@maison-doclar/shared-platform";
 import { AtelierPageHeader } from "../../../../../components/atelier-page-header";
+import { CanonicalTime } from "../../../../../components/canonical-evidence";
 import { AtelierOperationalState, AtelierEmptyState } from "../../../../../components/atelier-operational-state";
 import { AppShell } from "../../../../../components/shell";
 import { guardedActor } from "../../../../../server/guard";
@@ -24,7 +25,7 @@ export default async function LayoutListPage({ params }: { params: Promise<{ eve
   const permissions = venuePermissions(person, scoped.organisation.id, scoped.event.id);
   if (!permissions.viewLayout) {
     return (
-      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
         <AtelierOperationalState state={operationalStateFromCode("FORBIDDEN", "This assignment cannot view layouts.")} />
       </AppShell>
     );
@@ -35,13 +36,13 @@ export default async function LayoutListPage({ params }: { params: Promise<{ eve
   } catch (error) {
     const message = error instanceof PlatformError ? error.publicMessage : "Layouts could not be loaded.";
     return (
-      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
         <AtelierOperationalState state={operationalStateFromCode("INTERNAL_ERROR", message)} />
       </AppShell>
     );
   }
   return (
-    <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+    <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
       <AtelierPageHeader
         eyebrow={`Layouts · ${scoped.event.name}`}
         title="Spatial layouts"
@@ -70,6 +71,8 @@ export default async function LayoutListPage({ params }: { params: Promise<{ eve
                 <tr>
                   <th>Layout</th>
                   <th>Status</th>
+                  <th>Venue</th>
+                  <th>Updated</th>
                   <th>Hash</th>
                 </tr>
               </thead>
@@ -78,9 +81,17 @@ export default async function LayoutListPage({ params }: { params: Promise<{ eve
                   <tr key={layout.id}>
                     <td data-label="Layout">
                       <Link href={`/app/events/${eventId}/layouts/${layout.id}`}>{layout.name}</Link>
+                      <p className="lede">
+                        v{layout.currentRevisionNumber} · {layout.status}
+                        {layout.publicationStatus ? ` · ${layout.publicationStatus}` : ""}
+                      </p>
                     </td>
                     <td data-label="Status">
                       <span className="md-status">{layout.status}</span>
+                    </td>
+                    <td data-label="Venue">{workspace.adopted?.venueName ?? "Venue not provided"}</td>
+                    <td data-label="Updated">
+                      <CanonicalTime iso={layout.updatedAt} />
                     </td>
                     <td data-label="Hash">
                       <code>{layout.contentHash.slice(0, 12)}</code>

@@ -26,8 +26,7 @@ export default async function CommunicationsOverviewPage({
       <CommunicationsFrame
         person={loaded.person}
         organisationName={loaded.scoped.organisation.displayName}
-        eventName={loaded.scoped.event.name}
-        eventId={eventId}
+        eventName={loaded.scoped.event.name} eventId={loaded.scoped.event.id}
         title="Communications"
         lede="Guest communications"
       >
@@ -46,8 +45,7 @@ export default async function CommunicationsOverviewPage({
     <CommunicationsFrame
       person={person}
       organisationName={scoped.organisation.displayName}
-      eventName={scoped.event.name}
-      eventId={eventId}
+      eventName={scoped.event.name} eventId={scoped.event.id}
       title="Communications"
       lede={`Clear, considered guest communications for ${scoped.event.name}. Synthetic delivery only. This is not marketing and not Event-Day.`}
       error={error}

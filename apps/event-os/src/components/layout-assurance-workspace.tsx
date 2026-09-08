@@ -20,6 +20,12 @@ import {
 } from "../server/actions";
 import { FloorPlanUploadForm } from "./floor-plan-upload";
 import { IdempotencyField, PendingSubmit } from "./atelier-pending-submit";
+import { CanonicalHash, CanonicalTime, HistoryDisclosure } from "./canonical-evidence";
+import {
+  layoutApproveReadiness,
+  layoutPublishReadiness,
+  layoutSubmitReadiness,
+} from "../lib/layout-action-readiness";
 
 function CasFields({ workspace, eventId }: { workspace: LayoutSetupWorkspace; eventId: string }) {
   return (
@@ -67,6 +73,11 @@ export function LayoutAssuranceWorkspace({
   const { assurance, layout } = workspace;
   const currentPublication = assurance.publications.find((item) => item.status === "CURRENT");
   const submitted = [...assurance.approvals].reverse().find((item) => item.status === "SUBMITTED");
+  const submitReadiness = layoutSubmitReadiness(workspace);
+  const publishReadiness = layoutPublishReadiness(workspace);
+  const currentApprovals = assurance.approvals.filter((item) => item.status === "SUBMITTED" || (item.status === "APPROVED" && item.contentHash === layout.contentHash));
+  const historicalApprovals = assurance.approvals.filter((item) => !currentApprovals.includes(item));
+  const historicalPublications = assurance.publications.filter((item) => item.status !== "CURRENT");
   return (
     <section className="venue-atelier layout-assurance" data-testid="layout-assurance">
       <section className="atelier-panel" data-testid="validation-centre">
@@ -286,19 +297,24 @@ export function LayoutAssuranceWorkspace({
           {productCard("Operational provision", assurance.capacity.operationalProvision.quantity, assurance.capacity.operationalProvision.present, assurance.capacity.operationalProvision.explanation)}
           {productCard("Observed attendance", assurance.capacity.observedAttendance.quantity, assurance.capacity.observedAttendance.present, assurance.capacity.observedAttendance.explanation)}
         </div>
-        {assurance.capacity.phaseOccupancy.length > 0 ? (
-          <div className="capacity-cards" data-testid="phase-occupancy">
-            {assurance.capacity.phaseOccupancy.map((item, index) => (
-              <article key={`${item.quantity}-${index}`} className="capacity-card">
-                <h3>Phase occupancy</h3>
-                <p>Not whole-event people · quantity {item.quantity ?? "unknown"}</p>
-                <p>{item.explanation}</p>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <p>No phase occupancy slices. Missing facts remain visible.</p>
-        )}
+        <section data-testid="phase-occupancy">
+          <h3>Programme phase occupancy</h3>
+          <p className="lede">Phase occupancy must not be summed as whole-event people.</p>
+          {assurance.capacity.phaseOccupancy.length > 0 ? (
+            <div className="capacity-cards">
+              {assurance.capacity.phaseOccupancy.map((item, index) => (
+                <article key={`${item.ownerLabel ?? item.sourceLabel ?? "phase"}-${index}`} className="capacity-card">
+                  <h3>{item.ownerLabel ?? "Phase unavailable"}</h3>
+                  {item.sourceLabel ? <p className="lede">{item.sourceLabel}</p> : null}
+                  <p>Not whole-event people · quantity {item.quantity ?? "unknown"}</p>
+                  <p>{item.explanation}</p>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p>No phase occupancy slices. Missing facts remain visible.</p>
+          )}
+        </section>
         <ul className="atelier-folio capacity-tables">
           {assurance.capacity.tableBreakdown.map((table) => (
             <li key={table.objectId}>
@@ -555,14 +571,21 @@ export function LayoutAssuranceWorkspace({
           <form action={submitLayoutApprovalAction} className="form programme-form">
             <CasFields workspace={workspace} eventId={eventId} />
             <input type="hidden" name="reason" value="Submit layout hash for approval" />
-            <PendingSubmit locked={mutationLocked}>Submit for approval</PendingSubmit>
+            <p className="lede" data-testid="submit-prerequisite">
+              {submitReadiness.reason}
+            </p>
+            <PendingSubmit locked={mutationLocked} blocked={!submitReadiness.ready} blockedLabel="Submit unavailable">
+              Submit for approval
+            </PendingSubmit>
           </form>
         ) : null}
         <ul className="atelier-folio">
-          {assurance.approvals.map((approval) => (
+          {currentApprovals.map((approval) => {
+            const decideReadiness = layoutApproveReadiness(workspace, approval);
+            return (
             <li key={approval.id} data-testid={`layout-approval-${approval.status}`}>
               <span>
-                {approval.status} · hash {approval.contentHash.slice(0, 12)} · {approval.capacityBasis}
+                {approval.status} · hash <CanonicalHash value={approval.contentHash} /> · {approval.capacityBasis}
               </span>
               <p>{approval.materialDiffSummary}</p>
               <p>{approval.downstreamImpact}</p>
@@ -579,12 +602,25 @@ export function LayoutAssuranceWorkspace({
                     </select>
                   </label>
                   <input type="hidden" name="reason" value="Maker/checker decision" />
-                  <PendingSubmit locked={mutationLocked}>Record decision</PendingSubmit>
+                  <p className="lede">{decideReadiness.reason}</p>
+                  <PendingSubmit locked={mutationLocked} blocked={!decideReadiness.ready} blockedLabel="Decision unavailable">
+                    Record decision
+                  </PendingSubmit>
                 </form>
               ) : null}
             </li>
-          ))}
+            );
+          })}
         </ul>
+        <HistoryDisclosure summary="Earlier approval records" count={historicalApprovals.length} testId="approval-history">
+          <ul className="atelier-folio">
+            {historicalApprovals.map((approval) => (
+              <li key={approval.id} data-testid={`layout-approval-${approval.status}`}>
+                {approval.status} · hash <CanonicalHash value={approval.contentHash} />
+              </li>
+            ))}
+          </ul>
+        </HistoryDisclosure>
         {submitted ? <p>Submitted hash awaiting a different checker.</p> : null}
       </section>
 
@@ -593,15 +629,17 @@ export function LayoutAssuranceWorkspace({
         <p>Publication is a server-authorised decision over an approved hash. It does not send communications, create credentials, allocate guests or sign a protected gate.</p>
         {currentPublication ? (
           <p data-testid="publication-status">
-            {currentPublication.status} publication {currentPublication.publicationNumber} · hash {currentPublication.contentHash} ·{" "}
-            {currentPublication.publishedAt}
+            {currentPublication.status} publication {currentPublication.publicationNumber} · hash{" "}
+            <CanonicalHash value={currentPublication.contentHash} /> · <CanonicalTime iso={currentPublication.publishedAt} />
           </p>
         ) : (
           <p data-testid="publication-status">No current publication. Drafts are not published.</p>
         )}
-        {assurance.publications.map((item) => (
+        {assurance.publications
+          .filter((item) => item.status === "CURRENT")
+          .map((item) => (
           <p key={item.id}>
-            {item.status} #{item.publicationNumber} {item.contentHash.slice(0, 12)}
+            {item.status} #{item.publicationNumber} <CanonicalHash value={item.contentHash} />
             {assurance.capabilities.canPublish && item.status === "CURRENT" ? (
               <form action={withdrawLayoutPublicationAction} className="form programme-form">
                 <CasFields workspace={workspace} eventId={eventId} />
@@ -612,11 +650,23 @@ export function LayoutAssuranceWorkspace({
             ) : null}
           </p>
         ))}
+        <HistoryDisclosure summary="Superseded or withdrawn publications" count={historicalPublications.length} testId="publication-history">
+          {historicalPublications.map((item) => (
+            <p key={item.id}>
+              {item.status} #{item.publicationNumber} <CanonicalHash value={item.contentHash} />
+            </p>
+          ))}
+        </HistoryDisclosure>
         {assurance.capabilities.canPublish ? (
           <form action={publishLayoutAction} className="form programme-form">
             <CasFields workspace={workspace} eventId={eventId} />
             <input type="hidden" name="reason" value="Publish approved layout hash" />
-            <PendingSubmit locked={mutationLocked}>Publish approved hash</PendingSubmit>
+            <p className="lede" data-testid="publish-prerequisite">
+              {publishReadiness.reason}
+            </p>
+            <PendingSubmit locked={mutationLocked} blocked={!publishReadiness.ready} blockedLabel="Publish unavailable">
+              Publish approved hash
+            </PendingSubmit>
           </form>
         ) : null}
         <form action={requestLayoutExportAction} className="form programme-form">

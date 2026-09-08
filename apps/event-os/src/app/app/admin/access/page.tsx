@@ -3,9 +3,11 @@ import { ActionResultBanner } from "../../../../components/action-result-banner"
 import { AssignmentForm } from "../../../../components/assignment-form";
 import { AtelierPageHeader } from "../../../../components/atelier-page-header";
 import { AtelierOperationalState } from "../../../../components/atelier-operational-state";
+import { CanonicalId } from "../../../../components/canonical-evidence";
 import { AppShell } from "../../../../components/shell";
 import { loadPresentedActionResult } from "../../../../server/action-flash";
 import { guardedActor } from "../../../../server/guard";
+import { buildGovernanceLabelIndex, presentAssignment } from "../../../../server/identity-resolution";
 import { operationalStateFromCode } from "../../../../server/operational-state";
 import { getRuntime } from "../../../../server/runtime";
 
@@ -76,6 +78,7 @@ export default async function AccessPage({
 
   try {
     const administration = runtime.service.getAccessAdministration(actor, organisation.id);
+    const labels = buildGovernanceLabelIndex(runtime.service, actor, organisation.id);
     return (
       <AppShell person={person} organisationName={organisation.displayName} current="/app/admin/access">
         <AtelierPageHeader
@@ -85,11 +88,17 @@ export default async function AccessPage({
         />
         <ActionResultBanner presented={presented} />
         <ul className="atelier-ledger">
-          {administration.assignments.map((item) => (
-            <li key={item.id}>
-              {item.personId} · {item.status} · {item.eventId ?? "organisation"}
-            </li>
-          ))}
+          {administration.assignments.map((item) => {
+            const presented = presentAssignment(item, labels, new Date().toISOString());
+            return (
+              <li key={item.id} data-testid="access-assignment">
+                <p>
+                  <strong>{presented.personLabel}</strong> · {presented.roleLabel} · {presented.scopeLabel} · {presented.statusLabel}
+                </p>
+                <CanonicalId id={item.id} label="Assignment ID" />
+              </li>
+            );
+          })}
         </ul>
         <AssignmentForm people={administration.people} events={administration.events} error={params.error} />
       </AppShell>

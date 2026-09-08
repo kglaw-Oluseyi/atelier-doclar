@@ -35,7 +35,7 @@ export default async function MerchandisePage({
   const permissions = merchandisePermissions(person, scoped.organisation.id, scoped.event.id);
   if (!permissions.view) {
     return (
-      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
         <AtelierOperationalState
           state={operationalStateFromCode("FORBIDDEN", "This assignment cannot view merchandise coordination.")}
         />
@@ -48,7 +48,7 @@ export default async function MerchandisePage({
   } catch (error) {
     const message = error instanceof PlatformError ? error.publicMessage : "Merchandise could not be loaded.";
     return (
-      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
         <AtelierOperationalState state={operationalStateFromCode("INTERNAL_ERROR", message)} />
       </AppShell>
     );
@@ -67,8 +67,7 @@ export default async function MerchandisePage({
     <AppShell
       person={person}
       organisationName={scoped.organisation.displayName}
-      eventName={scoped.event.name}
-      eventId={scoped.event.id}
+      eventName={scoped.event.name} eventId={scoped.event.id}
       current="/app/events"
     >
       <AtelierPageHeader

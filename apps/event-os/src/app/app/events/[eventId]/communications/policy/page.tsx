@@ -28,8 +28,7 @@ export default async function CommunicationsPolicyPage({
     <CommunicationsFrame
       person={person}
       organisationName={scoped.organisation.displayName}
-      eventName={scoped.event.name}
-      eventId={eventId}
+      eventName={scoped.event.name} eventId={scoped.event.id}
       title="Policy and occasion"
       lede="Channel permission, suppression and guest-safe facts. Unknown facts stay unavailable."
       error={(await searchParams).error}

@@ -34,14 +34,14 @@ export default async function NewLayoutPage({
   const workspace = getRuntime().service.getEventVenueWorkspace(actor, scoped.organisation.id, scoped.event.id);
   if (!permissions.createLayout) {
     return (
-      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
         <AtelierOperationalState state={operationalStateFromCode("FORBIDDEN", "This assignment cannot create a layout.")} />
       </AppShell>
     );
   }
   if (!workspace.adopted) {
     return (
-      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
         <AtelierOperationalState
           state={operationalStateFromCode("VALIDATION_FAILED", "Adopt a venue before creating a blank layout.")}
         />
@@ -55,7 +55,7 @@ export default async function NewLayoutPage({
     eventId,
   });
   return (
-    <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+    <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
       <AtelierPageHeader
         eyebrow={`Blank layout · ${scoped.event.name}`}
         title="Create blank layout"

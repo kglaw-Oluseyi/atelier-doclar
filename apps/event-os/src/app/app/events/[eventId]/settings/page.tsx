@@ -1,7 +1,10 @@
 import { AtelierPageHeader } from "../../../../../components/atelier-page-header";
+import { AtelierOperationalState } from "../../../../../components/atelier-operational-state";
 import { AppShell } from "../../../../../components/shell";
 import { TransitionForm } from "../../../../../components/transition-form";
+import { eventPermissions } from "../../../../../server/event-scope";
 import { guardedActor } from "../../../../../server/guard";
+import { operationalStateFromCode } from "../../../../../server/operational-state";
 import { getRuntime } from "../../../../../server/runtime";
 
 export default async function EventSettingsPage({
@@ -25,22 +28,29 @@ export default async function EventSettingsPage({
     );
   }
   const event = runtime.service.getEvent(actor, organisation.id, eventId);
+  const permissions = eventPermissions(person, organisation.id, { eventId: event.id, clientId: event.clientId });
   return (
     <AppShell
       person={person}
       organisationName={organisation.displayName}
-      eventName={event.name}
+      eventName={event.name} eventId={event.id}
       current="/app/events"
     >
       <AtelierPageHeader
         eyebrow={`Configuration · ${event.name}`}
         title="Event settings"
-        lede="Phase changes require a reason. Ready and Live remain scaffolded."
+        lede="Phase changes require a reason. Ready and Live remain scaffolded until a later authorised slice."
       />
       <p>
-        Current phase <span className="md-status" data-tone="brass">{event.phase}</span> · version {event.version}
+        Current phase <span className="md-status event-phase-pill" data-tone="brass">{event.phase}</span> · version {event.version}
       </p>
-      <TransitionForm eventId={event.id} expectedVersion={event.version} error={error} />
+      {permissions.transition ? (
+        <TransitionForm eventId={event.id} expectedVersion={event.version} currentPhase={event.phase} error={error} />
+      ) : (
+        <AtelierOperationalState
+          state={operationalStateFromCode("FORBIDDEN", "This assignment cannot change event phase.")}
+        />
+      )}
     </AppShell>
   );
 }

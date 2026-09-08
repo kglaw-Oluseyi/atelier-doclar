@@ -24,8 +24,7 @@ export default async function FailuresPage({
     <CommunicationsFrame
       person={loaded.person}
       organisationName={loaded.scoped.organisation.displayName}
-      eventName={loaded.scoped.event.name}
-      eventId={eventId}
+      eventName={loaded.scoped.event.name} eventId={loaded.scoped.event.id}
       title="Failures"
       lede="Permanent synthetic failures stay in dead letter until a human decides."
       error={(await searchParams).error}

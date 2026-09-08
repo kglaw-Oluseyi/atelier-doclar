@@ -12,6 +12,7 @@ import {
   startAtelierNarrativeRevisionAction,
 } from "../server/actions";
 import { IdempotencyField, PendingSubmit } from "./atelier-pending-submit";
+import { CanonicalId, CanonicalTime, HistoryDisclosure } from "./canonical-evidence";
 import { CopyTestLink } from "./copy-test-link";
 
 function CanDecideRadios({
@@ -39,9 +40,11 @@ function CanDecideRadios({
 export function EventAtelierWorkspaceView({
   workspace,
   issuedHref,
+  authorLabels = {},
 }: {
   workspace: EventAtelierWorkspace;
   issuedHref?: string;
+  authorLabels?: Record<string, string>;
 }) {
   const { atelier, capabilities, editor, narrative } = workspace;
   return (
@@ -56,7 +59,11 @@ export function EventAtelierWorkspaceView({
           <p data-testid="current-edition-id">
             Edition {narrative.editionId} · {narrative.publicationState} · v{narrative.version}
           </p>
-          {narrative.publishedAt ? <p>Published {narrative.publishedAt}</p> : null}
+          {narrative.publishedAt ? (
+            <p>
+              Published <CanonicalTime iso={narrative.publishedAt} />
+            </p>
+          ) : null}
           {narrative.supersedesEditionId ? (
             <p data-testid="current-supersedes">Supersedes {narrative.supersedesEditionId}</p>
           ) : (
@@ -72,18 +79,39 @@ export function EventAtelierWorkspaceView({
         <section className="atelier-panel" data-testid="atelier-edition-history">
           <h2>Edition history</h2>
           <ul>
-            {workspace.history.map((item) => (
+            {workspace.history.slice(0, 1).map((item) => (
               <li key={item.id} data-testid={`edition-history-${item.publicationState.toLowerCase()}`}>
                 <p>
-                  {item.id} · {item.publicationState} · v{item.version}
-                  {item.publishedAt ? ` · ${item.publishedAt}` : ""}
+                  {item.publicationState} · v{item.version}
+                  {item.authorPersonId ? ` · ${authorLabels[item.authorPersonId] ?? "Identity unavailable"}` : ""}
+                  {item.publishedAt ? (
+                    <>
+                      {" · "}
+                      <CanonicalTime iso={item.publishedAt} />
+                    </>
+                  ) : null}
                 </p>
+                <CanonicalId id={item.id} label="Edition ID" />
                 {item.supersedesEditionId ? <p>Prior edition {item.supersedesEditionId}</p> : <p>First published edition</p>}
                 {item.changeSummary ? <p>{item.changeSummary}</p> : null}
                 <p>{item.provenance}</p>
               </li>
             ))}
           </ul>
+          <HistoryDisclosure summary="Earlier editions" count={Math.max(0, workspace.history.length - 1)} testId="atelier-history-earlier">
+            <ul>
+              {workspace.history.slice(1).map((item) => (
+                <li key={item.id} data-testid={`edition-history-${item.publicationState.toLowerCase()}`}>
+                  <p>
+                    {item.publicationState} · v{item.version}
+                    {item.authorPersonId ? ` · ${authorLabels[item.authorPersonId] ?? "Identity unavailable"}` : ""}
+                  </p>
+                  <CanonicalId id={item.id} label="Edition ID" />
+                  <p>{item.provenance}</p>
+                </li>
+              ))}
+            </ul>
+          </HistoryDisclosure>
         </section>
       ) : null}
       {capabilities.canPublish && atelier.publicationState !== "PUBLISHED" ? (

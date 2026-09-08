@@ -29,8 +29,7 @@ export default async function AudiencePreviewPage({
     <CommunicationsFrame
       person={loaded.person}
       organisationName={loaded.scoped.organisation.displayName}
-      eventName={loaded.scoped.event.name}
-      eventId={eventId}
+      eventName={loaded.scoped.event.name} eventId={loaded.scoped.event.id}
       title="Audience preview"
       lede="This is a preview. Approval freezes an immutable snapshot."
       error={(await searchParams).error}

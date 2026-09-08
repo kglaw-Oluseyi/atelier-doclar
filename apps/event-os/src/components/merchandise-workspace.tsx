@@ -596,6 +596,7 @@ export function MerchandiseWorkspace({
 
       <section className="atelier-panel" aria-labelledby="fulfilment">
         <h2 id="fulfilment">Fulfilment and vendor reports</h2>
+        <p className="lede">Vendor references identify a guest-item fulfilment for coordination. They are not payment identifiers.</p>
         {workspace.fulfilments.map((item) => (
           <article key={item.id} className="merchandise-card">
             <h3 className="guest-name">{item.guestDisplayName}</h3>

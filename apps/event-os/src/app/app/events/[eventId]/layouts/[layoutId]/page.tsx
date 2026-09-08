@@ -36,7 +36,7 @@ export default async function LayoutDetailPage({
   const permissions = venuePermissions(person, scoped.organisation.id, scoped.event.id);
   if (!permissions.viewLayout) {
     return (
-      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
         <AtelierOperationalState state={operationalStateFromCode("FORBIDDEN", "This assignment cannot view this layout.")} />
       </AppShell>
     );
@@ -47,7 +47,7 @@ export default async function LayoutDetailPage({
   } catch (error) {
     const message = error instanceof PlatformError ? error.publicMessage : "Layout could not be loaded.";
     return (
-      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
         <AtelierOperationalState state={operationalStateFromCode("NOT_FOUND", message)} />
       </AppShell>
     );
@@ -90,10 +90,11 @@ export default async function LayoutDetailPage({
     }
   }
   return (
-    <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+    <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
       <AtelierPageHeader
         eyebrow={`Layout setup · ${scoped.event.name}`}
         title={workspace.layout.name}
+        titleClamp
         lede="Authoritative millimetre geometry with a typed studio projection, validation, snapshots and immutable publication. Refresh after a conflict before retrying. Seating allocation is not available."
       />
       <ActionResultBanner

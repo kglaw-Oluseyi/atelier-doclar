@@ -25,7 +25,7 @@ export default async function ForecastHostPage({ params }: { params: Promise<{ e
   const permissions = forecastPermissions(person, scoped.organisation.id, scoped.event.id);
   if (!permissions.host) {
     return (
-      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
         <AtelierPageHeader eyebrow="Host projection" title="Calm planning range" />
         <AtelierOperationalState
           state={operationalStateFromCode("FORBIDDEN", "This assignment cannot view the host projection.")}
@@ -39,14 +39,14 @@ export default async function ForecastHostPage({ params }: { params: Promise<{ e
   } catch (error) {
     const message = error instanceof PlatformError ? error.publicMessage : "The host projection could not be loaded.";
     return (
-      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
         <AtelierPageHeader eyebrow="Host projection" title="Calm planning range" />
         <AtelierOperationalState state={operationalStateFromCode("INTERNAL_ERROR", message)} />
       </AppShell>
     );
   }
   return (
-    <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+    <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
       <AtelierPageHeader
         eyebrow={`Host projection · ${scoped.event.name}`}
         title="Calm planning range"

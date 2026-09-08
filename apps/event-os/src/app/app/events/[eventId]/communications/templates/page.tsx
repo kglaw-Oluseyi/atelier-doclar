@@ -25,8 +25,7 @@ export default async function TemplatesPage({
     <CommunicationsFrame
       person={loaded.person}
       organisationName={loaded.scoped.organisation.displayName}
-      eventName={loaded.scoped.event.name}
-      eventId={eventId}
+      eventName={loaded.scoped.event.name} eventId={loaded.scoped.event.id}
       title="Templates"
       lede="Approved variables only. Missing guest-safe facts stay unresolved."
       error={(await searchParams).error}

@@ -35,7 +35,7 @@ export default async function LanguagePage({
   const permissions = languagePermissions(person, scoped.organisation.id, scoped.event.id);
   if (!permissions.view) {
     return (
-      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
         <AtelierOperationalState
           state={operationalStateFromCode("FORBIDDEN", "This assignment cannot view language and cultural text.")}
         />
@@ -48,7 +48,7 @@ export default async function LanguagePage({
   } catch (error) {
     const message = error instanceof PlatformError ? error.publicMessage : "Language workspace could not be loaded.";
     return (
-      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
         <AtelierOperationalState state={operationalStateFromCode("INTERNAL_ERROR", message)} />
       </AppShell>
     );
@@ -60,7 +60,7 @@ export default async function LanguagePage({
     eventId: scoped.event.id,
   });
   return (
-    <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+    <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
       <AtelierPageHeader
         eyebrow={`Language · ${scoped.event.name}`}
         title="Language, cultural text and multilingual editions"

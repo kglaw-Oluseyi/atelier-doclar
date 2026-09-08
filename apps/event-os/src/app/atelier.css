@@ -1981,3 +1981,121 @@ body.atelier {
     transition: none !important;
   }
 }
+
+.event-crumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: baseline;
+  margin: 0 0 1rem;
+  font-size: 0.92rem;
+}
+
+.event-crumb-name {
+  color: var(--at-umber);
+}
+
+.event-open-target {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.event-phase-pill,
+.atelier-shell .md-status.event-phase-pill {
+  cursor: default;
+  pointer-events: none;
+}
+
+.title-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.canonical-evidence,
+.canonical-id {
+  display: inline-grid;
+  gap: 0.25rem;
+}
+
+.canonical-evidence details,
+.canonical-id,
+.history-disclosure {
+  margin-top: 0.25rem;
+}
+
+.canonical-copy {
+  margin-top: 0.35rem;
+}
+
+.dossier-tabs-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 0.5rem 0;
+  background: #f5f0e8;
+}
+
+.atelier-dossier [id] {
+  scroll-margin-top: 4.75rem;
+}
+
+@media (min-width: 861px) {
+  .atelier-guestbook .data-table thead th,
+  .atelier-guestbook .data-table .guest-name,
+  .atelier-guestbook thead th {
+    white-space: nowrap;
+  }
+}
+
+.atelier-guestbook .filter-bar {
+  overflow: visible;
+}
+
+.atelier-guestbook .filter-bar input[type="search"],
+.atelier-guestbook .filter-bar select {
+  min-width: min(100%, 12rem);
+}
+
+#studio-canvas .studio-canvas-frame {
+  min-height: 28rem;
+}
+
+.studio-shape[data-object-type="ZONE"] { stroke-dasharray: 160 80; }
+.studio-shape[data-object-type="TABLE"] { stroke-dasharray: none; }
+.studio-shape[data-object-type="SEAT"] { stroke-dasharray: 40 40; }
+.studio-shape[data-object-type="FIXTURE"] { stroke-dasharray: 200 40; }
+.studio-shape[data-object-type="ROUTE"] { stroke-dasharray: 80 80; }
+.studio-shape[data-object-type="SAFE_AREA"] { stroke-dasharray: 160 40 40 40; }
+.studio-shape[data-object-type="RESTRICTED_AREA"] { stroke-dasharray: 40 80; }
+.studio-shape[data-object-type="CLEARANCE_AREA"] { stroke-dasharray: 120 40 40 40; }
+.studio-shape[data-object-type="ANNOTATION"] { stroke-dasharray: 20 60; }
+
+@media (min-width: 960px) {
+  .layout-studio-grid[data-library="collapsed"] {
+    grid-template-columns: minmax(0, 1fr) 16rem;
+    grid-template-areas:
+      "canvas navigator"
+      "inspector navigator";
+  }
+
+  .layout-studio-grid[data-inspector="collapsed"] {
+    grid-template-areas:
+      "library canvas navigator"
+      "library canvas navigator";
+  }
+
+  .layout-studio-grid[data-library="collapsed"][data-inspector="collapsed"] {
+    grid-template-columns: minmax(0, 1fr) 16rem;
+    grid-template-areas:
+      "canvas navigator"
+      "canvas navigator";
+  }
+}
+
+.atelier-shell .button:disabled,
+.atelier-shell button:disabled,
+.atelier-shell [aria-disabled="true"] {
+  cursor: not-allowed;
+}

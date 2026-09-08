@@ -98,7 +98,7 @@ export default async function GuestDirectoryPage({
     <AppShell
       person={person}
       organisationName={scoped.organisation.displayName}
-      eventName={scoped.event.name}
+      eventName={scoped.event.name} eventId={scoped.event.id}
       current="/app/events"
     >
       <div className="atelier-guestbook at-scope">
@@ -115,9 +115,15 @@ export default async function GuestDirectoryPage({
           <span className="at-seal md-status" data-tone="brass">
             {guests.length} records
           </span>{" "}
-          <span className="at-seal md-status" data-tone={attentionCount ? "warn" : "ok"}>
-            {attentionCount} need attention
-          </span>{" "}
+          {attentionCount ? (
+            <Link className="at-seal md-status" data-tone="warn" href={`/app/events/${scoped.event.id}/guests?attention=1`}>
+              {attentionCount} need attention
+            </Link>
+          ) : (
+            <span className="at-seal md-status" data-tone="ok">
+              {attentionCount} need attention
+            </span>
+          )}{" "}
           <span className="at-seal md-status" data-tone={runtime.persistence === "POSTGRES" ? "ok" : "brass"}>
             {runtime.persistence.replaceAll("_", " ")}
           </span>

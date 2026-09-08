@@ -40,8 +40,7 @@ export default async function CampaignDetailPage({
     <CommunicationsFrame
       person={loaded.person}
       organisationName={loaded.scoped.organisation.displayName}
-      eventName={loaded.scoped.event.name}
-      eventId={eventId}
+      eventName={loaded.scoped.event.name} eventId={loaded.scoped.event.id}
       title={campaign.name}
       lede="Approval is not a role shortcut. Audience snapshot stays frozen after approval."
       error={(await searchParams).error}

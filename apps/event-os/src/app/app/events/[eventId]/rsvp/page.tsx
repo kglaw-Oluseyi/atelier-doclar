@@ -44,7 +44,7 @@ export default async function RsvpOverviewPage({
   const permissions = guestPermissions(person, actor, scoped.organisation.id, scoped.event.id);
   if (!permissions.rsvpView) {
     return (
-      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
         <h1>RSVP</h1>
         <p className="empty">Your assignment does not include RSVP visibility.</p>
       </AppShell>
@@ -74,7 +74,7 @@ export default async function RsvpOverviewPage({
     : undefined;
 
   return (
-    <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+    <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} eventId={scoped.event.id} current="/app/events">
       <AtelierPageHeader
         eyebrow={`Response book · ${scoped.event.name}`}
         title="RSVP"
