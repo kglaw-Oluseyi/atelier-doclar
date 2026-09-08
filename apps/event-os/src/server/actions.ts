@@ -3777,15 +3777,29 @@ export async function changeDiscoverySessionAction(formData: FormData): Promise<
     const engagementId = String(formData.get("engagementId") ?? "");
     const bind = actorBind(actor, `/app/discovery/${engagementId}`, "discovery.session");
     try {
-      getRuntime().service.changeInterviewSession(actor, {
-        organisationId: String(formData.get("organisationId") ?? ""),
-        engagementId,
-        sessionId: String(formData.get("sessionId") ?? "") || undefined,
-        action: String(formData.get("sessionAction") ?? "CREATE"),
-        expectedVersion: Number(formData.get("expectedVersion") ?? 0),
-        reason: String(formData.get("reason") ?? "Update session").trim() || "Update session",
-        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
-      });
+      const action = String(formData.get("sessionAction") ?? "CREATE");
+      getRuntime().service.changeInterviewSession(
+        actor,
+        action === "CREATE"
+          ? {
+              organisationId: String(formData.get("organisationId") ?? ""),
+              engagementId,
+              action: "CREATE",
+              mode: String(formData.get("mode") ?? "STAFF_LED") || "STAFF_LED",
+              expectedVersion: Number(formData.get("expectedVersion") ?? 0),
+              reason: String(formData.get("reason") ?? "Update session").trim() || "Update session",
+              idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+            }
+          : {
+              organisationId: String(formData.get("organisationId") ?? ""),
+              engagementId,
+              sessionId: String(formData.get("sessionId") ?? ""),
+              action,
+              expectedVersion: Number(formData.get("expectedVersion") ?? 0),
+              reason: String(formData.get("reason") ?? "Update session").trim() || "Update session",
+              idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+            },
+      );
       await finishAction(bind, { ok: "discovery.session" });
     } catch (error) {
       await finishAction(bind, { error });
@@ -3886,6 +3900,355 @@ export async function refreshDiscoveryRecordAction(formData: FormData): Promise<
       redirect(path);
     }
     redirect("/app/discovery");
+  });
+}
+
+export async function updateDiscoveryOpportunityAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const engagementId = String(formData.get("engagementId") ?? "");
+    const bind = actorBind(actor, engagementId ? `/app/discovery/${engagementId}` : "/app/discovery", "discovery.opportunity");
+    try {
+      getRuntime().service.updateEngagementOpportunity(actor, {
+        organisationId: String(formData.get("organisationId") ?? ""),
+        opportunityId: String(formData.get("opportunityId") ?? ""),
+        stage: String(formData.get("stage") ?? "") || undefined,
+        ownerPersonId: String(formData.get("ownerPersonId") ?? "") || undefined,
+        closedReason: String(formData.get("closedReason") ?? "") || undefined,
+        expectedVersion: Number(formData.get("expectedVersion") ?? 1),
+        reason: String(formData.get("reason") ?? "Update enquiry").trim() || "Update enquiry",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      });
+      await finishAction(bind, { ok: "discovery.opportunity" });
+    } catch (error) {
+      await finishAction(bind, { error });
+    }
+  });
+}
+
+export async function createBriefDraftAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const engagementId = String(formData.get("engagementId") ?? "");
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "brief.draft");
+    try {
+      getRuntime().service.createBriefDraft(actor, {
+        organisationId: String(formData.get("organisationId") ?? ""),
+        engagementId,
+        reason: String(formData.get("reason") ?? "Create working brief").trim() || "Create working brief",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      });
+      await finishAction(bind, { ok: "brief.draft" });
+    } catch (error) {
+      await finishAction(bind, { error });
+    }
+  });
+}
+
+export async function submitBriefEditionAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const engagementId = String(formData.get("engagementId") ?? "");
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "brief.submit");
+    try {
+      getRuntime().service.submitBriefEdition(actor, {
+        organisationId: String(formData.get("organisationId") ?? ""),
+        engagementId,
+        gate: String(formData.get("gate") ?? "WORKING"),
+        expectedVersion: Number(formData.get("expectedVersion") ?? 1),
+        reason: String(formData.get("reason") ?? "Submit brief").trim() || "Submit brief",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      });
+      await finishAction(bind, { ok: "brief.submit" });
+    } catch (error) {
+      await finishAction(bind, { error });
+    }
+  });
+}
+
+export async function decideBriefEditionAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const engagementId = String(formData.get("engagementId") ?? "");
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "brief.decide");
+    try {
+      getRuntime().service.decideBriefEdition(actor, {
+        organisationId: String(formData.get("organisationId") ?? ""),
+        editionId: String(formData.get("editionId") ?? ""),
+        decision: String(formData.get("decision") ?? "APPROVE"),
+        expectedVersion: Number(formData.get("expectedVersion") ?? 1),
+        reason: String(formData.get("reason") ?? "Decide brief").trim() || "Decide brief",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      });
+      await finishAction(bind, { ok: "brief.decide" });
+    } catch (error) {
+      await finishAction(bind, { error });
+    }
+  });
+}
+
+export async function publishBriefEditionAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const engagementId = String(formData.get("engagementId") ?? "");
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "brief.publish");
+    try {
+      getRuntime().service.publishBriefEdition(actor, {
+        organisationId: String(formData.get("organisationId") ?? ""),
+        editionId: String(formData.get("editionId") ?? ""),
+        expectedVersion: Number(formData.get("expectedVersion") ?? 1),
+        reason: String(formData.get("reason") ?? "Publish brief").trim() || "Publish brief",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      });
+      await finishAction(bind, { ok: "brief.publish" });
+    } catch (error) {
+      await finishAction(bind, { error });
+    }
+  });
+}
+
+export async function issueDiscoveryClientAccessAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const engagementId = String(formData.get("engagementId") ?? "");
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "brief.client_access");
+    try {
+      const issued = getRuntime().service.issueDiscoveryClientAccess(actor, {
+        organisationId: String(formData.get("organisationId") ?? ""),
+        engagementId,
+        reason: String(formData.get("reason") ?? "Issue client review access").trim() || "Issue client review access",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      });
+      await finishAction(bind, { ok: "brief.client_access", extra: { clientPath: `/discover/${issued.token}` } });
+    } catch (error) {
+      await finishAction(bind, { error });
+    }
+  });
+}
+
+export async function convertDiscoveryEngagementAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const engagementId = String(formData.get("engagementId") ?? "");
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "engagement.convert");
+    try {
+      getRuntime().service.convertDiscoveryEngagement(actor, {
+        organisationId: String(formData.get("organisationId") ?? ""),
+        engagementId,
+        sourceBriefHash: String(formData.get("sourceBriefHash") ?? ""),
+        clientDisposition: {
+          kind: "CREATE_NEW",
+          code: String(formData.get("clientCode") ?? "").trim(),
+          displayName: String(formData.get("clientDisplayName") ?? "").trim(),
+        },
+        eventDisposition: {
+          kind: "CREATE_NEW",
+          code: String(formData.get("eventCode") ?? "").trim(),
+          name: String(formData.get("eventName") ?? "").trim(),
+          startsAt: String(formData.get("startsAt") ?? ""),
+          endsAt: String(formData.get("endsAt") ?? ""),
+          timezone: String(formData.get("timezone") ?? "Africa/Lagos"),
+        },
+        expectedVersion: Number(formData.get("expectedVersion") ?? 1),
+        reason: String(formData.get("reason") ?? "Convert to Client and Event").trim() || "Convert to Client and Event",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      });
+      await finishAction(bind, { ok: "engagement.convert" });
+    } catch (error) {
+      await finishAction(bind, { error });
+    }
+  });
+}
+
+export async function calculateBudgetScenarioAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const engagementId = String(formData.get("engagementId") ?? "");
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "budget.calculate");
+    try {
+      getRuntime().service.calculateBudgetScenario(actor, {
+        organisationId: String(formData.get("organisationId") ?? ""),
+        engagementId,
+        purpose: String(formData.get("purpose") ?? "PROTECT_PRIORITIES"),
+        archetype: String(formData.get("archetype") ?? "WEDDING"),
+        guests: String(formData.get("guests") ?? "100"),
+        reason: String(formData.get("reason") ?? "Calculate budget").trim() || "Calculate budget",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      });
+      await finishAction(bind, { ok: "budget.calculate" });
+    } catch (error) {
+      await finishAction(bind, { error });
+    }
+  });
+}
+
+export async function decideBudgetScenarioAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const engagementId = String(formData.get("engagementId") ?? "");
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "budget.decide");
+    try {
+      getRuntime().service.decideBudgetScenario(actor, {
+        organisationId: String(formData.get("organisationId") ?? ""),
+        scenarioId: String(formData.get("scenarioId") ?? ""),
+        expectedVersion: Number(formData.get("expectedVersion") ?? 1),
+        reason: String(formData.get("reason") ?? "Approve budget scenario").trim() || "Approve budget scenario",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      });
+      await finishAction(bind, { ok: "budget.decide" });
+    } catch (error) {
+      await finishAction(bind, { error });
+    }
+  });
+}
+
+export async function instantiateRoadmapAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const engagementId = String(formData.get("engagementId") ?? "");
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "roadmap.instantiate");
+    try {
+      getRuntime().service.instantiateRoadmap(actor, {
+        organisationId: String(formData.get("organisationId") ?? ""),
+        engagementId,
+        titles: [
+          { title: "Confirm guest count", layer: "DECISION", durationDays: "3", clientVisible: true },
+          { title: "Venue hold window", layer: "OPERATIONAL_READINESS", durationDays: "5", clientVisible: false },
+          { title: "Family celebration date", layer: "CLIENT_OUTCOME", durationDays: "2", clientVisible: true },
+        ],
+        reason: String(formData.get("reason") ?? "Instantiate roadmap").trim() || "Instantiate roadmap",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      });
+      await finishAction(bind, { ok: "roadmap.instantiate" });
+    } catch (error) {
+      await finishAction(bind, { error });
+    }
+  });
+}
+
+export async function createChangeProposalAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const engagementId = String(formData.get("engagementId") ?? "");
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "change.detect");
+    try {
+      getRuntime().service.createChangeProposal(actor, {
+        organisationId: String(formData.get("organisationId") ?? ""),
+        engagementId,
+        summary: String(formData.get("summary") ?? "").trim(),
+        reason: String(formData.get("reason") ?? "Record change").trim() || "Record change",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      });
+      await finishAction(bind, { ok: "change.detect" });
+    } catch (error) {
+      await finishAction(bind, { error });
+    }
+  });
+}
+
+export async function assessChangeImpactAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const engagementId = String(formData.get("engagementId") ?? "");
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "change.assess");
+    try {
+      getRuntime().service.assessChangeImpact(actor, {
+        organisationId: String(formData.get("organisationId") ?? ""),
+        changeProposalId: String(formData.get("changeProposalId") ?? ""),
+        reason: String(formData.get("reason") ?? "Assess impact").trim() || "Assess impact",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      });
+      await finishAction(bind, { ok: "change.assess" });
+    } catch (error) {
+      await finishAction(bind, { error });
+    }
+  });
+}
+
+export async function decideChangeProposalAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const engagementId = String(formData.get("engagementId") ?? "");
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "change.decide");
+    try {
+      getRuntime().service.decideChangeProposal(actor, {
+        organisationId: String(formData.get("organisationId") ?? ""),
+        changeProposalId: String(formData.get("changeProposalId") ?? ""),
+        decision: String(formData.get("decision") ?? "APPROVE"),
+        expectedVersion: Number(formData.get("expectedVersion") ?? 1),
+        reason: String(formData.get("reason") ?? "Decide change").trim() || "Decide change",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      });
+      await finishAction(bind, { ok: "change.decide" });
+    } catch (error) {
+      await finishAction(bind, { error });
+    }
+  });
+}
+
+export async function recordClientBriefDecisionAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const token = String(formData.get("token") ?? "");
+    try {
+      getRuntime().service.recordClientBriefDecisionByToken(token, {
+        assertionId: String(formData.get("assertionId") ?? ""),
+        decision: String(formData.get("decision") ?? "CONFIRM"),
+        narrative: String(formData.get("narrative") ?? "") || undefined,
+        participantLabel: String(formData.get("participantLabel") ?? "Client").trim() || "Client",
+      });
+    } catch {
+      redirect(`/discover/${token}?error=1`);
+    }
+    redirect(`/discover/${token}?ok=1`);
+  });
+}
+
+export async function recordDiscoveryObjectAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const engagementId = String(formData.get("engagementId") ?? "");
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "discovery.source");
+    try {
+      const file = formData.get("file");
+      if (!(file instanceof File) || file.size < 1) {
+        throw new PlatformError("VALIDATION_FAILED", "a synthetic source file is required");
+      }
+      if (file.size > 2_000_000) {
+        throw new PlatformError("VALIDATION_FAILED", "source file exceeds the two-megabyte limit");
+      }
+      const allowed = ["text/plain", "application/pdf", "image/png", "image/jpeg"];
+      if (file.type && !allowed.includes(file.type)) {
+        throw new PlatformError("VALIDATION_FAILED", "only plain text, PDF, PNG or JPEG source files are accepted");
+      }
+      const { createHash } = await import("node:crypto");
+      const { createLayoutBinaryStoreFromEnv } = await import("./layout-s3-store");
+      const store = createLayoutBinaryStoreFromEnv();
+      if (!store?.configured) {
+        throw new PlatformError("CAPABILITY_NOT_ENABLED", "private source-object storage is not bound");
+      }
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const checksum = createHash("sha256").update(bytes).digest("hex");
+      const objectKey = `discovery/${String(formData.get("organisationId") ?? "")}/${engagementId}/${crypto.randomUUID()}`;
+      if (/^https?:\/\//i.test(objectKey)) {
+        throw new PlatformError("VALIDATION_FAILED", "source objects cannot be stored as public URLs");
+      }
+      await store.put({ key: objectKey, bytes, contentType: file.type || "application/octet-stream" });
+      getRuntime().service.recordDiscoverySource(actor, {
+        organisationId: String(formData.get("organisationId") ?? ""),
+        engagementId,
+        kind: "UPLOADED_DOCUMENT",
+        title: String(formData.get("title") ?? file.name).trim() || "Private source object",
+        text: "[private object stored; not rendered and not executable]",
+        objectKey,
+        byteChecksum: checksum,
+        contentSafetyStatus: "CLEAN",
+        reason: String(formData.get("reason") ?? "Store private source object").trim() || "Store private source object",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      });
+      await finishAction(bind, { ok: "discovery.source" });
+    } catch (error) {
+      await finishAction(bind, { error });
+    }
   });
 }
 

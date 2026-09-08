@@ -102,6 +102,20 @@ export function actionLabel(actionType: string): string {
     "discovery.review": "Review candidate assertion",
     "discovery.conflict": "Resolve contradiction",
     "discovery.participant": "Add discovery participant",
+    "discovery.opportunity": "Update enquiry",
+    "brief.draft": "Create working brief",
+    "brief.submit": "Submit brief edition",
+    "brief.decide": "Decide brief edition",
+    "brief.publish": "Publish brief edition",
+    "brief.client_access": "Issue client review access",
+    "engagement.convert": "Convert engagement",
+    "budget.calculate": "Calculate budget scenario",
+    "budget.decide": "Decide budget scenario",
+    "roadmap.instantiate": "Instantiate roadmap",
+    "change.detect": "Record change proposal",
+    "change.assess": "Assess change impact",
+    "change.decide": "Decide change proposal",
+    "command.view": "Review executive command",
   };
   return labels[actionType] ?? actionType.replaceAll(".", " ");
 }

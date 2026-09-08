@@ -149,6 +149,17 @@ export function DiscoveryWorkspaceView({
             <input type="hidden" name="engagementId" value={workspace.engagement.id} />
             {draftSession ? <input type="hidden" name="sessionId" value={draftSession.id} /> : null}
             <input type="hidden" name="expectedVersion" value={draftSession?.version ?? 0} />
+            {!draftSession ? (
+              <label>
+                Session mode
+                <select name="mode" defaultValue="STAFF_LED">
+                  <option value="STAFF_LED">Staff-led</option>
+                  <option value="CLIENT_LED">Client-led</option>
+                  <option value="FOLLOW_UP">Follow-up</option>
+                  <option value="OFFLINE_NOTES">Offline notes</option>
+                </select>
+              </label>
+            ) : null}
             <label>
               Session action
               <select name="sessionAction" defaultValue={draftSession ? "START" : "CREATE"}>

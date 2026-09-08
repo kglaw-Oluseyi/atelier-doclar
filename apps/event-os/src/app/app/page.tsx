@@ -66,6 +66,9 @@ export default async function HomeAppPage() {
                 <Link className="button secondary" href="/app/discovery">
                   Open discovery
                 </Link>
+                <Link className="button secondary" href="/app/command">
+                  Executive Event Command
+                </Link>
                 <Link className="button secondary" href="/app/academy/ACA-S04A">
                   ACA-S04A training
                 </Link>

@@ -5,7 +5,7 @@ import { AtelierOperationalState } from "../../../components/atelier-operational
 import { IdempotencyField, PendingSubmit } from "../../../components/atelier-pending-submit";
 import { AppShell } from "../../../components/shell";
 import { loadPresentedActionResult } from "../../../server/action-flash";
-import { createDiscoveryOpportunityAction, refreshDiscoveryRecordAction } from "../../../server/actions";
+import { createDiscoveryOpportunityAction, refreshDiscoveryRecordAction, updateDiscoveryOpportunityAction } from "../../../server/actions";
 import { discoveryPermissions, resolveDiscoveryOrganisation } from "../../../server/discovery-scope";
 import { guardedActor } from "../../../server/guard";
 import { getRuntime } from "../../../server/runtime";
@@ -116,6 +116,39 @@ export default async function DiscoveryIndexPage({
                   {opportunity ? <span className="md-status" data-tone="brass">{opportunity.stage}</span> : null}{" "}
                   {engagement.eventConceptLabel ?? opportunity?.knownEventType ?? "Event type not yet known"}
                 </p>
+                {permissions.update && opportunity && opportunity.stage !== "CONVERTED" ? (
+                  <form action={updateDiscoveryOpportunityAction} className="form">
+                    <IdempotencyField />
+                    <input type="hidden" name="organisationId" value={organisation.id} />
+                    <input type="hidden" name="engagementId" value={engagement.id} />
+                    <input type="hidden" name="opportunityId" value={opportunity.id} />
+                    <input type="hidden" name="expectedVersion" value={opportunity.version} />
+                    <label>
+                      Stage
+                      <select name="stage" defaultValue={opportunity.stage}>
+                        <option value="ENQUIRY">Enquiry</option>
+                        <option value="QUALIFYING">Qualifying</option>
+                        <option value="DISCOVERY">Discovery</option>
+                        <option value="CLOSED">Closed</option>
+                      </select>
+                    </label>
+                    <label>
+                      Owner person identity
+                      <input name="ownerPersonId" defaultValue={opportunity.ownerPersonId ?? person.id} />
+                    </label>
+                    <label>
+                      Close reason
+                      <input name="closedReason" maxLength={400} placeholder="Only needed when closing" />
+                    </label>
+                    <label>
+                      Reason
+                      <input name="reason" required maxLength={400} defaultValue="Update enquiry ownership or stage" />
+                    </label>
+                    <PendingSubmit className="secondary" locked={presented.mutationLocked}>
+                      Update enquiry
+                    </PendingSubmit>
+                  </form>
+                ) : null}
               </li>
             );
           })}
