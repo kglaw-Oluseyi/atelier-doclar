@@ -450,6 +450,7 @@ RATIFIED on `2026-09-07` by George Lawson under `MD-PR-S026`. P00–P11 implemen
 | EV-EOS-S05-HIST-SPEC | DOCUMENT | Historic Slice 5 specification (filename retained) | `MDOS/slice5/Maison_Doclar_Slice_5_Implementation_Specification_and_Build_Plan_v1.0.docx` |
 | EV-EOS-S05-HIST-PACK | DOCUMENT | Historic Slice 5 Cursor prompt pack (filename retained) | `MDOS/slice5/Maison_Doclar_Slice_5_Cursor_Prompt_Pack_v1.0.docx` |
 | EV-EOS-S05-ACCEPT | DOCUMENT | Independent AI CTO acceptance | `docs/control/EOS_S05_ACCEPTANCE.md` |
+| EV-MD-PR-UX001 | DOCUMENT | Cross-slice Event OS UX quality uplift | `docs/control/MD_PR_UX001.md` |
 
 RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S028`. Milestone 2 implemented under `MD-PR-S029`. Milestone 3 implemented under `MD-PR-S030`. Milestone 4 implemented under `MD-PR-S031`. Export provenance remediated under `MD-PR-S032`. Independent-verification defects remediated under `MD-PR-S033`. Final traceability and permission-affordance remediated under `MD-PR-S034`. ACCEPTED on `2026-09-08` by `ChatGPT / AI CTO` under `MD-PR-S035` at SHA `eba137712c65c6f59b77fe2a88a8f4a277228cd9`. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised` remains false. Catalogue accepted-slice count is 5. `TDR-S05-001` is CLOSED. `TDR-S05-002` remains OPEN / non-blocking. Historic `MD-PR-0232`–`MD-PR-0291` remain `NOT_EXECUTED`. Claude verified; Claude did not accept. Documentation-only acceptance commit does not redeploy Event OS or Control Tower. EOS-S06 is not authorised. Production remains unauthorised.
 

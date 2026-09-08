@@ -1,8 +1,8 @@
 # Current State
 
-**Updated:** EOS-S05 independent acceptance (`MD-PR-S035`, 2026-09-08)
-**Prompt Control ID:** MD-PR-S035
-**Milestone:** `EOS-S05` ACCEPTED — catalogue accepted-slice count 5; EOS-S06 not authorised
+**Updated:** MD-PR-UX001 Event OS cross-slice UX quality uplift (2026-09-08)
+**Prompt Control ID:** MD-PR-UX001
+**Milestone:** `EOS-S05` ACCEPTED — catalogue accepted-slice count 5; EOS-S06 not authorised; UX uplift is not a new accepted slice
 
 MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is ACCEPTED. EOS-S02 is ACCEPTED. EOS-S03 is ACCEPTED. EOS-S04 is CLOSED / ACCEPTED (`PASS WITH OBSERVATIONS`). EOS-S05 is ACCEPTED. Catalogue accepted-slice count is 5. Native coverage is 62/62. S4-61 is satisfied for technical review only. S4-62 is satisfied for controlled technical acceptance/handover only. Independent, specialist and CEO production gates remain unsigned.
 
@@ -105,6 +105,8 @@ MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is A
 **EOS-S06 STATUS: NOT_STARTED / NOT_AUTHORISED**
 **RECOMMENDED NEXT PROMPT CONTROL ID: MD-PR-S036**
 **MD-PR-S036 IMPLEMENTATION AUTHORITY: NO**
+**CROSS-SLICE UX CONTROL ID: MD-PR-UX001**
+**MD-PR-UX001 IMPLEMENTATION AUTHORITY: EXECUTED — awaiting focused human UX reverification**
 **EVENT OS S01-S03 LIVE DEPLOYED: YES**  
 **EVENT OS AUTOMATED LIVE VERIFICATION: PASS**  
 **EVENT OS CEO HUMAN LIVE VERIFICATION: PASS WITH MINOR REFINEMENTS**  
@@ -135,7 +137,9 @@ Event OS S01–S03 remain formally accepted. EOS-S04 is CLOSED / ACCEPTED after 
 
 **EOS-S04F:** `ACCEPTED` on `2026-09-08` at accepted implementation SHA `a4795e83c929bf24591f52c2224eb4b588c23ef3` under `MD-PR-S027`. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised: false`. Command Atelier remains the staff Event OS visual language. Host Atelier may use decorative metal `#B79F85`. Acceptance covers P00–P11 and the source-lineage / translation-staleness / placeholder-validation remediation. TDR-S04F-001–002 and carried `TDR-S04E-001`–`004` / `TDR-S04D-004` / `TDR-S04A-011` remain carried forward and do not reopen the slice. Catalogue accepted-slice count remains 4; EOS-S04F is not a catalogue slice. Acceptance record: `docs/control/EOS_S04F_ACCEPTANCE.md`. Historical ratification: `docs/control/EOS_S04F_RATIFICATION.md`. Historical `IN_REVIEW` / remediation: `docs/control/EOS_S04F_ACCEPTANCE_REMEDIATION.md`. Claude verified; Claude did not accept. ChatGPT issued the acceptance decision. Event OS is not redeployed for this documentation-only record.
 
-**EOS-S05:** `ACCEPTED` on `2026-09-08` by `ChatGPT / AI CTO` under `MD-PR-S035` at accepted implementation SHA `eba137712c65c6f59b77fe2a88a8f4a277228cd9`. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised: false`. Live Event OS deployment `ac6b5f2d-8c9c-41dc-ab93-cd3e5c154151` already carries that SHA and is not redeployed for this record. Control Tower is not redeployed. `TDR-S05-001` is CLOSED. Venue evidence remains metadata-only (`TDR-S05-002`, non-blocking). Historic `MDOS/slice5` filenames retain `RATIFICATION DRAFT` as evidence. Historic `MD-PR-0232`–`MD-PR-0291` remain `NOT_EXECUTED` traceability units. Catalogue accepted-slice count is 5. Claude verified; Claude did not accept. ChatGPT issued the acceptance decision. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. Recommended next control ID `MD-PR-S036` is not implementation authority. Production operations are not authorised (`productionAuthorised=false`). Acceptance record: `docs/control/EOS_S05_ACCEPTANCE.md`.
+**EOS-S05:** `ACCEPTED` on `2026-09-08` by `ChatGPT / AI CTO` under `MD-PR-S035` at accepted implementation SHA `eba137712c65c6f59b77fe2a88a8f4a277228cd9`. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised: false`. Catalogue accepted-slice count is 5. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. Recommended next control ID `MD-PR-S036` is not implementation authority.
+
+**MD-PR-UX001:** Cross-slice Event OS UX quality uplift across accepted EOS-S01–EOS-S05 surfaces. Does not accept a new slice, reopen EOS-S01–EOS-S05, consume `MD-PR-S036`, or authorise production. Evidence: `docs/control/MD_PR_UX001.md`.
 
 Historical sentence “Implementation of EOS-S04A–F is not authorised as a product slice” applied before CEO S04A–S04F implementation authority. For S04A–S04F that sentence is superseded. The EOS-S04E and EOS-S04F controlled slice pack filenames still contain `DRAFT`. Current programme status for S04E is `ACCEPTED`. Current programme status for S04F is `ACCEPTED`. Historical `IN_REVIEW / NOT READY` on 2026-09-08 remains dated history.
 

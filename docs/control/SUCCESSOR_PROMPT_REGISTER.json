@@ -282,6 +282,14 @@
       "product": "EVENT_OS",
       "title": "Recommended next control ID after EOS-S05 acceptance",
       "authorising_instruction": "Reserved recommendation only. This is not implementation authority for EOS-S06. EOS-S06 remains NOT_STARTED / NOT_AUTHORISED."
+    },
+    {
+      "prompt_control_id": "MD-PR-UX001",
+      "native_id": "UX001",
+      "slice_id": "EOS-S01-S05",
+      "product": "EVENT_OS",
+      "title": "Event OS cross-slice UX quality uplift",
+      "authorising_instruction": "Implement the authorised UX uplift across accepted EOS-S01–EOS-S05 surfaces only. Do not consume MD-PR-S036, start EOS-S06, change accepted-slice count, or authorise production."
     }
   ]
 }
