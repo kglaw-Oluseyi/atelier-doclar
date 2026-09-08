@@ -37,6 +37,7 @@
 | First Event OS deploy after S039 | Product defect (S039) | V2 mutated current cost rules/templates and the V1 receipt at the same document version, so Postgres CAS refused boot | Increment versions on durable mutations; V1 replay no longer rewrites the receipt | Redeploy after correction |
 | Live whole-slice change list empty | Product defect (S039) | Change idempotency matched org-wide summary, so a later engagement reused an earlier proposal | Bind semantic hash and alreadyApplied to engagement | Intelligence tests pass |
 | Planner Budget Studio showed Restricted | Product defect (S038/S039) | Redaction used the whole role catalogue, so every staff actor appeared to hold READ_ONLY_AUDITOR | Redact only when the actor has an active auditor assignment | Planner sees integer minor units; auditor still redacted |
+| Live whole-slice private-object assert | Test defect then product defect (S039) | Immediate retrieve count raced the reload; live store then rejected `discovery/` keys as unsafe | Wait for retrieve or failure; allow governed `discovery/` object keys | Live E2E rerun |
 
 ## Carried debt
 

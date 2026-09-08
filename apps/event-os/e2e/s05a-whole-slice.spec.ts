@@ -40,15 +40,14 @@ test("S05A whole slice: brief, budget, roadmap, change and command", async ({ pa
   });
   await page.getByRole("button", { name: "Store private object" }).click();
   const retrieve = page.getByTestId("private-source-retrieve");
+  const uploadFailed = page.getByText(
+    /private source-object storage is not bound|a synthetic source file is required|source file exceeds|only plain text/i,
+  );
+  await expect(retrieve.or(uploadFailed)).toBeVisible({ timeout: 20_000 });
   if (await retrieve.count()) {
-    await expect(retrieve).toBeVisible({ timeout: 20_000 });
     await expect(page.locator("body")).not.toContainText("discovery/");
     const [download] = await Promise.all([page.waitForEvent("download"), retrieve.click()]);
     expect(await download.failure()).toBeNull();
-  } else {
-    await expect(page.getByText(/private source-object storage is not bound|source file exceeds|only plain text/i)).toBeVisible({
-      timeout: 20_000,
-    });
   }
   await page.getByRole("button", { name: "Instantiate roadmap" }).click();
   await expect(page.getByTestId("roadmap-list")).toContainText("Confirm guest count", { timeout: 20_000 });

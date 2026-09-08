@@ -531,6 +531,7 @@ export {
   layoutSourceObjectKey,
   layoutDerivativeObjectKey,
   layoutExportObjectKey,
+  discoverySourceObjectKey,
   assertSafeObjectKey,
   type LayoutBinaryObject,
   type LayoutBinaryStore,

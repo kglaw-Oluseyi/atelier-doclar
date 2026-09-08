@@ -65,8 +65,16 @@ export function layoutExportObjectKey(input: {
   return `layout-exports/${input.organisationId}/${input.eventId}/${input.layoutId}/${input.jobId}.${input.format.toLowerCase()}`;
 }
 
+export function discoverySourceObjectKey(input: {
+  organisationId: string;
+  engagementId: string;
+  artefactId: string;
+}): string {
+  return `discovery/${input.organisationId}/${input.engagementId}/${input.artefactId}`;
+}
+
 export function assertSafeObjectKey(key: string): void {
-  if (!/^layout-(assets|exports)\/[A-Za-z0-9._/-]+$/.test(key) || key.includes("..")) {
+  if (!/^(layout-(assets|exports)|discovery)\/[A-Za-z0-9._/-]+$/.test(key) || key.includes("..") || /^https?:\/\//i.test(key)) {
     throw new Error("unsafe object key");
   }
 }

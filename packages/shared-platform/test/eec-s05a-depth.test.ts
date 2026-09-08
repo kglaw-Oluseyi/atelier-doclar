@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { evaluateBudgetExpr, parseBudgetExpr } from "../src/eec-budget-engine.js";
+import { assertSafeObjectKey, discoverySourceObjectKey } from "../src/layout-asset-store.js";
 import { formatMoneyMinor } from "../src/eec-money.js";
 import { calculateSchedule, compareBudgetScenariosOnSnap, nextGovernedInterviewTurn, recordConversationTurnOnSnap, selectPriceSource } from "../src/eec-s05a-depth.js";
 import { calculateCriticalPath } from "../src/eec-intelligence.js";
@@ -355,6 +356,16 @@ test("private source objects reject public URLs and leak no storage key", () => 
       }),
     (error: unknown) => error instanceof PlatformError && error.code === "VALIDATION_FAILED",
   );
+  assert.doesNotThrow(() =>
+    assertSafeObjectKey(
+      discoverySourceObjectKey({
+        organisationId,
+        engagementId: engagement.id,
+        artefactId: "11111111-1111-4111-8111-111111111301",
+      }),
+    ),
+  );
+  assert.throws(() => assertSafeObjectKey("https://example.test/leak"), (error: unknown) => error instanceof Error);
   const stored = service.recordDiscoverySource(planner, {
     organisationId,
     engagementId: engagement.id,

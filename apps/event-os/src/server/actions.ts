@@ -6,6 +6,7 @@ import {
   HONORIFICS,
   NonProductionIdentityAdapter,
   PlatformError,
+  discoverySourceObjectKey,
   type AgeBand,
   type Honorific,
 } from "@maison-doclar/shared-platform";
@@ -4247,7 +4248,11 @@ export async function recordDiscoveryObjectAction(formData: FormData): Promise<v
       }
       const bytes = new Uint8Array(await file.arrayBuffer());
       const checksum = createHash("sha256").update(bytes).digest("hex");
-      const objectKey = `discovery/${String(formData.get("organisationId") ?? "")}/${engagementId}/${crypto.randomUUID()}`;
+      const objectKey = discoverySourceObjectKey({
+        organisationId: String(formData.get("organisationId") ?? ""),
+        engagementId,
+        artefactId: crypto.randomUUID(),
+      });
       if (/^https?:\/\//i.test(objectKey)) {
         throw new PlatformError("VALIDATION_FAILED", "source objects cannot be stored as public URLs");
       }
