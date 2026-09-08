@@ -48,6 +48,7 @@ export default defineConfig({
       EVENT_OS_ATELIER_SESSION_SECRET: productionLike
         ? (process.env.EVENT_OS_ATELIER_SESSION_SECRET ?? "ci-event-os-atelier-session-secret-32")
         : "s04e-atelier-session-secret-not-for-production",
+      EVENT_OS_LAYOUT_EXPORT_FIXTURE_STORE: "1",
     },
   },
 });

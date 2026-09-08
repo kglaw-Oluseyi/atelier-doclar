@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { jsonError } from "../../../../../../../../server/http";
-import { createLayoutBinaryStoreFromEnv } from "../../../../../../../../server/layout-s3-store";
+import { resolveLayoutBinaryStore } from "../../../../../../../../server/layout-s3-store";
 import { getRuntime } from "../../../../../../../../server/runtime";
 import { requireActor } from "../../../../../../../../server/with-session";
 
@@ -22,7 +22,7 @@ export async function GET(
     const organisationId = new URL(request.url).searchParams.get("organisationId");
     if (!organisationId) return NextResponse.json({ ok: false, code: "VALIDATION_FAILED" }, { status: 400 });
     const job = getRuntime().service.getStoredLayoutExport(actor, organisationId, eventId, layoutId, jobId);
-    const store = createLayoutBinaryStoreFromEnv();
+    const store = resolveLayoutBinaryStore();
     const object = await store?.get(job.objectKey);
     if (!object) return NextResponse.json({ ok: false, code: "NOT_FOUND", message: "completed export was not found" }, { status: 404 });
     const filename = `layout-export-${job.marking.toLowerCase()}-${job.contentHash.slice(0, 12)}.${job.format.toLowerCase()}`;

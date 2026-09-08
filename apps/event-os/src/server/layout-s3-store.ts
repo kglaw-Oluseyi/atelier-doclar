@@ -6,7 +6,21 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
-import { assertSafeObjectKey, type LayoutBinaryObject, type LayoutBinaryStore } from "@maison-doclar/shared-platform";
+import { assertSafeObjectKey, MemoryLayoutBinaryStore, type LayoutBinaryObject, type LayoutBinaryStore } from "@maison-doclar/shared-platform";
+
+const fixtureGlobal = globalThis as typeof globalThis & { __eosFixtureExportStore?: MemoryLayoutBinaryStore };
+
+export function fixtureExportStoreEnabled(): boolean {
+  return env("EVENT_OS_LAYOUT_EXPORT_FIXTURE_STORE") === "1" && !layoutAssetEnvBound();
+}
+
+export function resolveLayoutBinaryStore(): LayoutBinaryStore | undefined {
+  const bound = createLayoutBinaryStoreFromEnv();
+  if (bound) return bound;
+  if (!fixtureExportStoreEnabled()) return undefined;
+  fixtureGlobal.__eosFixtureExportStore ??= new MemoryLayoutBinaryStore();
+  return fixtureGlobal.__eosFixtureExportStore;
+}
 
 function env(name: string): string | undefined {
   const value = process.env[name]?.trim();

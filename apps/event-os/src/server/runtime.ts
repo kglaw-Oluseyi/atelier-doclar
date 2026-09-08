@@ -12,7 +12,7 @@ import {
 } from "@maison-doclar/shared-platform";
 import { accessAuthority, atelierAccessConfig, databaseUrl, fixturesAllowed, rsvpAccessConfig, sessionConfig, vendorAccessConfig } from "./config";
 import { FileBackedPlatformStore } from "./file-store";
-import { createLayoutBinaryStoreFromEnv, layoutAssetEnvBound, layoutExportEnabled } from "./layout-s3-store";
+import { fixtureExportStoreEnabled, layoutAssetEnvBound, layoutExportEnabled, resolveLayoutBinaryStore } from "./layout-s3-store";
 
 export type PersistenceLabel = "POSTGRES" | "MEMORY_NON_PRODUCTION" | "UNAVAILABLE";
 export type MigrationStatus = "APPLIED" | "FAILED" | "UNAVAILABLE";
@@ -42,8 +42,9 @@ function platformOptions() {
     vendorAccess: vendorAccessConfig(),
     atelierAccess: atelierAccessConfig(),
     accessAuthority: accessAuthority(),
-    layoutExportEnabled: layoutExportEnabled() && layoutAssetEnvBound(),
+    layoutExportEnabled: (layoutExportEnabled() && layoutAssetEnvBound()) || fixtureExportStoreEnabled(),
     layoutAssetStoreConfigured: layoutAssetEnvBound(),
+    layoutBinaryStore: resolveLayoutBinaryStore(),
   };
 }
 
@@ -151,7 +152,7 @@ export async function flushRuntime(): Promise<void> {
 }
 
 export function layoutBinaryStore() {
-  return createLayoutBinaryStoreFromEnv();
+  return resolveLayoutBinaryStore();
 }
 
 export async function withDurable<T>(fn: () => Promise<T> | T): Promise<T> {

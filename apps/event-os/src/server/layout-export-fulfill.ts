@@ -7,12 +7,12 @@ import {
   type ActorContext,
   type LayoutExportJob,
 } from "@maison-doclar/shared-platform";
-import { createLayoutBinaryStoreFromEnv } from "./layout-s3-store";
+import { resolveLayoutBinaryStore } from "./layout-s3-store";
 import { getRuntime } from "./runtime";
 
 export async function fulfillLayoutExport(actor: ActorContext, job: LayoutExportJob): Promise<LayoutExportJob> {
   if (job.status === "COMPLETED") return job;
-  const store = createLayoutBinaryStoreFromEnv();
+  const store = resolveLayoutBinaryStore();
   const service = getRuntime().service;
   if (!store?.configured) {
     return service.failLayoutExport(actor, {
