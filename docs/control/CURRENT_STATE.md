@@ -105,7 +105,7 @@ MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is A
 **EOS-S05A PRINCIPAL EXPERIENCE: Executive Event Command**
 **EOS-S05A IMPLEMENTATION AUTHORISED: YES — Foundation Milestone A only (`EEC-00`–`EEC-10`)**
 **EOS-S05A ACCEPTED: NO**
-**EOS-S05A STATUS: RATIFIED / FOUNDATION MILESTONE A AUTHORISED / NOT ACCEPTED**
+**EOS-S05A STATUS: RATIFIED / FOUNDATION MILESTONE A IMPLEMENTED / NOT ACCEPTED**
 **EOS-S05A PROMPT CONTROL ID: MD-PR-S037**
 **EOS-S05A CATALOGUE SLICE: NO**
 **EOS-S05A LATER UNITS: EEC-11–EEC-45 RATIFIED BUT UNRELEASED**
@@ -150,7 +150,7 @@ Event OS S01–S03 remain formally accepted. EOS-S04 is CLOSED / ACCEPTED after 
 
 **MD-PR-UX001:** Cross-slice Event OS UX quality uplift across accepted EOS-S01–EOS-S05 surfaces. Does not accept a new slice, reopen EOS-S01–EOS-S05, consume `MD-PR-S036`, or authorise production. Evidence: `docs/control/MD_PR_UX001.md`.
 
-**EOS-S05A:** `RATIFIED / FOUNDATION MILESTONE A AUTHORISED / NOT ACCEPTED` on `2026-09-08` by George Lawson under `MD-PR-S037`. Controlled non-catalogue insert after accepted EOS-S05 and before historical EOS-S06. Catalogue accepted-slice count remains 5. `EEC-00`–`EEC-10` authorised. `EEC-11`–`EEC-45` ratified but unreleased. `MD-PR-S036` is not consumed. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. Production remains unauthorised. Canonical corpus: `docs/control/eos-s05a/`. Ratification: `docs/control/EOS_S05A_RATIFICATION.md`. Claude-in-Chrome is deferred. EOS-S05A is not accepted.
+**EOS-S05A:** `RATIFIED / FOUNDATION MILESTONE A IMPLEMENTED / NOT ACCEPTED` on `2026-09-08` by George Lawson under `MD-PR-S037`. Controlled non-catalogue insert after accepted EOS-S05 and before historical EOS-S06. Catalogue accepted-slice count remains 5. `EEC-00`–`EEC-10` implemented. `EEC-11`–`EEC-45` ratified but unreleased and not started. `MD-PR-S036` is not consumed. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. Production remains unauthorised. Canonical corpus: `docs/control/eos-s05a/`. Ratification: `docs/control/EOS_S05A_RATIFICATION.md`. Claude-in-Chrome is deferred. EOS-S05A is not accepted.
 
 Historical sentence “Implementation of EOS-S04A–F is not authorised as a product slice” applied before CEO S04A–S04F implementation authority. For S04A–S04F that sentence is superseded. The EOS-S04E and EOS-S04F controlled slice pack filenames still contain `DRAFT`. Current programme status for S04E is `ACCEPTED`. Current programme status for S04F is `ACCEPTED`. Historical `IN_REVIEW / NOT READY` on 2026-09-08 remains dated history.
 

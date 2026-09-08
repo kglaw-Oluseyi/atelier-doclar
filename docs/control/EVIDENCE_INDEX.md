@@ -468,7 +468,7 @@ RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S028`. Milestone 2 implem
 | EV-EOS-S05A-RATIFY | DOCUMENT | CEO ratification and Foundation Milestone A authority | `docs/control/EOS_S05A_RATIFICATION.md` |
 | EV-EOS-S05A-IMPL | DOCUMENT | Implementation record | `docs/control/EOS_S05A_IMPLEMENTATION.md` |
 | EV-EOS-S05A-LEDGER | DOCUMENT | Slice build ledger | `docs/control/EOS_S05A_BUILD_LEDGER.md` |
-| EV-EOS-S05A-ADR | DOCUMENT | Architecture ADR placeholder | `docs/control/ADR_EOS_S05A_EXECUTIVE_EVENT_COMMAND.md` |
+| EV-EOS-S05A-ADR | DOCUMENT | Architecture ADR for Foundation Milestone A | `docs/control/ADR_EOS_S05A_EXECUTIVE_EVENT_COMMAND.md` |
 | EV-EOS-S05A-00 | DOCUMENT | Pack index | `docs/control/eos-s05a/00_EXECUTIVE_EVENT_COMMAND_PACK_INDEX.md` |
 | EV-EOS-S05A-01 | DOCUMENT | Ratification, architecture and compatibility | `docs/control/eos-s05a/01_RATIFICATION_ARCHITECTURE_AND_COMPATIBILITY.md` |
 | EV-EOS-S05A-02 | DOCUMENT | Product, domain and data specification | `docs/control/eos-s05a/02_PRODUCT_DOMAIN_AND_DATA_SPECIFICATION.md` |
@@ -481,5 +481,5 @@ RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S028`. Milestone 2 implem
 | EV-EOS-S05A-05 | DOCUMENT | Independent verification and acceptance model | `docs/control/eos-s05a/05_INDEPENDENT_VERIFICATION_AND_ACCEPTANCE.md` |
 | EV-EOS-S05A-PACK | DOCUMENT | Consolidated v2.0 Word pack (controlling source for 02A and 04A–04D) | `docs/control/eos-s05a/Maison_Doclar_EOS_S05A_Detailed_Cursor_Prompt_Pack_v2.0.docx` |
 
-RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S037`. Canonical corpus placed at `docs/control/eos-s05a/` with original filenames preserved. `EEC-00`–`EEC-10` authorised. `EEC-11`–`EEC-45` ratified but unreleased. Catalogue accepted-slice count remains 5. `MD-PR-S036` is not consumed. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. Production remains unauthorised. Documentation commit does not redeploy Event OS or Control Tower. EOS-S05A is not accepted.
+RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S037`. Canonical corpus placed at `docs/control/eos-s05a/` with original filenames preserved. `EEC-00`–`EEC-10` implemented. `EEC-11`–`EEC-45` ratified but unreleased and not started. Catalogue accepted-slice count remains 5. `MD-PR-S036` is not consumed. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. Production remains unauthorised. Event OS is deployed after Milestone A application work. Control Tower is not redeployed. EOS-S05A is not accepted.
 

@@ -3,30 +3,37 @@
 **Slice ID:** `EOS-S05A`
 **Prompt Control ID:** `MD-PR-S037`
 **Starting baseline:** `ad69421026fe09b5d989252cadfe60eeac3cabf5`
-**Status:** `RATIFIED / FOUNDATION MILESTONE A AUTHORISED / NOT ACCEPTED`
+**Documentation SHA:** `32cde9f74f78482f182d29ea9e32a7f4e180eaa6`
+**Status:** `RATIFIED / FOUNDATION MILESTONE A IMPLEMENTED / NOT ACCEPTED`
 **Production:** unauthorised
 **Catalogue accepted-slice count:** remains 5
-**Next authorised range:** `EEC-00`–`EEC-10`
+**Implemented range:** `EEC-00`–`EEC-10`
 **Unreleased ratified range:** `EEC-11`–`EEC-45`
 **EOS-S06:** `NOT_STARTED / NOT_AUTHORISED`
 
 ## Foundation Milestone A — control, architecture and discovery foundations
 
-Historic / pack units: `EEC-00`–`EEC-10`. Later units remain ratified but unreleased.
+| Unit | Title | Status |
+|------|-------|--------|
+| EEC-00 | Baseline, authority ingestion and compatibility ledger | COMPLETE |
+| EEC-01 | Bounded-context ADR and package architecture | COMPLETE |
+| EEC-02 | Permission catalogue and role-safe projection | COMPLETE |
+| EEC-03 | Identifiers, primitives and assertion ontology | COMPLETE |
+| EEC-04 | Persistence, indexes and additive migration | COMPLETE |
+| EEC-05 | Engagement opportunity and discovery engagement | COMPLETE |
+| EEC-06 | Consent, participants and interview-session lifecycle | COMPLETE |
+| EEC-07 | Source artefacts, transcript segments and provenance | COMPLETE for staff notes; binary upload deferred |
+| EEC-08 | Coverage catalogue and applicability engine | COMPLETE |
+| EEC-09 | Candidate assertion extraction and human review | COMPLETE |
+| EEC-10 | Contradiction, staleness and clarification | COMPLETE |
 
-| Unit | Title | Status at documentation commit |
-|------|-------|--------------------------------|
-| EEC-00 | Baseline, authority ingestion and compatibility ledger | Documentation/authority records created; application behaviour not added |
-| EEC-01 | Bounded-context ADR and package architecture | NOT STARTED |
-| EEC-02 | Permission catalogue and role-safe projection | NOT STARTED |
-| EEC-03 | Identifiers, primitives and assertion ontology | NOT STARTED |
-| EEC-04 | Persistence, indexes and additive migration | NOT STARTED |
-| EEC-05 | Engagement opportunity and discovery engagement | NOT STARTED |
-| EEC-06 | Consent, participants and interview-session lifecycle | NOT STARTED |
-| EEC-07 | Source artefacts, transcript segments and provenance | NOT STARTED |
-| EEC-08 | Coverage catalogue and applicability engine | NOT STARTED |
-| EEC-09 | Candidate assertion extraction and human review | NOT STARTED |
-| EEC-10 | Contradiction, staleness and clarification | NOT STARTED |
+## Application commits
+
+| SHA | Message |
+|-----|---------|
+| `32cde9f74f78482f182d29ea9e32a7f4e180eaa6` | `docs(control): ratify EOS-S05A executive event command` |
+| `bcfc3ba` | `feat(platform): add EOS-S05A discovery foundation domain` |
+| `cdf1cce` | `feat(event-os): add discovery Command Atelier foundation surfaces` |
 
 ## Canonical corpus
 
@@ -44,8 +51,23 @@ Historic / pack units: `EEC-00`–`EEC-10`. Later units remain ratified but unre
 | Document 05 | `docs/control/eos-s05a/05_INDEPENDENT_VERIFICATION_AND_ACCEPTANCE.md` |
 | Consolidated Word pack | `docs/control/eos-s05a/Maison_Doclar_EOS_S05A_Detailed_Cursor_Prompt_Pack_v2.0.docx` |
 
-Document 02A and Volumes 04A–04D are faithful Markdown representations extracted from the consolidated Word pack. The Word file remains the controlling ratified source for those parts.
+## First-run failures
+
+| Command | Classification | Root cause | Correction | Rerun |
+|---------|----------------|------------|------------|-------|
+| Shared-platform `getDiscoveryWorkspace` capability filter | Product defect | `permissionAllowed` received `ActorContext` instead of `ActorSnapshot` | Filter with `ctx.actor` | 7/7 EEC platform tests pass |
+| `pnpm typecheck` | Product defect | `CoverageState` type not exported; Home empty-state JSX lacked a parent | Export type; wrap fragment | `pnpm typecheck` pass |
+| Focused E2E assertion label | Product defect | Fixture extraction stores `EXTRACTED`, so review controls were hidden and the label said “Proposal” | Treat `EXTRACTED` as a reviewable AI proposal | Focused E2E pass |
+| Focused E2E coverage locator | Test defect | Asserted `data-testid="discovery-coverage"` which was only a section id | Assert `discovery-coverage-list` contains `Conflicted` | Focused E2E pass |
+| Focused E2E auditor copy | Test defect | Blocked-review copy appears once per assertion | Use `.first()` | Focused E2E pass |
+
+## Carried debt
+
+| ID | Note |
+|----|------|
+| TDR-S05A-001 | EEC-07 binary/object-storage source artefacts are not implemented. Milestone A records typed staff notes with inert text, checksummed segments and fixture extraction only. |
+| TDR-S05A-002 | Opportunity close and owner-assignment UI are service-backed but not exposed as dedicated Command Atelier forms. |
 
 ## Deployment
 
-Documentation commit: no Railway deployment. Event OS deployment is deferred until Foundation Milestone A application work is complete and only if Event OS/shared runtime or migrations changed. Control Tower is not a deploy target.
+Documentation commit: no Railway deployment. Event OS is deployed once after Foundation Milestone A application work because shared runtime and the additive migration changed. Control Tower is not a deploy target.

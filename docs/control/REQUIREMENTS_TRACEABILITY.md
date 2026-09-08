@@ -366,8 +366,8 @@
 | Implementation ledger | `docs/control/EOS_S05A_BUILD_LEDGER.md` |
 | Implementation record | `docs/control/EOS_S05A_IMPLEMENTATION.md` |
 | ADR | `docs/control/ADR_EOS_S05A_EXECUTIVE_EVENT_COMMAND.md` |
-| Production / Railway / real operations | NO at documentation commit; Event OS deploy only after Milestone A application work if runtime/migrations change |
-| Status | RATIFIED / FOUNDATION MILESTONE A AUTHORISED / NOT ACCEPTED; catalogue accepted-slice count remains 5 |
+| Production / Railway / real operations | Event OS deploy after Milestone A application work; Control Tower not redeployed; `productionAuthorised` remains false |
+| Status | RATIFIED / FOUNDATION MILESTONE A IMPLEMENTED / NOT ACCEPTED; catalogue accepted-slice count remains 5 |
 | Successor | EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`; `MD-PR-S036` is not consumed |
 
 ## EOS-S04A
