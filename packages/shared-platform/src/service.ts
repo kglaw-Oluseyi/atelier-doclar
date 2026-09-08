@@ -639,6 +639,31 @@ import {
   type MsgChannel,
   type MsgPurpose,
 } from "./communications-schemas.js";
+import {
+  AddParticipantInputSchema,
+  CreateOpportunityInputSchema,
+  ExtractAssertionsInputSchema,
+  RecordDiscoveryConsentInputSchema,
+  RecordSourceArtefactInputSchema,
+  ResolveConflictInputSchema,
+  ReviewAssertionInputSchema,
+  SessionLifecycleInputSchema,
+  StartDiscoveryEngagementInputSchema,
+  UpdateOpportunityInputSchema,
+} from "./eec-schemas.js";
+import {
+  addParticipantOnSnap,
+  createOpportunityOnSnap,
+  extractAssertionsOnSnap,
+  recordDiscoveryConsentOnSnap,
+  recordSourceArtefactOnSnap,
+  resolveConflictOnSnap,
+  reviewAssertionOnSnap,
+  sessionLifecycleOnSnap,
+  startDiscoveryEngagementOnSnap,
+  updateOpportunityOnSnap,
+} from "./eec-operations.js";
+import { buildDiscoveryWorkspace, eecPermissionAllowed } from "./eec-projections.js";
 
 export interface ActorContext {
   personId: string;
@@ -6135,6 +6160,196 @@ export class PlatformService {
     return signSyntheticPayload(payload);
   }
 
+  listEngagementOpportunities(actor: ActorContext, organisationId: string) {
+    const { snap } = this.authorizeQuery(actor, "engagement.view", { organisationId });
+    return snap.engagementOpportunities.filter((item) => item.organisationId === organisationId);
+  }
+
+  listDiscoveryEngagements(actor: ActorContext, organisationId: string) {
+    const { snap } = this.authorizeQuery(actor, "engagement.view", { organisationId });
+    return snap.discoveryEngagements.filter((item) => item.organisationId === organisationId && item.status !== "ARCHIVED");
+  }
+
+  getDiscoveryWorkspace(actor: ActorContext, organisationId: string, engagementId: string) {
+    const { snap, ctx } = this.authorizeQuery(actor, "engagement.view", { organisationId });
+    const engagement = snap.discoveryEngagements.find((item) => item.id === engagementId && item.organisationId === organisationId);
+    if (!engagement) throw new PlatformError("NOT_FOUND", "discovery engagement was not found");
+    const opportunity = snap.engagementOpportunities.find((item) => item.id === engagement.opportunityId);
+    if (!opportunity) throw new PlatformError("NOT_FOUND", "engagement opportunity was not found");
+    const catalogue = [
+      "engagement.view",
+      "engagement.create",
+      "engagement.update",
+      "engagement.convert",
+      "discovery.session.view",
+      "discovery.session.manage",
+      "discovery.source.view",
+      "discovery.source.manage",
+      "discovery.assertion.review",
+      "executiveCommand.view",
+    ] as const;
+    const keys = catalogue.filter((key) => this.permissionAllowed(ctx.actor, key, { organisationId }));
+    return buildDiscoveryWorkspace({
+      opportunity,
+      engagement,
+      participants: snap.discoveryParticipants.filter((item) => item.engagementId === engagementId),
+      consents: snap.discoveryConsentRecords.filter((item) => item.engagementId === engagementId),
+      sessions: snap.interviewSessions.filter((item) => item.engagementId === engagementId),
+      artefacts: snap.sourceArtefacts.filter((item) => item.engagementId === engagementId),
+      segments: snap.sourceSegments.filter((item) => item.engagementId === engagementId),
+      assertions: snap.candidateAssertions.filter((item) => item.engagementId === engagementId),
+      conflicts: snap.assertionConflicts.filter((item) => item.engagementId === engagementId),
+      assessments: snap.coverageAssessments.filter((item) => item.engagementId === engagementId),
+      capabilities: eecPermissionAllowed(keys),
+      redactSensitive: ctx.actor.roles.some((role) => role.key === "READ_ONLY_AUDITOR"),
+    });
+  }
+
+  createEngagementOpportunity(actor: ActorContext, raw: unknown) {
+    const input = parseStrict(CreateOpportunityInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "engagement.create",
+      scope: { organisationId: input.organisationId },
+      action: "engagement.created",
+      resourceType: "engagement_opportunity",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => createOpportunityOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  updateEngagementOpportunity(actor: ActorContext, raw: unknown) {
+    const input = parseStrict(UpdateOpportunityInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "engagement.update",
+      scope: { organisationId: input.organisationId },
+      action: "engagement.updated",
+      resourceType: "engagement_opportunity",
+      resourceId: input.opportunityId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap) => updateOpportunityOnSnap(snap, input, actor.now ?? new Date().toISOString(), input.expectedVersion),
+    });
+  }
+
+  startDiscoveryEngagement(actor: ActorContext, raw: unknown) {
+    const input = parseStrict(StartDiscoveryEngagementInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "engagement.create",
+      scope: { organisationId: input.organisationId },
+      action: "discovery.engagement.started",
+      resourceType: "discovery_engagement",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      replayIfAlreadyApplied: true,
+      alreadyApplied: (snap) =>
+        snap.discoveryEngagements.find((item) => item.opportunityId === input.opportunityId && item.status === "ACTIVE"),
+      run: (snap) => startDiscoveryEngagementOnSnap(snap, input, actor.now ?? new Date().toISOString()),
+    });
+  }
+
+  addDiscoveryParticipant(actor: ActorContext, raw: unknown) {
+    const input = parseStrict(AddParticipantInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "engagement.update",
+      scope: { organisationId: input.organisationId },
+      action: "discovery.participant.added",
+      resourceType: "discovery_participant",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => addParticipantOnSnap(snap, input, ctx.now),
+    });
+  }
+
+  recordDiscoveryConsent(actor: ActorContext, raw: unknown) {
+    const input = parseStrict(RecordDiscoveryConsentInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "discovery.session.manage",
+      scope: { organisationId: input.organisationId },
+      action: "consent.recorded",
+      resourceType: "discovery_consent",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => recordDiscoveryConsentOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  changeInterviewSession(actor: ActorContext, raw: unknown) {
+    const input = parseStrict(SessionLifecycleInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "discovery.session.manage",
+      scope: { organisationId: input.organisationId },
+      action: input.action === "COMPLETE" ? "interview.completed" : "interview.started",
+      resourceType: "interview_session",
+      resourceId: input.sessionId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      replayIfAlreadyApplied: input.action === "RESUME",
+      alreadyApplied: (snap) =>
+        input.sessionId
+          ? snap.interviewSessions.find((item) => item.id === input.sessionId && item.status === "ACTIVE")
+          : undefined,
+      run: (snap, ctx) => sessionLifecycleOnSnap(snap, input, ctx.now),
+    });
+  }
+
+  recordDiscoverySource(actor: ActorContext, raw: unknown) {
+    const input = parseStrict(RecordSourceArtefactInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "discovery.source.manage",
+      scope: { organisationId: input.organisationId },
+      action: "discovery.source.recorded",
+      resourceType: "source_artefact",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => recordSourceArtefactOnSnap(snap, input, ctx.now).artefact,
+    });
+  }
+
+  extractCandidateAssertions(actor: ActorContext, raw: unknown) {
+    const input = parseStrict(ExtractAssertionsInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "discovery.assertion.review",
+      scope: { organisationId: input.organisationId },
+      action: "assertion.proposed",
+      resourceType: "candidate_assertion",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => {
+        const created = extractAssertionsOnSnap(snap, input, ctx.now, actor.personId, actor.actorKind);
+        return created[0] ?? { id: input.artefactId };
+      },
+    });
+  }
+
+  reviewCandidateAssertion(actor: ActorContext, raw: unknown) {
+    const input = parseStrict(ReviewAssertionInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "discovery.assertion.review",
+      scope: { organisationId: input.organisationId },
+      action: "assertion.reviewed",
+      resourceType: "candidate_assertion",
+      resourceId: input.assertionId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => reviewAssertionOnSnap(snap, input, ctx.now, actor.personId, actor.actorKind),
+    });
+  }
+
+  resolveAssertionConflict(actor: ActorContext, raw: unknown) {
+    const input = parseStrict(ResolveConflictInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "discovery.assertion.review",
+      scope: { organisationId: input.organisationId },
+      action: "assertion.conflict.resolved",
+      resourceType: "assertion_conflict",
+      resourceId: input.conflictId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => resolveConflictOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
   private requireCampaign(snap: PlatformSnapshot, organisationId: string, eventId: string, campaignId: string): Campaign {
     const campaign = snap.campaigns.find((item) => item.id === campaignId);
     if (!campaign || campaign.organisationId !== organisationId || campaign.eventId !== eventId) {
@@ -6984,6 +7199,19 @@ export class PlatformService {
       snap.layoutApprovals,
       snap.layoutPublications,
       snap.layoutExportJobs,
+      snap.engagementOpportunities,
+      snap.discoveryEngagements,
+      snap.discoveryParticipants,
+      snap.discoveryConsentRecords,
+      snap.interviewSessions,
+      snap.sourceArtefacts,
+      snap.sourceSegments,
+      snap.candidateAssertions,
+      snap.assertionConflicts,
+      snap.coverageCatalogueEditions,
+      snap.coverageRequirements,
+      snap.coverageAssessments,
+      snap.s05aMigrationReceipts,
       snap.guestDuplicateCandidates,
       snap.guestIntakeBatches,
       snap.rsvpPolicies,

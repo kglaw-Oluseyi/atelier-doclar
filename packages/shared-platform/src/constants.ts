@@ -362,6 +362,39 @@ export const PERMISSION_KEYS = [
   "layout.publish",
   "layout.publication.view",
   "layout.downstream.read",
+  "engagement.view",
+  "engagement.create",
+  "engagement.update",
+  "engagement.convert",
+  "discovery.session.view",
+  "discovery.session.manage",
+  "discovery.source.view",
+  "discovery.source.manage",
+  "discovery.assertion.review",
+  "brief.view",
+  "brief.author",
+  "brief.submit",
+  "brief.decide",
+  "brief.publish",
+  "investment.view",
+  "investment.author",
+  "investment.recommend",
+  "investment.decide",
+  "budget.catalogue.view",
+  "budget.catalogue.manage",
+  "budget.calculate",
+  "budget.scenario.author",
+  "budget.recommend",
+  "budget.decide",
+  "roadmap.view",
+  "roadmap.author",
+  "roadmap.rebaseline",
+  "roadmap.decide",
+  "change.view",
+  "change.triage",
+  "change.decide",
+  "change.propagate",
+  "executiveCommand.view",
 ] as const;
 
 export const SYSTEM_ROLE_KEYS = [
@@ -573,6 +606,110 @@ export const S05_SENSITIVE_PERMISSIONS = [
   "layout.approval.decide",
   "layout.publish",
 ] as const;
+
+export const S05A_SENSITIVE_PERMISSIONS = [
+  "engagement.convert",
+  "brief.decide",
+  "brief.publish",
+  "investment.decide",
+  "budget.decide",
+  "roadmap.decide",
+  "change.decide",
+  "change.propagate",
+  "executiveCommand.view",
+] as const;
+
+export const ASSERTION_KINDS = [
+  "FACT",
+  "PREFERENCE",
+  "ASPIRATION",
+  "PRIORITY",
+  "CONSTRAINT",
+  "NON_NEGOTIABLE",
+  "ASSUMPTION",
+  "DECISION",
+  "UNKNOWN",
+  "NOT_APPLICABLE",
+  "RISK_SIGNAL",
+  "DEPENDENCY_SIGNAL",
+  "INVESTMENT_INSTRUCTION",
+  "COMMUNICATION_PREFERENCE",
+] as const;
+
+export const CONFIRMATION_STATES = [
+  "CAPTURED",
+  "EXTRACTED",
+  "PROPOSED",
+  "STAFF_REVIEWED",
+  "CLIENT_CONFIRMED",
+  "GOVERNING",
+  "DISPUTED",
+  "SUPERSEDED",
+  "REJECTED",
+] as const;
+
+export const SENSITIVITY_CLASSES = [
+  "STANDARD",
+  "CONTACT",
+  "FAMILY_PRIVATE",
+  "CULTURAL_RELIGIOUS",
+  "ACCESSIBILITY_HEALTH",
+  "SECURITY",
+  "FINANCIAL",
+  "CONFIDENTIAL_SURPRISE",
+] as const;
+
+export const COVERAGE_STATES = [
+  "UNASSESSED",
+  "NOT_YET_RELEVANT",
+  "UNKNOWN",
+  "PARTIAL",
+  "ANSWERED_UNCONFIRMED",
+  "CONFIRMED",
+  "NOT_APPLICABLE",
+  "CONFLICTED",
+  "STALE",
+] as const;
+
+export const INTERVIEW_SESSION_STATES = [
+  "DRAFT",
+  "READY",
+  "ACTIVE",
+  "PAUSED",
+  "COMPLETED",
+  "ABANDONED",
+  "CANCELLED",
+] as const;
+
+export const DISCOVERY_CONSENT_DIMENSIONS = [
+  "PARTICIPATION",
+  "AUDIO_RECORDING",
+  "TRANSCRIPTION",
+  "AI_ANALYSIS",
+  "SOURCE_RETENTION",
+  "DEIDENTIFIED_BENCHMARKING",
+] as const;
+
+export const ENQUIRY_CHANNELS = ["REFERRAL", "DIRECT", "PARTNER", "OTHER"] as const;
+export const OPPORTUNITY_STAGES = ["ENQUIRY", "QUALIFYING", "DISCOVERY", "CONVERTED", "CLOSED"] as const;
+export const SOURCE_ARTEFACT_KINDS = [
+  "STAFF_NOTE",
+  "UPLOADED_DOCUMENT",
+  "AUDIO_METADATA",
+  "TRANSCRIPT",
+  "APPROVED_MESSAGE_INTAKE",
+] as const;
+export const ASSERTION_DIRECTNESS = ["DIRECT_STATEMENT", "INTERPRETATION"] as const;
+export const CONFIDENCE_LEVELS = ["LOW", "MEDIUM", "HIGH"] as const;
+export const CONFLICT_SEVERITIES = ["LOW", "MEDIUM", "HIGH"] as const;
+export const CONFLICT_RESOLUTIONS = [
+  "SELECT",
+  "SUPERSEDE",
+  "SCOPE_SEPARATE",
+  "COEXIST",
+  "REQUEST_CLARIFICATION",
+] as const;
+export const MONEY_CURRENCIES = ["NGN", "GBP", "USD", "EUR"] as const;
 
 export const VENUE_RECORD_STATUSES = ["ACTIVE", "ARCHIVED"] as const;
 export const VENUE_VISIBILITY_POLICIES = ["ORGANISATION_STAFF", "ASSIGNED_CLIENTS"] as const;

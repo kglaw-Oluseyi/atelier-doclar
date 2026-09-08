@@ -13,6 +13,7 @@ import { applyS05FixturesIfMissing } from "./venue-fixtures.js";
 import { applyEosS05ToSnapshot } from "./venue-migration.js";
 import { applyEosS05ObjectsToSnapshot } from "./spatial-migration.js";
 import { applyEosS05AssuranceToSnapshot } from "./layout-assurance-migration.js";
+import { applyEosS05AToSnapshot } from "./eec-migration.js";
 import { loadNonProductionFixtures } from "./bootstrap.js";
 import { seededPermissions, seededRoles } from "./catalog.js";
 import type { PgQueryable } from "./postgres-schema.js";
@@ -129,6 +130,12 @@ function applyS05Layer(store: PlatformStore, now = "2026-09-08T02:00:00.000Z"): 
   if (withFixtures !== snap) store.replace(withFixtures);
 }
 
+function applyS05ALayer(store: PlatformStore, now = "2026-09-08T22:00:00.000Z"): void {
+  const snap = store.snapshot();
+  const migrated = applyEosS05AToSnapshot(snap, now);
+  if (migrated !== snap) store.replace(migrated);
+}
+
 /** Replay-safe: insert missing catalogue rows only. Never rewrite accepted permission bodies. */
 export function ensureMissingCatalogueRecords(store: PlatformStore): void {
   const snap = store.snapshot();
@@ -160,6 +167,7 @@ export function applySyntheticSnapshot(store: PlatformStore, options: PlatformSe
   applyS04ELayer(store);
   applyS04FLayer(store);
   applyS05Layer(store);
+  applyS05ALayer(store);
   return service;
 }
 
@@ -178,6 +186,7 @@ export async function applySyntheticSeedIfNeeded(
     applyS04ELayer(store);
     applyS04FLayer(store);
     applyS05Layer(store);
+  applyS05ALayer(store);
     return {
       service,
       seed: {
@@ -200,6 +209,7 @@ export async function applySyntheticSeedIfNeeded(
   applyS04ELayer(store);
   applyS04FLayer(store);
   applyS05Layer(store);
+  applyS05ALayer(store);
   const durable = store as { flush?: () => Promise<void> };
   if (typeof durable.flush === "function") await durable.flush();
   const recordCount = countableRecords(store.snapshot());

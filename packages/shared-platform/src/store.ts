@@ -138,6 +138,21 @@ import type {
   LayoutValidationRun,
 } from "./layout-assurance-schemas.js";
 import type {
+  AssertionConflict,
+  CandidateAssertion,
+  CoverageAssessment,
+  CoverageCatalogueEdition,
+  CoverageRequirement,
+  DiscoveryConsentRecord,
+  DiscoveryEngagement,
+  DiscoveryParticipant,
+  EngagementOpportunity,
+  InterviewSession,
+  S05AMigrationReceipt,
+  SourceArtefact,
+  SourceSegment,
+} from "./eec-schemas.js";
+import type {
   GuestDuplicateCandidate,
   GuestHousehold,
   GuestIntakeBatch,
@@ -313,6 +328,19 @@ export interface PlatformSnapshot {
   layoutPublications: LayoutPublication[];
   layoutExportJobs: LayoutExportJob[];
   s05MigrationReceipts: S05MigrationReceipt[];
+  engagementOpportunities: EngagementOpportunity[];
+  discoveryEngagements: DiscoveryEngagement[];
+  discoveryParticipants: DiscoveryParticipant[];
+  discoveryConsentRecords: DiscoveryConsentRecord[];
+  interviewSessions: InterviewSession[];
+  sourceArtefacts: SourceArtefact[];
+  sourceSegments: SourceSegment[];
+  candidateAssertions: CandidateAssertion[];
+  assertionConflicts: AssertionConflict[];
+  coverageCatalogueEditions: CoverageCatalogueEdition[];
+  coverageRequirements: CoverageRequirement[];
+  coverageAssessments: CoverageAssessment[];
+  s05aMigrationReceipts: S05AMigrationReceipt[];
   rsvpPolicies: RsvpPolicy[];
   rsvpQuestionnaires: RsvpQuestionnaire[];
   rsvpInvitations: RsvpInvitation[];
@@ -482,6 +510,19 @@ export function emptySnapshot(): PlatformSnapshot {
     layoutPublications: [],
     layoutExportJobs: [],
     s05MigrationReceipts: [],
+    engagementOpportunities: [],
+    discoveryEngagements: [],
+    discoveryParticipants: [],
+    discoveryConsentRecords: [],
+    interviewSessions: [],
+    sourceArtefacts: [],
+    sourceSegments: [],
+    candidateAssertions: [],
+    assertionConflicts: [],
+    coverageCatalogueEditions: [],
+    coverageRequirements: [],
+    coverageAssessments: [],
+    s05aMigrationReceipts: [],
     rsvpPolicies: [],
     rsvpQuestionnaires: [],
     rsvpInvitations: [],
@@ -635,6 +676,19 @@ export function normalizeSnapshot(input: PlatformSnapshot): PlatformSnapshot {
     layoutPublications: input.layoutPublications ?? [],
     layoutExportJobs: input.layoutExportJobs ?? [],
     s05MigrationReceipts: input.s05MigrationReceipts ?? [],
+    engagementOpportunities: input.engagementOpportunities ?? [],
+    discoveryEngagements: input.discoveryEngagements ?? [],
+    discoveryParticipants: input.discoveryParticipants ?? [],
+    discoveryConsentRecords: input.discoveryConsentRecords ?? [],
+    interviewSessions: input.interviewSessions ?? [],
+    sourceArtefacts: input.sourceArtefacts ?? [],
+    sourceSegments: input.sourceSegments ?? [],
+    candidateAssertions: input.candidateAssertions ?? [],
+    assertionConflicts: input.assertionConflicts ?? [],
+    coverageCatalogueEditions: input.coverageCatalogueEditions ?? [],
+    coverageRequirements: input.coverageRequirements ?? [],
+    coverageAssessments: input.coverageAssessments ?? [],
+    s05aMigrationReceipts: input.s05aMigrationReceipts ?? [],
     rsvpPolicies: input.rsvpPolicies ?? [],
     rsvpQuestionnaires: input.rsvpQuestionnaires ?? [],
     rsvpInvitations: input.rsvpInvitations ?? [],

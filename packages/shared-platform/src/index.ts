@@ -789,3 +789,38 @@ export {
   type MsgChannel,
   type MsgPurpose,
 } from "./communications-schemas.js";
+export {
+  ASSERTION_KINDS,
+  CONFIRMATION_STATES,
+  SENSITIVITY_CLASSES,
+  COVERAGE_STATES,
+  S05A_SENSITIVE_PERMISSIONS,
+} from "./constants.js";
+export {
+  EOS_S05A_MIGRATION_ID,
+  applyEosS05AToSnapshot,
+  migrateEosS05A,
+} from "./eec-migration.js";
+export { validateS05APersistedCollections } from "./eec-persistence.js";
+export {
+  CreateOpportunityInputSchema,
+  StartDiscoveryEngagementInputSchema,
+  MoneyDtoSchema,
+  type EngagementOpportunity,
+  type DiscoveryEngagement,
+  type CandidateAssertion,
+  type AssertionConflict,
+  type CoverageAssessment,
+} from "./eec-schemas.js";
+export { addMoney, exactHash, moneyFromDto, moneyToDto, nfc } from "./eec-hash.js";
+export { buildDiscoveryWorkspace, eecPermissionAllowed, type DiscoveryWorkspace, type EecCapabilities } from "./eec-projections.js";
+export { extractFixtureProposals, sanitiseInertText } from "./eec-extraction.js";
+export * as engagementIntake from "./engagement-intake/index.js";
+export * as discoveryIntelligence from "./discovery-intelligence/index.js";
+export * as eventBrief from "./event-brief/index.js";
+export * as investmentIntelligence from "./investment-intelligence/index.js";
+export * as budgetIntelligence from "./budget-intelligence/index.js";
+export * as roadmapIntelligence from "./roadmap-intelligence/index.js";
+export * as changeIntelligence from "./change-intelligence/index.js";
+export * as executiveEventCommand from "./executive-event-command/index.js";
+export * as aiAssistance from "./ai-assistance/index.js";
