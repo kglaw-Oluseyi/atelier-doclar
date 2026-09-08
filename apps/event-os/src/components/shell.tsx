@@ -24,6 +24,7 @@ export function AppShell({
     ["/app", "Home"],
     ["/app/clients", "Clients"],
     ["/app/events", "Events"],
+    ["/app/venues", "Venues"],
     ["/app/my-work", "My Work"],
     ["/app/academy", "Academy"],
   ] as const;

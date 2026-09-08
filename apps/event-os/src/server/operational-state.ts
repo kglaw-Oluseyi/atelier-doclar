@@ -419,6 +419,20 @@ export function successCopy(ok: string): string {
       return "A host decision request was published. Canonical Event OS records were not rewritten.";
     case "decision-reviewed":
       return "The host decision was reviewed. Canonical Event OS records remain unchanged.";
+    case "venue-created":
+      return "The organisation venue was recorded. It is synthetic and has not been adopted into an event.";
+    case "venue-fact":
+      return "The venue fact was recorded with provenance. Binary evidence was not uploaded.";
+    case "venue-fact-verified":
+      return "The venue fact was verified. This is not a safety certification.";
+    case "venue-adopted":
+      return "The venue was adopted into this event. The reusable organisation record was not changed.";
+    case "venue-override":
+      return "An event-only fact override was recorded. The reusable venue fact was not rewritten.";
+    case "layout-created":
+      return "The blank layout was persisted in millimetres. Screen pixels were not stored.";
+    case "layout-updated":
+      return "The layout setup was saved as a new immutable revision.";
     default:
       return "The change was recorded.";
   }

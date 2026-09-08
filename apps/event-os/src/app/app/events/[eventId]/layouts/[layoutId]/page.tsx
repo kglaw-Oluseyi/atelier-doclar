@@ -1,0 +1,74 @@
+import { PlatformError } from "@maison-doclar/shared-platform";
+import { ActionResultBanner } from "../../../../../../components/action-result-banner";
+import { AtelierPageHeader } from "../../../../../../components/atelier-page-header";
+import { AtelierOperationalState } from "../../../../../../components/atelier-operational-state";
+import { LayoutSetupWorkspaceView } from "../../../../../../components/layout-setup-workspace";
+import { AppShell } from "../../../../../../components/shell";
+import { loadPresentedActionResult } from "../../../../../../server/action-flash";
+import { refreshLayoutRecordAction } from "../../../../../../server/actions";
+import { guardedActor } from "../../../../../../server/guard";
+import { getRuntime } from "../../../../../../server/runtime";
+import { operationalStateFromCode } from "../../../../../../server/operational-state";
+import { resolveVenueEvent, venuePermissions } from "../../../../../../server/venue-scope";
+
+export default async function LayoutDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ eventId: string; layoutId: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const { eventId, layoutId } = await params;
+  const query = await searchParams;
+  const { actor, person } = await guardedActor();
+  const scoped = resolveVenueEvent(actor, eventId);
+  if (!scoped) {
+    return (
+      <AppShell person={person} current="/app/events">
+        <AtelierOperationalState
+          state={operationalStateFromCode("NOT_FOUND", "The requested event is not available in this assignment.")}
+        />
+      </AppShell>
+    );
+  }
+  const permissions = venuePermissions(person, scoped.organisation.id, scoped.event.id);
+  if (!permissions.viewLayout) {
+    return (
+      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+        <AtelierOperationalState state={operationalStateFromCode("FORBIDDEN", "This assignment cannot view this layout.")} />
+      </AppShell>
+    );
+  }
+  let workspace;
+  try {
+    workspace = getRuntime().service.getLayoutSetupWorkspace(actor, scoped.organisation.id, scoped.event.id, layoutId);
+  } catch (error) {
+    const message = error instanceof PlatformError ? error.publicMessage : "Layout could not be loaded.";
+    return (
+      <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+        <AtelierOperationalState state={operationalStateFromCode("NOT_FOUND", message)} />
+      </AppShell>
+    );
+  }
+  const presented = await loadPresentedActionResult({
+    requestPath: `/app/events/${eventId}/layouts/${layoutId}`,
+    resultId: typeof query.result === "string" ? query.result : undefined,
+    actorPersonId: person.id,
+    eventId,
+  });
+  return (
+    <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
+      <AtelierPageHeader
+        eyebrow={`Layout setup · ${scoped.event.name}`}
+        title={workspace.layout.name}
+        lede="Authoritative millimetre geometry with optimistic revision checks. Refresh after a conflict before retrying."
+      />
+      <ActionResultBanner
+        presented={presented}
+        reloadAction={refreshLayoutRecordAction}
+        reloadFields={{ eventId, layoutId, path: `/app/events/${eventId}/layouts/${layoutId}` }}
+      />
+      <LayoutSetupWorkspaceView workspace={workspace} eventId={eventId} mutationLocked={presented.mutationLocked} />
+    </AppShell>
+  );
+}

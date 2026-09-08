@@ -3183,3 +3183,241 @@ export async function refreshLanguageRecordAction(formData: FormData): Promise<v
     redirect(`/app/events/${eventId}/language`);
   });
 }
+
+async function venueFail(
+  path: string,
+  error: unknown,
+  actor?: { correlationId: string; personId: string },
+  actionType = "venue.mutate",
+  eventId?: string,
+): Promise<never> {
+  const bind = actor ? actorBind(actor, path, actionType, eventId) : unsignedBind(path, actionType, eventId);
+  return finishAction(bind, { error });
+}
+
+async function venueOk(
+  path: string,
+  actor: { correlationId: string; personId: string },
+  actionType: string,
+  ok: string,
+  eventId?: string,
+): Promise<never> {
+  return finishAction(actorBind(actor, path, actionType, eventId), { ok });
+}
+
+export async function createVenueAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const actionType = "venue.create";
+    const path = "/app/venues/new";
+    const { actor } = await requireActor().catch((error) => venueFail(path, error, undefined, actionType));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await venueFail(path, new Error("No organisation assignment is available."), actor, actionType);
+    try {
+      const venue = getRuntime().service.createVenue(actor, {
+        organisationId: organisation.id,
+        displayName: String(formData.get("displayName") ?? ""),
+        locality: String(formData.get("locality") ?? "") || undefined,
+        countryCode: String(formData.get("countryCode") ?? "") || undefined,
+        notes: String(formData.get("notes") ?? "") || undefined,
+        reason: String(formData.get("reason") ?? "Register synthetic organisation venue"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+      await venueOk(`/app/venues/${venue.id}`, actor, actionType, "venue-created");
+    } catch (error) {
+      await venueFail(path, error, actor, actionType);
+    }
+  });
+}
+
+export async function recordVenueFactAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const venueId = String(formData.get("venueId") ?? "");
+    const actionType = "venue.fact.record";
+    const path = `/app/venues/${venueId}`;
+    const { actor } = await requireActor().catch((error) => venueFail(path, error, undefined, actionType));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await venueFail(path, new Error("No organisation assignment is available."), actor, actionType);
+    const integer = String(formData.get("valueInteger") ?? "").trim();
+    const mm = String(formData.get("valueIntegerMm") ?? "").trim();
+    try {
+      getRuntime().service.recordVenueFact(actor, {
+        organisationId: organisation.id,
+        venueId,
+        factType: String(formData.get("factType") ?? ""),
+        subtype: String(formData.get("subtype") ?? ""),
+        unit: String(formData.get("unit") ?? ""),
+        valueText: String(formData.get("valueText") ?? "") || undefined,
+        valueInteger: integer ? Number(integer) : undefined,
+        valueIntegerMm: mm ? Number(mm) : undefined,
+        sourceKind: String(formData.get("sourceKind") ?? ""),
+        sourceLabel: String(formData.get("sourceLabel") ?? ""),
+        verificationState: String(formData.get("verificationState") ?? "UNVERIFIED"),
+        evidenceFileName: String(formData.get("evidenceFileName") ?? "") || undefined,
+        expectedVenueVersion: Number(formData.get("expectedVenueVersion") || 1),
+        reason: String(formData.get("reason") ?? "Record venue fact"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await venueFail(path, error, actor, actionType);
+    }
+    await venueOk(path, actor, actionType, "venue-fact");
+  });
+}
+
+export async function verifyVenueFactAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const venueId = String(formData.get("venueId") ?? "");
+    const actionType = "venue.fact.verify";
+    const path = `/app/venues/${venueId}`;
+    const { actor } = await requireActor().catch((error) => venueFail(path, error, undefined, actionType));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await venueFail(path, new Error("No organisation assignment is available."), actor, actionType);
+    try {
+      getRuntime().service.verifyVenueFact(actor, {
+        organisationId: organisation.id,
+        venueId,
+        factId: String(formData.get("factId") ?? ""),
+        expectedVersion: Number(formData.get("expectedVersion") || 1),
+        reason: String(formData.get("reason") ?? "Verify venue fact"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await venueFail(path, error, actor, actionType);
+    }
+    await venueOk(path, actor, actionType, "venue-fact-verified");
+  });
+}
+
+export async function adoptVenueAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const actionType = "venue.adopt";
+    const path = `/app/events/${eventId}/venue`;
+    const { actor } = await requireActor().catch((error) => venueFail(path, error, undefined, actionType, eventId));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await venueFail(path, new Error("No organisation assignment is available."), actor, actionType, eventId);
+    try {
+      getRuntime().service.adoptVenue(actor, {
+        organisationId: organisation.id,
+        eventId,
+        venueId: String(formData.get("venueId") ?? ""),
+        reason: String(formData.get("reason") ?? "Adopt venue into this event"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await venueFail(path, error, actor, actionType, eventId);
+    }
+    await venueOk(path, actor, actionType, "venue-adopted", eventId);
+  });
+}
+
+export async function recordEventVenueOverrideAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const actionType = "venue.event.override";
+    const path = `/app/events/${eventId}/venue`;
+    const { actor } = await requireActor().catch((error) => venueFail(path, error, undefined, actionType, eventId));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await venueFail(path, new Error("No organisation assignment is available."), actor, actionType, eventId);
+    try {
+      getRuntime().service.recordEventVenueOverride(actor, {
+        organisationId: organisation.id,
+        eventId,
+        eventVenueId: String(formData.get("eventVenueId") ?? ""),
+        factType: String(formData.get("factType") ?? ""),
+        subtype: String(formData.get("subtype") ?? ""),
+        unit: String(formData.get("unit") ?? "TEXT"),
+        valueText: String(formData.get("valueText") ?? "") || undefined,
+        sourceKind: String(formData.get("sourceKind") ?? "STAFF_OBSERVED"),
+        sourceLabel: String(formData.get("sourceLabel") ?? ""),
+        reason: String(formData.get("reason") ?? "Record event-only venue fact"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await venueFail(path, error, actor, actionType, eventId);
+    }
+    await venueOk(path, actor, actionType, "venue-override", eventId);
+  });
+}
+
+export async function createBlankLayoutAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const actionType = "layout.create";
+    const path = `/app/events/${eventId}/layouts/new`;
+    const { actor } = await requireActor().catch((error) => venueFail(path, error, undefined, actionType, eventId));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await venueFail(path, new Error("No organisation assignment is available."), actor, actionType, eventId);
+    try {
+      const layout = getRuntime().service.createBlankLayout(actor, {
+        organisationId: organisation.id,
+        eventId,
+        eventVenueId: String(formData.get("eventVenueId") ?? ""),
+        name: String(formData.get("name") ?? ""),
+        widthMm: Number(formData.get("widthMm")),
+        heightMm: Number(formData.get("heightMm")),
+        displayLengthUnit: String(formData.get("displayLengthUnit") ?? "METRE"),
+        reason: String(formData.get("reason") ?? "Create blank event layout"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+      await venueOk(`/app/events/${eventId}/layouts/${layout.id}`, actor, actionType, "layout-created", eventId);
+    } catch (error) {
+      await venueFail(path, error, actor, actionType, eventId);
+    }
+  });
+}
+
+export async function updateLayoutSetupAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const layoutId = String(formData.get("layoutId") ?? "");
+    const actionType = "layout.update";
+    const path = `/app/events/${eventId}/layouts/${layoutId}`;
+    const { actor } = await requireActor().catch((error) => venueFail(path, error, undefined, actionType, eventId));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await venueFail(path, new Error("No organisation assignment is available."), actor, actionType, eventId);
+    try {
+      getRuntime().service.updateLayoutSetup(actor, {
+        organisationId: organisation.id,
+        eventId,
+        layoutId,
+        expectedVersion: Number(formData.get("expectedVersion") || 1),
+        expectedRevisionNumber: Number(formData.get("expectedRevisionNumber") || 1),
+        name: String(formData.get("name") ?? "") || undefined,
+        widthMm: Number(formData.get("widthMm")),
+        heightMm: Number(formData.get("heightMm")),
+        displayLengthUnit: String(formData.get("displayLengthUnit") ?? "") || undefined,
+        reason: String(formData.get("reason") ?? "Update blank layout setup"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await venueFail(path, error, actor, actionType, eventId);
+    }
+    await venueOk(path, actor, actionType, "layout-updated", eventId);
+  });
+}
+
+export async function refreshVenueRecordAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    redirect(String(formData.get("path") ?? "/app/venues"));
+  });
+}
+
+export async function refreshEventVenueRecordAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    redirect(`/app/events/${eventId}/venue`);
+  });
+}
+
+export async function refreshLayoutRecordAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const path = String(formData.get("path") ?? "");
+    if (path.startsWith("/app/events/")) {
+      redirect(path);
+    }
+    const eventId = String(formData.get("eventId") ?? "");
+    const layoutId = String(formData.get("layoutId") ?? "");
+    redirect(layoutId ? `/app/events/${eventId}/layouts/${layoutId}` : `/app/events/${eventId}/layouts`);
+  });
+}

@@ -84,6 +84,13 @@ export function actionLabel(actionType: string): string {
     "language.source.revise": "Start source revision",
     "language.source.submit": "Submit source revision",
     "language.source.decide": "Review source revision",
+    "venue.create": "Register venue",
+    "venue.fact.record": "Record venue fact",
+    "venue.fact.verify": "Verify venue fact",
+    "venue.adopt": "Adopt venue",
+    "venue.event.override": "Record event venue override",
+    "layout.create": "Create blank layout",
+    "layout.update": "Update layout setup",
   };
   return labels[actionType] ?? actionType.replaceAll(".", " ");
 }
