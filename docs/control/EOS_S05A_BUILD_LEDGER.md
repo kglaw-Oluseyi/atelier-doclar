@@ -1,12 +1,12 @@
 # EOS-S05A Build Ledger
 
 **Slice ID:** `EOS-S05A`
-**Prompt Control ID:** `MD-PR-S038`
-**Starting baseline for MD-PR-S038:** `947e5829b9ed131369055fa51110942dbc46b273`
-**Status:** `IMPLEMENTED / NOT ACCEPTED`
+**Prompt Control ID:** `MD-PR-S039`
+**Starting baseline for MD-PR-S039:** `566df703672209007da9ee3de180a8913a7be78b`
+**Status:** `REMEDIATED / NOT ACCEPTED`
 **Production:** unauthorised
 **Catalogue accepted-slice count:** remains 5
-**Implemented range:** `EEC-00`–`EEC-45`
+**Implemented range:** `EEC-00`–`EEC-45` with honest PARTIAL depth after S039
 **EOS-S06:** `NOT_STARTED / NOT_AUTHORISED`
 
 ## Units
@@ -17,29 +17,33 @@
 | EEC-06 | Consent and interview-session lifecycle | COMPLETE — consent spoof closed |
 | EEC-07 | Source artefacts | COMPLETE — staff notes and private objects |
 | EEC-08–EEC-10 | Coverage, extraction, contradiction | COMPLETE |
-| EEC-11–EEC-14 | Canonical Brief, client confirmation, conversion, workbench | COMPLETE |
-| EEC-15–EEC-25 | Budget Intelligence Engine and Budget Studio | COMPLETE |
-| EEC-26–EEC-32 | Roadmap, critical path, change impact | COMPLETE |
-| EEC-33–EEC-36 | Fixture AI boundary and interview orchestration | COMPLETE |
-| EEC-37–EEC-40 | Client review and Executive Event Command | COMPLETE |
-| EEC-41–EEC-45 | Integration, assurance, deployment, evidence | COMPLETE / NOT ACCEPTED |
+| EEC-11–EEC-14 | Canonical Brief, client confirmation, conversion, workbench | PARTIAL |
+| EEC-15–EEC-25 | Budget Intelligence Engine and Budget Studio | PARTIAL — synthetic evidence cannot claim COMPLETE |
+| EEC-26–EEC-32 | Roadmap, critical path, compression, Roadmap Studio | PARTIAL |
+| EEC-33–EEC-36 | Fixture AI boundary and change adapters | PARTIAL |
+| EEC-37–EEC-40 | Conversational interview and Executive Event Command | PARTIAL — EEC-39 evaluation corpus still stub |
+| EEC-41–EEC-45 | Integration, assurance, deployment, evidence | PARTIAL / NOT ACCEPTED |
 
 ## First-run failures
 
 | Command | Classification | Root cause | Correction | Rerun |
 |---------|----------------|------------|------------|-------|
-| Equal-timestamp consent winner | Product defect | UUID sort could prefer an older WITHDRAWN over a later GRANT | Sort by insertion index after timestamps | Consent boundary tests pass |
-| ACTIVE RESUME after withdrawal | Product defect | Service `alreadyApplied` returned the ACTIVE session before consent re-evaluation | Remove RESUME short-circuit | Consent boundary tests pass |
-| Conversion wrong-hash retry | Product defect | `alreadyApplied` / version check hid the durable hash conflict | Existing receipt checked first; hash mismatch is `IDEMPOTENCY_CONFLICT` | Intelligence tests pass |
-| Budget LOOKUP typecheck | Implementation defect | `LOOKUP` uses `input`, not `value` | Count/depth use `input` | `tsc` pass |
-| Live whole-slice E2E extract | Test defect | Journey omitted AI-analysis consent, so fixture extraction correctly refused | Grant AI-analysis before extract | Rerun after test correction |
+| Equal-timestamp consent winner | Product defect (S038) | UUID sort could prefer an older WITHDRAWN over a later GRANT | Sort by insertion index after timestamps | Consent boundary tests pass |
+| ACTIVE RESUME after withdrawal | Product defect (S038) | Service `alreadyApplied` returned the ACTIVE session before consent re-evaluation | Remove RESUME short-circuit | Consent boundary tests pass |
+| Conversion wrong-hash retry | Product defect (S038) | `alreadyApplied` / version check hid the durable hash conflict | Existing receipt checked first | Intelligence tests pass |
+| Budget LOOKUP typecheck | Implementation defect (S038) | `LOOKUP` uses `input`, not `value` | Count/depth use `input` | `tsc` pass |
+| Live whole-slice E2E extract | Test defect (S038) | Journey omitted AI-analysis consent | Grant AI-analysis before extract | Rerun after test correction |
+| Short-lead infeasibility first assertion | Implementation defect (S039) | Compressible-undefined milestones were treated as fully compressible, so 1 available day became COMPRESSED | Irreducible duration includes non-compressible lead times and a one-day floor for compressible work | Depth tests pass |
 
 ## Carried debt
 
 | ID | Note |
 |----|------|
-| TDR-S05A-001 | CLOSED — private object path on the existing layout store; no public URL; no antivirus claim |
+| TDR-S05A-001 | CLOSED — private object path on the existing layout store |
 | TDR-S05A-002 | CLOSED — enquiry owner, stage and close forms on Discovery |
+| TDR-S05A-003 | OPEN — EEC-39 versioned evaluation corpus and red-team gate remain a schema stub |
+| TDR-S05A-004 | OPEN — client investment view is framing only; no separate client budget route |
+| TDR-S05A-005 | OPEN — roadmap dates are duration-based integers, not a full Lagos working-day calendar |
 
 ## Deployment
 
