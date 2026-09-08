@@ -1888,7 +1888,27 @@ body.atelier {
   }
 }
 
+.atelier-shell code,
+.layout-studio code,
+.atelier-shell dd,
+[data-testid="studio-hash"],
+[data-testid="layout-hash"] {
+  display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
 @media (max-width: 720px) {
+  .atelier-shell,
+  .atelier-shell main,
+  .venue-atelier,
+  .layout-assurance {
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
   .capacity-tables li {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
