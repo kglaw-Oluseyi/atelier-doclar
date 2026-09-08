@@ -34,6 +34,15 @@
 | `EVENT_OS_ATELIER_LINK_PEPPER` | Host Atelier magic-link hashing material |
 | `EVENT_OS_ATELIER_SESSION_SECRET` | Host Atelier session HMAC |
 | `EVENT_OS_ATELIER_KEY_ID` | Current host Atelier key ring identifier |
+| `EVENT_OS_LAYOUT_ASSET_STORE_PROVIDER` | `railway-bucket` when the in-project layout bucket is bound |
+| `EVENT_OS_LAYOUT_ASSET_BUCKET` | Private Railway S3 bucket name |
+| `EVENT_OS_LAYOUT_ASSET_ENDPOINT` | S3-compatible endpoint |
+| `EVENT_OS_LAYOUT_ASSET_REGION` | S3 region string |
+| `EVENT_OS_LAYOUT_ASSET_URL_STYLE` | `virtual-host` or path-style |
+| `EVENT_OS_LAYOUT_ASSET_ACCESS_KEY` | Secret. Railway-generated bucket access key |
+| `EVENT_OS_LAYOUT_ASSET_SECRET_KEY` | Secret. Railway-generated bucket secret key |
+| `EVENT_OS_LAYOUT_ASSET_SCANNER` | `in-process-content-safety` |
+| `EVENT_OS_LAYOUT_EXPORT_ENABLED` | `1` enables exact-hash PDF/PNG export |
 
 ## Persistence
 

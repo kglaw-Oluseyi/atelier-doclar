@@ -1,7 +1,7 @@
 # EOS-S05 Build Ledger
 
 **Slice ID:** `EOS-S05`  
-**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030`
+**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030` / `MD-PR-S031`
 **Starting baseline:** `bb705588e0d4481802658a18d7666e28e3a18fea`
 **Milestone 2 starting SHA:** `a7dc4d931f3c01f05354b11e68bc7c4a155e5afb`
 **Milestone 3 starting SHA:** `72830730398f6aa1b02183417ca4ac4d32801b10`
@@ -12,9 +12,12 @@
 **Milestone 2 Event OS commit:** `82c758978d08e59018f539e399efda2c24733bfb`
 **Milestone 3 platform commit:** `d9d5882f856410d5630106443f9936da3ff6dea5`
 **Milestone 3 Event OS commit:** `0bec2ef166354d4ad5b55aad9f932f74cb80f2f4`
-**Status:** `IN_PROGRESS` — Milestones 1–3 implemented; not accepted
+**Milestone 4 starting SHA:** `41b40d6f4001b1c6913209cbe420b9080f64965d`
+**Milestone 4 platform commit:** `ff7b052b258d0859a30c62a7364a0087d214b445`
+**Milestone 4 Event OS commit:** `d087843d6c32ab47e94b348f30533c43edf0e270`
+**Status:** `IN_PROGRESS` — Milestones 1–4 implemented; not accepted
 **Production:** unauthorised  
-**Next slices:** EOS-S06 not authorised; Milestone 4 not released
+**Next slices:** EOS-S06 not authorised
 
 ## Milestone 1 — Authority, venue foundation and spatial contract
 
@@ -56,6 +59,19 @@ Historic traceability: `S5-28`–`S5-30` and `S5-39`–`S5-55`. Those historic u
 | Publication | Idempotent CURRENT/SUPERSEDED/WITHDRAWN. No comms, credentials, guests, Event-Day or protected gates. |
 | Downstream | Authenticated `eos-s05-spatial-publication-v1`. No guest identity. EOS-S06 not implemented. |
 | Migration | Additive `EOS-S05-VENUE-ASSURANCE-V1`. |
+
+## Milestone 4 — Production completion, hardening and slice qualification
+
+Historic units remain `NOT_EXECUTED`. No new collections. No EOS-S06 seating.
+
+| Area | Decision |
+|------|----------|
+| Storage | Railway S3-compatible bucket wholly inside `atelier-doclar`. Private by default. No public URL. |
+| Scan | In-process content-safety: magic/MIME/extension agreement, SVG/PDF active-content rejection, PNG/JPEG clipping. Not a general AV product. |
+| Delivery | Authenticated Event OS GET streams. `Cache-Control: private, no-store`. No stored signed URLs. |
+| Export | Deterministic PDF/PNG from current publication hash when present, else approved or draft marking. COMPLETED only after durable put. |
+| Health | `layoutAssetStore` READY/UNCONFIGURED/ERROR does not fail overall Postgres readiness. |
+| Process topology | One Event OS replica; export fulfill is in-request. Multi-replica would require a shared worker; not deferred as ordinary debt because the deployed topology is single-replica. |
 
 ## Verification
 

@@ -1,15 +1,15 @@
 # EOS-S05 Canonical Record Mapping
 
 **Slice:** `EOS-S05`  
-**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030`
+**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030` / `MD-PR-S031`
 **Rule:** one concept becomes one persisted collection. Historic pack naming differences are aliases, not duplicate tables.
 
 | Kind | Canonical record | Snapshot collection | Historic / pack labels | CEO-overlay labels | Notes |
 |------|------------------|---------------------|------------------------|--------------------|-------|
 | Venue | Venue | `venues` | Venue / tenant venue | organisation-owned venue | No Tenant. Cross-client reuse denied by default. |
 | Fact | VenueFact | `venueFacts` | VenueFact / provenance | reusable venue fact | Source, applicability, verification, lineage. |
-| Evidence | VenueEvidenceAsset | `venueEvidenceAssets` | evidence / attachment | metadata-only evidence | Binary upload unavailable (`TDR-S05-001` blocking before EOS-S05 acceptance). |
-| Floor plan | LayoutFloorPlanAsset | `layoutFloorPlanAssets` | floor-plan asset | upload intent | Live bytes not stored. Provider unconfigured. |
+| Evidence | VenueEvidenceAsset | `venueEvidenceAssets` | evidence / attachment | metadata-only evidence | Binary venue-fact upload remains unavailable (`TDR-S05-002`). |
+| Floor plan | LayoutFloorPlanAsset | `layoutFloorPlanAssets` | floor-plan asset | private stored object | Railway bucket object keys; CLEAN before use; not spatially authoritative until verified calibration. |
 | Calibration | LayoutAssetCalibration | `layoutAssetCalibrations` | scale | verified measurement | Not spatially authoritative until verified. |
 | Operational capacity | LayoutCapacityStatement | `layoutCapacityStatements` | operational capacity | named owner/source | Distinct from geometric, declared, RSVP, forecast. |
 | Validation run | LayoutValidationRun | `layoutValidationRuns` | validation | engine+hash binding | `EOS-S05-VALIDATION` `1.0.0`. |
@@ -18,7 +18,7 @@
 | Snapshot | LayoutSnapshot | `layoutSnapshots` | snapshot | immutable named hash | Restore creates a new revision. |
 | Approval | LayoutApproval | `layoutApprovals` | maker/checker | exact-hash approval | Author cannot approve. |
 | Publication | LayoutPublication | `layoutPublications` | publication | CURRENT/SUPERSEDED/WITHDRAWN | Idempotent; no Event-Day side effects. |
-| Export job | LayoutExportJob | `layoutExportJobs` | export | status-marked | PDF/PNG generation DISABLED; no fabricated files. |
+| Export job | LayoutExportJob | `layoutExportJobs` | export | status-marked | PDF/PNG COMPLETED only with private object identity; otherwise DISABLED/PENDING/FAILED. |
 | Adoption | EventVenue | `eventVenues` | EventVenue / event adoption | event venue snapshot | Provenance-preserving. Never mutates Venue. |
 | Override | EventVenueFact | `eventVenueFacts` | event fact / override | inherited or event-specific fact | Origin `INHERITED` or `EVENT_OVERRIDE`. |
 | Layout | Layout | `layouts` | Layout / floor plan | event-scoped layout | Current revision pointer and content hash. |
@@ -49,4 +49,4 @@ Person, Guest, Invitation, RSVP, Forecast, Programme, Merchandise, Atelier and L
 
 ## Historic sixty-unit and acceptance-scenario traceability
 
-Historic `S5-01`–`S5-60` remain `NOT_EXECUTED` traceability units. Milestone 1 covers S5-01–S5-13. Milestone 2 covers S5-14–S5-27 and S5-31–S5-38. Milestone 3 covers S5-28–S5-30 and S5-39–S5-55 substantively. Live binary upload remains unavailable (`TDR-S05-001` blocking before EOS-S05 final acceptance). Historic twenty acceptance scenarios are not present as working-tree files; their substantive venue, adoption, layout, isolation, validation, publication and false-success requirements are implemented through the authorised milestones.
+Historic `S5-01`–`S5-60` remain `NOT_EXECUTED` traceability units. Milestone 1 covers S5-01–S5-13. Milestone 2 covers S5-14–S5-27 and S5-31–S5-38. Milestone 3 covers S5-28–S5-30 and S5-39–S5-55 substantively. Milestone 4 completes the production floor-plan and export route. Historic twenty acceptance scenarios are not present as working-tree files; their substantive venue, adoption, layout, isolation, validation, publication and false-success requirements are implemented through the authorised milestones.

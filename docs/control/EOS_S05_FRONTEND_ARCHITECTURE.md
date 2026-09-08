@@ -1,9 +1,9 @@
 # EOS-S05 Frontend Architecture
 
 **Slice:** `EOS-S05`  
-**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030`
+**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030` / `MD-PR-S031`
 **Surface:** Command Atelier staff Event OS  
-**Milestone:** 3 — assets, assurance, versioning and immutable publication
+**Milestone:** 4 — production completion, hardening and slice qualification
 
 ## Routes
 
@@ -17,6 +17,9 @@
 | `/app/events/[eventId]/layouts/new` | Event | Blank-layout creation |
 | `/app/events/[eventId]/layouts/[layoutId]` | Event | Setup, studio, validation, capacity, snapshots, approval, publication |
 | `GET /api/events/[eventId]/layouts/[layoutId]/publication/current` | Event | Authenticated current-publication spatial contract |
+| `POST /api/events/[eventId]/layouts/[layoutId]/assets` | Event | Bounded floor-plan ingest |
+| `GET /api/events/[eventId]/layouts/[layoutId]/assets/[assetId]` | Event | Authenticated private floor-plan stream |
+| `GET /api/events/[eventId]/layouts/[layoutId]/exports/[jobId]` | Event | Authenticated private export stream |
 
 ## Visual language
 
@@ -42,6 +45,9 @@ The layout detail page hosts Command Atelier panels for:
 * maker/checker submission and decision, bound to the exact content hash;
 * publication, supersession and withdrawal, with current/superseded/withdrawn labels;
 * permission-safe published viewer (sensitive restricted/safe areas masked without override capability);
-* export jobs marked `DRAFT` / approved-hash / publication identity, or `DISABLED` / `QUEUED_UNAVAILABLE` when PDF/PNG generation is not configured.
+* export jobs marked `DRAFT` / `APPROVED` / `PUBLISHED`, with `COMPLETED` download only after a private object exists, otherwise `DISABLED` / `PENDING` / `FAILED`;
+* floor-plan upload with progress, error, retry and removal when storage is bound; calibration still requires verification for authority.
+
+On small screens the studio remains a useful review, validation and approval surface. Precise canvas authoring is limited; the labelled navigator and inspector stay keyboard accessible.
 
 Recommendations advise. They never approve, publish or override. Missing facts remain visible. Findings are not communicated by colour alone. Comparison has textual equivalents. Core approval and publication journeys are keyboard operable. Functional accent remains `#8B6E38`.

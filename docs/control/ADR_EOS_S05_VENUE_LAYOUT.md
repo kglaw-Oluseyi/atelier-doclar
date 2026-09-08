@@ -1,8 +1,8 @@
 # ADR — EOS-S05 venue registry and spatial contract
 
-**Status:** Selected for Milestones 1–3
+**Status:** Selected for Milestones 1–4
 **Slice:** `EOS-S05`  
-**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030`
+**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030` / `MD-PR-S031`
 **Date:** `2026-09-08`
 
 ## Context
@@ -17,10 +17,11 @@ Historic Slice 5 packs describe a venue registry, event adoption, spatial layout
 4. **Concurrency.** One active editor lease per layout. Durable optimistic `expectedVersion` / `expectedRevisionNumber` checks remain mandatory. No real-time collaborative editing.
 5. **Safety.** Only venue-supplied or qualified-authority safety thresholds may later become locked blocking constraints. Software never labels a layout safe, compliant, certified or authority-approved merely because rules passed.
 6. **Attendance.** EOS-S05 may read observed RSVP, whole-event forecast, phase occupancy, operational provision and observed attendance through a typed adapter. It must not copy or mutate those ledgers or sum phase counts as whole-event people.
-7. **Assets.** Evidence and floor-plan intents are metadata-only until an approved object-storage, malware-scanning and safe-derivative pipeline exists. Live binary upload remains disabled. A source asset is not spatially authoritative until calibrated from a verified measurement or supplied verified scale.
+7. **Assets.** Floor-plan binaries are stored privately in the authorised Railway bucket after content-safety inspection. Delivery is an authenticated Event OS stream. No public bucket and no durable public URL. A source asset is not spatially authoritative until calibrated from a verified measurement. Venue-fact evidence remains metadata-only.
 8. **Capacity.** Declared venue, geometric, operational, expected attendance, observed RSVP, forecast range, phase occupancy, operational provision and observed attendance remain distinct products. No universal reduction percentage. Phases are not summed as whole-event people.
-9. **Validation.** Findings bind to an exact layout revision and content hash. Material edits stale findings. Locked qualified-source constraints cannot be weakened by an ordinary operator. Software never claims regulatory, fire, engineering, accessibility or crowd-safety certification.
+9. **Validation.** Findings bind to an exact layout revision and content hash. Material edits stale findings. Locked qualified-source constraints cannot be weakened by an ordinary operator. Software never claims regulatory, fire, engineering, accessibility or crowd-safety certification. Finding evidence is bounded so large layouts cannot fail persistence.
 10. **Publication.** Maker/checker binds to the exact canonical hash. The author cannot approve. System Administrator has no operational approval. Publication is idempotent, immutable and superseding. Restore creates a new draft revision. The authenticated downstream contract contains no guest identity.
+11. **Export.** PDF/PNG derive from the current publication hash when one exists, otherwise the approved or draft hash, marked truthfully. Completion is recorded only after a durable private object exists. Restricted/safety geometry is masked without override authority. No guest identity.
 
 ## Bounded context
 
@@ -31,7 +32,7 @@ Organisation ── owns ── Venue ── has ── VenueFact (+ optional me
                                               │
                                               └── Layout ── LayoutRevision (immutable)
                                                          ├── LayoutEditorLease (one active)
-                                                         ├── FloorPlanAsset / Calibration (intent only until provider)
+                                                         ├── FloorPlanAsset / Calibration (private object + verified scale)
                                                          ├── CapacityStatement
                                                          ├── ValidationRun / Finding / Override
                                                          ├── Snapshot (immutable named hash)

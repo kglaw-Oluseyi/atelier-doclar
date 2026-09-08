@@ -200,4 +200,8 @@ Milestone 2 is authorised on the Milestone 1 contracts. Historic S5-14–S5-27 a
 
 ## Addendum — 2026-09-08 EOS-S05 Milestone 3 (`MD-PR-S030`)
 
-Milestone 3 is authorised on the Milestone 1–2 contracts. Historic S5-28–S5-30 and S5-39–S5-55 are implemented substantively and remain `NOT_EXECUTED` as individual prompt runs. Live binary upload stays disabled; `TDR-S05-001` is blocking before EOS-S05 final acceptance. Milestones 1–2 are not reopened. EOS-S05 is not accepted. Milestone 4 and EOS-S06 remain unauthorised. Production remains unauthorised.
+Milestone 3 is authorised on the Milestone 1–2 contracts. Historic S5-28–S5-30 and S5-39–S5-55 are implemented substantively and remain `NOT_EXECUTED` as individual prompt runs. Live binary upload stayed disabled in Milestone 3; `TDR-S05-001` was blocking until Milestone 4. Milestones 1–2 are not reopened. EOS-S05 is not accepted. Production remains unauthorised.
+
+## Addendum — 2026-09-08 EOS-S05 Milestone 4 (`MD-PR-S031`)
+
+Milestone 4 is authorised on the Milestone 1–3 contracts. Historic S5-01–S5-60 and `MD-PR-0232`–`0291` remain `NOT_EXECUTED` as individual prompt runs. The floor-plan production pipeline is bound inside `atelier-doclar`. `TDR-S05-001` is closed. Venue evidence remains metadata-only. Milestones 1–3 are not reopened. EOS-S05 is not accepted. EOS-S06 remains unauthorised. Production remains unauthorised.

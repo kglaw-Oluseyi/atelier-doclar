@@ -1,8 +1,8 @@
 # EOS-S05 Implementation Record
 
 **Slice ID:** `EOS-S05`  
-**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030`
-**Status:** `IN_PROGRESS` — Milestones 1–3 implemented; not accepted
+**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030` / `MD-PR-S031`
+**Status:** `IN_PROGRESS` — Milestones 1–4 implemented; not accepted
 **Catalogue slice:** yes — accepted-slice count remains 4  
 **Production:** unauthorised (`productionAuthorised` remains false)  
 **Starting baseline:** `bb705588e0d4481802658a18d7666e28e3a18fea`
@@ -13,6 +13,8 @@
 **Milestone 2 Event OS commit:** `82c758978d08e59018f539e399efda2c24733bfb`
 **Milestone 3 platform commit:** `d9d5882f856410d5630106443f9936da3ff6dea5`
 **Milestone 3 Event OS commit:** `0bec2ef166354d4ad5b55aad9f932f74cb80f2f4`
+**Milestone 4 platform commit:** `ff7b052b258d0859a30c62a7364a0087d214b445`
+**Milestone 4 Event OS commit:** `d087843d6c32ab47e94b348f30533c43edf0e270`
 
 ## Scope delivered
 
@@ -20,7 +22,9 @@ Milestone 1 only: ratification, ADR, canonical mapping, additive migration `EOS-
 
 Milestone 2 added typed spatial objects, one command path, SVG studio projection, navigator/inspector equivalence, draft undo/redo, lease/autosave/conflict recovery, and additive migration `EOS-S05-VENUE-OBJECTS-V1`. Historic units `S5-14`–`S5-27` and `S5-31`–`S5-38` are implemented substantively; `MD-PR-0245`–`MD-PR-0269` remain `NOT_EXECUTED`.
 
-Milestone 3 added the decision and publication chain: provider-neutral fail-closed floor-plan assets, distinct capacity products, a versioned validation engine, immutable snapshots with semantic/spatial diff and restore-as-new-version, maker/checker approval, idempotent immutable publication, permission-safe published viewer/export contracts, and an authenticated guest-free downstream spatial projection. Historic units `S5-28`–`S5-30` and `S5-39`–`S5-55` are implemented substantively and remain `NOT_EXECUTED` as individual prompt runs. Live binary upload stays disabled. Milestone 4, EOS-S06 and independent acceptance were not started. Control Tower was not a deploy target.
+Milestone 3 added the decision and publication chain: provider-neutral fail-closed floor-plan assets, distinct capacity products, a versioned validation engine, immutable snapshots with semantic/spatial diff and restore-as-new-version, maker/checker approval, idempotent immutable publication, permission-safe published viewer/export contracts, and an authenticated guest-free downstream spatial projection. Historic units `S5-28`–`S5-30` and `S5-39`–`S5-55` are implemented substantively and remain `NOT_EXECUTED` as individual prompt runs.
+
+Milestone 4 completed production-quality floor-plan ingest and PDF/PNG export inside Railway project `atelier-doclar`: private Railway bucket `event-os-layout-assets` / `event-os-layout-assets-j1zxpb`, in-process content-safety scanning for allowlisted PDF/SVG/PNG/JPEG, sanitised derivatives, authenticated expiry-controlled streaming (no public bucket, no durable public URL, no stored signed URLs), and exact-hash exports that complete only after a durable private object exists. Venue evidence remains metadata-only. EOS-S06 and independent acceptance were not started. Control Tower was not a deploy target. Claude-in-Chrome is held for AI CTO review.
 
 ## Product constitution
 
@@ -51,9 +55,20 @@ Historic Venue Liaison / Production Lead / Accessibility Lead / Safety Authority
 
 ## Object-storage status
 
-No approved object-storage, malware-scanning or derivative processor is configured in Event OS. Floor-plan intents are metadata-only. `LAYOUT_ASSET_PROVIDER_CONFIGURED` is `false`. `uploadAvailable` is `false`. Scan is `NOT_RUN`. Signed URLs are not issued. `TDR-S05-001` is reclassified as **blocking before EOS-S05 final acceptance**. Remaining action: George must supply the named Event OS variables for an approved provider; this implementation does not invent them.
+Production floor-plan storage is bound in Railway project `atelier-doclar` only.
 
-Required Event OS variables (unset; do not invent): `EVENT_OS_LAYOUT_ASSET_STORE_PROVIDER`, `EVENT_OS_LAYOUT_ASSET_BUCKET`, `EVENT_OS_LAYOUT_ASSET_ACCESS_KEY` (secret), `EVENT_OS_LAYOUT_ASSET_SECRET_KEY` (secret), `EVENT_OS_LAYOUT_ASSET_SCANNER_URL`, `EVENT_OS_LAYOUT_ASSET_SCANNER_TOKEN` (secret), `EVENT_OS_LAYOUT_ASSET_DERIVATIVE_URL`. Failure behaviour without them: `CONFIGURATION_REQUIRED`; no bytes stored.
+| Item | Value |
+|------|-------|
+| Bucket display name | `event-os-layout-assets` |
+| Bucket ID | `fa78e87f-a8e8-4dcf-af33-f296f9833588` |
+| S3 bucket name | `event-os-layout-assets-j1zxpb` |
+| Endpoint | `https://t3.storageapi.dev` |
+| Region | `auto` (US West / `sjc`) |
+| URL style | `virtual-host` |
+| Scanner | `in-process-content-safety` |
+| Export | `EVENT_OS_LAYOUT_EXPORT_ENABLED=1` |
+
+Secret variable names only: `EVENT_OS_LAYOUT_ASSET_ACCESS_KEY`, `EVENT_OS_LAYOUT_ASSET_SECRET_KEY`. Values are never committed or logged. Compile-time `LAYOUT_ASSET_PROVIDER_CONFIGURED` remains `false`; runtime uses Event OS env binding. Objects are private. Delivery is an authenticated Event OS stream with `Cache-Control: private, no-store`. Completion is recorded only after `put` plus `get` of the stored object. An uploaded file is not spatially authoritative until verified calibration. This is content-safety scanning for allowlisted floor-plan types, not a general antivirus product. `TDR-S05-001` is closed for the floor-plan pipeline. Venue evidence attachments remain metadata-only.
 
 ## First-run verification
 
@@ -112,4 +127,30 @@ Playwright first passing run after those test corrections: `s05-assurance-vertic
 
 Human/browser verification remains deferred until the complete EOS-S05 slice.
 
-See `docs/control/CUMULATIVE_TECHNICAL_DEBT_AND_REGRESSION_REGISTER.md` item `TDR-S05-001` (blocking before EOS-S05 final acceptance). EOS-S05 is not accepted. Milestone 4 and EOS-S06 are not authorised.
+See `docs/control/CUMULATIVE_TECHNICAL_DEBT_AND_REGRESSION_REGISTER.md`. EOS-S05 is not accepted. Milestone 4 and EOS-S06 are not authorised.
+
+## Milestone 4 first-run verification
+
+Authority `MD-PR-S031`. Starting SHA `41b40d6f4001b1c6913209cbe420b9080f64965d`. Platform `ff7b052b258d0859a30c62a7364a0087d214b445`. Event OS `d087843d6c32ab47e94b348f30533c43edf0e270`.
+
+Workspace `pnpm typecheck` passed. Focused `test/layout-assurance-journeys.test.ts` 11/11. Focused `test/layout-milestone4.test.ts` first run 7 passed / 1 failed.
+
+| Failure | Class | Root cause | Correction |
+|---------|-------|------------|------------|
+| Representative layout validation could not persist | product | Route-obstruction evidence concatenated every intersecting label and exceeded the 800-character finding schema | Cap evidence, explanation, recommended action and object-id lists in the validation engine |
+| Playwright `getByLabel('Label')` matched Owner/Source label | test | Capacity fields share the layout page; Playwright treats `Label` as a substring | Scope the inspector with `getByTestId('studio-inspector').getByRole('textbox', { name: 'Label' })` |
+| Playwright `venue-detail` 5s timeout while Save showed Saving… | test / environment | Default assertion timeout during a slow first compile of the create action | Wait up to 20s; rerun passed |
+
+Second focused M4 unit run: 8/8. Shared-platform tests 310. Event OS unit tests 72. `pnpm programme:validate` passed. Event OS build passed. `git diff --check` clean.
+
+Playwright first combined S05 run: 4 passed / 2 failed (studio Label; venue-detail timeout). After test corrections, studio + venue rerun: 3/3 passed. Assurance vertical (including axe, 360/768/1440, 200% zoom, mobile authoring limit copy) passed on the first combined run.
+
+Measured scale budgets on a 8-zone / 24-table / 6-fixture / 6-route / 1-safe-area layout: populate under 20s, hash under 250ms, validation under 2s, snapshot under 1s, PNG export under 3s.
+
+## Rollback and forward recovery
+
+Rollback Event OS application code to the previous known-good SHA. Do not run a destructive down-migration. Existing Postgres assurance rows remain readable. Private bucket objects are retained; PENDING export jobs may be retried after redeploy. Forward recovery is additive only. Preview any synthetic-fixture cleanup before deletion. Do not reset the database.
+
+Human/browser Claude-in-Chrome verification remains deferred until AI CTO review of this complete slice.
+
+See `docs/control/CUMULATIVE_TECHNICAL_DEBT_AND_REGRESSION_REGISTER.md`. EOS-S05 is not accepted. EOS-S06 is not authorised.

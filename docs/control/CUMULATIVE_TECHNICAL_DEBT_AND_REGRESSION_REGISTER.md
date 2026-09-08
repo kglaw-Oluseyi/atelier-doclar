@@ -899,22 +899,41 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 |-------|-------|
 | ID | `TDR-S05-001` |
 | Source slice | EOS-S05 |
-| Description | No approved object-storage, malware-scanning or safe-derivative pipeline exists in Event OS. Venue evidence and floor-plan assets remain metadata/intent only. `LAYOUT_ASSET_PROVIDER_CONFIGURED` is false. `uploadAvailable` is false. Scan is `NOT_RUN`. Signed URLs are not issued. The UI and adapters state this truthfully and do not simulate scanning, quarantine, signed access or successful production upload. |
+| Description | Floor-plan binaries now use a private Railway S3-compatible bucket in `atelier-doclar`, in-process content-safety scanning for allowlisted PDF/SVG/PNG/JPEG, sanitised derivatives, and authenticated Event OS streaming. Completion is never recorded without a durable object. Calibration is still not spatially authoritative until verified. Venue fact evidence attachments remain metadata-only (`TDR-S05-002`). |
 | Classification | Capability gap |
 | Severity | MEDIUM |
-| Evidence | `packages/shared-platform/src/constants.ts` `LAYOUT_ASSET_REQUIRED_VARIABLES`; layout-assurance asset adapters; venue evidence panel |
-| Affected surface or contract | Venue fact evidence / floor-plan asset-service contract |
-| Reason for deferral | Inventing storage, scanning or signed URLs would be false capability. Milestone 3 implemented the provider-neutral contract and kept live binary upload disabled. |
-| Blocking | BLOCKING before EOS-S05 final acceptance |
-| Current owner | George Lawson must supply Event OS variables for an approved provider |
-| Required regression coverage | Upload remains unavailable; intents may be recorded; no fake success; SVG scripts/external refs rejected; calibration not spatially authoritative until verified |
-| Latest safe remediation milestone | After George supplies `EVENT_OS_LAYOUT_ASSET_STORE_PROVIDER`, `EVENT_OS_LAYOUT_ASSET_BUCKET`, `EVENT_OS_LAYOUT_ASSET_ACCESS_KEY` (secret), `EVENT_OS_LAYOUT_ASSET_SECRET_KEY` (secret), `EVENT_OS_LAYOUT_ASSET_SCANNER_URL`, `EVENT_OS_LAYOUT_ASSET_SCANNER_TOKEN` (secret) and `EVENT_OS_LAYOUT_ASSET_DERIVATIVE_URL`, then a genuine production-quality pipeline can be proven. Do not invent values. |
+| Evidence | Railway bucket `event-os-layout-assets-j1zxpb`; Event OS env names in `LAYOUT_ASSET_REQUIRED_VARIABLES`; `layout-s3-store.ts`; `layout-milestone4.test.ts` |
+| Affected surface or contract | Floor-plan asset-service contract |
+| Reason for deferral | Closed by MD-PR-S031 inside the authorised Event OS/Railway project. |
+| Blocking | No longer blocking EOS-S05 independent review |
+| Current owner | Event OS / AI CTO review |
+| Required regression coverage | Unsafe SVG/PDF rejected; no false upload/scan/export success; private no-store delivery; exact-hash export; calibration not authoritative until verified |
+| Latest safe remediation milestone | MD-PR-S031 |
+| Current status | CLOSED |
+
+### TDR-S05-002 — Venue fact evidence remains metadata-only
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S05-002` |
+| Source slice | EOS-S05 |
+| Description | Organisation venue evidence attachments stay metadata-only. The production object pipeline is bound to layout floor-plans and exports, not the reusable venue-fact evidence panel. |
+| Classification | Capability gap |
+| Severity | LOW |
+| Evidence | `venueEvidenceAssets` / `VENUE_ASSET_UPLOAD_AVAILABLE` |
+| Affected surface or contract | Venue fact evidence |
+| Reason for deferral | Floor-plan ingest closed the acceptance blocker. Venue-registry evidence is not spatially authoritative and was not required to fake a binary pipeline. |
+| Blocking | NON_BLOCKING |
+| Current owner | Future venue-evidence authority if binary venue documents are required |
+| Required regression coverage | Venue evidence UI continues to state upload unavailable |
+| Latest safe remediation milestone | After a separate venue-evidence authority |
 | Current status | OPEN |
 
 ---
 
 ## Closed items
 
+- `TDR-S05-001` — floor-plan binary pipeline unavailable. Closed by MD-PR-S031 Railway bucket + in-process content-safety + authenticated delivery.
 - `TDR-S04A-007` — unsafe collection-clearing rollback. Closed by Milestone 1 scoped-receipt rollback.
 - `TDR-S04A-008` — invalid S04A persistence. Closed by Milestone 1 persist/hydrate schema validation.
 - `TDR-S04A-005` — S03 companion names reconciled without fabricating guests. Closed by P03/P05 nomination and reconciliation services.
@@ -991,3 +1010,4 @@ These do not reopen EOS-S04A and do not create new blocking IDs.
 | EOS-S05 ratification and Milestone 1 MD-PR-S028 2026-09-08 | George Lawson ratifies the historic Slice 5 packs and authorises Milestone 1 only. Status RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS. Entered TDR-S05-001 (non-blocking asset-pipeline gap). TDR-S04F-001–002 and carried earlier items remain OPEN. Catalogue accepted-slice count remains 4. EOS-S05 is not accepted. EOS-S06 remains unauthorised. Production remains unauthorised. |
 | EOS-S05 Milestone 2 MD-PR-S029 2026-09-08 | Typed spatial objects and layout studio implemented. TDR-S05-001 remains OPEN and is deferred to Milestone 3. Historic S5-28–S5-30 are not implemented. EOS-S05 is not accepted. Milestone 3 and EOS-S06 remain unauthorised. Production remains unauthorised. |
 | EOS-S05 Milestone 3 MD-PR-S030 2026-09-08 | Assets, assurance, versioning and immutable publication implemented. TDR-S05-001 remains OPEN and is reclassified BLOCKING before EOS-S05 final acceptance. Historic S5-28–S5-30 and S5-39–S5-55 remain `NOT_EXECUTED` as individual prompt runs. EOS-S05 is not accepted. Milestone 4 and EOS-S06 remain unauthorised. Production remains unauthorised. |
+| EOS-S05 Milestone 4 MD-PR-S031 2026-09-08 | Production floor-plan ingest and PDF/PNG export implemented in atelier-doclar. Closed TDR-S05-001. Entered TDR-S05-002 (venue evidence metadata-only, non-blocking). Catalogue accepted-slice count remains 4. EOS-S05 is not accepted. EOS-S06 remains unauthorised. Production remains unauthorised. |

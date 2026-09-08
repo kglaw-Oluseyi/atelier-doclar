@@ -205,3 +205,12 @@ Milestone 3 implementation authority. Does not accept EOS-S05, start Milestone 4
 | EOS-S05 canonical record mapping | `docs/control/EOS_S05_CANONICAL_RECORD_MAPPING.md` | CANONICAL MAPPING | Assurance collections and `EOS-S05-VENUE-ASSURANCE-V1`. |
 | EOS-S05 frontend architecture | `docs/control/EOS_S05_FRONTEND_ARCHITECTURE.md` | IMPLEMENTATION EVIDENCE | Validation, capacity, snapshot, approval, publication, viewer. |
 
+## Addendum — 2026-09-08 EOS-S05 Milestone 4 (`MD-PR-S031`)
+
+Milestone 4 implementation authority. Does not accept EOS-S05, start EOS-S06, or authorise production. Claude-in-Chrome is deferred until AI CTO review.
+
+| Document | Path | Authority class | Note |
+|----------|------|-----------------|------|
+| EOS-S05 implementation record | `docs/control/EOS_S05_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | Milestones 1–4; not acceptance. |
+| EOS-S05 venue-layout ADR | `docs/control/ADR_EOS_S05_VENUE_LAYOUT.md` | CANONICAL ARCHITECTURE RECORD | Private storage and exact-hash export. |
+| EOS-S05 canonical record mapping | `docs/control/EOS_S05_CANONICAL_RECORD_MAPPING.md` | CANONICAL MAPPING | Floor-plan object keys; export COMPLETED identity. |
