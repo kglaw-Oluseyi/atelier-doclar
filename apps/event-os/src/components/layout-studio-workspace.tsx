@@ -58,16 +58,18 @@ export function LayoutStudioWorkspace({
   actorPersonId,
   mutationLocked,
   conflict = false,
+  focusObjectIds = [],
 }: {
   workspace: LayoutSetupWorkspace;
   eventId: string;
   actorPersonId: string;
   mutationLocked: boolean;
   conflict?: boolean;
+  focusObjectIds?: string[];
 }) {
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("ALL");
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>(focusObjectIds);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [precisionCanvas, setPrecisionCanvas] = useState(true);
@@ -105,6 +107,10 @@ export function LayoutStudioWorkspace({
     () => [...workspace.objects].sort((left, right) => left.layer - right.layer || left.zIndex - right.zIndex),
     [workspace.objects],
   );
+
+  useEffect(() => {
+    if (focusObjectIds.length > 0) setSelectedIds(focusObjectIds);
+  }, [focusObjectIds]);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 720px)");

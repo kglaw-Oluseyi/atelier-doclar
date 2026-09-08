@@ -54,6 +54,15 @@ export default async function VenueRegistryPage() {
             canUpdateLayout: permissions.updateLayout,
             canAcquireLease: false,
             canOverrideConstraint: false,
+            canManageAsset: false,
+            canRecordCapacity: false,
+            canRunValidation: false,
+            canManageSnapshot: false,
+            canSubmitApproval: false,
+            canDecideApproval: false,
+            canPublish: false,
+            canViewPublication: false,
+            canReadDownstream: false,
           }
         }
       />

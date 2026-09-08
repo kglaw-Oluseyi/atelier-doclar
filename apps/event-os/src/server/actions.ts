@@ -3468,6 +3468,204 @@ export async function applyLayoutCommandAction(formData: FormData): Promise<void
   });
 }
 
+async function withLayoutMutation(
+  formData: FormData,
+  actionType: string,
+  run: (input: {
+    actor: Awaited<ReturnType<typeof requireActor>>["actor"];
+    organisationId: string;
+    eventId: string;
+    layoutId: string;
+    path: string;
+    formData: FormData;
+  }) => void,
+): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const layoutId = String(formData.get("layoutId") ?? "");
+    const path = `/app/events/${eventId}/layouts/${layoutId}`;
+    const { actor } = await requireActor().catch((error) => venueFail(path, error, undefined, actionType, eventId));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await venueFail(path, new Error("No organisation assignment is available."), actor, actionType, eventId);
+    try {
+      run({ actor, organisationId: organisation.id, eventId, layoutId, path, formData });
+    } catch (error) {
+      await venueFail(path, error, actor, actionType, eventId);
+    }
+    await venueOk(path, actor, actionType, actionType, eventId);
+  });
+}
+
+function layoutCas(formData: FormData) {
+  return {
+    expectedVersion: Number(formData.get("expectedVersion") || 1),
+    expectedRevisionNumber: Number(formData.get("expectedRevisionNumber") || 1),
+    reason: String(formData.get("reason") ?? "Layout assurance action"),
+    idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+  };
+}
+
+export async function recordFloorPlanIntentAction(formData: FormData): Promise<void> {
+  return withLayoutMutation(formData, "layout.asset.intent", ({ actor, organisationId, eventId, layoutId, formData: data }) => {
+    getRuntime().service.recordFloorPlanIntent(actor, {
+      organisationId,
+      eventId,
+      layoutId,
+      ...layoutCas(data),
+      originalFileName: String(data.get("originalFileName") ?? ""),
+      declaredMime: String(data.get("declaredMime") ?? ""),
+      detectedKind: String(data.get("detectedKind") ?? "PDF"),
+      byteSize: Number(data.get("byteSize") || 0),
+      checksumSha256: String(data.get("checksumSha256") ?? ""),
+      svgText: optionalFormValue(data, "svgText"),
+      magicBytesHex: optionalFormValue(data, "magicBytesHex"),
+      supersedesAssetId: optionalFormValue(data, "supersedesAssetId"),
+    });
+  });
+}
+
+export async function calibrateFloorPlanAction(formData: FormData): Promise<void> {
+  return withLayoutMutation(formData, "layout.asset.calibrate", ({ actor, organisationId, eventId, layoutId, formData: data }) => {
+    getRuntime().service.calibrateFloorPlan(actor, {
+      organisationId,
+      eventId,
+      layoutId,
+      ...layoutCas(data),
+      assetId: String(data.get("assetId") ?? ""),
+      measurementMm: Number(data.get("measurementMm") || 0),
+      sourceKind: String(data.get("sourceKind") ?? "STAFF_OBSERVED"),
+      sourceLabel: String(data.get("sourceLabel") ?? ""),
+      verificationState: String(data.get("verificationState") ?? "UNVERIFIED"),
+    });
+  });
+}
+
+export async function recordOperationalCapacityAction(formData: FormData): Promise<void> {
+  return withLayoutMutation(formData, "layout.capacity.record", ({ actor, organisationId, eventId, layoutId, formData: data }) => {
+    getRuntime().service.recordOperationalCapacity(actor, {
+      organisationId,
+      eventId,
+      layoutId,
+      ...layoutCas(data),
+      quantity: Number(data.get("quantity") || 0),
+      ownerLabel: String(data.get("ownerLabel") ?? ""),
+      sourceKind: String(data.get("sourceKind") ?? "STAFF_OBSERVED"),
+      sourceLabel: String(data.get("sourceLabel") ?? ""),
+      verificationState: String(data.get("verificationState") ?? "UNVERIFIED"),
+      rationale: String(data.get("rationale") ?? ""),
+    });
+  });
+}
+
+export async function runLayoutValidationAction(formData: FormData): Promise<void> {
+  return withLayoutMutation(formData, "layout.validation.run", ({ actor, organisationId, eventId, layoutId, formData: data }) => {
+    getRuntime().service.runLayoutValidation(actor, { organisationId, eventId, layoutId, ...layoutCas(data) });
+  });
+}
+
+export async function acknowledgeLayoutFindingAction(formData: FormData): Promise<void> {
+  return withLayoutMutation(formData, "layout.finding.ack", ({ actor, organisationId, eventId, layoutId, formData: data }) => {
+    getRuntime().service.acknowledgeLayoutFinding(actor, {
+      organisationId,
+      eventId,
+      layoutId,
+      ...layoutCas(data),
+      findingId: String(data.get("findingId") ?? ""),
+    });
+  });
+}
+
+export async function overrideLayoutFindingAction(formData: FormData): Promise<void> {
+  return withLayoutMutation(formData, "layout.finding.override", ({ actor, organisationId, eventId, layoutId, formData: data }) => {
+    getRuntime().service.overrideLayoutFinding(actor, {
+      organisationId,
+      eventId,
+      layoutId,
+      ...layoutCas(data),
+      findingId: String(data.get("findingId") ?? ""),
+      authorityKind: String(data.get("authorityKind") ?? "EVENT_DIRECTOR"),
+      evidenceLabel: String(data.get("evidenceLabel") ?? ""),
+      expiresAt: String(data.get("expiresAt") ?? "").includes("T")
+        ? new Date(String(data.get("expiresAt"))).toISOString()
+        : String(data.get("expiresAt") ?? ""),
+    });
+  });
+}
+
+export async function createLayoutSnapshotAction(formData: FormData): Promise<void> {
+  return withLayoutMutation(formData, "layout.snapshot.create", ({ actor, organisationId, eventId, layoutId, formData: data }) => {
+    getRuntime().service.createLayoutSnapshot(actor, {
+      organisationId,
+      eventId,
+      layoutId,
+      ...layoutCas(data),
+      name: String(data.get("name") ?? ""),
+    });
+  });
+}
+
+export async function restoreLayoutSnapshotAction(formData: FormData): Promise<void> {
+  return withLayoutMutation(formData, "layout.snapshot.restore", ({ actor, organisationId, eventId, layoutId, formData: data }) => {
+    getRuntime().service.restoreLayoutSnapshot(actor, {
+      organisationId,
+      eventId,
+      layoutId,
+      ...layoutCas(data),
+      snapshotId: String(data.get("snapshotId") ?? ""),
+      confirmNewVersion: data.get("confirmNewVersion") === "true" ? true : undefined,
+    });
+  });
+}
+
+export async function submitLayoutApprovalAction(formData: FormData): Promise<void> {
+  return withLayoutMutation(formData, "layout.approval.submit", ({ actor, organisationId, eventId, layoutId, formData: data }) => {
+    getRuntime().service.submitLayoutApproval(actor, { organisationId, eventId, layoutId, ...layoutCas(data) });
+  });
+}
+
+export async function decideLayoutApprovalAction(formData: FormData): Promise<void> {
+  return withLayoutMutation(formData, "layout.approval.decide", ({ actor, organisationId, eventId, layoutId, formData: data }) => {
+    getRuntime().service.decideLayoutApproval(actor, {
+      organisationId,
+      eventId,
+      layoutId,
+      ...layoutCas(data),
+      approvalId: String(data.get("approvalId") ?? ""),
+      decision: String(data.get("decision") ?? "REJECTED"),
+    });
+  });
+}
+
+export async function publishLayoutAction(formData: FormData): Promise<void> {
+  return withLayoutMutation(formData, "layout.publish", ({ actor, organisationId, eventId, layoutId, formData: data }) => {
+    getRuntime().service.publishLayout(actor, { organisationId, eventId, layoutId, ...layoutCas(data) });
+  });
+}
+
+export async function withdrawLayoutPublicationAction(formData: FormData): Promise<void> {
+  return withLayoutMutation(formData, "layout.publication.withdraw", ({ actor, organisationId, eventId, layoutId, formData: data }) => {
+    getRuntime().service.withdrawLayoutPublication(actor, {
+      organisationId,
+      eventId,
+      layoutId,
+      ...layoutCas(data),
+      publicationId: String(data.get("publicationId") ?? ""),
+    });
+  });
+}
+
+export async function requestLayoutExportAction(formData: FormData): Promise<void> {
+  return withLayoutMutation(formData, "layout.export.request", ({ actor, organisationId, eventId, layoutId, formData: data }) => {
+    getRuntime().service.requestLayoutExport(actor, {
+      organisationId,
+      eventId,
+      layoutId,
+      ...layoutCas(data),
+      format: String(data.get("format") ?? "PDF"),
+    });
+  });
+}
+
 export async function refreshLayoutRecordAction(formData: FormData): Promise<void> {
   return await withDurable(async () => {
     const path = String(formData.get("path") ?? "");

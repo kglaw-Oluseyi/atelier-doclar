@@ -1826,3 +1826,91 @@ body.atelier {
   background: var(--at-porcelain);
   border: 1px solid color-mix(in srgb, var(--at-rule, #d7cbb8) 80%, transparent);
 }
+
+.layout-assurance {
+  margin-top: 1.5rem;
+}
+
+.capacity-grid,
+.capacity-cards {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.capacity-card,
+.finding-list article {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.85rem 1rem;
+  background: var(--at-porcelain);
+  border: 1px solid color-mix(in srgb, var(--at-rule, #d7cbb8) 80%, transparent);
+}
+
+.capacity-tables li,
+.finding-list li {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.layout-assurance .form {
+  margin-top: 0.75rem;
+}
+
+.layout-assurance a {
+  color: #8b6e38;
+  cursor: pointer;
+}
+
+.layout-assurance button:disabled,
+.layout-assurance [aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+.layout-assurance input,
+.layout-assurance textarea,
+.layout-assurance select {
+  cursor: text;
+}
+
+.layout-assurance select {
+  cursor: pointer;
+}
+
+.layout-assurance :focus-visible {
+  outline: 2px solid #8b6e38;
+  outline-offset: 2px;
+}
+
+@media (min-width: 720px) {
+  .capacity-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .capacity-tables li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .capacity-tables li span::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.75rem;
+    color: #8b6e38;
+  }
+
+  .layout-assurance,
+  .capacity-grid,
+  .capacity-card {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .layout-assurance * {
+    transition: none !important;
+  }
+}

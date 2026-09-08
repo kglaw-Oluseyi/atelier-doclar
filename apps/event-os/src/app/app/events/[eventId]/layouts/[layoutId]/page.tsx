@@ -1,9 +1,10 @@
-import { PlatformError } from "@maison-doclar/shared-platform";
+import { PlatformError, type ActorContext } from "@maison-doclar/shared-platform";
 import { ActionResultBanner } from "../../../../../../components/action-result-banner";
 import { AtelierPageHeader } from "../../../../../../components/atelier-page-header";
 import { AtelierOperationalState } from "../../../../../../components/atelier-operational-state";
 import { LayoutSetupWorkspaceView } from "../../../../../../components/layout-setup-workspace";
 import { LayoutStudioWorkspace } from "../../../../../../components/layout-studio-workspace";
+import { LayoutAssuranceWorkspace as LayoutAssuranceWorkspaceView } from "../../../../../../components/layout-assurance-workspace";
 import { AppShell } from "../../../../../../components/shell";
 import { loadPresentedActionResult } from "../../../../../../server/action-flash";
 import { refreshLayoutRecordAction } from "../../../../../../server/actions";
@@ -62,7 +63,7 @@ export default async function LayoutDetailPage({
       <AtelierPageHeader
         eyebrow={`Layout setup · ${scoped.event.name}`}
         title={workspace.layout.name}
-        lede="Authoritative millimetre geometry with a typed studio projection. Refresh after a conflict before retrying. Seating allocation is not available."
+        lede="Authoritative millimetre geometry with a typed studio projection, validation, snapshots and immutable publication. Refresh after a conflict before retrying. Seating allocation is not available."
       />
       <ActionResultBanner
         presented={presented}
@@ -76,7 +77,55 @@ export default async function LayoutDetailPage({
         actorPersonId={person.id}
         mutationLocked={presented.mutationLocked}
         conflict={presented.mutationLocked}
+        focusObjectIds={typeof query.focusObjects === "string" ? query.focusObjects.split(",").filter(Boolean) : []}
       />
+      <LayoutAssuranceWorkspaceView
+        workspace={workspace}
+        eventId={eventId}
+        mutationLocked={presented.mutationLocked}
+      />
+      <PublishedLayoutPanel actorOrganisationId={scoped.organisation.id} eventId={eventId} layoutId={layoutId} actor={actor} />
     </AppShell>
+  );
+}
+
+function PublishedLayoutPanel({
+  actorOrganisationId,
+  eventId,
+  layoutId,
+  actor,
+}: {
+  actorOrganisationId: string;
+  eventId: string;
+  layoutId: string;
+  actor: ActorContext;
+}) {
+  let viewer;
+  try {
+    viewer = getRuntime().service.getPublishedLayoutViewer(actor, actorOrganisationId, eventId, layoutId);
+  } catch {
+    return null;
+  }
+  return (
+    <section className="atelier-panel" data-testid="published-viewer">
+      <h2>Published viewer</h2>
+      <p>
+        {viewer.eventName}
+        {viewer.venueName ? ` · ${viewer.venueName}` : ""} · publication {viewer.publicationNumber} · {viewer.status} · hash{" "}
+        {viewer.contentHash} · {viewer.publishedAt}
+      </p>
+      <p>{viewer.sourceContext}</p>
+      <p>
+        Validation {viewer.validationSummary.engineId} {viewer.validationSummary.engineVersion}: {viewer.validationSummary.blockingCount}{" "}
+        blocking, {viewer.validationSummary.warningCount} warning.
+      </p>
+      <ul className="atelier-folio">
+        {viewer.objects.map((object) => (
+          <li key={object.id}>
+            {object.objectType === "MASKED" ? "Restricted layer masked" : `${object.label} · ${object.objectType}`}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
