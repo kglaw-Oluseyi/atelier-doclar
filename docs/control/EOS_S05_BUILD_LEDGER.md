@@ -3,7 +3,10 @@
 **Slice ID:** `EOS-S05`  
 **Prompt Control ID:** `MD-PR-S028`  
 **Starting baseline:** `bb705588e0d4481802658a18d7666e28e3a18fea`  
-**Status:** `IN_PROGRESS` — Milestone 1 implementation; not accepted  
+**Authority commit:** `cee64f6f69bfc6dace53ffc60d8232e6938653de`  
+**Platform commit:** `bd65c02e790082ea2d46e1323a848c42446e512a`  
+**Event OS commit:** `e4ec11712c7f4fb3db0b3f4e6afc4b6ebc02c8b8`  
+**Status:** `IN_PROGRESS` — Milestone 1 implemented; not accepted  
 **Production:** unauthorised  
 **Next slices:** EOS-S06 not authorised; Milestone 2–4 not released
 
