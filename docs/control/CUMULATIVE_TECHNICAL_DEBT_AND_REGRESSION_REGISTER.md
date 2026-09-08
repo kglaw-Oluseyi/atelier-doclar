@@ -935,17 +935,17 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 |-------|-------|
 | ID | `TDR-S05A-001` |
 | Source slice | EOS-S05A |
-| Description | EEC-07 binary/object-storage source artefacts are not implemented. Foundation Milestone A records typed staff notes with inert text, checksummed segments and deterministic fixture extraction only. |
-| Classification | In-slice deferred capability |
+| Description | Private source-object storage now uses the existing Event OS object store: private keys, checksums, size/type limits, inert placeholder text, no public URL, no executable rendering, no antivirus claim. |
+| Classification | Closed in-slice capability |
 | Severity | LOW |
-| Evidence | `docs/control/EOS_S05A_BUILD_LEDGER.md` |
+| Evidence | `recordDiscoveryObjectAction` and `SourceArtefact.objectKey` |
 | Affected surface or contract | Discovery evidence |
-| Reason for deferral | Milestone A required inspectable provenance and fixture extraction, not a second object pipeline. Uploaded documents remain a later authorised unit. |
+| Reason for deferral | Closed under `MD-PR-S038`. |
 | Blocking | NON_BLOCKING |
-| Current owner | Later EOS-S05A source-artefact authority |
-| Required regression coverage | Staff-note evidence and fixture extraction remain available; upload is not pretended |
-| Latest safe remediation milestone | After a later authorised EOS-S05A evidence unit |
-| Current status | OPEN |
+| Current owner | EOS-S05A |
+| Required regression coverage | Public URL rejected; unbound store fails closed |
+| Latest safe remediation milestone | Closed |
+| Current status | CLOSED |
 
 ### TDR-S05A-002 — Opportunity close and owner assignment have no dedicated form
 
@@ -953,17 +953,17 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 |-------|-------|
 | ID | `TDR-S05A-002` |
 | Source slice | EOS-S05A |
-| Description | Opportunity update/close and owner-assignment commands exist on the shared-platform service but are not exposed as dedicated Command Atelier forms. |
-| Classification | In-slice deferred surface |
+| Description | Opportunity update, owner assignment and close are exposed on the Discovery enquiry list using the existing server command. Conversion remains a separate explicit command. |
+| Classification | Closed in-slice surface |
 | Severity | LOW |
-| Evidence | `updateEngagementOpportunity` in `packages/shared-platform/src/service.ts` |
+| Evidence | Discovery index `Update enquiry` form |
 | Affected surface or contract | Discovery enquiry list |
-| Reason for deferral | The authorised foundation journey is open-enquiry, consent, session, evidence, coverage and assertion review. Close/owner forms can follow without reopening the domain. |
+| Reason for deferral | Closed under `MD-PR-S038`. |
 | Blocking | NON_BLOCKING |
-| Current owner | Later EOS-S05A intake UI authority |
-| Required regression coverage | Create and start remain available; conversion remains refused |
-| Latest safe remediation milestone | After a later authorised EOS-S05A intake unit |
-| Current status | OPEN |
+| Current owner | EOS-S05A |
+| Required regression coverage | `CONVERTED` cannot be set through generic update |
+| Latest safe remediation milestone | Closed |
+| Current status | CLOSED |
 
 ---
 
@@ -1050,3 +1050,4 @@ These do not reopen EOS-S04A and do not create new blocking IDs.
 | EOS-S05 independent acceptance MD-PR-S035 2026-09-08 | ChatGPT accepted EOS-S05 at SHA `eba137712c65c6f59b77fe2a88a8f4a277228cd9` after Cursor implementation/live evidence and Claude final focused verdict READY. Catalogue accepted-slice count is 5. TDR-S05-002 remains OPEN / non-blocking. No new TDR is created for the override Evidence/Reason label observation. EOS-S06 remains NOT_STARTED / NOT_AUTHORISED. Production remains unauthorised. Documentation-only commit does not redeploy Event OS or Control Tower. |
 | EOS-S05A ratification MD-PR-S037 2026-09-08 | George Lawson ratifies the EOS-S05A Executive Event Command corpus and authorises Foundation Milestone A only (`EEC-00`–`EEC-10`). Status RATIFIED / FOUNDATION MILESTONE A AUTHORISED / NOT ACCEPTED. Catalogue accepted-slice count remains 5. `EEC-11`–`EEC-45` remain ratified but unreleased. `MD-PR-S036` is not consumed. EOS-S06 remains NOT_STARTED / NOT_AUTHORISED. Production remains unauthorised. Documentation commit does not redeploy Event OS or Control Tower. |
 | EOS-S05A Foundation Milestone A MD-PR-S037 2026-09-08 | Implemented `EEC-00`–`EEC-10` in shared-platform and Command Atelier discovery surfaces. Entered TDR-S05A-001–002 (non-blocking). `EEC-11`–`EEC-45` not started. Catalogue accepted-slice count remains 5. EOS-S06 remains NOT_STARTED / NOT_AUTHORISED. Production remains unauthorised. Control Tower is not redeployed. EOS-S05A is not accepted. |
+| EOS-S05A whole-slice MD-PR-S038 2026-09-08 | Implemented `EEC-11`–`EEC-45`, closed the Foundation consent spoof, closed TDR-S05A-001–002. Catalogue accepted-slice count remains 5. EOS-S06 remains NOT_STARTED / NOT_AUTHORISED. Production remains unauthorised. Control Tower is not redeployed. EOS-S05A is not accepted. |

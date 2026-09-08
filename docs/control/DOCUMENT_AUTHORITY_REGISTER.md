@@ -268,3 +268,14 @@ This addendum does not rewrite the B0 row set or the earlier S04A–S05 addenda.
 | EOS-S05A implementation record | `docs/control/EOS_S05A_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | Not acceptance. |
 | EOS-S05A build ledger | `docs/control/EOS_S05A_BUILD_LEDGER.md` | IMPLEMENTATION LEDGER | Foundation Milestone A tracking. |
 | EOS-S05A architecture ADR | `docs/control/ADR_EOS_S05A_EXECUTIVE_EVENT_COMMAND.md` | ADR PLACEHOLDER | Completed under `EEC-01`. |
+
+## Addendum — 2026-09-08 EOS-S05A whole-slice implementation (`MD-PR-S038`)
+
+This addendum does not rewrite the B0 row set or earlier addenda. Catalogue accepted-slice count remains 5. EOS-S06 remains unauthorised. Production remains unauthorised. EOS-S05A is not accepted.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| EOS-S05A Volume 04B | `docs/control/eos-s05a/04B_CURSOR_PACK_BRIEF_AND_BUDGET_ENGINE.md` | IMPLEMENTED / NOT ACCEPTED | `EEC-11`–`EEC-25`. |
+| EOS-S05A Volume 04C | `docs/control/eos-s05a/04C_CURSOR_PACK_ROADMAP_AI_AND_EXPERIENCE.md` | IMPLEMENTED / NOT ACCEPTED | `EEC-26`–`EEC-40`. |
+| EOS-S05A Volume 04D | `docs/control/eos-s05a/04D_CURSOR_PACK_RELEASE_ASSURANCE_AND_REPORTING.md` | IMPLEMENTED / NOT ACCEPTED | `EEC-41`–`EEC-45`. |
+| EOS-S05A implementation record | `docs/control/EOS_S05A_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | Whole-slice evidence. Not acceptance. |

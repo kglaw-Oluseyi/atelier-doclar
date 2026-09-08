@@ -234,3 +234,15 @@ Milestone 4 is authorised on the Milestone 1–3 contracts. Historic S5-01–S5-
 | Catalogue accepted-slice count | RETAINED at 5. EOS-S05A is a non-catalogue insert. |
 | Control Tower | Compatibility-only. Not a deploy target for this prompt. |
 | Deploy-by-default (6 September 2026) | Documentation commit does not deploy. Event OS may be deployed once after completed Milestone A application work if Event OS/shared runtime or migrations changed. Deployment is not acceptance. |
+
+## Addendum — 2026-09-08 EOS-S05A whole-slice implementation (`MD-PR-S038`)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| `EEC-11`–`EEC-45` ratified but unreleased | SUPERSEDED. Implemented under `MD-PR-S038`. Not accepted. |
+| Foundation Milestone A consent using caller `mode` | SUPERSEDED. Durable session mode is authoritative after CREATE. |
+| TDR-S05A-001 / TDR-S05A-002 | CLOSED. Private source objects and opportunity owner/update/close surfaces exist. |
+| EOS-S06 / `MD-PR-S036` | RETAINED. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. `MD-PR-S036` is not consumed. |
+| Catalogue accepted-slice count | RETAINED at 5. |
+| Control Tower | Compatibility-only. Not a deploy target. |
+| Claude-in-Chrome | Deferred until independent whole-slice verification after Event OS deployment. |
