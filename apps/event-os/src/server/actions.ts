@@ -3593,6 +3593,18 @@ export async function overrideLayoutFindingAction(formData: FormData): Promise<v
   });
 }
 
+export async function revokeLayoutOverrideAction(formData: FormData): Promise<void> {
+  return withLayoutMutation(formData, "layout.finding.override.revoke", ({ actor, organisationId, eventId, layoutId, formData: data }) => {
+    getRuntime().service.revokeLayoutOverride(actor, {
+      organisationId,
+      eventId,
+      layoutId,
+      ...layoutCas(data),
+      overrideId: String(data.get("overrideId") ?? ""),
+    });
+  });
+}
+
 export async function createLayoutSnapshotAction(formData: FormData): Promise<void> {
   return withLayoutMutation(formData, "layout.snapshot.create", ({ actor, organisationId, eventId, layoutId, formData: data }) => {
     getRuntime().service.createLayoutSnapshot(actor, {

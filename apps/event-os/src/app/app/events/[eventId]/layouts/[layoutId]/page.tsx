@@ -58,6 +58,37 @@ export default async function LayoutDetailPage({
     actorPersonId: person.id,
     eventId,
   });
+  const baseSnapshot = typeof query.baseSnapshot === "string" ? query.baseSnapshot : "";
+  const compareSnapshot = typeof query.compareSnapshot === "string" ? query.compareSnapshot : "";
+  let comparison:
+    | {
+        entries: Array<{ kind: string; summary: string }>;
+        direction: string;
+        noChange: boolean;
+      }
+    | undefined;
+  if (baseSnapshot && compareSnapshot) {
+    try {
+      comparison = getRuntime().service.compareLayoutSnapshots(
+        actor,
+        scoped.organisation.id,
+        scoped.event.id,
+        baseSnapshot,
+        compareSnapshot,
+      );
+    } catch (error) {
+      comparison = {
+        entries: [
+          {
+            kind: "TYPE_OR_PROPERTY",
+            summary: error instanceof PlatformError ? error.publicMessage : "Comparison could not be loaded.",
+          },
+        ],
+        direction: "Comparison failed",
+        noChange: false,
+      };
+    }
+  }
   return (
     <AppShell person={person} organisationName={scoped.organisation.displayName} eventName={scoped.event.name} current="/app/events">
       <AtelierPageHeader
@@ -83,6 +114,9 @@ export default async function LayoutDetailPage({
         workspace={workspace}
         eventId={eventId}
         mutationLocked={presented.mutationLocked}
+        diffSummary={comparison?.entries}
+        comparisonDirection={comparison?.direction}
+        comparisonNoChange={comparison?.noChange}
       />
       <PublishedLayoutPanel actorOrganisationId={scoped.organisation.id} eventId={eventId} layoutId={layoutId} actor={actor} />
     </AppShell>

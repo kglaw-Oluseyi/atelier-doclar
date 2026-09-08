@@ -1929,6 +1929,48 @@ body.atelier {
   }
 }
 
+.atelier-masthead,
+.atelier-masthead h1,
+.atelier-masthead .eyebrow,
+.atelier-masthead .lede,
+.atelier-shell main,
+.layout-studio-status,
+.layout-studio-status p,
+.venue-atelier,
+.atelier-folio,
+.atelier-folio article,
+.atelier-folio li,
+.atelier-folio a,
+.atelier-folio h2,
+.atelier-folio h3,
+.atelier-shell .data-table,
+.atelier-shell .data-table td,
+.atelier-shell .data-table th,
+.atelier-shell .data-table a,
+.atelier-shell .table-wrap,
+[data-testid="layout-list"],
+[data-testid="venue-registry"] {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.atelier-folio {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+}
+
+.atelier-shell .data-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.atelier-shell .data-table a,
+.layout-studio-status code {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .layout-assurance * {
     transition: none !important;

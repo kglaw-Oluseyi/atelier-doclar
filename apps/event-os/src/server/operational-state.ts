@@ -252,7 +252,6 @@ export function operationalStateFromCode(
           false,
           "warn",
           "assertive",
-          message,
         ),
         reloadRequired: true,
       };

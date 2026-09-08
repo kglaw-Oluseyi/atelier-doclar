@@ -27,14 +27,15 @@ function pendingKey(layoutId: string) {
   return `eos-s05-pending:${layoutId}`;
 }
 
-function geometryBox(geometry: SpatialObject["geometry"]) {
-  if (geometry.kind === "RECTANGLE") return { x: geometry.xMm, y: geometry.yMm, w: geometry.widthMm, h: geometry.heightMm };
+function geometryBox(geometry: { kind: string; xMm?: number; yMm?: number; widthMm?: number; heightMm?: number; cxMm?: number; cyMm?: number; radiusXMm?: number; radiusYMm?: number; points?: Array<{ xMm: number; yMm: number }> }) {
+  if (geometry.kind === "MASKED") return { x: 0, y: 0, w: 0, h: 0 };
+  if (geometry.kind === "RECTANGLE") return { x: geometry.xMm ?? 0, y: geometry.yMm ?? 0, w: geometry.widthMm ?? 0, h: geometry.heightMm ?? 0 };
   if (geometry.kind === "ELLIPSE") {
-    return { x: geometry.cxMm - geometry.radiusXMm, y: geometry.cyMm - geometry.radiusYMm, w: geometry.radiusXMm * 2, h: geometry.radiusYMm * 2 };
+    return { x: (geometry.cxMm ?? 0) - (geometry.radiusXMm ?? 0), y: (geometry.cyMm ?? 0) - (geometry.radiusYMm ?? 0), w: (geometry.radiusXMm ?? 0) * 2, h: (geometry.radiusYMm ?? 0) * 2 };
   }
-  const xs = geometry.points.map((point) => point.xMm);
-  const ys = geometry.points.map((point) => point.yMm);
-  return { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) };
+  const xs = (geometry.points ?? []).map((point) => point.xMm);
+  const ys = (geometry.points ?? []).map((point) => point.yMm);
+  return { x: Math.min(...xs, 0), y: Math.min(...ys, 0), w: Math.max(...xs, 0) - Math.min(...xs, 0), h: Math.max(...ys, 0) - Math.min(...ys, 0) };
 }
 
 function snapMm(value: number) {
@@ -195,7 +196,7 @@ export function LayoutStudioWorkspace({
     function onKey(event: KeyboardEvent) {
       const target = event.target as HTMLElement | null;
       if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT")) return;
-      if (!selected || readOnly) return;
+      if (!selected || readOnly || selected.objectType === "MASKED" || selected.geometry.kind === "MASKED") return;
       const step = event.shiftKey ? 500 : 100;
       if (event.key === "ArrowLeft") {
         event.preventDefault();
@@ -374,7 +375,7 @@ export function LayoutStudioWorkspace({
               {guides.x !== undefined ? <line x1={guides.x} y1="0" x2={guides.x} y2={workspace.layout.heightMm} className="studio-guide" /> : null}
               {guides.y !== undefined ? <line x1="0" y1={guides.y} x2={workspace.layout.widthMm} y2={guides.y} className="studio-guide" /> : null}
               {sorted.map((object) => {
-                if (!object.visible) return null;
+                if (!object.visible || object.geometry.kind === "MASKED") return null;
                 const box = geometryBox(object.geometry);
                 const active = selectedIds.includes(object.id);
                 if (object.geometry.kind === "POLYLINE") {
@@ -455,9 +456,9 @@ export function LayoutStudioWorkspace({
             {objects.map((object) => (
               <li key={object.id}>
                 <button type="button" className="button secondary" aria-pressed={selectedIds.includes(object.id)} onClick={(event) => select(object.id, event.shiftKey)}>
-                  {object.label} · {object.objectType.replaceAll("_", " ").toLowerCase()}
-                  {object.locked ? " · locked" : ""}
-                  {object.visible ? "" : " · hidden"}
+                  {object.objectType === "MASKED" ? "Restricted layer masked" : `${object.label} · ${object.objectType.replaceAll("_", " ").toLowerCase()}`}
+                  {object.objectType !== "MASKED" && object.locked ? " · locked" : ""}
+                  {object.objectType !== "MASKED" && object.visible ? "" : object.objectType === "MASKED" ? "" : " · hidden"}
                 </button>
               </li>
             ))}
@@ -469,6 +470,10 @@ export function LayoutStudioWorkspace({
             <p className="empty">Select an object in the navigator or canvas. Keyboard editing does not require drag.</p>
           ) : (
             <div data-testid="studio-inspector">
+              {selected.objectType === "MASKED" || selected.geometry.kind === "MASKED" ? (
+                <p>Restricted layer masked. Exact geometry, coordinates, dimensions and typed properties are withheld for this assignment.</p>
+              ) : (
+              <>
               <p>
                 {selected.objectType.replaceAll("_", " ")} · layer {selected.layer} · z {selected.zIndex}
                 {selected.locked ? " · locked" : ""}
@@ -630,6 +635,8 @@ export function LayoutStudioWorkspace({
                   Bring forward
                 </button>
               </p>
+              </>
+              )}
             </div>
           )}
         </section>

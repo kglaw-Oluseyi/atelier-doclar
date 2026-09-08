@@ -12,6 +12,7 @@ import {
   recordOperationalCapacityAction,
   requestLayoutExportAction,
   restoreLayoutSnapshotAction,
+  revokeLayoutOverrideAction,
   runLayoutValidationAction,
   submitLayoutApprovalAction,
   withdrawLayoutAssetAction,
@@ -53,11 +54,15 @@ export function LayoutAssuranceWorkspace({
   eventId,
   mutationLocked,
   diffSummary,
+  comparisonDirection,
+  comparisonNoChange,
 }: {
   workspace: LayoutSetupWorkspace;
   eventId: string;
   mutationLocked: boolean;
   diffSummary?: Array<{ kind: string; summary: string }>;
+  comparisonDirection?: string;
+  comparisonNoChange?: boolean;
 }) {
   const { assurance, layout } = workspace;
   const currentPublication = assurance.publications.find((item) => item.status === "CURRENT");
@@ -72,11 +77,19 @@ export function LayoutAssuranceWorkspace({
           engineering, accessibility or crowd safety.
         </p>
         {assurance.publicationBlocked ? (
-          <p className="studio-conflict" role="status">
-            Publication blocked: unresolved blocking findings on this hash.
+          <p className="studio-conflict" role="status" data-testid="validation-summary">
+            Publication blocked: {assurance.unresolvedBlockingCount} unresolved effective blocker
+            {assurance.unresolvedBlockingCount === 1 ? "" : "s"} on this hash.
+            Raw blocking findings: {assurance.rawBlockingCount}. Validly overridden: {assurance.overriddenBlockingCount}.
           </p>
         ) : (
-          <p role="status">Publication is not blocked by a current blocking finding.</p>
+          <p role="status" data-testid="validation-summary">
+            Publication is not blocked by an unresolved effective blocker.
+            Raw blocking findings: {assurance.rawBlockingCount}. Validly overridden: {assurance.overriddenBlockingCount}.
+            {assurance.rawBlockingCount > 0 && assurance.overriddenBlockingCount > 0
+              ? " Publication is permitted because blocking findings are validly overridden."
+              : ""}
+          </p>
         )}
         {assurance.latestRun && assurance.latestRun.contentHash !== layout.contentHash ? (
           <p className="studio-conflict" role="status">
@@ -100,6 +113,7 @@ export function LayoutAssuranceWorkspace({
                     {finding.severity}
                   </span>{" "}
                   {finding.status} · {finding.ruleId} v{finding.ruleVersion}
+                  {finding.overrideRecognised ? " · existing governed override recognised" : ""}
                 </p>
                 <p>{finding.explanation}</p>
                 <p>Evidence: {finding.evidence}</p>
@@ -122,6 +136,14 @@ export function LayoutAssuranceWorkspace({
                     <input type="hidden" name="findingId" value={finding.id} />
                     <input type="hidden" name="reason" value="Acknowledge finding" />
                     <PendingSubmit locked={mutationLocked}>Acknowledge</PendingSubmit>
+                  </form>
+                ) : null}
+                {assurance.capabilities.canOverrideConstraint && finding.status === "OVERRIDDEN" && finding.overrideId ? (
+                  <form action={revokeLayoutOverrideAction} className="form programme-form">
+                    <CasFields workspace={workspace} eventId={eventId} />
+                    <input type="hidden" name="overrideId" value={finding.overrideId} />
+                    <input type="hidden" name="reason" value="Revoke authorised finding override" />
+                    <PendingSubmit locked={mutationLocked}>Revoke override</PendingSubmit>
                   </form>
                 ) : null}
                 {assurance.capabilities.canOverrideConstraint && finding.status === "OPEN" ? (
@@ -364,6 +386,39 @@ export function LayoutAssuranceWorkspace({
             <PendingSubmit locked={mutationLocked}>Create snapshot</PendingSubmit>
           </form>
         ) : null}
+        <form method="get" className="form programme-form" data-testid="snapshot-compare-form">
+          <label>
+            Base snapshot
+            <select name="baseSnapshot" required defaultValue="">
+              <option value="" disabled>
+                Select base
+              </option>
+              {assurance.snapshots.map((item) => (
+                <option key={`base-${item.id}`} value={item.id}>
+                  {item.name} · r{item.revisionNumber}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Comparison source
+            <select name="compareSnapshot" required defaultValue="">
+              <option value="" disabled>
+                Select comparison
+              </option>
+              <option value="CURRENT">Current draft</option>
+              {assurance.snapshots.map((item) => (
+                <option key={`compare-${item.id}`} value={item.id}>
+                  {item.name} · r{item.revisionNumber}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button className="button" type="submit">
+            Compare snapshots
+          </button>
+          <p className="lede">Comparison is listed as text, not colour alone. Snapshots are not mutated. Auditor review remains read-only.</p>
+        </form>
         <ul className="atelier-folio">
           {assurance.snapshots.map((snapshot) => (
             <li key={snapshot.id}>
@@ -385,7 +440,10 @@ export function LayoutAssuranceWorkspace({
             </li>
           ))}
         </ul>
-        {diffSummary && diffSummary.length > 0 ? (
+        {comparisonDirection ? <p data-testid="layout-diff-direction">Direction: {comparisonDirection}</p> : null}
+        {comparisonNoChange ? (
+          <p data-testid="layout-diff">No material spatial or semantic changes.</p>
+        ) : diffSummary && diffSummary.length > 0 ? (
           <ul className="atelier-folio" data-testid="layout-diff">
             {diffSummary.map((entry, index) => (
               <li key={`${entry.kind}-${index}`}>
@@ -488,8 +546,13 @@ export function LayoutAssuranceWorkspace({
         </p>
         <ul className="atelier-folio">
           {assurance.exportJobs.map((job) => (
-            <li key={job.id}>
-              {job.marking} · {job.format} · {job.status} · {job.notes}
+            <li key={job.id} data-testid={`export-job-${job.marking}`}>
+              <span>
+                {job.marking} · {job.format} · {job.status} · hash {job.contentHash}
+                {job.publicationNumber ? ` · publication ${job.publicationNumber}` : ""}
+                {job.generatedAt ? ` · generated ${job.generatedAt}` : ""}
+              </span>
+              <p>{job.notes}</p>
               {job.status === "COMPLETED" ? (
                 <p>
                   <a href={`/api/events/${eventId}/layouts/${layout.id}/exports/${job.id}?organisationId=${layout.organisationId}`}>
