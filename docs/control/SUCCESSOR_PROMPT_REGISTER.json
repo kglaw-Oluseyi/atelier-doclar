@@ -266,6 +266,22 @@
       "product": "EVENT_OS",
       "title": "EOS-S05 Final Traceability and Permission-Affordance Remediation",
       "authorising_instruction": "Remediate override decision-record reviewability and Auditor export affordances only; push and deploy event-os only; do not accept EOS-S05, start EOS-S06, reopen passed S033 behaviour, or authorise production"
+    },
+    {
+      "prompt_control_id": "MD-PR-S035",
+      "native_id": "S05-ACCEPT",
+      "slice_id": "EOS-S05",
+      "product": "EVENT_OS",
+      "title": "EOS-S05 Independent Acceptance Record",
+      "authorising_instruction": "Record independent AI CTO acceptance of EOS-S05 at SHA eba137712c65c6f59b77fe2a88a8f4a277228cd9; documentation only; do not change application code, redeploy Event OS or Control Tower, start EOS-S06, or authorise production"
+    },
+    {
+      "prompt_control_id": "MD-PR-S036",
+      "native_id": "S06-HOLD",
+      "slice_id": "EOS-S06",
+      "product": "EVENT_OS",
+      "title": "Recommended next control ID after EOS-S05 acceptance",
+      "authorising_instruction": "Reserved recommendation only. This is not implementation authority for EOS-S06. EOS-S06 remains NOT_STARTED / NOT_AUTHORISED."
     }
   ]
 }

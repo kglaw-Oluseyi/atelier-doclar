@@ -1,7 +1,7 @@
 # EOS-S05 Build Ledger
 
 **Slice ID:** `EOS-S05`  
-**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030` / `MD-PR-S031` / `MD-PR-S032` / `MD-PR-S033` / `MD-PR-S034`
+**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030` / `MD-PR-S031` / `MD-PR-S032` / `MD-PR-S033` / `MD-PR-S034` / `MD-PR-S035`
 **Starting baseline:** `bb705588e0d4481802658a18d7666e28e3a18fea`
 **Milestone 2 starting SHA:** `a7dc4d931f3c01f05354b11e68bc7c4a155e5afb`
 **Milestone 3 starting SHA:** `72830730398f6aa1b02183417ca4ac4d32801b10`
@@ -22,9 +22,11 @@
 **S034 starting SHA:** `566223c8741d889266805608db9be2d26e99fb35`
 **S034 platform commit:** `62ddeddecdbf7746329a121a507ae4010061ba6c`
 **S034 Event OS commit:** `5b79996325f0c3f684ba33254bb63b85ea120e70`
-**Status:** `IN_PROGRESS` — Milestones 1–4 implemented; not accepted
+**Accepted implementation SHA:** `eba137712c65c6f59b77fe2a88a8f4a277228cd9`
+**Acceptance Prompt Control ID:** `MD-PR-S035`
+**Status:** `ACCEPTED`
 **Production:** unauthorised  
-**Next slices:** EOS-S06 not authorised
+**Next slices:** EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`
 
 ## Milestone 1 — Authority, venue foundation and spatial contract
 
@@ -104,4 +106,6 @@ Workspace `pnpm typecheck`, `pnpm --filter @maison-doclar/shared-platform test` 
 
 S034 verification (`typecheck`, shared-platform 329, Event OS 72, `programme:validate`, Event OS build, Playwright `s05-s034-traceability` 2/2, `git diff --check`) is recorded in `EOS_S05_IMPLEMENTATION.md`.
 
-Deployment of Event OS to Railway project `atelier-doclar` is implementation evidence only. It is not EOS-S05 acceptance and not production authorisation.
+## MD-PR-S035 — Independent acceptance
+
+ChatGPT / AI CTO accepted EOS-S05 on `2026-09-08` at SHA `eba137712c65c6f59b77fe2a88a8f4a277228cd9`. Catalogue accepted-slice count is 5. Live Event OS deployment `ac6b5f2d-8c9c-41dc-ab93-cd3e5c154151` already carries that SHA and is not redeployed. Control Tower is not redeployed. Production remains unauthorised. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. Record: `docs/control/EOS_S05_ACCEPTANCE.md`.

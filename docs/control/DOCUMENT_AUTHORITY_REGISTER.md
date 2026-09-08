@@ -237,4 +237,12 @@ Bounded remediation of override decision-record reviewability and Auditor export
 
 | Document | Path | Authority class | Note |
 |----------|------|-----------------|------|
-| EOS-S05 implementation record | `docs/control/EOS_S05_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | MD-PR-S034 final traceability remediation; not acceptance. |
+| EOS-S05 implementation record | `docs/control/EOS_S05_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | MD-PR-S034 final traceability remediation; later accepted under MD-PR-S035. |
+
+## Addendum — 2026-09-08 EOS-S05 independent acceptance (`MD-PR-S035`)
+
+Independent AI CTO acceptance of EOS-S05. Catalogue accepted-slice count is 5. Does not start EOS-S06 or authorise production. Event OS and Control Tower are not redeployed.
+
+| Document | Path | Authority class | Note |
+|----------|------|-----------------|------|
+| EOS-S05 formal technical acceptance | `docs/control/EOS_S05_ACCEPTANCE.md` | CANONICAL ACCEPTANCE RECORD | Status `ACCEPTED` at SHA `eba137712c65c6f59b77fe2a88a8f4a277228cd9`. Catalogue slice. |

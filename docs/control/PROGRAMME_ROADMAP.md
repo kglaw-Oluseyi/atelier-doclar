@@ -12,7 +12,7 @@ Percent complete is not used. Unknown is not healthy. Documented ≠ implemented
 | Code | Name | Route | Implementation reality |
 |------|------|-------|------------------------|
 | FOUNDATION | Shared Foundation / Control Tower | `/programme` | Control Tower implemented; Foundation closeout IN_REVIEW; production unsigned |
-| EVENT_OS | Event OS | `/programme/event-os` | S01–S03 accepted; S04 CLOSED / ACCEPTED; S04A ACCEPTED (not catalogue); S04B ACCEPTED (not catalogue); S04C ACCEPTED (not catalogue); S04D ACCEPTED (not catalogue); S04E ACCEPTED (not catalogue); S04F ACCEPTED (not catalogue); S05 not authorised |
+| EVENT_OS | Event OS | `/programme/event-os` | S01–S03 accepted; S04 CLOSED / ACCEPTED; S04A ACCEPTED (not catalogue); S04B ACCEPTED (not catalogue); S04C ACCEPTED (not catalogue); S04D ACCEPTED (not catalogue); S04E ACCEPTED (not catalogue); S04F ACCEPTED (not catalogue); S05 ACCEPTED (catalogue count 5); S06 not authorised |
 | EVENT_DAY | Event-Day Runtime | `/programme/event-day` | Specs + contracts; no app |
 | ACADEMY | Academy | `/programme/academy` | Specified/prompted; no app |
 | MARKETING | Marketing OS | `/programme/marketing` | Specified/prompted; no app |
@@ -69,15 +69,16 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 | EOS-S04D | ACCEPTED — Attendance Forecasting & Planning Intelligence; not a catalogue slice; SHA `64683a853ead39c62caeb2d2e9f26bcb9d1dca21`; `MD-PR-S022` / `MD-PR-S023` |
 | EOS-S04E | ACCEPTED — Event Blueprint, Journey & Host Experience; not a catalogue slice; SHA `05b91bb62dcc20357666bef4ff9bfa1d0cef11b2`; `MD-PR-S024` / `MD-PR-S025` |
 | EOS-S04F | ACCEPTED — Language, Cultural Text & Multilingual Editions; not a catalogue slice; SHA `a4795e83c929bf24591f52c2224eb4b588c23ef3`; `MD-PR-S026` / `MD-PR-S027` |
-| EOS-S05 | IN_PROGRESS — Venue registry and spatial layout; catalogue slice; Milestones 1–4 implemented; not accepted |
+| EOS-S05 | ACCEPTED — Venue registry and spatial layout; catalogue slice; SHA `eba137712c65c6f59b77fe2a88a8f4a277228cd9`; `MD-PR-S028`–`MD-PR-S035` |
+| EOS-S06 | NOT_STARTED / NOT_AUTHORISED — seating allocation; `MD-PR-S036` is recommended only and is not implementation authority |
 | All others | NOT_STARTED, READY, or BLOCKED only by valid Event OS / Event-Day dependencies |
 
 ## Now / next / later
 
 | Band | Content |
 |------|---------|
-| Now | Event OS S01–S03 accepted; EOS-S04 CLOSED / ACCEPTED; EOS-S04A–F ACCEPTED (S04A–F are not catalogue slices); EOS-S05 Milestones 1–4 implemented and not accepted; production unsigned; no real communication or translation provider |
-| Next | Independent AI CTO review of complete EOS-S05, then one Claude-in-Chrome whole-slice verification batch; do not start EOS-S06 without a separate CEO overlay |
+| Now | Event OS S01–S05 accepted (catalogue count 5); EOS-S04A–F ACCEPTED (not catalogue slices); production unsigned; no real communication or translation provider |
+| Next | Separate CEO overlay would be required before EOS-S06; recommended control ID `MD-PR-S036` is not implementation authority |
 | Later | Event OS S01 after a new authorised instruction; Runtime after Event OS foundations |
 | Held | All 693 product/recon prompts except CT0/CT1 wrappers; EOS-S06 |
 | External | Independent, specialist, venue, CEO gates — unsigned |

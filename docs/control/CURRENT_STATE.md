@@ -1,10 +1,10 @@
 # Current State
 
-**Updated:** EOS-S05 final traceability and permission-affordance remediation (`MD-PR-S034`, 2026-09-08)
-**Prompt Control ID:** MD-PR-S034
-**Milestone:** `EOS-S05` RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS — Milestones 1–4 implemented; not accepted; catalogue accepted-slice count remains 4
+**Updated:** EOS-S05 independent acceptance (`MD-PR-S035`, 2026-09-08)
+**Prompt Control ID:** MD-PR-S035
+**Milestone:** `EOS-S05` ACCEPTED — catalogue accepted-slice count 5; EOS-S06 not authorised
 
-MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is ACCEPTED. EOS-S02 is ACCEPTED. EOS-S03 is ACCEPTED. EOS-S04 is CLOSED / ACCEPTED (`PASS WITH OBSERVATIONS`). Accepted count remains 4. Native coverage is 62/62. S4-61 is satisfied for technical review only. S4-62 is satisfied for controlled technical acceptance/handover only. Independent, specialist and CEO production gates remain unsigned.
+MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is ACCEPTED. EOS-S02 is ACCEPTED. EOS-S03 is ACCEPTED. EOS-S04 is CLOSED / ACCEPTED (`PASS WITH OBSERVATIONS`). EOS-S05 is ACCEPTED. Catalogue accepted-slice count is 5. Native coverage is 62/62. S4-61 is satisfied for technical review only. S4-62 is satisfied for controlled technical acceptance/handover only. Independent, specialist and CEO production gates remain unsigned.
 
 **FOUNDATION IMPLEMENTATION COMPLETE: YES**  
 **KNOWN FOUNDATION TECHNICAL DEBT: ZERO**  
@@ -83,11 +83,15 @@ MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is A
 **EOS-S04F CATALOGUE SLICE: NO**
 **EOS-S05 TECHNICALLY ELIGIBLE: YES**
 **EOS-S05 IMPLEMENTATION AUTHORISED: YES**
-**EOS-S05 ACCEPTED: NO**
-**EOS-S05 MILESTONE 1: IMPLEMENTED — NOT ACCEPTED**
-**EOS-S05 MILESTONE 2: IMPLEMENTED — NOT ACCEPTED**
-**EOS-S05 MILESTONE 3: IMPLEMENTED — NOT ACCEPTED**
-**EOS-S05 MILESTONE 4: IMPLEMENTED — MD-PR-S034 FINAL TRACEABILITY REMEDIATION COMPLETE — READY FOR FINAL FOCUSED CLAUDE VERIFICATION — NOT ACCEPTED**
+**EOS-S05 ACCEPTED: YES**
+**EOS-S05 STATUS: ACCEPTED**
+**EOS-S05 ACCEPTED IMPLEMENTATION SHA: eba137712c65c6f59b77fe2a88a8f4a277228cd9**
+**EOS-S05 ACCEPTANCE PROMPT CONTROL ID: MD-PR-S035**
+**EOS-S05 ACCEPTANCE RECORD: docs/control/EOS_S05_ACCEPTANCE.md**
+**EOS-S05 MILESTONE 1: IMPLEMENTED — ACCEPTED**
+**EOS-S05 MILESTONE 2: IMPLEMENTED — ACCEPTED**
+**EOS-S05 MILESTONE 3: IMPLEMENTED — ACCEPTED**
+**EOS-S05 MILESTONE 4: IMPLEMENTED — ACCEPTED**
 **EOS-S05 MILESTONE 4 PROMPT CONTROL ID: MD-PR-S031**
 **EOS-S05 EXPORT PROVENANCE PROMPT CONTROL ID: MD-PR-S032**
 **EOS-S05 CONSOLIDATED REMEDIATION PROMPT CONTROL ID: MD-PR-S033**
@@ -98,6 +102,9 @@ MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is A
 **EOS-S05 STARTING BASELINE: bb705588e0d4481802658a18d7666e28e3a18fea**
 **EOS-S05 CATALOGUE SLICE: YES**
 **EOS-S06 IMPLEMENTATION AUTHORISED: NO**
+**EOS-S06 STATUS: NOT_STARTED / NOT_AUTHORISED**
+**RECOMMENDED NEXT PROMPT CONTROL ID: MD-PR-S036**
+**MD-PR-S036 IMPLEMENTATION AUTHORITY: NO**
 **EVENT OS S01-S03 LIVE DEPLOYED: YES**  
 **EVENT OS AUTOMATED LIVE VERIFICATION: PASS**  
 **EVENT OS CEO HUMAN LIVE VERIFICATION: PASS WITH MINOR REFINEMENTS**  
@@ -114,7 +121,7 @@ Railway project: `atelier-doclar` only.
 
 `OI-FC1-004` is `RESOLVED_BY_EVENT_OS_ARCHITECTURE`. This is not production authorisation and does not accept any Foundation slice.
 
-Event OS S01–S03 remain formally accepted. EOS-S04 is CLOSED / ACCEPTED after hosted verification `MD-EOS-S04-R3-05` (`PASS WITH OBSERVATIONS`). Accepted-slice count remains 4. S4-61 and S4-62 are satisfied only for technical review and controlled handover.
+Event OS S01–S03 remain formally accepted. EOS-S04 is CLOSED / ACCEPTED after hosted verification `MD-EOS-S04-R3-05` (`PASS WITH OBSERVATIONS`). EOS-S05 is ACCEPTED. Catalogue accepted-slice count is 5. S4-61 and S4-62 are satisfied only for technical review and controlled handover.
 
 **EOS-S04A:** `ACCEPTED` on `2026-09-07` at accepted implementation SHA `8f1957d2353db539449d9bcce62f9e4d71eb31af`. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised: false`. Command Atelier remains the approved Event OS visual language. Acceptance covers P00–P11 and the final remediation chain. Acceptance-only items TDR-S04A-016–020 are CLOSED. TDR-S04A-012 remains a tool/client artefact. TDR-S04A-011 remains blocking before real client onboarding and is not blocking successor development. TDR-S04A-015, permanent IdP selection, synthetic-data cleanup, inactive external providers, and long local Next.js test-suite memory pressure remain carried forward. Independent, specialist and CEO production gates remain unsigned. Academy delta ACA-S04A is training evidence only and does not grant operational authority. Catalogue accepted-slice count remains 4; EOS-S04A is not a catalogue slice. Acceptance record: `docs/control/EOS_S04A_ACCEPTANCE.md`. Historical review: `docs/control/EOS_S04A_WHOLE_SLICE_REVIEW.md`.
 
@@ -128,7 +135,7 @@ Event OS S01–S03 remain formally accepted. EOS-S04 is CLOSED / ACCEPTED after 
 
 **EOS-S04F:** `ACCEPTED` on `2026-09-08` at accepted implementation SHA `a4795e83c929bf24591f52c2224eb4b588c23ef3` under `MD-PR-S027`. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised: false`. Command Atelier remains the staff Event OS visual language. Host Atelier may use decorative metal `#B79F85`. Acceptance covers P00–P11 and the source-lineage / translation-staleness / placeholder-validation remediation. TDR-S04F-001–002 and carried `TDR-S04E-001`–`004` / `TDR-S04D-004` / `TDR-S04A-011` remain carried forward and do not reopen the slice. Catalogue accepted-slice count remains 4; EOS-S04F is not a catalogue slice. Acceptance record: `docs/control/EOS_S04F_ACCEPTANCE.md`. Historical ratification: `docs/control/EOS_S04F_RATIFICATION.md`. Historical `IN_REVIEW` / remediation: `docs/control/EOS_S04F_ACCEPTANCE_REMEDIATION.md`. Claude verified; Claude did not accept. ChatGPT issued the acceptance decision. Event OS is not redeployed for this documentation-only record.
 
-**EOS-S05:** `RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS` under `MD-PR-S028`–`MD-PR-S034`. Milestones 1–4 are not reopened except for the MD-PR-S033 and MD-PR-S034 defects. `TDR-S05-001` is CLOSED. Venue evidence remains metadata-only (`TDR-S05-002`, non-blocking). Historic `MDOS/slice5` filenames retain `RATIFICATION DRAFT` as evidence. Historic `MD-PR-0232`–`MD-PR-0291` remain `NOT_EXECUTED` traceability units. Catalogue accepted-slice count remains 4. Independent acceptance is not granted. Whole-slice Claude-in-Chrome is not rerun; final focused verification of the S034 defects is required. EOS-S06 is not authorised. Production operations are not authorised (`productionAuthorised=false`).
+**EOS-S05:** `ACCEPTED` on `2026-09-08` by `ChatGPT / AI CTO` under `MD-PR-S035` at accepted implementation SHA `eba137712c65c6f59b77fe2a88a8f4a277228cd9`. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised: false`. Live Event OS deployment `ac6b5f2d-8c9c-41dc-ab93-cd3e5c154151` already carries that SHA and is not redeployed for this record. Control Tower is not redeployed. `TDR-S05-001` is CLOSED. Venue evidence remains metadata-only (`TDR-S05-002`, non-blocking). Historic `MDOS/slice5` filenames retain `RATIFICATION DRAFT` as evidence. Historic `MD-PR-0232`–`MD-PR-0291` remain `NOT_EXECUTED` traceability units. Catalogue accepted-slice count is 5. Claude verified; Claude did not accept. ChatGPT issued the acceptance decision. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. Recommended next control ID `MD-PR-S036` is not implementation authority. Production operations are not authorised (`productionAuthorised=false`). Acceptance record: `docs/control/EOS_S05_ACCEPTANCE.md`.
 
 Historical sentence “Implementation of EOS-S04A–F is not authorised as a product slice” applied before CEO S04A–S04F implementation authority. For S04A–S04F that sentence is superseded. The EOS-S04E and EOS-S04F controlled slice pack filenames still contain `DRAFT`. Current programme status for S04E is `ACCEPTED`. Current programme status for S04F is `ACCEPTED`. Historical `IN_REVIEW / NOT READY` on 2026-09-08 remains dated history.
 

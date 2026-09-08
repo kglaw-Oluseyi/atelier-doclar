@@ -1,9 +1,9 @@
 # EOS-S05 Implementation Record
 
 **Slice ID:** `EOS-S05`  
-**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030` / `MD-PR-S031` / `MD-PR-S032` / `MD-PR-S033` / `MD-PR-S034`
-**Status:** `IN_PROGRESS` — Milestones 1–4 implemented; not accepted
-**Catalogue slice:** yes — accepted-slice count remains 4  
+**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030` / `MD-PR-S031` / `MD-PR-S032` / `MD-PR-S033` / `MD-PR-S034` / `MD-PR-S035`
+**Status:** `ACCEPTED` under `MD-PR-S035` at SHA `eba137712c65c6f59b77fe2a88a8f4a277228cd9`
+**Catalogue slice:** yes — accepted-slice count is 5
 **Production:** unauthorised (`productionAuthorised` remains false)  
 **Starting baseline:** `bb705588e0d4481802658a18d7666e28e3a18fea`
 **Authority commit:** `cee64f6f69bfc6dace53ffc60d8232e6938653de`
@@ -22,6 +22,8 @@
 **S034 starting baseline:** `566223c8741d889266805608db9be2d26e99fb35`
 **S034 platform commit:** `62ddeddecdbf7746329a121a507ae4010061ba6c`
 **S034 Event OS commit:** `5b79996325f0c3f684ba33254bb63b85ea120e70`
+**Accepted implementation SHA:** `eba137712c65c6f59b77fe2a88a8f4a277228cd9`
+**Acceptance record:** `docs/control/EOS_S05_ACCEPTANCE.md`
 
 ## Scope delivered
 

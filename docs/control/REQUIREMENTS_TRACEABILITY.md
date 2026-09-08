@@ -335,6 +335,22 @@
 | Production / Railway / real send | NO |
 | Status | ACCEPTED; accepted count 4 |
 
+## EOS-S05
+
+**Prompt Control ID:** `MD-PR-S028`–`MD-PR-S035`
+**Slice ID:** `EOS-S05` (catalogue slice)
+
+| Requirement | Record |
+|-------------|---------|
+| Title | Venue registry and spatial layout |
+| Implementation lineage | `MD-PR-S028`–`MD-PR-S034` |
+| Formal technical acceptance | `EV-EOS-S05-ACCEPT` / `MD-PR-S035` on `2026-09-08` by `ChatGPT / AI CTO` |
+| Accepted implementation SHA | `eba137712c65c6f59b77fe2a88a8f4a277228cd9` |
+| Historic units | `S5-01`–`S5-60` / `MD-PR-0232`–`MD-PR-0291` remain `NOT_EXECUTED` |
+| Production / Railway / real operations | NO — documentation-only acceptance; Event OS not redeployed |
+| Status | ACCEPTED; catalogue accepted-slice count 5 |
+| Successor | EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`; `MD-PR-S036` is not implementation authority |
+
 ## EOS-S04A
 
 **Prompt Control ID:** EOS-S04A-P00–P11

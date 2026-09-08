@@ -64,3 +64,7 @@ Historic prompts `S5-01`–`S5-60` and register IDs `MD-PR-0232`–`MD-PR-0291` 
 - No other repository or Railway project.
 - Accepted EOS-S01–S04F contracts are not weakened.
 - Catalogue accepted-slice count remains four.
+
+## Addendum — 2026-09-08 independent acceptance (`MD-PR-S035`)
+
+The ratification text above remains dated history. Independent AI CTO acceptance is recorded in `docs/control/EOS_S05_ACCEPTANCE.md`. Current programme status is `ACCEPTED` at SHA `eba137712c65c6f59b77fe2a88a8f4a277228cd9`. Catalogue accepted-slice count is 5. EOS-S06 remains unauthorised. Production remains unauthorised. This addendum does not rewrite the original overlay.

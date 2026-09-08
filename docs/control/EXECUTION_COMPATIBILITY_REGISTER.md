@@ -217,3 +217,7 @@ Milestone 4 is authorised on the Milestone 1–3 contracts. Historic S5-01–S5-
 ## Addendum — 2026-09-08 EOS-S05 final traceability (`MD-PR-S034`)
 
 `MD-PR-S034` authorises Cursor to implement and deploy the override decision-record and export-affordance defects only. It does not accept EOS-S05, start EOS-S06, reopen passed S033 behaviour, or authorise production. Whole-slice Claude-in-Chrome is not rerun.
+
+## Addendum — 2026-09-08 EOS-S05 independent acceptance (`MD-PR-S035`)
+
+`MD-PR-S035` authorises a documentation-only acceptance record. It does not change Event OS or Control Tower application code, redeploy either service, start EOS-S06, or authorise production. Recommended next control ID `MD-PR-S036` is not implementation authority.
