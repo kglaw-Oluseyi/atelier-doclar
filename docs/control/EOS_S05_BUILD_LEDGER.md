@@ -1,7 +1,7 @@
 # EOS-S05 Build Ledger
 
 **Slice ID:** `EOS-S05`  
-**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030` / `MD-PR-S031`
+**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030` / `MD-PR-S031` / `MD-PR-S032`
 **Starting baseline:** `bb705588e0d4481802658a18d7666e28e3a18fea`
 **Milestone 2 starting SHA:** `a7dc4d931f3c01f05354b11e68bc7c4a155e5afb`
 **Milestone 3 starting SHA:** `72830730398f6aa1b02183417ca4ac4d32801b10`

@@ -242,6 +242,14 @@
       "product": "EVENT_OS",
       "title": "EOS-S05 Milestone 4 Production Completion, Hardening and Slice Qualification",
       "authorising_instruction": "Complete EOS-S05 production asset pipeline, export, hardening and qualification on the MD-PR-S028–S030 contracts; push and deploy event-os only; do not start EOS-S06, invent catalogue acceptance, run Claude-in-Chrome, or authorise production"
+    },
+    {
+      "prompt_control_id": "MD-PR-S032",
+      "native_id": "S05-M4-R1",
+      "slice_id": "EOS-S05",
+      "product": "EVENT_OS",
+      "title": "EOS-S05 Export Provenance Remediation",
+      "authorising_instruction": "Correct PDF and PNG export provenance so status, complete hash, publication number and timestamp remain visible; push and deploy event-os only; do not start EOS-S06, invent catalogue acceptance, run Claude-in-Chrome, or authorise production"
     }
   ]
 }

@@ -205,3 +205,7 @@ Milestone 3 is authorised on the Milestone 1–2 contracts. Historic S5-28–S5-
 ## Addendum — 2026-09-08 EOS-S05 Milestone 4 (`MD-PR-S031`)
 
 Milestone 4 is authorised on the Milestone 1–3 contracts. Historic S5-01–S5-60 and `MD-PR-0232`–`0291` remain `NOT_EXECUTED` as individual prompt runs. The floor-plan production pipeline is bound inside `atelier-doclar`. `TDR-S05-001` is closed. Venue evidence remains metadata-only. Milestones 1–3 are not reopened. EOS-S05 is not accepted. EOS-S06 remains unauthorised. Production remains unauthorised.
+
+## Addendum — 2026-09-08 EOS-S05 export provenance (`MD-PR-S032`)
+
+`MD-PR-S032` authorises a bounded correction of visible PDF/PNG provenance only. It does not reopen Milestones 1–3, accept EOS-S05, start EOS-S06 or authorise production. Claude-in-Chrome remains deferred.

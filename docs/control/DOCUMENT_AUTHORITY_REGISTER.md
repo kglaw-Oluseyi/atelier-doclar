@@ -214,3 +214,11 @@ Milestone 4 implementation authority. Does not accept EOS-S05, start EOS-S06, or
 | EOS-S05 implementation record | `docs/control/EOS_S05_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | Milestones 1–4; not acceptance. |
 | EOS-S05 venue-layout ADR | `docs/control/ADR_EOS_S05_VENUE_LAYOUT.md` | CANONICAL ARCHITECTURE RECORD | Private storage and exact-hash export. |
 | EOS-S05 canonical record mapping | `docs/control/EOS_S05_CANONICAL_RECORD_MAPPING.md` | CANONICAL MAPPING | Floor-plan object keys; export COMPLETED identity. |
+
+## Addendum — 2026-09-08 EOS-S05 export provenance (`MD-PR-S032`)
+
+Bounded remediation of PDF/PNG visible provenance. Does not accept EOS-S05, start EOS-S06, or authorise production. Claude-in-Chrome remains deferred.
+
+| Document | Path | Authority class | Note |
+|----------|------|-----------------|------|
+| EOS-S05 implementation record | `docs/control/EOS_S05_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | MD-PR-S032 export provenance correction; not acceptance. |
