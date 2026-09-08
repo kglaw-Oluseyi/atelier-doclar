@@ -13,6 +13,7 @@ test("S05A whole slice: brief, budget, roadmap, change and command", async ({ pa
 
   await page.locator("#discovery-consent").getByRole("button", { name: "Save participation" }).click();
   await expect(page.getByTestId("discovery-consent-list")).toContainText("GRANTED", { timeout: 20_000 });
+  await page.locator("#discovery-consent").getByRole("button", { name: "Save AI analysis" }).click();
   await page.getByLabel("What was said").fill("The family mentioned 180 guests in Yorùbá.");
   await page.getByRole("button", { name: "Save note" }).click();
   await expect(page.getByTestId("discovery-evidence-list")).toContainText("180 guests", { timeout: 20_000 });

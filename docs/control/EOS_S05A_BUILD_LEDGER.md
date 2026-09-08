@@ -32,6 +32,7 @@
 | ACTIVE RESUME after withdrawal | Product defect | Service `alreadyApplied` returned the ACTIVE session before consent re-evaluation | Remove RESUME short-circuit | Consent boundary tests pass |
 | Conversion wrong-hash retry | Product defect | `alreadyApplied` / version check hid the durable hash conflict | Existing receipt checked first; hash mismatch is `IDEMPOTENCY_CONFLICT` | Intelligence tests pass |
 | Budget LOOKUP typecheck | Implementation defect | `LOOKUP` uses `input`, not `value` | Count/depth use `input` | `tsc` pass |
+| Live whole-slice E2E extract | Test defect | Journey omitted AI-analysis consent, so fixture extraction correctly refused | Grant AI-analysis before extract | Rerun after test correction |
 
 ## Carried debt
 
