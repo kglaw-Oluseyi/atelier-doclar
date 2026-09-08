@@ -239,10 +239,21 @@ Milestone 4 is authorised on the Milestone 1–3 contracts. Historic S5-01–S5-
 
 | Historical / pack wording | Current execution meaning |
 |---------------------------|---------------------------|
-| `EEC-11`–`EEC-45` ratified but unreleased | SUPERSEDED. Implemented under `MD-PR-S038`. Not accepted. |
+| `EEC-11`–`EEC-45` ratified but unreleased | SUPERSEDED by S038 scaffolds, then S039 product-depth remediation. Units remain PARTIAL / NOT ACCEPTED. |
 | Foundation Milestone A consent using caller `mode` | SUPERSEDED. Durable session mode is authoritative after CREATE. |
 | TDR-S05A-001 / TDR-S05A-002 | CLOSED. Private source objects and opportunity owner/update/close surfaces exist. |
 | EOS-S06 / `MD-PR-S036` | RETAINED. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. `MD-PR-S036` is not consumed. |
 | Catalogue accepted-slice count | RETAINED at 5. |
 | Control Tower | Compatibility-only. Not a deploy target. |
 | Claude-in-Chrome | Deferred until independent whole-slice verification after Event OS deployment. |
+
+## Addendum — 2026-09-09 EOS-S05A product-depth remediation (`MD-PR-S039`)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| `EEC-11`–`EEC-45` complete under `MD-PR-S038` | SUPERSEDED. Independent review found scaffolds. S039 deepens behaviour. Units remain PARTIAL / NOT ACCEPTED. |
+| Hardcoded NGN current prices in cost rules | SUPERSEDED. Rules use `PRICE_REF`. Synthetic evidence is labelled and cannot yield `COMPLETE`. |
+| Catalogue accepted-slice count | RETAINED at 5. |
+| Control Tower | Compatibility-only. Not a deploy target. |
+| Claude-in-Chrome | Not run. Still deferred. |
+| EOS-S06 / `MD-PR-S036` | RETAINED. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. |
