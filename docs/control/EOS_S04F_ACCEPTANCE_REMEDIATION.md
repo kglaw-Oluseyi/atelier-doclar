@@ -2,7 +2,7 @@
 
 **Slice:** `EOS-S04F`  
 **Prompt Control ID:** `MD-PR-S026`  
-**Status:** `IN_REVIEW / NOT READY`  
+**Status:** historical `IN_REVIEW / NOT READY` on 2026-09-08; superseded for current programme language by `docs/control/EOS_S04F_ACCEPTANCE.md`
 **Catalogue slice:** no  
 **Production:** unauthorised (`productionAuthorised` remains false)  
 **Remediation baseline:** `50c451e76f44855efe9a691290e064e42f785007`  

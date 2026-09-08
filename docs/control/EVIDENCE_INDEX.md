@@ -409,8 +409,8 @@ ACCEPTED on `2026-09-07` by `ChatGPT / AI CTO` after Claude-in-Chrome verificati
 
 **Slice ID:** `EOS-S04F`
 **Title:** Language, Cultural Text & Multilingual Editions
-**Status:** `IN_REVIEW / NOT READY`
-**Prompt Control ID:** `MD-PR-S026`
+**Status:** `ACCEPTED`
+**Prompt Control ID:** `MD-PR-S026` / `MD-PR-S027`
 **Position:** after EOS-S04E and before EOS-S05
 **Execution authority:** `AUTHORISED` — P00–P11 released
 
@@ -426,6 +426,7 @@ ACCEPTED on `2026-09-07` by `ChatGPT / AI CTO` after Claude-in-Chrome verificati
 | EV-EOS-S04F-CLAUDE | DOCUMENT | Independent Claude-in-Chrome verification prompt | `docs/control/EOS_S04F_CLAUDE_IN_CHROME_VERIFICATION.md` |
 | EV-EOS-S04F-REMEDIATE | DOCUMENT | Source-supersession / staleness / placeholder remediation | `docs/control/EOS_S04F_ACCEPTANCE_REMEDIATION.md` |
 | EV-EOS-S04F-FOCUSED | DOCUMENT | Focused two-journey Claude verification prompt | `docs/control/EOS_S04F_FOCUSED_CLAUDE_VERIFICATION.md` |
+| EV-EOS-S04F-ACCEPT | DOCUMENT | Formal technical acceptance | `docs/control/EOS_S04F_ACCEPTANCE.md` |
 
-RATIFIED on `2026-09-07` by George Lawson under `MD-PR-S026`. P00–P11 implemented. Source-supersession remediation recorded `2026-09-08`. Status `IN_REVIEW / NOT READY`. Persistence target `POSTGRES`. `productionAuthorised` remains false. Does not accept the slice, invent catalogue acceptance, start EOS-S05, or authorise production. Claude verifies; Claude does not accept.
+RATIFIED on `2026-09-07` by George Lawson under `MD-PR-S026`. P00–P11 implemented. Source-supersession remediation recorded `2026-09-08`. ACCEPTED on `2026-09-08` by `ChatGPT / AI CTO` under `MD-PR-S027` at SHA `a4795e83c929bf24591f52c2224eb4b588c23ef3`. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised` remains false. TDR-S04F-001–002 remain carried forward. Does not invent catalogue acceptance, start EOS-S05, or authorise production. Claude verified; Claude did not accept. Documentation-only acceptance commit does not redeploy Event OS.
 

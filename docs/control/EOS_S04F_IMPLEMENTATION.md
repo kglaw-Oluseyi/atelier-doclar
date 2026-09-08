@@ -2,7 +2,7 @@
 
 **Slice ID:** `EOS-S04F`  
 **Prompt Control ID:** `MD-PR-S026`  
-**Status:** `IN_REVIEW / NOT READY` (P00–P11 implemented; source-supersession remediation awaiting focused verification)
+**Status:** `ACCEPTED` on `2026-09-08` at SHA `a4795e83c929bf24591f52c2224eb4b588c23ef3` (`MD-PR-S027`). Historical 2026-09-08 programme language was `IN_REVIEW / NOT READY` after source-supersession remediation.
 **Catalogue slice:** no  
 **Production:** unauthorised (`productionAuthorised` remains false)  
 **Starting baseline:** `2663f4363ad311f486f05c70e8e8411d5e9830bb`
@@ -67,6 +67,6 @@ Language journeys first run: inference was applied to content-work `title`; the 
 
 Playwright first run: 0 passed / 2 failed. The German compound appears in both source and target, and two French complete editions share `edition-COMPLETE-fr`. Locators were tightened. Second run: `s04f-vertical` passed; responsive still matched two `[lang="de"]` nodes. Third run: both S04F Playwright specs passed, including host multilingual edition, Academy ACA-S04F, 360/768/720/1440 viewports and axe.
 
-Source-edition supersession, dependent-translation staleness and visible placeholder-set validation were remediating after the first implementation. Remediation verification: workspace typecheck passed; `pnpm test` 614/0; programme validate passed; Event OS build passed; `git diff --check` clean. See `docs/control/EOS_S04F_ACCEPTANCE_REMEDIATION.md`. Focused Claude prompt: `docs/control/EOS_S04F_FOCUSED_CLAUDE_VERIFICATION.md`. This record does not accept EOS-S04F.
+Source-edition supersession, dependent-translation staleness and visible placeholder-set validation were remediating after the first implementation. Formal acceptance is `docs/control/EOS_S04F_ACCEPTANCE.md`. Historical remediation: `docs/control/EOS_S04F_ACCEPTANCE_REMEDIATION.md`. Claude verified; Claude did not accept.
 
 See `docs/control/CUMULATIVE_TECHNICAL_DEBT_AND_REGRESSION_REGISTER.md` items `TDR-S04F-001`–`002` and carried `TDR-S04E-001`–`004` / `TDR-S04D-004`. EOS-S05 remains unauthorised.

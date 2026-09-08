@@ -10,8 +10,8 @@
 | History | LanguagePreferenceHistory | `languagePreferenceHistories` | LanguageProfile provenance | language-preference source/history | Immutable correction lineage. |
 | Cultural | CulturalSourceText | `culturalSourceTexts` | cultural text / Yorùbá orthography | cultural source text | Exact text, meaning, provenance, reviewer, approval. |
 | Approval | CulturalTextApproval | embedded on `culturalSourceTexts` + `reviewAssignments` | ReviewAssignment | cultural-text approval | Human, attributable. No automatic AI approval. |
-| Work | ContentWork | `contentWorks` | ContentWork | multilingual content identity | Stable communicative work. Not a second campaign. |
-| Edition | ContentEdition | `contentEditions` | ContentEdition | translation edition / multilingual content edition | Immutable when approved. Supersession only. |
+| Work | ContentWork | `contentWorks` | ContentWork | multilingual content identity | Stable communicative work. Not a second campaign. Fixture invitation work is `…134`. |
+| Edition | ContentEdition | `contentEditions` | ContentEdition | translation edition / multilingual content edition | Immutable when approved. Supersession only. Fixture English source is `…135`. Staff “current source” shows this edition id, not the work id. |
 | Unit | ContentBlock | `contentBlocks` | ContentBlock | translation unit | Ordered; supports partial translation. |
 | Lineage | TranslationLink | `translationLinks` | TranslationLink | translation source lineage | Source edition/block → target. Stale when source changes. |
 | Glossary | TerminologyEntry | `terminologyEntries` | TerminologyEntry | glossary/term decision | Context and language scoped. |

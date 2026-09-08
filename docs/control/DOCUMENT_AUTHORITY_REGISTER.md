@@ -158,5 +158,15 @@ This addendum does not rewrite the B0 row set or the earlier S04A–S04E addenda
 | EOS-S04F implementation record | `docs/control/EOS_S04F_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | P00–P11; not acceptance. |
 | EOS-S04F frontend architecture | `docs/control/EOS_S04F_FRONTEND_ARCHITECTURE.md` | IMPLEMENTATION EVIDENCE | Staff Command Atelier language workspace; host multilingual edition. |
 | EOS-S04F build ledger | `docs/control/EOS_S04F_BUILD_LEDGER.md` | IMPLEMENTATION EVIDENCE | Prompt-by-prompt ledger. |
-| EOS-S04F Claude-in-Chrome verification | `docs/control/EOS_S04F_CLAUDE_IN_CHROME_VERIFICATION.md` | INDEPENDENT REVIEW PROMPT | Claude verifies; Claude does not accept. |
+| EOS-S04F Claude-in-Chrome verification | `docs/control/EOS_S04F_CLAUDE_IN_CHROME_VERIFICATION.md` | INDEPENDENT REVIEW PROMPT | Claude verifies; Claude does not accept. Historical whole-slice prompt. |
+
+## Addendum — 2026-09-08 EOS-S04F acceptance (`MD-PR-S027`)
+
+This addendum does not rewrite the B0 row set or the earlier S04A–S04F ratification addenda.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| EOS-S04F Formal Technical Acceptance | `docs/control/EOS_S04F_ACCEPTANCE.md` | CANONICAL ACCEPTANCE RECORD | Status `ACCEPTED` at SHA `a4795e83c929bf24591f52c2224eb4b588c23ef3`. Not catalogue-slice acceptance. Does not authorise EOS-S05 or production. |
+| EOS-S04F acceptance remediation | `docs/control/EOS_S04F_ACCEPTANCE_REMEDIATION.md` | HISTORICAL REVIEW RECORD | Dated `IN_REVIEW / NOT READY`. Superseded for current status by MD-PR-S027. |
+| EOS-S04F focused Claude verification | `docs/control/EOS_S04F_FOCUSED_CLAUDE_VERIFICATION.md` | INDEPENDENT REVIEW PROMPT | Claude verified; Claude did not accept. |
 

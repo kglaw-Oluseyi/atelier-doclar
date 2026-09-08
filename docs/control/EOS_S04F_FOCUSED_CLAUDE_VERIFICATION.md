@@ -23,6 +23,7 @@ Staff token: Railway `EVENT_OS_ACCESS_TOKEN` on `event-os`. Do not paste the sec
 |--------|----|
 | Alpha One | `00000000-0000-4000-8000-000000000021` |
 | Invitation work | `00000000-0000-4000-8000-000000000134` |
+| Fixture English source edition | `00000000-0000-4000-8000-000000000135` — this is the **current source** id before a revision, not the work id |
 | Olúfẹ́mi Alákíjà | `00000000-0000-4000-8000-000000000073` — explicit Yorùbá |
 
 Language workspace: `/app/events/00000000-0000-4000-8000-000000000021/language`.
@@ -55,3 +56,7 @@ Still on the language workspace translation editor, with the current source’s 
 ## Verdict
 
 Report evidence for both journeys. Claude verifies. Claude does not accept EOS-S04F.
+
+## Addendum — 2026-09-08 identifier distinction
+
+The original prompt named invitation-work `…134`. Deployed “current source” showed `…135` because that field is the current approved `ContentEdition`, not the `ContentWork`. Both identifiers are correct. See `docs/control/EOS_S04F_ACCEPTANCE.md`.

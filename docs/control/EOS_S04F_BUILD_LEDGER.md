@@ -3,7 +3,7 @@
 **Slice ID:** `EOS-S04F`  
 **Prompt Control ID:** `MD-PR-S026`  
 **Starting baseline:** `2663f4363ad311f486f05c70e8e8411d5e9830bb`  
-**Status:** `IN_REVIEW / NOT READY` (implementation ledger; not acceptance)
+**Status:** `ACCEPTED` (implementation ledger; acceptance recorded under `MD-PR-S027`)
 **Production:** unauthorised  
 **Next slices:** EOS-S05 not started; not authorised by this overlay
 
@@ -45,4 +45,4 @@ Workspace `pnpm typecheck`, `pnpm test`, `pnpm programme:validate`, `pnpm --filt
 
 ## Source-supersession remediation
 
-Governed source revision (draft → review → separate-reviewer approve), transactional dependent staleness, coverage recalculation, assembly exclusion/fallback, and visible placeholder-set validation. Tests: `language-lineage.test.ts`, `s04f-lineage.spec.ts`. Control: `EOS_S04F_ACCEPTANCE_REMEDIATION.md`, `EOS_S04F_FOCUSED_CLAUDE_VERIFICATION.md`. Status remains `IN_REVIEW / NOT READY`. EOS-S05 not started.
+Governed source revision (draft → review → separate-reviewer approve), transactional dependent staleness, coverage recalculation, assembly exclusion/fallback, and visible placeholder-set validation. Tests: `language-lineage.test.ts`, `s04f-lineage.spec.ts`. Historical control: `EOS_S04F_ACCEPTANCE_REMEDIATION.md`, `EOS_S04F_FOCUSED_CLAUDE_VERIFICATION.md`. Acceptance: `EOS_S04F_ACCEPTANCE.md` at SHA `a4795e83c929bf24591f52c2224eb4b588c23ef3`. EOS-S05 not started.

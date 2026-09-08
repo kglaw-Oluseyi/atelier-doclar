@@ -12,5 +12,5 @@ externalAuthorityRequirements:
   - Independent acceptance pack
   - CEO production authorisation
   - Specialist gates for FaceGate/biometrics
-implementationReality: EOS-S01 shared platform is ACCEPTED. EOS-S02 guest intake and operational directory are ACCEPTED. EOS-S03 RSVP and guest self-service are ACCEPTED. EOS-S04 guest communications and concierge are ACCEPTED under MD-PR-S016. S4-61 and S4-62 are satisfied for technical review and controlled handover only. Production is not authorised. EOS-S05 is not authorised.
+implementationReality: EOS-S01 shared platform is ACCEPTED. EOS-S02 guest intake and operational directory are ACCEPTED. EOS-S03 RSVP and guest self-service are ACCEPTED. EOS-S04 guest communications and concierge are ACCEPTED under MD-PR-S016. S04A–F are ACCEPTED and are not catalogue slices. S4-61 and S4-62 are satisfied for technical review and controlled handover only. Production is not authorised. EOS-S05 is not authorised.
 notes: Historical Slice 8 runtime capability is mapped to EVENT_DAY. Event OS remains the control plane.

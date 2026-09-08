@@ -202,6 +202,14 @@
       "product": "EVENT_OS",
       "title": "EOS-S04F — Language, Cultural Text & Multilingual Editions",
       "authorising_instruction": "CEO ratification of the EOS-S04F controlled slice and Cursor prompt packs as controlling requirements and implementation packs, subject to the 2026-09-07 authority overlay; implement P00–P11; push and deploy affected atelier-doclar Event OS; do not start EOS-S05, invent catalogue acceptance, or authorise production"
+    },
+    {
+      "prompt_control_id": "MD-PR-S027",
+      "native_id": "S04F-ACCEPT",
+      "slice_id": "EOS-S04F",
+      "product": "EVENT_OS",
+      "title": "EOS-S04F Formal Technical Acceptance Record",
+      "authorising_instruction": "Record formal technical acceptance of EOS-S04F after independent AI CTO review, Claude-in-Chrome focused verification and source-lineage / staleness / placeholder remediation; do not start EOS-S05, invent catalogue acceptance, redeploy Event OS, or authorise production"
     }
   ]
 }

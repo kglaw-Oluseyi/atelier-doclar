@@ -12,7 +12,7 @@ Percent complete is not used. Unknown is not healthy. Documented ≠ implemented
 | Code | Name | Route | Implementation reality |
 |------|------|-------|------------------------|
 | FOUNDATION | Shared Foundation / Control Tower | `/programme` | Control Tower implemented; Foundation closeout IN_REVIEW; production unsigned |
-| EVENT_OS | Event OS | `/programme/event-os` | S01–S03 accepted; S04 CLOSED / ACCEPTED; S04A ACCEPTED (not catalogue); S04B ACCEPTED (not catalogue); S04C ACCEPTED (not catalogue); S04D ACCEPTED (not catalogue); S04E ACCEPTED (not catalogue); S04F RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS (not catalogue); S05 not authorised |
+| EVENT_OS | Event OS | `/programme/event-os` | S01–S03 accepted; S04 CLOSED / ACCEPTED; S04A ACCEPTED (not catalogue); S04B ACCEPTED (not catalogue); S04C ACCEPTED (not catalogue); S04D ACCEPTED (not catalogue); S04E ACCEPTED (not catalogue); S04F ACCEPTED (not catalogue); S05 not authorised |
 | EVENT_DAY | Event-Day Runtime | `/programme/event-day` | Specs + contracts; no app |
 | ACADEMY | Academy | `/programme/academy` | Specified/prompted; no app |
 | MARKETING | Marketing OS | `/programme/marketing` | Specified/prompted; no app |
@@ -68,15 +68,15 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 | EOS-S04C | ACCEPTED — Aso-Ebi, Aso-Oke & Event Merchandise Coordination; not a catalogue slice; SHA `b378fa4f092e4fa5237894975738e3f22b530d73` |
 | EOS-S04D | ACCEPTED — Attendance Forecasting & Planning Intelligence; not a catalogue slice; SHA `64683a853ead39c62caeb2d2e9f26bcb9d1dca21`; `MD-PR-S022` / `MD-PR-S023` |
 | EOS-S04E | ACCEPTED — Event Blueprint, Journey & Host Experience; not a catalogue slice; SHA `05b91bb62dcc20357666bef4ff9bfa1d0cef11b2`; `MD-PR-S024` / `MD-PR-S025` |
-| EOS-S04F | RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS — Language, Cultural Text & Multilingual Editions; not a catalogue slice; `MD-PR-S026`; P00–P11 released |
+| EOS-S04F | ACCEPTED — Language, Cultural Text & Multilingual Editions; not a catalogue slice; SHA `a4795e83c929bf24591f52c2224eb4b588c23ef3`; `MD-PR-S026` / `MD-PR-S027` |
 | All others | NOT_STARTED, READY, or BLOCKED only by valid Event OS / Event-Day dependencies |
 
 ## Now / next / later
 
 | Band | Content |
 |------|---------|
-| Now | Event OS S01–S03 accepted; EOS-S04 CLOSED / ACCEPTED; EOS-S04A–E ACCEPTED (S04A–E are not catalogue slices); EOS-S04F RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS (not a catalogue slice); production unsigned; no real communication or translation provider |
-| Next | Independent Claude verification of EOS-S04F; do not implement EOS-S05 without a separate CEO authority |
+| Now | Event OS S01–S03 accepted; EOS-S04 CLOSED / ACCEPTED; EOS-S04A–F ACCEPTED (S04A–F are not catalogue slices); production unsigned; no real communication or translation provider |
+| Next | Do not implement EOS-S05 without a separate CEO implementation-authority overlay |
 | Later | Event OS S01 after a new authorised instruction; Runtime after Event OS foundations |
 | Held | All 693 product/recon prompts except CT0/CT1 wrappers; EOS-S05 |
 | External | Independent, specialist, venue, CEO gates — unsigned |
