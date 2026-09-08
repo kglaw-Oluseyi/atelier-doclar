@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { SCHEMA_VERSION } from "./constants.js";
+import { BudgetExprSchema } from "./eec-budget-engine.js";
 import { EventIdSchema, IsoDatetimeSchema, NonEmptySchema, OrganisationIdSchema, PersonIdSchema, UuidSchema } from "./schemas.js";
 import { EngagementIdSchema, MoneyDtoSchema, OpportunityIdSchema } from "./eec-schemas.js";
 
@@ -111,6 +112,10 @@ export const CostItemDefinitionSchema = z
     clientDescription: NonEmptySchema.max(400),
     internalNotes: z.string().max(400).optional(),
     retired: z.boolean(),
+    driverKey: z.string().max(80).optional(),
+    mutexGroup: z.string().max(80).optional(),
+    taxEmbedded: z.boolean().optional(),
+    contingencyClass: z.string().max(40).optional(),
     ...versioned,
   })
   .strict();
@@ -120,9 +125,10 @@ export const CostRuleEditionSchema = z
     id: UuidSchema,
     organisationId: OrganisationIdSchema,
     costItemCode: NonEmptySchema.max(80),
-    expression: z.unknown(),
+    expression: BudgetExprSchema,
     contentHash: NonEmptySchema.max(128),
     current: z.boolean(),
+    resultUnit: z.string().max(32).optional(),
     ...versioned,
   })
   .strict();
@@ -131,14 +137,51 @@ export const PriceEvidenceSchema = z
   .object({
     id: UuidSchema,
     organisationId: OrganisationIdSchema,
-    basis: z.enum(["VENDOR_QUOTE", "VENDOR_RATE_CARD", "CONTRACTED", "INTERNAL_BENCHMARK", "COMPARABLE_EVENT", "MARKET_ESTIMATE", "MANUAL_ASSUMPTION"]),
+    costItemCode: z.string().max(80).optional(),
+    basis: z.enum([
+      "VENDOR_QUOTE",
+      "VENDOR_RATE_CARD",
+      "CONTRACTED",
+      "INTERNAL_BENCHMARK",
+      "COMPARABLE_EVENT",
+      "MARKET_ESTIMATE",
+      "MANUAL_ASSUMPTION",
+      "SYNTHETIC_SEED",
+    ]),
     money: MoneyDtoSchema,
+    lowMinor: z.string().regex(/^-?\d+$/).optional(),
+    highMinor: z.string().regex(/^-?\d+$/).optional(),
+    validFrom: z.string().date().optional(),
     validUntil: z.string().date().optional(),
     stale: z.boolean(),
     confidence: z.enum(["LOW", "MEDIUM", "HIGH"]),
     sourceLabel: NonEmptySchema.max(160),
     objectKey: z.string().max(240).optional(),
+    checksum: z.string().max(128).optional(),
+    synthetic: z.boolean().optional(),
+    nonProduction: z.boolean().optional(),
+    provisional: z.boolean().optional(),
+    unsupportedForRealClientReliance: z.boolean().optional(),
+    evidenceDated: IsoDatetimeSchema.optional(),
+    vendorPriceCardEditionId: UuidSchema.optional(),
     ...versioned,
+  })
+  .strict();
+
+export const BudgetTemplateCandidateSchema = z
+  .object({
+    code: NonEmptySchema.max(80),
+    classification: z.enum(["REQUIRED", "RECOMMENDED", "CONDITIONAL", "OPTIONAL"]),
+    predicate: z.enum(["ALWAYS", "GUESTS_GTE", "ARCHETYPE", "FORMAT", "NEVER"]).optional(),
+    predicateValue: z.string().max(80).optional(),
+    dependsOn: z.array(NonEmptySchema.max(80)).optional(),
+    excludes: z.array(NonEmptySchema.max(80)).optional(),
+    mutexGroup: z.string().max(80).optional(),
+    driverKey: z.string().max(80).optional(),
+    unit: z.string().max(32).optional(),
+    pricePreference: z.array(z.string().max(40)).optional(),
+    protectedItem: z.boolean().optional(),
+    clientVisible: z.boolean().optional(),
   })
   .strict();
 
@@ -148,8 +191,11 @@ export const BudgetTemplateEditionSchema = z
     organisationId: OrganisationIdSchema,
     archetype: NonEmptySchema.max(80),
     itemCodes: z.array(NonEmptySchema.max(80)),
+    candidates: z.array(BudgetTemplateCandidateSchema).optional(),
+    formatOverlays: z.array(NonEmptySchema.max(80)).optional(),
     contentHash: NonEmptySchema.max(128),
     current: z.boolean(),
+    supersededById: UuidSchema.optional(),
     ...versioned,
   })
   .strict();
@@ -164,8 +210,12 @@ export const BudgetAssumptionSchema = z
     value: NonEmptySchema.max(80),
     unit: NonEmptySchema.max(32),
     sourceAssertionId: UuidSchema.optional(),
+    sourceKind: z.enum(["BRIEF", "MANUAL", "SCENARIO"]).optional(),
+    confidence: z.enum(["LOW", "MEDIUM", "HIGH"]).optional(),
+    expiresAt: IsoDatetimeSchema.optional(),
     confirmed: z.boolean(),
     stale: z.boolean(),
+    labelledManualAssumption: z.boolean().optional(),
     ...versioned,
   })
   .strict();
@@ -186,10 +236,17 @@ export const BudgetScenarioEditionSchema = z
     highMinor: z.string().regex(/^-?\d+$/),
     inputHash: NonEmptySchema.max(128),
     resultHash: NonEmptySchema.max(128),
-    trace: z.array(z.object({ op: NonEmptySchema.max(40), detail: z.string().max(200), value: z.string().max(80) }).strict()),
+    trace: z.array(z.object({ op: NonEmptySchema.max(40), detail: z.string().max(240), value: z.string().max(80) }).strict()),
     submittedByPersonId: PersonIdSchema.optional(),
     decidedByPersonId: PersonIdSchema.optional(),
     current: z.boolean(),
+    bomSnapshotId: UuidSchema.optional(),
+    assumptionSetHash: z.string().max(128).optional(),
+    evidenceHashes: z.array(z.string().max(128)).optional(),
+    contingencyMinor: z.string().regex(/^-?\d+$/).optional(),
+    contingencyBasis: z.string().max(200).optional(),
+    warnings: z.array(z.string().max(240)).optional(),
+    missingDrivers: z.array(z.string().max(80)).optional(),
     ...versioned,
   })
   .strict();
@@ -228,10 +285,30 @@ export const RoadmapMilestoneSchema = z
     organisationId: OrganisationIdSchema,
     eventId: EventIdSchema.optional(),
     engagementId: EngagementIdSchema.optional(),
+    editionId: UuidSchema.optional(),
+    code: z.string().max(80).optional(),
     title: NonEmptySchema.max(200),
+    purpose: z.string().max(400).optional(),
     layer: z.enum(["CLIENT_OUTCOME", "OPERATIONAL_READINESS", "DECISION"]),
+    ownerLabel: z.string().max(160).optional(),
+    status: z.enum(["PLANNED", "READY", "BLOCKED", "COMPLETE", "UNRESOLVED"]).optional(),
     durationDays: z.string().regex(/^\d+$/),
+    leadTimeDays: z.string().regex(/^\d+$/).optional(),
+    compressible: z.boolean().optional(),
+    targetStart: z.string().date().optional(),
+    targetEnd: z.string().date().optional(),
+    earliestFeasible: z.string().date().optional(),
+    latestSafe: z.string().date().optional(),
+    actualCompleted: z.string().date().optional(),
+    decisionDeadline: z.string().date().optional(),
+    financialWindow: z.string().max(160).optional(),
+    readinessRequirements: z.array(z.string().max(160)).optional(),
+    evidenceRequirements: z.array(z.string().max(160)).optional(),
+    delayConsequence: z.string().max(400).optional(),
+    sourceLabel: z.string().max(160).optional(),
+    confidence: z.enum(["LOW", "MEDIUM", "HIGH", "UNRESOLVED"]).optional(),
     clientVisible: z.boolean(),
+    contentHash: z.string().max(128).optional(),
     ...versioned,
   })
   .strict();
@@ -245,6 +322,11 @@ export const RoadmapEditionSchema = z
     status: z.enum(["DRAFT", "PUBLISHED", "SUPERSEDED", "INFEASIBLE"]),
     contentHash: NonEmptySchema.max(128),
     current: z.boolean(),
+    templateEditionId: UuidSchema.optional(),
+    briefHash: z.string().max(128).optional(),
+    budgetHash: z.string().max(128).optional(),
+    scheduleStatus: z.enum(["CALCULATED", "INSUFFICIENT_INFORMATION", "COMPRESSED", "INFEASIBLE"]).optional(),
+    unresolvedAssumptions: z.array(z.string().max(200)).optional(),
     ...versioned,
   })
   .strict();
@@ -315,11 +397,340 @@ export const AiEvaluationRunSchema = z
   })
   .strict();
 
+export const VendorPriceCardSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    vendorSourceLabel: NonEmptySchema.max(160),
+    vendorRef: z.string().max(80).optional(),
+    costItemCode: NonEmptySchema.max(80),
+    currentEditionId: UuidSchema.optional(),
+    ...versioned,
+  })
+  .strict();
+
+export const VendorPriceCardEditionSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    cardId: UuidSchema,
+    costItemCode: NonEmptySchema.max(80),
+    currency: NonEmptySchema.max(8),
+    unitMinor: z.string().regex(/^-?\d+$/),
+    lowMinor: z.string().regex(/^-?\d+$/).optional(),
+    highMinor: z.string().regex(/^-?\d+$/).optional(),
+    pricingBasis: z.enum(["PER_GUEST", "PER_EVENT", "PER_DAY", "PER_HOUR", "PER_UNIT", "FLAT"]),
+    geography: z.string().max(80).optional(),
+    minimumMinor: z.string().regex(/^-?\d+$/).optional(),
+    inclusions: z.array(z.string().max(160)).optional(),
+    exclusions: z.array(z.string().max(160)).optional(),
+    overtimeNote: z.string().max(200).optional(),
+    taxesFeesNote: z.string().max(200).optional(),
+    cancellationNote: z.string().max(200).optional(),
+    effectiveFrom: z.string().date(),
+    effectiveUntil: z.string().date().optional(),
+    sourceArtefactKey: z.string().max(240).optional(),
+    checksum: z.string().max(128).optional(),
+    confidence: z.enum(["LOW", "MEDIUM", "HIGH"]),
+    reviewState: z.enum(["DRAFT", "SUBMITTED", "PUBLISHED", "SUPERSEDED", "REVOKED"]),
+    submittedByPersonId: PersonIdSchema.optional(),
+    decidedByPersonId: PersonIdSchema.optional(),
+    supersedesEditionId: UuidSchema.optional(),
+    current: z.boolean(),
+    synthetic: z.boolean(),
+    nonProduction: z.boolean(),
+    provisional: z.boolean(),
+    unsupportedForRealClientReliance: z.boolean(),
+    contentHash: NonEmptySchema.max(128),
+    ...versioned,
+  })
+  .strict();
+
+export const MarketIndexDefinitionSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    code: NonEmptySchema.max(80),
+    title: NonEmptySchema.max(160),
+    unit: NonEmptySchema.max(32),
+    freshnessDays: z.string().regex(/^\d+$/),
+    ...versioned,
+  })
+  .strict();
+
+export const MarketIndexObservationSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    definitionId: UuidSchema,
+    value: NonEmptySchema.max(40),
+    observedAt: IsoDatetimeSchema,
+    effectiveAt: IsoDatetimeSchema,
+    sourceKind: z.enum(["MANUAL", "PROVIDER", "SYNTHETIC"]),
+    approvalState: z.enum(["DRAFT", "APPROVED", "STALE"]),
+    confidence: z.enum(["LOW", "MEDIUM", "HIGH"]),
+    stale: z.boolean(),
+    contentHash: NonEmptySchema.max(128),
+    ...versioned,
+  })
+  .strict();
+
+export const FxObservationSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    fromCurrency: NonEmptySchema.max(8),
+    toCurrency: NonEmptySchema.max(8),
+    rate: z.string().regex(/^-?\d+(\.\d+)?$/),
+    locked: z.boolean(),
+    observedAt: IsoDatetimeSchema,
+    effectiveAt: IsoDatetimeSchema,
+    sourceKind: z.enum(["MANUAL", "PROVIDER", "SYNTHETIC"]),
+    approvalState: z.enum(["DRAFT", "APPROVED", "STALE"]),
+    stale: z.boolean(),
+    contentHash: NonEmptySchema.max(128),
+    ...versioned,
+  })
+  .strict();
+
+export const LocationCostZoneSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    code: NonEmptySchema.max(80),
+    title: NonEmptySchema.max(160),
+    locality: NonEmptySchema.max(80),
+    currentEditionId: UuidSchema.optional(),
+    ...versioned,
+  })
+  .strict();
+
+export const LocationFactorEditionSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    zoneId: UuidSchema,
+    factor: z.string().regex(/^-?\d+(\.\d+)?$/),
+    accessNote: z.string().max(200).optional(),
+    current: z.boolean(),
+    contentHash: NonEmptySchema.max(128),
+    ...versioned,
+  })
+  .strict();
+
+export const SeasonWindowEditionSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    title: NonEmptySchema.max(160),
+    startsOn: z.string().date(),
+    endsOn: z.string().date(),
+    factor: z.string().regex(/^-?\d+(\.\d+)?$/),
+    current: z.boolean(),
+    contentHash: NonEmptySchema.max(128),
+    ...versioned,
+  })
+  .strict();
+
+export const LookupTableEditionSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    tableId: NonEmptySchema.max(80),
+    entries: z.record(z.string(), z.string()),
+    contentHash: NonEmptySchema.max(128),
+    current: z.boolean(),
+    ...versioned,
+  })
+  .strict();
+
+export const BudgetLineSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    scenarioId: UuidSchema,
+    itemCode: NonEmptySchema.max(80),
+    inclusionReason: NonEmptySchema.max(240),
+    classification: NonEmptySchema.max(40),
+    quantity: NonEmptySchema.max(40),
+    unit: NonEmptySchema.max(32),
+    quantityDriverKey: z.string().max(80).optional(),
+    priceSource: NonEmptySchema.max(80),
+    priceEvidenceDate: z.string().max(40).optional(),
+    priceConfidence: z.enum(["LOW", "MEDIUM", "HIGH"]),
+    stale: z.boolean(),
+    synthetic: z.boolean(),
+    expectedMinor: z.string().regex(/^-?\d+$/),
+    lowMinor: z.string().regex(/^-?\d+$/),
+    highMinor: z.string().regex(/^-?\d+$/),
+    currency: NonEmptySchema.max(8),
+    ruleEditionHash: z.string().max(128),
+    warnings: z.array(z.string().max(240)),
+    unresolvedAssumptions: z.array(z.string().max(200)),
+    contentHash: NonEmptySchema.max(128),
+    ...versioned,
+  })
+  .strict();
+
+export const BudgetBomSnapshotSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    scenarioId: UuidSchema.optional(),
+    templateEditionHash: NonEmptySchema.max(128),
+    briefHash: z.string().max(128).optional(),
+    assertionHashes: z.array(z.string().max(128)),
+    assumptionSetHash: NonEmptySchema.max(128),
+    observationHashes: z.array(z.string().max(128)),
+    itemCodes: z.array(NonEmptySchema.max(80)),
+    contentHash: NonEmptySchema.max(128),
+    ...versioned,
+  })
+  .strict();
+
+export const ContingencyRuleEditionSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    basis: z.enum(["PERCENT_OF_PRICED_SCOPE", "FIXED_MONEY"]),
+    percent: z.string().regex(/^\d+(\.\d+)?$/).optional(),
+    money: MoneyDtoSchema.optional(),
+    riskLink: z.string().max(160).optional(),
+    minimumMinor: z.string().regex(/^-?\d+$/).optional(),
+    maximumMinor: z.string().regex(/^-?\d+$/).optional(),
+    current: z.boolean(),
+    contentHash: NonEmptySchema.max(128),
+    ...versioned,
+  })
+  .strict();
+
+export const SensitivityRunSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    scenarioId: UuidSchema,
+    drivers: z.array(z.object({ key: NonEmptySchema.max(80), movementMinor: z.string().regex(/^-?\d+$/), explanation: NonEmptySchema.max(240) }).strict()),
+    contentHash: NonEmptySchema.max(128),
+    ...versioned,
+  })
+  .strict();
+
+export const ScenarioComparisonSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    leftScenarioId: UuidSchema,
+    rightScenarioId: UuidSchema,
+    added: z.array(z.string().max(80)),
+    removed: z.array(z.string().max(80)),
+    quantityChanged: z.array(z.string().max(80)),
+    priceChanged: z.array(z.string().max(80)),
+    assumptionChanged: z.array(z.string().max(80)),
+    evidenceChanged: z.array(z.string().max(80)),
+    protectedItems: z.array(z.string().max(80)),
+    totalMovementMinor: z.string().regex(/^-?\d+$/),
+    cashFlowEffect: z.string().max(240),
+    operationalConsequence: z.string().max(240),
+    clientExperienceConsequence: z.string().max(240),
+    unresolvedRisk: z.string().max(240),
+    contentHash: NonEmptySchema.max(128),
+    ...versioned,
+  })
+  .strict();
+
+export const RoadmapTemplateEditionSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    archetype: NonEmptySchema.max(80),
+    leadMode: z.enum(["LONG", "STANDARD", "SHORT"]),
+    milestones: z.array(
+      z.object({
+        code: NonEmptySchema.max(80),
+        title: NonEmptySchema.max(200),
+        purpose: NonEmptySchema.max(400),
+        layer: z.enum(["CLIENT_OUTCOME", "OPERATIONAL_READINESS", "DECISION"]),
+        durationDays: z.string().regex(/^\d+$/),
+        leadTimeDays: z.string().regex(/^\d+$/),
+        compressible: z.boolean(),
+        clientVisible: z.boolean(),
+        delayConsequence: NonEmptySchema.max(400),
+        dependsOn: z.array(NonEmptySchema.max(80)).optional(),
+        dependencyKind: z.enum(["FINISH_TO_START", "START_TO_START", "DECISION_GATES", "EVIDENCE_GATES", "FINANCIAL_GATES", "SCOPE_DEPENDS_ON"]).optional(),
+      }).strict(),
+    ),
+    contentHash: NonEmptySchema.max(128),
+    current: z.boolean(),
+    ...versioned,
+  })
+  .strict();
+
+export const RoadmapScheduleResultSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    editionId: UuidSchema,
+    status: z.enum(["CALCULATED", "INSUFFICIENT_INFORMATION", "COMPRESSED", "INFEASIBLE"]),
+    compressionClass: z.enum(["STANDARD", "COMPRESSED_FEASIBLE", "FEASIBLE_WITH_DECISIONS", "FEASIBLE_WITH_RISK", "INFEASIBLE"]).optional(),
+    critical: z.array(z.object({ milestoneId: UuidSchema, title: NonEmptySchema.max(200), floatDays: z.string(), explanation: NonEmptySchema.max(400) }).strict()),
+    totalDurationDays: z.string().regex(/^\d+$/),
+    inputHash: NonEmptySchema.max(128),
+    ...versioned,
+  })
+  .strict();
+
+export const ConversationTurnSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    engagementId: EngagementIdSchema,
+    sessionId: UuidSchema.optional(),
+    accessId: UuidSchema.optional(),
+    turnIndex: z.number().int().nonnegative(),
+    phase: z.enum(["WELCOME", "CONSENT", "PRINCIPALS", "ADDRESS", "LANGUAGE", "COVERAGE", "REVIEW", "COMPLETE"]),
+    questionId: NonEmptySchema.max(80),
+    questionEdition: NonEmptySchema.max(40),
+    topicKeys: z.array(NonEmptySchema.max(80)),
+    prompt: NonEmptySchema.max(800),
+    answerSource: z.enum(["CLIENT_DIRECT", "STAFF", "UNKNOWN", "NOT_YET", "NOT_APPLICABLE", "PREFER_NOT", "CORRECTION", "PAUSE"]),
+    speakerLabel: z.string().max(160).optional(),
+    formOfAddress: z.string().max(80).optional(),
+    languagePreference: z.string().max(32).optional(),
+    directClientText: z.string().max(2000).optional(),
+    proposedNarrative: z.string().max(800).optional(),
+    confirmationState: z.enum(["UNANSWERED", "CAPTURED", "CONFIRMED", "REVISIT"]).optional(),
+    revisitReason: z.string().max(240).optional(),
+    correlationId: z.string().max(80).optional(),
+    ...versioned,
+  })
+  .strict();
+
+export const ClientOverviewEditionSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    engagementId: EngagementIdSchema,
+    vision: z.string().max(800).optional(),
+    priorities: z.array(z.string().max(200)),
+    nonNegotiables: z.array(z.string().max(200)),
+    knownFacts: z.array(z.string().max(240)),
+    openQuestions: z.array(z.string().max(240)),
+    decisionsRequired: z.array(z.string().max(240)),
+    investmentFraming: z.string().max(400).optional(),
+    roadmapExpectation: z.string().max(400).optional(),
+    conflicts: z.array(z.string().max(240)),
+    changesSinceLastReview: z.array(z.string().max(240)),
+    contentHash: NonEmptySchema.max(128),
+    current: z.boolean(),
+    ...versioned,
+  })
+  .strict();
+
 export const S05AIntelligenceReceiptSchema = z
   .object({
     id: UuidSchema,
     organisationId: OrganisationIdSchema,
-    migrationId: z.literal("EOS-S05A-INTELLIGENCE-V1"),
+    migrationId: z.enum(["EOS-S05A-INTELLIGENCE-V1", "EOS-S05A-INTELLIGENCE-V2"]),
     checksum: NonEmptySchema.max(128),
     status: z.enum(["APPLIED", "REPLAYED"]),
     createdRecords: z.array(z.string()),
@@ -350,6 +761,24 @@ export const S05A_INTELLIGENCE_COLLECTIONS = [
   "aiJobs",
   "aiEvaluationRuns",
   "s05aIntelligenceReceipts",
+  "vendorPriceCards",
+  "vendorPriceCardEditions",
+  "marketIndexDefinitions",
+  "marketIndexObservations",
+  "fxObservations",
+  "locationCostZones",
+  "locationFactorEditions",
+  "seasonWindowEditions",
+  "lookupTableEditions",
+  "budgetLines",
+  "budgetBomSnapshots",
+  "contingencyRuleEditions",
+  "sensitivityRuns",
+  "scenarioComparisons",
+  "roadmapTemplateEditions",
+  "roadmapScheduleResults",
+  "conversationTurns",
+  "clientOverviewEditions",
 ] as const;
 
 export type EventBriefDraft = z.infer<typeof EventBriefDraftSchema>;
@@ -369,8 +798,27 @@ export type AiJob = z.infer<typeof AiJobSchema>;
 export type AiEvaluationRun = z.infer<typeof AiEvaluationRunSchema>;
 export type CostItemDefinition = z.infer<typeof CostItemDefinitionSchema>;
 export type BudgetTemplateEdition = z.infer<typeof BudgetTemplateEditionSchema>;
+export type BudgetTemplateCandidate = z.infer<typeof BudgetTemplateCandidateSchema>;
 export type BudgetAssumption = z.infer<typeof BudgetAssumptionSchema>;
 export type PriceEvidence = z.infer<typeof PriceEvidenceSchema>;
 export type CostRuleEdition = z.infer<typeof CostRuleEditionSchema>;
 export type BudgetTaxonomyEdition = z.infer<typeof BudgetTaxonomyEditionSchema>;
 export type S05AIntelligenceReceipt = z.infer<typeof S05AIntelligenceReceiptSchema>;
+export type VendorPriceCard = z.infer<typeof VendorPriceCardSchema>;
+export type VendorPriceCardEdition = z.infer<typeof VendorPriceCardEditionSchema>;
+export type MarketIndexDefinition = z.infer<typeof MarketIndexDefinitionSchema>;
+export type MarketIndexObservation = z.infer<typeof MarketIndexObservationSchema>;
+export type FxObservation = z.infer<typeof FxObservationSchema>;
+export type LocationCostZone = z.infer<typeof LocationCostZoneSchema>;
+export type LocationFactorEdition = z.infer<typeof LocationFactorEditionSchema>;
+export type SeasonWindowEdition = z.infer<typeof SeasonWindowEditionSchema>;
+export type LookupTableEdition = z.infer<typeof LookupTableEditionSchema>;
+export type BudgetLine = z.infer<typeof BudgetLineSchema>;
+export type BudgetBomSnapshot = z.infer<typeof BudgetBomSnapshotSchema>;
+export type ContingencyRuleEdition = z.infer<typeof ContingencyRuleEditionSchema>;
+export type SensitivityRun = z.infer<typeof SensitivityRunSchema>;
+export type ScenarioComparison = z.infer<typeof ScenarioComparisonSchema>;
+export type RoadmapTemplateEdition = z.infer<typeof RoadmapTemplateEditionSchema>;
+export type RoadmapScheduleResult = z.infer<typeof RoadmapScheduleResultSchema>;
+export type ConversationTurn = z.infer<typeof ConversationTurnSchema>;
+export type ClientOverviewEdition = z.infer<typeof ClientOverviewEditionSchema>;

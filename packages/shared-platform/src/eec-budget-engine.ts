@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { PlatformError } from "./errors.js";
 import { exactHash } from "./eec-hash.js";
 
@@ -6,15 +7,17 @@ export const BUDGET_EXPR_MAX_NODES = 64;
 export const BUDGET_EVAL_MAX_STEPS = 128;
 
 export type BudgetExpr =
-  | { kind: "CONST_MONEY"; valueMinor: string; currency: string }
-  | { kind: "CONST_NUMBER"; value: string }
+  | { kind: "CONST_MONEY"; valueMinor: string; currency: string; unit?: string }
+  | { kind: "CONST_NUMBER"; value: string; unit?: string }
   | { kind: "DRIVER"; key: string }
   | { kind: "ADD"; terms: BudgetExpr[] }
   | { kind: "MULTIPLY"; factors: BudgetExpr[] }
   | { kind: "MAX"; values: BudgetExpr[] }
   | { kind: "MIN"; values: BudgetExpr[] }
   | { kind: "ROUND"; value: BudgetExpr; increment: string; mode: "UP" | "DOWN" | "NEAREST" }
-  | { kind: "LOOKUP"; tableId: string; input: BudgetExpr }
+  | { kind: "LOOKUP"; tableId: string; input: BudgetExpr; tableHash?: string }
+  | { kind: "PRICE_REF"; itemCode: string }
+  | { kind: "FX_CONVERT"; value: BudgetExpr; toCurrency: string; fxObservationHash: string }
   | { kind: "IF"; condition: BudgetCondition; then: BudgetExpr; otherwise: BudgetExpr };
 
 export type BudgetCondition =
@@ -22,6 +25,67 @@ export type BudgetCondition =
   | { kind: "IN"; value: BudgetExpr; choices: string[] }
   | { kind: "AND"; conditions: BudgetCondition[] }
   | { kind: "OR"; conditions: BudgetCondition[] };
+
+const DecimalString = z.string().regex(/^-?\d+(\.\d+)?$/);
+const MinorString = z.string().regex(/^-?\d+$/);
+const CurrencyString = z.string().trim().min(3).max(8);
+const UnitString = z.string().trim().min(1).max(32).optional();
+
+export const BudgetExprSchema: z.ZodType<BudgetExpr> = z.lazy(() =>
+  z.discriminatedUnion("kind", [
+    z.object({ kind: z.literal("CONST_MONEY"), valueMinor: MinorString, currency: CurrencyString, unit: UnitString }).strict(),
+    z.object({ kind: z.literal("CONST_NUMBER"), value: DecimalString, unit: UnitString }).strict(),
+    z.object({ kind: z.literal("DRIVER"), key: z.string().min(1).max(80) }).strict(),
+    z.object({ kind: z.literal("ADD"), terms: z.array(BudgetExprSchema).min(1).max(16) }).strict(),
+    z.object({ kind: z.literal("MULTIPLY"), factors: z.array(BudgetExprSchema).min(1).max(16) }).strict(),
+    z.object({ kind: z.literal("MAX"), values: z.array(BudgetExprSchema).min(1).max(16) }).strict(),
+    z.object({ kind: z.literal("MIN"), values: z.array(BudgetExprSchema).min(1).max(16) }).strict(),
+    z.object({
+      kind: z.literal("ROUND"),
+      value: BudgetExprSchema,
+      increment: DecimalString,
+      mode: z.enum(["UP", "DOWN", "NEAREST"]),
+    }).strict(),
+    z.object({
+      kind: z.literal("LOOKUP"),
+      tableId: z.string().min(1).max(80),
+      input: BudgetExprSchema,
+      tableHash: z.string().max(128).optional(),
+    }).strict(),
+    z.object({ kind: z.literal("PRICE_REF"), itemCode: z.string().min(1).max(80) }).strict(),
+    z.object({
+      kind: z.literal("FX_CONVERT"),
+      value: BudgetExprSchema,
+      toCurrency: CurrencyString,
+      fxObservationHash: z.string().min(8).max(128),
+    }).strict(),
+    z.object({ kind: z.literal("IF"), condition: BudgetConditionSchema, then: BudgetExprSchema, otherwise: BudgetExprSchema }).strict(),
+  ]),
+);
+
+export const BudgetConditionSchema: z.ZodType<BudgetCondition> = z.lazy(() =>
+  z.discriminatedUnion("kind", [
+    z.object({
+      kind: z.literal("COMPARE"),
+      operator: z.enum(["LT", "LTE", "EQ", "GTE", "GT"]),
+      left: BudgetExprSchema,
+      right: BudgetExprSchema,
+    }).strict(),
+    z.object({ kind: z.literal("IN"), value: BudgetExprSchema, choices: z.array(z.string().max(80)).min(1).max(32) }).strict(),
+    z.object({ kind: z.literal("AND"), conditions: z.array(BudgetConditionSchema).min(1).max(16) }).strict(),
+    z.object({ kind: z.literal("OR"), conditions: z.array(BudgetConditionSchema).min(1).max(16) }).strict(),
+  ]),
+);
+
+export function parseBudgetExpr(value: unknown): BudgetExpr {
+  const parsed = BudgetExprSchema.safeParse(value);
+  if (!parsed.success) {
+    throw new PlatformError("VALIDATION_FAILED", "rule expression is not a closed budget AST", {
+      details: parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`),
+    });
+  }
+  return parsed.data;
+}
 
 export type EvaluationTraceStep = Readonly<{
   op: string;
@@ -63,11 +127,18 @@ function formatScaled(value: bigint): string {
 }
 
 function countNodes(expr: BudgetExpr | BudgetCondition): number {
-  if (expr.kind === "CONST_MONEY" || expr.kind === "CONST_NUMBER" || expr.kind === "DRIVER") return 1;
+  if (
+    expr.kind === "CONST_MONEY" ||
+    expr.kind === "CONST_NUMBER" ||
+    expr.kind === "DRIVER" ||
+    expr.kind === "PRICE_REF"
+  ) {
+    return 1;
+  }
   if (expr.kind === "ADD") return 1 + expr.terms.reduce((sum, item) => sum + countNodes(item), 0);
   if (expr.kind === "MULTIPLY") return 1 + expr.factors.reduce((sum, item) => sum + countNodes(item), 0);
   if (expr.kind === "MAX" || expr.kind === "MIN") return 1 + expr.values.reduce((sum, item) => sum + countNodes(item), 0);
-  if (expr.kind === "ROUND") return 1 + countNodes(expr.value);
+  if (expr.kind === "ROUND" || expr.kind === "FX_CONVERT") return 1 + countNodes(expr.value);
   if (expr.kind === "LOOKUP") return 1 + countNodes(expr.input);
   if (expr.kind === "IF") return 1 + countNodes(expr.condition) + countNodes(expr.then) + countNodes(expr.otherwise);
   if (expr.kind === "COMPARE") return 1 + countNodes(expr.left) + countNodes(expr.right);
@@ -76,11 +147,18 @@ function countNodes(expr: BudgetExpr | BudgetCondition): number {
 }
 
 function depthOf(expr: BudgetExpr | BudgetCondition): number {
-  if (expr.kind === "CONST_MONEY" || expr.kind === "CONST_NUMBER" || expr.kind === "DRIVER") return 1;
+  if (
+    expr.kind === "CONST_MONEY" ||
+    expr.kind === "CONST_NUMBER" ||
+    expr.kind === "DRIVER" ||
+    expr.kind === "PRICE_REF"
+  ) {
+    return 1;
+  }
   if (expr.kind === "ADD") return 1 + Math.max(...expr.terms.map(depthOf));
   if (expr.kind === "MULTIPLY") return 1 + Math.max(...expr.factors.map(depthOf));
   if (expr.kind === "MAX" || expr.kind === "MIN") return 1 + Math.max(...expr.values.map(depthOf));
-  if (expr.kind === "ROUND") return 1 + depthOf(expr.value);
+  if (expr.kind === "ROUND" || expr.kind === "FX_CONVERT") return 1 + depthOf(expr.value);
   if (expr.kind === "LOOKUP") return 1 + depthOf(expr.input);
   if (expr.kind === "IF") return 1 + Math.max(depthOf(expr.condition), depthOf(expr.then), depthOf(expr.otherwise));
   if (expr.kind === "COMPARE") return 1 + Math.max(depthOf(expr.left), depthOf(expr.right));
@@ -97,18 +175,24 @@ function display(value: Value): string {
   return value.kind === "MONEY" ? `${value.minor.toString()} ${value.currency}` : formatScaled(value.value);
 }
 
+export type BudgetEvalInput = {
+  drivers: Record<string, string>;
+  lookups?: Record<string, Record<string, string>>;
+  lookupHashes?: Record<string, string>;
+  prices?: Record<string, { minor: string; currency: string }>;
+  fxRates?: Record<string, { fromCurrency: string; toCurrency: string; rate: string }>;
+  ruleEditionHash: string;
+};
+
 export function evaluateBudgetExpr(
   expr: BudgetExpr,
-  input: {
-    drivers: Record<string, string>;
-    lookups?: Record<string, Record<string, string>>;
-    ruleEditionHash: string;
-  },
+  input: BudgetEvalInput,
 ): EvaluationResult<{ kind: "MONEY" | "NUMBER"; currency?: string; minor?: string; value?: string }> {
-  if (depthOf(expr) > BUDGET_EXPR_MAX_DEPTH) {
+  const parsed = parseBudgetExpr(expr);
+  if (depthOf(parsed) > BUDGET_EXPR_MAX_DEPTH) {
     throw new PlatformError("VALIDATION_FAILED", "rule exceeds maximum depth");
   }
-  if (countNodes(expr) > BUDGET_EXPR_MAX_NODES) {
+  if (countNodes(parsed) > BUDGET_EXPR_MAX_NODES) {
     throw new PlatformError("VALIDATION_FAILED", "rule exceeds maximum node count");
   }
   const trace: EvaluationTraceStep[] = [];
@@ -223,9 +307,43 @@ export function evaluateBudgetExpr(
         const key = formatScaled(asNumber(evalExpr(node.input), "lookup"));
         const table = input.lookups?.[node.tableId];
         if (!table || table[key] == null) throw new PlatformError("VALIDATION_FAILED", `missing lookup ${node.tableId}:${key}`);
+        if (node.tableHash && input.lookupHashes?.[node.tableId] && input.lookupHashes[node.tableId] !== node.tableHash) {
+          throw new PlatformError("VALIDATION_FAILED", `lookup table ${node.tableId} hash does not match the bound edition`);
+        }
         const value: NumberValue = { kind: "NUMBER", value: parseDecimal(table[key]!), scale: 0 };
         trace.push({ op: "LOOKUP", detail: `${node.tableId}:${key}`, value: display(value) });
         return value;
+      }
+      case "PRICE_REF": {
+        const price = input.prices?.[node.itemCode];
+        if (!price) throw new PlatformError("VALIDATION_FAILED", `missing price evidence for ${node.itemCode}`);
+        const value: MoneyValue = { kind: "MONEY", currency: price.currency, minor: BigInt(price.minor) };
+        trace.push({ op: "PRICE_REF", detail: node.itemCode, value: display(value) });
+        return value;
+      }
+      case "FX_CONVERT": {
+        const inner = evalExpr(node.value);
+        if (inner.kind !== "MONEY") throw new PlatformError("VALIDATION_FAILED", "FX conversion requires money");
+        if (inner.currency === node.toCurrency) {
+          trace.push({ op: "FX_CONVERT", detail: "same-currency", value: display(inner) });
+          return inner;
+        }
+        const fx = input.fxRates?.[node.fxObservationHash];
+        if (!fx) throw new PlatformError("VALIDATION_FAILED", "missing FX observation");
+        if (fx.fromCurrency !== inner.currency || fx.toCurrency !== node.toCurrency) {
+          throw new PlatformError("VALIDATION_FAILED", "FX observation currencies do not match the conversion node");
+        }
+        const converted: MoneyValue = {
+          kind: "MONEY",
+          currency: node.toCurrency,
+          minor: (inner.minor * parseDecimal(fx.rate)) / SCALE,
+        };
+        trace.push({
+          op: "FX_CONVERT",
+          detail: `${inner.currency}->${node.toCurrency}:${node.fxObservationHash.slice(0, 12)}`,
+          value: display(converted),
+        });
+        return converted;
       }
       case "IF": {
         const matched = evalCondition(node.condition);
@@ -266,7 +384,7 @@ export function evaluateBudgetExpr(
     return compare(left.value, right.value);
   };
 
-  const value = evalExpr(expr);
+  const value = evalExpr(parsed);
   const dto =
     value.kind === "MONEY"
       ? { kind: "MONEY" as const, currency: value.currency, minor: value.minor.toString() }
@@ -275,7 +393,13 @@ export function evaluateBudgetExpr(
     value: dto,
     trace,
     warnings,
-    inputHash: exactHash({ drivers: input.drivers, lookups: input.lookups ?? {}, expr }),
+    inputHash: exactHash({
+      drivers: input.drivers,
+      lookups: input.lookups ?? {},
+      prices: input.prices ?? {},
+      fxRates: input.fxRates ?? {},
+      expr: parsed,
+    }),
     ruleEditionHash: input.ruleEditionHash,
   };
 }

@@ -1,14 +1,24 @@
 import { createHash, randomUUID } from "node:crypto";
 import { SCHEMA_VERSION } from "./constants.js";
 import { PlatformError } from "./errors.js";
-import { evaluateBudgetExpr, type BudgetExpr } from "./eec-budget-engine.js";
+import { type BudgetExpr } from "./eec-budget-engine.js";
+import {
+  assessChangeImpactDeepOnSnap,
+  buildExecutiveCommandDeep,
+  calculateBudgetScenarioDeepOnSnap,
+  calculateSchedule,
+  instantiateRoadmapFromTemplateOnSnap,
+  nextGovernedInterviewTurn,
+  propagateApprovedChangeOnSnap,
+  applyQuantityRulesToCatalogue,
+  seedBudgetKnowledgeOnSnap,
+} from "./eec-s05a-depth.js";
 import { exactHash, nfc } from "./eec-hash.js";
 import { emptyMasterEventFile } from "./mef.js";
 import { ensureDefaultPhaseOnSnap } from "./programme-operations.js";
 import type { Client, EventRecord } from "./schemas.js";
 import type {
   AiJob,
-  BudgetAssumption,
   BudgetRecommendationEdition,
   BudgetScenarioEdition,
   BudgetTemplateEdition,
@@ -107,15 +117,62 @@ export function submitBriefEditionOnSnap(
   return record;
 }
 
+export function addAssertionToBriefOnSnap(
+  snap: PlatformSnapshot,
+  input: { organisationId: string; engagementId: string; assertionId: string; expectedVersion: number },
+  now: string,
+): EventBriefDraft {
+  const draft = snap.eventBriefDrafts.find((item) => item.engagementId === input.engagementId && item.organisationId === input.organisationId);
+  if (!draft) throw new PlatformError("NOT_FOUND", "brief draft was not found");
+  if (draft.version !== input.expectedVersion) throw new PlatformError("VERSION_CONFLICT", "stale brief draft");
+  const assertion = snap.candidateAssertions.find((item) => item.id === input.assertionId && item.engagementId === input.engagementId);
+  if (!assertion) throw new PlatformError("NOT_FOUND", "assertion was not found");
+  if (!draft.assertionIds.includes(assertion.id)) draft.assertionIds.push(assertion.id);
+  draft.version += 1;
+  draft.updatedAt = now;
+  return draft;
+}
+
+export function removeAssertionFromDraftOnSnap(
+  snap: PlatformSnapshot,
+  input: { organisationId: string; engagementId: string; assertionId: string; expectedVersion: number },
+  now: string,
+): EventBriefDraft {
+  const draft = snap.eventBriefDrafts.find((item) => item.engagementId === input.engagementId && item.organisationId === input.organisationId);
+  if (!draft) throw new PlatformError("NOT_FOUND", "brief draft was not found");
+  if (draft.version !== input.expectedVersion) throw new PlatformError("VERSION_CONFLICT", "stale brief draft");
+  draft.assertionIds = draft.assertionIds.filter((id) => id !== input.assertionId);
+  draft.version += 1;
+  draft.updatedAt = now;
+  return draft;
+}
+
+export function recordBriefUnknownOnSnap(
+  snap: PlatformSnapshot,
+  input: { organisationId: string; engagementId: string; topicKey: string; expectedVersion: number },
+  now: string,
+): EventBriefDraft {
+  const draft = snap.eventBriefDrafts.find((item) => item.engagementId === input.engagementId && item.organisationId === input.organisationId);
+  if (!draft) throw new PlatformError("NOT_FOUND", "brief draft was not found");
+  if (draft.version !== input.expectedVersion) throw new PlatformError("VERSION_CONFLICT", "stale brief draft");
+  if (!draft.unknownTopics.includes(input.topicKey)) draft.unknownTopics.push(nfc(input.topicKey));
+  draft.version += 1;
+  draft.updatedAt = now;
+  return draft;
+}
+
 export function decideBriefEditionOnSnap(
   snap: PlatformSnapshot,
-  input: { organisationId: string; editionId: string; decision: "APPROVE" | "REJECT"; expectedVersion: number },
+  input: { organisationId: string; editionId: string; decision: "APPROVE" | "REJECT"; expectedVersion: number; expectedHash?: string },
   now: string,
   actorPersonId: string,
 ): EventBriefEdition {
   const record = snap.eventBriefEditions.find((item) => item.id === input.editionId && item.organisationId === input.organisationId);
   if (!record) throw new PlatformError("NOT_FOUND", "brief edition was not found");
   if (record.version !== input.expectedVersion) throw new PlatformError("VERSION_CONFLICT", "stale brief edition");
+  if (input.expectedHash && input.expectedHash !== record.contentHash) {
+    throw new PlatformError("VALIDATION_FAILED", "decision binds the exact submitted hash");
+  }
   if (record.submittedByPersonId === actorPersonId) {
     throw new PlatformError("FORBIDDEN", "the submitting maker cannot decide this edition");
   }
@@ -392,8 +449,8 @@ export function seedBudgetCatalogueOnSnap(snap: PlatformSnapshot, organisationId
     snap.costItemDefinitions.push(item);
     const expression: BudgetExpr =
       unitKind === "guest"
-        ? { kind: "MULTIPLY", factors: [{ kind: "CONST_MONEY", valueMinor: "1500000", currency: "NGN" }, { kind: "DRIVER", key: "guest.target_count" }] }
-        : { kind: "CONST_MONEY", valueMinor: unitKind === "event" ? "25000000" : "8000000", currency: "NGN" };
+        ? { kind: "MULTIPLY", factors: [{ kind: "PRICE_REF", itemCode: code }, { kind: "DRIVER", key: "guest.target_count" }] }
+        : { kind: "PRICE_REF", itemCode: code };
     snap.costRuleEditions.push({
       id: randomUUID(),
       organisationId,
@@ -401,6 +458,7 @@ export function seedBudgetCatalogueOnSnap(snap: PlatformSnapshot, organisationId
       expression,
       contentHash: exactHash(expression),
       current: true,
+      resultUnit: "NGN",
       version: 1,
       ...stamp(now),
     });
@@ -413,18 +471,35 @@ export function seedBudgetCatalogueOnSnap(snap: PlatformSnapshot, organisationId
     ["COMPRESSED", ["VENUE_HIRE", "CATERING_HEAD", "POWER", "SECURITY", "ACCESSIBILITY", "CONTINGENCY"]],
   ] as const;
   for (const [archetype, itemCodes] of archetypes) {
+    const candidates = itemCodes.map((itemCode) => {
+      const item = snap.costItemDefinitions.find((entry) => entry.organisationId === organisationId && entry.code === itemCode);
+      return {
+        code: itemCode,
+        classification: (item?.requirement === "RECOMMENDED" || item?.requirement === "CONDITIONAL" || item?.requirement === "OPTIONAL"
+          ? item.requirement
+          : "REQUIRED") as NonNullable<BudgetTemplateEdition["candidates"]>[number]["classification"],
+        predicate: "ALWAYS" as const,
+        driverKey: item?.unitKind === "guest" ? "guest.target_count" : undefined,
+        unit: item?.unitKind,
+        protectedItem: item?.protectedItem,
+        clientVisible: true,
+      };
+    });
     const record: BudgetTemplateEdition = {
       id: randomUUID(),
       organisationId,
       archetype,
       itemCodes: [...itemCodes],
-      contentHash: exactHash({ archetype, itemCodes }),
+      candidates,
+      contentHash: exactHash({ archetype, candidates }),
       current: true,
       version: 1,
       ...stamp(now),
     };
     snap.budgetTemplateEditions.push(record);
   }
+  applyQuantityRulesToCatalogue(snap, organisationId, now);
+  seedBudgetKnowledgeOnSnap(snap, organisationId, now);
 }
 
 export function calculateBudgetScenarioOnSnap(
@@ -442,82 +517,7 @@ export function calculateBudgetScenarioOnSnap(
   actorPersonId: string,
 ): BudgetScenarioEdition {
   seedBudgetCatalogueOnSnap(snap, input.organisationId, now);
-  const template = snap.budgetTemplateEditions.find((item) => item.organisationId === input.organisationId && item.archetype === input.archetype && item.current);
-  if (!template) throw new PlatformError("NOT_FOUND", "budget template was not found");
-  const excluded = new Set(input.excludeCodes ?? []);
-  for (const code of excluded) {
-    const item = snap.costItemDefinitions.find((entry) => entry.code === code && entry.organisationId === input.organisationId);
-    if (item?.protectedItem) throw new PlatformError("VALIDATION_FAILED", `protected line ${code} cannot be excluded without a recorded risk`);
-  }
-  let expected = 0n;
-  let low = 0n;
-  let high = 0n;
-  const trace: BudgetScenarioEdition["trace"] = [];
-  for (const code of template.itemCodes) {
-    if (excluded.has(code)) continue;
-    const rule = snap.costRuleEditions.find((item) => item.organisationId === input.organisationId && item.costItemCode === code && item.current);
-    if (!rule) continue;
-    const result = evaluateBudgetExpr(rule.expression as BudgetExpr, {
-      drivers: { "guest.target_count": input.guests },
-      ruleEditionHash: rule.contentHash,
-    });
-    if (result.value.kind !== "MONEY" || result.value.currency !== "NGN" || !result.value.minor) {
-      throw new PlatformError("VALIDATION_FAILED", "budget lines must resolve in NGN");
-    }
-    const minor = BigInt(result.value.minor);
-    expected += minor;
-    low += (minor * 90n) / 100n;
-    high += (minor * 115n) / 100n;
-    trace.push(...result.trace.map((step) => ({ op: step.op, detail: `${code}:${step.detail}`, value: step.value })));
-  }
-  const assumption: BudgetAssumption = {
-    id: randomUUID(),
-    organisationId: input.organisationId,
-    engagementId: input.engagementId,
-    eventId: input.eventId,
-    key: "guest.target_count",
-    value: input.guests,
-    unit: "guests",
-    confirmed: true,
-    stale: false,
-    version: 1,
-    ...stamp(now),
-  };
-  snap.budgetAssumptions.push(assumption);
-  const envelope = snap.financialStateDeclarations.find((item) => item.organisationId === input.organisationId && item.kind === "ENVELOPE");
-  let alignment: BudgetScenarioEdition["alignment"] = "ALIGNED";
-  if (!envelope) alignment = "INSUFFICIENT_INFORMATION";
-  else if (expected > BigInt(envelope.money.minor)) alignment = "MISALIGNED";
-  else if (expected * 100n > BigInt(envelope.money.minor) * 90n) alignment = "PRESSURED";
-  else if (expected * 100n < BigInt(envelope.money.minor) * 70n) alignment = "SURPLUS_CAPACITY";
-  const inputHash = exactHash({ template: template.contentHash, guests: input.guests, excluded: [...excluded], purpose: input.purpose });
-  const record: BudgetScenarioEdition = {
-    id: randomUUID(),
-    organisationId: input.organisationId,
-    engagementId: input.engagementId,
-    eventId: input.eventId,
-    purpose: input.purpose,
-    status: "DRAFT",
-    alignment,
-    calculationStatus: "COMPLETE",
-    currency: "NGN",
-    expectedMinor: expected.toString(),
-    lowMinor: low.toString(),
-    highMinor: high.toString(),
-    inputHash,
-    resultHash: exactHash({ expected: expected.toString(), low: low.toString(), high: high.toString(), inputHash }),
-    trace,
-    submittedByPersonId: actorPersonId,
-    current: true,
-    version: 1,
-    ...stamp(now),
-  };
-  for (const previous of snap.budgetScenarioEditions.filter((item) => item.organisationId === input.organisationId && item.purpose === input.purpose && item.current)) {
-    previous.current = false;
-    previous.status = "SUPERSEDED";
-  }
-  snap.budgetScenarioEditions.push(record);
-  return record;
+  return calculateBudgetScenarioDeepOnSnap(snap, input, now, actorPersonId);
 }
 
 export function decideBudgetScenarioOnSnap(
@@ -588,114 +588,25 @@ export function declareFinancialStateOnSnap(
 
 export function instantiateRoadmapOnSnap(
   snap: PlatformSnapshot,
-  input: { organisationId: string; eventId?: string; engagementId?: string; titles: readonly { title: string; layer: RoadmapMilestone["layer"]; durationDays: string; clientVisible: boolean }[] },
+  input: { organisationId: string; eventId?: string; engagementId?: string; titles: readonly { title: string; layer: RoadmapMilestone["layer"]; durationDays: string; clientVisible: boolean }[]; archetype?: string; leadMode?: "LONG" | "STANDARD" | "SHORT"; availableDays?: string },
   now: string,
 ): { edition: RoadmapEdition; milestones: RoadmapMilestone[]; dependencies: RoadmapDependency[] } {
-  const milestones = input.titles.map((item) => {
-    const record: RoadmapMilestone = {
-      id: randomUUID(),
-      organisationId: input.organisationId,
-      eventId: input.eventId,
-      engagementId: input.engagementId,
-      title: nfc(item.title),
-      layer: item.layer,
-      durationDays: item.durationDays,
-      clientVisible: item.clientVisible,
-      version: 1,
-      ...stamp(now),
-    };
-    snap.roadmapMilestones.push(record);
-    return record;
-  });
-  const dependencies: RoadmapDependency[] = [];
-  for (let index = 1; index < milestones.length; index += 1) {
-    const record: RoadmapDependency = {
-      id: randomUUID(),
-      organisationId: input.organisationId,
-      editionId: "pending",
-      fromMilestoneId: milestones[index - 1]!.id,
-      toMilestoneId: milestones[index]!.id,
-      kind: "FINISH_TO_START",
-      version: 1,
-      ...stamp(now),
-    };
-    dependencies.push(record);
-  }
-  const contentHash = exactHash({ milestones: milestones.map((item) => item.id), edges: dependencies.map((item) => [item.fromMilestoneId, item.toMilestoneId]) });
-  const edition: RoadmapEdition = {
-    id: randomUUID(),
-    organisationId: input.organisationId,
-    eventId: input.eventId,
-    engagementId: input.engagementId,
-    status: "PUBLISHED",
-    contentHash,
-    current: true,
-    version: 1,
-    ...stamp(now),
-  };
-  for (const dependency of dependencies) {
-    dependency.editionId = edition.id;
-    snap.roadmapDependencies.push(dependency);
-  }
-  snap.roadmapEditions.push(edition);
-  return { edition, milestones, dependencies };
+  const result = instantiateRoadmapFromTemplateOnSnap(snap, input, now);
+  return { edition: result.edition, milestones: result.milestones, dependencies: result.dependencies };
 }
 
 export function calculateCriticalPath(
   milestones: readonly RoadmapMilestone[],
   dependencies: readonly RoadmapDependency[],
-): { status: "CALCULATED" | "INFEASIBLE"; milestoneIds: string[]; totalDurationDays: string; inputHash: string } {
-  const nodes = new Map(milestones.map((item) => [item.id, item]));
-  const incoming = new Map<string, string[]>();
-  const outgoing = new Map<string, string[]>();
-  for (const node of milestones) {
-    incoming.set(node.id, []);
-    outgoing.set(node.id, []);
-  }
-  for (const edge of dependencies) {
-    if (edge.fromMilestoneId === edge.toMilestoneId) throw new PlatformError("VALIDATION_FAILED", "self-loop rejected");
-    if (!nodes.has(edge.fromMilestoneId) || !nodes.has(edge.toMilestoneId)) throw new PlatformError("VALIDATION_FAILED", "missing dependency node");
-    incoming.get(edge.toMilestoneId)!.push(edge.fromMilestoneId);
-    outgoing.get(edge.fromMilestoneId)!.push(edge.toMilestoneId);
-  }
-  const degree = new Map([...incoming.entries()].map(([id, list]) => [id, list.length]));
-  const queue = [...degree.entries()].filter(([, count]) => count === 0).map(([id]) => id);
-  const order: string[] = [];
-  const earliest = new Map<string, number>();
-  for (const id of queue) earliest.set(id, 0);
-  while (queue.length) {
-    const id = queue.shift()!;
-    order.push(id);
-    const start = earliest.get(id) ?? 0;
-    const finish = start + Number(nodes.get(id)!.durationDays);
-    for (const next of outgoing.get(id) ?? []) {
-      earliest.set(next, Math.max(earliest.get(next) ?? 0, finish));
-      degree.set(next, (degree.get(next) ?? 1) - 1);
-      if (degree.get(next) === 0) queue.push(next);
-    }
-  }
-  if (order.length !== milestones.length) throw new PlatformError("VALIDATION_FAILED", "dependency cycle rejected");
-  let endId = milestones[milestones.length - 1]!.id;
-  let best = -1;
-  for (const item of milestones) {
-    const finish = (earliest.get(item.id) ?? 0) + Number(item.durationDays);
-    if (finish >= best) {
-      best = finish;
-      endId = item.id;
-    }
-  }
-  const path = [endId];
-  let cursor = endId;
-  while ((incoming.get(cursor) ?? []).length) {
-    const previous = (incoming.get(cursor) ?? []).sort((left, right) => (earliest.get(right) ?? 0) - (earliest.get(left) ?? 0))[0]!;
-    path.unshift(previous);
-    cursor = previous;
-  }
+  availableDays?: string,
+): { status: "CALCULATED" | "INFEASIBLE" | "INSUFFICIENT_INFORMATION" | "COMPRESSED"; milestoneIds: string[]; totalDurationDays: string; inputHash: string; critical?: { title: string; explanation: string; floatDays: string }[] } {
+  const schedule = calculateSchedule(milestones, dependencies, availableDays);
   return {
-    status: "CALCULATED",
-    milestoneIds: path,
-    totalDurationDays: String(best),
-    inputHash: exactHash({ milestones: milestones.map((item) => [item.id, item.durationDays]), dependencies: dependencies.map((item) => [item.fromMilestoneId, item.toMilestoneId]) }),
+    status: schedule.status === "INFEASIBLE" ? "INFEASIBLE" : schedule.status === "INSUFFICIENT_INFORMATION" ? "INSUFFICIENT_INFORMATION" : schedule.status === "COMPRESSED" ? "COMPRESSED" : "CALCULATED",
+    milestoneIds: schedule.milestoneIds,
+    totalDurationDays: schedule.totalDurationDays,
+    inputHash: schedule.inputHash,
+    critical: schedule.critical.map((item) => ({ title: item.title, explanation: item.explanation, floatDays: item.floatDays })),
   };
 }
 
@@ -731,32 +642,7 @@ export function assessChangeImpactOnSnap(
   input: { organisationId: string; changeProposalId: string },
   now: string,
 ): ImpactAssessment {
-  const proposal = snap.changeProposals.find((item) => item.id === input.changeProposalId && item.organisationId === input.organisationId);
-  if (!proposal) throw new PlatformError("NOT_FOUND", "change proposal was not found");
-  const guest = /guest/i.test(proposal.summary);
-  const date = /date/i.test(proposal.summary);
-  const venue = /venue/i.test(proposal.summary);
-  const impacts = [
-    { target: "brief", kind: guest || date ? "DIRECT" : "POTENTIAL", explanation: "Governing brief assertions may need a new edition." },
-    { target: "budget", kind: guest ? "DIRECT" : "POTENTIAL", explanation: "Guest or scope changes stale budget assumptions." },
-    { target: "roadmap", kind: date || venue ? "DIRECT" : "POTENTIAL", explanation: "Date or venue changes move latest-safe windows." },
-    { target: "rsvp", kind: "NONE", explanation: "RSVP truth is not mutated by discovery change." },
-  ] as ImpactAssessment["impacts"];
-  const record: ImpactAssessment = {
-    id: randomUUID(),
-    organisationId: input.organisationId,
-    changeProposalId: proposal.id,
-    impacts,
-    inputHash: exactHash({ proposal: proposal.semanticHash, brief: proposal.governingBriefHash ?? "" }),
-    stale: false,
-    version: 1,
-    ...stamp(now),
-  };
-  snap.impactAssessments.push(record);
-  proposal.status = "IMPACT_ASSESSED";
-  proposal.version += 1;
-  proposal.updatedAt = now;
-  return record;
+  return assessChangeImpactDeepOnSnap(snap, input, now);
 }
 
 export function decideChangeOnSnap(
@@ -776,11 +662,7 @@ export function decideChangeOnSnap(
   proposal.version += 1;
   proposal.updatedAt = now;
   if (input.decision === "APPROVE") {
-    for (const assumption of snap.budgetAssumptions.filter((item) => item.organisationId === input.organisationId)) {
-      assumption.stale = true;
-      assumption.updatedAt = now;
-    }
-    proposal.status = "PROPAGATED";
+    propagateApprovedChangeOnSnap(snap, proposal.id, input.organisationId, now);
   }
   return proposal;
 }
@@ -834,6 +716,19 @@ export function nextInterviewQuestion(
   };
 }
 
+export function nextInterviewQuestionForEngagement(snap: PlatformSnapshot, engagementId: string) {
+  const governed = nextGovernedInterviewTurn(snap, engagementId);
+  if (!governed) return undefined;
+  return {
+    topicKey: governed.topicKeys[0] ?? governed.questionId,
+    question: governed.prompt,
+    revisit: governed.revisit,
+    phase: governed.phase,
+    questionId: governed.questionId,
+    revisitReason: governed.revisitReason,
+  };
+}
+
 export function buildExecutiveCommand(input: {
   organisationId: string;
   eventId?: string;
@@ -865,4 +760,8 @@ export function buildExecutiveCommand(input: {
     aiProposed: input.aiProposed,
     blocking: input.conflicted > 0 ? "Open contradictions block publication." : input.unknown > 0 ? "Unknown facts remain." : "No publication block is recorded.",
   };
+}
+
+export function buildExecutiveCommandFromSnap(snap: PlatformSnapshot, organisationId: string, eventId?: string) {
+  return buildExecutiveCommandDeep(snap, organisationId, eventId);
 }

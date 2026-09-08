@@ -156,12 +156,17 @@ import type {
   AiEvaluationRun,
   AiJob,
   BudgetAssumption,
+  BudgetBomSnapshot,
+  BudgetLine,
   BudgetRecommendationEdition,
   BudgetScenarioEdition,
   BudgetTaxonomyEdition,
   BudgetTemplateEdition,
   ChangeProposal,
   ClientBriefDecision,
+  ClientOverviewEdition,
+  ContingencyRuleEdition,
+  ConversationTurn,
   ConversionReceipt,
   CostItemDefinition,
   CostRuleEdition,
@@ -169,12 +174,25 @@ import type {
   EventBriefDraft,
   EventBriefEdition,
   FinancialStateDeclaration,
+  FxObservation,
   ImpactAssessment,
+  LocationCostZone,
+  LocationFactorEdition,
+  LookupTableEdition,
+  MarketIndexDefinition,
+  MarketIndexObservation,
   PriceEvidence,
   RoadmapDependency,
   RoadmapEdition,
   RoadmapMilestone,
+  RoadmapScheduleResult,
+  RoadmapTemplateEdition,
   S05AIntelligenceReceipt,
+  ScenarioComparison,
+  SeasonWindowEdition,
+  SensitivityRun,
+  VendorPriceCard,
+  VendorPriceCardEdition,
 } from "./eec-intelligence-schemas.js";
 import type {
   GuestDuplicateCandidate,
@@ -387,6 +405,24 @@ export interface PlatformSnapshot {
   aiJobs: AiJob[];
   aiEvaluationRuns: AiEvaluationRun[];
   s05aIntelligenceReceipts: S05AIntelligenceReceipt[];
+  vendorPriceCards: VendorPriceCard[];
+  vendorPriceCardEditions: VendorPriceCardEdition[];
+  marketIndexDefinitions: MarketIndexDefinition[];
+  marketIndexObservations: MarketIndexObservation[];
+  fxObservations: FxObservation[];
+  locationCostZones: LocationCostZone[];
+  locationFactorEditions: LocationFactorEdition[];
+  seasonWindowEditions: SeasonWindowEdition[];
+  lookupTableEditions: LookupTableEdition[];
+  budgetLines: BudgetLine[];
+  budgetBomSnapshots: BudgetBomSnapshot[];
+  contingencyRuleEditions: ContingencyRuleEdition[];
+  sensitivityRuns: SensitivityRun[];
+  scenarioComparisons: ScenarioComparison[];
+  roadmapTemplateEditions: RoadmapTemplateEdition[];
+  roadmapScheduleResults: RoadmapScheduleResult[];
+  conversationTurns: ConversationTurn[];
+  clientOverviewEditions: ClientOverviewEdition[];
   rsvpPolicies: RsvpPolicy[];
   rsvpQuestionnaires: RsvpQuestionnaire[];
   rsvpInvitations: RsvpInvitation[];
@@ -591,6 +627,24 @@ export function emptySnapshot(): PlatformSnapshot {
     aiJobs: [],
     aiEvaluationRuns: [],
     s05aIntelligenceReceipts: [],
+    vendorPriceCards: [],
+    vendorPriceCardEditions: [],
+    marketIndexDefinitions: [],
+    marketIndexObservations: [],
+    fxObservations: [],
+    locationCostZones: [],
+    locationFactorEditions: [],
+    seasonWindowEditions: [],
+    lookupTableEditions: [],
+    budgetLines: [],
+    budgetBomSnapshots: [],
+    contingencyRuleEditions: [],
+    sensitivityRuns: [],
+    scenarioComparisons: [],
+    roadmapTemplateEditions: [],
+    roadmapScheduleResults: [],
+    conversationTurns: [],
+    clientOverviewEditions: [],
     rsvpPolicies: [],
     rsvpQuestionnaires: [],
     rsvpInvitations: [],
@@ -779,6 +833,24 @@ export function normalizeSnapshot(input: PlatformSnapshot): PlatformSnapshot {
     aiJobs: input.aiJobs ?? [],
     aiEvaluationRuns: input.aiEvaluationRuns ?? [],
     s05aIntelligenceReceipts: input.s05aIntelligenceReceipts ?? [],
+    vendorPriceCards: input.vendorPriceCards ?? [],
+    vendorPriceCardEditions: input.vendorPriceCardEditions ?? [],
+    marketIndexDefinitions: input.marketIndexDefinitions ?? [],
+    marketIndexObservations: input.marketIndexObservations ?? [],
+    fxObservations: input.fxObservations ?? [],
+    locationCostZones: input.locationCostZones ?? [],
+    locationFactorEditions: input.locationFactorEditions ?? [],
+    seasonWindowEditions: input.seasonWindowEditions ?? [],
+    lookupTableEditions: input.lookupTableEditions ?? [],
+    budgetLines: input.budgetLines ?? [],
+    budgetBomSnapshots: input.budgetBomSnapshots ?? [],
+    contingencyRuleEditions: input.contingencyRuleEditions ?? [],
+    sensitivityRuns: input.sensitivityRuns ?? [],
+    scenarioComparisons: input.scenarioComparisons ?? [],
+    roadmapTemplateEditions: input.roadmapTemplateEditions ?? [],
+    roadmapScheduleResults: input.roadmapScheduleResults ?? [],
+    conversationTurns: input.conversationTurns ?? [],
+    clientOverviewEditions: input.clientOverviewEditions ?? [],
     rsvpPolicies: input.rsvpPolicies ?? [],
     rsvpQuestionnaires: input.rsvpQuestionnaires ?? [],
     rsvpInvitations: input.rsvpInvitations ?? [],

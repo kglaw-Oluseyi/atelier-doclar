@@ -666,7 +666,7 @@ import {
 import { buildDiscoveryWorkspace, eecPermissionAllowed } from "./eec-projections.js";
 import {
   assessChangeImpactOnSnap,
-  buildExecutiveCommand,
+  buildExecutiveCommandFromSnap,
   calculateBudgetScenarioOnSnap,
   calculateCriticalPath,
   convertEngagementOnSnap,
@@ -678,7 +678,7 @@ import {
   declareFinancialStateOnSnap,
   instantiateRoadmapOnSnap,
   issueDiscoveryClientAccessOnSnap,
-  nextInterviewQuestion,
+  nextInterviewQuestionForEngagement,
   publishBriefEditionOnSnap,
   recommendBudgetOnSnap,
   recordClientBriefDecisionOnSnap,
@@ -686,6 +686,14 @@ import {
   runFixtureAiJobOnSnap,
   submitBriefEditionOnSnap,
 } from "./eec-intelligence.js";
+import {
+  buildClientOverviewOnSnap,
+  compareBudgetScenariosOnSnap,
+  nextGovernedInterviewTurn,
+  recordConversationTurnOnSnap,
+  revokeDiscoveryClientAccessOnSnap,
+  submitBudgetScenarioOnSnap,
+} from "./eec-s05a-depth.js";
 
 export interface ActorContext {
   personId: string;
@@ -6502,22 +6510,122 @@ export class PlatformService {
         confirmationState: item.confirmationState,
         origin: item.origin === "AI_FIXTURE" ? "AI proposal" : item.origin === "HUMAN" ? "Your words" : "Staff note",
       }));
-    const confirmedTopics = snap.candidateAssertions
-      .filter((item) => item.engagementId === access.engagementId && item.confirmationState === "CLIENT_CONFIRMED")
-      .map((item) => item.topicKey);
-    const question = nextInterviewQuestion(
-      snap.coverageAssessments.filter((item) => item.engagementId === access.engagementId),
-      confirmedTopics,
-    );
+    const question = nextInterviewQuestionForEngagement(snap, access.engagementId);
+    const turns = snap.conversationTurns
+      .filter((item) => item.engagementId === access.engagementId)
+      .map((item) => ({
+        id: item.id,
+        phase: item.phase,
+        prompt: item.prompt,
+        answerSource: item.answerSource,
+        directClientText: item.directClientText,
+        formOfAddress: item.formOfAddress,
+        languagePreference: item.languagePreference,
+        revisitReason: item.revisitReason,
+      }));
+    const overview = snap.clientOverviewEditions.find((item) => item.engagementId === access.engagementId && item.current);
+    const grouped = {
+      UNDERSTOOD: assertions.filter((item) => item.confirmationState === "CLIENT_CONFIRMED" || item.confirmationState === "STAFF_REVIEWED"),
+      NEEDS_CONFIRMATION: assertions.filter((item) => item.confirmationState === "PROPOSED" || item.confirmationState === "STAFF_REVIEWED"),
+      OPEN_QUESTION: assertions.filter((item) => item.confirmationState === "PROPOSED"),
+    };
     return {
       engagementReference: engagement.displayReference,
       organisationId: access.organisationId,
       engagementId: access.engagementId,
       permittedActions: access.permittedActions,
       assertions,
+      grouped,
       nextQuestion: question,
+      turns,
+      overview,
       decisions: snap.clientBriefDecisions.filter((item) => item.engagementId === access.engagementId),
     };
+  }
+
+  recordClientInterviewTurnByToken(
+    token: string,
+    raw: {
+      answerSource: "CLIENT_DIRECT" | "UNKNOWN" | "NOT_YET" | "NOT_APPLICABLE" | "PREFER_NOT" | "CORRECTION" | "PAUSE";
+      directClientText?: string;
+      speakerLabel?: string;
+      formOfAddress?: string;
+      languagePreference?: string;
+    },
+  ) {
+    const snap = structuredClone(this.store.snapshot());
+    const now = new Date().toISOString();
+    const access = resolveDiscoveryClientAccess(snap, token, now);
+    if (!access.permittedActions.includes("INTERVIEW") && !access.permittedActions.includes("CONFIRM")) {
+      throw new PlatformError("FORBIDDEN", "this client access cannot continue the interview");
+    }
+    const next = nextGovernedInterviewTurn(snap, access.engagementId);
+    if (!next) throw new PlatformError("VALIDATION_FAILED", "the interview has no outstanding governed question");
+    const turn = recordConversationTurnOnSnap(
+      snap,
+      {
+        organisationId: access.organisationId,
+        engagementId: access.engagementId,
+        accessId: access.id,
+        questionId: next.questionId,
+        phase: next.phase,
+        topicKeys: next.topicKeys,
+        prompt: next.prompt,
+        answerSource: raw.answerSource,
+        speakerLabel: raw.speakerLabel,
+        formOfAddress: raw.formOfAddress,
+        languagePreference: raw.languagePreference,
+        directClientText: raw.directClientText,
+        revisitReason: next.revisitReason,
+      },
+      now,
+    );
+    if (next.phase === "REVIEW" || raw.answerSource === "CORRECTION") {
+      buildClientOverviewOnSnap(snap, access.engagementId, access.organisationId, now);
+    }
+    this.store.replace(snap);
+    return turn;
+  }
+
+  revokeDiscoveryClientAccess(actor: ActorContext, raw: unknown) {
+    const input = raw as { organisationId: string; accessId: string; reason?: string; idempotencyKey?: string };
+    return this.mutate(actor, {
+      permission: "engagement.update",
+      scope: { organisationId: input.organisationId },
+      action: "discovery.client_access.revoked",
+      resourceType: "discovery_client_access",
+      resourceId: input.accessId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => revokeDiscoveryClientAccessOnSnap(snap, input, ctx.now),
+    });
+  }
+
+  compareBudgetScenarios(actor: ActorContext, raw: unknown) {
+    const input = raw as { organisationId: string; leftScenarioId: string; rightScenarioId: string; reason?: string; idempotencyKey?: string };
+    return this.mutate(actor, {
+      permission: "budget.calculate",
+      scope: { organisationId: input.organisationId },
+      action: "budget.compared",
+      resourceType: "budget_comparison",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => compareBudgetScenariosOnSnap(snap, input, ctx.now),
+    });
+  }
+
+  submitBudgetScenario(actor: ActorContext, raw: unknown) {
+    const input = raw as { organisationId: string; scenarioId: string; expectedVersion: number; expectedHash?: string; reason?: string; idempotencyKey?: string };
+    return this.mutate(actor, {
+      permission: "budget.calculate",
+      scope: { organisationId: input.organisationId },
+      action: "budget.submitted",
+      resourceType: "budget_scenario",
+      resourceId: input.scenarioId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => submitBudgetScenarioOnSnap(snap, input, ctx.now, actor.personId),
+    });
   }
 
   convertDiscoveryEngagement(actor: ActorContext, raw: unknown) {
@@ -6677,32 +6785,7 @@ export class PlatformService {
 
   getExecutiveCommand(actor: ActorContext, organisationId: string, eventId?: string) {
     const { snap } = this.authorizeQuery(actor, "executiveCommand.view", { organisationId, eventId });
-    const assertions = snap.candidateAssertions.filter((item) => !eventId || snap.eventBriefDrafts.some((draft) => draft.eventId === eventId && draft.engagementId === item.engagementId));
-    const assessments = snap.coverageAssessments.filter((item) => assertions.some((assertion) => assertion.engagementId === item.engagementId) || !eventId);
-    const envelope = snap.financialStateDeclarations.find((item) => item.kind === "ENVELOPE" && item.organisationId === organisationId);
-    const forecast = snap.budgetScenarioEditions.find((item) => item.organisationId === organisationId && item.current);
-    const edition = snap.roadmapEditions.find((item) => item.organisationId === organisationId && item.current);
-    const path = edition
-      ? calculateCriticalPath(
-          snap.roadmapMilestones.filter((item) => item.organisationId === organisationId),
-          snap.roadmapDependencies.filter((item) => item.editionId === edition.id),
-        )
-      : undefined;
-    return buildExecutiveCommand({
-      organisationId,
-      eventId,
-      known: assessments.filter((item) => item.state === "CONFIRMED").length,
-      unknown: assessments.filter((item) => item.state === "UNKNOWN" || item.state === "UNASSESSED").length,
-      conflicted: assessments.filter((item) => item.state === "CONFLICTED").length,
-      stale: assessments.filter((item) => item.state === "STALE").length,
-      nextDecision: snap.changeProposals.find((item) => item.status === "IMPACT_ASSESSED")?.summary,
-      criticalPath: path?.milestoneIds,
-      envelopeMinor: envelope?.money.minor,
-      forecastMinor: forecast?.expectedMinor,
-      clientConfirmed: assertions.filter((item) => item.confirmationState === "CLIENT_CONFIRMED").length,
-      staffReviewed: assertions.filter((item) => item.confirmationState === "STAFF_REVIEWED").length,
-      aiProposed: assertions.filter((item) => item.origin === "AI_FIXTURE" && item.confirmationState === "PROPOSED").length,
-    });
+    return buildExecutiveCommandFromSnap(snap, organisationId, eventId);
   }
 
   getIntelligenceWorkspace(actor: ActorContext, organisationId: string, engagementId: string) {
@@ -6722,10 +6805,21 @@ export class PlatformService {
       changes: snap.changeProposals.filter((item) => item.engagementId === engagementId),
       impacts: snap.impactAssessments.filter((item) => snap.changeProposals.some((change) => change.id === item.changeProposalId && change.engagementId === engagementId)),
       aiJobs: snap.aiJobs.filter((item) => item.engagementId === engagementId),
-      nextQuestion: nextInterviewQuestion(
-        snap.coverageAssessments.filter((item) => item.engagementId === engagementId),
-        snap.candidateAssertions.filter((item) => item.engagementId === engagementId && item.confirmationState === "CLIENT_CONFIRMED").map((item) => item.topicKey),
-      ),
+      nextQuestion: nextInterviewQuestionForEngagement(snap, engagementId),
+      lines: redact ? [] : snap.budgetLines.filter((item) => scenarios.some((scenario) => scenario.id === item.scenarioId)),
+      comparisons: snap.scenarioComparisons.filter((item) => item.organisationId === organisationId),
+      sensitivity: snap.sensitivityRuns.filter((item) => scenarios.some((scenario) => scenario.id === item.scenarioId)),
+      priceEvidence: snap.priceEvidenceRecords
+        .filter((item) => item.organisationId === organisationId)
+        .map((item) => ({
+          costItemCode: item.costItemCode,
+          basis: item.basis,
+          sourceLabel: item.sourceLabel,
+          stale: item.stale,
+          synthetic: Boolean(item.synthetic),
+          confidence: item.confidence,
+        })),
+      schedule: snap.roadmapScheduleResults.filter((item) => snap.roadmapEditions.some((edition) => edition.id === item.editionId && edition.engagementId === engagementId)),
     };
   }
 
@@ -7613,6 +7707,24 @@ export class PlatformService {
       snap.aiJobs,
       snap.aiEvaluationRuns,
       snap.s05aIntelligenceReceipts,
+      snap.vendorPriceCards,
+      snap.vendorPriceCardEditions,
+      snap.marketIndexDefinitions,
+      snap.marketIndexObservations,
+      snap.fxObservations,
+      snap.locationCostZones,
+      snap.locationFactorEditions,
+      snap.seasonWindowEditions,
+      snap.lookupTableEditions,
+      snap.budgetLines,
+      snap.budgetBomSnapshots,
+      snap.contingencyRuleEditions,
+      snap.sensitivityRuns,
+      snap.scenarioComparisons,
+      snap.roadmapTemplateEditions,
+      snap.roadmapScheduleResults,
+      snap.conversationTurns,
+      snap.clientOverviewEditions,
       snap.guestDuplicateCandidates,
       snap.guestIntakeBatches,
       snap.rsvpPolicies,

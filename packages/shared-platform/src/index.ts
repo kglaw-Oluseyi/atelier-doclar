@@ -800,19 +800,31 @@ export {
 export {
   EOS_S05A_MIGRATION_ID,
   EOS_S05A_INTELLIGENCE_MIGRATION_ID,
+  EOS_S05A_INTELLIGENCE_V2_MIGRATION_ID,
   applyEosS05AToSnapshot,
   migrateEosS05A,
   migrateEosS05AIntelligence,
+  migrateEosS05AIntelligenceV2,
 } from "./eec-migration.js";
 export {
   evaluateBudgetExpr,
+  parseBudgetExpr,
+  BudgetExprSchema,
   BUDGET_EXPR_MAX_DEPTH,
 } from "./eec-budget-engine.js";
 export {
   calculateCriticalPath,
   nextInterviewQuestion,
   buildExecutiveCommand,
+  buildExecutiveCommandFromSnap,
 } from "./eec-intelligence.js";
+export { formatMoneyMinor } from "./eec-money.js";
+export {
+  selectPriceSource,
+  compareBudgetScenariosOnSnap,
+  calculateSchedule,
+  nextGovernedInterviewTurn,
+} from "./eec-s05a-depth.js";
 export { validateS05APersistedCollections } from "./eec-persistence.js";
 export {
   CreateOpportunityInputSchema,
