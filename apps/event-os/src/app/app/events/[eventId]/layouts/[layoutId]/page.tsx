@@ -3,6 +3,7 @@ import { ActionResultBanner } from "../../../../../../components/action-result-b
 import { AtelierPageHeader } from "../../../../../../components/atelier-page-header";
 import { AtelierOperationalState } from "../../../../../../components/atelier-operational-state";
 import { LayoutSetupWorkspaceView } from "../../../../../../components/layout-setup-workspace";
+import { LayoutStudioWorkspace } from "../../../../../../components/layout-studio-workspace";
 import { AppShell } from "../../../../../../components/shell";
 import { loadPresentedActionResult } from "../../../../../../server/action-flash";
 import { refreshLayoutRecordAction } from "../../../../../../server/actions";
@@ -61,7 +62,7 @@ export default async function LayoutDetailPage({
       <AtelierPageHeader
         eyebrow={`Layout setup · ${scoped.event.name}`}
         title={workspace.layout.name}
-        lede="Authoritative millimetre geometry with optimistic revision checks. Refresh after a conflict before retrying."
+        lede="Authoritative millimetre geometry with a typed studio projection. Refresh after a conflict before retrying. Seating allocation is not available."
       />
       <ActionResultBanner
         presented={presented}
@@ -69,6 +70,13 @@ export default async function LayoutDetailPage({
         reloadFields={{ eventId, layoutId, path: `/app/events/${eventId}/layouts/${layoutId}` }}
       />
       <LayoutSetupWorkspaceView workspace={workspace} eventId={eventId} mutationLocked={presented.mutationLocked} />
+      <LayoutStudioWorkspace
+        workspace={workspace}
+        eventId={eventId}
+        actorPersonId={person.id}
+        mutationLocked={presented.mutationLocked}
+        conflict={presented.mutationLocked}
+      />
     </AppShell>
   );
 }

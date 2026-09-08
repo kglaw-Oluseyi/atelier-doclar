@@ -91,6 +91,8 @@ export function actionLabel(actionType: string): string {
     "venue.event.override": "Record event venue override",
     "layout.create": "Create blank layout",
     "layout.update": "Update layout setup",
+    "layout.command": "Apply spatial command",
+    "layout.lease": "Acquire layout lease",
   };
   return labels[actionType] ?? actionType.replaceAll(".", " ");
 }

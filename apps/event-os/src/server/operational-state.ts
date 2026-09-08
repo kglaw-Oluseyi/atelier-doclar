@@ -433,6 +433,10 @@ export function successCopy(ok: string): string {
       return "The blank layout was persisted in millimetres. Screen pixels were not stored.";
     case "layout-updated":
       return "The layout setup was saved as a new immutable revision.";
+    case "layout-commanded":
+      return "The spatial command was acknowledged as a new immutable revision. Rejected values are not shown as saved.";
+    case "layout-leased":
+      return "The editor lease was acquired or renewed. Collaborators remain read-only until it expires.";
     default:
       return "The change was recorded.";
   }

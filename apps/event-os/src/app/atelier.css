@@ -1697,6 +1697,125 @@ body.atelier {
   gap: 0.75rem;
 }
 
+.layout-studio {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.layout-studio-status {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.layout-studio-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.studio-conflict {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid #8b6e38;
+  background: #f5f0e8;
+}
+
+.studio-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.studio-guide {
+  stroke: #8b6e38;
+  stroke-width: 20;
+  stroke-dasharray: 80 80;
+  pointer-events: none;
+}
+
+@media (min-width: 720px) and (max-width: 959px) {
+  .layout-studio-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 960px) {
+  .layout-studio-grid {
+    grid-template-columns: 14rem minmax(0, 1fr) 16rem;
+    grid-template-areas:
+      "library canvas navigator"
+      "library inspector navigator";
+  }
+
+  #studio-library { grid-area: library; }
+  #studio-canvas { grid-area: canvas; }
+  #studio-navigator { grid-area: navigator; }
+  #studio-inspector { grid-area: inspector; }
+}
+
+.studio-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.studio-canvas-frame {
+  overflow: auto;
+  background: #f5f0e8;
+  border: 1px solid color-mix(in srgb, #b89a62 40%, transparent);
+  max-width: 100%;
+}
+
+.studio-canvas-frame:focus {
+  outline: 2px solid #8b6e38;
+  outline-offset: 2px;
+}
+
+.studio-floor {
+  fill: #f5f0e8;
+  stroke: #11100f;
+  stroke-width: 40;
+}
+
+.studio-shape {
+  fill: color-mix(in srgb, #8b6e38 28%, transparent);
+  stroke: #11100f;
+  stroke-width: 40;
+  cursor: pointer;
+}
+
+.studio-shape.is-selected {
+  stroke: #8b6e38;
+  stroke-width: 80;
+}
+
+.studio-label {
+  fill: #11100f;
+  font-size: 280px;
+  pointer-events: none;
+}
+
+@media (max-width: 720px) {
+  .studio-canvas-frame[data-precision="off"] svg {
+    pointer-events: none;
+  }
+
+  .layout-studio,
+  .layout-studio-grid,
+  .studio-canvas-frame {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .layout-studio * {
+    transition: none !important;
+  }
+}
+
 .venue-atelier .atelier-folio li {
   display: flex;
   flex-wrap: wrap;

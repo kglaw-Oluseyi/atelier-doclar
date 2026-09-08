@@ -53,6 +53,7 @@ export default async function VenueRegistryPage() {
             canCreateLayout: permissions.createLayout,
             canUpdateLayout: permissions.updateLayout,
             canAcquireLease: false,
+            canOverrideConstraint: false,
           }
         }
       />

@@ -3410,6 +3410,64 @@ export async function refreshEventVenueRecordAction(formData: FormData): Promise
   });
 }
 
+export async function acquireLayoutLeaseAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const layoutId = String(formData.get("layoutId") ?? "");
+    const actionType = "layout.lease";
+    const path = `/app/events/${eventId}/layouts/${layoutId}`;
+    const { actor } = await requireActor().catch((error) => venueFail(path, error, undefined, actionType, eventId));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await venueFail(path, new Error("No organisation assignment is available."), actor, actionType, eventId);
+    try {
+      getRuntime().service.acquireLayoutLease(actor, {
+        organisationId: organisation.id,
+        eventId,
+        layoutId,
+        expectedVersion: Number(formData.get("expectedVersion") || 1),
+        reason: String(formData.get("reason") ?? "Acquire or renew the editor lease"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      await venueFail(path, error, actor, actionType, eventId);
+    }
+    await venueOk(path, actor, actionType, "layout-leased", eventId);
+  });
+}
+
+export async function applyLayoutCommandAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const eventId = String(formData.get("eventId") ?? "");
+    const layoutId = String(formData.get("layoutId") ?? "");
+    const actionType = "layout.command";
+    const path = `/app/events/${eventId}/layouts/${layoutId}`;
+    const { actor } = await requireActor().catch((error) => venueFail(path, error, undefined, actionType, eventId));
+    const organisation = getRuntime().service.listOrganisations(actor)[0];
+    if (!organisation) return await venueFail(path, new Error("No organisation assignment is available."), actor, actionType, eventId);
+    let command: unknown;
+    try {
+      command = JSON.parse(String(formData.get("commandJson") ?? "{}"));
+    } catch {
+      return await venueFail(path, new Error("The spatial command could not be read."), actor, actionType, eventId);
+    }
+    try {
+      getRuntime().service.applyLayoutCommand(actor, {
+        organisationId: organisation.id,
+        eventId,
+        layoutId,
+        expectedVersion: Number(formData.get("expectedVersion") || 1),
+        expectedRevisionNumber: Number(formData.get("expectedRevisionNumber") || 1),
+        reason: String(formData.get("reason") ?? "Apply spatial command"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+        command,
+      });
+    } catch (error) {
+      await venueFail(path, error, actor, actionType, eventId);
+    }
+    await venueOk(path, actor, actionType, "layout-commanded", eventId);
+  });
+}
+
 export async function refreshLayoutRecordAction(formData: FormData): Promise<void> {
   return await withDurable(async () => {
     const path = String(formData.get("path") ?? "");
