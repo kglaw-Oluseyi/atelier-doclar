@@ -1,7 +1,7 @@
 # EOS-S05 Build Ledger
 
 **Slice ID:** `EOS-S05`  
-**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030` / `MD-PR-S031` / `MD-PR-S032`
+**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030` / `MD-PR-S031` / `MD-PR-S032` / `MD-PR-S033`
 **Starting baseline:** `bb705588e0d4481802658a18d7666e28e3a18fea`
 **Milestone 2 starting SHA:** `a7dc4d931f3c01f05354b11e68bc7c4a155e5afb`
 **Milestone 3 starting SHA:** `72830730398f6aa1b02183417ca4ac4d32801b10`
@@ -16,6 +16,9 @@
 **Milestone 4 platform commit:** `ff7b052b258d0859a30c62a7364a0087d214b445`
 **Milestone 4 Event OS commit:** `d087843d6c32ab47e94b348f30533c43edf0e270`
 **Milestone 4 overflow-fix commit:** `e646a864b00606f7a0e6f7b66d5d62feba826b8f`
+**S033 starting SHA:** `c161398e817121057064faf1eafa1294e33e9108`
+**S033 platform commit:** `48a8264f65f203c803c6612fd05651505ab36e15`
+**S033 Event OS commit:** `933ab993c5bbc8abda1ac2dd9e4debeae9622000`
 **Status:** `IN_PROGRESS` — Milestones 1–4 implemented; not accepted
 **Production:** unauthorised  
 **Next slices:** EOS-S06 not authorised
@@ -70,12 +73,22 @@ Historic units remain `NOT_EXECUTED`. No new collections. No EOS-S06 seating.
 | Storage | Railway S3-compatible bucket wholly inside `atelier-doclar`. Private by default. No public URL. |
 | Scan | In-process content-safety: magic/MIME/extension agreement, SVG/PDF active-content rejection, PNG/JPEG clipping. Not a general AV product. |
 | Delivery | Authenticated Event OS GET streams. `Cache-Control: private, no-store`. No stored signed URLs. |
-| Export | Deterministic PDF/PNG from current publication hash when present, else approved or draft marking. COMPLETED only after durable put. |
+| Export | Deterministic PDF/PNG from current publication hash when present, else approved or draft marking. COMPLETED only after durable put. Idempotency includes marking, publication number and projection mask. |
 | Health | `layoutAssetStore` READY/UNCONFIGURED/ERROR does not fail overall Postgres readiness. |
 | Process topology | One Event OS replica; export fulfill is in-request. Multi-replica would require a shared worker; not deferred as ordinary debt because the deployed topology is single-replica. |
 
+## MD-PR-S033 — Independent-verification remediation
+
+| Area | Decision |
+|------|----------|
+| Overrides | Durable applicability key. Original record immutable. Same-hash revalidation recognises ACTIVE overrides. Expiry/revocation explicit. |
+| Disclosure | Central policy; not every SAFE_AREA or CLEARANCE_AREA is sensitive. Restricted actors cannot reconstruct geometry from partial surfaces. |
+| Export | Authority context at request time. Privileged artifacts are not reused for masked actors. |
+| Comparison | Existing `diffLayoutObjects` via discoverable GET form. Auditor read-only. |
+| Migration | Additive `EOS-S05-OVERRIDE-LINEAGE-V1`. |
+
 ## Verification
 
-Workspace `pnpm typecheck`, `pnpm test`, `pnpm programme:validate`, `pnpm --filter @maison-doclar/event-os build`, Event OS Playwright `s05-venue-vertical` / `s05-responsive-a11y` / `s05-studio-vertical` / `s05-assurance-vertical`, and `git diff --check` are recorded in `EOS_S05_IMPLEMENTATION.md`.
+Workspace `pnpm typecheck`, `pnpm --filter @maison-doclar/shared-platform test` (324), `pnpm --filter @maison-doclar/event-os test` (72), `pnpm programme:validate`, `pnpm --filter @maison-doclar/event-os build`, Event OS Playwright `s05-s033-remediation` (4), and `git diff --check` are recorded in `EOS_S05_IMPLEMENTATION.md`.
 
 Deployment of Event OS to Railway project `atelier-doclar` is implementation evidence only. It is not EOS-S05 acceptance and not production authorisation.

@@ -209,3 +209,7 @@ Milestone 4 is authorised on the Milestone 1–3 contracts. Historic S5-01–S5-
 ## Addendum — 2026-09-08 EOS-S05 export provenance (`MD-PR-S032`)
 
 `MD-PR-S032` authorises a bounded correction of visible PDF/PNG provenance only. It does not reopen Milestones 1–3, accept EOS-S05, start EOS-S06 or authorise production. Claude-in-Chrome remains deferred.
+
+## Addendum — 2026-09-08 EOS-S05 consolidated remediation (`MD-PR-S033`)
+
+`MD-PR-S033` authorises Cursor to implement and deploy the independent-verification defects only. It does not accept EOS-S05, start EOS-S06 or authorise production. Whole-slice Claude-in-Chrome is not rerun.

@@ -435,7 +435,7 @@ RATIFIED on `2026-09-07` by George Lawson under `MD-PR-S026`. P00–P11 implemen
 **Slice ID:** `EOS-S05`
 **Title:** Venue registry and spatial layout
 **Status:** `IN_PROGRESS` — Milestones 1–4 implemented; not accepted
-**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030` / `MD-PR-S031` / `MD-PR-S032`
+**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030` / `MD-PR-S031` / `MD-PR-S032` / `MD-PR-S033`
 **Position:** after accepted EOS-S04F
 **Execution authority:** `AUTHORISED` — Milestones 1–4 implemented; independent acceptance not granted
 
@@ -450,5 +450,5 @@ RATIFIED on `2026-09-07` by George Lawson under `MD-PR-S026`. P00–P11 implemen
 | EV-EOS-S05-HIST-SPEC | DOCUMENT | Historic Slice 5 specification (filename retained) | `MDOS/slice5/Maison_Doclar_Slice_5_Implementation_Specification_and_Build_Plan_v1.0.docx` |
 | EV-EOS-S05-HIST-PACK | DOCUMENT | Historic Slice 5 Cursor prompt pack (filename retained) | `MDOS/slice5/Maison_Doclar_Slice_5_Cursor_Prompt_Pack_v1.0.docx` |
 
-RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S028`. Milestone 2 implemented under `MD-PR-S029`. Milestone 3 implemented under `MD-PR-S030`. Milestone 4 implemented under `MD-PR-S031`. Export provenance remediated under `MD-PR-S032`. Catalogue accepted-slice count remains 4. Independent acceptance is not granted. `TDR-S05-001` is CLOSED. Claude has not been run. EOS-S06 is not authorised. Production remains unauthorised.
+RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S028`. Milestone 2 implemented under `MD-PR-S029`. Milestone 3 implemented under `MD-PR-S030`. Milestone 4 implemented under `MD-PR-S031`. Export provenance remediated under `MD-PR-S032`. Independent-verification defects remediated under `MD-PR-S033`. Catalogue accepted-slice count remains 4. Independent acceptance is not granted. `TDR-S05-001` is CLOSED. Focused Claude reverification of changed risks is required; whole-slice Claude is not rerun. EOS-S06 is not authorised. Production remains unauthorised.
 

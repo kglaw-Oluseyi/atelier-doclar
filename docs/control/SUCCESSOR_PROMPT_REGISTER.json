@@ -250,6 +250,14 @@
       "product": "EVENT_OS",
       "title": "EOS-S05 Export Provenance Remediation",
       "authorising_instruction": "Correct PDF and PNG export provenance so status, complete hash, publication number and timestamp remain visible; push and deploy event-os only; do not start EOS-S06, invent catalogue acceptance, run Claude-in-Chrome, or authorise production"
+    },
+    {
+      "prompt_control_id": "MD-PR-S033",
+      "native_id": "S05-M4-R2",
+      "slice_id": "EOS-S05",
+      "product": "EVENT_OS",
+      "title": "EOS-S05 Consolidated Independent-Verification Remediation",
+      "authorising_instruction": "Remediate Claude-in-Chrome blocking defects for override lineage, restricted-information projection, export authority context, snapshot comparison, overflow and minor UX; push and deploy event-os only; do not accept EOS-S05, start EOS-S06, rerun the whole-slice journey, or authorise production"
     }
   ]
 }

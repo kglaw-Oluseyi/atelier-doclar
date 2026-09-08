@@ -1,7 +1,7 @@
 # EOS-S05 Implementation Record
 
 **Slice ID:** `EOS-S05`  
-**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030` / `MD-PR-S031` / `MD-PR-S032`
+**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030` / `MD-PR-S031` / `MD-PR-S032` / `MD-PR-S033`
 **Status:** `IN_PROGRESS` — Milestones 1–4 implemented; not accepted
 **Catalogue slice:** yes — accepted-slice count remains 4  
 **Production:** unauthorised (`productionAuthorised` remains false)  
@@ -16,6 +16,9 @@
 **Milestone 4 platform commit:** `ff7b052b258d0859a30c62a7364a0087d214b445`
 **Milestone 4 Event OS commit:** `d087843d6c32ab47e94b348f30533c43edf0e270`
 **Milestone 4 overflow-fix commit:** `e646a864b00606f7a0e6f7b66d5d62feba826b8f`
+**S033 starting baseline:** `c161398e817121057064faf1eafa1294e33e9108`
+**S033 platform commit:** `48a8264f65f203c803c6612fd05651505ab36e15`
+**S033 Event OS commit:** `933ab993c5bbc8abda1ac2dd9e4debeae9622000`
 
 ## Scope delivered
 
@@ -181,3 +184,63 @@ Focused `test/layout-export-provenance.test.ts` first run: 5 passed / 1 failed.
 | Live export refused `synchronous export store required` | product | Production S3 store was passed into snapshot mutation; `put` is async | Pass a binary store into `PlatformService` only for the opt-in fixture store |
 
 Second focused unit run: 6/6. Shared-platform tests 316. Event OS unit tests 72. Focused Playwright `s05-export-provenance` passed (14.4s). `pnpm typecheck`, `programme:validate`, Event OS build and `git diff --check` passed.
+
+## Consolidated independent-verification remediation (`MD-PR-S033`)
+
+Authority `MD-PR-S033`. Starting SHA `c161398e817121057064faf1eafa1294e33e9108` = local HEAD = origin/main = GitHub main. Pre-remediation Event OS deployment `9e3bcb45-85c5-4b9d-a6ef-2c543e8461db`. Cursor implements and deploys; Cursor does not accept EOS-S05; EOS-S06 is not started. Claude will reverify only the changed risks.
+
+### Override lineage
+
+Overrides are bound to organisation + event + layout + content hash + rule id + rule version + sorted object ids (`overrideApplicabilityKey`). The original override row is immutable. Same-hash revalidation stamps a new run and finding, then `applyDurableOverrides` recognises an ACTIVE override (`overrideRecognised`). A new validation-run id alone does not invalidate. Changed hash, rule version or affected-object set does not inherit. Expiry is evaluated at read/apply time. Revocation sets `revokedAt` / `revokedByPersonId` only. Cross-event and cross-organisation reuse is denied. Recommendations cannot create or revive overrides. Publication and submission use unresolved effective blockers, not the raw blocking count. Additive migration `EOS-S05-OVERRIDE-LINEAGE-V1` backfills applicability from the original finding and is replay-safe.
+
+Latest validation run selection uses insertion order when timestamps are equal, so same-instant revalidation cannot revive a STALE run.
+
+### Spatial disclosure policy
+
+One server policy (`classifiedSpatialDisclosure` / `projectSpatialObject`) is used by studio, Navigator, Inspector, published viewer, approval summaries, snapshot comparison, validation evidence, publication history, downstream JSON, PDF/PNG export and direct API routes.
+
+| Classification | Rule |
+|----------------|------|
+| `RESTRICTED_GEOMETRY` | `RESTRICTED_AREA`; `SAFE_AREA` / `CLEARANCE_AREA` with `governedLocked`; explicit `disclosureClass` |
+| `OMIT` | explicit `disclosureClass` only |
+| `OPERATIONAL` | otherwise, including unlocked SAFE/CLEARANCE areas |
+
+Reveal if the actor has `layout.update` or `layout.constraint.override`. Auditor and System Administrator do not reveal. System Administrator gains no spatial override from the catalogue role. Masked existence uses label `Restricted layer masked`; original labels, coordinates, dimensions and typed properties are omitted. Downstream omits restricted-geometry objects for restricted actors. Unauthorised roles cannot reuse a privileged cached export (`projectionMasked`).
+
+### Export authority context
+
+Idempotency includes marking, publication number and `projectionMasked`. Hash equality alone is not sufficient. CURRENT → `PUBLISHED`; matching WITHDRAWN/SUPERSEDED → those markings; approved unpublished → `APPROVED`; else `DRAFT`. UI records show `generatedAt`, complete hash and publication number.
+
+### Snapshot comparison
+
+GET `baseSnapshot` + `compareSnapshot` (or `CURRENT`) runs the existing `diffLayoutObjects`. Same source twice is rejected. Differences are listed as text. Auditor may compare (`layout.view`) and remains read-only.
+
+### Overflow and minor UX
+
+Layout/venue cards, headings, hashes and correlation identifiers use `overflow-wrap: anywhere` and `min-width: 0`. Count facts use field-level guidance `COUNT_FACT_GUIDANCE` instead of `count facts require valueInteger`. VERSION_CONFLICT no longer duplicates “Rejected values were not saved.” onto the operational sentence.
+
+### First-run verification
+
+`pnpm typecheck` passed. Focused `test/layout-s033-remediation.test.ts` first shared-platform run failed.
+
+| Failure | Class | Root cause | Correction |
+|---------|-------|------------|------------|
+| Override tests `FORBIDDEN: another editor holds the layout lease` | test | Director created the layout; planner then applied overlap commands | Planner creates Alpha One layouts; CEO creates Alpha Two |
+| Golden `layoutContentHash(workspace.objects)` diverged | product / test | FULL projections added a `disclosure` field into hashed objects | FULL projection returns the persisted object identity; tests hash stored objects |
+| Same-hash revalidation returned `STALE` instead of `OVERRIDDEN` | product | Latest-run sort by `createdAt` kept the earlier run when timestamps were equal | `selectLatestValidationRun` prefers later insertion at equal timestamps |
+| Alpha Two adopt `SCOPE_MISMATCH` | test | Event Director assignment is Alpha One only | CEO registers and adopts Alpha Two |
+| Projection UPDATE_PROPERTIES on locked restricted area | test | Planner cannot weaken a governed lock; lease stays with planner | Move the table instead of relabelling the restricted object |
+| Playwright overlap finding never appeared | test | Default table and restricted geometries do not overlap; inspector fill is not proof of persist | Move table onto the restricted area, wait for saved persist, reload before validation |
+| Playwright snapshot create stayed on Saving… | test | Snapshot form CAS was stale while Add Table was in flight | Wait for navigator + persist, then reload before create |
+| Playwright `selectOption({ label: /regex/ })` | test | Playwright 1.51 `label` must be a string | Select by option value filtered on visible text |
+| Playwright export/auditor `ERR_CONNECTION_REFUSED` | environment | Next.js dev server restarted after memory pressure | `NODE_OPTIONS=--max-old-space-size=8192`; combined rerun passed |
+
+Second shared-platform run: 324/324. Event OS unit tests 72. `pnpm programme:validate` passed. Event OS build passed. `git diff --check` clean.
+
+Focused Playwright `s05-s033-remediation` first combined passing run: 4/4 (~1.1m) after the test corrections above. Unrelated whole-slice journeys were not rerun.
+
+Control Tower was not a deploy target. EOS-S05 remains unaccepted. EOS-S06 was not started.
+
+### Rollback and forward recovery
+
+Rollback Event OS application code to `c161398e817121057064faf1eafa1294e33e9108`. Do not run a destructive down-migration. `EOS-S05-OVERRIDE-LINEAGE-V1` is additive and replay-safe; existing override decision fields remain readable. Forward recovery is additive only.

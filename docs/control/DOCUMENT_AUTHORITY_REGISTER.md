@@ -222,3 +222,11 @@ Bounded remediation of PDF/PNG visible provenance. Does not accept EOS-S05, star
 | Document | Path | Authority class | Note |
 |----------|------|-----------------|------|
 | EOS-S05 implementation record | `docs/control/EOS_S05_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | MD-PR-S032 export provenance correction; not acceptance. |
+
+## Addendum — 2026-09-08 EOS-S05 consolidated remediation (`MD-PR-S033`)
+
+Bounded remediation of override lineage, spatial disclosure, export authority context, snapshot comparison, overflow and two evidenced UX defects. Does not accept EOS-S05, start EOS-S06, or authorise production. Claude-in-Chrome whole-slice is not rerun; focused reverification of changed risks is required.
+
+| Document | Path | Authority class | Note |
+|----------|------|-----------------|------|
+| EOS-S05 implementation record | `docs/control/EOS_S05_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | MD-PR-S033 consolidated remediation; not acceptance. |
