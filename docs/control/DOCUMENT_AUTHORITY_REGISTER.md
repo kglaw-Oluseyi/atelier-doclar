@@ -194,3 +194,14 @@ Milestone 2 implementation authority. Does not accept EOS-S05, start Milestone 3
 | EOS-S05 implementation record | `docs/control/EOS_S05_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | Milestones 1–2; not acceptance. |
 | EOS-S05 frontend architecture | `docs/control/EOS_S05_FRONTEND_ARCHITECTURE.md` | IMPLEMENTATION EVIDENCE | Studio SVG projection, navigator and inspector. |
 
+## Addendum — 2026-09-08 EOS-S05 Milestone 3 (`MD-PR-S030`)
+
+Milestone 3 implementation authority. Does not accept EOS-S05, start Milestone 4 or EOS-S06, or authorise production.
+
+| Document | Path | Authority class | Note |
+|----------|------|-----------------|------|
+| EOS-S05 implementation record | `docs/control/EOS_S05_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | Milestones 1–3; not acceptance. |
+| EOS-S05 venue-layout ADR | `docs/control/ADR_EOS_S05_VENUE_LAYOUT.md` | CANONICAL ARCHITECTURE RECORD | Assets, capacity, validation, snapshots, approval, publication. |
+| EOS-S05 canonical record mapping | `docs/control/EOS_S05_CANONICAL_RECORD_MAPPING.md` | CANONICAL MAPPING | Assurance collections and `EOS-S05-VENUE-ASSURANCE-V1`. |
+| EOS-S05 frontend architecture | `docs/control/EOS_S05_FRONTEND_ARCHITECTURE.md` | IMPLEMENTATION EVIDENCE | Validation, capacity, snapshot, approval, publication, viewer. |
+

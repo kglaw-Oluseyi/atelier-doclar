@@ -434,10 +434,10 @@ RATIFIED on `2026-09-07` by George Lawson under `MD-PR-S026`. P00–P11 implemen
 
 **Slice ID:** `EOS-S05`
 **Title:** Venue registry and spatial layout
-**Status:** `IN_PROGRESS` — Milestones 1–2 implemented; not accepted
-**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029`
+**Status:** `IN_PROGRESS` — Milestones 1–3 implemented; not accepted
+**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030`
 **Position:** after accepted EOS-S04F
-**Execution authority:** `AUTHORISED` — Milestones 1–2; Milestone 3 not released
+**Execution authority:** `AUTHORISED` — Milestones 1–3; Milestone 4 not released
 
 | ID | Kind | Summary | Location |
 |----|------|---------|----------|
@@ -450,5 +450,5 @@ RATIFIED on `2026-09-07` by George Lawson under `MD-PR-S026`. P00–P11 implemen
 | EV-EOS-S05-HIST-SPEC | DOCUMENT | Historic Slice 5 specification (filename retained) | `MDOS/slice5/Maison_Doclar_Slice_5_Implementation_Specification_and_Build_Plan_v1.0.docx` |
 | EV-EOS-S05-HIST-PACK | DOCUMENT | Historic Slice 5 Cursor prompt pack (filename retained) | `MDOS/slice5/Maison_Doclar_Slice_5_Cursor_Prompt_Pack_v1.0.docx` |
 
-RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S028`. Milestone 2 implemented under `MD-PR-S029`. Catalogue accepted-slice count remains 4. Independent acceptance is not granted. Milestone 3 and EOS-S06 are not authorised. Production remains unauthorised.
+RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S028`. Milestone 2 implemented under `MD-PR-S029`. Milestone 3 implemented under `MD-PR-S030`. Catalogue accepted-slice count remains 4. Independent acceptance is not granted. `TDR-S05-001` is blocking before EOS-S05 final acceptance. Milestone 4 and EOS-S06 are not authorised. Production remains unauthorised.
 

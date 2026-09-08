@@ -226,6 +226,14 @@
       "product": "EVENT_OS",
       "title": "EOS-S05 Milestone 2 Implementation Authority",
       "authorising_instruction": "Implement Milestone 2 typed spatial objects and authoring vertical on the MD-PR-S028 contracts; push and deploy event-os only; do not start Milestone 3 or EOS-S06, invent catalogue acceptance, or authorise production"
+    },
+    {
+      "prompt_control_id": "MD-PR-S030",
+      "native_id": "S05-M3",
+      "slice_id": "EOS-S05",
+      "product": "EVENT_OS",
+      "title": "EOS-S05 Milestone 3 Implementation Authority",
+      "authorising_instruction": "Implement Milestone 3 assets, assurance, versioning and immutable publication on the MD-PR-S028 / MD-PR-S029 contracts; push and deploy event-os only; do not start Milestone 4 or EOS-S06, invent catalogue acceptance, or authorise production"
     }
   ]
 }

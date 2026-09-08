@@ -899,16 +899,16 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 |-------|-------|
 | ID | `TDR-S05-001` |
 | Source slice | EOS-S05 |
-| Description | No approved object-storage, malware-scanning or safe-derivative pipeline exists. Venue evidence is metadata-only. `uploadAvailable` is false. The UI states this truthfully and does not simulate scanning, signed URLs, quarantine or successful binary upload. |
+| Description | No approved object-storage, malware-scanning or safe-derivative pipeline exists in Event OS. Venue evidence and floor-plan assets remain metadata/intent only. `LAYOUT_ASSET_PROVIDER_CONFIGURED` is false. `uploadAvailable` is false. Scan is `NOT_RUN`. Signed URLs are not issued. The UI and adapters state this truthfully and do not simulate scanning, quarantine, signed access or successful production upload. |
 | Classification | Capability gap |
 | Severity | MEDIUM |
-| Evidence | `packages/shared-platform/src/venue-schemas.ts`; venue detail evidence panel |
-| Affected surface or contract | Venue fact evidence / asset-service contract |
-| Reason for deferral | Inventing storage, scanning or signed URLs would be false capability. Milestone 2 preserved the designed unavailable state. Historic S5-28–S5-30 stay in Milestone 3. |
-| Blocking | NON_BLOCKING for Milestone 2; blocking for EOS-S05 completion if background assets are required |
-| Current owner | Event OS venue assets |
-| Required regression coverage | Upload remains unavailable; metadata may be recorded; no fake success |
-| Latest safe remediation milestone | EOS-S05 Milestone 3 after an approved asset pipeline |
+| Evidence | `packages/shared-platform/src/constants.ts` `LAYOUT_ASSET_REQUIRED_VARIABLES`; layout-assurance asset adapters; venue evidence panel |
+| Affected surface or contract | Venue fact evidence / floor-plan asset-service contract |
+| Reason for deferral | Inventing storage, scanning or signed URLs would be false capability. Milestone 3 implemented the provider-neutral contract and kept live binary upload disabled. |
+| Blocking | BLOCKING before EOS-S05 final acceptance |
+| Current owner | George Lawson must supply Event OS variables for an approved provider |
+| Required regression coverage | Upload remains unavailable; intents may be recorded; no fake success; SVG scripts/external refs rejected; calibration not spatially authoritative until verified |
+| Latest safe remediation milestone | After George supplies `EVENT_OS_LAYOUT_ASSET_STORE_PROVIDER`, `EVENT_OS_LAYOUT_ASSET_BUCKET`, `EVENT_OS_LAYOUT_ASSET_ACCESS_KEY` (secret), `EVENT_OS_LAYOUT_ASSET_SECRET_KEY` (secret), `EVENT_OS_LAYOUT_ASSET_SCANNER_URL`, `EVENT_OS_LAYOUT_ASSET_SCANNER_TOKEN` (secret) and `EVENT_OS_LAYOUT_ASSET_DERIVATIVE_URL`, then a genuine production-quality pipeline can be proven. Do not invent values. |
 | Current status | OPEN |
 
 ---
@@ -990,3 +990,4 @@ These do not reopen EOS-S04A and do not create new blocking IDs.
 | EOS-S04F formal technical acceptance 2026-09-08 | ChatGPT accepted EOS-S04F at SHA `a4795e83c929bf24591f52c2224eb4b588c23ef3`. Closed the blocking source-supersession, staleness and placeholder findings. TDR-S04F-001–002 remain OPEN and non-blocking. TDR-S04E-001–004, TDR-S04D-004 and TDR-S04A-011 remain OPEN. Catalogue accepted-slice count remains 4. EOS-S05 remains unauthorised. Production remains unauthorised. Documentation-only commit does not redeploy Event OS. |
 | EOS-S05 ratification and Milestone 1 MD-PR-S028 2026-09-08 | George Lawson ratifies the historic Slice 5 packs and authorises Milestone 1 only. Status RATIFIED / IMPLEMENTATION AUTHORISED / IN_PROGRESS. Entered TDR-S05-001 (non-blocking asset-pipeline gap). TDR-S04F-001–002 and carried earlier items remain OPEN. Catalogue accepted-slice count remains 4. EOS-S05 is not accepted. EOS-S06 remains unauthorised. Production remains unauthorised. |
 | EOS-S05 Milestone 2 MD-PR-S029 2026-09-08 | Typed spatial objects and layout studio implemented. TDR-S05-001 remains OPEN and is deferred to Milestone 3. Historic S5-28–S5-30 are not implemented. EOS-S05 is not accepted. Milestone 3 and EOS-S06 remain unauthorised. Production remains unauthorised. |
+| EOS-S05 Milestone 3 MD-PR-S030 2026-09-08 | Assets, assurance, versioning and immutable publication implemented. TDR-S05-001 remains OPEN and is reclassified BLOCKING before EOS-S05 final acceptance. Historic S5-28–S5-30 and S5-39–S5-55 remain `NOT_EXECUTED` as individual prompt runs. EOS-S05 is not accepted. Milestone 4 and EOS-S06 remain unauthorised. Production remains unauthorised. |

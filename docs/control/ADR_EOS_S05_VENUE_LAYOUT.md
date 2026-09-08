@@ -1,8 +1,8 @@
 # ADR — EOS-S05 venue registry and spatial contract
 
-**Status:** Selected for Milestones 1–2
+**Status:** Selected for Milestones 1–3
 **Slice:** `EOS-S05`  
-**Prompt Control ID:** `MD-PR-S028`  
+**Prompt Control ID:** `MD-PR-S028` / `MD-PR-S029` / `MD-PR-S030`
 **Date:** `2026-09-08`
 
 ## Context
@@ -17,7 +17,10 @@ Historic Slice 5 packs describe a venue registry, event adoption, spatial layout
 4. **Concurrency.** One active editor lease per layout. Durable optimistic `expectedVersion` / `expectedRevisionNumber` checks remain mandatory. No real-time collaborative editing.
 5. **Safety.** Only venue-supplied or qualified-authority safety thresholds may later become locked blocking constraints. Software never labels a layout safe, compliant, certified or authority-approved merely because rules passed.
 6. **Attendance.** EOS-S05 may read observed RSVP, whole-event forecast, phase occupancy, operational provision and observed attendance through a typed adapter. It must not copy or mutate those ledgers or sum phase counts as whole-event people.
-7. **Assets.** Evidence is metadata-only until an approved object-storage, malware-scanning and safe-derivative pipeline exists.
+7. **Assets.** Evidence and floor-plan intents are metadata-only until an approved object-storage, malware-scanning and safe-derivative pipeline exists. Live binary upload remains disabled. A source asset is not spatially authoritative until calibrated from a verified measurement or supplied verified scale.
+8. **Capacity.** Declared venue, geometric, operational, expected attendance, observed RSVP, forecast range, phase occupancy, operational provision and observed attendance remain distinct products. No universal reduction percentage. Phases are not summed as whole-event people.
+9. **Validation.** Findings bind to an exact layout revision and content hash. Material edits stale findings. Locked qualified-source constraints cannot be weakened by an ordinary operator. Software never claims regulatory, fire, engineering, accessibility or crowd-safety certification.
+10. **Publication.** Maker/checker binds to the exact canonical hash. The author cannot approve. System Administrator has no operational approval. Publication is idempotent, immutable and superseding. Restore creates a new draft revision. The authenticated downstream contract contains no guest identity.
 
 ## Bounded context
 
@@ -27,10 +30,17 @@ Organisation ── owns ── Venue ── has ── VenueFact (+ optional me
      └── Client ── owns ── Event ── adopts ── EventVenue ── snapshots/overrides ── EventVenueFact
                                               │
                                               └── Layout ── LayoutRevision (immutable)
-                                                         └── LayoutEditorLease (one active)
+                                                         ├── LayoutEditorLease (one active)
+                                                         ├── FloorPlanAsset / Calibration (intent only until provider)
+                                                         ├── CapacityStatement
+                                                         ├── ValidationRun / Finding / Override
+                                                         ├── Snapshot (immutable named hash)
+                                                         ├── Approval (maker/checker)
+                                                         └── Publication (CURRENT / SUPERSEDED / WITHDRAWN)
 Attendance adapter ── reads ── RSVP / Forecast / Provision / Calibration (no write)
+Downstream contract ── projects ── current publication (no guest identity)
 ```
 
 ## Consequences
 
-The database remains authoritative. Milestone 2 projects typed objects through SVG rather than Konva so the canvas cannot become a parallel JSON blob. Guest placement remains EOS-S06. Publication, binary assets and capacity findings remain Milestone 3.
+The database remains authoritative. Milestone 2 projects typed objects through SVG rather than Konva so the canvas cannot become a parallel JSON blob. Milestone 3 adds fail-closed assets, distinct capacity products, hash-bound validation, immutable snapshots, maker/checker, publication supersession and a guest-free downstream spatial contract. Guest placement remains EOS-S06. Live binary upload remains unavailable until George supplies an approved provider. EOS-S05 is not accepted.

@@ -197,3 +197,7 @@ Successor implementation after EOS-S04D requires a separate CEO decision. Cursor
 ## Addendum — 2026-09-08 EOS-S05 Milestone 2 (`MD-PR-S029`)
 
 Milestone 2 is authorised on the Milestone 1 contracts. Historic S5-14–S5-27 and S5-31–S5-38 are implemented substantively. S5-28–S5-30 remain Milestone 3. Milestone 1 is not reopened. EOS-S05 is not accepted. EOS-S06 remains unauthorised.
+
+## Addendum — 2026-09-08 EOS-S05 Milestone 3 (`MD-PR-S030`)
+
+Milestone 3 is authorised on the Milestone 1–2 contracts. Historic S5-28–S5-30 and S5-39–S5-55 are implemented substantively and remain `NOT_EXECUTED` as individual prompt runs. Live binary upload stays disabled; `TDR-S05-001` is blocking before EOS-S05 final acceptance. Milestones 1–2 are not reopened. EOS-S05 is not accepted. Milestone 4 and EOS-S06 remain unauthorised. Production remains unauthorised.
