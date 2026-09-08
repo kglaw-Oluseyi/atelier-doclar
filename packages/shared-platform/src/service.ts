@@ -320,6 +320,46 @@ import {
   type TerminologyEntry,
 } from "./language-schemas.js";
 import {
+  acquireLayoutLeaseOnSnap,
+  adoptVenueOnSnap,
+  assertNoVenueGuestIdentity,
+  createBlankLayoutOnSnap,
+  createVenueOnSnap,
+  recordEventVenueOverrideOnSnap,
+  recordVenueFactOnSnap,
+  updateLayoutSetupOnSnap,
+  verifyVenueFactOnSnap,
+} from "./venue-operations.js";
+import {
+  buildEventVenueWorkspace,
+  buildLayoutSetupWorkspace,
+  buildVenueDetailWorkspace,
+  buildVenueRegistry,
+  venuePermissionAllowed,
+  type EventVenueWorkspace,
+  type LayoutSetupWorkspace,
+  type VenueDetailWorkspace,
+  type VenueRegistryItem,
+} from "./venue-projections.js";
+import { readAttendanceProjection, type AttendanceProjectionRead } from "./venue-attendance.js";
+import { assertNoPixelPersistence } from "./venue-geometry.js";
+import {
+  AcquireLayoutLeaseInputSchema,
+  AdoptVenueInputSchema,
+  CreateBlankLayoutInputSchema,
+  CreateVenueInputSchema,
+  RecordEventVenueOverrideInputSchema,
+  RecordVenueFactInputSchema,
+  UpdateLayoutSetupInputSchema,
+  VerifyVenueFactInputSchema,
+  type EventVenue,
+  type EventVenueFact,
+  type Layout,
+  type LayoutEditorLease,
+  type Venue,
+  type VenueFact,
+} from "./venue-schemas.js";
+import {
   DEFAULT_NON_PRODUCTION_VENDOR_ACCESS,
   assertVendorAccessConfig,
   generateVendorAssignmentToken,
@@ -2975,6 +3015,188 @@ export class PlatformService {
         ),
       replayIfAlreadyApplied: Boolean(input.idempotencyKey),
       run: (snap, ctx) => assembleRecipientContentOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  private venueCapabilities(actor: ActorSnapshot, organisationId: string, eventId?: string) {
+    const scope = { organisationId, eventId };
+    return venuePermissionAllowed(
+      (
+        [
+          "venue.registry.view",
+          "venue.record.create",
+          "venue.record.update",
+          "venue.fact.record",
+          "venue.fact.verify",
+          "venue.adopt",
+          "venue.event.override",
+          "layout.view",
+          "layout.create",
+          "layout.update",
+          "layout.lease.acquire",
+        ] as const
+      ).filter((key) => this.permissionAllowed(actor, key, scope)),
+    );
+  }
+
+  listVenues(actor: ActorContext, organisationId: string): VenueRegistryItem[] {
+    const { snap } = this.authorizeQuery(actor, "venue.registry.view", { organisationId });
+    return buildVenueRegistry(snap, organisationId);
+  }
+
+  getVenueDetailWorkspace(actor: ActorContext, organisationId: string, venueId: string): VenueDetailWorkspace {
+    const { snap, ctx } = this.authorizeQuery(actor, "venue.registry.view", { organisationId });
+    const workspace = buildVenueDetailWorkspace(snap, organisationId, venueId, this.venueCapabilities(ctx.actor, organisationId));
+    if (!workspace) throw new PlatformError("NOT_FOUND", "venue was not found");
+    return workspace;
+  }
+
+  getEventVenueWorkspace(actor: ActorContext, organisationId: string, eventId: string): EventVenueWorkspace {
+    const { snap, ctx } = this.authorizeQuery(actor, "venue.registry.view", { organisationId, eventId });
+    this.requireEvent(snap, organisationId, eventId);
+    const workspace = buildEventVenueWorkspace(snap, eventId, this.venueCapabilities(ctx.actor, organisationId, eventId));
+    if (!workspace) throw new PlatformError("NOT_FOUND", "event venue workspace was not found");
+    return workspace;
+  }
+
+  getLayoutSetupWorkspace(actor: ActorContext, organisationId: string, eventId: string, layoutId: string): LayoutSetupWorkspace {
+    const { snap, ctx } = this.authorizeQuery(actor, "layout.view", { organisationId, eventId });
+    this.requireEvent(snap, organisationId, eventId);
+    const workspace = buildLayoutSetupWorkspace(snap, eventId, layoutId, this.venueCapabilities(ctx.actor, organisationId, eventId));
+    if (!workspace) throw new PlatformError("NOT_FOUND", "layout was not found");
+    return workspace;
+  }
+
+  readEventAttendanceProjection(actor: ActorContext, organisationId: string, eventId: string): AttendanceProjectionRead {
+    const { snap } = this.authorizeQuery(actor, "venue.registry.view", { organisationId, eventId });
+    this.requireEvent(snap, organisationId, eventId);
+    return readAttendanceProjection(snap, eventId);
+  }
+
+  createVenue(actor: ActorContext, raw: unknown): Venue {
+    assertNoVenueGuestIdentity(raw);
+    const input = parseStrict(CreateVenueInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "venue.record.create",
+      scope: { organisationId: input.organisationId },
+      action: "venue.created",
+      resourceType: "venue",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => createVenueOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  recordVenueFact(actor: ActorContext, raw: unknown): VenueFact {
+    assertNoVenueGuestIdentity(raw);
+    const input = parseStrict(RecordVenueFactInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "venue.fact.record",
+      scope: { organisationId: input.organisationId },
+      action: "venue.fact.recorded",
+      resourceType: "venue_fact",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => recordVenueFactOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  verifyVenueFact(actor: ActorContext, raw: unknown): VenueFact {
+    const input = parseStrict(VerifyVenueFactInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "venue.fact.verify",
+      scope: { organisationId: input.organisationId },
+      action: "venue.fact.verified",
+      resourceType: "venue_fact",
+      resourceId: input.factId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => verifyVenueFactOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  adoptVenue(actor: ActorContext, raw: unknown): EventVenue {
+    const input = parseStrict(AdoptVenueInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "venue.adopt",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "venue.adopted",
+      resourceType: "event_venue",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      alreadyApplied: (snap) =>
+        snap.eventVenues.find(
+          (item) => item.venueId === input.venueId && item.eventId === input.eventId && item.status === "ACTIVE",
+        ),
+      replayIfAlreadyApplied: Boolean(input.idempotencyKey),
+      run: (snap, ctx) => adoptVenueOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  recordEventVenueOverride(actor: ActorContext, raw: unknown): EventVenueFact {
+    assertNoVenueGuestIdentity(raw);
+    const input = parseStrict(RecordEventVenueOverrideInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "venue.event.override",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "venue.event.override.recorded",
+      resourceType: "event_venue_fact",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => recordEventVenueOverrideOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  createBlankLayout(actor: ActorContext, raw: unknown): Layout {
+    assertNoVenueGuestIdentity(raw);
+    assertNoPixelPersistence(raw);
+    const input = parseStrict(CreateBlankLayoutInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "layout.create",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "layout.created",
+      resourceType: "layout",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => createBlankLayoutOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  updateLayoutSetup(actor: ActorContext, raw: unknown): Layout {
+    assertNoVenueGuestIdentity(raw);
+    assertNoPixelPersistence(raw);
+    const input = parseStrict(UpdateLayoutSetupInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "layout.update",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "layout.updated",
+      resourceType: "layout",
+      resourceId: input.layoutId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => updateLayoutSetupOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  acquireLayoutLease(actor: ActorContext, raw: unknown): LayoutEditorLease {
+    const input = parseStrict(AcquireLayoutLeaseInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "layout.lease.acquire",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "layout.lease.acquired",
+      resourceType: "layout_editor_lease",
+      resourceId: input.layoutId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => acquireLayoutLeaseOnSnap(snap, input, ctx.now, ctx.actor.person.id),
     });
   }
 
@@ -5983,6 +6205,16 @@ export class PlatformService {
       snap.offlineAccessPackages,
       snap.accessExceptions,
     ];
+    const s05Tables = [
+      snap.venues,
+      snap.venueFacts,
+      snap.eventVenues,
+      snap.eventVenueFacts,
+      snap.layouts,
+      snap.layoutRevisions,
+      snap.layoutEditorLeases,
+      snap.venueEvidenceAssets,
+    ];
     const s04cTables = [
       snap.merchandiseCollections,
       snap.merchandiseItems,
@@ -6002,7 +6234,7 @@ export class PlatformService {
       snap.externalContactLinks,
       snap.merchandiseExceptions,
     ];
-    for (const table of [...s04aTables, ...s04bTables, ...s04cTables]) {
+    for (const table of [...s04aTables, ...s04bTables, ...s04cTables, ...s05Tables]) {
       const record = table.find((item) => item.id === id);
       if (record && "organisationId" in record) {
         return {
@@ -6156,6 +6388,14 @@ export class PlatformService {
       snap.recipientEditionRules,
       snap.recipientAssemblies,
       snap.languageCoverageSnapshots,
+      snap.venues,
+      snap.venueFacts,
+      snap.eventVenues,
+      snap.eventVenueFacts,
+      snap.layouts,
+      snap.layoutRevisions,
+      snap.layoutEditorLeases,
+      snap.venueEvidenceAssets,
       snap.guestDuplicateCandidates,
       snap.guestIntakeBatches,
       snap.rsvpPolicies,

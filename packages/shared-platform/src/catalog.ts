@@ -7,6 +7,7 @@ import {
   S04D_SENSITIVE_PERMISSIONS,
   S04E_SENSITIVE_PERMISSIONS,
   S04F_SENSITIVE_PERMISSIONS,
+  S05_SENSITIVE_PERMISSIONS,
   SCHEMA_VERSION,
   SYSTEM_ROLE_KEYS,
 } from "./constants.js";
@@ -135,6 +136,17 @@ const PERMISSION_IDS: Record<PermissionKey, string> = {
   "language.assembly.preview": "11111111-1111-4111-8111-111111111118",
   "language.glossary.manage": "11111111-1111-4111-8111-111111111119",
   "language.audit.view": "11111111-1111-4111-8111-111111111120",
+  "venue.registry.view": "11111111-1111-4111-8111-111111111121",
+  "venue.record.create": "11111111-1111-4111-8111-111111111122",
+  "venue.record.update": "11111111-1111-4111-8111-111111111123",
+  "venue.fact.record": "11111111-1111-4111-8111-111111111124",
+  "venue.fact.verify": "11111111-1111-4111-8111-111111111125",
+  "venue.adopt": "11111111-1111-4111-8111-111111111126",
+  "venue.event.override": "11111111-1111-4111-8111-111111111127",
+  "layout.view": "11111111-1111-4111-8111-111111111128",
+  "layout.create": "11111111-1111-4111-8111-111111111129",
+  "layout.update": "11111111-1111-4111-8111-111111111130",
+  "layout.lease.acquire": "11111111-1111-4111-8111-111111111131",
 };
 
 const ROLE_IDS: Record<(typeof SYSTEM_ROLE_KEYS)[number], string> = {
@@ -278,6 +290,17 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "language.assembly.preview",
     "language.glossary.manage",
     "language.audit.view",
+    "venue.registry.view",
+    "venue.record.create",
+    "venue.record.update",
+    "venue.fact.record",
+    "venue.fact.verify",
+    "venue.adopt",
+    "venue.event.override",
+    "layout.view",
+    "layout.create",
+    "layout.update",
+    "layout.lease.acquire",
   ],
   CLIENT_LEAD: [
     "organisation.view",
@@ -299,6 +322,8 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "atelier.view",
     "language.preference.view",
     "language.assembly.preview",
+    "venue.registry.view",
+    "layout.view",
   ],
   DEPARTMENT_LEAD: [
     "organisation.view",
@@ -315,6 +340,8 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "provision.propose",
     "atelier.view",
     "language.preference.view",
+    "venue.registry.view",
+    "layout.view",
   ],
   PLANNER: [
     "organisation.view",
@@ -377,6 +404,16 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "language.edition.manage",
     "language.assembly.preview",
     "language.glossary.manage",
+    "venue.registry.view",
+    "venue.record.create",
+    "venue.record.update",
+    "venue.fact.record",
+    "venue.adopt",
+    "venue.event.override",
+    "layout.view",
+    "layout.create",
+    "layout.update",
+    "layout.lease.acquire",
   ],
   SYSTEM_ADMINISTRATOR: [
     "organisation.view",
@@ -386,6 +423,8 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "role.manage",
     "audit.view",
     "system.health.view",
+    "venue.registry.view",
+    "layout.view",
   ],
   READ_ONLY_AUDITOR: [
     "organisation.view",
@@ -419,6 +458,8 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "language.preference.view",
     "language.assembly.preview",
     "language.audit.view",
+    "venue.registry.view",
+    "layout.view",
   ],
 };
 
@@ -438,7 +479,8 @@ function permissionRecord(key: PermissionKey): Permission {
       (S04C_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
       (S04D_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
       (S04E_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
-      (S04F_SENSITIVE_PERMISSIONS as readonly string[]).includes(key)
+      (S04F_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
+      (S05_SENSITIVE_PERMISSIONS as readonly string[]).includes(key)
         ? "SENSITIVE"
         : "NORMAL",
     schemaVersion: SCHEMA_VERSION,

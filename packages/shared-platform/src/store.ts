@@ -114,6 +114,17 @@ import type {
   TranslationLink,
 } from "./language-schemas.js";
 import type {
+  EventVenue,
+  EventVenueFact,
+  Layout,
+  LayoutEditorLease,
+  LayoutRevision,
+  S05MigrationReceipt,
+  Venue,
+  VenueEvidenceAsset,
+  VenueFact,
+} from "./venue-schemas.js";
+import type {
   GuestDuplicateCandidate,
   GuestHousehold,
   GuestIntakeBatch,
@@ -268,6 +279,15 @@ export interface PlatformSnapshot {
   recipientAssemblies: RecipientAssembly[];
   languageCoverageSnapshots: LanguageCoverageSnapshot[];
   s04fMigrationReceipts: S04FMigrationReceipt[];
+  venues: Venue[];
+  venueFacts: VenueFact[];
+  eventVenues: EventVenue[];
+  eventVenueFacts: EventVenueFact[];
+  layouts: Layout[];
+  layoutRevisions: LayoutRevision[];
+  layoutEditorLeases: LayoutEditorLease[];
+  venueEvidenceAssets: VenueEvidenceAsset[];
+  s05MigrationReceipts: S05MigrationReceipt[];
   rsvpPolicies: RsvpPolicy[];
   rsvpQuestionnaires: RsvpQuestionnaire[];
   rsvpInvitations: RsvpInvitation[];
@@ -416,6 +436,15 @@ export function emptySnapshot(): PlatformSnapshot {
     recipientAssemblies: [],
     languageCoverageSnapshots: [],
     s04fMigrationReceipts: [],
+    venues: [],
+    venueFacts: [],
+    eventVenues: [],
+    eventVenueFacts: [],
+    layouts: [],
+    layoutRevisions: [],
+    layoutEditorLeases: [],
+    venueEvidenceAssets: [],
+    s05MigrationReceipts: [],
     rsvpPolicies: [],
     rsvpQuestionnaires: [],
     rsvpInvitations: [],
@@ -548,6 +577,15 @@ export function normalizeSnapshot(input: PlatformSnapshot): PlatformSnapshot {
     recipientAssemblies: input.recipientAssemblies ?? [],
     languageCoverageSnapshots: input.languageCoverageSnapshots ?? [],
     s04fMigrationReceipts: input.s04fMigrationReceipts ?? [],
+    venues: input.venues ?? [],
+    venueFacts: input.venueFacts ?? [],
+    eventVenues: input.eventVenues ?? [],
+    eventVenueFacts: input.eventVenueFacts ?? [],
+    layouts: input.layouts ?? [],
+    layoutRevisions: input.layoutRevisions ?? [],
+    layoutEditorLeases: input.layoutEditorLeases ?? [],
+    venueEvidenceAssets: input.venueEvidenceAssets ?? [],
+    s05MigrationReceipts: input.s05MigrationReceipts ?? [],
     rsvpPolicies: input.rsvpPolicies ?? [],
     rsvpQuestionnaires: input.rsvpQuestionnaires ?? [],
     rsvpInvitations: input.rsvpInvitations ?? [],

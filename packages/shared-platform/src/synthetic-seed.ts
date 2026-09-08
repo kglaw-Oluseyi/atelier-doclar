@@ -9,6 +9,8 @@ import { applyS04EFixturesIfMissing } from "./atelier-fixtures.js";
 import { applyEosS04EToSnapshot } from "./atelier-migration.js";
 import { applyS04FFixturesIfMissing } from "./language-fixtures.js";
 import { applyEosS04FToSnapshot } from "./language-migration.js";
+import { applyS05FixturesIfMissing } from "./venue-fixtures.js";
+import { applyEosS05ToSnapshot } from "./venue-migration.js";
 import { loadNonProductionFixtures } from "./bootstrap.js";
 import { seededPermissions, seededRoles } from "./catalog.js";
 import type { PgQueryable } from "./postgres-schema.js";
@@ -115,6 +117,13 @@ function applyS04FLayer(store: PlatformStore, now = "2026-09-07T20:00:00.000Z"):
   if (withFixtures !== snap) store.replace(withFixtures);
 }
 
+function applyS05Layer(store: PlatformStore, now = "2026-09-08T02:00:00.000Z"): void {
+  const snap = store.snapshot();
+  const migrated = applyEosS05ToSnapshot(snap, now);
+  const withFixtures = applyS05FixturesIfMissing(migrated);
+  if (withFixtures !== snap) store.replace(withFixtures);
+}
+
 /** Replay-safe: insert missing catalogue rows only. Never rewrite accepted permission bodies. */
 export function ensureMissingCatalogueRecords(store: PlatformStore): void {
   const snap = store.snapshot();
@@ -145,6 +154,7 @@ export function applySyntheticSnapshot(store: PlatformStore, options: PlatformSe
   applyS04DLayer(store);
   applyS04ELayer(store);
   applyS04FLayer(store);
+  applyS05Layer(store);
   return service;
 }
 
@@ -162,6 +172,7 @@ export async function applySyntheticSeedIfNeeded(
     applyS04DLayer(store);
     applyS04ELayer(store);
     applyS04FLayer(store);
+    applyS05Layer(store);
     return {
       service,
       seed: {
@@ -183,6 +194,7 @@ export async function applySyntheticSeedIfNeeded(
   applyS04DLayer(store);
   applyS04ELayer(store);
   applyS04FLayer(store);
+  applyS05Layer(store);
   const durable = store as { flush?: () => Promise<void> };
   if (typeof durable.flush === "function") await durable.flush();
   const recordCount = countableRecords(store.snapshot());

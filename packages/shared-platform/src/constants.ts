@@ -117,6 +117,14 @@ export const SHARED_PLATFORM_OWNERSHIP = {
   atelierAccessGrant: PLATFORM_PACKAGE,
   magicLinkChallenge: PLATFORM_PACKAGE,
   atelierSession: PLATFORM_PACKAGE,
+  venue: PLATFORM_PACKAGE,
+  venueFact: PLATFORM_PACKAGE,
+  eventVenue: PLATFORM_PACKAGE,
+  eventVenueFact: PLATFORM_PACKAGE,
+  layout: PLATFORM_PACKAGE,
+  layoutRevision: PLATFORM_PACKAGE,
+  layoutEditorLease: PLATFORM_PACKAGE,
+  venueEvidenceAsset: PLATFORM_PACKAGE,
 } as const;
 
 /** Parallel product-owned truth stores are forbidden. Product projections may exist. */
@@ -158,6 +166,12 @@ export const FORBIDDEN_PARALLEL_TRUTH = [
   "HostAssurancePortal",
   "ParallelRsvpAtelier",
   "ParallelFinanceAtelier",
+  "Tenant",
+  "ParallelOrganisation",
+  "ParallelVenueLedger",
+  "GuestPlacement",
+  "GuestSeatAssignment",
+  "SeatingSolver",
 ] as const;
 
 export const DEFAULT_TIMEZONE = "Africa/Lagos";
@@ -327,6 +341,17 @@ export const PERMISSION_KEYS = [
   "language.assembly.preview",
   "language.glossary.manage",
   "language.audit.view",
+  "venue.registry.view",
+  "venue.record.create",
+  "venue.record.update",
+  "venue.fact.record",
+  "venue.fact.verify",
+  "venue.adopt",
+  "venue.event.override",
+  "layout.view",
+  "layout.create",
+  "layout.update",
+  "layout.lease.acquire",
 ] as const;
 
 export const SYSTEM_ROLE_KEYS = [
@@ -528,6 +553,71 @@ export const S04F_SENSITIVE_PERMISSIONS = [
   "language.translation.approve",
   "language.edition.publish",
   "language.audit.view",
+] as const;
+
+export const S05_SENSITIVE_PERMISSIONS = [
+  "venue.fact.verify",
+  "venue.adopt",
+  "layout.lease.acquire",
+] as const;
+
+export const VENUE_RECORD_STATUSES = ["ACTIVE", "ARCHIVED"] as const;
+export const VENUE_VISIBILITY_POLICIES = ["ORGANISATION_STAFF", "ASSIGNED_CLIENTS"] as const;
+export const VENUE_CROSS_CLIENT_REUSE = ["DENIED", "EXPLICITLY_AUTHORISED"] as const;
+export const VENUE_FACT_TYPES = [
+  "ADDRESS",
+  "DIMENSION",
+  "DECLARED_CAPACITY",
+  "ACCESS",
+  "SAFETY_THRESHOLD",
+  "OPERATING_HOURS",
+  "CONTACT_CHANNEL",
+  "OTHER",
+] as const;
+export const VENUE_FACT_SUBTYPES = [
+  "STREET_LOCALITY",
+  "COUNTRY",
+  "POSTAL",
+  "FLOOR_WIDTH",
+  "FLOOR_LENGTH",
+  "CEILING_HEIGHT",
+  "ROOM_AREA",
+  "FIRE_STATED",
+  "VENUE_STATED",
+  "UNKNOWN_CAPACITY",
+  "STEP_FREE",
+  "LIFT",
+  "PARKING",
+  "ENTRANCE",
+  "MAX_OCCUPANCY",
+  "EXIT_WIDTH",
+  "RESTRICTED_ZONE",
+  "STANDARD",
+  "CURFEW",
+  "METADATA_ONLY",
+  "GENERAL",
+] as const;
+export const VENUE_FACT_UNITS = ["NONE", "MILLIMETRE", "COUNT", "TEXT"] as const;
+export const VENUE_FACT_SOURCE_KINDS = [
+  "VENUE_SUPPLIED",
+  "QUALIFIED_AUTHORITY",
+  "STAFF_OBSERVED",
+  "UNVERIFIED_REPORT",
+] as const;
+export const VENUE_FACT_VERIFICATION_STATES = ["UNKNOWN", "UNVERIFIED", "VERIFIED", "CONFLICTING", "STALE"] as const;
+export const VENUE_FACT_ORIGINS = ["INHERITED", "EVENT_OVERRIDE"] as const;
+export const VENUE_LAYOUT_STATUSES = ["DRAFT"] as const;
+export const VENUE_LEASE_STATUSES = ["ACTIVE", "RELEASED", "EXPIRED"] as const;
+export const VENUE_EVIDENCE_STORAGE_STATES = ["UNAVAILABLE"] as const;
+export const VENUE_ASSET_UPLOAD_AVAILABLE = false;
+export const LAYOUT_EDITOR_LEASE_TTL_SECONDS = 1800;
+export const PROHIBITED_VENUE_GUEST_KEYS = [
+  "guestId",
+  "personId",
+  "EventGuest",
+  "invitationId",
+  "seatingAssignment",
+  "guestPlacement",
 ] as const;
 
 export const LANGUAGE_TAGS = ["en-GB", "en-US", "yo", "ig", "ha", "fr", "de-DE", "zh-Hans"] as const;

@@ -491,6 +491,48 @@ export {
   renderPlaceholders,
 } from "./language-placeholders.js";
 export {
+  migrateEosS05,
+  applyEosS05ToSnapshot,
+  rollbackEosS05,
+  EOS_S05_MIGRATION_ID,
+  EOS_S05_MIGRATION_CHECKSUM,
+} from "./venue-migration.js";
+export { applyS05FixturesIfMissing, S05_FIXTURE_IDS } from "./venue-fixtures.js";
+export { validateS05PersistedCollections } from "./venue-persistence.js";
+export {
+  buildEventVenueWorkspace,
+  buildLayoutSetupWorkspace,
+  buildVenueDetailWorkspace,
+  buildVenueRegistry,
+  venuePermissionAllowed,
+  type EventVenueWorkspace,
+  type LayoutSetupWorkspace,
+  type VenueCapabilities,
+  type VenueDetailWorkspace,
+} from "./venue-projections.js";
+export { readAttendanceProjection, type AttendanceProjectionRead } from "./venue-attendance.js";
+export {
+  FROZEN_COORDINATE_SYSTEM,
+  canonicalContentHash,
+  canonicalSerialize,
+  layoutContentHash,
+} from "./venue-geometry.js";
+export {
+  AcquireLayoutLeaseInputSchema,
+  AdoptVenueInputSchema,
+  CreateBlankLayoutInputSchema,
+  CreateVenueInputSchema,
+  RecordEventVenueOverrideInputSchema,
+  RecordVenueFactInputSchema,
+  UpdateLayoutSetupInputSchema,
+  VerifyVenueFactInputSchema,
+  type EventVenue,
+  type Layout,
+  type Venue,
+  type VenueFact,
+} from "./venue-schemas.js";
+export { assertNoVenueGuestIdentity } from "./venue-operations.js";
+export {
   accentInsensitiveSearchKey,
   authoredTextsEqual,
   canonicalDisplayText,

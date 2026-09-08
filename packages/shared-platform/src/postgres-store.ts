@@ -9,6 +9,7 @@ import { validateS04CPersistedCollections } from "./merchandise-persistence.js";
 import { validateS04DPersistedCollections } from "./forecast-persistence.js";
 import { validateS04EPersistedCollections } from "./atelier-persistence.js";
 import { validateS04FPersistedCollections } from "./language-persistence.js";
+import { validateS05PersistedCollections } from "./venue-persistence.js";
 import type { PgQueryable, PgQueryResult, PgTransactor } from "./postgres-schema.js";
 
 type Collection = keyof Omit<PlatformSnapshot, "audit" | "idempotency">;
@@ -116,6 +117,15 @@ const COLLECTIONS: Collection[] = [
   "recipientAssemblies",
   "languageCoverageSnapshots",
   "s04fMigrationReceipts",
+  "venues",
+  "venueFacts",
+  "eventVenues",
+  "eventVenueFacts",
+  "layouts",
+  "layoutRevisions",
+  "layoutEditorLeases",
+  "venueEvidenceAssets",
+  "s05MigrationReceipts",
   "rsvpPolicies",
   "rsvpQuestionnaires",
   "rsvpInvitations",
@@ -201,6 +211,7 @@ export class PostgresPlatformStore implements PlatformStore {
     validateS04DPersistedCollections(normalised);
     validateS04EPersistedCollections(normalised);
     validateS04FPersistedCollections(normalised);
+    validateS05PersistedCollections(normalised);
     const previous = this.snapshot();
     this.state = structuredClone(normalised);
     this.pending = this.pending
@@ -346,6 +357,7 @@ export class PostgresPlatformStore implements PlatformStore {
     validateS04DPersistedCollections(normalised);
     validateS04EPersistedCollections(normalised);
     validateS04FPersistedCollections(normalised);
+    validateS05PersistedCollections(normalised);
     this.state = normalised;
   }
 }
