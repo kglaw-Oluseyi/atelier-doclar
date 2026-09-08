@@ -35,6 +35,8 @@
 | Live whole-slice E2E extract | Test defect (S038) | Journey omitted AI-analysis consent | Grant AI-analysis before extract | Rerun after test correction |
 | Short-lead infeasibility first assertion | Implementation defect (S039) | Compressible-undefined milestones were treated as fully compressible, so 1 available day became COMPRESSED | Irreducible duration includes non-compressible lead times and a one-day floor for compressible work | Depth tests pass |
 | First Event OS deploy after S039 | Product defect (S039) | V2 mutated current cost rules/templates and the V1 receipt at the same document version, so Postgres CAS refused boot | Increment versions on durable mutations; V1 replay no longer rewrites the receipt | Redeploy after correction |
+| Live whole-slice change list empty | Product defect (S039) | Change idempotency matched org-wide summary, so a later engagement reused an earlier proposal | Bind semantic hash and alreadyApplied to engagement | Intelligence tests pass |
+| Planner Budget Studio showed Restricted | Product defect (S038/S039) | Redaction used the whole role catalogue, so every staff actor appeared to hold READ_ONLY_AUDITOR | Redact only when the actor has an active auditor assignment | Planner sees integer minor units; auditor still redacted |
 
 ## Carried debt
 

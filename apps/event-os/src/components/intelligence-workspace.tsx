@@ -14,6 +14,7 @@ import {
   instantiateRoadmapAction,
   issueDiscoveryClientAccessAction,
   publishBriefEditionAction,
+  revokeDiscoveryClientAccessAction,
   recordDiscoveryObjectAction,
   submitBriefEditionAction,
   submitBudgetScenarioAction,
@@ -155,6 +156,28 @@ export function IntelligenceWorkspaceView({
               Issue client review access
             </PendingSubmit>
           </form>
+        ) : null}
+        {(intelligence.clientAccess ?? []).length > 0 ? (
+          <ul className="atelier-queue" data-testid="client-access-list">
+            {intelligence.clientAccess.map((access) => (
+              <li key={access.id}>
+                <p>
+                  Client conversation access is {access.revokedAt ? "revoked" : "active"}. The link is one-time and staff-cookie separate.
+                </p>
+                {!access.revokedAt && canAuthorBrief ? (
+                  <form action={revokeDiscoveryClientAccessAction}>
+                    <IdempotencyField />
+                    <input type="hidden" name="organisationId" value={organisationId} />
+                    <input type="hidden" name="engagementId" value={engagementId} />
+                    <input type="hidden" name="accessId" value={access.id} />
+                    <PendingSubmit className="secondary" locked={mutationLocked}>
+                      Revoke client conversation access
+                    </PendingSubmit>
+                  </form>
+                ) : null}
+              </li>
+            ))}
+          </ul>
         ) : null}
       </section>
 

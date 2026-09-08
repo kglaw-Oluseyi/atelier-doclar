@@ -255,6 +255,17 @@ export function DiscoveryWorkspaceView({
                     <p key={segment.id}>{segment.text}</p>
                   ))}
                   {artefact.byteChecksum ? <CanonicalHash value={artefact.byteChecksum} /> : null}
+                  {artefact.hasPrivateObject ? (
+                    <p>
+                      <a
+                        href={`/api/discovery/${workspace.engagement.id}/sources/${artefact.id}?organisationId=${workspace.engagement.organisationId}`}
+                        data-testid="private-source-retrieve"
+                      >
+                        Retrieve privately
+                      </a>
+                      . Preview stays inert. This is not a public URL and is not an antivirus claim.
+                    </p>
+                  ) : null}
                   {capabilities.canReviewAssertion ? (
                     <form action={extractDiscoveryAssertionsAction}>
                       <IdempotencyField />

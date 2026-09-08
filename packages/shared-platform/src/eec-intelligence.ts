@@ -616,7 +616,12 @@ export function createChangeProposalOnSnap(
   now: string,
   actorPersonId: string,
 ): ChangeProposal {
-  const semanticHash = exactHash({ summary: nfc(input.summary), sourceAssertionId: input.sourceAssertionId ?? "", eventId: input.eventId ?? "" });
+  const semanticHash = exactHash({
+    summary: nfc(input.summary),
+    sourceAssertionId: input.sourceAssertionId ?? "",
+    eventId: input.eventId ?? "",
+    engagementId: input.engagementId ?? "",
+  });
   const existing = snap.changeProposals.find((item) => item.organisationId === input.organisationId && item.semanticHash === semanticHash);
   if (existing) return existing;
   const record: ChangeProposal = {

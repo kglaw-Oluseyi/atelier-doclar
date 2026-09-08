@@ -32,6 +32,24 @@ test("S05A whole slice: brief, budget, roadmap, change and command", async ({ pa
   await expect(page.getByTestId("budget-scenario-list")).toBeVisible({ timeout: 20_000 });
   await expect(page.getByTestId("budget-synthetic-warning")).toContainText("synthetic");
   await expect(page.getByTestId("budget-scenario-list")).toContainText("partial");
+  await expect(page.getByTestId("budget-scenario-list")).not.toContainText("Restricted in this projection");
+  await page.locator("#private-source-object input[name='file']").setInputFiles({
+    name: "synthetic-source.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("Maison Doclar synthetic source object. Yorùbá guests."),
+  });
+  await page.getByRole("button", { name: "Store private object" }).click();
+  const retrieve = page.getByTestId("private-source-retrieve");
+  if (await retrieve.count()) {
+    await expect(retrieve).toBeVisible({ timeout: 20_000 });
+    await expect(page.locator("body")).not.toContainText("discovery/");
+    const [download] = await Promise.all([page.waitForEvent("download"), retrieve.click()]);
+    expect(await download.failure()).toBeNull();
+  } else {
+    await expect(page.getByText(/private source-object storage is not bound|source file exceeds|only plain text/i)).toBeVisible({
+      timeout: 20_000,
+    });
+  }
   await page.getByRole("button", { name: "Instantiate roadmap" }).click();
   await expect(page.getByTestId("roadmap-list")).toContainText("Confirm guest count", { timeout: 20_000 });
   await expect(page.getByTestId("roadmap-critical-path")).toContainText("Confirm guest count");
@@ -51,8 +69,27 @@ test("S05A whole slice: brief, budget, roadmap, change and command", async ({ pa
   await clientPage.getByLabel("Your words").fill("We understand the purpose of this conversation.");
   await clientPage.getByRole("button", { name: "Save and continue" }).click();
   await expect(clientPage.getByTestId("interview-progress")).toContainText("Saved progress", { timeout: 20_000 });
+  await clientPage.getByLabel("How should we treat this answer").selectOption("PAUSE");
+  await clientPage.getByRole("button", { name: "Save and continue" }).click();
+  await clientPage.reload();
+  await expect(clientPage.getByTestId("interview-progress")).toContainText("Saved progress", { timeout: 20_000 });
+  await expect(clientPage.getByTestId("client-interview")).not.toContainText(
+    "Welcome. This conversation helps Maison Doclar",
+  );
+  await clientPage.goto("/app/command");
+  await expect(clientPage).not.toHaveURL(/\/app\/command/);
   await clientPage.close();
   await guest.close();
+  await page.getByRole("button", { name: "Revoke client conversation access" }).click();
+  await expect(page.getByTestId("client-access-list")).toContainText("revoked", { timeout: 20_000 });
+  const revoked = await page.context().browser()!.newContext();
+  const revokedPage = await revoked.newPage();
+  await revokedPage.goto(href);
+  await expect(revokedPage.getByText(/not available/i)).toBeVisible({ timeout: 20_000 });
+  await revokedPage.goto("/discover/not-a-valid-client-token");
+  await expect(revokedPage.getByText(/not available/i)).toBeVisible();
+  await revokedPage.close();
+  await revoked.close();
 
   await loginAs(page, "ceo");
   await page.goto("/app/discovery");
@@ -71,7 +108,26 @@ test("S05A whole slice: brief, budget, roadmap, change and command", async ({ pa
   await expect(page.getByTestId("command-blocking")).toBeVisible();
   await expect(page.getByTestId("executive-command")).toContainText("Confirm guest count");
 
+  await loginAs(page, "director");
+  await page.goto("/app/discovery");
+  await page.getByRole("link", { name }).click();
+  await expect(page.getByTestId("intelligence-workspace")).toBeVisible();
+  await expect(page.getByTestId("change-list")).toContainText("Guest count");
+
   await loginAs(page, "auditor");
   await page.goto("/app/command");
   await expect(page.getByText("This assignment cannot open Executive Event Command.")).toBeVisible();
+  await page.goto("/app/discovery");
+  await page.getByRole("link", { name }).click();
+  await expect(page.getByTestId("budget-scenario-list")).toContainText("Restricted in this projection");
+  if (await page.getByTestId("private-source-retrieve").count()) {
+    const denied = await page.request.get((await page.getByTestId("private-source-retrieve").getAttribute("href")) ?? "/");
+    expect(denied.status()).toBe(403);
+  }
+
+  await loginAs(page, "admin");
+  await page.goto("/app/command");
+  await expect(page.getByText("This assignment cannot open Executive Event Command.")).toBeVisible();
+  await page.goto("/app/discovery");
+  await expect(page.getByText("This assignment cannot view discovery enquiries.")).toBeVisible();
 });

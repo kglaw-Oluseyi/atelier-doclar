@@ -5,6 +5,7 @@ export const STAFF_IDENTITIES = {
   director: { email: "director@maison-doclar.test", displayName: "Event Director", roleLabel: "Event Director" },
   planner: { email: "planner@maison-doclar.test", displayName: "Assigned Planner", roleLabel: "Planner" },
   auditor: { email: "auditor@maison-doclar.test", displayName: "Read Only Auditor", roleLabel: "Read-only Auditor" },
+  admin: { email: "admin@maison-doclar.test", displayName: "System Administrator", roleLabel: "System Administrator" },
 } as const;
 
 export type StaffIdentityKey = keyof typeof STAFF_IDENTITIES;

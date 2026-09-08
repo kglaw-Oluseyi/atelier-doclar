@@ -4026,6 +4026,25 @@ export async function issueDiscoveryClientAccessAction(formData: FormData): Prom
   });
 }
 
+export async function revokeDiscoveryClientAccessAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const engagementId = String(formData.get("engagementId") ?? "");
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "discovery.client_access.revoke");
+    try {
+      getRuntime().service.revokeDiscoveryClientAccess(actor, {
+        organisationId: String(formData.get("organisationId") ?? ""),
+        accessId: String(formData.get("accessId") ?? ""),
+        reason: String(formData.get("reason") ?? "Revoke client conversation access").trim() || "Revoke client conversation access",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      });
+      await finishAction(bind, { ok: "discovery.client_access.revoke" });
+    } catch (error) {
+      await finishAction(bind, { error });
+    }
+  });
+}
+
 export async function convertDiscoveryEngagementAction(formData: FormData): Promise<void> {
   return await withDurable(async () => {
     const { actor } = await requireActor();

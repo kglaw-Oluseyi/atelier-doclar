@@ -269,6 +269,45 @@ test("no-repeat interview, correction lineage and token revoke", () => {
     () => service.getClientDiscoveryProjection(access.token),
     (error: unknown) => error instanceof PlatformError && error.code === "AUTH_REQUIRED",
   );
+  const expired = service.issueDiscoveryClientAccess(planner, {
+    organisationId,
+    engagementId: engagement.id,
+    expiresAt: "2020-01-01T00:00:00.000Z",
+    reason: "expired",
+    idempotencyKey: "depth-expired",
+  });
+  assert.throws(
+    () => service.getClientDiscoveryProjection(expired.token),
+    (error: unknown) => error instanceof PlatformError && error.code === "AUTH_REQUIRED",
+  );
+  assert.throws(
+    () => service.getClientDiscoveryProjection("not-a-valid-client-token"),
+    (error: unknown) => error instanceof PlatformError && error.code === "AUTH_REQUIRED",
+  );
+  const other = service.createEngagementOpportunity(planner, {
+    organisationId,
+    displayReference: "Other conversation",
+    enquiryChannel: "DIRECT",
+    knownEventType: "WEDDING",
+    reason: "other",
+    idempotencyKey: "depth-other-opp",
+  });
+  const otherEngagement = service.startDiscoveryEngagement(planner, {
+    organisationId,
+    opportunityId: other.id,
+    expectedVersion: other.version,
+    reason: "other start",
+    idempotencyKey: "depth-other-eng",
+  });
+  const otherAccess = service.issueDiscoveryClientAccess(planner, {
+    organisationId,
+    engagementId: otherEngagement.id,
+    reason: "other token",
+    idempotencyKey: "depth-other-token",
+  });
+  const otherProjection = service.getClientDiscoveryProjection(otherAccess.token);
+  assert.equal(otherProjection.engagementId, otherEngagement.id);
+  assert.equal(otherProjection.assertions.length, 0);
 });
 
 test("compareBudgetScenariosOnSnap requires same organisation", () => {
@@ -297,4 +336,48 @@ test("compareBudgetScenariosOnSnap requires same organisation", () => {
     "2026-09-09T00:00:00.000Z",
   );
   assert.match(comparison.totalMovementMinor, /^-?\d+$/);
+});
+
+test("private source objects reject public URLs and leak no storage key", () => {
+  const { service, planner, organisationId, engagement } = openReviewedEngagement();
+  assert.throws(
+    () =>
+      service.recordDiscoverySource(planner, {
+        organisationId,
+        engagementId: engagement.id,
+        kind: "UPLOADED_DOCUMENT",
+        title: "Public URL must fail",
+        text: "[private object stored; not rendered and not executable]",
+        objectKey: "https://example.test/leak",
+        byteChecksum: "a".repeat(64),
+        reason: "url",
+        idempotencyKey: "depth-public-url",
+      }),
+    (error: unknown) => error instanceof PlatformError && error.code === "VALIDATION_FAILED",
+  );
+  const stored = service.recordDiscoverySource(planner, {
+    organisationId,
+    engagementId: engagement.id,
+    kind: "UPLOADED_DOCUMENT",
+    title: "Synthetic source object",
+    text: "[private object stored; not rendered and not executable]",
+    objectKey: `discovery/${organisationId}/${engagement.id}/synthetic`,
+    byteChecksum: "b".repeat(64),
+    reason: "store",
+    idempotencyKey: "depth-private-object",
+  });
+  const workspace = service.getDiscoveryWorkspace(planner, organisationId, engagement.id);
+  const projected = workspace.artefacts.find((item) => item.id === stored.id);
+  assert.equal(projected?.hasPrivateObject, true);
+  assert.equal("objectKey" in (projected ?? {}), false);
+  const resolved = service.getStoredDiscoverySource(planner, organisationId, engagement.id, stored.id);
+  assert.match(resolved.objectKey, /^discovery\//);
+  assert.throws(
+    () => service.getStoredDiscoverySource(actor(people.personAuditor), organisationId, engagement.id, stored.id),
+    (error: unknown) => error instanceof PlatformError && error.code === "FORBIDDEN",
+  );
+  assert.throws(
+    () => service.getStoredDiscoverySource(actor(people.personAdmin), organisationId, engagement.id, stored.id),
+    (error: unknown) => error instanceof PlatformError && error.code === "FORBIDDEN",
+  );
 });

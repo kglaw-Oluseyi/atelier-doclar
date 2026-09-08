@@ -108,6 +108,7 @@ export function actionLabel(actionType: string): string {
     "brief.decide": "Decide brief edition",
     "brief.publish": "Publish brief edition",
     "brief.client_access": "Issue client review access",
+    "discovery.client_access.revoke": "Revoke client conversation access",
     "engagement.convert": "Convert engagement",
     "budget.calculate": "Calculate budget scenario",
     "budget.decide": "Decide budget scenario",

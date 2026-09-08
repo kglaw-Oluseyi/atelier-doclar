@@ -762,6 +762,15 @@ function parseStrict<T>(schema: { safeParse: (value: unknown) => { success: true
   return parsed.data;
 }
 
+function actorHoldsRole(actor: ActorSnapshot, organisationId: string, key: string): boolean {
+  const roleIds = new Set(
+    actor.assignments
+      .filter((item) => item.status === "ACTIVE" && item.organisationId === organisationId)
+      .map((item) => item.roleId),
+  );
+  return actor.roles.some((role) => roleIds.has(role.id) && role.key === key);
+}
+
 export class PlatformService {
   constructor(
     private readonly store: PlatformStore,
@@ -6231,7 +6240,7 @@ export class PlatformService {
       conflicts: snap.assertionConflicts.filter((item) => item.engagementId === engagementId),
       assessments: snap.coverageAssessments.filter((item) => item.engagementId === engagementId),
       capabilities: eecPermissionAllowed(keys),
-      redactSensitive: ctx.actor.roles.some((role) => role.key === "READ_ONLY_AUDITOR"),
+      redactSensitive: actorHoldsRole(ctx.actor, organisationId, "READ_ONLY_AUDITOR"),
     });
   }
 
@@ -6329,6 +6338,28 @@ export class PlatformService {
       idempotencyKey: input.idempotencyKey,
       run: (snap, ctx) => recordSourceArtefactOnSnap(snap, input, ctx.now).artefact,
     });
+  }
+
+  getStoredDiscoverySource(
+    actor: ActorContext,
+    organisationId: string,
+    engagementId: string,
+    artefactId: string,
+  ): { objectKey: string; byteChecksum?: string; title: string } {
+    const { snap, ctx } = this.authorizeQuery(actor, "discovery.source.manage", { organisationId });
+    if (
+      actorHoldsRole(ctx.actor, organisationId, "READ_ONLY_AUDITOR") ||
+      actorHoldsRole(ctx.actor, organisationId, "SYSTEM_ADMINISTRATOR")
+    ) {
+      throw new PlatformError("FORBIDDEN", "this assignment cannot retrieve private source objects");
+    }
+    const artefact = snap.sourceArtefacts.find(
+      (item) => item.id === artefactId && item.engagementId === engagementId && item.organisationId === organisationId,
+    );
+    if (!artefact?.objectKey) {
+      throw new PlatformError("NOT_FOUND", "private source object is not available");
+    }
+    return { objectKey: artefact.objectKey, byteChecksum: artefact.byteChecksum, title: artefact.title };
   }
 
   extractCandidateAssertions(actor: ActorContext, raw: unknown) {
@@ -6734,7 +6765,10 @@ export class PlatformService {
       replayIfAlreadyApplied: true,
       alreadyApplied: (snap) =>
         snap.changeProposals.find(
-          (item) => item.organisationId === input.organisationId && item.summary === input.summary,
+          (item) =>
+            item.organisationId === input.organisationId &&
+            item.engagementId === input.engagementId &&
+            item.summary === input.summary,
         ),
       run: (snap, ctx) => createChangeProposalOnSnap(snap, input, ctx.now, actor.personId),
     });
@@ -6790,7 +6824,7 @@ export class PlatformService {
 
   getIntelligenceWorkspace(actor: ActorContext, organisationId: string, engagementId: string) {
     const { snap, ctx } = this.authorizeQuery(actor, "engagement.view", { organisationId });
-    const redact = ctx.actor.roles.some((role) => role.key === "READ_ONLY_AUDITOR");
+    const redact = actorHoldsRole(ctx.actor, organisationId, "READ_ONLY_AUDITOR");
     const scenarios = snap.budgetScenarioEditions.filter((item) => item.engagementId === engagementId);
     return {
       draft: snap.eventBriefDrafts.find((item) => item.engagementId === engagementId),
@@ -6809,6 +6843,14 @@ export class PlatformService {
       lines: redact ? [] : snap.budgetLines.filter((item) => scenarios.some((scenario) => scenario.id === item.scenarioId)),
       comparisons: snap.scenarioComparisons.filter((item) => item.organisationId === organisationId),
       sensitivity: snap.sensitivityRuns.filter((item) => scenarios.some((scenario) => scenario.id === item.scenarioId)),
+      clientAccess: snap.discoveryClientAccess
+        .filter((item) => item.engagementId === engagementId)
+        .map((item) => ({
+          id: item.id,
+          expiresAt: item.expiresAt,
+          revokedAt: item.revokedAt,
+          permittedActions: item.permittedActions,
+        })),
       priceEvidence: snap.priceEvidenceRecords
         .filter((item) => item.organisationId === organisationId)
         .map((item) => ({

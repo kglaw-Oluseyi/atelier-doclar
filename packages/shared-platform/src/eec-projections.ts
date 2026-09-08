@@ -47,7 +47,7 @@ export type DiscoveryWorkspace = {
   participants: DiscoveryParticipant[];
   consents: DiscoveryConsentRecord[];
   sessions: InterviewSession[];
-  artefacts: SourceArtefact[];
+  artefacts: Array<Omit<SourceArtefact, "objectKey"> & { hasPrivateObject: boolean }>;
   segments: SourceSegment[];
   assertions: CandidateAssertion[];
   conflicts: AssertionConflict[];
@@ -89,7 +89,10 @@ export function buildDiscoveryWorkspace(input: {
     participants: input.participants,
     consents: input.consents,
     sessions: input.sessions,
-    artefacts: input.artefacts,
+    artefacts: input.artefacts.map((item) => {
+      const { objectKey, ...safe } = item;
+      return { ...safe, hasPrivateObject: Boolean(objectKey) };
+    }),
     segments,
     assertions,
     conflicts: input.conflicts,

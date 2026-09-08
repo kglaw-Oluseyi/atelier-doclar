@@ -373,6 +373,8 @@ test("EEC-15–EEC-25 budget engine money, hashes, permissions and no payments",
       }),
     (error: unknown) => error instanceof PlatformError && error.code === "VALIDATION_FAILED",
   );
+  const plannerView = service.getIntelligenceWorkspace(planner, organisationId, engagement.id);
+  assert.match(plannerView.scenarios[0]?.expectedMinor ?? "", /^-?\d+$/);
   const auditor = service.getIntelligenceWorkspace(actor(people.personAuditor), organisationId, engagement.id);
   assert.equal(auditor.scenarios[0]?.expectedMinor, "redacted");
   assert.throws(
@@ -455,6 +457,29 @@ test("EEC-26–EEC-32 roadmap critical path, cycles and change impact", () => {
     idempotencyKey: "change-1b",
   });
   assert.equal(replay.id, change.id);
+  const secondOpportunity = service.createEngagementOpportunity(planner, {
+    organisationId,
+    displayReference: "Second engagement for change isolation",
+    enquiryChannel: "DIRECT",
+    knownEventType: "WEDDING",
+    reason: "open second",
+    idempotencyKey: "intel-opp-2",
+  });
+  const secondEngagement = service.startDiscoveryEngagement(planner, {
+    organisationId,
+    opportunityId: secondOpportunity.id,
+    expectedVersion: secondOpportunity.version,
+    reason: "start second",
+    idempotencyKey: "intel-eng-2",
+  });
+  const isolated = service.createChangeProposal(planner, {
+    organisationId,
+    engagementId: secondEngagement.id,
+    summary: "Guest count may move from 180 to 220",
+    reason: "detect other",
+    idempotencyKey: "change-2",
+  });
+  assert.notEqual(isolated.id, change.id);
   const impact = service.assessChangeImpact(planner, {
     organisationId,
     changeProposalId: change.id,
