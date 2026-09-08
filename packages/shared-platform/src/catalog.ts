@@ -545,6 +545,10 @@ export function roleIdForKey(key: (typeof SYSTEM_ROLE_KEYS)[number]): string {
   return ROLE_IDS[key];
 }
 
+export function roleKeyForId(id: string): (typeof SYSTEM_ROLE_KEYS)[number] | undefined {
+  return (Object.entries(ROLE_IDS) as Array<[(typeof SYSTEM_ROLE_KEYS)[number], string]>).find(([, value]) => value === id)?.[0];
+}
+
 export function permissionIdForKey(key: PermissionKey): string {
   return PERMISSION_IDS[key];
 }

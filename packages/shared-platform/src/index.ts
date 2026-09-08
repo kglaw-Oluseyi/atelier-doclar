@@ -226,9 +226,9 @@ export {
   addressingAlreadyApplied,
 } from "./mutation-replay.js";
 export { parseCanonicalCsv, CANONICAL_CSV_COLUMNS } from "./guest-intake.js";
-export { seededPermissions, seededRoles, permissionsForRole, roleIdForKey } from "./catalog.js";
+export { seededPermissions, seededRoles, permissionsForRole, roleIdForKey, roleKeyForId } from "./catalog.js";
 export { authorize, assignmentIsActive, assignmentCoversScope, canSeeClient, canSeeEvent, singleCoveringRoleKey, type ActorSnapshot, type PolicyDecision } from "./policy.js";
-export { allowedNextPhases, assertPhaseTransition } from "./transitions.js";
+export { allowedNextPhases, assertPhaseTransition, isScaffoldedPhase, SCAFFOLDED_PHASES } from "./transitions.js";
 export { redactValue, stableHash } from "./redaction.js";
 export {
   NonProductionIdentityAdapter,
@@ -377,6 +377,7 @@ export {
   assertNoProhibitedMerchandiseFields,
   prohibitedMerchandisePayload,
   assertCapCircumferenceRaw,
+  vendorReference,
 } from "./merchandise-operations.js";
 export {
   describeMerchandiseAccessState,

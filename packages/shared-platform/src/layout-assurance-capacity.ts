@@ -192,16 +192,21 @@ export function buildCapacityReport(
       substitutesAnotherProduct: false,
       explanation: attendance.wholeEventDistinctPersonForecast.explanation,
     },
-    phaseOccupancy: attendance.phaseOccupancy.map((item) => ({
-      product: "PHASE_OCCUPANCY" as const,
-      present: item.present,
-      quantity: item.quantity,
-      low: item.low,
-      high: item.high,
-      notWholeEventPeople: true as const,
-      substitutesAnotherProduct: false as const,
-      explanation: item.explanation,
-    })),
+    phaseOccupancy: attendance.phaseOccupancy.map((item) => {
+      const phase = snap.programmePhases.find((entry) => entry.id === item.phaseId);
+      return {
+        product: "PHASE_OCCUPANCY" as const,
+        present: item.present,
+        quantity: item.quantity,
+        low: item.low,
+        high: item.high,
+        ownerLabel: phase?.name,
+        sourceLabel: phase ? `${phase.type} · ${phase.status}` : item.phaseId,
+        notWholeEventPeople: true as const,
+        substitutesAnotherProduct: false as const,
+        explanation: item.explanation,
+      };
+    }),
     operationalProvision: {
       product: "OPERATIONAL_PROVISION",
       present: attendance.operationalProvision.present,

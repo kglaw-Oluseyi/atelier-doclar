@@ -65,8 +65,13 @@ function versioned(now: string) {
   };
 }
 
-function vendorReference(guestId: string, itemId: string): string {
-  return `VR-${guestId.slice(0, 8)}-${itemId.slice(0, 6)}`.toUpperCase();
+function compactHex(id: string): string {
+  return id.replace(/-/g, "").toUpperCase();
+}
+
+/** Trailing hex keeps sequential fixture UUIDs distinct. Existing stored fulfilments are not rewritten. */
+export function vendorReference(guestId: string, itemId: string): string {
+  return `VR-${compactHex(guestId).slice(-8)}-${compactHex(itemId).slice(-6)}`;
 }
 
 export function prohibitedMerchandisePayload(raw: unknown): string | undefined {

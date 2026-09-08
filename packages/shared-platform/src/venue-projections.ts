@@ -127,7 +127,16 @@ export type EventVenueWorkspace = {
   availableVenues: VenueRegistryItem[];
   inheritedFacts: EventVenueFactView[];
   overrideFacts: EventVenueFactView[];
-  layouts: Array<{ id: string; name: string; status: Layout["status"]; contentHash: string; version: number }>;
+  layouts: Array<{
+    id: string;
+    name: string;
+    status: Layout["status"];
+    contentHash: string;
+    version: number;
+    currentRevisionNumber: number;
+    updatedAt: string;
+    publicationStatus?: string;
+  }>;
   attendanceProjection: AttendanceProjectionRead;
   coordinateConvention: typeof FROZEN_COORDINATE_SYSTEM;
   capabilities: VenueCapabilities;
@@ -281,13 +290,21 @@ export function buildEventVenueWorkspace(
       .map((item) => ({ ...projectEventFact(item), origin: item.origin, inherited: false })),
     layouts: snap.layouts
       .filter((item) => item.eventId === eventId)
-      .map((item) => ({
-        id: item.id,
-        name: item.name,
-        status: item.status,
-        contentHash: item.contentHash,
-        version: item.version,
-      })),
+      .map((item) => {
+        const publication = snap.layoutPublications
+          .filter((entry) => entry.layoutId === item.id)
+          .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))[0];
+        return {
+          id: item.id,
+          name: item.name,
+          status: item.status,
+          contentHash: item.contentHash,
+          version: item.version,
+          currentRevisionNumber: item.currentRevisionNumber,
+          updatedAt: item.updatedAt,
+          publicationStatus: publication?.status,
+        };
+      }),
     attendanceProjection: readAttendanceProjection(snap, eventId),
     coordinateConvention: FROZEN_COORDINATE_SYSTEM,
     capabilities,

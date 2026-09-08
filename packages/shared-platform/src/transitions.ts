@@ -13,6 +13,12 @@ const ALLOWED: Record<EventPhase, readonly EventPhase[]> = {
 
 const SCAFFOLDED_TARGETS = new Set<EventPhase>(["READY", "LIVE"]);
 
+export const SCAFFOLDED_PHASES = ["READY", "LIVE"] as const;
+
+export function isScaffoldedPhase(phase: EventPhase): boolean {
+  return SCAFFOLDED_TARGETS.has(phase);
+}
+
 export function allowedNextPhases(phase: EventPhase): readonly EventPhase[] {
   return ALLOWED[phase];
 }
