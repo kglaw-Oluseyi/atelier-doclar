@@ -126,6 +126,18 @@ import type {
 } from "./venue-schemas.js";
 import type { LayoutCommand, LayoutDraftCursor } from "./spatial-schemas.js";
 import type {
+  LayoutApproval,
+  LayoutAssetCalibration,
+  LayoutCapacityStatement,
+  LayoutExportJob,
+  LayoutFloorPlanAsset,
+  LayoutPublication,
+  LayoutSnapshot,
+  LayoutValidationFinding,
+  LayoutValidationOverride,
+  LayoutValidationRun,
+} from "./layout-assurance-schemas.js";
+import type {
   GuestDuplicateCandidate,
   GuestHousehold,
   GuestIntakeBatch,
@@ -290,6 +302,16 @@ export interface PlatformSnapshot {
   layoutCommands: LayoutCommand[];
   layoutDraftCursors: LayoutDraftCursor[];
   venueEvidenceAssets: VenueEvidenceAsset[];
+  layoutFloorPlanAssets: LayoutFloorPlanAsset[];
+  layoutAssetCalibrations: LayoutAssetCalibration[];
+  layoutCapacityStatements: LayoutCapacityStatement[];
+  layoutValidationRuns: LayoutValidationRun[];
+  layoutValidationFindings: LayoutValidationFinding[];
+  layoutValidationOverrides: LayoutValidationOverride[];
+  layoutSnapshots: LayoutSnapshot[];
+  layoutApprovals: LayoutApproval[];
+  layoutPublications: LayoutPublication[];
+  layoutExportJobs: LayoutExportJob[];
   s05MigrationReceipts: S05MigrationReceipt[];
   rsvpPolicies: RsvpPolicy[];
   rsvpQuestionnaires: RsvpQuestionnaire[];
@@ -449,6 +471,16 @@ export function emptySnapshot(): PlatformSnapshot {
     layoutCommands: [],
     layoutDraftCursors: [],
     venueEvidenceAssets: [],
+    layoutFloorPlanAssets: [],
+    layoutAssetCalibrations: [],
+    layoutCapacityStatements: [],
+    layoutValidationRuns: [],
+    layoutValidationFindings: [],
+    layoutValidationOverrides: [],
+    layoutSnapshots: [],
+    layoutApprovals: [],
+    layoutPublications: [],
+    layoutExportJobs: [],
     s05MigrationReceipts: [],
     rsvpPolicies: [],
     rsvpQuestionnaires: [],
@@ -592,6 +624,16 @@ export function normalizeSnapshot(input: PlatformSnapshot): PlatformSnapshot {
     layoutCommands: input.layoutCommands ?? [],
     layoutDraftCursors: input.layoutDraftCursors ?? [],
     venueEvidenceAssets: input.venueEvidenceAssets ?? [],
+    layoutFloorPlanAssets: input.layoutFloorPlanAssets ?? [],
+    layoutAssetCalibrations: input.layoutAssetCalibrations ?? [],
+    layoutCapacityStatements: input.layoutCapacityStatements ?? [],
+    layoutValidationRuns: input.layoutValidationRuns ?? [],
+    layoutValidationFindings: input.layoutValidationFindings ?? [],
+    layoutValidationOverrides: input.layoutValidationOverrides ?? [],
+    layoutSnapshots: input.layoutSnapshots ?? [],
+    layoutApprovals: input.layoutApprovals ?? [],
+    layoutPublications: input.layoutPublications ?? [],
+    layoutExportJobs: input.layoutExportJobs ?? [],
     s05MigrationReceipts: input.s05MigrationReceipts ?? [],
     rsvpPolicies: input.rsvpPolicies ?? [],
     rsvpQuestionnaires: input.rsvpQuestionnaires ?? [],

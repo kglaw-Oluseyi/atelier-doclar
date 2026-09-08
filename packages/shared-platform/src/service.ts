@@ -6,7 +6,7 @@ import {
   SYSTEM_ROLE_KEYS,
 } from "./constants.js";
 import { localFixtureAccessAuthority, type AccessAuthority } from "./access-authority.js";
-import { permissionIdForKey, roleIdForKey, seededPermissions, seededRoles } from "./catalog.js";
+import { permissionIdForKey, roleIdForKey, seededPermissions, seededRoles, isSystemAdministratorRole } from "./catalog.js";
 import { PlatformError } from "./errors.js";
 import { assertNamedHuman } from "./identity.js";
 import { lineageFixtureMark } from "./fixtures.js";
@@ -332,6 +332,55 @@ import {
 } from "./venue-operations.js";
 import { applyLayoutCommandOnSnap } from "./spatial-operations.js";
 import { ApplyLayoutCommandInputSchema } from "./spatial-schemas.js";
+import {
+  afterLayoutMaterialChange,
+  afterVenueFactChange,
+  acknowledgeFindingOnSnap,
+  calibrateFloorPlanOnSnap,
+  compareLayoutSnapshots,
+  createLayoutSnapshotOnSnap,
+  decideLayoutApprovalOnSnap,
+  overrideFindingOnSnap,
+  publishLayoutOnSnap,
+  recordFloorPlanIntentOnSnap,
+  recordOperationalCapacityOnSnap,
+  requestLayoutExportOnSnap,
+  restoreLayoutSnapshotOnSnap,
+  runLayoutValidationOnSnap,
+  submitLayoutApprovalOnSnap,
+  withdrawLayoutPublicationOnSnap,
+} from "./layout-assurance-operations.js";
+import {
+  AcknowledgeFindingInputSchema,
+  CalibrateFloorPlanInputSchema,
+  CreateLayoutSnapshotInputSchema,
+  DecideLayoutApprovalInputSchema,
+  OverrideFindingInputSchema,
+  PublishLayoutInputSchema,
+  RecordFloorPlanIntentInputSchema,
+  RecordOperationalCapacityInputSchema,
+  RequestLayoutExportInputSchema,
+  RestoreLayoutSnapshotInputSchema,
+  RunLayoutValidationInputSchema,
+  SubmitLayoutApprovalInputSchema,
+  WithdrawLayoutPublicationInputSchema,
+  type LayoutApproval,
+  type LayoutAssetCalibration,
+  type LayoutCapacityStatement,
+  type LayoutExportJob,
+  type LayoutFloorPlanAsset,
+  type LayoutPublication,
+  type LayoutSnapshot,
+  type LayoutValidationFinding,
+  type LayoutValidationOverride,
+  type LayoutValidationRun,
+} from "./layout-assurance-schemas.js";
+import {
+  buildLayoutDownstreamProjection,
+  buildPublishedLayoutViewer,
+  type LayoutDownstreamProjection,
+  type PublishedLayoutViewer,
+} from "./layout-assurance-projections.js";
 import {
   buildEventVenueWorkspace,
   buildLayoutSetupWorkspace,
@@ -3037,6 +3086,15 @@ export class PlatformService {
           "layout.update",
           "layout.lease.acquire",
           "layout.constraint.override",
+          "layout.asset.manage",
+          "layout.capacity.record",
+          "layout.validation.run",
+          "layout.snapshot.manage",
+          "layout.approval.submit",
+          "layout.approval.decide",
+          "layout.publish",
+          "layout.publication.view",
+          "layout.downstream.read",
         ] as const
       ).filter((key) => this.permissionAllowed(actor, key, scope)),
     );
@@ -3125,7 +3183,11 @@ export class PlatformService {
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash(input),
-      run: (snap, ctx) => verifyVenueFactOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+      run: (snap, ctx) => {
+        const fact = verifyVenueFactOnSnap(snap, input, ctx.now, ctx.actor.person.id);
+        afterVenueFactChange(snap, fact.venueId, undefined, ctx.now);
+        return fact;
+      },
     });
   }
 
@@ -3159,7 +3221,12 @@ export class PlatformService {
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash(input),
-      run: (snap, ctx) => recordEventVenueOverrideOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+      run: (snap, ctx) => {
+        const fact = recordEventVenueOverrideOnSnap(snap, input, ctx.now, ctx.actor.person.id);
+        const adopted = snap.eventVenues.find((item) => item.id === fact.eventVenueId);
+        if (adopted) afterVenueFactChange(snap, adopted.venueId, adopted.eventId, ctx.now);
+        return fact;
+      },
     });
   }
 
@@ -3192,7 +3259,12 @@ export class PlatformService {
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash(input),
-      run: (snap, ctx) => updateLayoutSetupOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+      run: (snap, ctx) => {
+        const previousHash = snap.layouts.find((item) => item.id === input.layoutId)?.contentHash ?? "";
+        const layout = updateLayoutSetupOnSnap(snap, input, ctx.now, ctx.actor.person.id);
+        afterLayoutMaterialChange(snap, layout, previousHash, ctx.now);
+        return layout;
+      },
     });
   }
 
@@ -3209,8 +3281,9 @@ export class PlatformService {
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash(input),
-      run: (snap, ctx) =>
-        applyLayoutCommandOnSnap(
+      run: (snap, ctx) => {
+        const previousHash = snap.layouts.find((item) => item.id === input.layoutId)?.contentHash ?? "";
+        const result = applyLayoutCommandOnSnap(
           snap,
           input,
           ctx.now,
@@ -3219,7 +3292,10 @@ export class PlatformService {
             organisationId: input.organisationId,
             eventId: input.eventId,
           }),
-        ).layout,
+        );
+        afterLayoutMaterialChange(snap, result.layout, previousHash, ctx.now);
+        return result.layout;
+      },
     });
   }
 
@@ -3236,6 +3312,265 @@ export class PlatformService {
       payloadHash: stableHash(input),
       run: (snap, ctx) => acquireLayoutLeaseOnSnap(snap, input, ctx.now, ctx.actor.person.id),
     });
+  }
+
+  recordFloorPlanIntent(actor: ActorContext, raw: unknown): LayoutFloorPlanAsset {
+    assertNoVenueGuestIdentity(raw);
+    const input = parseStrict(RecordFloorPlanIntentInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "layout.asset.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "layout.asset.intent.recorded",
+      resourceType: "layout_floor_plan_asset",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => recordFloorPlanIntentOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  calibrateFloorPlan(actor: ActorContext, raw: unknown): LayoutAssetCalibration {
+    const input = parseStrict(CalibrateFloorPlanInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "layout.asset.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "layout.asset.calibrated",
+      resourceType: "layout_asset_calibration",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => calibrateFloorPlanOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  recordOperationalCapacity(actor: ActorContext, raw: unknown): LayoutCapacityStatement {
+    const input = parseStrict(RecordOperationalCapacityInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "layout.capacity.record",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "layout.capacity.recorded",
+      resourceType: "layout_capacity_statement",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => recordOperationalCapacityOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  runLayoutValidation(actor: ActorContext, raw: unknown): LayoutValidationRun {
+    const input = parseStrict(RunLayoutValidationInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "layout.validation.run",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "layout.validation.ran",
+      resourceType: "layout_validation_run",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => runLayoutValidationOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  acknowledgeLayoutFinding(actor: ActorContext, raw: unknown): LayoutValidationFinding {
+    const input = parseStrict(AcknowledgeFindingInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "layout.validation.run",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "layout.finding.acknowledged",
+      resourceType: "layout_validation_finding",
+      resourceId: input.findingId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => acknowledgeFindingOnSnap(snap, input, ctx.now),
+    });
+  }
+
+  overrideLayoutFinding(actor: ActorContext, raw: unknown): LayoutValidationOverride {
+    const input = parseStrict(OverrideFindingInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "layout.constraint.override",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "layout.finding.overridden",
+      resourceType: "layout_validation_override",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) =>
+        overrideFindingOnSnap(
+          snap,
+          input,
+          ctx.now,
+          ctx.actor.person.id,
+          this.permissionAllowed(ctx.actor, "layout.constraint.override", {
+            organisationId: input.organisationId,
+            eventId: input.eventId,
+          }),
+        ),
+    });
+  }
+
+  createLayoutSnapshot(actor: ActorContext, raw: unknown): LayoutSnapshot {
+    const input = parseStrict(CreateLayoutSnapshotInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "layout.snapshot.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "layout.snapshot.created",
+      resourceType: "layout_snapshot",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => createLayoutSnapshotOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  restoreLayoutSnapshot(actor: ActorContext, raw: unknown): Layout {
+    const input = parseStrict(RestoreLayoutSnapshotInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "layout.snapshot.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "layout.snapshot.restored",
+      resourceType: "layout",
+      resourceId: input.layoutId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => restoreLayoutSnapshotOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  compareLayoutSnapshots(actor: ActorContext, organisationId: string, eventId: string, leftId: string, rightId: string) {
+    const { snap } = this.authorizeQuery(actor, "layout.snapshot.manage", { organisationId, eventId });
+    this.requireEvent(snap, organisationId, eventId);
+    return compareLayoutSnapshots(snap, organisationId, eventId, leftId, rightId);
+  }
+
+  submitLayoutApproval(actor: ActorContext, raw: unknown): LayoutApproval {
+    const input = parseStrict(SubmitLayoutApprovalInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "layout.approval.submit",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "layout.approval.submitted",
+      resourceType: "layout_approval",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => submitLayoutApprovalOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  decideLayoutApproval(actor: ActorContext, raw: unknown): LayoutApproval {
+    const input = parseStrict(DecideLayoutApprovalInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "layout.approval.decide",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: `layout.approval.${input.decision.toLowerCase()}`,
+      resourceType: "layout_approval",
+      resourceId: input.approvalId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) =>
+        decideLayoutApprovalOnSnap(
+          snap,
+          input,
+          ctx.now,
+          ctx.actor.person.id,
+          this.permissionAllowed(ctx.actor, "layout.approval.decide", {
+            organisationId: input.organisationId,
+            eventId: input.eventId,
+          }),
+          ctx.actor.assignments.some((assignment) => {
+            const role = ctx.actor.roles.find((item) => item.id === assignment.roleId);
+            return Boolean(role && isSystemAdministratorRole(role.key) && assignment.status === "ACTIVE");
+          }),
+        ),
+    });
+  }
+
+  publishLayout(actor: ActorContext, raw: unknown): LayoutPublication {
+    const input = parseStrict(PublishLayoutInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "layout.publish",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "layout.published",
+      resourceType: "layout_publication",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      replayIfAlreadyApplied: true,
+      alreadyApplied: (snap) => {
+        const layout = snap.layouts.find((item) => item.id === input.layoutId);
+        if (!layout) return undefined;
+        return snap.layoutPublications.find(
+          (item) => item.layoutId === layout.id && item.status === "CURRENT" && item.contentHash === layout.contentHash,
+        );
+      },
+      run: (snap, ctx) => publishLayoutOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  withdrawLayoutPublication(actor: ActorContext, raw: unknown): LayoutPublication {
+    const input = parseStrict(WithdrawLayoutPublicationInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "layout.publish",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "layout.publication.withdrawn",
+      resourceType: "layout_publication",
+      resourceId: input.publicationId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => withdrawLayoutPublicationOnSnap(snap, input, ctx.now),
+    });
+  }
+
+  requestLayoutExport(actor: ActorContext, raw: unknown): LayoutExportJob {
+    const input = parseStrict(RequestLayoutExportInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "layout.publication.view",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "layout.export.requested",
+      resourceType: "layout_export_job",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => requestLayoutExportOnSnap(snap, input, ctx.now, ctx.actor.person.id),
+    });
+  }
+
+  getPublishedLayoutViewer(
+    actor: ActorContext,
+    organisationId: string,
+    eventId: string,
+    layoutId: string,
+  ): PublishedLayoutViewer {
+    const { snap, ctx } = this.authorizeQuery(actor, "layout.publication.view", { organisationId, eventId });
+    this.requireEvent(snap, organisationId, eventId);
+    return buildPublishedLayoutViewer(
+      snap,
+      organisationId,
+      eventId,
+      layoutId,
+      this.permissionAllowed(ctx.actor, "layout.constraint.override", { organisationId, eventId }),
+    );
+  }
+
+  getLayoutDownstreamProjection(
+    actor: ActorContext,
+    organisationId: string,
+    eventId: string,
+    layoutId: string,
+  ): LayoutDownstreamProjection {
+    const { snap, ctx } = this.authorizeQuery(actor, "layout.downstream.read", { organisationId, eventId });
+    this.requireEvent(snap, organisationId, eventId);
+    return buildLayoutDownstreamProjection(
+      snap,
+      organisationId,
+      eventId,
+      layoutId,
+      this.permissionAllowed(ctx.actor, "layout.constraint.override", { organisationId, eventId }),
+    );
   }
 
   exchangeAtelierAccess(token: string, now?: string, correlationId = "atelier-access"): { sessionToken: string; view: HostAtelierProjection } {
@@ -6254,6 +6589,16 @@ export class PlatformService {
       snap.layoutCommands,
       snap.layoutDraftCursors,
       snap.venueEvidenceAssets,
+      snap.layoutFloorPlanAssets,
+      snap.layoutAssetCalibrations,
+      snap.layoutCapacityStatements,
+      snap.layoutValidationRuns,
+      snap.layoutValidationFindings,
+      snap.layoutValidationOverrides,
+      snap.layoutSnapshots,
+      snap.layoutApprovals,
+      snap.layoutPublications,
+      snap.layoutExportJobs,
     ];
     const s04cTables = [
       snap.merchandiseCollections,
@@ -6438,6 +6783,16 @@ export class PlatformService {
       snap.layoutCommands,
       snap.layoutDraftCursors,
       snap.venueEvidenceAssets,
+      snap.layoutFloorPlanAssets,
+      snap.layoutAssetCalibrations,
+      snap.layoutCapacityStatements,
+      snap.layoutValidationRuns,
+      snap.layoutValidationFindings,
+      snap.layoutValidationOverrides,
+      snap.layoutSnapshots,
+      snap.layoutApprovals,
+      snap.layoutPublications,
+      snap.layoutExportJobs,
       snap.guestDuplicateCandidates,
       snap.guestIntakeBatches,
       snap.rsvpPolicies,

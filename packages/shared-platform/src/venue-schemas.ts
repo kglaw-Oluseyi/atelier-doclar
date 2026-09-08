@@ -109,6 +109,16 @@ export const S05_CANONICAL_COLLECTIONS = [
   "layoutCommands",
   "layoutDraftCursors",
   "venueEvidenceAssets",
+  "layoutFloorPlanAssets",
+  "layoutAssetCalibrations",
+  "layoutCapacityStatements",
+  "layoutValidationRuns",
+  "layoutValidationFindings",
+  "layoutValidationOverrides",
+  "layoutSnapshots",
+  "layoutApprovals",
+  "layoutPublications",
+  "layoutExportJobs",
 ] as const;
 
 export type S05CanonicalCollection = (typeof S05_CANONICAL_COLLECTIONS)[number];
@@ -283,7 +293,7 @@ export const VenueEvidenceAssetSchema = z
 export const S05MigrationReceiptSchema = z
   .object({
     id: UuidSchema,
-    migrationId: z.enum(["EOS-S05-VENUE-LAYOUT-V1", "EOS-S05-VENUE-OBJECTS-V1"]),
+    migrationId: z.enum(["EOS-S05-VENUE-LAYOUT-V1", "EOS-S05-VENUE-OBJECTS-V1", "EOS-S05-VENUE-ASSURANCE-V1"]),
     checksum: NonEmptySchema.max(128),
     status: z.enum(["APPLIED", "REPLAYED", "ROLLED_BACK"]),
     createdRecords: z.array(z.object({ collection: NonEmptySchema.max(80), id: UuidSchema }).strict()),

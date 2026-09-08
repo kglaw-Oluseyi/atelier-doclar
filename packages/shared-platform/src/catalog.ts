@@ -148,6 +148,15 @@ const PERMISSION_IDS: Record<PermissionKey, string> = {
   "layout.update": "11111111-1111-4111-8111-111111111130",
   "layout.lease.acquire": "11111111-1111-4111-8111-111111111131",
   "layout.constraint.override": "11111111-1111-4111-8111-111111111132",
+  "layout.asset.manage": "11111111-1111-4111-8111-111111111133",
+  "layout.capacity.record": "11111111-1111-4111-8111-111111111134",
+  "layout.validation.run": "11111111-1111-4111-8111-111111111135",
+  "layout.snapshot.manage": "11111111-1111-4111-8111-111111111136",
+  "layout.approval.submit": "11111111-1111-4111-8111-111111111137",
+  "layout.approval.decide": "11111111-1111-4111-8111-111111111138",
+  "layout.publish": "11111111-1111-4111-8111-111111111139",
+  "layout.publication.view": "11111111-1111-4111-8111-111111111140",
+  "layout.downstream.read": "11111111-1111-4111-8111-111111111141",
 };
 
 const ROLE_IDS: Record<(typeof SYSTEM_ROLE_KEYS)[number], string> = {
@@ -303,6 +312,15 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "layout.update",
     "layout.lease.acquire",
     "layout.constraint.override",
+    "layout.asset.manage",
+    "layout.capacity.record",
+    "layout.validation.run",
+    "layout.snapshot.manage",
+    "layout.approval.submit",
+    "layout.approval.decide",
+    "layout.publish",
+    "layout.publication.view",
+    "layout.downstream.read",
   ],
   CLIENT_LEAD: [
     "organisation.view",
@@ -416,6 +434,13 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "layout.create",
     "layout.update",
     "layout.lease.acquire",
+    "layout.asset.manage",
+    "layout.capacity.record",
+    "layout.validation.run",
+    "layout.snapshot.manage",
+    "layout.approval.submit",
+    "layout.publication.view",
+    "layout.downstream.read",
   ],
   SYSTEM_ADMINISTRATOR: [
     "organisation.view",
@@ -427,6 +452,7 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "system.health.view",
     "venue.registry.view",
     "layout.view",
+    "layout.publication.view",
   ],
   READ_ONLY_AUDITOR: [
     "organisation.view",
@@ -462,6 +488,8 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "language.audit.view",
     "venue.registry.view",
     "layout.view",
+    "layout.publication.view",
+    "layout.downstream.read",
   ],
 };
 

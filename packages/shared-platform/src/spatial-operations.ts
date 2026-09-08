@@ -176,6 +176,40 @@ function persistObjects(
   return revision;
 }
 
+export function replaceLayoutObjectsOnSnap(
+  snap: PlatformSnapshot,
+  input: {
+    organisationId: string;
+    eventId: string;
+    layoutId: string;
+    expectedVersion: number;
+    expectedRevisionNumber: number;
+  },
+  objects: SpatialObject[],
+  now: string,
+  actorPersonId: string,
+): Layout {
+  const layout = requireLayout(snap, input.organisationId, input.eventId, input.layoutId);
+  if (layout.version !== input.expectedVersion || layout.currentRevisionNumber !== input.expectedRevisionNumber) {
+    throw new PlatformError("VERSION_CONFLICT", "this layout revision changed while you were editing", {
+      publicMessage: "This layout changed while you were editing. Reload before retrying. Rejected values were not saved.",
+    });
+  }
+  acquireLayoutLeaseOnSnap(
+    snap,
+    {
+      organisationId: input.organisationId,
+      eventId: input.eventId,
+      layoutId: input.layoutId,
+      reason: "Acquire editor lease to restore a snapshot as a new version",
+    },
+    now,
+    actorPersonId,
+  );
+  persistObjects(snap, layout, objects, actorPersonId, now);
+  return layout;
+}
+
 function auditCommand(
   snap: PlatformSnapshot,
   layout: Layout,

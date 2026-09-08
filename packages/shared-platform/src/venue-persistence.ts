@@ -14,6 +14,18 @@ import {
   VenueSchema,
 } from "./venue-schemas.js";
 import { LayoutCommandSchema, LayoutDraftCursorSchema } from "./spatial-schemas.js";
+import {
+  LayoutApprovalSchema,
+  LayoutAssetCalibrationSchema,
+  LayoutCapacityStatementSchema,
+  LayoutExportJobSchema,
+  LayoutFloorPlanAssetSchema,
+  LayoutPublicationSchema,
+  LayoutSnapshotSchema,
+  LayoutValidationFindingSchema,
+  LayoutValidationOverrideSchema,
+  LayoutValidationRunSchema,
+} from "./layout-assurance-schemas.js";
 
 export const S05_UNKNOWN_FIELDS_POLICY = "REJECT" as const;
 export const S05_JOURNAL_COLLECTION = "s05MigrationReceipts" as const;
@@ -31,6 +43,16 @@ const S05_COLLECTION_SCHEMAS = {
   layoutCommands: z.array(LayoutCommandSchema),
   layoutDraftCursors: z.array(LayoutDraftCursorSchema),
   venueEvidenceAssets: z.array(VenueEvidenceAssetSchema),
+  layoutFloorPlanAssets: z.array(LayoutFloorPlanAssetSchema),
+  layoutAssetCalibrations: z.array(LayoutAssetCalibrationSchema),
+  layoutCapacityStatements: z.array(LayoutCapacityStatementSchema),
+  layoutValidationRuns: z.array(LayoutValidationRunSchema),
+  layoutValidationFindings: z.array(LayoutValidationFindingSchema),
+  layoutValidationOverrides: z.array(LayoutValidationOverrideSchema),
+  layoutSnapshots: z.array(LayoutSnapshotSchema),
+  layoutApprovals: z.array(LayoutApprovalSchema),
+  layoutPublications: z.array(LayoutPublicationSchema),
+  layoutExportJobs: z.array(LayoutExportJobSchema),
   s05MigrationReceipts: z.array(S05MigrationReceiptSchema),
 } as const;
 

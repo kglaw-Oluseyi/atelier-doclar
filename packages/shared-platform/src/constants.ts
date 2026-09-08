@@ -353,6 +353,15 @@ export const PERMISSION_KEYS = [
   "layout.update",
   "layout.lease.acquire",
   "layout.constraint.override",
+  "layout.asset.manage",
+  "layout.capacity.record",
+  "layout.validation.run",
+  "layout.snapshot.manage",
+  "layout.approval.submit",
+  "layout.approval.decide",
+  "layout.publish",
+  "layout.publication.view",
+  "layout.downstream.read",
 ] as const;
 
 export const SYSTEM_ROLE_KEYS = [
@@ -561,6 +570,8 @@ export const S05_SENSITIVE_PERMISSIONS = [
   "venue.adopt",
   "layout.lease.acquire",
   "layout.constraint.override",
+  "layout.approval.decide",
+  "layout.publish",
 ] as const;
 
 export const VENUE_RECORD_STATUSES = ["ACTIVE", "ARCHIVED"] as const;
@@ -612,6 +623,94 @@ export const VENUE_LAYOUT_STATUSES = ["DRAFT"] as const;
 export const VENUE_LEASE_STATUSES = ["ACTIVE", "RELEASED", "EXPIRED"] as const;
 export const VENUE_EVIDENCE_STORAGE_STATES = ["UNAVAILABLE"] as const;
 export const VENUE_ASSET_UPLOAD_AVAILABLE = false;
+export const LAYOUT_ASSET_PROVIDER_CONFIGURED = false;
+export const LAYOUT_PDF_EXPORT_AVAILABLE = false;
+export const LAYOUT_ASSET_REQUIRED_VARIABLES = [
+  {
+    name: "EVENT_OS_LAYOUT_ASSET_STORE_PROVIDER",
+    service: "event-os",
+    secret: false,
+    purpose: "Approved object-store provider identifier once George authorises one. Unset keeps live binary upload disabled.",
+    failureBehaviour: "CONFIGURATION_REQUIRED; no bytes stored; no signed URLs.",
+  },
+  {
+    name: "EVENT_OS_LAYOUT_ASSET_BUCKET",
+    service: "event-os",
+    secret: false,
+    purpose: "Bucket or container for floor-plan binaries after a provider is approved.",
+    failureBehaviour: "CONFIGURATION_REQUIRED.",
+  },
+  {
+    name: "EVENT_OS_LAYOUT_ASSET_ACCESS_KEY",
+    service: "event-os",
+    secret: true,
+    purpose: "Provider access key. Must be supplied by George; never invented.",
+    failureBehaviour: "CONFIGURATION_REQUIRED.",
+  },
+  {
+    name: "EVENT_OS_LAYOUT_ASSET_SECRET_KEY",
+    service: "event-os",
+    secret: true,
+    purpose: "Provider secret key. Must be supplied by George; never invented.",
+    failureBehaviour: "CONFIGURATION_REQUIRED.",
+  },
+  {
+    name: "EVENT_OS_LAYOUT_ASSET_SCANNER_URL",
+    service: "event-os",
+    secret: false,
+    purpose: "Malware scanner endpoint. Required before TDR-S05-001 can close.",
+    failureBehaviour: "Scan remains NOT_RUN; production upload stays disabled.",
+  },
+  {
+    name: "EVENT_OS_LAYOUT_ASSET_SCANNER_TOKEN",
+    service: "event-os",
+    secret: true,
+    purpose: "Scanner authentication token. Must be supplied by George.",
+    failureBehaviour: "Scan remains NOT_RUN.",
+  },
+  {
+    name: "EVENT_OS_LAYOUT_ASSET_DERIVATIVE_URL",
+    service: "event-os",
+    secret: false,
+    purpose: "Inert PDF/SVG/raster derivative processor endpoint.",
+    failureBehaviour: "Derivatives remain INERT_METADATA only; no generated preview files.",
+  },
+] as const;
+export const LAYOUT_ASSET_MAX_BYTES = 20_000_000;
+export const LAYOUT_ASSET_MAX_FILES = 8;
+export const LAYOUT_VALIDATION_ENGINE_ID = "EOS-S05-VALIDATION" as const;
+export const LAYOUT_VALIDATION_ENGINE_VERSION = "1.0.0" as const;
+export const LAYOUT_DOWNSTREAM_CONTRACT_ID = "eos-s05-spatial-publication-v1" as const;
+export const LAYOUT_FLOOR_PLAN_KINDS = ["PDF", "SVG", "PNG", "JPEG"] as const;
+export const LAYOUT_ASSET_STORAGE_STATES = [
+  "INTENT_RECORDED",
+  "CONFIGURATION_REQUIRED",
+  "QUARANTINED",
+  "SCAN_PENDING",
+  "SCAN_FAILED",
+  "REJECTED",
+  "UNAVAILABLE",
+  "SUPERSEDED",
+  "RETAINED",
+] as const;
+export const LAYOUT_FINDING_SEVERITIES = ["BLOCKING", "WARNING", "RECOMMENDATION", "INFORMATION"] as const;
+export const LAYOUT_FINDING_STATUSES = ["OPEN", "ACKNOWLEDGED", "OVERRIDDEN", "RESOLVED", "STALE", "OBSOLETE"] as const;
+export const LAYOUT_APPROVAL_STATUSES = ["SUBMITTED", "APPROVED", "REJECTED", "REVOKED", "INVALIDATED"] as const;
+export const LAYOUT_PUBLICATION_STATUSES = ["CURRENT", "SUPERSEDED", "WITHDRAWN"] as const;
+export const LAYOUT_EXPORT_STATUSES = ["QUEUED_UNAVAILABLE", "DISABLED"] as const;
+export const LAYOUT_DIFF_KINDS = [
+  "ADDED",
+  "REMOVED",
+  "MOVED",
+  "RESIZED",
+  "ROTATED",
+  "RELABELLED",
+  "TYPE_OR_PROPERTY",
+  "CAPACITY",
+  "LOCK_OR_SAFETY",
+  "SOURCE_OR_FACT",
+  "DOWNSTREAM_IDENTIFIER",
+] as const;
 export const LAYOUT_EDITOR_LEASE_TTL_SECONDS = 1800;
 export const SPATIAL_OBJECT_TYPES = [
   "ZONE",

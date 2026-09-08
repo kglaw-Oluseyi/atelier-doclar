@@ -1,0 +1,341 @@
+import {
+  LAYOUT_ASSET_PROVIDER_CONFIGURED,
+  LAYOUT_DOWNSTREAM_CONTRACT_ID,
+  LAYOUT_PDF_EXPORT_AVAILABLE,
+  LAYOUT_VALIDATION_ENGINE_ID,
+  LAYOUT_VALIDATION_ENGINE_VERSION,
+} from "./constants.js";
+import { PlatformError } from "./errors.js";
+import type { CapacityReport } from "./layout-assurance-capacity.js";
+import { buildCapacityReport } from "./layout-assurance-capacity.js";
+import { diffLayoutObjects } from "./layout-assurance-diff.js";
+import type {
+  LayoutApproval,
+  LayoutDiffEntry,
+  LayoutExportJob,
+  LayoutFloorPlanAsset,
+  LayoutPublication,
+  LayoutSnapshot,
+  LayoutValidationFinding,
+  LayoutValidationRun,
+} from "./layout-assurance-schemas.js";
+import type { PermissionKey } from "./schemas.js";
+import { currentLayoutObjects } from "./spatial-operations.js";
+import type { SpatialObject } from "./spatial-schemas.js";
+import type { PlatformSnapshot } from "./store.js";
+import { FROZEN_COORDINATE_SYSTEM } from "./venue-geometry.js";
+import type { Layout } from "./venue-schemas.js";
+
+const PROHIBITED_DOWNSTREAM_KEYS = [
+  "guestId",
+  "personId",
+  "householdId",
+  "partyId",
+  "invitationId",
+  "entitlementId",
+  "seatAssignment",
+  "communicationStatus",
+  "biometric",
+] as const;
+
+export type LayoutAssuranceCapabilities = {
+  canManageAsset: boolean;
+  canRecordCapacity: boolean;
+  canRunValidation: boolean;
+  canManageSnapshot: boolean;
+  canSubmitApproval: boolean;
+  canDecideApproval: boolean;
+  canPublish: boolean;
+  canViewPublication: boolean;
+  canReadDownstream: boolean;
+  canOverrideConstraint: boolean;
+};
+
+export function layoutAssurancePermissionAllowed(keys: readonly PermissionKey[]): LayoutAssuranceCapabilities {
+  return {
+    canManageAsset: keys.includes("layout.asset.manage"),
+    canRecordCapacity: keys.includes("layout.capacity.record"),
+    canRunValidation: keys.includes("layout.validation.run"),
+    canManageSnapshot: keys.includes("layout.snapshot.manage"),
+    canSubmitApproval: keys.includes("layout.approval.submit"),
+    canDecideApproval: keys.includes("layout.approval.decide"),
+    canPublish: keys.includes("layout.publish"),
+    canViewPublication: keys.includes("layout.publication.view"),
+    canReadDownstream: keys.includes("layout.downstream.read"),
+    canOverrideConstraint: keys.includes("layout.constraint.override"),
+  };
+}
+
+export type LayoutAssuranceWorkspace = {
+  capacity: CapacityReport;
+  latestRun?: LayoutValidationRun;
+  findings: LayoutValidationFinding[];
+  assets: LayoutFloorPlanAsset[];
+  snapshots: Array<Pick<LayoutSnapshot, "id" | "name" | "contentHash" | "revisionNumber" | "createdAt" | "recordedByPersonId">>;
+  approvals: LayoutApproval[];
+  publications: LayoutPublication[];
+  exportJobs: LayoutExportJob[];
+  publicationBlocked: boolean;
+  assetProviderConfigured: false;
+  pdfExportAvailable: false;
+  certificationClaim: "NONE";
+  intelligenceMayApprove: false;
+  capabilities: LayoutAssuranceCapabilities;
+};
+
+export type PublishedLayoutViewer = {
+  eventId: string;
+  eventName: string;
+  venueName?: string;
+  publicationNumber: number;
+  contentHash: string;
+  publishedAt: string;
+  status: LayoutPublication["status"];
+  scale: "MILLIMETRE";
+  objects: Array<{
+    id: string;
+    objectType: SpatialObject["objectType"] | "MASKED";
+    label: string;
+    geometry: SpatialObject["geometry"] | { kind: "MASKED" };
+    layer: number;
+  }>;
+  validationSummary: { engineId: string; engineVersion: string; blockingCount: number; warningCount: number };
+  sourceContext: string;
+};
+
+export type DownstreamSpatialObject = {
+  id: string;
+  objectType: SpatialObject["objectType"];
+  label: string;
+  geometry: SpatialObject["geometry"];
+  rotationMillidegree: number;
+  layer: number;
+  zIndex: number;
+  locked: boolean;
+  visible: boolean;
+  subtype: SpatialObject["subtype"];
+};
+
+export type LayoutDownstreamProjection = {
+  contractId: typeof LAYOUT_DOWNSTREAM_CONTRACT_ID;
+  publication: {
+    id: string;
+    publicationNumber: number;
+    status: LayoutPublication["status"];
+    contentHash: string;
+    publishedAt: string;
+    supersedesPublicationId?: string;
+  };
+  eventId: string;
+  layoutId: string;
+  coordinateSystem: typeof FROZEN_COORDINATE_SYSTEM;
+  zones: DownstreamSpatialObject[];
+  tables: DownstreamSpatialObject[];
+  physicalSeats: DownstreamSpatialObject[];
+  fixtures: DownstreamSpatialObject[];
+  routes: DownstreamSpatialObject[];
+  areas: DownstreamSpatialObject[];
+  validationSummary: { engineId: string; engineVersion: string; ruleVersions: string[]; blockingCount: number; warningCount: number };
+  checksumSha256: string;
+};
+
+function toDownstreamObject(object: SpatialObject): DownstreamSpatialObject {
+  return {
+    id: object.id,
+    objectType: object.objectType,
+    label: object.label,
+    geometry: object.geometry,
+    rotationMillidegree: object.rotationMillidegree,
+    layer: object.layer,
+    zIndex: object.zIndex,
+    locked: object.locked,
+    visible: object.visible,
+    subtype: object.subtype,
+  };
+}
+
+export function buildLayoutAssuranceWorkspace(
+  snap: PlatformSnapshot,
+  layout: Layout,
+  capabilities: LayoutAssuranceCapabilities,
+): LayoutAssuranceWorkspace {
+  const objects = currentLayoutObjects(snap, layout);
+  const latestRun = [...snap.layoutValidationRuns]
+    .filter((item) => item.layoutId === layout.id)
+    .sort((left, right) => right.createdAt.localeCompare(left.createdAt))[0];
+  const findings = latestRun ? snap.layoutValidationFindings.filter((item) => item.runId === latestRun.id) : [];
+  return {
+    capacity: buildCapacityReport(snap, layout, objects),
+    latestRun,
+    findings,
+    assets: snap.layoutFloorPlanAssets.filter((item) => item.layoutId === layout.id),
+    snapshots: snap.layoutSnapshots
+      .filter((item) => item.layoutId === layout.id)
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
+        contentHash: item.contentHash,
+        revisionNumber: item.revisionNumber,
+        createdAt: item.createdAt,
+        recordedByPersonId: item.recordedByPersonId,
+      })),
+    approvals: snap.layoutApprovals.filter((item) => item.layoutId === layout.id),
+    publications: snap.layoutPublications.filter((item) => item.layoutId === layout.id),
+    exportJobs: snap.layoutExportJobs.filter((item) => item.layoutId === layout.id),
+    publicationBlocked: Boolean(latestRun?.publicationBlocked && latestRun.contentHash === layout.contentHash),
+    assetProviderConfigured: false,
+    pdfExportAvailable: LAYOUT_PDF_EXPORT_AVAILABLE,
+    certificationClaim: "NONE",
+    intelligenceMayApprove: false,
+    capabilities,
+  };
+}
+
+function maskSensitive(objects: readonly SpatialObject[], revealSensitive: boolean): PublishedLayoutViewer["objects"] {
+  return objects
+    .filter((item) => !item.tombstoned)
+    .map((item) => {
+      const sensitive = item.objectType === "RESTRICTED_AREA" || item.objectType === "SAFE_AREA";
+      if (sensitive && !revealSensitive) {
+        return {
+          id: item.id,
+          objectType: "MASKED" as const,
+          label: "Restricted layer masked",
+          geometry: { kind: "MASKED" as const },
+          layer: item.layer,
+        };
+      }
+      return {
+        id: item.id,
+        objectType: item.objectType,
+        label: item.label,
+        geometry: item.geometry,
+        layer: item.layer,
+      };
+    });
+}
+
+export function buildPublishedLayoutViewer(
+  snap: PlatformSnapshot,
+  organisationId: string,
+  eventId: string,
+  layoutId: string,
+  revealSensitive: boolean,
+): PublishedLayoutViewer {
+  const publication = snap.layoutPublications.find(
+    (item) => item.layoutId === layoutId && item.eventId === eventId && item.organisationId === organisationId && item.status === "CURRENT",
+  );
+  if (!publication) {
+    throw new PlatformError("NOT_FOUND", "no current publication exists for this layout");
+  }
+  const event = snap.events.find((item) => item.id === eventId);
+  const layout = snap.layouts.find((item) => item.id === layoutId);
+  const revision = snap.layoutRevisions.find((item) => item.id === publication.revisionId);
+  if (!event || !layout || !revision) throw new PlatformError("NOT_FOUND", "published layout was not found");
+  const venue = snap.eventVenues.find((item) => item.id === layout.eventVenueId);
+  const venueName = venue ? snap.venues.find((item) => item.id === venue.venueId)?.displayName : undefined;
+  const run = snap.layoutValidationRuns.find((item) => item.contentHash === publication.contentHash && item.layoutId === layoutId);
+  return {
+    eventId: event.id,
+    eventName: event.name,
+    venueName,
+    publicationNumber: publication.publicationNumber,
+    contentHash: publication.contentHash,
+    publishedAt: publication.publishedAt,
+    status: publication.status,
+    scale: "MILLIMETRE",
+    objects: maskSensitive(revision.objects, revealSensitive),
+    validationSummary: {
+      engineId: LAYOUT_VALIDATION_ENGINE_ID,
+      engineVersion: LAYOUT_VALIDATION_ENGINE_VERSION,
+      blockingCount: run?.blockingCount ?? 0,
+      warningCount: run?.warningCount ?? 0,
+    },
+    sourceContext: `Publication ${publication.publicationNumber} · hash ${publication.contentHash} · ${publication.status}. This view is not a safety certificate.`,
+  };
+}
+
+export function buildLayoutDownstreamProjection(
+  snap: PlatformSnapshot,
+  organisationId: string,
+  eventId: string,
+  layoutId: string,
+  revealSensitive: boolean,
+): LayoutDownstreamProjection {
+  const publication = snap.layoutPublications.find(
+    (item) =>
+      item.layoutId === layoutId &&
+      item.eventId === eventId &&
+      item.organisationId === organisationId &&
+      item.status === "CURRENT",
+  );
+  if (!publication) {
+    throw new PlatformError("NOT_FOUND", "no current publication exists for downstream consumption");
+  }
+  const revision = snap.layoutRevisions.find((item) => item.id === publication.revisionId);
+  if (!revision) throw new PlatformError("NOT_FOUND", "published revision was not found");
+  const objects = revision.objects.filter((item) => !item.tombstoned).map(toDownstreamObject);
+  const areas = objects.filter((item) =>
+    item.objectType === "CLEARANCE_AREA" || item.objectType === "SAFE_AREA" || item.objectType === "RESTRICTED_AREA",
+  );
+  const run = snap.layoutValidationRuns.find((item) => item.contentHash === publication.contentHash && item.layoutId === layoutId);
+  const findings = run ? snap.layoutValidationFindings.filter((item) => item.runId === run.id) : [];
+  const projection: LayoutDownstreamProjection = {
+    contractId: LAYOUT_DOWNSTREAM_CONTRACT_ID,
+    publication: {
+      id: publication.id,
+      publicationNumber: publication.publicationNumber,
+      status: publication.status,
+      contentHash: publication.contentHash,
+      publishedAt: publication.publishedAt,
+      supersedesPublicationId: publication.supersedesPublicationId,
+    },
+    eventId,
+    layoutId,
+    coordinateSystem: FROZEN_COORDINATE_SYSTEM,
+    zones: objects.filter((item) => item.objectType === "ZONE"),
+    tables: objects.filter((item) => item.objectType === "TABLE"),
+    physicalSeats: objects.filter((item) => item.objectType === "SEAT"),
+    fixtures: objects.filter((item) => item.objectType === "FIXTURE"),
+    routes: objects.filter((item) => item.objectType === "ROUTE"),
+    areas: revealSensitive
+      ? areas
+      : areas.filter((item) => item.objectType === "CLEARANCE_AREA"),
+    validationSummary: {
+      engineId: LAYOUT_VALIDATION_ENGINE_ID,
+      engineVersion: LAYOUT_VALIDATION_ENGINE_VERSION,
+      ruleVersions: [...new Set(findings.map((item) => `${item.ruleId}@${item.ruleVersion}`))],
+      blockingCount: run?.blockingCount ?? 0,
+      warningCount: run?.warningCount ?? 0,
+    },
+    checksumSha256: publication.contentHash,
+  };
+  assertNoProhibitedDownstreamKeys(projection);
+  return projection;
+}
+
+export function assertNoProhibitedDownstreamKeys(value: unknown, path = "$"): void {
+  if (!value || typeof value !== "object") return;
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => assertNoProhibitedDownstreamKeys(item, `${path}[${index}]`));
+    return;
+  }
+  for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
+    if (
+      (PROHIBITED_DOWNSTREAM_KEYS as readonly string[]).includes(key) ||
+      /^(guestId|personId|householdId|partyId|invitationId|entitlementId)$/i.test(key) ||
+      /guest|household|invitation|entitlement|biometric|seatassignment/i.test(key)
+    ) {
+      throw new PlatformError("VALIDATION_FAILED", `downstream projection must not contain ${key} at ${path}`);
+    }
+    assertNoProhibitedDownstreamKeys(nested, `${path}.${key}`);
+  }
+}
+
+export function comparePublishedToDraft(snap: PlatformSnapshot, layout: Layout): LayoutDiffEntry[] {
+  const publication = snap.layoutPublications.find((item) => item.layoutId === layout.id && item.status === "CURRENT");
+  const published = publication ? snap.layoutRevisions.find((item) => item.id === publication.revisionId)?.objects ?? [] : [];
+  return diffLayoutObjects(published, currentLayoutObjects(snap, layout));
+}
+
+export { LAYOUT_ASSET_PROVIDER_CONFIGURED, LAYOUT_DOWNSTREAM_CONTRACT_ID };

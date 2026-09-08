@@ -6,6 +6,7 @@ import { currentReusableFacts } from "./venue-operations.js";
 import { currentLayoutObjects } from "./spatial-operations.js";
 import type { SpatialObject } from "./spatial-schemas.js";
 import type { EventVenueFact, Layout, Venue, VenueEvidenceAsset, VenueFact } from "./venue-schemas.js";
+import { buildLayoutAssuranceWorkspace, type LayoutAssuranceWorkspace } from "./layout-assurance-projections.js";
 
 export type VenueCapabilities = {
   canViewRegistry: boolean;
@@ -20,6 +21,15 @@ export type VenueCapabilities = {
   canUpdateLayout: boolean;
   canAcquireLease: boolean;
   canOverrideConstraint: boolean;
+  canManageAsset: boolean;
+  canRecordCapacity: boolean;
+  canRunValidation: boolean;
+  canManageSnapshot: boolean;
+  canSubmitApproval: boolean;
+  canDecideApproval: boolean;
+  canPublish: boolean;
+  canViewPublication: boolean;
+  canReadDownstream: boolean;
 };
 
 export function venuePermissionAllowed(keys: readonly PermissionKey[]): VenueCapabilities {
@@ -36,6 +46,15 @@ export function venuePermissionAllowed(keys: readonly PermissionKey[]): VenueCap
     canUpdateLayout: keys.includes("layout.update"),
     canAcquireLease: keys.includes("layout.lease.acquire"),
     canOverrideConstraint: keys.includes("layout.constraint.override"),
+    canManageAsset: keys.includes("layout.asset.manage"),
+    canRecordCapacity: keys.includes("layout.capacity.record"),
+    canRunValidation: keys.includes("layout.validation.run"),
+    canManageSnapshot: keys.includes("layout.snapshot.manage"),
+    canSubmitApproval: keys.includes("layout.approval.submit"),
+    canDecideApproval: keys.includes("layout.approval.decide"),
+    canPublish: keys.includes("layout.publish"),
+    canViewPublication: keys.includes("layout.publication.view"),
+    canReadDownstream: keys.includes("layout.downstream.read"),
   };
 }
 
@@ -135,6 +154,7 @@ export type LayoutSetupWorkspace = {
   persistenceState: "saved";
   binaryBackgroundAvailable: false;
   validationPlaceholders: Array<{ id: string; title: string; detail: string }>;
+  assurance: LayoutAssuranceWorkspace;
   coordinateSystem: typeof FROZEN_COORDINATE_SYSTEM;
   pendingPixelPersistence: false;
   capabilities: VenueCapabilities;
@@ -296,6 +316,18 @@ export function buildLayoutSetupWorkspace(
     ? snap.layoutEditorLeases.find((item) => item.id === layout.editorLeaseId && item.status === "ACTIVE")
     : undefined;
   const cursor = snap.layoutDraftCursors.find((item) => item.layoutId === layout.id);
+  const assurance = buildLayoutAssuranceWorkspace(snap, layout, {
+    canManageAsset: capabilities.canManageAsset,
+    canRecordCapacity: capabilities.canRecordCapacity,
+    canRunValidation: capabilities.canRunValidation,
+    canManageSnapshot: capabilities.canManageSnapshot,
+    canSubmitApproval: capabilities.canSubmitApproval,
+    canDecideApproval: capabilities.canDecideApproval,
+    canPublish: capabilities.canPublish,
+    canViewPublication: capabilities.canViewPublication,
+    canReadDownstream: capabilities.canReadDownstream,
+    canOverrideConstraint: capabilities.canOverrideConstraint,
+  });
   return {
     layout: {
       id: layout.id,
@@ -321,13 +353,12 @@ export function buildLayoutSetupWorkspace(
     },
     persistenceState: "saved",
     binaryBackgroundAvailable: false,
-    validationPlaceholders: [
-      {
-        id: "m3-capacity",
-        title: "Capacity findings",
-        detail: "Milestone 3 will show capacity and spatial-conflict findings. This studio does not certify safety.",
-      },
-    ],
+    validationPlaceholders: assurance.findings.slice(0, 8).map((item) => ({
+      id: item.id,
+      title: `${item.severity}: ${item.ruleId}`,
+      detail: item.explanation,
+    })),
+    assurance,
     coordinateSystem: FROZEN_COORDINATE_SYSTEM,
     pendingPixelPersistence: false,
     capabilities,

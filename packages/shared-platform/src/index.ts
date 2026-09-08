@@ -60,6 +60,12 @@ export {
   LANGUAGE_REGISTER,
   DEFAULT_FALLBACK_LANGUAGE_TAG,
   UNICODE_NORMALISATION_FORM,
+  LAYOUT_ASSET_PROVIDER_CONFIGURED,
+  LAYOUT_PDF_EXPORT_AVAILABLE,
+  LAYOUT_ASSET_REQUIRED_VARIABLES,
+  LAYOUT_DOWNSTREAM_CONTRACT_ID,
+  LAYOUT_VALIDATION_ENGINE_ID,
+  LAYOUT_VALIDATION_ENGINE_VERSION,
   type StoreProductionStatus,
 } from "./constants.js";
 export { PlatformError, PLATFORM_ERROR_CODES, publicMessageFor, type PlatformErrorCode } from "./errors.js";
@@ -505,9 +511,46 @@ export {
   type SpatialCommandBody,
   type SpatialObject,
 } from "./spatial-schemas.js";
-export { applyLayoutCommandOnSnap, currentLayoutObjects, type ApplyLayoutCommandResult } from "./spatial-operations.js";
+export { applyLayoutCommandOnSnap, currentLayoutObjects, replaceLayoutObjectsOnSnap, type ApplyLayoutCommandResult } from "./spatial-operations.js";
 export { applyS05FixturesIfMissing, S05_FIXTURE_IDS } from "./venue-fixtures.js";
 export { validateS05PersistedCollections } from "./venue-persistence.js";
+export { migrateEosS05Assurance, applyEosS05AssuranceToSnapshot, EOS_S05_ASSURANCE_MIGRATION_ID } from "./layout-assurance-migration.js";
+export { inspectFloorPlanPayload } from "./layout-assurance-assets.js";
+export { buildCapacityReport, geometricCapacityFromObjects, type CapacityReport } from "./layout-assurance-capacity.js";
+export { diffLayoutObjects } from "./layout-assurance-diff.js";
+export {
+  LAYOUT_VALIDATION_RULES,
+  RecordFloorPlanIntentInputSchema,
+  CalibrateFloorPlanInputSchema,
+  RecordOperationalCapacityInputSchema,
+  RunLayoutValidationInputSchema,
+  AcknowledgeFindingInputSchema,
+  OverrideFindingInputSchema,
+  CreateLayoutSnapshotInputSchema,
+  RestoreLayoutSnapshotInputSchema,
+  SubmitLayoutApprovalInputSchema,
+  DecideLayoutApprovalInputSchema,
+  PublishLayoutInputSchema,
+  WithdrawLayoutPublicationInputSchema,
+  RequestLayoutExportInputSchema,
+  type LayoutApproval,
+  type LayoutDownstreamContractId,
+  type LayoutExportJob,
+  type LayoutFloorPlanAsset,
+  type LayoutPublication,
+  type LayoutSnapshot,
+  type LayoutValidationFinding,
+  type LayoutValidationRun,
+} from "./layout-assurance-schemas.js";
+export {
+  buildLayoutAssuranceWorkspace,
+  buildLayoutDownstreamProjection,
+  buildPublishedLayoutViewer,
+  assertNoProhibitedDownstreamKeys,
+  type LayoutAssuranceWorkspace,
+  type LayoutDownstreamProjection,
+  type PublishedLayoutViewer,
+} from "./layout-assurance-projections.js";
 export {
   buildEventVenueWorkspace,
   buildLayoutSetupWorkspace,
