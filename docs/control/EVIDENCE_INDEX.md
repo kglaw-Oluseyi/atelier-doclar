@@ -454,3 +454,32 @@ RATIFIED on `2026-09-07` by George Lawson under `MD-PR-S026`. P00–P11 implemen
 
 RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S028`. Milestone 2 implemented under `MD-PR-S029`. Milestone 3 implemented under `MD-PR-S030`. Milestone 4 implemented under `MD-PR-S031`. Export provenance remediated under `MD-PR-S032`. Independent-verification defects remediated under `MD-PR-S033`. Final traceability and permission-affordance remediated under `MD-PR-S034`. ACCEPTED on `2026-09-08` by `ChatGPT / AI CTO` under `MD-PR-S035` at SHA `eba137712c65c6f59b77fe2a88a8f4a277228cd9`. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised` remains false. Catalogue accepted-slice count is 5. `TDR-S05-001` is CLOSED. `TDR-S05-002` remains OPEN / non-blocking. Historic `MD-PR-0232`–`MD-PR-0291` remain `NOT_EXECUTED`. Claude verified; Claude did not accept. Documentation-only acceptance commit does not redeploy Event OS or Control Tower. EOS-S06 is not authorised. Production remains unauthorised.
 
+## EOS-S05A
+
+**Slice ID:** `EOS-S05A`
+**Title:** Discovery, Investment & Executive Event Command
+**Status:** `RATIFIED / FOUNDATION MILESTONE A AUTHORISED / NOT ACCEPTED`
+**Prompt Control ID:** `MD-PR-S037`
+**Position:** after accepted EOS-S05; before historical EOS-S06
+**Execution authority:** Foundation Milestone A (`EEC-00`–`EEC-10`) only — catalogue accepted-slice count remains 5; EOS-S06 not authorised
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-EOS-S05A-RATIFY | DOCUMENT | CEO ratification and Foundation Milestone A authority | `docs/control/EOS_S05A_RATIFICATION.md` |
+| EV-EOS-S05A-IMPL | DOCUMENT | Implementation record | `docs/control/EOS_S05A_IMPLEMENTATION.md` |
+| EV-EOS-S05A-LEDGER | DOCUMENT | Slice build ledger | `docs/control/EOS_S05A_BUILD_LEDGER.md` |
+| EV-EOS-S05A-ADR | DOCUMENT | Architecture ADR placeholder | `docs/control/ADR_EOS_S05A_EXECUTIVE_EVENT_COMMAND.md` |
+| EV-EOS-S05A-00 | DOCUMENT | Pack index | `docs/control/eos-s05a/00_EXECUTIVE_EVENT_COMMAND_PACK_INDEX.md` |
+| EV-EOS-S05A-01 | DOCUMENT | Ratification, architecture and compatibility | `docs/control/eos-s05a/01_RATIFICATION_ARCHITECTURE_AND_COMPATIBILITY.md` |
+| EV-EOS-S05A-02 | DOCUMENT | Product, domain and data specification | `docs/control/eos-s05a/02_PRODUCT_DOMAIN_AND_DATA_SPECIFICATION.md` |
+| EV-EOS-S05A-02A | DOCUMENT | Budget Intelligence Engine addendum | `docs/control/eos-s05a/02A_BUDGET_INTELLIGENCE_ENGINE_ADDENDUM.md` |
+| EV-EOS-S05A-03 | DOCUMENT | AI safety, privacy, UX and evaluation | `docs/control/eos-s05a/03_AI_SAFETY_PRIVACY_UX_AND_EVALUATION.md` |
+| EV-EOS-S05A-04A | DOCUMENT | Cursor pack Volume A — `EEC-00`–`EEC-10` | `docs/control/eos-s05a/04A_CURSOR_PACK_CONTROL_AND_FOUNDATIONS.md` |
+| EV-EOS-S05A-04B | DOCUMENT | Cursor pack Volume B — `EEC-11`–`EEC-25` (unreleased) | `docs/control/eos-s05a/04B_CURSOR_PACK_BRIEF_AND_BUDGET_ENGINE.md` |
+| EV-EOS-S05A-04C | DOCUMENT | Cursor pack Volume C — `EEC-26`–`EEC-40` (unreleased) | `docs/control/eos-s05a/04C_CURSOR_PACK_ROADMAP_AI_AND_EXPERIENCE.md` |
+| EV-EOS-S05A-04D | DOCUMENT | Cursor pack Volume D — `EEC-41`–`EEC-45` (unreleased) | `docs/control/eos-s05a/04D_CURSOR_PACK_RELEASE_ASSURANCE_AND_REPORTING.md` |
+| EV-EOS-S05A-05 | DOCUMENT | Independent verification and acceptance model | `docs/control/eos-s05a/05_INDEPENDENT_VERIFICATION_AND_ACCEPTANCE.md` |
+| EV-EOS-S05A-PACK | DOCUMENT | Consolidated v2.0 Word pack (controlling source for 02A and 04A–04D) | `docs/control/eos-s05a/Maison_Doclar_EOS_S05A_Detailed_Cursor_Prompt_Pack_v2.0.docx` |
+
+RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S037`. Canonical corpus placed at `docs/control/eos-s05a/` with original filenames preserved. `EEC-00`–`EEC-10` authorised. `EEC-11`–`EEC-45` ratified but unreleased. Catalogue accepted-slice count remains 5. `MD-PR-S036` is not consumed. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. Production remains unauthorised. Documentation commit does not redeploy Event OS or Control Tower. EOS-S05A is not accepted.
+

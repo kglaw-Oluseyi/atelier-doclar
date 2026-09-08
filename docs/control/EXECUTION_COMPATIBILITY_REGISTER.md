@@ -221,3 +221,16 @@ Milestone 4 is authorised on the Milestone 1–3 contracts. Historic S5-01–S5-
 ## Addendum — 2026-09-08 EOS-S05 independent acceptance (`MD-PR-S035`)
 
 `MD-PR-S035` authorises a documentation-only acceptance record. It does not change Event OS or Control Tower application code, redeploy either service, start EOS-S06, or authorise production. Recommended next control ID `MD-PR-S036` is not implementation authority.
+
+## Addendum — 2026-09-08 EOS-S05A ratification (`MD-PR-S037`)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| EOS-S05A `CEO REVIEW DRAFT — NOT IMPLEMENTATION AUTHORITY` | SUPERSEDED by `docs/control/EOS_S05A_RATIFICATION.md`. Status is `RATIFIED / FOUNDATION MILESTONE A AUTHORISED / NOT ACCEPTED`. |
+| Document 00: Cursor must not implement; no repository or deployment change | SUPERSEDED for canonical documentation and `EEC-00`–`EEC-10` only. Later units remain unreleased. |
+| Document 02A `CEO REVIEW / ADDITIVE RATIFICATION REQUIRED` | SUPERSEDED. 02A is ratified. Budget Studio implementation remains inside unreleased `EEC-15`–`EEC-25`. |
+| Volumes 04A–04D draft hold / execute only after wrapper approval | SUPERSEDED by this CEO wrapper for Foundation Milestone A. `EEC-11`–`EEC-45` remain ratified but unreleased. |
+| EOS-S06 / `MD-PR-S036` | RETAINED. EOS-S06 remains Seating Allocation and `NOT_STARTED / NOT_AUTHORISED`. `MD-PR-S036` is not consumed. |
+| Catalogue accepted-slice count | RETAINED at 5. EOS-S05A is a non-catalogue insert. |
+| Control Tower | Compatibility-only. Not a deploy target for this prompt. |
+| Deploy-by-default (6 September 2026) | Documentation commit does not deploy. Event OS may be deployed once after completed Milestone A application work if Event OS/shared runtime or migrations changed. Deployment is not acceptance. |

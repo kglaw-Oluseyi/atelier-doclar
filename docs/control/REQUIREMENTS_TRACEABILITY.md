@@ -1,8 +1,8 @@
 # Requirements Traceability
 
-**Slice:** MD-CT1  
-**Product:** FOUNDATION  
-**Prompt Control ID:** `MD-PR-0002`  
+**Slice:** MD-CT1
+**Product:** FOUNDATION
+**Prompt Control ID:** `MD-PR-0002`
 **Native ID:** `CT1`
 
 | Requirement | Implementation |
@@ -23,8 +23,8 @@
 
 ## MD-CT2
 
-**Prompt Control ID:** `MD-PR-0003`  
-**Native ID:** `CT2`  
+**Prompt Control ID:** `MD-PR-0003`
+**Native ID:** `CT2`
 **Slice ID:** `MD-CT2`
 
 | Requirement | Implementation |
@@ -42,8 +42,8 @@
 
 ## MD-CT3
 
-**Prompt Control ID:** `MD-PR-0004`  
-**Native ID:** `CT3`  
+**Prompt Control ID:** `MD-PR-0004`
+**Native ID:** `CT3`
 **Slice ID:** `MD-CT3`
 
 | Requirement | Implementation |
@@ -65,8 +65,8 @@
 
 ## MD-CT4
 
-**Prompt Control ID:** `MD-PR-0005`  
-**Native ID:** `CT4`  
+**Prompt Control ID:** `MD-PR-0005`
+**Native ID:** `CT4`
 **Slice ID:** `MD-CT4`
 
 | Requirement | Implementation |
@@ -130,7 +130,7 @@
 
 ## MD-FC1
 
-**Prompt Control ID:** `MD-PR-S001`  
+**Prompt Control ID:** `MD-PR-S001`
 **Slice ID:** `MD-FC1`
 
 | Requirement | Implementation |
@@ -149,7 +149,7 @@
 
 ## MD-LV1
 
-**Prompt Control ID:** `MD-PR-S002`  
+**Prompt Control ID:** `MD-PR-S002`
 **Slice ID:** `MD-LV1`
 
 | Requirement | Implementation |
@@ -165,7 +165,7 @@
 
 ## MD-HV1
 
-**Prompt Control ID:** `MD-PR-S003`  
+**Prompt Control ID:** `MD-PR-S003`
 **Slice ID:** `MD-HV1`
 
 | Requirement | Implementation |
@@ -179,7 +179,7 @@
 
 ## EOS-S01
 
-**Prompt Control ID:** `MD-PR-S004`  
+**Prompt Control ID:** `MD-PR-S004`
 **Slice ID:** `EOS-S01`
 
 | Requirement | Implementation |
@@ -196,7 +196,7 @@
 
 ## EOS-S01-ACCEPT
 
-**Prompt Control ID:** `MD-PR-S007`  
+**Prompt Control ID:** `MD-PR-S007`
 **Slice ID:** `EOS-S01`
 
 | Requirement | Implementation |
@@ -211,7 +211,7 @@
 
 ## MD-GR1
 
-**Prompt Control ID:** `MD-PR-S006`  
+**Prompt Control ID:** `MD-PR-S006`
 **Slice ID:** `MD-GR1`
 
 | Requirement | Implementation |
@@ -229,7 +229,7 @@
 
 ## EOS-S02
 
-**Prompt Control ID:** `MD-PR-S008`  
+**Prompt Control ID:** `MD-PR-S008`
 **Slice ID:** `EOS-S02`
 
 | Requirement | Implementation |
@@ -247,7 +247,7 @@
 
 ## EOS-S02 acceptance
 
-**Prompt Control ID:** `MD-PR-S009`  
+**Prompt Control ID:** `MD-PR-S009`
 **Slice ID:** `EOS-S02`
 
 | Requirement | Implementation |
@@ -262,7 +262,7 @@
 
 ## EOS-S03
 
-**Prompt Control ID:** `MD-PR-S010`  
+**Prompt Control ID:** `MD-PR-S010`
 **Slice ID:** `EOS-S03`
 
 | Requirement | Implementation |
@@ -289,7 +289,7 @@
 
 ## EOS-HV1
 
-**Prompt Control ID:** `MD-PR-S013`  
+**Prompt Control ID:** `MD-PR-S013`
 **Milestone:** `EOS-HV1`
 
 | Requirement | Record |
@@ -306,7 +306,7 @@
 
 ## EOS-S04-RECON
 
-**Prompt Control ID:** `MD-PR-S014`  
+**Prompt Control ID:** `MD-PR-S014`
 **Milestone:** `EOS-S04-RECON`
 
 | Requirement | Record |
@@ -321,7 +321,7 @@
 
 ## EOS-S04 implementation
 
-**Prompt Control ID:** `MD-PR-S015`  
+**Prompt Control ID:** `MD-PR-S015`
 **Slice ID:** `EOS-S04`
 
 | Requirement | Record |
@@ -349,7 +349,26 @@
 | Historic units | `S5-01`–`S5-60` / `MD-PR-0232`–`MD-PR-0291` remain `NOT_EXECUTED` |
 | Production / Railway / real operations | NO — documentation-only acceptance; Event OS not redeployed |
 | Status | ACCEPTED; catalogue accepted-slice count 5 |
-| Successor | EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`; `MD-PR-S036` is not implementation authority |
+| Successor | EOS-S05A is the controlled non-catalogue insert; EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`; `MD-PR-S036` is not implementation authority |
+
+## EOS-S05A
+
+**Prompt Control ID:** `MD-PR-S037`
+**Slice ID:** `EOS-S05A` (not a programme-catalogue accepted slice)
+
+| Requirement | Record |
+|-------------|---------|
+| Title | Discovery, Investment & Executive Event Command |
+| Authority | George Lawson ratification overlay `docs/control/EOS_S05A_RATIFICATION.md` |
+| Canonical corpus | `docs/control/eos-s05a/` — documents 00, 01, 02, 02A, 03, 04A–04D, 05 and the consolidated v2.0 Word pack |
+| Controlling implementation volume for this prompt | Volume 04A / `EEC-00`–`EEC-10` |
+| Later units | `EEC-11`–`EEC-45` ratified but unreleased |
+| Implementation ledger | `docs/control/EOS_S05A_BUILD_LEDGER.md` |
+| Implementation record | `docs/control/EOS_S05A_IMPLEMENTATION.md` |
+| ADR | `docs/control/ADR_EOS_S05A_EXECUTIVE_EVENT_COMMAND.md` |
+| Production / Railway / real operations | NO at documentation commit; Event OS deploy only after Milestone A application work if runtime/migrations change |
+| Status | RATIFIED / FOUNDATION MILESTONE A AUTHORISED / NOT ACCEPTED; catalogue accepted-slice count remains 5 |
+| Successor | EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`; `MD-PR-S036` is not consumed |
 
 ## EOS-S04A
 

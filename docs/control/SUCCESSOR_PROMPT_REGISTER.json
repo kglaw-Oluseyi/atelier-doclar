@@ -290,6 +290,14 @@
       "product": "EVENT_OS",
       "title": "Event OS cross-slice UX quality uplift",
       "authorising_instruction": "Implement the authorised UX uplift across accepted EOS-S01–EOS-S05 surfaces only. Do not consume MD-PR-S036, start EOS-S06, change accepted-slice count, or authorise production."
+    },
+    {
+      "prompt_control_id": "MD-PR-S037",
+      "native_id": "S05A-M1",
+      "slice_id": "EOS-S05A",
+      "product": "EVENT_OS",
+      "title": "EOS-S05A CEO Ratification and Foundation Milestone A Authority",
+      "authorising_instruction": "CEO ratification of the EOS-S05A Executive Event Command corpus; canonicalise documents 00-03, 02A, 04A-04D and 05; implement EEC-00-EEC-10 only; do not start EEC-11-EEC-45 or EOS-S06, consume MD-PR-S036, invent catalogue acceptance, redeploy Control Tower, or authorise production"
     }
   ]
 }

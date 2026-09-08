@@ -246,3 +246,25 @@ Independent AI CTO acceptance of EOS-S05. Catalogue accepted-slice count is 5. D
 | Document | Path | Authority class | Note |
 |----------|------|-----------------|------|
 | EOS-S05 formal technical acceptance | `docs/control/EOS_S05_ACCEPTANCE.md` | CANONICAL ACCEPTANCE RECORD | Status `ACCEPTED` at SHA `eba137712c65c6f59b77fe2a88a8f4a277228cd9`. Catalogue slice. |
+
+## Addendum — 2026-09-08 EOS-S05A ratification (`MD-PR-S037`)
+
+This addendum does not rewrite the B0 row set or the earlier S04A–S05 addenda. Catalogue accepted-slice count remains 5. EOS-S06 remains unauthorised. Production remains unauthorised.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| EOS-S05A CEO ratification overlay | `docs/control/EOS_S05A_RATIFICATION.md` | CANONICAL AUTHORITY RECORD | Changes EOS-S05A from CEO REVIEW DRAFT to RATIFIED / FOUNDATION MILESTONE A AUTHORISED / NOT ACCEPTED. Releases `EEC-00`–`EEC-10` only. Does not accept EOS-S05A, start `EEC-11`–`EEC-45` or EOS-S06, or authorise production. |
+| EOS-S05A Document 00 | `docs/control/eos-s05a/00_EXECUTIVE_EVENT_COMMAND_PACK_INDEX.md` | RATIFIED SPECIFICATION | Original filename preserved. Embedded “NOT IMPLEMENTATION AUTHORITY” wording is historical evidence. |
+| EOS-S05A Document 01 | `docs/control/eos-s05a/01_RATIFICATION_ARCHITECTURE_AND_COMPATIBILITY.md` | RATIFIED SPECIFICATION | Original filename preserved. |
+| EOS-S05A Document 02 | `docs/control/eos-s05a/02_PRODUCT_DOMAIN_AND_DATA_SPECIFICATION.md` | RATIFIED SPECIFICATION | Original filename preserved. |
+| EOS-S05A Document 02A | `docs/control/eos-s05a/02A_BUDGET_INTELLIGENCE_ENGINE_ADDENDUM.md` | RATIFIED SPECIFICATION | Faithful Markdown extract. Word pack remains controlling for 02A. |
+| EOS-S05A Document 03 | `docs/control/eos-s05a/03_AI_SAFETY_PRIVACY_UX_AND_EVALUATION.md` | RATIFIED SPECIFICATION | Original filename preserved. |
+| EOS-S05A Volume 04A | `docs/control/eos-s05a/04A_CURSOR_PACK_CONTROL_AND_FOUNDATIONS.md` | CONTROLLING IMPLEMENTATION VOLUME | `EEC-00`–`EEC-10`. Faithful extract from the Word pack. |
+| EOS-S05A Volume 04B | `docs/control/eos-s05a/04B_CURSOR_PACK_BRIEF_AND_BUDGET_ENGINE.md` | RATIFIED; UNRELEASED | `EEC-11`–`EEC-25`. |
+| EOS-S05A Volume 04C | `docs/control/eos-s05a/04C_CURSOR_PACK_ROADMAP_AI_AND_EXPERIENCE.md` | RATIFIED; UNRELEASED | `EEC-26`–`EEC-40`. |
+| EOS-S05A Volume 04D | `docs/control/eos-s05a/04D_CURSOR_PACK_RELEASE_ASSURANCE_AND_REPORTING.md` | RATIFIED; UNRELEASED | `EEC-41`–`EEC-45`. |
+| EOS-S05A Document 05 | `docs/control/eos-s05a/05_INDEPENDENT_VERIFICATION_AND_ACCEPTANCE.md` | RATIFIED VERIFICATION MODEL | Claude-in-Chrome deferred until the whole slice is implemented. |
+| EOS-S05A consolidated Cursor pack v2.0 | `docs/control/eos-s05a/Maison_Doclar_EOS_S05A_Detailed_Cursor_Prompt_Pack_v2.0.docx` | CONTROLLING RATIFIED SOURCE for 02A and 04A–04D | Original filename preserved. |
+| EOS-S05A implementation record | `docs/control/EOS_S05A_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | Not acceptance. |
+| EOS-S05A build ledger | `docs/control/EOS_S05A_BUILD_LEDGER.md` | IMPLEMENTATION LEDGER | Foundation Milestone A tracking. |
+| EOS-S05A architecture ADR | `docs/control/ADR_EOS_S05A_EXECUTIVE_EVENT_COMMAND.md` | ADR PLACEHOLDER | Completed under `EEC-01`. |
