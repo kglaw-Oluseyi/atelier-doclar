@@ -1867,6 +1867,11 @@ body.atelier {
   cursor: not-allowed;
 }
 
+.export-download-denied {
+  cursor: not-allowed;
+  color: var(--at-umber);
+}
+
 .layout-assurance input,
 .layout-assurance textarea,
 .layout-assurance select {

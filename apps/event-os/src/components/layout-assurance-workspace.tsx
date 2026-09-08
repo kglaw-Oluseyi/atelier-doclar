@@ -138,7 +138,96 @@ export function LayoutAssuranceWorkspace({
                     <PendingSubmit locked={mutationLocked}>Acknowledge</PendingSubmit>
                   </form>
                 ) : null}
-                {assurance.capabilities.canOverrideConstraint && finding.status === "OVERRIDDEN" && finding.overrideId ? (
+                {finding.overrideDecision ? (
+                  <aside className="override-decision" data-testid="override-decision">
+                    <h3>Governed override decision</h3>
+                    <p>
+                      {finding.overrideDecision.recognisedByLaterRun
+                        ? "A later validation run recognised this existing authorised decision. The original record was not rewritten."
+                        : "Original authorised decision for this finding."}
+                    </p>
+                    <dl>
+                      <div>
+                        <dt>Status</dt>
+                        <dd data-testid="override-status">{finding.overrideDecision.status}</dd>
+                      </div>
+                      {finding.overrideDecision.reason ? (
+                        <div>
+                          <dt>Reason</dt>
+                          <dd>{finding.overrideDecision.reason}</dd>
+                        </div>
+                      ) : null}
+                      <div>
+                        <dt>Evidence</dt>
+                        <dd data-testid="override-evidence">{finding.overrideDecision.evidenceLabel}</dd>
+                      </div>
+                      <div>
+                        <dt>Authority</dt>
+                        <dd>{finding.overrideDecision.authorityKind.replaceAll("_", " ")}</dd>
+                      </div>
+                      <div>
+                        <dt>Expires</dt>
+                        <dd>{finding.overrideDecision.expiresAt}</dd>
+                      </div>
+                      <div>
+                        <dt>Recorded by</dt>
+                        <dd>{finding.overrideDecision.recordedByPersonId}</dd>
+                      </div>
+                      <div>
+                        <dt>Recorded at</dt>
+                        <dd data-testid="override-recorded-at">{finding.overrideDecision.recordedAt}</dd>
+                      </div>
+                      <div>
+                        <dt>Rule</dt>
+                        <dd>
+                          {finding.overrideDecision.ruleId} v{finding.overrideDecision.ruleVersion}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Content hash</dt>
+                        <dd>
+                          <code>{finding.overrideDecision.contentHash}</code>
+                        </dd>
+                      </div>
+                      {finding.overrideDecision.applicabilityKey ? (
+                        <div>
+                          <dt>Applicability</dt>
+                          <dd>
+                            <code>{finding.overrideDecision.applicabilityKey}</code>
+                          </dd>
+                        </div>
+                      ) : null}
+                      <div>
+                        <dt>Affected objects</dt>
+                        <dd>
+                          {finding.overrideDecision.affectedObjectCount}: {finding.overrideDecision.affectedObjectScope.join(", ") || "None listed"}
+                        </dd>
+                      </div>
+                      {finding.overrideDecision.revokedAt ? (
+                        <>
+                          <div>
+                            <dt>Revoked at</dt>
+                            <dd>{finding.overrideDecision.revokedAt}</dd>
+                          </div>
+                          <div>
+                            <dt>Revoked by</dt>
+                            <dd>{finding.overrideDecision.revokedByPersonId}</dd>
+                          </div>
+                          {finding.overrideDecision.revokedReason ? (
+                            <div>
+                              <dt>Revocation reason</dt>
+                              <dd>{finding.overrideDecision.revokedReason}</dd>
+                            </div>
+                          ) : null}
+                        </>
+                      ) : null}
+                    </dl>
+                  </aside>
+                ) : null}
+                {assurance.capabilities.canOverrideConstraint &&
+                finding.status === "OVERRIDDEN" &&
+                finding.overrideId &&
+                finding.overrideDecision?.status === "ACTIVE" ? (
                   <form action={revokeLayoutOverrideAction} className="form programme-form">
                     <CasFields workspace={workspace} eventId={eventId} />
                     <input type="hidden" name="overrideId" value={finding.overrideId} />
@@ -165,7 +254,10 @@ export function LayoutAssuranceWorkspace({
                       Expires
                       <input name="expiresAt" required type="datetime-local" />
                     </label>
-                    <input type="hidden" name="reason" value="Authorised finding override" />
+                    <label>
+                      Reason
+                      <input name="reason" required maxLength={400} defaultValue="Authorised finding override" />
+                    </label>
                     <PendingSubmit locked={mutationLocked}>Record authorised override</PendingSubmit>
                   </form>
                 ) : null}
@@ -553,11 +645,19 @@ export function LayoutAssuranceWorkspace({
                 {job.generatedAt ? ` · generated ${job.generatedAt}` : ""}
               </span>
               <p>{job.notes}</p>
-              {job.status === "COMPLETED" ? (
+              {job.status === "COMPLETED" && job.retrieveAllowed ? (
                 <p>
-                  <a href={`/api/events/${eventId}/layouts/${layout.id}/exports/${job.id}?organisationId=${layout.organisationId}`}>
+                  <a
+                    href={`/api/events/${eventId}/layouts/${layout.id}/exports/${job.id}?organisationId=${layout.organisationId}`}
+                    data-testid="export-download"
+                  >
                     Download {job.format}
                   </a>
+                </p>
+              ) : null}
+              {job.status === "COMPLETED" && !job.retrieveAllowed ? (
+                <p className="export-download-denied" aria-disabled="true" data-testid="export-download-denied">
+                  {job.retrieveDeniedReason}
                 </p>
               ) : null}
             </li>
