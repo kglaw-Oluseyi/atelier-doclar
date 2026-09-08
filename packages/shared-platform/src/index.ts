@@ -517,7 +517,14 @@ export { applyS05FixturesIfMissing, S05_FIXTURE_IDS } from "./venue-fixtures.js"
 export { validateS05PersistedCollections } from "./venue-persistence.js";
 export { migrateEosS05Assurance, applyEosS05AssuranceToSnapshot, EOS_S05_ASSURANCE_MIGRATION_ID } from "./layout-assurance-migration.js";
 export { inspectFloorPlanPayload, sanitiseFloorPlanFileName } from "./layout-assurance-assets.js";
-export { renderLayoutExport } from "./layout-export-render.js";
+export {
+  renderLayoutExport,
+  layoutExportProvenanceLines,
+  inspectLayoutExportPdfText,
+  inspectLayoutExportPngText,
+  type LayoutExportMarking,
+  type LayoutExportRenderInput,
+} from "./layout-export-render.js";
 export {
   MemoryLayoutBinaryStore,
   layoutSourceObjectKey,
