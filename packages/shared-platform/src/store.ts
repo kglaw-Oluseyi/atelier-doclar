@@ -164,7 +164,11 @@ import type {
   BudgetTemplateEdition,
   ChangeProposal,
   ClientBriefDecision,
+  CalendarDefinition,
+  ClientInvestmentAction,
   ClientOverviewEdition,
+  ClientReviewAction,
+  ClientReviewEdition,
   ContingencyRuleEdition,
   ConversationTurn,
   ConversionReceipt,
@@ -173,6 +177,7 @@ import type {
   DiscoveryClientAccess,
   EventBriefDraft,
   EventBriefEdition,
+  EventCalendarOverlay,
   FinancialStateDeclaration,
   FxObservation,
   ImpactAssessment,
@@ -423,6 +428,11 @@ export interface PlatformSnapshot {
   roadmapScheduleResults: RoadmapScheduleResult[];
   conversationTurns: ConversationTurn[];
   clientOverviewEditions: ClientOverviewEdition[];
+  clientReviewEditions: ClientReviewEdition[];
+  clientReviewActions: ClientReviewAction[];
+  clientInvestmentActions: ClientInvestmentAction[];
+  calendarDefinitions: CalendarDefinition[];
+  eventCalendarOverlays: EventCalendarOverlay[];
   rsvpPolicies: RsvpPolicy[];
   rsvpQuestionnaires: RsvpQuestionnaire[];
   rsvpInvitations: RsvpInvitation[];
@@ -645,6 +655,11 @@ export function emptySnapshot(): PlatformSnapshot {
     roadmapScheduleResults: [],
     conversationTurns: [],
     clientOverviewEditions: [],
+    clientReviewEditions: [],
+    clientReviewActions: [],
+    clientInvestmentActions: [],
+    calendarDefinitions: [],
+    eventCalendarOverlays: [],
     rsvpPolicies: [],
     rsvpQuestionnaires: [],
     rsvpInvitations: [],
@@ -851,6 +866,11 @@ export function normalizeSnapshot(input: PlatformSnapshot): PlatformSnapshot {
     roadmapScheduleResults: input.roadmapScheduleResults ?? [],
     conversationTurns: input.conversationTurns ?? [],
     clientOverviewEditions: input.clientOverviewEditions ?? [],
+    clientReviewEditions: input.clientReviewEditions ?? [],
+    clientReviewActions: input.clientReviewActions ?? [],
+    clientInvestmentActions: input.clientInvestmentActions ?? [],
+    calendarDefinitions: input.calendarDefinitions ?? [],
+    eventCalendarOverlays: input.eventCalendarOverlays ?? [],
     rsvpPolicies: input.rsvpPolicies ?? [],
     rsvpQuestionnaires: input.rsvpQuestionnaires ?? [],
     rsvpInvitations: input.rsvpInvitations ?? [],

@@ -802,10 +802,12 @@ export {
   EOS_S05A_MIGRATION_ID,
   EOS_S05A_INTELLIGENCE_MIGRATION_ID,
   EOS_S05A_INTELLIGENCE_V2_MIGRATION_ID,
+  EOS_S05A_INTELLIGENCE_V3_MIGRATION_ID,
   applyEosS05AToSnapshot,
   migrateEosS05A,
   migrateEosS05AIntelligence,
   migrateEosS05AIntelligenceV2,
+  migrateEosS05AIntelligenceV3,
 } from "./eec-migration.js";
 export {
   evaluateBudgetExpr,
@@ -826,6 +828,14 @@ export {
   calculateSchedule,
   nextGovernedInterviewTurn,
 } from "./eec-s05a-depth.js";
+export {
+  INTERVIEW_CORPUS,
+  INTERVIEW_CORPUS_EDITION,
+  addWorkingDays,
+  evaluateZeroTolerance,
+  interviewCorpusHash,
+  runS05AEvaluationCorpusOnSnap,
+} from "./eec-s05a-completion.js";
 export { validateS05APersistedCollections } from "./eec-persistence.js";
 export {
   CreateOpportunityInputSchema,

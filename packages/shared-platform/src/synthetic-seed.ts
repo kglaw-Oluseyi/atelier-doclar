@@ -13,7 +13,7 @@ import { applyS05FixturesIfMissing } from "./venue-fixtures.js";
 import { applyEosS05ToSnapshot } from "./venue-migration.js";
 import { applyEosS05ObjectsToSnapshot } from "./spatial-migration.js";
 import { applyEosS05AssuranceToSnapshot } from "./layout-assurance-migration.js";
-import { migrateEosS05A, migrateEosS05AIntelligence, migrateEosS05AIntelligenceV2 } from "./eec-migration.js";
+import { migrateEosS05A, migrateEosS05AIntelligence, migrateEosS05AIntelligenceV2, migrateEosS05AIntelligenceV3 } from "./eec-migration.js";
 import { loadNonProductionFixtures } from "./bootstrap.js";
 import { seededPermissions, seededRoles } from "./catalog.js";
 import type { PgQueryable } from "./postgres-schema.js";
@@ -135,8 +135,9 @@ export function ensureEosS05ACollections(store: PlatformStore, now = "2026-09-08
   const discovery = migrateEosS05A(snap, now);
   const intelligence = migrateEosS05AIntelligence(discovery.snapshot, now);
   const depth = migrateEosS05AIntelligenceV2(intelligence.snapshot, now);
-  if (discovery.status === "APPLIED" || intelligence.status === "APPLIED" || depth.status === "APPLIED") {
-    store.replace(depth.snapshot);
+  const completion = migrateEosS05AIntelligenceV3(depth.snapshot, now);
+  if (discovery.status === "APPLIED" || intelligence.status === "APPLIED" || depth.status === "APPLIED" || completion.status === "APPLIED") {
+    store.replace(completion.snapshot);
   }
 }
 

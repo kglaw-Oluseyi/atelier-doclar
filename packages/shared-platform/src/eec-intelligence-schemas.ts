@@ -67,7 +67,7 @@ export const DiscoveryClientAccessSchema = z
     tokenHash: NonEmptySchema.max(128),
     expiresAt: IsoDatetimeSchema,
     revokedAt: IsoDatetimeSchema.optional(),
-    permittedActions: z.array(z.enum(["CONFIRM", "CORRECT", "INTERVIEW"])),
+    permittedActions: z.array(z.enum(["CONFIRM", "CORRECT", "INTERVIEW", "INVESTMENT", "ROADMAP", "REVIEW"])),
     ...versioned,
   })
   .strict();
@@ -391,8 +391,17 @@ export const AiEvaluationRunSchema = z
     organisationId: OrganisationIdSchema,
     corpusEdition: NonEmptySchema.max(80),
     modelVersion: NonEmptySchema.max(80),
+    providerVersion: z.string().max(80).optional(),
+    orchestratorVersion: z.string().max(80).optional(),
+    status: z.enum(["PASSED", "FAILED", "BLOCKED"]).optional(),
     zeroToleranceFailed: z.boolean(),
     metrics: z.record(z.string(), z.string()),
+    inputCaseHashes: z.array(NonEmptySchema.max(128)).optional(),
+    zeroToleranceFailures: z.array(NonEmptySchema.max(240)).optional(),
+    caseEvidence: z.array(z.string().max(400)).optional(),
+    durationMs: z.string().regex(/^\d+$/).optional(),
+    correlationId: z.string().max(80).optional(),
+    executedAt: IsoDatetimeSchema.optional(),
     ...versioned,
   })
   .strict();
@@ -726,11 +735,127 @@ export const ClientOverviewEditionSchema = z
   })
   .strict();
 
+export const ClientReviewEditionSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    engagementId: EngagementIdSchema,
+    status: z.enum([
+      "DRAFT",
+      "ISSUED",
+      "IN_REVIEW",
+      "CORRECTION_REQUIRED",
+      "CLIENT_CONFIRMED",
+      "EXPIRED",
+      "REVOKED",
+      "SUPERSEDED",
+    ]),
+    briefHash: z.string().max(128).optional(),
+    assertionHashes: z.array(NonEmptySchema.max(128)),
+    openQuestions: z.array(z.string().max(240)),
+    conflicts: z.array(z.string().max(240)),
+    investmentFraming: z.string().max(400).optional(),
+    roadmapSummary: z.string().max(400).optional(),
+    projectionPolicyVersion: NonEmptySchema.max(80),
+    expiresAt: IsoDatetimeSchema,
+    confirmedAt: IsoDatetimeSchema.optional(),
+    confirmedByAccessId: UuidSchema.optional(),
+    confirmationScopes: z.array(
+      z.object({
+        accessId: UuidSchema,
+        scope: NonEmptySchema.max(80),
+        itemKey: z.string().max(80).optional(),
+      }),
+    ),
+    stale: z.boolean(),
+    contentHash: NonEmptySchema.max(128),
+    current: z.boolean(),
+    supersedesEditionId: UuidSchema.optional(),
+    ...versioned,
+  })
+  .strict();
+
+export const ClientReviewActionSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    engagementId: EngagementIdSchema,
+    reviewEditionId: UuidSchema,
+    accessId: UuidSchema,
+    kind: z.enum(["CONFIRM_ITEM", "CORRECT", "DISPUTE", "DEFER", "PREFER_NOT", "CLARIFY", "SUBMIT_REVIEW", "CONFIRM_EDITION"]),
+    itemKey: z.string().max(80).optional(),
+    narrative: z.string().max(2000).optional(),
+    expectedHash: NonEmptySchema.max(128),
+    ...versioned,
+  })
+  .strict();
+
+export const ClientInvestmentActionSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    engagementId: EngagementIdSchema,
+    accessId: UuidSchema,
+    kind: z.enum([
+      "CONFIRM_ENVELOPE",
+      "NO_ENVELOPE",
+      "CORRECT_AMOUNT",
+      "CHOOSE_SCENARIO",
+      "REJECT_SCENARIO",
+      "CLARIFY",
+      "DEFER",
+      "PREFER_NOT",
+      "CONFIRM_PRIORITIES",
+    ]),
+    amountMinor: z.string().regex(/^\d+$/).optional(),
+    scenarioPurpose: z.string().max(80).optional(),
+    narrative: z.string().max(2000).optional(),
+    contentHash: NonEmptySchema.max(128),
+    ...versioned,
+  })
+  .strict();
+
+export const CalendarDefinitionSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    label: NonEmptySchema.max(160),
+    timezone: NonEmptySchema.max(80),
+    workingWeekdays: z.array(z.number().int().min(1).max(7)).min(1).max(7),
+    blackoutDates: z.array(
+      z.object({
+        date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        label: NonEmptySchema.max(160),
+        synthetic: z.boolean(),
+      }),
+    ),
+    current: z.boolean(),
+    contentHash: NonEmptySchema.max(128),
+    ...versioned,
+  })
+  .strict();
+
+export const EventCalendarOverlaySchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    engagementId: EngagementIdSchema.optional(),
+    eventId: EventIdSchema.optional(),
+    timezone: NonEmptySchema.max(80),
+    eventDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    unavailableDates: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
+    schedulingAssumptions: z.array(z.string().max(240)),
+    current: z.boolean(),
+    contentHash: NonEmptySchema.max(128),
+    ...versioned,
+  })
+  .strict();
+
 export const S05AIntelligenceReceiptSchema = z
   .object({
     id: UuidSchema,
     organisationId: OrganisationIdSchema,
-    migrationId: z.enum(["EOS-S05A-INTELLIGENCE-V1", "EOS-S05A-INTELLIGENCE-V2"]),
+    migrationId: z.enum(["EOS-S05A-INTELLIGENCE-V1", "EOS-S05A-INTELLIGENCE-V2", "EOS-S05A-INTELLIGENCE-V3"]),
     checksum: NonEmptySchema.max(128),
     status: z.enum(["APPLIED", "REPLAYED"]),
     createdRecords: z.array(z.string()),
@@ -779,6 +904,11 @@ export const S05A_INTELLIGENCE_COLLECTIONS = [
   "roadmapScheduleResults",
   "conversationTurns",
   "clientOverviewEditions",
+  "clientReviewEditions",
+  "clientReviewActions",
+  "clientInvestmentActions",
+  "calendarDefinitions",
+  "eventCalendarOverlays",
 ] as const;
 
 export type EventBriefDraft = z.infer<typeof EventBriefDraftSchema>;
@@ -822,3 +952,8 @@ export type RoadmapTemplateEdition = z.infer<typeof RoadmapTemplateEditionSchema
 export type RoadmapScheduleResult = z.infer<typeof RoadmapScheduleResultSchema>;
 export type ConversationTurn = z.infer<typeof ConversationTurnSchema>;
 export type ClientOverviewEdition = z.infer<typeof ClientOverviewEditionSchema>;
+export type ClientReviewEdition = z.infer<typeof ClientReviewEditionSchema>;
+export type ClientReviewAction = z.infer<typeof ClientReviewActionSchema>;
+export type ClientInvestmentAction = z.infer<typeof ClientInvestmentActionSchema>;
+export type CalendarDefinition = z.infer<typeof CalendarDefinitionSchema>;
+export type EventCalendarOverlay = z.infer<typeof EventCalendarOverlaySchema>;

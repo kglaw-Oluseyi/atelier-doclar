@@ -694,6 +694,15 @@ import {
   revokeDiscoveryClientAccessOnSnap,
   submitBudgetScenarioOnSnap,
 } from "./eec-s05a-depth.js";
+import {
+  clientInvestmentProjection,
+  clientRoadmapProjection,
+  issueClientReviewEditionOnSnap,
+  recordClientInvestmentActionOnSnap,
+  recordClientReviewActionOnSnap,
+  runS05AEvaluationCorpusOnSnap,
+  s05aReadinessFromSnap,
+} from "./eec-s05a-completion.js";
 
 export interface ActorContext {
   personId: string;
@@ -6473,7 +6482,11 @@ export class PlatformService {
       resourceType: "discovery_client_access",
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
-      run: (snap, ctx) => issueDiscoveryClientAccessOnSnap(snap, { ...input, token, expiresAt }, ctx.now),
+      run: (snap, ctx) => {
+        const access = issueDiscoveryClientAccessOnSnap(snap, { ...input, token, expiresAt }, ctx.now);
+        issueClientReviewEditionOnSnap(snap, { organisationId: input.organisationId, engagementId: input.engagementId, expiresAt }, ctx.now);
+        return access;
+      },
     });
     return { ...record, token };
   }
@@ -6555,6 +6568,7 @@ export class PlatformService {
         revisitReason: item.revisitReason,
       }));
     const overview = snap.clientOverviewEditions.find((item) => item.engagementId === access.engagementId && item.current);
+    const review = snap.clientReviewEditions.find((item) => item.engagementId === access.engagementId && item.current);
     const grouped = {
       UNDERSTOOD: assertions.filter((item) => item.confirmationState === "CLIENT_CONFIRMED" || item.confirmationState === "STAFF_REVIEWED"),
       NEEDS_CONFIRMATION: assertions.filter((item) => item.confirmationState === "PROPOSED" || item.confirmationState === "STAFF_REVIEWED"),
@@ -6570,8 +6584,103 @@ export class PlatformService {
       nextQuestion: question,
       turns,
       overview,
+      review,
+      reviewActions: snap.clientReviewActions.filter((item) => item.engagementId === access.engagementId),
+      investment: clientInvestmentProjection(snap, access.engagementId),
+      clientRoadmap: clientRoadmapProjection(snap, access.engagementId),
       decisions: snap.clientBriefDecisions.filter((item) => item.engagementId === access.engagementId),
     };
+  }
+
+  issueClientReviewEdition(actor: ActorContext, raw: unknown) {
+    const input = raw as { organisationId: string; engagementId: string; expiresAt?: string; reason?: string; idempotencyKey?: string };
+    const expiresAt = input.expiresAt ?? new Date(Date.parse(actor.now ?? new Date().toISOString()) + 7 * 24 * 60 * 60 * 1000).toISOString();
+    return this.mutate(actor, {
+      permission: "brief.author",
+      scope: { organisationId: input.organisationId },
+      action: "brief.client_review.issued",
+      resourceType: "client_review_edition",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => issueClientReviewEditionOnSnap(snap, { ...input, expiresAt }, ctx.now),
+    });
+  }
+
+  recordClientReviewActionByToken(
+    token: string,
+    raw: { kind: "CONFIRM_ITEM" | "CORRECT" | "DISPUTE" | "DEFER" | "PREFER_NOT" | "CLARIFY" | "SUBMIT_REVIEW" | "CONFIRM_EDITION"; itemKey?: string; narrative?: string; expectedHash: string },
+  ) {
+    const snap = structuredClone(this.store.snapshot());
+    const now = new Date().toISOString();
+    const access = resolveDiscoveryClientAccess(snap, token, now);
+    if (!access.permittedActions.includes("REVIEW") && !access.permittedActions.includes("CONFIRM")) {
+      throw new PlatformError("FORBIDDEN", "this client access cannot confirm a review edition");
+    }
+    const record = recordClientReviewActionOnSnap(
+      snap,
+      {
+        organisationId: access.organisationId,
+        engagementId: access.engagementId,
+        accessId: access.id,
+        kind: raw.kind,
+        itemKey: raw.itemKey,
+        narrative: raw.narrative,
+        expectedHash: raw.expectedHash,
+      },
+      now,
+    );
+    this.store.replace(snap);
+    return record;
+  }
+
+  recordClientInvestmentActionByToken(
+    token: string,
+    raw: {
+      kind: "CONFIRM_ENVELOPE" | "NO_ENVELOPE" | "CORRECT_AMOUNT" | "CHOOSE_SCENARIO" | "REJECT_SCENARIO" | "CLARIFY" | "DEFER" | "PREFER_NOT" | "CONFIRM_PRIORITIES";
+      amountMinor?: string;
+      scenarioPurpose?: string;
+      narrative?: string;
+    },
+  ) {
+    const snap = structuredClone(this.store.snapshot());
+    const now = new Date().toISOString();
+    const access = resolveDiscoveryClientAccess(snap, token, now);
+    if (!access.permittedActions.includes("INVESTMENT") && !access.permittedActions.includes("CONFIRM")) {
+      throw new PlatformError("FORBIDDEN", "this client access cannot record investment preferences");
+    }
+    const record = recordClientInvestmentActionOnSnap(
+      snap,
+      {
+        organisationId: access.organisationId,
+        engagementId: access.engagementId,
+        accessId: access.id,
+        kind: raw.kind,
+        amountMinor: raw.amountMinor,
+        scenarioPurpose: raw.scenarioPurpose,
+        narrative: raw.narrative,
+      },
+      now,
+    );
+    this.store.replace(snap);
+    return record;
+  }
+
+  runS05AEvaluation(actor: ActorContext, raw: unknown) {
+    const input = raw as { organisationId: string; reason?: string; idempotencyKey?: string };
+    return this.mutate(actor, {
+      permission: "executiveCommand.view",
+      scope: { organisationId: input.organisationId },
+      action: "ai.evaluation.ran",
+      resourceType: "ai_evaluation_run",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => runS05AEvaluationCorpusOnSnap(snap, input.organisationId, ctx.now),
+    });
+  }
+
+  getS05AReadiness(organisationId?: string) {
+    const snap = this.store.snapshot();
+    return s05aReadinessFromSnap(snap, organisationId ?? snap.organisations[0]?.id ?? "");
   }
 
   recordClientInterviewTurnByToken(
@@ -6862,6 +6971,29 @@ export class PlatformService {
           confidence: item.confidence,
         })),
       schedule: snap.roadmapScheduleResults.filter((item) => snap.roadmapEditions.some((edition) => edition.id === item.editionId && edition.engagementId === engagementId)),
+      reviews: snap.clientReviewEditions.filter((item) => item.engagementId === engagementId),
+      calendar: snap.calendarDefinitions.find((item) => item.organisationId === organisationId && item.current),
+      evaluation: [...snap.aiEvaluationRuns].reverse().find((item) => item.organisationId === organisationId),
+      workbench: {
+        coverage: snap.coverageAssessments
+          .filter((item) => item.engagementId === engagementId)
+          .map((item) => ({ topicKey: item.topicKey, state: item.state, explanation: item.explanation })),
+        assertions: snap.candidateAssertions
+          .filter((item) => item.engagementId === engagementId && (!redact || item.sensitivity === "STANDARD"))
+          .map((item) => ({
+            topicKey: item.topicKey,
+            narrative: item.narrative,
+            origin: item.origin,
+            confirmationState: item.confirmationState,
+            sensitivity: item.sensitivity,
+          })),
+        conflicts: snap.assertionConflicts
+          .filter((item) => item.engagementId === engagementId)
+          .map((item) => ({ topicKey: item.topicKey, explanation: item.explanation, status: item.status })),
+        sources: snap.sourceSegments
+          .filter((item) => snap.sourceArtefacts.some((artefact) => artefact.id === item.artefactId && artefact.engagementId === engagementId))
+          .map((item) => ({ text: item.text, artefactKind: snap.sourceArtefacts.find((artefact) => artefact.id === item.artefactId)?.kind })),
+      },
     };
   }
 
@@ -7767,6 +7899,11 @@ export class PlatformService {
       snap.roadmapScheduleResults,
       snap.conversationTurns,
       snap.clientOverviewEditions,
+      snap.clientReviewEditions,
+      snap.clientReviewActions,
+      snap.clientInvestmentActions,
+      snap.calendarDefinitions,
+      snap.eventCalendarOverlays,
       snap.guestDuplicateCandidates,
       snap.guestIntakeBatches,
       snap.rsvpPolicies,

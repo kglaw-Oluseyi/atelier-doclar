@@ -27,7 +27,11 @@ import {
   BudgetTemplateEditionSchema,
   ChangeProposalSchema,
   ClientBriefDecisionSchema,
+  CalendarDefinitionSchema,
+  ClientInvestmentActionSchema,
   ClientOverviewEditionSchema,
+  ClientReviewActionSchema,
+  ClientReviewEditionSchema,
   ContingencyRuleEditionSchema,
   ConversationTurnSchema,
   ConversionReceiptSchema,
@@ -36,6 +40,7 @@ import {
   DiscoveryClientAccessSchema,
   EventBriefDraftSchema,
   EventBriefEditionSchema,
+  EventCalendarOverlaySchema,
   FinancialStateDeclarationSchema,
   FxObservationSchema,
   ImpactAssessmentSchema,
@@ -121,6 +126,11 @@ const S05A_INTELLIGENCE_SCHEMAS = {
   roadmapScheduleResults: RoadmapScheduleResultSchema.array(),
   conversationTurns: ConversationTurnSchema.array(),
   clientOverviewEditions: ClientOverviewEditionSchema.array(),
+  clientReviewEditions: ClientReviewEditionSchema.array(),
+  clientReviewActions: ClientReviewActionSchema.array(),
+  clientInvestmentActions: ClientInvestmentActionSchema.array(),
+  calendarDefinitions: CalendarDefinitionSchema.array(),
+  eventCalendarOverlays: EventCalendarOverlaySchema.array(),
 } as const;
 
 export function validateS05APersistedCollections(snapshot: PlatformSnapshot): void {

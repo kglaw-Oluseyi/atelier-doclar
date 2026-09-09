@@ -24,6 +24,7 @@ import type {
   SensitivityRun,
   VendorPriceCardEdition,
 } from "./eec-intelligence-schemas.js";
+import { applyCalendarDatesToMilestones, nextGovernedInterviewFromCorpus, seedCalendarDefinitionOnSnap } from "./eec-s05a-completion.js";
 import { PlatformError } from "./errors.js";
 import type { PlatformSnapshot } from "./store.js";
 
@@ -884,9 +885,34 @@ export function instantiateRoadmapFromTemplateOnSnap(
     }
   }
   const schedule = calculateSchedule(milestones, dependencies, input.availableDays);
+  seedCalendarDefinitionOnSnap(snap, input.organisationId, now);
+  const converted = input.eventId ? snap.events.find((item) => item.id === input.eventId) : undefined;
+  const eventDate = converted?.startsAt?.slice(0, 10);
+  try {
+    applyCalendarDatesToMilestones(
+      snap,
+      {
+        organisationId: input.organisationId,
+        engagementId: input.engagementId,
+        milestones: milestones.map((item) => ({ id: item.id, durationDays: item.durationDays, layer: item.layer })),
+        earliest: schedule.earliest,
+        latest: schedule.latest,
+        eventDate,
+        timezone: converted?.timezone,
+      },
+      now,
+    );
+  } catch (error) {
+    if (error instanceof PlatformError && error.code === "VALIDATION_FAILED") {
+      schedule.missingInputs.push(error.message);
+    } else {
+      throw error;
+    }
+  }
   for (const previous of snap.roadmapEditions.filter((item) => item.organisationId === input.organisationId && item.engagementId === input.engagementId && item.current)) {
     previous.current = false;
     previous.status = "SUPERSEDED";
+    previous.version += 1;
     previous.updatedAt = now;
   }
   const edition: RoadmapEdition = {
@@ -1144,68 +1170,17 @@ export function propagateApprovedChangeOnSnap(
   }
   for (const edition of snap.roadmapEditions.filter((item) => item.organisationId === organisationId && item.engagementId === proposal.engagementId && item.current)) {
     edition.unresolvedAssumptions = [...(edition.unresolvedAssumptions ?? []), "Approved change requires a new roadmap edition"];
+    edition.version += 1;
     edition.updatedAt = now;
   }
   proposal.status = "PROPAGATED";
 }
 
-const INTERVIEW_SCRIPT: Array<{
-  phase: ConversationTurn["phase"];
-  questionId: string;
-  topicKeys: string[];
-  prompt: string;
-}> = [
-  { phase: "WELCOME", questionId: "welcome", topicKeys: [], prompt: "Welcome. This conversation helps Maison Doclar understand your event with care. We will ask one question at a time, and you may pause whenever you need." },
-  { phase: "CONSENT", questionId: "consent", topicKeys: ["consent.participation"], prompt: "We will use your answers only to plan this engagement. You may say unknown, not yet, not applicable, or prefer not to answer at any time. Do you consent to continue this conversation?" },
-  { phase: "PRINCIPALS", questionId: "principals", topicKeys: ["people.principals"], prompt: "Who are the participating principals we should address, and how should we refer to each person?" },
-  { phase: "ADDRESS", questionId: "address", topicKeys: ["people.address"], prompt: "What form of address would you like us to use?" },
-  { phase: "LANGUAGE", questionId: "language", topicKeys: ["language.preference"], prompt: "Which language would you prefer for this conversation? We will not infer this from names or tone." },
-  { phase: "COVERAGE", questionId: "guest", topicKeys: ["guest.target_count"], prompt: "How many guests should we plan for, if you know?" },
-  { phase: "COVERAGE", questionId: "date", topicKeys: ["date.window"], prompt: "Is there a date or season we should treat as the working window?" },
-  { phase: "COVERAGE", questionId: "venue", topicKeys: ["venue.status"], prompt: "Has a venue already been chosen, or is that still open?" },
-  { phase: "COVERAGE", questionId: "vision", topicKeys: ["vision.feeling"], prompt: "In your own words, what should this occasion feel like?" },
-  { phase: "REVIEW", questionId: "review", topicKeys: [], prompt: "Here is what we understood. Please correct anything before you confirm. Your words stay distinct from any Maison interpretation." },
-];
-
-function settledTopic(snap: PlatformSnapshot, engagementId: string, topicKey: string): boolean {
-  const confirmed = snap.candidateAssertions.some(
-    (item) => item.engagementId === engagementId && item.topicKey === topicKey && (item.confirmationState === "CLIENT_CONFIRMED" || item.confirmationState === "STAFF_REVIEWED"),
-  );
-  const answered = snap.conversationTurns.some(
-    (item) =>
-      item.engagementId === engagementId &&
-      item.topicKeys.includes(topicKey) &&
-      ["CLIENT_DIRECT", "UNKNOWN", "NOT_YET", "NOT_APPLICABLE", "PREFER_NOT"].includes(item.answerSource),
-  );
-  const conflicted = snap.coverageAssessments.some((item) => item.engagementId === engagementId && item.topicKey === topicKey && (item.state === "CONFLICTED" || item.state === "STALE"));
-  return (confirmed || answered) && !conflicted;
-}
-
 export function nextGovernedInterviewTurn(
   snap: PlatformSnapshot,
   engagementId: string,
-): { phase: ConversationTurn["phase"]; questionId: string; topicKeys: string[]; prompt: string; revisit: boolean; revisitReason?: string } | undefined {
-  const conflicted = snap.coverageAssessments.find((item) => item.engagementId === engagementId && (item.state === "CONFLICTED" || item.state === "STALE"));
-  if (conflicted) {
-    return {
-      phase: "COVERAGE",
-      questionId: `revisit:${conflicted.topicKey}`,
-      topicKeys: [conflicted.topicKey],
-      prompt: `We need to revisit ${conflicted.topicKey.replaceAll(".", " ")} because the earlier answer is ${conflicted.state.toLowerCase()}. Your previous words are kept; this is not a new blank form.`,
-      revisit: true,
-      revisitReason: conflicted.state,
-    };
-  }
-  for (const step of INTERVIEW_SCRIPT) {
-    if (step.topicKeys.length === 0) {
-      const already = snap.conversationTurns.some((item) => item.engagementId === engagementId && item.questionId === step.questionId && item.answerSource !== "PAUSE");
-      if (!already) return { ...step, revisit: false };
-      continue;
-    }
-    if (step.topicKeys.every((topic) => settledTopic(snap, engagementId, topic))) continue;
-    return { ...step, revisit: false };
-  }
-  return undefined;
+): { phase: ConversationTurn["phase"]; questionId: string; topicKeys: string[]; prompt: string; rationale?: string; revisit: boolean; revisitReason?: string } | undefined {
+  return nextGovernedInterviewFromCorpus(snap, engagementId);
 }
 
 export function recordConversationTurnOnSnap(
@@ -1288,6 +1263,7 @@ export function buildClientOverviewOnSnap(
   };
   for (const previous of snap.clientOverviewEditions.filter((item) => item.engagementId === engagementId && item.current)) {
     previous.current = false;
+    previous.version += 1;
     previous.updatedAt = now;
   }
   snap.clientOverviewEditions.push(record);
@@ -1328,6 +1304,9 @@ export function buildExecutiveCommandDeep(snap: PlatformSnapshot, organisationId
   const contracted = snap.financialStateDeclarations.find((item) => item.organisationId === organisationId && item.kind === "CONTRACTED_COMMITMENT");
   const cash = snap.financialStateDeclarations.find((item) => item.organisationId === organisationId && item.kind === "CASH_REQUIREMENT");
   const change = snap.changeProposals.find((item) => (!selected || item.engagementId === selected.id) && (item.status === "IMPACT_ASSESSED" || item.status === "APPROVED" || item.status === "PROPAGATED"));
+  const review = selected ? snap.clientReviewEditions.find((item) => item.engagementId === selected.id && item.current) : undefined;
+  const evaluation = [...snap.aiEvaluationRuns].reverse().find((item) => item.organisationId === organisationId);
+  const impact = change ? snap.impactAssessments.find((item) => item.changeProposalId === change.id) : undefined;
   const stalePrices = snap.priceEvidenceRecords.filter((item) => item.organisationId === organisationId && item.stale);
   const syntheticPrices = snap.priceEvidenceRecords.filter((item) => item.organisationId === organisationId && item.synthetic);
   const decisions = [
@@ -1363,7 +1342,11 @@ export function buildExecutiveCommandDeep(snap: PlatformSnapshot, organisationId
     lastMaterialChange: change?.summary ?? "No material change is recorded.",
     readiness: assessments.some((item) => item.state === "CONFLICTED") ? "Blocked by contradiction" : assessments.some((item) => item.state === "UNKNOWN") ? "Unknown facts remain" : "No publication block is recorded",
     evidenceFreshness: stalePrices.length ? "Stale price evidence is present" : "No stale price evidence is marked",
-    clientConfirmation: `${assertions.filter((item) => item.confirmationState === "CLIENT_CONFIRMED").length} client-confirmed facts`,
+    clientConfirmation: review
+      ? `${review.status.replaceAll("_", " ").toLowerCase()}${review.stale ? " · stale after later substance" : ""}`
+      : `${assertions.filter((item) => item.confirmationState === "CLIENT_CONFIRMED").length} client-confirmed facts`,
+    clientReviewHash: review?.contentHash,
+    clientReviewStatus: review?.status,
     known: assessments.filter((item) => item.state === "CONFIRMED").length,
     unknown: assessments.filter((item) => item.state === "UNKNOWN" || item.state === "UNASSESSED").length,
     conflicted: assessments.filter((item) => item.state === "CONFLICTED").length,
@@ -1380,6 +1363,10 @@ export function buildExecutiveCommandDeep(snap: PlatformSnapshot, organisationId
       blockedBudget: budget?.calculationStatus === "BLOCKED",
       roadmapInfeasible: roadmap?.status === "INFEASIBLE",
       unpropagated: snap.changeProposals.some((item) => item.organisationId === organisationId && item.status === "APPROVED"),
+      missingClientConfirmation: !review || review.status !== "CLIENT_CONFIRMED" || review.stale,
+      failedEvaluation: Boolean(evaluation?.zeroToleranceFailed),
+      unmetConsent: snap.discoveryConsentRecords.some((item) => (!selected || item.engagementId === selected.id) && item.decision !== "GRANTED"),
+      approachingWindows: schedule?.critical.map((item) => item.title) ?? [],
     },
     investment: {
       envelopeMinor: envelope?.money.minor,
@@ -1401,12 +1388,27 @@ export function buildExecutiveCommandDeep(snap: PlatformSnapshot, organisationId
       criticalMilestones: schedule?.critical ?? [],
       compressionClass: schedule?.compressionClass,
       infeasible: roadmap?.status === "INFEASIBLE",
+      calendarDates: selected
+        ? snap.roadmapMilestones
+            .filter((item) => item.engagementId === selected.id)
+            .map((item) => ({ title: item.title, latestSafe: item.latestSafe, targetEnd: item.targetEnd, float: schedule?.critical.some((critical) => critical.milestoneId === item.id) ? "0" : undefined }))
+        : [],
     },
     change: change
       ? {
           summary: change.summary,
           status: change.status,
           hash: change.semanticHash,
+          impactHash: impact?.inputHash,
+          affected: impact?.impacts.map((item) => `${item.target}: ${item.kind.toLowerCase()}`) ?? [],
+        }
+      : undefined,
+    drillDown: selected
+      ? {
+          brief: `/app/discovery/${selected.id}#brief-review`,
+          investment: `/app/discovery/${selected.id}#budget-studio`,
+          roadmap: `/app/discovery/${selected.id}#roadmap-studio`,
+          change: `/app/discovery/${selected.id}#change-impact`,
         }
       : undefined,
     clientConfirmed: assertions.filter((item) => item.confirmationState === "CLIENT_CONFIRMED").length,

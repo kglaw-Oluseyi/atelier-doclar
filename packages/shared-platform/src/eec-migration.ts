@@ -7,12 +7,14 @@ import type { CoverageCatalogueEdition, CoverageRequirement, S05AMigrationReceip
 import type { S05AIntelligenceReceipt } from "./eec-intelligence-schemas.js";
 import { seedBudgetCatalogueOnSnap } from "./eec-intelligence.js";
 import { applyQuantityRulesToCatalogue, retireUnsupportedRulePricesOnSnap, seedBudgetKnowledgeOnSnap } from "./eec-s05a-depth.js";
+import { seedCalendarDefinitionOnSnap } from "./eec-s05a-completion.js";
 import { exactHash as intelligenceHash } from "./eec-hash.js";
 import { normalizeSnapshot, type PlatformSnapshot } from "./store.js";
 
 export const EOS_S05A_MIGRATION_ID = "EOS-S05A-DISCOVERY-V1" as const;
 export const EOS_S05A_INTELLIGENCE_MIGRATION_ID = "EOS-S05A-INTELLIGENCE-V1" as const;
 export const EOS_S05A_INTELLIGENCE_V2_MIGRATION_ID = "EOS-S05A-INTELLIGENCE-V2" as const;
+export const EOS_S05A_INTELLIGENCE_V3_MIGRATION_ID = "EOS-S05A-INTELLIGENCE-V3" as const;
 export const EOS_S05A_MIGRATION_CHECKSUM = createHash("sha256")
   .update(`${EOS_S05A_MIGRATION_ID}:additive-discovery-collections:synthetic-coverage-catalogue`)
   .digest("hex");
@@ -282,8 +284,39 @@ export function migrateEosS05AIntelligenceV2(input: PlatformSnapshot, now: strin
   return { status: "APPLIED", snapshot: snap, created, receipt };
 }
 
+export function migrateEosS05AIntelligenceV3(input: PlatformSnapshot, now: string): S05AIntelligenceMigrationResult {
+  const snap = normalizeSnapshot(structuredClone(input));
+  const existing = snap.s05aIntelligenceReceipts.find((item) => item.migrationId === EOS_S05A_INTELLIGENCE_V3_MIGRATION_ID);
+  if (existing) {
+    return { status: "REPLAYED", snapshot: snap, created: existing.createdRecords, receipt: existing };
+  }
+  const created: string[] = [];
+  for (const organisation of snap.organisations) {
+    seedCalendarDefinitionOnSnap(snap, organisation.id, now);
+    created.push(`calendar:${organisation.id}`);
+  }
+  const receipt = {
+    id: deterministicUuid("intelligence-receipt-v3"),
+    organisationId: snap.organisations[0]?.id ?? "00000000-0000-4000-8000-000000000001",
+    migrationId: EOS_S05A_INTELLIGENCE_V3_MIGRATION_ID,
+    checksum: intelligenceHash({ id: EOS_S05A_INTELLIGENCE_V3_MIGRATION_ID, created }),
+    status: "APPLIED" as const,
+    createdRecords: created,
+    schemaVersion: SCHEMA_VERSION,
+    version: 1,
+    createdAt: now,
+    updatedAt: now,
+  };
+  snap.s05aIntelligenceReceipts.push(receipt);
+  validateS05APersistedCollections(snap);
+  return { status: "APPLIED", snapshot: snap, created, receipt };
+}
+
 export function applyEosS05AToSnapshot(snap: PlatformSnapshot, now: string): PlatformSnapshot {
-  return migrateEosS05AIntelligenceV2(migrateEosS05AIntelligence(migrateEosS05A(snap, now).snapshot, now).snapshot, now).snapshot;
+  return migrateEosS05AIntelligenceV3(
+    migrateEosS05AIntelligenceV2(migrateEosS05AIntelligence(migrateEosS05A(snap, now).snapshot, now).snapshot, now).snapshot,
+    now,
+  ).snapshot;
 }
 
 export function rollbackEosS05A(input: PlatformSnapshot, now: string): S05AMigrationResult {

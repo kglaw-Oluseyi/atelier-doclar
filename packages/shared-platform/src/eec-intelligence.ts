@@ -246,7 +246,7 @@ export function issueDiscoveryClientAccessOnSnap(
     engagementId: input.engagementId,
     tokenHash: createHash("sha256").update(input.token).digest("hex"),
     expiresAt: input.expiresAt,
-    permittedActions: ["CONFIRM", "CORRECT", "INTERVIEW"],
+    permittedActions: ["CONFIRM", "CORRECT", "INTERVIEW", "INVESTMENT", "ROADMAP", "REVIEW"],
     version: 1,
     ...stamp(now),
   };
@@ -733,6 +733,7 @@ export function nextInterviewQuestionForEngagement(snap: PlatformSnapshot, engag
     phase: governed.phase,
     questionId: governed.questionId,
     revisitReason: governed.revisitReason,
+    rationale: governed.rationale,
   };
 }
 
