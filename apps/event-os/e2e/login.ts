@@ -29,9 +29,9 @@ export async function login(page: Page, email = STAFF_IDENTITIES.ceo.email): Pro
 export async function loginAs(page: Page, identity: StaffIdentityKey): Promise<void> {
   const staff = STAFF_IDENTITIES[identity];
   await login(page, staff.email);
-  const identity = staffNavIdentity(page).locator(".staff-identity-name");
-  if (await identity.count()) {
-    await expect(identity).toHaveText(staff.displayName);
+  const signedInName = staffNavIdentity(page).locator(".staff-identity-name");
+  if (await signedInName.count()) {
+    await expect(signedInName).toHaveText(staff.displayName);
   }
 }
 
