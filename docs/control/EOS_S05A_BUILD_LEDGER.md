@@ -1,8 +1,8 @@
 # EOS-S05A Build Ledger
 
 **Slice ID:** `EOS-S05A`
-**Prompt Control ID:** `MD-PR-S041` (executable evaluation remediation; prior completion `MD-PR-S040`)
-**Starting baseline for MD-PR-S041:** `9556ca4e47e548bd424049159b7f9b6758eef05c`
+**Prompt Control ID:** `MD-PR-S043` (human-verification remediation of MD-PR-S042; prior evaluation `MD-PR-S041`)
+**Starting baseline for MD-PR-S043:** `30ea2899955f06c8b7a5a5a84b6d2b9a7a352cb1`
 **Application/test SHA:** `0201df901343c35610c6a36308d21b775bb29a32`
 **Status:** `IMPLEMENTED / NOT ACCEPTED`
 **Production:** unauthorised
@@ -126,3 +126,26 @@ S040 recorded an evaluation pass by looping family names and calling `evaluateZe
 | Planner / Auditor / Sysadmin | No run form; direct `POST /api/eec-evaluation` denied |
 | Control Tower | not deployed |
 | Claude / EOS-S06 / acceptance | not run / not started / not accepted |
+
+## MD-PR-S043 consolidated human-verification remediation
+
+S042 findings are remediated. EOS-S05A remains NOT ACCEPTED. No TDR was manufactured.
+
+| Field | Value |
+|-------|-------|
+| Controlling pack | `docs/control/eos-s05a/MD_PR_S043_EOS_S05A_CONSOLIDATED_HUMAN_VERIFICATION_REMEDIATION.md` |
+| Starting baseline | `30ea2899955f06c8b7a5a5a84b6d2b9a7a352cb1` |
+| Corpus edition / hash | `s05a-eval-v3` / `5a7c208aed31aa0b0ef47ae1553370c3d259254468f2eac7e3eb3cff6e21169c` |
+| Case count | 37 executable cases |
+| Focused S043 unit/integration | PASS (`packages/shared-platform/test/eec-s043-remediation.test.ts`) |
+| `pnpm typecheck` | PASS (first run failed: unused `actorHoldsRole`, missing `guestSourceKind`, `workbenchSources` MASK-only inference; corrected) |
+| `pnpm --filter @maison-doclar/shared-platform test` | 387 pass / 0 fail (first run 385/1: client interview required CLIENT_TOKEN participation) |
+| `pnpm --filter @maison-doclar/event-os test` | 81 pass / 0 fail |
+| `pnpm programme:validate` | PASS |
+| `pnpm --filter @maison-doclar/event-os build` | PASS |
+| `git diff --check` | PASS |
+| Focused S043 Playwright | PASS — 4/4 after first-run Journey 3/4 failures (issue-access `clientPath` abort; section receipt/scroll) |
+| S05A regression Playwright | PASS — discovery-foundation, evaluation-readiness, responsive, whole-slice (4/4) |
+| Control Tower | not deployed |
+| Claude / EOS-S06 / acceptance | not run / not started / not accepted |
+| `productionAuthorised` | false, unchanged |

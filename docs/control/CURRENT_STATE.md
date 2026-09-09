@@ -1,7 +1,7 @@
 # Current State
 
-**Updated:** MD-PR-S041 EOS-S05A executable evaluation remediation (2026-09-09)
-**Prompt Control ID:** MD-PR-S041
+**Updated:** MD-PR-S043 EOS-S05A consolidated human-verification remediation (2026-09-09)
+**Prompt Control ID:** MD-PR-S043
 **Milestone:** `EOS-S05` ACCEPTED — catalogue accepted-slice count 5; `EOS-S05A` IMPLEMENTED / NOT ACCEPTED (not catalogue); EOS-S06 not authorised
 
 MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is ACCEPTED. EOS-S02 is ACCEPTED. EOS-S03 is ACCEPTED. EOS-S04 is CLOSED / ACCEPTED (`PASS WITH OBSERVATIONS`). EOS-S05 is ACCEPTED. Catalogue accepted-slice count is 5. Native coverage is 62/62. S4-61 is satisfied for technical review only. S4-62 is satisfied for controlled technical acceptance/handover only. Independent, specialist and CEO production gates remain unsigned.
@@ -150,7 +150,7 @@ Event OS S01–S03 remain formally accepted. EOS-S04 is CLOSED / ACCEPTED after 
 
 **MD-PR-UX001:** Cross-slice Event OS UX quality uplift across accepted EOS-S01–EOS-S05 surfaces. Does not accept a new slice, reopen EOS-S01–EOS-S05, consume `MD-PR-S036`, or authorise production. Evidence: `docs/control/MD_PR_UX001.md`.
 
-**EOS-S05A:** `IMPLEMENTED / NOT ACCEPTED` on `2026-09-09`. `MD-PR-S041` starting SHA `9556ca4e47e548bd424049159b7f9b6758eef05c`. Application/test SHA `0201df901343c35610c6a36308d21b775bb29a32`. Live Event OS deploy `d8e57477-d046-4cc4-8e66-abc841591d4b` at that application SHA. Removes the S040 boolean self-report evaluator and replaces it with an executable 33-case corpus, isolated harness, persisted case results, fail-closed readiness and a CEO-only Event Command action. Live CEO fixture run PASSED 33/0 with `s05aReleaseReady` true. `TDR-S05A-003` is closed on the actual runner. Catalogue accepted-slice count remains 5. `MD-PR-S036` is not consumed. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. Production remains unauthorised. Claude-in-Chrome remains deferred. EOS-S05A is not accepted. Controlling pack: `docs/control/eos-s05a/MD_PR_S041_EXECUTABLE_EVALUATION_IMPLEMENTATION_PACK.md`.
+**EOS-S05A:** `IMPLEMENTED / NOT ACCEPTED` on `2026-09-09`. `MD-PR-S043` remediates MD-PR-S042 human-verification findings (confidential disclosure, extraction outcomes, dimension-specific client consent, related UX). Starting SHA `30ea2899955f06c8b7a5a5a84b6d2b9a7a352cb1`. Catalogue accepted-slice count remains 5. `MD-PR-S036` is not consumed. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. Production remains unauthorised. Claude was not run. Control Tower was not deployed. EOS-S05A is not accepted. Controlling pack: `docs/control/eos-s05a/MD_PR_S043_EOS_S05A_CONSOLIDATED_HUMAN_VERIFICATION_REMEDIATION.md`. Prior `MD-PR-S041` executable evaluation remains in force as a regression boundary; the live corpus edition is now `s05a-eval-v3` (37 cases) until the genuine live CEO rerun.
 
 Historical sentence “Implementation of EOS-S04A–F is not authorised as a product slice” applied before CEO S04A–S04F implementation authority. For S04A–S04F that sentence is superseded. The EOS-S04E and EOS-S04F controlled slice pack filenames still contain `DRAFT`. Current programme status for S04E is `ACCEPTED`. Current programme status for S04F is `ACCEPTED`. Historical `IN_REVIEW / NOT READY` on 2026-09-08 remains dated history.
 

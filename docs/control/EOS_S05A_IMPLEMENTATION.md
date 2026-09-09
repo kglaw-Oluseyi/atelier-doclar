@@ -1,10 +1,10 @@
 # EOS-S05A Implementation Record
 
 **Slice ID:** `EOS-S05A`
-**Prompt Control ID:** `MD-PR-S041` (evaluation remediation; prior completion `MD-PR-S040`)
+**Prompt Control ID:** `MD-PR-S043` (human-verification remediation; prior evaluation `MD-PR-S041`)
 **Title:** Discovery, Investment & Executive Event Command
 **Status:** `IMPLEMENTED / NOT ACCEPTED`
-**Starting baseline for MD-PR-S041:** `9556ca4e47e548bd424049159b7f9b6758eef05c`
+**Starting baseline for MD-PR-S043:** `30ea2899955f06c8b7a5a5a84b6d2b9a7a352cb1`
 **Application/test SHA:** `0201df901343c35610c6a36308d21b775bb29a32`
 **Live Event OS deploy:** `d8e57477-d046-4cc4-8e66-abc841591d4b`
 **Catalogue slice:** no — accepted-slice count remains 5
@@ -77,6 +77,19 @@ S039 PARTIAL/MISSING rows are reassessed against functional and test evidence. S
 S040 preserves the S039 engines and completes the remaining product gaps: client review editions, Brief Review Workbench, client investment, Lagos-configurable calendars, interview coverage corpus, evaluation/red-team runner, and Event Command drill-downs.
 
 `TDR-S05A-003`, `TDR-S05A-004` and `TDR-S05A-005` are CLOSED. `MD-PR-S041` closed EEC-39 only after the executable runner, case-result persistence, negative controls and live CEO fixture pass existed. EOS-S05A is not accepted. Claude-in-Chrome was not run. EOS-S06 was not started. Control Tower was not deployed.
+
+## MD-PR-S042 findings and MD-PR-S043 disposition
+
+MD-PR-S042 independent verification found three related release blockers plus associated UX/accessibility gaps. `MD-PR-S043` remediates them in one engineering batch. This is not acceptance.
+
+| Finding | Observed defect | S043 disposition |
+|---------|-----------------|------------------|
+| A | Confidential surprise evidence leaked to Auditor without an explicit disclosure grant | One server-owned `decideDiscoveryDisclosure` policy; Auditor and System Administrator have no implicit reveal; masked DTO omits original title/body/identity/object key; grants honour expiry/revocation at read time |
+| B | Extraction reported success while omitting a 360-guest conflicting assertion | Durable extraction outcome per eligible segment; truthful receipt counts; guest-count patterns including `closer to 360 people`; 320 vs 360 remains OPEN until human resolution; idempotent retry; stale version conflict |
+| C | Client interview bundled consent into one yes/no | Six independent consent dimensions; no `acceptAll` database truth; client token path; staff cannot fabricate client consent |
+| Related UX | Raw engagement code as client heading; save jumped to page top; Budget Studio seeded `180`; Admin label `Identity unavailable` | Client-safe heading; section-local receipts and scroll restore; prefill only from current confirmed brief guest count; Admin `Event scope restricted` / `Assignment identity restricted` |
+
+No new defect-specific TDR is opened. Established safe debt is unchanged.
 
 ## Exclusions that remain in force
 

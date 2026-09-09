@@ -279,3 +279,13 @@ This addendum does not rewrite the B0 row set or earlier addenda. Catalogue acce
 | EOS-S05A Volume 04C | `docs/control/eos-s05a/04C_CURSOR_PACK_ROADMAP_AI_AND_EXPERIENCE.md` | IMPLEMENTED / NOT ACCEPTED | `EEC-26`–`EEC-40`. |
 | EOS-S05A Volume 04D | `docs/control/eos-s05a/04D_CURSOR_PACK_RELEASE_ASSURANCE_AND_REPORTING.md` | IMPLEMENTED / NOT ACCEPTED | `EEC-41`–`EEC-45`. |
 | EOS-S05A implementation record | `docs/control/EOS_S05A_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | Whole-slice evidence. Not acceptance. |
+
+## Addendum — 2026-09-09 EOS-S05A consolidated human-verification remediation (`MD-PR-S043`)
+
+This addendum does not rewrite the B0 row set or earlier addenda. Catalogue accepted-slice count remains 5. EOS-S06 remains unauthorised. Production remains unauthorised. EOS-S05A is not accepted. Claude was not run. Control Tower was not deployed.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| MD-PR-S043 remediation pack | `docs/control/eos-s05a/MD_PR_S043_EOS_S05A_CONSOLIDATED_HUMAN_VERIFICATION_REMEDIATION.md` | CONTROLLING IMPLEMENTATION AUTHORITY for this remediation | Remediation of MD-PR-S042 findings. Does not accept EOS-S05A. |
+| EOS-S05A implementation record | `docs/control/EOS_S05A_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | S043 disposition recorded. Not acceptance. |
+| EOS-S05A build ledger | `docs/control/EOS_S05A_BUILD_LEDGER.md` | IMPLEMENTATION LEDGER | S043 local gates and corpus edition `s05a-eval-v3`. |

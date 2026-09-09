@@ -268,3 +268,15 @@ Milestone 4 is authorised on the Milestone 1–3 contracts. Historic S5-01–S5-
 | Control Tower | Compatibility-only. Not a deploy target. |
 | Claude-in-Chrome | Not run. Still deferred. |
 | EOS-S06 / `MD-PR-S036` | RETAINED. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. |
+
+## Addendum — 2026-09-09 EOS-S05A consolidated human-verification remediation (`MD-PR-S043`)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| MD-PR-S042 Auditor confidentiality / extraction false success / bundled client consent | SUPERSEDED by `MD-PR-S043` product remediation. Findings remain recorded; disposition is implemented, not accepted. |
+| Evaluation corpus `s05a-eval-v2` / 33 cases | SUPERSEDED as the current executable edition. Current edition is `s05a-eval-v3` / 37 cases / hash `5a7c208aed31aa0b0ef47ae1553370c3d259254468f2eac7e3eb3cff6e21169c`. Prior PASSED runs are STALE until a genuine live CEO rerun. |
+| Catalogue accepted-slice count | RETAINED at 5. |
+| Control Tower | Compatibility-only. Not a deploy target for this run. |
+| Claude-in-Chrome | Not run. Still deferred. Ready for focused Claude re-verification after AI CTO review. |
+| EOS-S06 / `MD-PR-S036` | RETAINED. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. |
+| `productionAuthorised` | RETAINED false. Not changed. |
