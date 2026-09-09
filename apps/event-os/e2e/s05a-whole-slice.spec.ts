@@ -24,6 +24,7 @@ test("S05A whole slice: brief, budget, roadmap, change and command", async ({ pa
 
   await page.getByRole("button", { name: "Create working brief" }).click();
   await expect(page.getByTestId("intelligence-workspace")).toContainText("Working brief", { timeout: 20_000 });
+  await expect(page.getByTestId("brief-workbench")).toContainText("Coverage");
   await page.getByRole("button", { name: "Submit brief edition" }).click();
   await expect(page.getByTestId("intelligence-workspace")).toContainText("submitted", { timeout: 20_000 });
 
@@ -75,6 +76,16 @@ test("S05A whole slice: brief, budget, roadmap, change and command", async ({ pa
   await expect(clientPage.getByTestId("client-interview")).not.toContainText(
     "Welcome. This conversation helps Maison Doclar",
   );
+  await clientPage.getByRole("link", { name: "Review and sign-off" }).click();
+  await expect(clientPage.getByTestId("client-review")).toBeVisible({ timeout: 20_000 });
+  await clientPage.getByRole("button", { name: "Confirm this complete review" }).click();
+  await expect(clientPage.getByTestId("client-review-receipt")).toBeVisible({ timeout: 20_000 });
+  await clientPage.getByRole("link", { name: "Investment" }).click();
+  await expect(clientPage.getByTestId("client-investment")).toContainText("not an instruction to spend");
+  await clientPage.getByRole("button", { name: "Record my preference" }).click();
+  await expect(clientPage.getByTestId("client-investment-receipt")).toBeVisible({ timeout: 20_000 });
+  await clientPage.getByRole("link", { name: "Your roadmap" }).click();
+  await expect(clientPage.getByTestId("client-roadmap")).toBeVisible({ timeout: 20_000 });
   await clientPage.goto("/app/command");
   await expect(clientPage).not.toHaveURL(/\/app\/command/);
   await clientPage.close();

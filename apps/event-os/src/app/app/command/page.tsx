@@ -77,6 +77,11 @@ export default async function ExecutiveEventCommandPage({
           <p>Readiness: {command.readiness}</p>
           <p>Evidence: {command.evidenceFreshness}</p>
           <p>{command.clientConfirmation}</p>
+          {command.clientReviewHash ? (
+            <p>
+              Client review edition <CanonicalHash value={command.clientReviewHash} />
+            </p>
+          ) : null}
         </section>
         <section className="form programme-form">
           <h2>What we know</h2>
@@ -115,6 +120,8 @@ export default async function ExecutiveEventCommandPage({
           <p>Stale prices: {command.exceptions?.stalePrices.join(", ") || "none marked"}</p>
           <p>Weak or synthetic evidence: {command.exceptions?.weakConfidence.join(", ") || "none marked"}</p>
           <p>Blocked budget: {command.exceptions?.blockedBudget ? "yes" : "no"} · Roadmap infeasible: {command.exceptions?.roadmapInfeasible ? "yes" : "no"}</p>
+          <p>Missing client confirmation: {command.exceptions?.missingClientConfirmation ? "yes" : "no"}</p>
+          <p>Failed evaluation job: {command.exceptions?.failedEvaluation ? "yes" : "no"}</p>
         </section>
         <section className="form programme-form">
           <h2>Investment intelligence</h2>
@@ -135,6 +142,11 @@ export default async function ExecutiveEventCommandPage({
           <p>Evidence maturity: {command.investment?.evidenceMaturity ?? "No scenario is bound."}</p>
           {command.investment?.spendNotRecommended ? <p>Do not spend unused envelope capacity. Surplus is not a target.</p> : null}
           <p className="lede">An available envelope is not an instruction to spend it. No payment or booking is authorised here.</p>
+          {command.drillDown ? (
+            <p data-testid="command-investment-drill">
+              <a href={command.drillDown.investment}>Open Budget Studio and calculation traces</a>
+            </p>
+          ) : null}
         </section>
         <section className="form programme-form">
           <h2>Roadmap intelligence</h2>
@@ -152,6 +164,16 @@ export default async function ExecutiveEventCommandPage({
             <p>{command.criticalPath.length} milestone identities sit on the current critical path.</p>
           )}
           {command.roadmap?.compressionClass ? <p>Compression: {command.roadmap.compressionClass.toLowerCase().replaceAll("_", " ")}</p> : null}
+          {command.roadmap?.calendarDates?.some((item) => item.latestSafe) ? (
+            <p data-testid="command-roadmap-calendar">
+              Latest safe dates: {command.roadmap.calendarDates.filter((item) => item.latestSafe).map((item) => `${item.title} ${item.latestSafe}`).join(" · ")}
+            </p>
+          ) : null}
+          {command.drillDown ? (
+            <p data-testid="command-roadmap-drill">
+              <a href={command.drillDown.roadmap}>Open Roadmap Studio</a>
+            </p>
+          ) : null}
         </section>
         <section className="form programme-form">
           <h2>Change intelligence</h2>
@@ -159,6 +181,13 @@ export default async function ExecutiveEventCommandPage({
             <p>
               {command.change.summary} · {command.change.status.toLowerCase().replaceAll("_", " ")} ·{" "}
               <CanonicalHash value={command.change.hash} />
+              {command.change.impactHash ? (
+                <>
+                  {" "}
+                  · impact <CanonicalHash value={command.change.impactHash} />
+                </>
+              ) : null}
+              {command.change.affected?.length ? <span> · {command.change.affected.join(" · ")}</span> : null}
             </p>
           ) : (
             <p className="empty">No change proposal is waiting.</p>

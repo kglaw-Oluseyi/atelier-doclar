@@ -4364,3 +4364,54 @@ export async function submitBudgetScenarioAction(formData: FormData): Promise<vo
     }
   });
 }
+
+export async function recordClientReviewAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const token = String(formData.get("token") ?? "");
+    try {
+      getRuntime().service.recordClientReviewActionByToken(token, {
+        kind: String(formData.get("kind") ?? "CONFIRM_ITEM") as
+          | "CONFIRM_ITEM"
+          | "CORRECT"
+          | "DISPUTE"
+          | "DEFER"
+          | "PREFER_NOT"
+          | "CLARIFY"
+          | "SUBMIT_REVIEW"
+          | "CONFIRM_EDITION",
+        itemKey: String(formData.get("itemKey") ?? "") || undefined,
+        narrative: String(formData.get("narrative") ?? "") || undefined,
+        expectedHash: String(formData.get("expectedHash") ?? ""),
+      });
+    } catch {
+      redirect(`/discover/${token}/review?error=1`);
+    }
+    redirect(`/discover/${token}/review?ok=1`);
+  });
+}
+
+export async function recordClientInvestmentAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const token = String(formData.get("token") ?? "");
+    try {
+      getRuntime().service.recordClientInvestmentActionByToken(token, {
+        kind: String(formData.get("kind") ?? "NO_ENVELOPE") as
+          | "CONFIRM_ENVELOPE"
+          | "NO_ENVELOPE"
+          | "CORRECT_AMOUNT"
+          | "CHOOSE_SCENARIO"
+          | "REJECT_SCENARIO"
+          | "CLARIFY"
+          | "DEFER"
+          | "PREFER_NOT"
+          | "CONFIRM_PRIORITIES",
+        amountMinor: String(formData.get("amountMinor") ?? "") || undefined,
+        scenarioPurpose: String(formData.get("scenarioPurpose") ?? "") || undefined,
+        narrative: String(formData.get("narrative") ?? "") || undefined,
+      });
+    } catch {
+      redirect(`/discover/${token}/investment?error=1`);
+    }
+    redirect(`/discover/${token}/investment?ok=1`);
+  });
+}

@@ -1,4 +1,5 @@
 import { GuestFrame } from "../../../components/guest-frame";
+import { ClientSessionNav } from "../../../components/client-session-nav";
 import { PlatformError } from "@maison-doclar/shared-platform";
 import { IdempotencyField, PendingSubmit } from "../../../components/atelier-pending-submit";
 import { recordClientBriefDecisionAction, recordClientInterviewTurnAction } from "../../../server/actions";
@@ -28,6 +29,7 @@ export default async function DiscoveryClientPage({
   const next = projection.nextQuestion;
   return (
     <GuestFrame host="Maison Doclar" eventName={projection.engagementReference}>
+      <ClientSessionNav token={token} current="conversation" />
       <p className="lede">
         This is a Maison Doclar consultation, not a form. We keep your words distinct from any interpretation we propose. You may pause, say unknown, not yet, not applicable, or prefer not to answer.
       </p>
@@ -45,6 +47,7 @@ export default async function DiscoveryClientPage({
           <h2>Current question</h2>
           <p>{next.question}</p>
           {next.revisit ? <p>We are revisiting this because the earlier answer is conflicted or stale. Your previous words remain.</p> : null}
+          {"rationale" in next && next.rationale ? <p className="lede">{String(next.rationale)}</p> : null}
           {projection.permittedActions.includes("INTERVIEW") || projection.permittedActions.includes("CONFIRM") ? (
             <form action={recordClientInterviewTurnAction}>
               <IdempotencyField />

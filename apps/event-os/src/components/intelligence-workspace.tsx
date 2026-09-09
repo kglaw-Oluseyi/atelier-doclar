@@ -68,11 +68,28 @@ export function IntelligenceWorkspaceView({
   const currentEdition = intelligence.editions.find((item) => item.current);
   return (
     <div className="discovery-workspace" data-testid="intelligence-workspace">
-      <section id="brief-review" className="form programme-form">
-        <h2>Brief review</h2>
+      <section id="brief-review" className="form programme-form" data-testid="brief-workbench">
+        <h2>Brief Review Workbench</h2>
         <p className="lede">
-          The working brief is governed event intelligence. It is not a long editable document and it is not yet a Client or Event.
+          Coverage, working meaning and evidence stay in one workbench. On small screens these become labelled regions, not three squeezed columns.
         </p>
+        <div className="brief-workbench">
+          <section className="brief-workbench-region" aria-labelledby="workbench-coverage">
+            <h3 id="workbench-coverage">Coverage</h3>
+            {(intelligence.workbench?.coverage ?? []).length === 0 ? (
+              <p className="empty">No coverage states yet.</p>
+            ) : (
+              <ul>
+                {intelligence.workbench.coverage.map((item) => (
+                  <li key={item.topicKey}>
+                    {item.topicKey.replaceAll(".", " ")} · {item.state.toLowerCase().replaceAll("_", " ")}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+          <section className="brief-workbench-region" aria-labelledby="workbench-brief">
+            <h3 id="workbench-brief">Working brief</h3>
         {intelligence.nextQuestion ? (
           <p data-testid="interview-next-question">
             Next conversation: {intelligence.nextQuestion.question}
@@ -179,6 +196,23 @@ export function IntelligenceWorkspaceView({
             ))}
           </ul>
         ) : null}
+          </section>
+          <section className="brief-workbench-region" aria-labelledby="workbench-evidence">
+            <h3 id="workbench-evidence">Evidence and decisions</h3>
+            <p>Client review: {intelligence.reviews?.[0]?.status.replaceAll("_", " ").toLowerCase() ?? "not issued"}</p>
+            {(intelligence.workbench?.conflicts ?? []).length ? (
+              <p>Conflicts: {intelligence.workbench.conflicts.map((item) => item.explanation).join(" · ")}</p>
+            ) : (
+              <p>No open conflicts.</p>
+            )}
+            {(intelligence.workbench?.assertions ?? []).slice(0, 6).map((item) => (
+              <p key={item.topicKey + item.narrative}>
+                {item.origin === "AI_FIXTURE" ? "AI proposal" : item.origin === "HUMAN" ? "Client wording" : "Staff interpretation"} ·{" "}
+                {item.topicKey.replaceAll(".", " ")} · {item.confirmationState.toLowerCase().replaceAll("_", " ")}
+              </p>
+            ))}
+          </section>
+        </div>
       </section>
 
       <section id="conversion" className="form programme-form">
@@ -387,6 +421,8 @@ export function IntelligenceWorkspaceView({
             {intelligence.milestones.map((item) => (
               <li key={item.id}>
                 {item.title} · {item.layer.replaceAll("_", " ").toLowerCase()} · {item.durationDays} days
+                {item.targetEnd ? ` · target ${item.targetEnd}` : ""}
+                {item.latestSafe ? ` · latest safe ${item.latestSafe}` : ""}
                 {item.purpose ? ` · ${item.purpose}` : ""}
                 {item.delayConsequence ? ` · delay: ${item.delayConsequence}` : ""}
                 {item.clientVisible ? "" : " · internal"}

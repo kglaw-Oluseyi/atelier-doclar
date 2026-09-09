@@ -501,6 +501,40 @@ body.atelier {
   }
 }
 
+.brief-workbench {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.brief-workbench-region {
+  min-width: 0;
+}
+
+.brief-workbench-region h3 {
+  margin-bottom: 0.5rem;
+}
+
+.client-session-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  margin: 0 0 1.25rem;
+}
+
+.client-session-nav a,
+.client-session-nav span {
+  min-height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+@media (min-width: 1100px) {
+  .brief-workbench {
+    grid-template-columns: minmax(12rem, 16rem) minmax(0, 1fr) minmax(14rem, 20rem);
+    align-items: start;
+  }
+}
+
 @media (min-width: 980px) {
   .atelier-brief-grid {
     grid-template-columns: minmax(0, 1.7fr) minmax(240px, 0.9fr);
