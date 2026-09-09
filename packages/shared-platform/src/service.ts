@@ -7,7 +7,7 @@ import {
 } from "./constants.js";
 import { localFixtureAccessAuthority, type AccessAuthority } from "./access-authority.js";
 import type { LayoutBinaryStore } from "./layout-asset-store.js";
-import { permissionIdForKey, roleIdForKey, seededPermissions, seededRoles, isSystemAdministratorRole } from "./catalog.js";
+import { permissionIdForKey, roleIdForKey, roleKeyForId, seededPermissions, seededRoles, isSystemAdministratorRole } from "./catalog.js";
 import { PlatformError } from "./errors.js";
 import { assertNamedHuman } from "./identity.js";
 import { lineageFixtureMark } from "./fixtures.js";
@@ -700,9 +700,9 @@ import {
   issueClientReviewEditionOnSnap,
   recordClientInvestmentActionOnSnap,
   recordClientReviewActionOnSnap,
-  runS05AEvaluationCorpusOnSnap,
-  s05aReadinessFromSnap,
 } from "./eec-s05a-completion.js";
+import { executeS05AEvaluationOnSnap, requestS05AEvaluationOnSnap } from "./eec-evaluation-runner.js";
+import { listEvaluationRunSummaries, projectEvaluationRun, s05aEvaluationReadinessFromSnap, s05aReadinessFromSnap } from "./eec-evaluation-projections.js";
 
 export interface ActorContext {
   personId: string;
@@ -6665,22 +6665,110 @@ export class PlatformService {
     return record;
   }
 
-  runS05AEvaluation(actor: ActorContext, raw: unknown) {
+  requestS05AEvaluation(actor: ActorContext, raw: unknown) {
     const input = raw as { organisationId: string; reason?: string; idempotencyKey?: string };
     return this.mutate(actor, {
-      permission: "executiveCommand.view",
+      permission: "executiveCommand.evaluate",
       scope: { organisationId: input.organisationId },
-      action: "ai.evaluation.ran",
+      action: "ai.evaluation.requested",
       resourceType: "ai_evaluation_run",
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
-      run: (snap, ctx) => runS05AEvaluationCorpusOnSnap(snap, input.organisationId, ctx.now),
+      run: (snap, ctx) =>
+        requestS05AEvaluationOnSnap(snap, {
+          organisationId: input.organisationId,
+          requestedByPersonId: actor.personId,
+          correlationId: actor.correlationId,
+          idempotencyKey: input.idempotencyKey ?? `${input.organisationId}:${ctx.now}`,
+          applicationSha: process.env.RAILWAY_GIT_COMMIT_SHA || process.env.EVENT_OS_GIT_SHA || "local-dev",
+          now: ctx.now,
+        }),
     });
+  }
+
+  async executeS05AEvaluation(actor: ActorContext, raw: unknown) {
+    const input = raw as { organisationId: string; reason?: string; idempotencyKey?: string; runId?: string };
+    this.authorizeQuery(actor, "executiveCommand.evaluate", { organisationId: input.organisationId });
+    const requested = this.requestS05AEvaluation(actor, raw);
+    const snap = structuredClone(this.store.snapshot());
+    const now = actor.now ?? new Date().toISOString();
+    try {
+      const run = await executeS05AEvaluationOnSnap(snap, {
+        organisationId: input.organisationId,
+        requestedByPersonId: actor.personId,
+        correlationId: actor.correlationId,
+        idempotencyKey: input.idempotencyKey ?? requested.idempotencyKey,
+        applicationSha: process.env.RAILWAY_GIT_COMMIT_SHA || process.env.EVENT_OS_GIT_SHA || "local-dev",
+        now,
+        runId: requested.id,
+      });
+      this.writeAudit(snap, {
+        action: "ai.evaluation.completed",
+        outcome: run.status === "PASSED" ? "SUCCESS" : "FAILED",
+        actorPersonId: actor.personId,
+        organisationId: input.organisationId,
+        resourceType: "ai_evaluation_run",
+        resourceId: run.id,
+        correlationId: actor.correlationId,
+        reason: input.reason,
+        occurredAt: now,
+      });
+      this.store.replace(snap);
+      return run;
+    } catch (error) {
+      this.writeAudit(snap, {
+        action: "ai.evaluation.completed",
+        outcome: "FAILED",
+        actorPersonId: actor.personId,
+        organisationId: input.organisationId,
+        resourceType: "ai_evaluation_run",
+        correlationId: actor.correlationId,
+        reason: error instanceof Error ? error.message.slice(0, 200) : "evaluation failed",
+        occurredAt: now,
+      });
+      this.store.replace(snap);
+      throw error;
+    }
+  }
+
+  runS05AEvaluation(actor: ActorContext, raw: unknown) {
+    return this.executeS05AEvaluation(actor, raw);
   }
 
   getS05AReadiness(organisationId?: string) {
     const snap = this.store.snapshot();
     return s05aReadinessFromSnap(snap, organisationId ?? snap.organisations[0]?.id ?? "");
+  }
+
+  getS05AEvaluationReadiness(actor: ActorContext | undefined, organisationId: string) {
+    if (actor) this.assertEvaluationReadAccess(actor, organisationId);
+    return s05aEvaluationReadinessFromSnap(this.store.snapshot(), organisationId);
+  }
+
+  getS05AEvaluationRun(actor: ActorContext, organisationId: string, runId: string) {
+    const safe = this.assertEvaluationReadAccess(actor, organisationId);
+    return projectEvaluationRun(this.store.snapshot(), organisationId, runId, safe);
+  }
+
+  listS05AEvaluationRuns(actor: ActorContext, organisationId: string) {
+    this.assertEvaluationReadAccess(actor, organisationId);
+    return listEvaluationRunSummaries(this.store.snapshot(), organisationId);
+  }
+
+  private assertEvaluationReadAccess(actor: ActorContext, organisationId: string): boolean {
+    const actorSnap = this.actorSnapshot(actor);
+    const sysadmin = actorSnap.roles.some((role) => isSystemAdministratorRole(role.key) || isSystemAdministratorRole(roleKeyForId(role.id) ?? ""));
+    if (sysadmin) {
+      this.authorizeQuery(actor, "executiveCommand.evaluate", { organisationId });
+    }
+    const evaluate = this.decide(actorSnap, "executiveCommand.evaluate", { organisationId }, { type: "ai_evaluation_run", organisationId }, actor);
+    if (evaluate.allow) return false;
+    const view = this.decide(actorSnap, "executiveCommand.view", { organisationId }, { type: "ai_evaluation_run", organisationId }, actor);
+    if (view.allow) return false;
+    const audit = this.decide(actorSnap, "audit.view", { organisationId }, { type: "ai_evaluation_run", organisationId }, actor);
+    if (audit.allow && !sysadmin) return true;
+    this.authorizeQuery(actor, "executiveCommand.evaluate", { organisationId });
+    return false;
   }
 
   recordClientInterviewTurnByToken(
@@ -7880,6 +7968,9 @@ export class PlatformService {
       snap.impactAssessments,
       snap.aiJobs,
       snap.aiEvaluationRuns,
+      snap.aiEvaluationCaseResults,
+      snap.aiEvaluationRunLeases,
+      snap.s05aEvaluationMigrationReceipts,
       snap.s05aIntelligenceReceipts,
       snap.vendorPriceCards,
       snap.vendorPriceCardEditions,

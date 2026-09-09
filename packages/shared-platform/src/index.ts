@@ -832,10 +832,19 @@ export {
   INTERVIEW_CORPUS,
   INTERVIEW_CORPUS_EDITION,
   addWorkingDays,
-  evaluateZeroTolerance,
   interviewCorpusHash,
-  runS05AEvaluationCorpusOnSnap,
 } from "./eec-s05a-completion.js";
+export {
+  EVALUATION_CONTRACT_VERSION,
+  EVALUATION_CORPUS_EDITION,
+  EVALUATION_ORCHESTRATOR_VERSION,
+  EVALUATION_PROVIDER_VERSION,
+  EVALUATION_PROJECTION_POLICY_VERSION,
+} from "./eec-evaluation-schemas.js";
+export { S05A_EVALUATION_CASES, evaluationCorpusHash, validateEvaluationCorpus } from "./eec-evaluation-corpus.js";
+export { executeS05AEvaluationOnSnap, requestS05AEvaluationOnSnap, currentEvaluationVersions } from "./eec-evaluation-runner.js";
+export { s05aEvaluationReadinessFromSnap, s05aReadinessFromSnap } from "./eec-evaluation-projections.js";
+export { migrateEosS05AEvaluationV4, EOS_S05A_EVALUATION_MIGRATION_ID } from "./eec-evaluation-migration.js";
 export { validateS05APersistedCollections } from "./eec-persistence.js";
 export {
   CreateOpportunityInputSchema,

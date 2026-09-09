@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { addWorkingDays, evaluateZeroTolerance, INTERVIEW_CORPUS, nextGovernedInterviewFromCorpus } from "../src/eec-s05a-completion.js";
+import { addWorkingDays, INTERVIEW_CORPUS, nextGovernedInterviewFromCorpus } from "../src/eec-s05a-completion.js";
 import { PlatformError } from "../src/errors.js";
 import { actor, fixtureService, people } from "./helpers.js";
 
@@ -129,16 +129,11 @@ test("working-day calendar placement and interview corpus coverage", () => {
   assert.ok(INTERVIEW_CORPUS.some((item) => item.key === "privacy"));
 });
 
-test("evaluation corpus records zero-tolerance results and blocks release on failure", () => {
-  const { service, ceo, organisationId } = openReviewedEngagement();
-  const run = service.runS05AEvaluation(ceo, { organisationId, reason: "eval", idempotencyKey: "completion-eval" });
-  assert.equal(run.corpusEdition, "s05a-eval-v1");
-  assert.equal(run.zeroToleranceFailed, false);
-  assert.equal(run.status, "PASSED");
-  assert.ok((run.inputCaseHashes?.length ?? 0) >= 22);
-  assert.deepEqual(evaluateZeroTolerance({ fabricatedStatement: true }), ["fabricated client statement"]);
+test("evaluation readiness is fail-closed until an executable run exists", () => {
+  const { service, organisationId } = openReviewedEngagement();
   const readiness = service.getS05AReadiness(organisationId);
-  assert.equal(readiness.evaluationStatus, "PASSED");
-  assert.equal(readiness.evaluationBlocked, false);
+  assert.equal(readiness.evaluationStatus, "UNRUN");
+  assert.equal(readiness.evaluationBlocked, true);
+  assert.equal(readiness.releaseReady, false);
   assert.equal(readiness.calendarReady, true);
 });

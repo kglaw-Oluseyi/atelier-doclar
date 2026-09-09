@@ -22,7 +22,7 @@ test("EEC-02 role grants stay least-privilege", () => {
     "discovery.assertion.review",
   ] as const;
   const decide = ["brief.decide", "investment.decide", "roadmap.decide", "change.decide"] as const;
-  const forbiddenToAuthor = ["engagement.convert", "executiveCommand.view", ...decide] as const;
+  const forbiddenToAuthor = ["engagement.convert", "executiveCommand.view", "executiveCommand.evaluate", ...decide] as const;
   for (const key of author) {
     assert.ok(ceo.includes(key), `CEO missing ${key}`);
     assert.ok(planner.includes(key), `Planner missing ${key}`);
@@ -38,6 +38,7 @@ test("EEC-02 role grants stay least-privilege", () => {
   }
   assert.equal(director.includes("engagement.convert"), false);
   assert.equal(director.includes("executiveCommand.view"), false);
+  assert.equal(director.includes("executiveCommand.evaluate"), false);
   assert.ok(director.includes("brief.decide"));
   assert.ok(auditor.includes("engagement.view"));
 });
