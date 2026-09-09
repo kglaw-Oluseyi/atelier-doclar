@@ -769,6 +769,6 @@ export function buildExecutiveCommand(input: {
   };
 }
 
-export function buildExecutiveCommandFromSnap(snap: PlatformSnapshot, organisationId: string, eventId?: string) {
-  return buildExecutiveCommandDeep(snap, organisationId, eventId);
+export function buildExecutiveCommandFromSnap(snap: PlatformSnapshot, organisationId: string, eventId?: string, engagementId?: string) {
+  return buildExecutiveCommandDeep(snap, organisationId, eventId, engagementId);
 }

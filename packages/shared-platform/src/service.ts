@@ -6817,9 +6817,9 @@ export class PlatformService {
     });
   }
 
-  getExecutiveCommand(actor: ActorContext, organisationId: string, eventId?: string) {
+  getExecutiveCommand(actor: ActorContext, organisationId: string, eventId?: string, engagementId?: string) {
     const { snap } = this.authorizeQuery(actor, "executiveCommand.view", { organisationId, eventId });
-    return buildExecutiveCommandFromSnap(snap, organisationId, eventId);
+    return buildExecutiveCommandFromSnap(snap, organisationId, eventId, engagementId);
   }
 
   getIntelligenceWorkspace(actor: ActorContext, organisationId: string, engagementId: string) {

@@ -1307,11 +1307,16 @@ export function revokeDiscoveryClientAccessOnSnap(
   return record;
 }
 
-export function buildExecutiveCommandDeep(snap: PlatformSnapshot, organisationId: string, eventId?: string) {
-  const engagements = snap.discoveryEngagements.filter((item) => item.organisationId === organisationId);
-  const selected = eventId
-    ? engagements.find((item) => item.convertedEventId === eventId) ?? engagements[0]
-    : engagements[0];
+export function buildExecutiveCommandDeep(snap: PlatformSnapshot, organisationId: string, eventId?: string, engagementId?: string) {
+  const engagements = snap.discoveryEngagements
+    .filter((item) => item.organisationId === organisationId && item.status !== "ARCHIVED")
+    .slice()
+    .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt) || Date.parse(right.createdAt) - Date.parse(left.createdAt));
+  const selected = engagementId
+    ? engagements.find((item) => item.id === engagementId) ?? engagements[0]
+    : eventId
+      ? engagements.find((item) => item.convertedEventId === eventId) ?? engagements[0]
+      : engagements[0];
   const brief = selected ? snap.eventBriefEditions.find((item) => item.engagementId === selected.id && item.current) : undefined;
   const budget = selected ? snap.budgetScenarioEditions.find((item) => item.engagementId === selected.id && item.current) : undefined;
   const roadmap = selected ? snap.roadmapEditions.find((item) => item.engagementId === selected.id && item.current) : undefined;
@@ -1347,6 +1352,11 @@ export function buildExecutiveCommandDeep(snap: PlatformSnapshot, organisationId
     eventId: eventId ?? selected?.convertedEventId,
     engagementId: selected?.id,
     engagementLabel: selected?.displayReference ?? "No active engagement",
+    engagements: engagements.map((item) => ({
+      id: item.id,
+      label: item.displayReference,
+      eventId: item.convertedEventId,
+    })),
     briefHash: brief?.contentHash,
     budgetHash: budget?.resultHash,
     roadmapHash: roadmap?.contentHash,

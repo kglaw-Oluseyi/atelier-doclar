@@ -13,7 +13,12 @@ function moneyLabel(minor?: string) {
   return formatMoneyMinor(minor);
 }
 
-export default async function ExecutiveEventCommandPage() {
+export default async function ExecutiveEventCommandPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const query = await searchParams;
   const { actor, person } = await guardedActor();
   const organisation = resolveDiscoveryOrganisation(actor);
   if (!organisation) {
@@ -33,7 +38,9 @@ export default async function ExecutiveEventCommandPage() {
       </AppShell>
     );
   }
-  const command = getRuntime().service.getExecutiveCommand(actor, organisation.id);
+  const eventId = typeof query.eventId === "string" ? query.eventId : undefined;
+  const engagementId = typeof query.engagementId === "string" ? query.engagementId : undefined;
+  const command = getRuntime().service.getExecutiveCommand(actor, organisation.id, eventId, engagementId);
   const decision = command.decisions?.[0];
   return (
     <AppShell person={person} organisationName={organisation.displayName} current="/app/command">
@@ -45,6 +52,21 @@ export default async function ExecutiveEventCommandPage() {
       <div className="atelier-brief at-scope" data-testid="executive-command">
         <section className="form programme-form">
           <h2>Orientation</h2>
+          {(command.engagements ?? []).length > 1 ? (
+            <form method="GET" action="/app/command">
+              <label>
+                Engagement or converted event
+                <select name="engagementId" defaultValue={command.engagementId ?? ""}>
+                  {(command.engagements ?? []).map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button type="submit">Show this engagement</button>
+            </form>
+          ) : null}
           <p>{command.engagementLabel ?? "No active engagement"}</p>
           <p>
             Brief {command.briefHash ? <CanonicalHash value={command.briefHash} /> : "none"} · Budget{" "}

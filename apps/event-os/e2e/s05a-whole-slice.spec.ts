@@ -104,6 +104,12 @@ test("S05A whole slice: brief, budget, roadmap, change and command", async ({ pa
   await page.getByRole("button", { name: "Decide change" }).click();
   await page.getByRole("navigation", { name: "Staff" }).getByRole("link", { name: "Event Command" }).click();
   await expect(page.getByTestId("executive-command")).toBeVisible({ timeout: 20_000 });
+  const selector = page.getByLabel("Engagement or converted event");
+  if (await selector.count()) {
+    await selector.selectOption({ label: name });
+    await page.getByRole("button", { name: "Show this engagement" }).click();
+    await expect(page.getByTestId("executive-command")).toContainText(name, { timeout: 20_000 });
+  }
   await expect(page.getByTestId("command-blocking")).toBeVisible();
   await expect(page.getByTestId("executive-command")).toContainText("Confirm guest count");
 
