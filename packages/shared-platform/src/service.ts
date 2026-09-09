@@ -652,12 +652,16 @@ import {
   SessionLifecycleInputSchema,
   StartDiscoveryEngagementInputSchema,
   UpdateOpportunityInputSchema,
+  type ExtractionInvocationResult,
 } from "./eec-schemas.js";
 import {
   addParticipantOnSnap,
   createOpportunityOnSnap,
   extractAssertionsOnSnap,
+  findDurableExtractionOutcome,
   governingGuestCountFromBrief,
+  isExtractionInvocationResult,
+  toExtractionInvocation,
   grantDiscoveryDisclosureOnSnap,
   latestConsentFor,
   recordDiscoveryConsentOnSnap,
@@ -6399,22 +6403,49 @@ export class PlatformService {
     return { objectKey: artefact.objectKey, byteChecksum: artefact.byteChecksum, title: artefact.title };
   }
 
-  extractCandidateAssertions(actor: ActorContext, raw: unknown) {
+  extractCandidateAssertions(actor: ActorContext, raw: unknown): ExtractionInvocationResult {
     const input = parseStrict(ExtractAssertionsInputSchema, raw);
-    return this.mutate(actor, {
+    const result = this.mutate(actor, {
       permission: "discovery.assertion.review",
       scope: { organisationId: input.organisationId },
       action: "assertion.proposed",
       resourceType: "extraction_outcome",
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash({ artefactId: input.artefactId, expectedVersion: input.expectedVersion }),
       replayIfAlreadyApplied: true,
-      alreadyApplied: (snap) =>
-        snap.extractionOutcomes.find(
+      alreadyApplied: (snap) => {
+        const artefact = snap.sourceArtefacts.find((item) => item.id === input.artefactId);
+        if (input.expectedVersion > 0 && artefact && artefact.version !== input.expectedVersion) {
+          return undefined;
+        }
+        const byKey = snap.extractionOutcomes.find(
           (item) => item.artefactId === input.artefactId && item.idempotencyKey === input.idempotencyKey,
-        ),
+        );
+        const byContent = findDurableExtractionOutcome(snap, input.artefactId);
+        const outcome = byKey ?? byContent;
+        return outcome ? toExtractionInvocation(outcome, true) : undefined;
+      },
       run: (snap, ctx) => extractAssertionsOnSnap(snap, input, ctx.now, actor.personId, actor.actorKind),
     });
+    const invocation = isExtractionInvocationResult(result) ? result : toExtractionInvocation(result, true);
+    if (invocation.replayed) {
+      const snap = this.store.snapshot();
+      this.writeAudit(snap, {
+        action: "assertion.extract.replayed",
+        outcome: "SUCCESS",
+        actorPersonId: actor.personId,
+        organisationId: input.organisationId,
+        resourceType: "extraction_outcome",
+        resourceId: invocation.extractionRunId,
+        correlationId: actor.correlationId,
+        idempotencyKey: input.idempotencyKey,
+        reason: "idempotent extraction replay; no new proposal created",
+        occurredAt: actor.now ?? new Date().toISOString(),
+      });
+      this.store.replace(snap);
+    }
+    return invocation;
   }
 
   grantDiscoveryDisclosure(actor: ActorContext, raw: unknown) {
@@ -6468,7 +6499,22 @@ export class PlatformService {
       resourceId: input.conflictId,
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
-      run: (snap, ctx) => resolveConflictOnSnap(snap, input, ctx.now, actor.personId),
+      payloadHash: stableHash({
+        conflictId: input.conflictId,
+        decision: input.decision,
+        resolution: input.resolution,
+        selectedAssertionId: input.selectedAssertionId,
+      }),
+      replayIfAlreadyApplied: true,
+      alreadyApplied: (snap) => {
+        const conflict = snap.assertionConflicts.find((item) => item.id === input.conflictId);
+        if (!conflict || conflict.status === "OPEN") return undefined;
+        const governingId =
+          input.decision?.kind === "SELECT_GOVERNING_ASSERTION" ? input.decision.governingAssertionId : input.selectedAssertionId;
+        if (governingId && conflict.governingAssertionId && conflict.governingAssertionId !== governingId) return undefined;
+        return conflict;
+      },
+      run: (snap, ctx) => resolveConflictOnSnap(snap, input, ctx.now, actor.personId, actor.actorKind),
     });
   }
 
@@ -7063,7 +7109,7 @@ export class PlatformService {
       run: (snap, ctx) => {
         if (input.engagementId) {
           const governing = governingGuestCountFromBrief(snap, input.engagementId);
-          if (governing.kind === "UNRESOLVED_CONTRADICTION" || governing.kind === "UNKNOWN") {
+          if (governing.kind !== "CURRENT_BRIEF") {
             if (input.assumptionAcknowledged === false) {
               throw new PlatformError("VALIDATION_FAILED", "a planning guest-count assumption must be acknowledged before calculation");
             }

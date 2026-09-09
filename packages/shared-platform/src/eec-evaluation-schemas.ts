@@ -17,7 +17,7 @@ const versioned = {
 };
 
 export const EVALUATION_CONTRACT_VERSION = "s05a-eval-contract-v1";
-export const EVALUATION_CORPUS_EDITION = "s05a-eval-v3";
+export const EVALUATION_CORPUS_EDITION = "s05a-eval-v4";
 export const EVALUATION_ORCHESTRATOR_VERSION = "s05a-orchestrator-v2";
 export const EVALUATION_PROVIDER_VERSION = "fixture-inactive-v1";
 export const EVALUATION_PROJECTION_POLICY_VERSION = "client-projection-v2";
@@ -97,6 +97,16 @@ export const EvaluationActionSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("EXTRACT_ASSERTIONS") }).strict(),
   z
     .object({
+      kind: z.literal("RESOLVE_CONFLICT"),
+      topicKey: z.string(),
+      governingCount: z.string(),
+    })
+    .strict(),
+  z.object({ kind: z.literal("CREATE_BRIEF") }).strict(),
+  z.object({ kind: z.literal("SUBMIT_BRIEF"), gate: z.enum(["INDICATIVE", "WORKING", "APPROVED"]).optional() }).strict(),
+  z.object({ kind: z.literal("DECIDE_BRIEF"), decision: z.enum(["APPROVE", "REJECT"]) }).strict(),
+  z
+    .object({
       kind: z.literal("REVIEW_ASSERTION"),
       topicKey: z.string(),
       decision: z.enum(["ACCEPT_STAFF_REVIEWED", "REJECT", "REQUEST_CLARIFICATION"]),
@@ -143,6 +153,15 @@ export const ExpectedObservationSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("OTHER_ENGAGEMENT_OMITS"), valueRef: z.string() }).strict(),
   z.object({ kind: z.literal("UNICODE_EQUALS"), valueRef: z.string(), text: z.string() }).strict(),
   z.object({ kind: z.literal("AUDIT_OUTCOME"), actionType: z.string(), outcome: z.string() }).strict(),
+  z.object({ kind: z.literal("ASSERTION_COUNT"), topicKey: z.string(), count: z.number().int().nonnegative() }).strict(),
+  z.object({ kind: z.literal("EXTRACTION_OUTCOME_COUNT"), count: z.number().int().nonnegative() }).strict(),
+  z.object({ kind: z.literal("CONFLICT_GOVERNING"), topicKey: z.string(), count: z.string() }).strict(),
+  z
+    .object({
+      kind: z.literal("BUDGET_GUEST_SOURCE"),
+      sourceKind: z.enum(["CURRENT_BRIEF", "BRIEF_NOT_CURRENT", "UNRESOLVED_CONTRADICTION", "UNKNOWN", "NOT_APPLICABLE"]),
+    })
+    .strict(),
 ]);
 
 export const EvaluationPrincipalSeedSchema = z
@@ -234,6 +253,10 @@ export const EvaluationObservationResultSchema = z
       "OTHER_ENGAGEMENT_OMITS",
       "UNICODE_EQUALS",
       "AUDIT_OUTCOME",
+      "ASSERTION_COUNT",
+      "EXTRACTION_OUTCOME_COUNT",
+      "CONFLICT_GOVERNING",
+      "BUDGET_GUEST_SOURCE",
     ]),
     passed: z.boolean(),
     code: z.string().min(1).max(80),

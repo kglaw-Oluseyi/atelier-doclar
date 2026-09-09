@@ -294,6 +294,9 @@ export const AssertionConflictSchema = z
     status: z.enum(["OPEN", "RESOLVED", "CLARIFICATION_REQUIRED"]),
     resolution: z.enum(CONFLICT_RESOLUTIONS).optional(),
     clarificationWording: z.string().max(2000).optional(),
+    governingAssertionId: CandidateAssertionIdSchema.optional(),
+    supersededAssertionIds: z.array(CandidateAssertionIdSchema).optional(),
+    resolutionReason: z.string().max(400).optional(),
     ...orgScoped,
     ...versioned,
   })
@@ -531,18 +534,43 @@ export const ReviewAssertionInputSchema = z
   })
   .strict();
 
+export const ConflictDecisionSchema = z.discriminatedUnion("kind", [
+  z
+    .object({
+      kind: z.literal("SELECT_GOVERNING_ASSERTION"),
+      governingAssertionId: CandidateAssertionIdSchema,
+      supersededAssertionIds: z.array(CandidateAssertionIdSchema).min(1),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("KEEP_UNRESOLVED"),
+    })
+    .strict(),
+]);
+
 export const ResolveConflictInputSchema = z
   .object({
     organisationId: OrganisationIdSchema,
     engagementId: EngagementIdSchema,
     conflictId: AssertionConflictIdSchema,
-    resolution: z.enum(CONFLICT_RESOLUTIONS),
+    resolution: z.enum(CONFLICT_RESOLUTIONS).optional(),
     selectedAssertionId: CandidateAssertionIdSchema.optional(),
+    decision: ConflictDecisionSchema.optional(),
     expectedVersion: z.number().int().positive(),
     reason: NonEmptySchema.max(400),
     idempotencyKey: NonEmptySchema.max(120),
   })
-  .strict();
+  .strict()
+  .superRefine((value, ctx) => {
+    if (!value.decision && !value.resolution) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "decision or resolution is required",
+        path: ["resolution"],
+      });
+    }
+  });
 
 export const ExtractionDispositionSchema = z.discriminatedUnion("kind", [
   z
@@ -695,6 +723,18 @@ export type PredicateAst = z.infer<typeof PredicateAstSchema>;
 export type DiscoveryDisclosureClass = z.infer<typeof DiscoveryDisclosureClassSchema>;
 export type ExtractionDisposition = z.infer<typeof ExtractionDispositionSchema>;
 export type ExtractionOutcome = z.infer<typeof ExtractionOutcomeSchema>;
+export type ConflictDecision = z.infer<typeof ConflictDecisionSchema>;
+export type ExtractionInvocationResult = ExtractionOutcome & {
+  invocationId: string;
+  extractionRunId: string;
+  replayed: boolean;
+  sourceVersion: number;
+  newlyProposedCount: number;
+  existingLinkedCount: number;
+  noMaterialAssertionCount: number;
+  needsHumanReviewCount: number;
+  failedCount: number;
+};
 export type DiscoveryDisclosureGrant = z.infer<typeof DiscoveryDisclosureGrantSchema>;
 export type GrantDiscoveryDisclosureInput = z.infer<typeof GrantDiscoveryDisclosureInputSchema>;
 export type RevokeDiscoveryDisclosureInput = z.infer<typeof RevokeDiscoveryDisclosureInputSchema>;

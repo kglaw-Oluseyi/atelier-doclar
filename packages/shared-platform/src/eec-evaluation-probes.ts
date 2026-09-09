@@ -1,5 +1,6 @@
 import { sanitiseInertText } from "./eec-extraction.js";
 import { nfc } from "./eec-hash.js";
+import { governingGuestCountFromBrief } from "./eec-operations.js";
 import type { EvaluationObservationResult, ExpectedObservation, ZeroToleranceCategory } from "./eec-evaluation-schemas.js";
 import type { PlatformSnapshot } from "./store.js";
 
@@ -347,6 +348,61 @@ export function observeExpected(ctx: ProbeContext): EvaluationObservationResult 
       event ? [event.id] : [],
     );
   }
+  if (expected.kind === "ASSERTION_COUNT") {
+    const matches = snap.candidateAssertions.filter(
+      (item) => item.engagementId === engagementId && item.topicKey === expected.topicKey && item.confirmationState !== "REJECTED",
+    );
+    const passed = matches.length === expected.count;
+    return result(
+      expected,
+      passed,
+      passed ? "ASSERTION_COUNT_MATCH" : "ASSERTION_COUNT_MISMATCH",
+      `${expected.topicKey} has ${expected.count} assertions`,
+      `${matches.length} assertions`,
+      matches.map((item) => item.id),
+    );
+  }
+  if (expected.kind === "EXTRACTION_OUTCOME_COUNT") {
+    const matches = snap.extractionOutcomes.filter((item) => item.engagementId === engagementId);
+    const passed = matches.length === expected.count;
+    return result(
+      expected,
+      passed,
+      passed ? "EXTRACTION_OUTCOME_COUNT_MATCH" : "EXTRACTION_OUTCOME_COUNT_MISMATCH",
+      `${expected.count} extraction outcomes`,
+      `${matches.length} extraction outcomes`,
+      matches.map((item) => item.id),
+    );
+  }
+  if (expected.kind === "CONFLICT_GOVERNING") {
+    const conflict = snap.assertionConflicts.find(
+      (item) => item.engagementId === engagementId && item.topicKey === expected.topicKey && item.status === "RESOLVED",
+    );
+    const governing = conflict
+      ? snap.candidateAssertions.find((item) => item.id === conflict.governingAssertionId)
+      : undefined;
+    const observed = String((governing?.structuredValue as { count?: string } | undefined)?.count ?? "");
+    const passed = Boolean(conflict && observed === expected.count);
+    return result(
+      expected,
+      passed,
+      passed ? "CONFLICT_GOVERNING_MATCH" : "CONFLICT_GOVERNING_MISMATCH",
+      `governing ${expected.topicKey} is ${expected.count}`,
+      observed || "no governing assertion",
+      conflict ? [conflict.id] : [],
+    );
+  }
+  if (expected.kind === "BUDGET_GUEST_SOURCE") {
+    const source = governingGuestCountFromBrief(snap, engagementId);
+    const passed = source.kind === expected.sourceKind;
+    return result(
+      expected,
+      passed,
+      passed ? "BUDGET_GUEST_SOURCE_MATCH" : "BUDGET_GUEST_SOURCE_MISMATCH",
+      `budget guest source is ${expected.sourceKind}`,
+      source.kind,
+    );
+  }
   return result(expected, false, "UNKNOWN_OBSERVATION", "unsupported observation", "observation kind was not evaluated");
 }
 
@@ -387,6 +443,9 @@ export function categoryForFailedObservation(observation: EvaluationObservationR
       if (observation.kind === "NO_GOVERNING_PRICE_WITHOUT_EVIDENCE") return "INVENTED_GOVERNING_PRICE";
       if (observation.kind === "NO_GOVERNING_AI_WRITE") return "AI_OPERATIONAL_AUTHORITY";
       if (observation.kind === "CONFLICT_NOT_SILENTLY_RESOLVED" || observation.kind === "CONFLICT_OPEN") return "SILENT_CONFLICT_RESOLUTION";
+      if (observation.kind === "ASSERTION_COUNT" || observation.kind === "EXTRACTION_OUTCOME_COUNT") return "FALSE_SUCCESS";
+      if (observation.kind === "CONFLICT_GOVERNING") return "SILENT_CONFLICT_RESOLUTION";
+      if (observation.kind === "BUDGET_GUEST_SOURCE") return "FALSE_SUCCESS";
       return undefined;
   }
 }

@@ -19,6 +19,7 @@ import type {
   DiscoveryParticipant,
   EngagementOpportunity,
   ExtractionDisposition,
+  ExtractionInvocationResult,
   ExtractionOutcome,
   InterviewSession,
   SourceArtefact,
@@ -417,6 +418,48 @@ function countDispositions(dispositions: readonly ExtractionDisposition[]) {
   };
 }
 
+export function toExtractionInvocation(outcome: ExtractionOutcome, replayed: boolean, invocationId = randomUUID()): ExtractionInvocationResult {
+  return {
+    ...outcome,
+    invocationId,
+    extractionRunId: outcome.id,
+    replayed,
+    sourceVersion: outcome.artefactVersion,
+    newlyProposedCount: replayed ? 0 : outcome.proposedCount,
+    existingLinkedCount: replayed ? outcome.proposedCount + outcome.duplicateCount : outcome.duplicateCount,
+    noMaterialAssertionCount: outcome.noMaterialCount,
+    needsHumanReviewCount: outcome.needsReviewCount,
+    failedCount: outcome.failureCount,
+  };
+}
+
+export function isExtractionInvocationResult(value: object): value is ExtractionInvocationResult {
+  return "replayed" in value && "newlyProposedCount" in value && "invocationId" in value;
+}
+
+export function formatExtractionInvocationReceipt(invocation: ExtractionInvocationResult): string {
+  const counts = `Considered ${invocation.consideredCount}: ${invocation.newlyProposedCount} new proposal${
+    invocation.newlyProposedCount === 1 ? "" : "s"
+  }, ${invocation.existingLinkedCount} existing, ${invocation.noMaterialAssertionCount} unmatched, ${invocation.needsHumanReviewCount} need review, ${invocation.rejectedCount} rejected.`;
+  if (invocation.replayed || (invocation.newlyProposedCount === 0 && invocation.existingLinkedCount > 0)) {
+    return `No new proposals — the existing proposal is already linked to this source. ${counts}`;
+  }
+  if (invocation.newlyProposedCount === 0) {
+    return `Extraction completed — no proposals created. ${counts}`;
+  }
+  return counts;
+}
+
+export function findDurableExtractionOutcome(snap: PlatformSnapshot, artefactId: string): ExtractionOutcome | undefined {
+  const artefact = snap.sourceArtefacts.find((item) => item.id === artefactId);
+  if (!artefact) return undefined;
+  const segments = snap.sourceSegments.filter((item) => item.artefactId === artefact.id);
+  const contentHash = sourceContentHashFor(artefact, segments);
+  return snap.extractionOutcomes.find(
+    (item) => item.artefactId === artefact.id && item.artefactVersion === artefact.version && item.sourceContentHash === contentHash,
+  );
+}
+
 export function extractAssertionsOnSnap(
   snap: PlatformSnapshot,
   input: ExtractAssertionsInput,
@@ -424,7 +467,7 @@ export function extractAssertionsOnSnap(
   actorPersonId: string,
   actorKind?: string,
   options?: { providerMode?: "DETERMINISTIC" | "UNAVAILABLE" | "MALFORMED" },
-): ExtractionOutcome {
+): ExtractionInvocationResult {
   if (!consentIsActive(snap, input.engagementId, "AI_ANALYSIS")) {
     throw new PlatformError("VALIDATION_FAILED", "AI analysis consent is required");
   }
@@ -444,7 +487,7 @@ export function extractAssertionsOnSnap(
       item.sourceContentHash === contentHash,
   );
   if (existingOutcome) {
-    return existingOutcome;
+    return toExtractionInvocation(existingOutcome, true);
   }
   if (options?.providerMode === "UNAVAILABLE") {
     const dispositions: ExtractionDisposition[] = segments.map((segment) => ({
@@ -491,7 +534,7 @@ export function extractAssertionsOnSnap(
       ...stamp(now),
     };
     snap.extractionOutcomes.push(outcome);
-    return outcome;
+    return toExtractionInvocation(outcome, false);
   }
   const created: CandidateAssertion[] = [];
   const dispositions: ExtractionDisposition[] = [];
@@ -535,7 +578,7 @@ export function extractAssertionsOnSnap(
       structuredValue: proposal.value,
       narrative: nfc(proposal.rationale),
       sourceSegmentIds: [...proposal.sourceSegmentIds],
-      assertedByParticipantId: segments[0]?.speakerParticipantId,
+      assertedByParticipantId: segments.find((item) => item.id === sourceSegmentId)?.speakerParticipantId ?? segments[0]?.speakerParticipantId,
       capturedByPersonId: actorPersonId,
       origin: "AI_FIXTURE",
       directness: proposal.directness,
@@ -584,8 +627,26 @@ export function extractAssertionsOnSnap(
       explanationCode: "NO_SUPPORTED_PATTERN",
     });
   }
-  detectConflictsOnSnap(snap, input.engagementId, input.organisationId, now);
+  const createdConflicts = detectConflictsOnSnap(snap, input.engagementId, input.organisationId, now);
   refreshCoverageOnSnap(snap, input.engagementId, now);
+  const raced = snap.extractionOutcomes.find(
+    (item) =>
+      item.artefactId === artefact.id &&
+      item.artefactVersion === artefact.version &&
+      item.sourceContentHash === contentHash,
+  );
+  if (raced) {
+    for (const record of created) {
+      const index = snap.candidateAssertions.findIndex((item) => item.id === record.id);
+      if (index >= 0) snap.candidateAssertions.splice(index, 1);
+    }
+    for (const conflict of createdConflicts) {
+      const index = snap.assertionConflicts.findIndex((item) => item.id === conflict.id);
+      if (index >= 0) snap.assertionConflicts.splice(index, 1);
+    }
+    refreshCoverageOnSnap(snap, input.engagementId, now);
+    return toExtractionInvocation(raced, true);
+  }
   const outcome: ExtractionOutcome = {
     id: randomUUID(),
     engagementId: input.engagementId,
@@ -600,7 +661,7 @@ export function extractAssertionsOnSnap(
     ...stamp(now),
   };
   snap.extractionOutcomes.push(outcome);
-  return outcome;
+  return toExtractionInvocation(outcome, false);
 }
 
 const INJECTION_MARKERS_LOCAL = /ignore (all|previous) instructions|system prompt|<script|javascript:/i;
@@ -644,38 +705,66 @@ export function revokeDiscoveryDisclosureOnSnap(
   return grant;
 }
 
-export function governingGuestCountFromBrief(
-  snap: PlatformSnapshot,
-  engagementId: string,
-):
-  | { kind: "CONFIRMED"; count: string; editionId: string; contentHash: string; assertionId: string }
+export type BudgetGuestCountSource =
+  | {
+      kind: "CURRENT_BRIEF";
+      count: string;
+      value: number;
+      editionId: string;
+      briefEditionId: string;
+      contentHash: string;
+      briefContentHash: string;
+      assertionId: string;
+      confirmedAt: string;
+    }
+  | { kind: "BRIEF_NOT_CURRENT"; latestBriefState: "WORKING" | "SUBMITTED" | "APPROVED_UNPUBLISHED" }
   | { kind: "UNRESOLVED_CONTRADICTION" }
-  | { kind: "UNKNOWN" } {
+  | { kind: "UNKNOWN" }
+  | { kind: "NOT_APPLICABLE" };
+
+export function governingGuestCountFromBrief(snap: PlatformSnapshot, engagementId: string): BudgetGuestCountSource {
   const openConflict = snap.assertionConflicts.find(
     (item) => item.engagementId === engagementId && item.topicKey === "guest.target_count" && item.status === "OPEN",
   );
   if (openConflict) return { kind: "UNRESOLVED_CONTRADICTION" };
-  const edition = [...snap.eventBriefEditions]
+  const currentEdition = [...snap.eventBriefEditions]
     .reverse()
-    .find((item) => item.engagementId === engagementId && item.current && (item.status === "APPROVED" || item.status === "PUBLISHED"));
-  if (!edition) return { kind: "UNKNOWN" };
-  const assertions = snap.candidateAssertions.filter(
-    (item) =>
-      edition.assertionIds.includes(item.id) &&
-      item.topicKey === "guest.target_count" &&
-      ["CLIENT_CONFIRMED", "GOVERNING", "STAFF_REVIEWED"].includes(item.confirmationState),
-  );
-  const counts = [...new Set(assertions.map((item) => String((item.structuredValue as { count?: string })?.count ?? "")))].filter(Boolean);
-  if (counts.length === 1 && assertions[0]) {
-    return {
-      kind: "CONFIRMED",
-      count: counts[0]!,
-      editionId: edition.id,
-      contentHash: edition.contentHash,
-      assertionId: assertions[0].id,
-    };
+    .find((item) => item.engagementId === engagementId && item.current);
+  const eligibleEdition =
+    currentEdition && (currentEdition.status === "APPROVED" || currentEdition.status === "PUBLISHED") ? currentEdition : undefined;
+  if (eligibleEdition) {
+    const assertions = snap.candidateAssertions.filter(
+      (item) =>
+        eligibleEdition.assertionIds.includes(item.id) &&
+        item.topicKey === "guest.target_count" &&
+        ["CLIENT_CONFIRMED", "GOVERNING", "STAFF_REVIEWED"].includes(item.confirmationState),
+    );
+    const counts = [...new Set(assertions.map((item) => String((item.structuredValue as { count?: string })?.count ?? "")))].filter(
+      Boolean,
+    );
+    if (counts.length === 1 && assertions[0]) {
+      return {
+        kind: "CURRENT_BRIEF",
+        count: counts[0]!,
+        value: Number(counts[0]),
+        editionId: eligibleEdition.id,
+        briefEditionId: eligibleEdition.id,
+        contentHash: eligibleEdition.contentHash,
+        briefContentHash: eligibleEdition.contentHash,
+        assertionId: assertions[0].id,
+        confirmedAt: eligibleEdition.updatedAt,
+      };
+    }
+    if (counts.length > 1) return { kind: "UNRESOLVED_CONTRADICTION" };
+    return { kind: "UNKNOWN" };
   }
-  if (counts.length > 1) return { kind: "UNRESOLVED_CONTRADICTION" };
+  if (currentEdition?.status === "SUBMITTED") {
+    return { kind: "BRIEF_NOT_CURRENT", latestBriefState: "SUBMITTED" };
+  }
+  const draft = snap.eventBriefDrafts.find((item) => item.engagementId === engagementId);
+  if (draft) {
+    return { kind: "BRIEF_NOT_CURRENT", latestBriefState: "WORKING" };
+  }
   return { kind: "UNKNOWN" };
 }
 
@@ -805,11 +894,11 @@ export function detectConflictsOnSnap(
 export function clarificationWording(topicKey: string, assertions: readonly CandidateAssertion[]): string {
   if (topicKey === "guest.target_count") {
     const counts = assertions.map((item) => String((item.structuredValue as { count?: string })?.count ?? "unknown"));
-    return `Earlier, ${counts[0]} guests was recorded as the preferred target. A later source suggests approximately ${counts[1]}. Which figure should now govern planning?`;
+    return `Approximately ${counts[0]} guests and approximately ${counts[1]} guests are both recorded. Which figure should now govern planning?`;
   }
   if (topicKey === "event.date") {
     const dates = assertions.map((item) => String((item.structuredValue as { date?: string })?.date ?? "unknown"));
-    return `A date of ${dates[0]} was recorded. A later source names ${dates[1]}. Which date should now govern planning?`;
+    return `A date of ${dates[0]} and a date of ${dates[1]} are both recorded. Which date should now govern planning?`;
   }
   return `More than one ${topicKey} value is recorded. Both sources are preserved until an authorised person decides.`;
 }
@@ -819,7 +908,11 @@ export function resolveConflictOnSnap(
   input: ResolveConflictInput,
   now: string,
   actorPersonId: string,
+  actorKind?: string,
 ): AssertionConflict {
+  if (actorKind === "AI") {
+    throw new PlatformError("AI_AUTHORITY_FORBIDDEN", "AI-origin commands cannot decide a governing contradiction");
+  }
   const conflict = snap.assertionConflicts.find((item) => item.id === input.conflictId);
   if (!conflict || conflict.engagementId !== input.engagementId || conflict.organisationId !== input.organisationId) {
     throw new PlatformError("NOT_FOUND", "assertion conflict was not found");
@@ -827,22 +920,140 @@ export function resolveConflictOnSnap(
   if (conflict.version !== input.expectedVersion) {
     throw new PlatformError("VERSION_CONFLICT", "stale conflict resolution");
   }
-  conflict.resolution = input.resolution;
-  conflict.decisionOwnerPersonId = actorPersonId;
-  conflict.status = input.resolution === "REQUEST_CLARIFICATION" ? "CLARIFICATION_REQUIRED" : "RESOLVED";
-  if (input.resolution === "SELECT" || input.resolution === "SUPERSEDE") {
-    for (const assertionId of conflict.assertionIds) {
-      const assertion = snap.candidateAssertions.find((item) => item.id === assertionId);
-      if (!assertion) continue;
-      assertion.confirmationState = assertionId === input.selectedAssertionId ? "STAFF_REVIEWED" : "SUPERSEDED";
-      assertion.version += 1;
-      assertion.updatedAt = now;
+  if (input.resolution === "COEXIST" || input.resolution === "SCOPE_SEPARATE") {
+    if (conflict.status === "RESOLVED" && conflict.resolution === input.resolution) return conflict;
+    if (conflict.status === "RESOLVED") {
+      throw new PlatformError("VALIDATION_FAILED", "contradiction is already resolved");
     }
+    conflict.resolution = input.resolution;
+    conflict.status = "RESOLVED";
+    conflict.decisionOwnerPersonId = actorPersonId;
+    conflict.resolutionReason = input.reason;
+    conflict.version += 1;
+    conflict.updatedAt = now;
+    refreshCoverageOnSnap(snap, input.engagementId, now);
+    return conflict;
   }
+  const liveDistinct = liveDistinctAssertionsForTopic(snap, input.engagementId, conflict.topicKey);
+  const liveIds = new Set(liveDistinct.map((item) => item.id));
+  const conflictIds = new Set(conflict.assertionIds);
+  if (liveIds.size !== conflictIds.size || [...liveIds].some((id) => !conflictIds.has(id))) {
+    throw new PlatformError("VERSION_CONFLICT", "stale candidate set cannot be decided");
+  }
+  const parsed = parseConflictDecision(input, conflict);
+  if (conflict.status === "RESOLVED") {
+    const sameGoverning =
+      parsed.kind === "SELECT_GOVERNING_ASSERTION" &&
+      conflict.governingAssertionId === parsed.governingAssertionId &&
+      sameIdSet(conflict.supersededAssertionIds ?? [], parsed.supersededAssertionIds);
+    if (sameGoverning) return conflict;
+    throw new PlatformError("VALIDATION_FAILED", "contradiction is already resolved");
+  }
+  if (parsed.kind === "KEEP_UNRESOLVED") {
+    conflict.resolution = "REQUEST_CLARIFICATION";
+    conflict.status = "CLARIFICATION_REQUIRED";
+    conflict.decisionOwnerPersonId = actorPersonId;
+    conflict.resolutionReason = input.reason;
+    conflict.version += 1;
+    conflict.updatedAt = now;
+    refreshCoverageOnSnap(snap, input.engagementId, now);
+    return conflict;
+  }
+  applyGoverningDecision(snap, conflict, parsed.governingAssertionId, parsed.supersededAssertionIds, now);
+  conflict.resolution = input.resolution === "SELECT" ? "SELECT" : "SUPERSEDE";
+  conflict.status = "RESOLVED";
+  conflict.decisionOwnerPersonId = actorPersonId;
+  conflict.governingAssertionId = parsed.governingAssertionId;
+  conflict.supersededAssertionIds = parsed.supersededAssertionIds;
+  conflict.resolutionReason = input.reason;
   conflict.version += 1;
   conflict.updatedAt = now;
   refreshCoverageOnSnap(snap, input.engagementId, now);
   return conflict;
+}
+
+function liveDistinctAssertionsForTopic(snap: PlatformSnapshot, engagementId: string, topicKey: string): CandidateAssertion[] {
+  const live = snap.candidateAssertions.filter(
+    (item) => item.engagementId === engagementId && item.topicKey === topicKey && !["REJECTED", "SUPERSEDED"].includes(item.confirmationState),
+  );
+  return live.filter(
+    (item, index) => live.findIndex((other) => exactHash(other.structuredValue) === exactHash(item.structuredValue)) === index,
+  );
+}
+
+function sameIdSet(left: readonly string[], right: readonly string[]): boolean {
+  if (left.length !== right.length) return false;
+  const rightSet = new Set(right);
+  return left.every((id) => rightSet.has(id));
+}
+
+function parseConflictDecision(
+  input: ResolveConflictInput,
+  conflict: AssertionConflict,
+):
+  | { kind: "KEEP_UNRESOLVED" }
+  | { kind: "SELECT_GOVERNING_ASSERTION"; governingAssertionId: string; supersededAssertionIds: string[] } {
+  if (input.decision?.kind === "KEEP_UNRESOLVED" || input.resolution === "REQUEST_CLARIFICATION") {
+    return { kind: "KEEP_UNRESOLVED" };
+  }
+  if (input.decision?.kind === "SELECT_GOVERNING_ASSERTION") {
+    validateGoverningChoice(conflict, input.decision.governingAssertionId, input.decision.supersededAssertionIds);
+    return {
+      kind: "SELECT_GOVERNING_ASSERTION",
+      governingAssertionId: input.decision.governingAssertionId,
+      supersededAssertionIds: input.decision.supersededAssertionIds,
+    };
+  }
+  const governingAssertionId = input.selectedAssertionId;
+  if (!governingAssertionId) {
+    throw new PlatformError("VALIDATION_FAILED", "a governing assertion identity is required");
+  }
+  const supersededAssertionIds = conflict.assertionIds.filter((id) => id !== governingAssertionId);
+  validateGoverningChoice(conflict, governingAssertionId, supersededAssertionIds);
+  return { kind: "SELECT_GOVERNING_ASSERTION", governingAssertionId, supersededAssertionIds };
+}
+
+function validateGoverningChoice(conflict: AssertionConflict, governingAssertionId: string, supersededAssertionIds: readonly string[]): void {
+  const conflictIds = new Set(conflict.assertionIds);
+  if (!conflictIds.has(governingAssertionId)) {
+    throw new PlatformError("VALIDATION_FAILED", "governing assertion is not a candidate of this contradiction");
+  }
+  if (supersededAssertionIds.includes(governingAssertionId)) {
+    throw new PlatformError("VALIDATION_FAILED", "governing assertion cannot also be superseded");
+  }
+  for (const id of supersededAssertionIds) {
+    if (!conflictIds.has(id)) {
+      throw new PlatformError("VALIDATION_FAILED", "superseded assertion is not a candidate of this contradiction");
+    }
+  }
+  const covered = new Set([governingAssertionId, ...supersededAssertionIds]);
+  if (![...conflictIds].every((id) => covered.has(id))) {
+    throw new PlatformError("VALIDATION_FAILED", "decision must cover the competing candidates");
+  }
+}
+
+function applyGoverningDecision(
+  snap: PlatformSnapshot,
+  conflict: AssertionConflict,
+  governingAssertionId: string,
+  supersededAssertionIds: readonly string[],
+  now: string,
+): void {
+  for (const assertionId of conflict.assertionIds) {
+    const assertion = snap.candidateAssertions.find(
+      (item) =>
+        item.id === assertionId && item.engagementId === conflict.engagementId && item.organisationId === conflict.organisationId,
+    );
+    if (!assertion) {
+      throw new PlatformError("VALIDATION_FAILED", "decision cannot manufacture a candidate value");
+    }
+    assertion.confirmationState = assertionId === governingAssertionId ? "STAFF_REVIEWED" : "SUPERSEDED";
+    if (assertionId !== governingAssertionId && !supersededAssertionIds.includes(assertionId)) {
+      throw new PlatformError("VALIDATION_FAILED", "decision must cover the competing candidates");
+    }
+    assertion.version += 1;
+    assertion.updatedAt = now;
+  }
 }
 
 export function refreshCoverageOnSnap(snap: PlatformSnapshot, engagementId: string, now: string): CoverageAssessment[] {

@@ -857,6 +857,7 @@ export {
   type CandidateAssertion,
   type AssertionConflict,
   type CoverageAssessment,
+  type ExtractionInvocationResult,
 } from "./eec-schemas.js";
 export { addMoney, exactHash, moneyFromDto, moneyToDto, nfc } from "./eec-hash.js";
 export { buildDiscoveryWorkspace, eecPermissionAllowed, type DiscoveryWorkspace, type EecCapabilities } from "./eec-projections.js";
@@ -866,7 +867,11 @@ export {
   resolveArtefactDisclosureClass,
   RESTRICTED_EVIDENCE_LABEL,
 } from "./eec-discovery-disclosure.js";
-export { governingGuestCountFromBrief } from "./eec-operations.js";
+export {
+  formatExtractionInvocationReceipt,
+  governingGuestCountFromBrief,
+  toExtractionInvocation,
+} from "./eec-operations.js";
 export { clientSafeHeading } from "./eec-projections.js";
 export * as engagementIntake from "./engagement-intake/index.js";
 export * as discoveryIntelligence from "./discovery-intelligence/index.js";

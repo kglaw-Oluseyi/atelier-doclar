@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { loadNonProductionFixtures } from "./bootstrap.js";
 import { SCHEMA_VERSION } from "./constants.js";
 import { exactHash, nfc } from "./eec-hash.js";
-import { calculateBudgetScenarioOnSnap, issueDiscoveryClientAccessOnSnap, runFixtureAiJobOnSnap } from "./eec-intelligence.js";
+import { calculateBudgetScenarioOnSnap, createBriefDraftOnSnap, decideBriefEditionOnSnap, issueDiscoveryClientAccessOnSnap, runFixtureAiJobOnSnap, submitBriefEditionOnSnap } from "./eec-intelligence.js";
 import { buildDiscoveryWorkspace, eecPermissionAllowed } from "./eec-projections.js";
 import { instantiateRoadmapFromTemplateOnSnap, recordConversationTurnOnSnap, seedBudgetKnowledgeOnSnap } from "./eec-s05a-depth.js";
 import {
@@ -12,6 +12,7 @@ import {
   recordDiscoveryConsentOnSnap,
   recordSourceArtefactOnSnap,
   refreshCoverageOnSnap,
+  resolveConflictOnSnap,
   reviewAssertionOnSnap,
   sessionLifecycleOnSnap,
   startDiscoveryEngagementOnSnap,
@@ -523,6 +524,68 @@ export function buildIsolatedEvaluationHarness(
         adapters?.afterConflictDetect?.(current, caseDef);
         store.replace(current);
         return { ok: true, recordIds: created };
+      }
+      if (action.kind === "RESOLVE_CONFLICT") {
+        const conflict = current.assertionConflicts.find(
+          (item) => item.engagementId === engagement.id && item.topicKey === action.topicKey && item.status === "OPEN",
+        );
+        if (!conflict) throw new PlatformError("NOT_FOUND", "assertion conflict was not found");
+        const candidates = conflict.assertionIds
+          .map((id) => current.candidateAssertions.find((item) => item.id === id))
+          .filter((item): item is NonNullable<typeof item> => Boolean(item));
+        const governing = candidates.find((item) => String((item.structuredValue as { count?: string }).count ?? "") === action.governingCount);
+        if (!governing) throw new PlatformError("VALIDATION_FAILED", "governing assertion was not found");
+        const supersededAssertionIds = candidates.filter((item) => item.id !== governing.id).map((item) => item.id);
+        const resolved = resolveConflictOnSnap(
+          current,
+          {
+            organisationId,
+            engagementId: engagement.id,
+            conflictId: conflict.id,
+            expectedVersion: conflict.version,
+            reason: "evaluation-govern",
+            idempotencyKey: `${caseDef.id}-resolve-${conflict.id}`,
+            decision: {
+              kind: "SELECT_GOVERNING_ASSERTION",
+              governingAssertionId: governing.id,
+              supersededAssertionIds,
+            },
+          },
+          now,
+          staffPersonId,
+          "HUMAN",
+        );
+        store.replace(current);
+        return { ok: true, recordIds: [resolved.id] };
+      }
+      if (action.kind === "CREATE_BRIEF") {
+        const draft = createBriefDraftOnSnap(current, { organisationId, engagementId: engagement.id }, now);
+        store.replace(current);
+        return { ok: true, recordIds: [draft.id] };
+      }
+      if (action.kind === "SUBMIT_BRIEF") {
+        const draft = current.eventBriefDrafts.find((item) => item.engagementId === engagement.id);
+        if (!draft) throw new PlatformError("NOT_FOUND", "brief draft was not found");
+        const edition = submitBriefEditionOnSnap(
+          current,
+          { organisationId, engagementId: engagement.id, gate: action.gate ?? "WORKING", expectedVersion: draft.version },
+          now,
+          staffPersonId,
+        );
+        store.replace(current);
+        return { ok: true, recordIds: [edition.id] };
+      }
+      if (action.kind === "DECIDE_BRIEF") {
+        const edition = current.eventBriefEditions.find((item) => item.engagementId === engagement.id && item.current);
+        if (!edition) throw new PlatformError("NOT_FOUND", "brief edition was not found");
+        const decided = decideBriefEditionOnSnap(
+          current,
+          { organisationId, editionId: edition.id, decision: action.decision, expectedVersion: edition.version },
+          now,
+          FIXTURE_IDS.personPlanner,
+        );
+        store.replace(current);
+        return { ok: true, recordIds: [decided.id] };
       }
       if (action.kind === "REVIEW_ASSERTION") {
         const assertion = [...current.candidateAssertions]
