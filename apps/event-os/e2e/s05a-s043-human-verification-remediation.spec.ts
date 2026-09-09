@@ -101,7 +101,7 @@ test("S043 Journey 2 — extraction and contradiction", async ({ page }) => {
   await page.getByRole("button", { name: "Save note" }).click();
   await expect(page.getByTestId("discovery-evidence-list")).toContainText("closer to 360 people", { timeout: 20_000 });
   await page.getByRole("button", { name: "Extract proposals" }).last().click();
-  await expect(page.getByText(/Extraction completed/i).first()).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText(/1 new proposal|Extraction completed/i).first()).toBeVisible({ timeout: 20_000 });
   await expect(page.getByTestId("discovery-assertion-list")).toContainText("360", { timeout: 20_000 });
   await expect(page.getByTestId("discovery-conflicts")).toContainText("conflict", { timeout: 20_000 });
   await page.reload();
@@ -110,9 +110,10 @@ test("S043 Journey 2 — extraction and contradiction", async ({ page }) => {
   await expect(page.getByTestId("discovery-conflicts")).toContainText("conflict");
   const beforeCount = await page.getByTestId("discovery-assertion-list").locator("li").count();
   await page.getByRole("button", { name: "Extract proposals" }).last().click();
-  await expect(page.getByText(/duplicate|no proposals created|Extraction completed/i).first()).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText(/0 new proposals|already linked|no new proposal/i).first()).toBeVisible({ timeout: 20_000 });
   await expect(page.getByTestId("discovery-assertion-list").locator("li")).toHaveCount(beforeCount);
-  await page.getByRole("button", { name: "Resolve contradiction" }).click();
+  await page.getByRole("radio", { name: /Keep unresolved and seek clarification/i }).check();
+  await page.getByRole("button", { name: /Keep unresolved and seek clarification/i }).click();
   await expect(page.getByTestId("discovery-evidence-list")).toContainText("320 guests", { timeout: 20_000 });
   await expect(page.getByTestId("discovery-evidence-list")).toContainText("closer to 360 people");
 });
@@ -198,7 +199,7 @@ test("S043 Journey 4 — UX and accessibility sample", async ({ page, browser })
   await page.getByRole("button", { name: "Decide brief" }).click();
   await expect(page.getByRole("button", { name: "Publish brief" })).toBeVisible({ timeout: 20_000 });
   await page.getByRole("button", { name: "Publish brief" }).click();
-  await expect(page.getByTestId("budget-guest-source")).toContainText("Prefill from confirmed brief", { timeout: 20_000 });
+  await expect(page.getByTestId("budget-guest-source")).toContainText("From current Event Brief", { timeout: 20_000 });
   await expect(page.getByLabel("Guest count")).toHaveValue("320");
   await viewportMatrix(page, "budget studio");
 

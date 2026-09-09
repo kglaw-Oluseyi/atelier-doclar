@@ -409,26 +409,37 @@ export function IntelligenceWorkspaceView({
                 name="guests"
                 required
                 inputMode="numeric"
-                defaultValue={intelligence.guestPrefill?.kind === "CONFIRMED" ? intelligence.guestPrefill.count : ""}
-                placeholder={intelligence.guestPrefill?.kind === "CONFIRMED" ? undefined : "Enter a planning count"}
+                defaultValue={intelligence.guestPrefill?.kind === "CURRENT_BRIEF" ? intelligence.guestPrefill.count : ""}
+                placeholder={intelligence.guestPrefill?.kind === "CURRENT_BRIEF" ? undefined : "Enter a planning count"}
               />
             </label>
-            {intelligence.guestPrefill?.kind === "CONFIRMED" ? (
+            {intelligence.guestPrefill?.kind === "CURRENT_BRIEF" ? (
               <p data-testid="budget-guest-source">
-                Prefill from confirmed brief edition {intelligence.guestPrefill.contentHash.slice(0, 12)}. Changing this value becomes a
-                scenario assumption and does not rewrite the brief.
+                From current Event Brief. Edition hash {intelligence.guestPrefill.contentHash.slice(0, 12)} is secondary provenance.
+                Changing this value becomes a labelled scenario assumption and does not rewrite the brief.
+              </p>
+            ) : intelligence.guestPrefill?.kind === "UNRESOLVED_CONTRADICTION" ? (
+              <p data-testid="budget-guest-unknown">
+                The guest-count contradiction must be resolved before Budget Studio can use it.{" "}
+                <a href={`/app/discovery/${engagementId}#discovery-assertions`}>Open the contradiction</a>. An example such as 180 is
+                not the event value.
+              </p>
+            ) : intelligence.guestPrefill?.kind === "BRIEF_NOT_CURRENT" ? (
+              <p data-testid="budget-guest-unknown">
+                A guest count is recorded, but the Event Brief is still awaiting{" "}
+                {intelligence.guestPrefill.latestBriefState === "SUBMITTED" ? "approval" : "approval/publication"}. Budget Studio will
+                not treat it as governing yet. <a href={`#brief-review`}>Open Event Brief</a>. An example such as 180 is not the event
+                value.
               </p>
             ) : (
-              <>
-                <p data-testid="budget-guest-unknown">
-                  No confirmed guest count is available
-                  {intelligence.guestPrefill?.kind === "UNRESOLVED_CONTRADICTION" ? " because a contradiction remains open" : ""}.
-                  An example such as 180 is not the event value.
-                </p>
+              <p data-testid="budget-guest-unknown">
+                The current Event Brief records the guest count as unknown. An example such as 180 is not the event value.
+              </p>
+            )}
+            {intelligence.guestPrefill?.kind === "CURRENT_BRIEF" ? null : (
                 <label>
                   <input type="checkbox" name="assumptionAcknowledged" value="1" /> I am entering a planning assumption, not a confirmed brief fact
                 </label>
-              </>
             )}
             <PendingSubmit locked={mutationLocked}>Calculate scenario</PendingSubmit>
           </form>

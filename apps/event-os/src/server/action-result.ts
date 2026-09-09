@@ -260,12 +260,23 @@ export function scopeAllowsPath(scopePath: string, requestPath: string): boolean
 }
 
 function viewFromResult(result: ActionResult): OperationalStateView {
+  const replayedExtraction =
+    result.status === "SUCCESS" &&
+    Boolean(result.message?.includes("No new proposals") || result.message?.includes("already linked to this source"));
   const view =
     result.status === "SUCCESS"
       ? operationalStateFromCode("SUCCESS", result.message)
       : operationalStateFromCode(result.code as PlatformErrorCode, result.message);
   return {
     ...view,
+    ...(replayedExtraction
+      ? {
+          title: "No new proposals were created",
+          whatHappened: result.message ?? "The existing proposal is already linked to this source.",
+          dataChanged: "no" as const,
+          tone: "brass" as const,
+        }
+      : {}),
     actionType: result.actionType,
     actionLabel: actionLabel(result.actionType),
     correlationId: result.correlationId,

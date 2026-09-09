@@ -7,6 +7,7 @@ import {
   NonProductionIdentityAdapter,
   PlatformError,
   discoverySourceObjectKey,
+  formatExtractionInvocationReceipt,
   type AgeBand,
   type Honorific,
 } from "@maison-doclar/shared-platform";
@@ -3827,6 +3828,7 @@ export async function recordDiscoverySourceAction(formData: FormData): Promise<v
         title: String(formData.get("title") ?? "Staff note").trim() || "Staff note",
         text: String(formData.get("text") ?? "").trim(),
         disclosureClass: String(formData.get("disclosureClass") ?? "OPERATIONAL") || "OPERATIONAL",
+        speakerParticipantId: String(formData.get("speakerParticipantId") ?? "") || undefined,
         reason: String(formData.get("reason") ?? "Record note").trim() || "Record note",
         idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
       });
@@ -3873,10 +3875,7 @@ export async function extractDiscoveryAssertionsAction(formData: FormData): Prom
         reason: String(formData.get("reason") ?? "Extract proposals").trim() || "Extract proposals",
         idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
       });
-      const message =
-        outcome.proposedCount === 0
-          ? `Extraction completed — no proposals created. Considered ${outcome.consideredCount}: ${outcome.duplicateCount} duplicate, ${outcome.noMaterialCount} no material assertion, ${outcome.needsReviewCount} need review, ${outcome.rejectedCount} rejected.`
-          : `Extraction completed. Considered ${outcome.consideredCount}: ${outcome.proposedCount} proposed, ${outcome.duplicateCount} duplicate, ${outcome.noMaterialCount} unmatched, ${outcome.needsReviewCount} need review, ${outcome.rejectedCount} rejected.`;
+      const message = formatExtractionInvocationReceipt(outcome);
       await finishAction(bind, { ok: "discovery.extract", extra: discoverySectionExtra(formData), message });
     } catch (error) {
       await finishAction(bind, { error });
@@ -4336,15 +4335,33 @@ export async function resolveDiscoveryConflictAction(formData: FormData): Promis
     const engagementId = String(formData.get("engagementId") ?? "");
     const bind = actorBind(actor, `/app/discovery/${engagementId}`, "discovery.conflict");
     try {
+      const supersededAssertionIds = formData
+        .getAll("supersededAssertionIds")
+        .map((item) => String(item))
+        .filter(Boolean);
+      const decisionKind = String(formData.get("decisionKind") ?? "");
+      const governingAssertionId = String(formData.get("governingAssertionId") ?? "") || undefined;
       getRuntime().service.resolveAssertionConflict(actor, {
         organisationId: String(formData.get("organisationId") ?? ""),
         engagementId,
         conflictId: String(formData.get("conflictId") ?? ""),
-        resolution: String(formData.get("resolution") ?? "SELECT"),
-        selectedAssertionId: String(formData.get("selectedAssertionId") ?? "") || undefined,
         expectedVersion: Number(formData.get("expectedVersion") ?? 1),
         reason: String(formData.get("reason") ?? "Resolve contradiction").trim() || "Resolve contradiction",
         idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+        ...(decisionKind === "KEEP_UNRESOLVED"
+          ? { decision: { kind: "KEEP_UNRESOLVED" as const } }
+          : decisionKind === "SELECT_GOVERNING_ASSERTION" && governingAssertionId
+            ? {
+                decision: {
+                  kind: "SELECT_GOVERNING_ASSERTION" as const,
+                  governingAssertionId,
+                  supersededAssertionIds,
+                },
+              }
+            : {
+                resolution: String(formData.get("resolution") ?? "SELECT"),
+                selectedAssertionId: String(formData.get("selectedAssertionId") ?? "") || governingAssertionId,
+              }),
       });
       await finishAction(bind, { ok: "discovery.conflict", extra: discoverySectionExtra(formData) });
     } catch (error) {

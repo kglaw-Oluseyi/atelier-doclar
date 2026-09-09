@@ -10,9 +10,9 @@ import {
   extractDiscoveryAssertionsAction,
   recordDiscoveryConsentAction,
   recordDiscoverySourceAction,
-  resolveDiscoveryConflictAction,
   reviewDiscoveryAssertionAction,
 } from "../server/actions";
+import { ContradictionResolveForm, type ContradictionCandidate } from "./contradiction-resolve-form";
 
 const CONSENT_DIMENSIONS = [
   ["PARTICIPATION", "Participation"],
@@ -59,6 +59,29 @@ function valueText(value: unknown) {
   if (value && typeof value === "object" && "redacted" in value) return "Restricted in this projection";
   if (value && typeof value === "object") return Object.values(value as Record<string, unknown>).map(String).join(" · ");
   return String(value ?? "Not provided");
+}
+
+function guestCountLabel(value: unknown): string {
+  if (value && typeof value === "object" && "count" in value) return String((value as { count?: string }).count ?? "unknown");
+  return valueText(value);
+}
+
+function contradictionCandidates(workspace: DiscoveryWorkspace, assertionIds: readonly string[]): ContradictionCandidate[] {
+  return assertionIds.map((id) => {
+    const assertion = workspace.assertions.find((item) => item.id === id);
+    const participant = workspace.participants.find((item) => item.id === assertion?.assertedByParticipantId);
+    const segment = workspace.segments.find(
+      (item) => assertion?.sourceSegmentIds.includes(item.id) && item.disclosureDecision !== "MASK",
+    );
+    const restricted = !assertion || assertion.narrative === "Restricted";
+    return {
+      id,
+      countLabel: restricted ? "restricted" : guestCountLabel(assertion.structuredValue),
+      sourceLabel: participant?.displayName ?? (restricted ? "Restricted source" : "Recorded source"),
+      quote: restricted ? "" : (segment?.text ?? assertion.narrative ?? "").slice(0, 180),
+      recordedAt: assertion?.createdAt,
+    };
+  });
 }
 
 function SectionReceipt({
@@ -356,9 +379,9 @@ export function DiscoveryWorkspaceView({
                   ) : null}
                   {outcome ? (
                     <p data-testid="extraction-outcome-receipt">
-                      Considered {outcome.consideredCount} · proposed {outcome.proposedCount} · duplicates {outcome.duplicateCount} ·
-                      unmatched {outcome.noMaterialCount} · review {outcome.needsReviewCount} · rejected {outcome.rejectedCount}
-                      {outcome.proposedCount === 0 ? " · Extraction completed — no proposals created" : ""}
+                      Recorded on this source — new proposals at original extraction: {outcome.proposedCount}; existing linked at
+                      original extraction: {outcome.duplicateCount}; unmatched {outcome.noMaterialCount}; review {outcome.needsReviewCount};
+                      rejected {outcome.rejectedCount}.
                     </p>
                   ) : null}
                   {capabilities.canReviewAssertion && !masked ? (
@@ -405,6 +428,19 @@ export function DiscoveryWorkspaceView({
                 <option value="PRINCIPAL_PRIVATE">Principal private</option>
               </select>
             </label>
+            {workspace.participants.length > 0 ? (
+              <label>
+                Speaker
+                <select name="speakerParticipantId" defaultValue="">
+                  <option value="">Not attributed</option>
+                  {workspace.participants.map((participant) => (
+                    <option key={participant.id} value={participant.id}>
+                      {participant.displayName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
             <label>
               What was said
               <textarea name="text" required maxLength={8000} rows={4} placeholder="The family mentioned 320 guests." />
@@ -456,13 +492,13 @@ export function DiscoveryWorkspaceView({
           reloadPath={reloadPath}
         />
         <h2>Assertion review</h2>
-        {workspace.conflicts.filter((item) => item.status !== "RESOLVED").length > 0 ? (
+        {workspace.conflicts.length > 0 ? (
           <div data-testid="discovery-conflicts">
-            <h3>Open contradictions</h3>
+            {workspace.conflicts.filter((item) => item.status !== "RESOLVED").length > 0 ? <h3>Open contradictions</h3> : null}
             {workspace.conflicts
               .filter((item) => item.status !== "RESOLVED")
               .map((conflict) => (
-                <article key={conflict.id} className="discovery-card">
+                <article key={conflict.id} className="discovery-card" data-testid="contradiction-open">
                   <p>
                     <span className="md-status" data-tone="warn">{conflict.severity} conflict</span>{" "}
                     {topicLabel(conflict.topicKey)}
@@ -470,35 +506,49 @@ export function DiscoveryWorkspaceView({
                   <p>{conflict.explanation}</p>
                   {conflict.clarificationWording ? <p>{conflict.clarificationWording}</p> : null}
                   {capabilities.canReviewAssertion ? (
-                    <form action={resolveDiscoveryConflictAction}>
-                      <IdempotencyField />
-                      <input type="hidden" name="organisationId" value={workspace.engagement.organisationId} />
-                      <input type="hidden" name="engagementId" value={workspace.engagement.id} />
-                      <input type="hidden" name="conflictId" value={conflict.id} />
-                      <input type="hidden" name="expectedVersion" value={conflict.version} />
-                      <input type="hidden" name="selectedAssertionId" value={conflict.assertionIds[0] ?? ""} />
-                      <input type="hidden" name="section" value="discovery-assertions" />
-                      <label>
-                        Resolution
-                        <select name="resolution" defaultValue="REQUEST_CLARIFICATION">
-                          <option value="REQUEST_CLARIFICATION">Ask for clarification</option>
-                          <option value="SELECT">Select first recorded value</option>
-                          <option value="COEXIST">Record as coexisting</option>
-                          <option value="SCOPE_SEPARATE">Keep in separate scopes</option>
-                          <option value="SUPERSEDE">Supersede earlier value</option>
-                        </select>
-                      </label>
-                      <label>
-                        Reason
-                        <input name="reason" required maxLength={400} defaultValue="Resolve contradiction without silent overwrite" />
-                      </label>
-                      <PendingSubmit locked={mutationLocked}>Resolve contradiction</PendingSubmit>
-                    </form>
+                    <ContradictionResolveForm
+                      organisationId={workspace.engagement.organisationId}
+                      engagementId={workspace.engagement.id}
+                      conflictId={conflict.id}
+                      expectedVersion={conflict.version}
+                      candidates={contradictionCandidates(workspace, conflict.assertionIds)}
+                      mutationLocked={mutationLocked}
+                    />
                   ) : (
                     <p className="lede">Resolving a contradiction is blocked for this assignment.</p>
                   )}
                 </article>
               ))}
+            {workspace.conflicts.filter((item) => item.status === "RESOLVED").length > 0 ? <h3>Resolved contradictions</h3> : null}
+            {workspace.conflicts
+              .filter((item) => item.status === "RESOLVED")
+              .map((conflict) => {
+                const candidates = contradictionCandidates(workspace, conflict.assertionIds);
+                const governing = candidates.find((item) => item.id === conflict.governingAssertionId);
+                const superseded = candidates.filter((item) => (conflict.supersededAssertionIds ?? []).includes(item.id));
+                return (
+                  <article key={conflict.id} className="discovery-card" data-testid="contradiction-result">
+                    <p>
+                      <span className="md-status">Resolved</span> {topicLabel(conflict.topicKey)}
+                    </p>
+                    <p>
+                      Governing value: approximately {governing?.countLabel ?? "recorded"} guests
+                      {governing?.sourceLabel ? ` · ${governing.sourceLabel}` : ""}.
+                    </p>
+                    {superseded.length > 0 ? (
+                      <p>
+                        Superseded evidence: approximately {superseded.map((item) => item.countLabel).join(" and ")} guests remains in
+                        the source history.
+                      </p>
+                    ) : null}
+                    <p className="lede">
+                      Decision maker: authorised staff reviewer · {conflict.updatedAt}
+                      {conflict.resolutionReason ? ` · ${conflict.resolutionReason}` : ""}
+                    </p>
+                    <p className="lede">Original sources were preserved. Correlation remains secondary.</p>
+                  </article>
+                );
+              })}
           </div>
         ) : null}
         {workspace.assertions.length === 0 ? (

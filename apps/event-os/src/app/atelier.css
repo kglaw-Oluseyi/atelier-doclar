@@ -2145,6 +2145,29 @@ body.atelier {
   gap: 8px;
 }
 
+.contradiction-choice {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.contradiction-option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.contradiction-option span {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
 .discovery-workspace textarea,
 .discovery-workspace input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]),
 .programme-form textarea,

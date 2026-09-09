@@ -48,7 +48,13 @@ export function AtelierOperationalState({
         {state.resultStatus ? (
           <div>
             <dt>Result</dt>
-            <dd data-testid="action-result-status">{state.resultStatus === "SUCCESS" ? "Succeeded" : "Not applied"}</dd>
+            <dd data-testid="action-result-status">
+              {state.resultStatus === "SUCCESS"
+                ? state.title.includes("No new proposals")
+                  ? "Recorded — no new proposals"
+                  : "Succeeded"
+                : "Not applied"}
+            </dd>
           </div>
         ) : null}
         {state.correlationId ? (
