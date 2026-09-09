@@ -11,7 +11,7 @@ import {
   type Honorific,
 } from "@maison-doclar/shared-platform";
 import { fixturesAllowed } from "./config";
-import { consumeActionFlash, consumeIssuedAccessFlash, writeActionResult, writeAudiencePreviewFlash, writeIssuedAccessFlash, writeRecoveredMarker } from "./action-flash";
+import { consumeActionFlash, consumeIssuedAccessFlash, rememberIssuedDiscoveryPath, writeActionResult, writeAudiencePreviewFlash, writeIssuedAccessFlash, writeIssuedDiscoveryPath, writeRecoveredMarker } from "./action-flash";
 import { buildActionResult, resultHref, sessionHashFromToken, successMessageForOk } from "./action-result";
 import { classifyActionError } from "./operational-state";
 import { getRuntime, withDurable } from "./runtime";
@@ -3727,6 +3727,7 @@ export async function createDiscoveryOpportunityAction(formData: FormData): Prom
       const opportunity = getRuntime().service.createEngagementOpportunity(actor, {
         organisationId,
         displayReference: String(formData.get("displayReference") ?? "").trim(),
+        eventConceptLabel: String(formData.get("eventConceptLabel") ?? "").trim() || undefined,
         enquiryChannel: String(formData.get("enquiryChannel") ?? "DIRECT"),
         knownEventType: String(formData.get("knownEventType") ?? "").trim() || undefined,
         reason: String(formData.get("reason") ?? "Open enquiry").trim() || "Open enquiry",
@@ -3749,6 +3750,11 @@ export async function createDiscoveryOpportunityAction(formData: FormData): Prom
   });
 }
 
+function discoverySectionExtra(formData: FormData): Record<string, string> | undefined {
+  const section = String(formData.get("section") ?? "");
+  return /^[a-z][a-z0-9-]{0,80}$/.test(section) ? { section } : undefined;
+}
+
 export async function recordDiscoveryConsentAction(formData: FormData): Promise<void> {
   return await withDurable(async () => {
     const { actor } = await requireActor();
@@ -3765,7 +3771,7 @@ export async function recordDiscoveryConsentAction(formData: FormData): Promise<
         reason: String(formData.get("reason") ?? "Record consent").trim() || "Record consent",
         idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
       });
-      await finishAction(bind, { ok: "discovery.consent" });
+      await finishAction(bind, { ok: "discovery.consent", extra: discoverySectionExtra(formData) });
     } catch (error) {
       await finishAction(bind, { error });
     }
@@ -3801,7 +3807,7 @@ export async function changeDiscoverySessionAction(formData: FormData): Promise<
               idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
             },
       );
-      await finishAction(bind, { ok: "discovery.session" });
+      await finishAction(bind, { ok: "discovery.session", extra: discoverySectionExtra(formData) });
     } catch (error) {
       await finishAction(bind, { error });
     }
@@ -3820,10 +3826,11 @@ export async function recordDiscoverySourceAction(formData: FormData): Promise<v
         kind: "STAFF_NOTE",
         title: String(formData.get("title") ?? "Staff note").trim() || "Staff note",
         text: String(formData.get("text") ?? "").trim(),
+        disclosureClass: String(formData.get("disclosureClass") ?? "OPERATIONAL") || "OPERATIONAL",
         reason: String(formData.get("reason") ?? "Record note").trim() || "Record note",
         idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
       });
-      await finishAction(bind, { ok: "discovery.source" });
+      await finishAction(bind, { ok: "discovery.source", extra: discoverySectionExtra(formData) });
     } catch (error) {
       await finishAction(bind, { error });
     }
@@ -3845,7 +3852,7 @@ export async function reviewDiscoveryAssertionAction(formData: FormData): Promis
         reason: String(formData.get("reason") ?? "Staff review").trim() || "Staff review",
         idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
       });
-      await finishAction(bind, { ok: "discovery.review" });
+      await finishAction(bind, { ok: "discovery.review", extra: discoverySectionExtra(formData) });
     } catch (error) {
       await finishAction(bind, { error });
     }
@@ -3858,14 +3865,19 @@ export async function extractDiscoveryAssertionsAction(formData: FormData): Prom
     const engagementId = String(formData.get("engagementId") ?? "");
     const bind = actorBind(actor, `/app/discovery/${engagementId}`, "discovery.extract");
     try {
-      getRuntime().service.extractCandidateAssertions(actor, {
+      const outcome = getRuntime().service.extractCandidateAssertions(actor, {
         organisationId: String(formData.get("organisationId") ?? ""),
         engagementId,
         artefactId: String(formData.get("artefactId") ?? ""),
+        expectedVersion: Number(formData.get("expectedVersion") ?? 0),
         reason: String(formData.get("reason") ?? "Extract proposals").trim() || "Extract proposals",
         idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
       });
-      await finishAction(bind, { ok: "discovery.extract" });
+      const message =
+        outcome.proposedCount === 0
+          ? `Extraction completed — no proposals created. Considered ${outcome.consideredCount}: ${outcome.duplicateCount} duplicate, ${outcome.noMaterialCount} no material assertion, ${outcome.needsReviewCount} need review, ${outcome.rejectedCount} rejected.`
+          : `Extraction completed. Considered ${outcome.consideredCount}: ${outcome.proposedCount} proposed, ${outcome.duplicateCount} duplicate, ${outcome.noMaterialCount} unmatched, ${outcome.needsReviewCount} need review, ${outcome.rejectedCount} rejected.`;
+      await finishAction(bind, { ok: "discovery.extract", extra: discoverySectionExtra(formData), message });
     } catch (error) {
       await finishAction(bind, { error });
     }
@@ -3887,7 +3899,7 @@ export async function addDiscoveryParticipantAction(formData: FormData): Promise
         reason: String(formData.get("reason") ?? "Add participant").trim() || "Add participant",
         idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
       });
-      await finishAction(bind, { ok: "discovery.participant" });
+      await finishAction(bind, { ok: "discovery.participant", extra: discoverySectionExtra(formData) });
     } catch (error) {
       await finishAction(bind, { error });
     }
@@ -4020,7 +4032,13 @@ export async function issueDiscoveryClientAccessAction(formData: FormData): Prom
         reason: String(formData.get("reason") ?? "Issue client review access").trim() || "Issue client review access",
         idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
       });
-      await finishAction(bind, { ok: "brief.client_access", extra: { clientPath: `/discover/${issued.token}` } });
+      const clientPath = `/discover/${issued.token}`;
+      rememberIssuedDiscoveryPath(`${actor.personId}:${engagementId}`, clientPath);
+      await writeIssuedDiscoveryPath(clientPath, `${actor.personId}:${engagementId}`);
+      await finishAction(bind, {
+        ok: "brief.client_access",
+        extra: { clientToken: issued.token, section: "brief-review" },
+      });
     } catch (error) {
       await finishAction(bind, { error });
     }
@@ -4091,11 +4109,12 @@ export async function calculateBudgetScenarioAction(formData: FormData): Promise
         engagementId,
         purpose: String(formData.get("purpose") ?? "PROTECT_PRIORITIES"),
         archetype: String(formData.get("archetype") ?? "WEDDING"),
-        guests: String(formData.get("guests") ?? "100"),
+        guests: String(formData.get("guests") ?? "").trim(),
+        assumptionAcknowledged: String(formData.get("assumptionAcknowledged") ?? "") === "1",
         reason: String(formData.get("reason") ?? "Calculate budget").trim() || "Calculate budget",
         idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
       });
-      await finishAction(bind, { ok: "budget.calculate" });
+      await finishAction(bind, { ok: "budget.calculate", extra: { section: "budget-studio" } });
     } catch (error) {
       await finishAction(bind, { error });
     }
@@ -4223,6 +4242,41 @@ export async function recordClientBriefDecisionAction(formData: FormData): Promi
   });
 }
 
+export async function recordClientDiscoveryConsentAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const token = String(formData.get("token") ?? "");
+    try {
+      getRuntime().service.recordClientDiscoveryConsentByToken(token, {
+        dimension: String(formData.get("dimension") ?? "") as
+          | "PARTICIPATION"
+          | "AUDIO_RECORDING"
+          | "TRANSCRIPTION"
+          | "AI_ANALYSIS"
+          | "SOURCE_RETENTION"
+          | "DEIDENTIFIED_BENCHMARKING",
+        decision: String(formData.get("decision") ?? "GRANTED") as "GRANTED" | "DECLINED" | "WITHDRAWN" | "NOT_APPLICABLE",
+        idempotencyKey: String(formData.get("idempotencyKey") ?? "") || undefined,
+      });
+    } catch {
+      redirect(`/discover/${token}?error=1#client-consent`);
+    }
+    redirect(`/discover/${token}?ok=1&consent=${encodeURIComponent(String(formData.get("dimension") ?? ""))}#client-consent`);
+  });
+}
+
+export async function extractClientDiscoveryAssertionsAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const token = String(formData.get("token") ?? "");
+    try {
+      getRuntime().service.extractClientDiscoveryAssertionsByToken(token);
+    } catch (error) {
+      const message = error instanceof Error && error.message.includes("AI analysis consent") ? "ai-consent" : "1";
+      redirect(`/discover/${token}?error=${message}#client-consent`);
+    }
+    redirect(`/discover/${token}?ok=extract#client-consent`);
+  });
+}
+
 export async function recordDiscoveryObjectAction(formData: FormData): Promise<void> {
   return await withDurable(async () => {
     const { actor } = await requireActor();
@@ -4292,7 +4346,7 @@ export async function resolveDiscoveryConflictAction(formData: FormData): Promis
         reason: String(formData.get("reason") ?? "Resolve contradiction").trim() || "Resolve contradiction",
         idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
       });
-      await finishAction(bind, { ok: "discovery.conflict" });
+      await finishAction(bind, { ok: "discovery.conflict", extra: discoverySectionExtra(formData) });
     } catch (error) {
       await finishAction(bind, { error });
     }

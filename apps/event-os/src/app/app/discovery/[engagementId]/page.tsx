@@ -6,7 +6,7 @@ import { AtelierSectionTabs } from "../../../../components/atelier-section-tabs"
 import { DiscoveryWorkspaceView } from "../../../../components/discovery-workspace";
 import { IntelligenceWorkspaceView } from "../../../../components/intelligence-workspace";
 import { AppShell } from "../../../../components/shell";
-import { loadPresentedActionResult } from "../../../../server/action-flash";
+import { loadPresentedActionResult, readIssuedDiscoveryPath } from "../../../../server/action-flash";
 import { refreshDiscoveryRecordAction } from "../../../../server/actions";
 import { discoveryPermissions, resolveDiscoveryOrganisation } from "../../../../server/discovery-scope";
 import { guardedActor } from "../../../../server/guard";
@@ -60,7 +60,28 @@ export default async function DiscoveryWorkspacePage({
     resultId: typeof query.result === "string" ? query.result : undefined,
     actorPersonId: person.id,
   });
-  const clientPath = typeof query.clientPath === "string" && /^\/discover\/[0-9a-f-]{36}$/i.test(query.clientPath) ? query.clientPath : undefined;
+  const resultSection =
+    (typeof query.section === "string" && /^[a-z][a-z0-9-]{0,80}$/.test(query.section) ? query.section : undefined) ??
+    (presented.actionType === "discovery.consent"
+      ? "discovery-consent"
+      : presented.actionType === "discovery.session" || presented.actionType === "discovery.participant"
+        ? "discovery-session"
+        : presented.actionType === "discovery.source" || presented.actionType === "discovery.extract"
+          ? "discovery-evidence"
+          : presented.actionType === "discovery.review" || presented.actionType === "discovery.conflict"
+            ? "discovery-assertions"
+            : presented.actionType === "budget.calculate"
+              ? "budget-studio"
+              : presented.actionType === "brief.client_access"
+                ? "brief-review"
+                : undefined);
+  const clientToken =
+    typeof query.clientToken === "string" && /^[0-9a-f-]{36}$/i.test(query.clientToken) ? query.clientToken : undefined;
+  const issuedPath = await readIssuedDiscoveryPath(`${person.id}:${engagementId}`);
+  const clientPath =
+    (clientToken ? `/discover/${clientToken}` : undefined) ??
+    (typeof query.clientPath === "string" && /^\/discover\/[0-9a-f-]{36}$/i.test(query.clientPath) ? query.clientPath : undefined) ??
+    issuedPath;
   return (
     <AppShell person={person} organisationName={organisation.displayName} current="/app/discovery">
       <AtelierPageHeader
@@ -82,19 +103,21 @@ export default async function DiscoveryWorkspacePage({
           { href: "#change-impact", label: "Change" },
         ]}
       />
-      <ActionResultBanner
+      {resultSection ? null : (
+        <ActionResultBanner
+          presented={presented}
+          reloadAction={refreshDiscoveryRecordAction}
+          reloadFields={{ path: `/app/discovery/${engagementId}` }}
+        />
+      )}
+      <DiscoveryWorkspaceView
+        workspace={workspace}
+        mutationLocked={presented.mutationLocked}
         presented={presented}
+        resultSection={resultSection}
         reloadAction={refreshDiscoveryRecordAction}
-        reloadFields={{ path: `/app/discovery/${engagementId}` }}
+        reloadPath={`/app/discovery/${engagementId}`}
       />
-      {clientPath ? (
-        <p>
-          <a href={clientPath} data-testid="client-conversation-link">
-            Open the one-time client conversation
-          </a>
-        </p>
-      ) : null}
-      <DiscoveryWorkspaceView workspace={workspace} mutationLocked={presented.mutationLocked} />
       <IntelligenceWorkspaceView
         organisationId={organisation.id}
         engagementId={engagementId}
@@ -113,6 +136,7 @@ export default async function DiscoveryWorkspacePage({
         canTriageChange={permissions.changeTriage}
         canDecideChange={permissions.changeDecide}
         canManageSource={permissions.manageSource}
+        clientPath={clientPath}
       />
     </AppShell>
   );

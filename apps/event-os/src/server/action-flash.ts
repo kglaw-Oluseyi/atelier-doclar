@@ -8,6 +8,7 @@ import {
   forgetActionResult,
   presentActionResult,
   recallActionResult,
+  recallLatestActionResult,
   rememberActionResult,
   sessionHashFromToken,
   storedResultMatchesCorrelation,
@@ -121,17 +122,19 @@ export async function loadPresentedActionResult(input: {
   guestId?: string;
 }): Promise<PresentedActionResult> {
   const token = (await readStaffSessionCookie()) ?? "";
+  const latest = recallLatestActionResult(input.actorPersonId, input.requestPath);
   const cookie = await readActionResult();
-  const stored =
-    cookie && (!input.resultId || cookie.correlationId === input.resultId)
+  const scopedCookie =
+    cookie && (cookie.scopePath === input.requestPath || input.requestPath.startsWith(`${cookie.scopePath}/`))
       ? cookie
-      : recallActionResult(input.resultId);
+      : undefined;
+  const stored = latest ?? scopedCookie ?? recallActionResult(input.resultId);
   return presentActionResult({
     stored,
     sessionHash: sessionHashFromToken(token),
     actorPersonId: input.actorPersonId,
     requestPath: input.requestPath,
-    resultId: input.resultId,
+    resultId: stored?.correlationId ?? input.resultId,
     eventId: input.eventId,
     guestId: input.guestId,
   });
@@ -170,6 +173,49 @@ export type IssuedAccessFlash = {
   token: string;
   subjectId: string;
 };
+
+const ISSUED_DISCOVERY_COOKIE = "md_event_os_issued_discovery";
+const RECENT_ISSUED_DISCOVERY = new Map<string, { path: string; expiresAt: number }>();
+const ISSUED_DISCOVERY_TTL_MS = 300_000;
+
+function isDiscoveryPath(path: string): boolean {
+  return /^\/discover\/[0-9a-f-]{36}$/i.test(path);
+}
+
+export function rememberIssuedDiscoveryPath(key: string, path: string): void {
+  if (!key || !isDiscoveryPath(path)) return;
+  RECENT_ISSUED_DISCOVERY.set(key, { path, expiresAt: Date.now() + ISSUED_DISCOVERY_TTL_MS });
+}
+
+export function recallIssuedDiscoveryPath(key: string): string | undefined {
+  const row = RECENT_ISSUED_DISCOVERY.get(key);
+  if (!row || row.expiresAt <= Date.now()) {
+    if (row) RECENT_ISSUED_DISCOVERY.delete(key);
+    return undefined;
+  }
+  return row.path;
+}
+
+export async function writeIssuedDiscoveryPath(path: string, key?: string): Promise<void> {
+  if (!isDiscoveryPath(path)) return;
+  if (key) rememberIssuedDiscoveryPath(key, path);
+  (await cookies()).set({
+    name: ISSUED_DISCOVERY_COOKIE,
+    value: path,
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 300,
+    secure: cookieSecure(),
+  });
+}
+
+export async function readIssuedDiscoveryPath(key?: string): Promise<string | undefined> {
+  const remembered = key ? recallIssuedDiscoveryPath(key) : undefined;
+  if (remembered) return remembered;
+  const raw = (await cookies()).get(ISSUED_DISCOVERY_COOKIE)?.value;
+  return raw && isDiscoveryPath(raw) ? raw : undefined;
+}
 
 export async function writeIssuedAccessFlash(flash: IssuedAccessFlash): Promise<void> {
   (await cookies()).set({

@@ -46,6 +46,7 @@ export function IntelligenceWorkspaceView({
   canTriageChange,
   canDecideChange,
   canManageSource,
+  clientPath,
 }: {
   organisationId: string;
   engagementId: string;
@@ -64,6 +65,7 @@ export function IntelligenceWorkspaceView({
   canTriageChange: boolean;
   canDecideChange: boolean;
   canManageSource: boolean;
+  clientPath?: string;
 }) {
   const currentEdition = intelligence.editions.find((item) => item.current);
   return (
@@ -173,6 +175,13 @@ export function IntelligenceWorkspaceView({
               Issue client review access
             </PendingSubmit>
           </form>
+        ) : null}
+        {clientPath ? (
+          <p>
+            <a href={clientPath} data-testid="client-conversation-link">
+              Open the one-time client conversation
+            </a>
+          </p>
         ) : null}
         {(intelligence.clientAccess ?? []).length > 0 ? (
           <ul className="atelier-queue" data-testid="client-access-list">
@@ -396,8 +405,31 @@ export function IntelligenceWorkspaceView({
             </label>
             <label>
               Guest count
-              <input name="guests" required defaultValue="180" />
+              <input
+                name="guests"
+                required
+                inputMode="numeric"
+                defaultValue={intelligence.guestPrefill?.kind === "CONFIRMED" ? intelligence.guestPrefill.count : ""}
+                placeholder={intelligence.guestPrefill?.kind === "CONFIRMED" ? undefined : "Enter a planning count"}
+              />
             </label>
+            {intelligence.guestPrefill?.kind === "CONFIRMED" ? (
+              <p data-testid="budget-guest-source">
+                Prefill from confirmed brief edition {intelligence.guestPrefill.contentHash.slice(0, 12)}. Changing this value becomes a
+                scenario assumption and does not rewrite the brief.
+              </p>
+            ) : (
+              <>
+                <p data-testid="budget-guest-unknown">
+                  No confirmed guest count is available
+                  {intelligence.guestPrefill?.kind === "UNRESOLVED_CONTRADICTION" ? " because a contradiction remains open" : ""}.
+                  An example such as 180 is not the event value.
+                </p>
+                <label>
+                  <input type="checkbox" name="assumptionAcknowledged" value="1" /> I am entering a planning assumption, not a confirmed brief fact
+                </label>
+              </>
+            )}
             <PendingSubmit locked={mutationLocked}>Calculate scenario</PendingSubmit>
           </form>
         ) : (

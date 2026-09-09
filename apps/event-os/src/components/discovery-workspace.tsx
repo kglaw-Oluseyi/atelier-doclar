@@ -1,5 +1,8 @@
 import type { DiscoveryWorkspace } from "@maison-doclar/shared-platform";
+import type { PresentedActionResult } from "../server/action-result";
+import { ActionResultBanner } from "./action-result-banner";
 import { CanonicalHash, CanonicalId, HistoryDisclosure } from "./canonical-evidence";
+import { DiscoveryScrollRestore } from "./discovery-scroll-restore";
 import { IdempotencyField, PendingSubmit } from "./atelier-pending-submit";
 import {
   addDiscoveryParticipantAction,
@@ -58,12 +61,46 @@ function valueText(value: unknown) {
   return String(value ?? "Not provided");
 }
 
+function SectionReceipt({
+  section,
+  resultSection,
+  presented,
+  reloadAction,
+  reloadPath,
+}: {
+  section: string;
+  resultSection?: string;
+  presented?: PresentedActionResult;
+  reloadAction?: (formData: FormData) => void | Promise<void>;
+  reloadPath?: string;
+}) {
+  if (!presented || resultSection !== section) return null;
+  return (
+    <div data-testid={`discovery-receipt-${section}`}>
+      <ActionResultBanner
+        presented={presented}
+        reloadAction={reloadAction}
+        reloadFields={reloadPath ? { path: reloadPath } : undefined}
+        focusOnSuccess={section === "discovery-evidence"}
+      />
+    </div>
+  );
+}
+
 export function DiscoveryWorkspaceView({
   workspace,
   mutationLocked,
+  presented,
+  resultSection,
+  reloadAction,
+  reloadPath,
 }: {
   workspace: DiscoveryWorkspace;
   mutationLocked: boolean;
+  presented?: PresentedActionResult;
+  resultSection?: string;
+  reloadAction?: (formData: FormData) => void | Promise<void>;
+  reloadPath?: string;
 }) {
   const { capabilities } = workspace;
   const participationGranted = latestConsent(workspace, "PARTICIPATION")?.decision === "GRANTED";
@@ -72,6 +109,7 @@ export function DiscoveryWorkspaceView({
 
   return (
     <div className="discovery-workspace" data-testid="discovery-workspace">
+      <DiscoveryScrollRestore />
       <p className="lede" data-testid="discovery-next-action">
         Next: {workspace.nextAction}
       </p>
@@ -82,6 +120,13 @@ export function DiscoveryWorkspaceView({
       </p>
 
       <section id="discovery-consent" className="form programme-form">
+        <SectionReceipt
+          section="discovery-consent"
+          resultSection={resultSection}
+          presented={presented}
+          reloadAction={reloadAction}
+          reloadPath={reloadPath}
+        />
         <h2>Consent</h2>
         <p className="lede">
           Recording and analysis stay off until the specific grant is present. Manual notes can still be taken without audio consent.
@@ -103,6 +148,7 @@ export function DiscoveryWorkspaceView({
                     <input type="hidden" name="organisationId" value={workspace.engagement.organisationId} />
                     <input type="hidden" name="engagementId" value={workspace.engagement.id} />
                     <input type="hidden" name="dimension" value={dimension} />
+                    <input type="hidden" name="section" value="discovery-consent" />
                     <input type="hidden" name="reason" value={`Record ${label.toLowerCase()} consent`} />
                     <label>
                       Decision
@@ -126,6 +172,13 @@ export function DiscoveryWorkspaceView({
       </section>
 
       <section id="discovery-session" className="form programme-form">
+        <SectionReceipt
+          section="discovery-session"
+          resultSection={resultSection}
+          presented={presented}
+          reloadAction={reloadAction}
+          reloadPath={reloadPath}
+        />
         <h2>Interview session</h2>
         {workspace.sessions.length === 0 ? (
           <p className="empty">No session has been opened. Create a staff-led draft when you are ready.</p>
@@ -149,6 +202,7 @@ export function DiscoveryWorkspaceView({
             <input type="hidden" name="engagementId" value={workspace.engagement.id} />
             {draftSession ? <input type="hidden" name="sessionId" value={draftSession.id} /> : null}
             <input type="hidden" name="expectedVersion" value={draftSession?.version ?? 0} />
+            <input type="hidden" name="section" value="discovery-session" />
             {!draftSession ? (
               <label>
                 Session mode
@@ -204,6 +258,7 @@ export function DiscoveryWorkspaceView({
             <IdempotencyField />
             <input type="hidden" name="organisationId" value={workspace.engagement.organisationId} />
             <input type="hidden" name="engagementId" value={workspace.engagement.id} />
+            <input type="hidden" name="section" value="discovery-session" />
             <label>
               Display name
               <input name="displayName" required maxLength={160} placeholder="Adéwálé" />
@@ -236,6 +291,28 @@ export function DiscoveryWorkspaceView({
       </section>
 
       <section id="discovery-evidence" className="form programme-form">
+        {workspace.artefacts.length > 0 ? (
+          <div data-testid="discovery-receipt-discovery-evidence">
+            {resultSection === "discovery-evidence" && presented?.view ? (
+              <ActionResultBanner
+                presented={presented}
+                reloadAction={reloadAction}
+                reloadFields={reloadPath ? { path: reloadPath } : undefined}
+                focusOnSuccess
+              />
+            ) : (
+              <p role="status">The source note is saved on this record. It is evidence, not a confirmed fact.</p>
+            )}
+          </div>
+        ) : (
+          <SectionReceipt
+            section="discovery-evidence"
+            resultSection={resultSection}
+            presented={presented}
+            reloadAction={reloadAction}
+            reloadPath={reloadPath}
+          />
+        )}
         <h2>Evidence</h2>
         <p className="lede">Notes are source evidence. They are not confirmed facts and they are not executable content.</p>
         {workspace.artefacts.length === 0 ? (
@@ -244,18 +321,25 @@ export function DiscoveryWorkspaceView({
           <ul className="atelier-queue" data-testid="discovery-evidence-list">
             {workspace.artefacts.map((artefact) => {
               const segments = workspace.segments.filter((item) => item.artefactId === artefact.id);
+              const masked = artefact.disclosureDecision === "MASK";
+              const outcome = workspace.extractionOutcomes.find((item) => item.artefactId === artefact.id);
               return (
-                <li key={artefact.id} className="discovery-card">
+                <li key={artefact.id} className="discovery-card" data-disclosure={artefact.disclosureDecision ?? "REVEAL"}>
                   <p>
                     <strong>{artefact.title}</strong>{" "}
-                    <span className="md-status">Source evidence</span>{" "}
+                    <span className="md-status">{masked ? "Restricted evidence" : "Source evidence"}</span>{" "}
                     <span className="md-status">{artefact.kind.replaceAll("_", " ").toLowerCase()}</span>
                   </p>
-                  {segments.map((segment) => (
-                    <p key={segment.id}>{segment.text}</p>
-                  ))}
-                  {artefact.byteChecksum ? <CanonicalHash value={artefact.byteChecksum} /> : null}
-                  {artefact.hasPrivateObject ? (
+                  {masked ? (
+                    <p data-testid="restricted-evidence-mask">
+                      An explicit confidentiality grant is required to view this evidence. The original title, body and source
+                      locator are withheld.
+                    </p>
+                  ) : (
+                    segments.map((segment) => <p key={segment.id}>{segment.text}</p>)
+                  )}
+                  {artefact.byteChecksum && !masked ? <CanonicalHash value={artefact.byteChecksum} /> : null}
+                  {artefact.hasPrivateObject && !masked ? (
                     <p>
                       <a
                         href={`/api/discovery/${workspace.engagement.id}/sources/${artefact.id}?organisationId=${workspace.engagement.organisationId}`}
@@ -266,12 +350,21 @@ export function DiscoveryWorkspaceView({
                       . Preview stays inert. This is not a public URL and is not an antivirus claim.
                     </p>
                   ) : null}
-                  {capabilities.canReviewAssertion ? (
+                  {outcome ? (
+                    <p data-testid="extraction-outcome-receipt">
+                      Considered {outcome.consideredCount} · proposed {outcome.proposedCount} · duplicates {outcome.duplicateCount} ·
+                      unmatched {outcome.noMaterialCount} · review {outcome.needsReviewCount} · rejected {outcome.rejectedCount}
+                      {outcome.proposedCount === 0 ? " · Extraction completed — no proposals created" : ""}
+                    </p>
+                  ) : null}
+                  {capabilities.canReviewAssertion && !masked ? (
                     <form action={extractDiscoveryAssertionsAction}>
                       <IdempotencyField />
                       <input type="hidden" name="organisationId" value={workspace.engagement.organisationId} />
                       <input type="hidden" name="engagementId" value={workspace.engagement.id} />
                       <input type="hidden" name="artefactId" value={artefact.id} />
+                      <input type="hidden" name="expectedVersion" value={artefact.version} />
+                      <input type="hidden" name="section" value="discovery-evidence" />
                       <input type="hidden" name="reason" value="Extract proposals from this note" />
                       <PendingSubmit className="secondary" locked={mutationLocked}>
                         Extract proposals
@@ -290,9 +383,23 @@ export function DiscoveryWorkspaceView({
             <IdempotencyField />
             <input type="hidden" name="organisationId" value={workspace.engagement.organisationId} />
             <input type="hidden" name="engagementId" value={workspace.engagement.id} />
+            <input type="hidden" name="section" value="discovery-evidence" />
             <label>
               Note title
               <input name="title" required maxLength={200} defaultValue="Staff note" />
+            </label>
+            <label>
+              Disclosure class
+              <select name="disclosureClass" defaultValue="OPERATIONAL">
+                <option value="OPERATIONAL">Operational</option>
+                <option value="CLIENT_VISIBLE">Client visible</option>
+                <option value="FINANCIAL_RESTRICTED">Financial restricted</option>
+                <option value="HEALTH_ACCESSIBILITY_RESTRICTED">Health and accessibility restricted</option>
+                <option value="SECURITY_RESTRICTED">Security restricted</option>
+                <option value="CULTURAL_RELIGIOUS_RESTRICTED">Cultural and religious restricted</option>
+                <option value="CONFIDENTIAL_SURPRISE">Confidential surprise</option>
+                <option value="PRINCIPAL_PRIVATE">Principal private</option>
+              </select>
             </label>
             <label>
               What was said
@@ -337,6 +444,13 @@ export function DiscoveryWorkspaceView({
       </section>
 
       <section id="discovery-assertions" className="form programme-form">
+        <SectionReceipt
+          section="discovery-assertions"
+          resultSection={resultSection}
+          presented={presented}
+          reloadAction={reloadAction}
+          reloadPath={reloadPath}
+        />
         <h2>Assertion review</h2>
         {workspace.conflicts.filter((item) => item.status !== "RESOLVED").length > 0 ? (
           <div data-testid="discovery-conflicts">
@@ -359,6 +473,7 @@ export function DiscoveryWorkspaceView({
                       <input type="hidden" name="conflictId" value={conflict.id} />
                       <input type="hidden" name="expectedVersion" value={conflict.version} />
                       <input type="hidden" name="selectedAssertionId" value={conflict.assertionIds[0] ?? ""} />
+                      <input type="hidden" name="section" value="discovery-assertions" />
                       <label>
                         Resolution
                         <select name="resolution" defaultValue="REQUEST_CLARIFICATION">
@@ -406,6 +521,7 @@ export function DiscoveryWorkspaceView({
                     <input type="hidden" name="engagementId" value={workspace.engagement.id} />
                     <input type="hidden" name="assertionId" value={assertion.id} />
                     <input type="hidden" name="expectedVersion" value={assertion.version} />
+                    <input type="hidden" name="section" value="discovery-assertions" />
                     <label>
                       Decision
                       <select name="decision" defaultValue="ACCEPT_STAFF_REVIEWED">

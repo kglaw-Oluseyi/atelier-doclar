@@ -152,7 +152,9 @@ export function resultHref(scopePath: string, correlationId: string, extra?: Rec
     params.set(key, value);
   }
   const query = params.toString();
-  return query ? `${scopePath}?${query}` : scopePath;
+  const section = extra?.section;
+  const hash = section && /^[a-z][a-z0-9-]{0,80}$/.test(section) ? `#${section}` : "";
+  return query ? `${scopePath}?${query}${hash}` : `${scopePath}${hash}`;
 }
 
 function scopedId(value: unknown): string | undefined {
@@ -272,28 +274,47 @@ function viewFromResult(result: ActionResult): OperationalStateView {
 }
 
 const RECENT_RESULTS = new Map<string, { result: ActionResult; expiresAt: number }>();
+const LATEST_BY_SCOPE = new Map<string, { result: ActionResult; expiresAt: number }>();
 const RECENT_RESULT_TTL_MS = ACTION_RESULT_MAX_AGE_SECONDS * 1000;
 
-export function rememberActionResult(result: ActionResult): void {
-  RECENT_RESULTS.set(result.correlationId, {
-    result,
-    expiresAt: Date.now() + RECENT_RESULT_TTL_MS,
-  });
+function scopeKey(actorPersonId: string, scopePath: string): string {
+  return `${actorPersonId}:${scopePath}`;
 }
 
-export function recallActionResult(correlationId: string | undefined): ActionResult | undefined {
-  if (!correlationId || !UUID.test(correlationId)) return undefined;
-  const row = RECENT_RESULTS.get(correlationId);
+function liveResult(row: { result: ActionResult; expiresAt: number } | undefined, forget: () => void): ActionResult | undefined {
   if (!row) return undefined;
   if (row.expiresAt <= Date.now()) {
-    RECENT_RESULTS.delete(correlationId);
+    forget();
     return undefined;
   }
   return row.result;
 }
 
+export function rememberActionResult(result: ActionResult): void {
+  const entry = { result, expiresAt: Date.now() + RECENT_RESULT_TTL_MS };
+  RECENT_RESULTS.set(result.correlationId, entry);
+  LATEST_BY_SCOPE.set(scopeKey(result.actorPersonId, result.scopePath), entry);
+}
+
+export function recallActionResult(correlationId: string | undefined): ActionResult | undefined {
+  if (!correlationId || !UUID.test(correlationId)) return undefined;
+  return liveResult(RECENT_RESULTS.get(correlationId), () => RECENT_RESULTS.delete(correlationId));
+}
+
+export function recallLatestActionResult(actorPersonId: string, scopePath: string): ActionResult | undefined {
+  const key = scopeKey(actorPersonId, scopePath);
+  return liveResult(LATEST_BY_SCOPE.get(key), () => LATEST_BY_SCOPE.delete(key));
+}
+
 export function forgetActionResult(correlationId: string | undefined): void {
-  if (correlationId) RECENT_RESULTS.delete(correlationId);
+  if (!correlationId) return;
+  const row = RECENT_RESULTS.get(correlationId);
+  RECENT_RESULTS.delete(correlationId);
+  if (!row) return;
+  const key = scopeKey(row.result.actorPersonId, row.result.scopePath);
+  if (LATEST_BY_SCOPE.get(key)?.result.correlationId === correlationId) {
+    LATEST_BY_SCOPE.delete(key);
+  }
 }
 
 export function storedResultMatchesCorrelation(

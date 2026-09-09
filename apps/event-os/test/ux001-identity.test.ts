@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { FIXTURE_IDS, loadNonProductionFixtures, MemoryPlatformStore } from "@maison-doclar/shared-platform";
 import {
+  EVENT_SCOPE_RESTRICTED,
   IDENTITY_UNAVAILABLE,
   buildGovernanceLabelIndex,
   presentAssignment,
@@ -54,5 +55,27 @@ describe("MD-PR-UX001 role-safe identity resolution", () => {
     assert.equal(hiddenEvent.actorLabel, IDENTITY_UNAVAILABLE);
     assert.match(hiddenEvent.targetLabel, /unavailable|Event/i);
     assert.doesNotMatch(JSON.stringify(hiddenEvent), /Other Org|Alpha Two/);
+  });
+
+  it("uses Event scope restricted for Admin when CEO sees Alpha One", () => {
+    const service = loadNonProductionFixtures(new MemoryPlatformStore());
+    const ceo = { personId: FIXTURE_IDS.personCeo, correlationId: "s043-id-ceo", now: NOW };
+    const auditor = { personId: FIXTURE_IDS.personAuditor, correlationId: "s043-id-auditor", now: NOW };
+    const admin = { personId: FIXTURE_IDS.personAdmin, correlationId: "s043-id-admin", now: NOW };
+    const assignment = service
+      .listAssignments(ceo, FIXTURE_IDS.orgMaison)
+      .find((item) => item.eventId === FIXTURE_IDS.eventAlphaOne);
+    assert.ok(assignment);
+    const ceoPresented = presentAssignment(assignment, buildGovernanceLabelIndex(service, ceo, FIXTURE_IDS.orgMaison), NOW);
+    const auditorPresented = presentAssignment(
+      assignment,
+      buildGovernanceLabelIndex(service, auditor, FIXTURE_IDS.orgMaison),
+      NOW,
+    );
+    const adminPresented = presentAssignment(assignment, buildGovernanceLabelIndex(service, admin, FIXTURE_IDS.orgMaison), NOW);
+    assert.equal(ceoPresented.scopeLabel, "Alpha One");
+    assert.equal(auditorPresented.scopeLabel, "Alpha One");
+    assert.equal(adminPresented.scopeLabel, EVENT_SCOPE_RESTRICTED);
+    assert.notEqual(adminPresented.scopeLabel, IDENTITY_UNAVAILABLE);
   });
 });

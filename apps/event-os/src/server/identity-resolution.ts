@@ -10,6 +10,8 @@ import {
 import { formatOperationalTimestamp, governedRoleLabel } from "./comms-display";
 
 export const IDENTITY_UNAVAILABLE = "Identity unavailable";
+export const EVENT_SCOPE_RESTRICTED = "Event scope restricted";
+export const ASSIGNMENT_IDENTITY_RESTRICTED = "Assignment identity restricted";
 
 export type GovernanceLabelIndex = {
   persons: Map<string, string>;
@@ -81,11 +83,17 @@ export function buildGovernanceLabelIndex(
   return { persons, events, clients, organisations, roles };
 }
 
-export function resolveAuthorisedLabel(map: Map<string, string>, id: string | undefined): ResolvedLabel {
+export function resolveAuthorisedLabel(
+  map: Map<string, string>,
+  id: string | undefined,
+  kind: "person" | "event" | "client" | "organisation" | "generic" = "generic",
+): ResolvedLabel {
   if (!id) return { label: "Not provided", known: false };
   const label = map.get(id);
   if (label) return { label, known: true, id };
-  return { label: IDENTITY_UNAVAILABLE, known: false, id };
+  const restricted =
+    kind === "event" ? EVENT_SCOPE_RESTRICTED : kind === "person" || kind === "client" ? ASSIGNMENT_IDENTITY_RESTRICTED : IDENTITY_UNAVAILABLE;
+  return { label: restricted, known: false, id };
 }
 
 export function governedActionLabel(action: string): string {
@@ -127,17 +135,17 @@ export function presentAssignment(
   index: GovernanceLabelIndex,
   now: string,
 ): PresentedAssignment {
-  const person = resolveAuthorisedLabel(index.persons, assignment.personId);
-  const organisation = resolveAuthorisedLabel(index.organisations, assignment.organisationId);
-  const event = resolveAuthorisedLabel(index.events, assignment.eventId);
-  const client = resolveAuthorisedLabel(index.clients, assignment.clientId);
+  const person = resolveAuthorisedLabel(index.persons, assignment.personId, "person");
+  const organisation = resolveAuthorisedLabel(index.organisations, assignment.organisationId, "organisation");
+  const event = resolveAuthorisedLabel(index.events, assignment.eventId, "event");
+  const client = resolveAuthorisedLabel(index.clients, assignment.clientId, "client");
   const roleKey = roleKeyForId(assignment.roleId);
   const roleLabel = roleKey ? governedRoleLabel(roleKey) : resolveAuthorisedLabel(index.roles, assignment.roleId).label;
   const scopedToEvent = Boolean(assignment.eventId);
   const scopeLabel = scopedToEvent
     ? event.known
       ? event.label
-      : IDENTITY_UNAVAILABLE
+      : EVENT_SCOPE_RESTRICTED
     : `Organisation-wide · ${organisation.label}`;
   const href = scopedToEvent && event.known && assignment.eventId ? `/app/events/${assignment.eventId}` : undefined;
   return {

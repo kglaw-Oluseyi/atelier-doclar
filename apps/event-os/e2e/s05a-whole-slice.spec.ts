@@ -29,6 +29,7 @@ test("S05A whole slice: brief, budget, roadmap, change and command", async ({ pa
   await expect(page.getByTestId("intelligence-workspace")).toContainText("submitted", { timeout: 20_000 });
 
   await page.getByLabel("Guest count").fill("180");
+  await page.getByLabel("I am entering a planning assumption, not a confirmed brief fact").check();
   await page.getByRole("button", { name: "Calculate scenario" }).click();
   await expect(page.getByTestId("budget-scenario-list")).toBeVisible({ timeout: 20_000 });
   await expect(page.getByTestId("budget-synthetic-warning")).toContainText("synthetic");
@@ -65,6 +66,7 @@ test("S05A whole slice: brief, budget, roadmap, change and command", async ({ pa
   const guest = await page.context().browser()!.newContext();
   const clientPage = await guest.newPage();
   await clientPage.goto(href);
+  await clientPage.getByTestId("client-consent-PARTICIPATION").getByRole("button", { name: "Save participation" }).click();
   await expect(clientPage.getByTestId("client-interview")).toBeVisible({ timeout: 20_000 });
   await clientPage.getByLabel("Your words").fill("We understand the purpose of this conversation.");
   await clientPage.getByRole("button", { name: "Save and continue" }).click();
