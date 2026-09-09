@@ -643,8 +643,10 @@ import {
   AddParticipantInputSchema,
   CreateOpportunityInputSchema,
   ExtractAssertionsInputSchema,
+  GrantDiscoveryDisclosureInputSchema,
   RecordDiscoveryConsentInputSchema,
   RecordSourceArtefactInputSchema,
+  RevokeDiscoveryDisclosureInputSchema,
   ResolveConflictInputSchema,
   ReviewAssertionInputSchema,
   SessionLifecycleInputSchema,
@@ -655,15 +657,24 @@ import {
   addParticipantOnSnap,
   createOpportunityOnSnap,
   extractAssertionsOnSnap,
+  governingGuestCountFromBrief,
+  grantDiscoveryDisclosureOnSnap,
+  latestConsentFor,
   recordDiscoveryConsentOnSnap,
   recordSourceArtefactOnSnap,
+  revokeDiscoveryDisclosureOnSnap,
   resolveConflictOnSnap,
   reviewAssertionOnSnap,
   sessionLifecycleOnSnap,
   startDiscoveryEngagementOnSnap,
   updateOpportunityOnSnap,
 } from "./eec-operations.js";
-import { buildDiscoveryWorkspace, eecPermissionAllowed } from "./eec-projections.js";
+import {
+  assertDirectSourceReveal,
+  decideDiscoveryDisclosure,
+  resolveArtefactDisclosureClass,
+} from "./eec-discovery-disclosure.js";
+import { buildDiscoveryWorkspace, clientSafeHeading, eecPermissionAllowed } from "./eec-projections.js";
 import {
   assessChangeImpactOnSnap,
   buildExecutiveCommandFromSnap,
@@ -769,15 +780,6 @@ function parseStrict<T>(schema: { safeParse: (value: unknown) => { success: true
     });
   }
   return parsed.data;
-}
-
-function actorHoldsRole(actor: ActorSnapshot, organisationId: string, key: string): boolean {
-  const roleIds = new Set(
-    actor.assignments
-      .filter((item) => item.status === "ACTIVE" && item.organisationId === organisationId)
-      .map((item) => item.roleId),
-  );
-  return actor.roles.some((role) => roleIds.has(role.id) && role.key === key);
 }
 
 export class PlatformService {
@@ -6234,6 +6236,8 @@ export class PlatformService {
       "discovery.source.view",
       "discovery.source.manage",
       "discovery.assertion.review",
+      "discovery.confidential.reveal",
+      "discovery.confidential.grant",
       "executiveCommand.view",
     ] as const;
     const keys = catalogue.filter((key) => this.permissionAllowed(ctx.actor, key, { organisationId }));
@@ -6248,8 +6252,12 @@ export class PlatformService {
       assertions: snap.candidateAssertions.filter((item) => item.engagementId === engagementId),
       conflicts: snap.assertionConflicts.filter((item) => item.engagementId === engagementId),
       assessments: snap.coverageAssessments.filter((item) => item.engagementId === engagementId),
+      extractionOutcomes: snap.extractionOutcomes.filter((item) => item.engagementId === engagementId),
       capabilities: eecPermissionAllowed(keys),
-      redactSensitive: actorHoldsRole(ctx.actor, organisationId, "READ_ONLY_AUDITOR"),
+      permissionKeys: keys,
+      grants: snap.discoveryDisclosureGrants.filter((item) => item.organisationId === organisationId),
+      actorPersonId: actor.personId,
+      now: actor.now ?? new Date().toISOString(),
     });
   }
 
@@ -6355,18 +6363,38 @@ export class PlatformService {
     engagementId: string,
     artefactId: string,
   ): { objectKey: string; byteChecksum?: string; title: string } {
-    const { snap, ctx } = this.authorizeQuery(actor, "discovery.source.manage", { organisationId });
-    if (
-      actorHoldsRole(ctx.actor, organisationId, "READ_ONLY_AUDITOR") ||
-      actorHoldsRole(ctx.actor, organisationId, "SYSTEM_ADMINISTRATOR")
-    ) {
-      throw new PlatformError("FORBIDDEN", "this assignment cannot retrieve private source objects");
-    }
+    const { snap, ctx } = this.authorizeQuery(actor, "discovery.source.view", { organisationId });
     const artefact = snap.sourceArtefacts.find(
       (item) => item.id === artefactId && item.engagementId === engagementId && item.organisationId === organisationId,
     );
-    if (!artefact?.objectKey) {
+    if (!artefact) {
       throw new PlatformError("NOT_FOUND", "private source object is not available");
+    }
+    const keys = (
+      [
+        "discovery.source.view",
+        "discovery.source.manage",
+        "discovery.confidential.reveal",
+      ] as const
+    ).filter((key) => this.permissionAllowed(ctx.actor, key, { organisationId }));
+    const disclosureClass = resolveArtefactDisclosureClass(
+      artefact,
+      snap.candidateAssertions.filter((item) => item.engagementId === engagementId),
+      snap.sourceSegments.filter((item) => item.artefactId === artefact.id),
+    );
+    const decision = decideDiscoveryDisclosure(disclosureClass, {
+      organisationId,
+      engagementId,
+      personId: actor.personId,
+      permissionKeys: keys,
+      grants: snap.discoveryDisclosureGrants.filter((item) => item.organisationId === organisationId),
+      now: actor.now ?? new Date().toISOString(),
+      clientProjection: false,
+      inScope: true,
+    });
+    assertDirectSourceReveal(decision);
+    if (!keys.includes("discovery.source.manage") || !artefact.objectKey) {
+      throw new PlatformError("FORBIDDEN", "this assignment cannot retrieve private source objects");
     }
     return { objectKey: artefact.objectKey, byteChecksum: artefact.byteChecksum, title: artefact.title };
   }
@@ -6377,13 +6405,42 @@ export class PlatformService {
       permission: "discovery.assertion.review",
       scope: { organisationId: input.organisationId },
       action: "assertion.proposed",
-      resourceType: "candidate_assertion",
+      resourceType: "extraction_outcome",
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
-      run: (snap, ctx) => {
-        const created = extractAssertionsOnSnap(snap, input, ctx.now, actor.personId, actor.actorKind);
-        return created[0] ?? { id: input.artefactId };
-      },
+      replayIfAlreadyApplied: true,
+      alreadyApplied: (snap) =>
+        snap.extractionOutcomes.find(
+          (item) => item.artefactId === input.artefactId && item.idempotencyKey === input.idempotencyKey,
+        ),
+      run: (snap, ctx) => extractAssertionsOnSnap(snap, input, ctx.now, actor.personId, actor.actorKind),
+    });
+  }
+
+  grantDiscoveryDisclosure(actor: ActorContext, raw: unknown) {
+    const input = parseStrict(GrantDiscoveryDisclosureInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "discovery.confidential.grant",
+      scope: { organisationId: input.organisationId },
+      action: "discovery.confidential.granted",
+      resourceType: "discovery_disclosure_grant",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => grantDiscoveryDisclosureOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  revokeDiscoveryDisclosure(actor: ActorContext, raw: unknown) {
+    const input = parseStrict(RevokeDiscoveryDisclosureInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "discovery.confidential.grant",
+      scope: { organisationId: input.organisationId },
+      action: "discovery.confidential.revoked",
+      resourceType: "discovery_disclosure_grant",
+      resourceId: input.grantId,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => revokeDiscoveryDisclosureOnSnap(snap, input, ctx.now),
     });
   }
 
@@ -6574,14 +6631,37 @@ export class PlatformService {
       NEEDS_CONFIRMATION: assertions.filter((item) => item.confirmationState === "PROPOSED" || item.confirmationState === "STAFF_REVIEWED"),
       OPEN_QUESTION: assertions.filter((item) => item.confirmationState === "PROPOSED"),
     };
+    const dimensions = [
+      "PARTICIPATION",
+      "AUDIO_RECORDING",
+      "TRANSCRIPTION",
+      "AI_ANALYSIS",
+      "SOURCE_RETENTION",
+      "DEIDENTIFIED_BENCHMARKING",
+    ] as const;
+    const consents = dimensions.map((dimension) => {
+      const latest = latestConsentFor(snap, access.engagementId, dimension, undefined, "CLIENT_TOKEN");
+      return {
+        dimension,
+        decision: latest?.decision ?? "UNDECIDED",
+        decidedAt: latest?.decidedAt,
+        withdrawnAt: latest?.withdrawnAt,
+      };
+    });
+    const participationGranted = consents.find((item) => item.dimension === "PARTICIPATION")?.decision === "GRANTED";
+    const aiGranted = consents.find((item) => item.dimension === "AI_ANALYSIS")?.decision === "GRANTED";
     return {
       engagementReference: engagement.displayReference,
+      clientSafeHeading: clientSafeHeading(engagement),
       organisationId: access.organisationId,
       engagementId: access.engagementId,
       permittedActions: access.permittedActions,
       assertions,
       grouped,
-      nextQuestion: question,
+      nextQuestion: participationGranted ? question : undefined,
+      interviewBlockedReason: participationGranted ? undefined : "PARTICIPATION_CONSENT_REQUIRED",
+      aiAnalysisBlocked: !aiGranted,
+      consents,
       turns,
       overview,
       review,
@@ -6590,6 +6670,100 @@ export class PlatformService {
       clientRoadmap: clientRoadmapProjection(snap, access.engagementId),
       decisions: snap.clientBriefDecisions.filter((item) => item.engagementId === access.engagementId),
     };
+  }
+
+  recordClientDiscoveryConsentByToken(
+    token: string,
+    raw: {
+      dimension: "PARTICIPATION" | "AUDIO_RECORDING" | "TRANSCRIPTION" | "AI_ANALYSIS" | "SOURCE_RETENTION" | "DEIDENTIFIED_BENCHMARKING";
+      decision: "GRANTED" | "DECLINED" | "WITHDRAWN" | "NOT_APPLICABLE";
+      policyVersion?: string;
+      wordingEdition?: string;
+      idempotencyKey?: string;
+    },
+  ) {
+    const snap = structuredClone(this.store.snapshot());
+    const now = new Date().toISOString();
+    const access = resolveDiscoveryClientAccess(snap, token, now);
+    if (!access.permittedActions.includes("INTERVIEW") && !access.permittedActions.includes("CONFIRM")) {
+      throw new PlatformError("FORBIDDEN", "this client access cannot record consent");
+    }
+    if (raw.idempotencyKey) {
+      const existing = snap.idempotency.find((item) => item.key === raw.idempotencyKey);
+      if (existing) {
+        const reused = snap.discoveryConsentRecords.find((item) => item.id === existing.resultRef);
+        if (reused) return reused;
+      }
+    }
+    const record = {
+      id: randomUUID(),
+      engagementId: access.engagementId,
+      dimension: raw.dimension,
+      decision: raw.decision,
+      policyVersion: raw.policyVersion ?? "client-consent-v1",
+      wordingEdition: raw.wordingEdition ?? "client-consent-v1",
+      decidedAt: now,
+      withdrawnAt: raw.decision === "WITHDRAWN" ? now : undefined,
+      source: "CLIENT_TOKEN" as const,
+      accessId: access.id,
+      organisationId: access.organisationId,
+      version: 1,
+      schemaVersion: SCHEMA_VERSION,
+      createdAt: now,
+      updatedAt: now,
+    };
+    snap.discoveryConsentRecords.push(record);
+    if (raw.idempotencyKey) {
+      snap.idempotency.push({
+        key: raw.idempotencyKey,
+        action: "consent.recorded",
+        hash: raw.idempotencyKey,
+        resultRef: record.id,
+        createdAt: now,
+      });
+    }
+    this.writeAudit(snap, {
+      action: "consent.recorded",
+      outcome: "SUCCESS",
+      organisationId: access.organisationId,
+      resourceType: "discovery_consent",
+      resourceId: record.id,
+      correlationId: `client-consent-${access.id}`,
+      reason: `${raw.dimension}:${raw.decision}`,
+      occurredAt: now,
+      actorType: "USER",
+    });
+    this.store.replace(snap);
+    return record;
+  }
+
+  extractClientDiscoveryAssertionsByToken(token: string, artefactId?: string) {
+    const snap = structuredClone(this.store.snapshot());
+    const now = new Date().toISOString();
+    const access = resolveDiscoveryClientAccess(snap, token, now);
+    const latestAi = latestConsentFor(snap, access.engagementId, "AI_ANALYSIS", undefined, "CLIENT_TOKEN");
+    if (latestAi?.decision !== "GRANTED") {
+      throw new PlatformError("VALIDATION_FAILED", "AI analysis consent is required");
+    }
+    const artefacts = snap.sourceArtefacts.filter((item) => item.engagementId === access.engagementId && (!artefactId || item.id === artefactId));
+    const outcomes = artefacts.map((artefact) =>
+      extractAssertionsOnSnap(
+        snap,
+        {
+          organisationId: access.organisationId,
+          engagementId: access.engagementId,
+          artefactId: artefact.id,
+          expectedVersion: 0,
+          reason: "Client-permitted extraction",
+          idempotencyKey: `client-extract-${access.id}-${artefact.id}`,
+        },
+        now,
+        access.id,
+        "HUMAN",
+      ),
+    );
+    this.store.replace(snap);
+    return outcomes;
   }
 
   issueClientReviewEdition(actor: ActorContext, raw: unknown) {
@@ -6787,6 +6961,10 @@ export class PlatformService {
     if (!access.permittedActions.includes("INTERVIEW") && !access.permittedActions.includes("CONFIRM")) {
       throw new PlatformError("FORBIDDEN", "this client access cannot continue the interview");
     }
+    const participation = latestConsentFor(snap, access.engagementId, "PARTICIPATION", undefined, "CLIENT_TOKEN");
+    if (participation?.decision !== "GRANTED") {
+      throw new PlatformError("VALIDATION_FAILED", "participation consent is required");
+    }
     const next = nextGovernedInterviewTurn(snap, access.engagementId);
     if (!next) throw new PlatformError("VALIDATION_FAILED", "the interview has no outstanding governed question");
     const turn = recordConversationTurnOnSnap(
@@ -6870,7 +7048,11 @@ export class PlatformService {
   }
 
   calculateBudgetScenario(actor: ActorContext, raw: unknown) {
-    const input = raw as Parameters<typeof calculateBudgetScenarioOnSnap>[1] & { reason?: string; idempotencyKey?: string };
+    const input = raw as Parameters<typeof calculateBudgetScenarioOnSnap>[1] & {
+      reason?: string;
+      idempotencyKey?: string;
+      assumptionAcknowledged?: boolean;
+    };
     return this.mutate(actor, {
       permission: "budget.calculate",
       scope: { organisationId: input.organisationId, eventId: input.eventId },
@@ -6878,7 +7060,35 @@ export class PlatformService {
       resourceType: "budget_scenario",
       reason: input.reason,
       idempotencyKey: input.idempotencyKey,
-      run: (snap, ctx) => calculateBudgetScenarioOnSnap(snap, input, ctx.now, actor.personId),
+      run: (snap, ctx) => {
+        if (input.engagementId) {
+          const governing = governingGuestCountFromBrief(snap, input.engagementId);
+          if (governing.kind === "UNRESOLVED_CONTRADICTION" || governing.kind === "UNKNOWN") {
+            if (input.assumptionAcknowledged === false) {
+              throw new PlatformError("VALIDATION_FAILED", "a planning guest-count assumption must be acknowledged before calculation");
+            }
+            return calculateBudgetScenarioOnSnap(
+              snap,
+              { ...input, guestSourceKind: "SCENARIO" },
+              ctx.now,
+              actor.personId,
+            );
+          }
+          const overridden = input.guests !== governing.count;
+          return calculateBudgetScenarioOnSnap(
+            snap,
+            {
+              ...input,
+              guestSourceKind: overridden ? "SCENARIO" : "BRIEF",
+              sourceAssertionId: governing.assertionId,
+              assumptionAcknowledged: overridden || input.assumptionAcknowledged,
+            },
+            ctx.now,
+            actor.personId,
+          );
+        }
+        return calculateBudgetScenarioOnSnap(snap, input, ctx.now, actor.personId);
+      },
     });
   }
 
@@ -7021,8 +7231,48 @@ export class PlatformService {
 
   getIntelligenceWorkspace(actor: ActorContext, organisationId: string, engagementId: string) {
     const { snap, ctx } = this.authorizeQuery(actor, "engagement.view", { organisationId });
-    const redact = actorHoldsRole(ctx.actor, organisationId, "READ_ONLY_AUDITOR");
+    const redact =
+      !this.permissionAllowed(ctx.actor, "budget.calculate", { organisationId }) &&
+      !this.permissionAllowed(ctx.actor, "budget.decide", { organisationId });
+    const revealConfidential = this.permissionAllowed(ctx.actor, "discovery.confidential.reveal", { organisationId });
+    const sourceView = this.permissionAllowed(ctx.actor, "discovery.source.view", { organisationId });
+    const guestPrefill = governingGuestCountFromBrief(snap, engagementId);
     const scenarios = snap.budgetScenarioEditions.filter((item) => item.engagementId === engagementId);
+    const workbenchSources: Array<{
+      text: string;
+      artefactKind: (typeof snap.sourceArtefacts)[number]["kind"];
+      disclosureDecision: "REVEAL" | "MASK";
+    }> = [];
+    for (const item of snap.sourceSegments) {
+      const artefact = snap.sourceArtefacts.find((row) => row.id === item.artefactId && row.engagementId === engagementId);
+      if (!artefact) continue;
+      const disclosureClass = resolveArtefactDisclosureClass(
+        artefact,
+        snap.candidateAssertions.filter((row) => row.engagementId === engagementId),
+        snap.sourceSegments.filter((row) => row.artefactId === artefact.id),
+      );
+      const decision = decideDiscoveryDisclosure(disclosureClass, {
+        organisationId,
+        engagementId,
+        personId: actor.personId,
+        permissionKeys: (
+          [
+            sourceView ? "discovery.source.view" : undefined,
+            revealConfidential ? "discovery.confidential.reveal" : undefined,
+          ] as const
+        ).filter((key): key is "discovery.source.view" | "discovery.confidential.reveal" => Boolean(key)),
+        grants: snap.discoveryDisclosureGrants.filter((row) => row.organisationId === organisationId),
+        now: actor.now ?? new Date().toISOString(),
+        clientProjection: false,
+        inScope: true,
+      });
+      if (decision.kind === "OMIT") continue;
+      if (decision.kind === "MASK") {
+        workbenchSources.push({ text: "Restricted evidence", artefactKind: artefact.kind, disclosureDecision: "MASK" });
+        continue;
+      }
+      workbenchSources.push({ text: item.text, artefactKind: artefact.kind, disclosureDecision: "REVEAL" });
+    }
     return {
       draft: snap.eventBriefDrafts.find((item) => item.engagementId === engagementId),
       editions: snap.eventBriefEditions.filter((item) => item.engagementId === engagementId),
@@ -7062,12 +7312,13 @@ export class PlatformService {
       reviews: snap.clientReviewEditions.filter((item) => item.engagementId === engagementId),
       calendar: snap.calendarDefinitions.find((item) => item.organisationId === organisationId && item.current),
       evaluation: [...snap.aiEvaluationRuns].reverse().find((item) => item.organisationId === organisationId),
+      guestPrefill,
       workbench: {
         coverage: snap.coverageAssessments
           .filter((item) => item.engagementId === engagementId)
           .map((item) => ({ topicKey: item.topicKey, state: item.state, explanation: item.explanation })),
         assertions: snap.candidateAssertions
-          .filter((item) => item.engagementId === engagementId && (!redact || item.sensitivity === "STANDARD"))
+          .filter((item) => item.engagementId === engagementId && (revealConfidential || item.sensitivity === "STANDARD"))
           .map((item) => ({
             topicKey: item.topicKey,
             narrative: item.narrative,
@@ -7078,9 +7329,7 @@ export class PlatformService {
         conflicts: snap.assertionConflicts
           .filter((item) => item.engagementId === engagementId)
           .map((item) => ({ topicKey: item.topicKey, explanation: item.explanation, status: item.status })),
-        sources: snap.sourceSegments
-          .filter((item) => snap.sourceArtefacts.some((artefact) => artefact.id === item.artefactId && artefact.engagementId === engagementId))
-          .map((item) => ({ text: item.text, artefactKind: snap.sourceArtefacts.find((artefact) => artefact.id === item.artefactId)?.kind })),
+        sources: workbenchSources,
       },
     };
   }
@@ -7946,6 +8195,8 @@ export class PlatformService {
       snap.coverageCatalogueEditions,
       snap.coverageRequirements,
       snap.coverageAssessments,
+      snap.discoveryDisclosureGrants,
+      snap.extractionOutcomes,
       snap.s05aMigrationReceipts,
       snap.eventBriefDrafts,
       snap.eventBriefEditions,

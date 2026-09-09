@@ -13,7 +13,7 @@ import { applyS05FixturesIfMissing } from "./venue-fixtures.js";
 import { applyEosS05ToSnapshot } from "./venue-migration.js";
 import { applyEosS05ObjectsToSnapshot } from "./spatial-migration.js";
 import { applyEosS05AssuranceToSnapshot } from "./layout-assurance-migration.js";
-import { migrateEosS05A, migrateEosS05AIntelligence, migrateEosS05AIntelligenceV2, migrateEosS05AIntelligenceV3 } from "./eec-migration.js";
+import { migrateEosS05A, migrateEosS05ADisclosureV5, migrateEosS05AIntelligence, migrateEosS05AIntelligenceV2, migrateEosS05AIntelligenceV3 } from "./eec-migration.js";
 import { migrateEosS05AEvaluationV4 } from "./eec-evaluation-migration.js";
 import { loadNonProductionFixtures } from "./bootstrap.js";
 import { seededPermissions, seededRoles } from "./catalog.js";
@@ -138,14 +138,16 @@ export function ensureEosS05ACollections(store: PlatformStore, now = "2026-09-08
   const depth = migrateEosS05AIntelligenceV2(intelligence.snapshot, now);
   const completion = migrateEosS05AIntelligenceV3(depth.snapshot, now);
   const evaluation = migrateEosS05AEvaluationV4(completion.snapshot, now);
+  const disclosure = migrateEosS05ADisclosureV5(evaluation.snapshot, now);
   if (
     discovery.status === "APPLIED" ||
     intelligence.status === "APPLIED" ||
     depth.status === "APPLIED" ||
     completion.status === "APPLIED" ||
-    evaluation.status === "APPLIED"
+    evaluation.status === "APPLIED" ||
+    disclosure.status === "APPLIED"
   ) {
-    store.replace(evaluation.snapshot);
+    store.replace(disclosure.snapshot);
   }
 }
 

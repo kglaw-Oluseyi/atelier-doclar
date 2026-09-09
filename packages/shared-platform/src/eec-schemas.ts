@@ -8,6 +8,7 @@ import {
   CONFLICT_RESOLUTIONS,
   CONFLICT_SEVERITIES,
   DISCOVERY_CONSENT_DIMENSIONS,
+  DISCOVERY_DISCLOSURE_CLASSES,
   ENQUIRY_CHANNELS,
   INTERVIEW_SESSION_STATES,
   MONEY_CURRENCIES,
@@ -38,6 +39,8 @@ export type AssertionConflictId = Brand<string, "AssertionConflictId">;
 export type CoverageRequirementId = Brand<string, "CoverageRequirementId">;
 export type CoverageAssessmentId = Brand<string, "CoverageAssessmentId">;
 export type CoverageCatalogueEditionId = Brand<string, "CoverageCatalogueEditionId">;
+export type DiscoveryDisclosureGrantId = Brand<string, "DiscoveryDisclosureGrantId">;
+export type ExtractionOutcomeId = Brand<string, "ExtractionOutcomeId">;
 export type BriefEditionId = Brand<string, "BriefEditionId">;
 export type InvestmentEditionId = Brand<string, "InvestmentEditionId">;
 export type BudgetEntityId = Brand<string, "BudgetEntityId">;
@@ -56,10 +59,13 @@ export const AssertionConflictIdSchema = UuidSchema;
 export const CoverageRequirementIdSchema = UuidSchema;
 export const CoverageAssessmentIdSchema = UuidSchema;
 export const CoverageCatalogueEditionIdSchema = UuidSchema;
+export const DiscoveryDisclosureGrantIdSchema = UuidSchema;
+export const ExtractionOutcomeIdSchema = UuidSchema;
 
 export const AssertionKindSchema = z.enum(ASSERTION_KINDS);
 export const ConfirmationStateSchema = z.enum(CONFIRMATION_STATES);
 export const SensitivityClassSchema = z.enum(SENSITIVITY_CLASSES);
+export const DiscoveryDisclosureClassSchema = z.enum(DISCOVERY_DISCLOSURE_CLASSES);
 export const CoverageStateSchema = z.enum(COVERAGE_STATES);
 export const InterviewSessionStateSchema = z.enum(INTERVIEW_SESSION_STATES);
 export const ConsentDimensionSchema = z.enum(DISCOVERY_CONSENT_DIMENSIONS);
@@ -170,13 +176,15 @@ export const DiscoveryConsentRecordSchema = z
     engagementId: EngagementIdSchema,
     participantId: ParticipantIdSchema.optional(),
     dimension: ConsentDimensionSchema,
-    decision: z.enum(["GRANTED", "DECLINED", "WITHDRAWN"]),
+    decision: z.enum(["GRANTED", "DECLINED", "WITHDRAWN", "NOT_APPLICABLE"]),
     policyVersion: NonEmptySchema.max(80),
     wordingEdition: NonEmptySchema.max(80),
     decidedAt: IsoDatetimeSchema,
     withdrawnAt: IsoDatetimeSchema.optional(),
     legalBasisPlaceholder: z.string().max(200).optional(),
-    actorPersonId: PersonIdSchema,
+    actorPersonId: PersonIdSchema.optional(),
+    source: z.enum(["STAFF", "CLIENT_TOKEN"]).optional(),
+    accessId: UuidSchema.optional(),
     ...orgScoped,
     schemaVersion: z.literal(SCHEMA_VERSION),
     version: z.number().int().positive(),
@@ -213,6 +221,8 @@ export const SourceArtefactSchema = z
     objectKey: z.string().max(240).optional(),
     byteChecksum: z.string().max(128).optional(),
     language: z.string().max(32).optional(),
+    disclosureClass: DiscoveryDisclosureClassSchema.optional(),
+    disclosureBackfillRule: z.string().max(80).optional(),
     ...orgScoped,
     schemaVersion: z.literal(SCHEMA_VERSION),
     version: z.number().int().positive(),
@@ -422,7 +432,7 @@ export const RecordDiscoveryConsentInputSchema = z
     engagementId: EngagementIdSchema,
     participantId: ParticipantIdSchema.optional(),
     dimension: ConsentDimensionSchema,
-    decision: z.enum(["GRANTED", "DECLINED", "WITHDRAWN"]),
+    decision: z.enum(["GRANTED", "DECLINED", "WITHDRAWN", "NOT_APPLICABLE"]),
     policyVersion: NonEmptySchema.max(80),
     wordingEdition: NonEmptySchema.max(80),
     legalBasisPlaceholder: z.string().max(200).optional(),
@@ -475,6 +485,7 @@ export const RecordSourceArtefactInputSchema = z
     byteChecksum: z.string().max(128).optional(),
     contentSafetyStatus: z.enum(["CLEAN", "QUARANTINED", "FAILED"]).optional(),
     speakerParticipantId: ParticipantIdSchema.optional(),
+    disclosureClass: DiscoveryDisclosureClassSchema.optional(),
     expectedVersion: z.number().int().nonnegative().default(0),
     reason: NonEmptySchema.max(400),
     idempotencyKey: NonEmptySchema.max(120),
@@ -533,6 +544,117 @@ export const ResolveConflictInputSchema = z
   })
   .strict();
 
+export const ExtractionDispositionSchema = z.discriminatedUnion("kind", [
+  z
+    .object({
+      kind: z.literal("ASSERTION_PROPOSED"),
+      sourceSegmentId: SourceSegmentIdSchema,
+      assertionId: CandidateAssertionIdSchema,
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("DUPLICATE_SUPPORTED"),
+      sourceSegmentId: SourceSegmentIdSchema,
+      existingAssertionId: CandidateAssertionIdSchema,
+      explanationCode: z.string().min(1).max(80),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("NO_MATERIAL_ASSERTION"),
+      sourceSegmentId: SourceSegmentIdSchema,
+      explanationCode: z.string().min(1).max(80),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("NEEDS_HUMAN_REVIEW"),
+      sourceSegmentId: SourceSegmentIdSchema,
+      explanationCode: z.string().min(1).max(80),
+      safeSummary: z.string().min(1).max(400),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("REJECTED_UNSUPPORTED"),
+      sourceSegmentId: SourceSegmentIdSchema,
+      explanationCode: z.string().min(1).max(80),
+    })
+    .strict(),
+]);
+
+export const ExtractionOutcomeSchema = z
+  .object({
+    id: ExtractionOutcomeIdSchema,
+    engagementId: EngagementIdSchema,
+    artefactId: SourceArtefactIdSchema,
+    artefactVersion: z.number().int().nonnegative(),
+    sourceContentHash: NonEmptySchema.max(128),
+    dispositions: z.array(ExtractionDispositionSchema),
+    consideredCount: z.number().int().nonnegative(),
+    proposedCount: z.number().int().nonnegative(),
+    duplicateCount: z.number().int().nonnegative(),
+    noMaterialCount: z.number().int().nonnegative(),
+    needsReviewCount: z.number().int().nonnegative(),
+    rejectedCount: z.number().int().nonnegative(),
+    failureCount: z.number().int().nonnegative(),
+    idempotencyKey: NonEmptySchema.max(120),
+    ...orgScoped,
+    ...versioned,
+  })
+  .strict();
+
+export const DiscoveryDisclosureGrantSchema = z
+  .object({
+    id: DiscoveryDisclosureGrantIdSchema,
+    engagementId: EngagementIdSchema.optional(),
+    personId: PersonIdSchema,
+    disclosureClass: DiscoveryDisclosureClassSchema,
+    grantedByPersonId: PersonIdSchema,
+    expiresAt: IsoDatetimeSchema.optional(),
+    revokedAt: IsoDatetimeSchema.optional(),
+    revokeReason: z.string().max(400).optional(),
+    reason: NonEmptySchema.max(400),
+    ...orgScoped,
+    ...versioned,
+  })
+  .strict();
+
+export const GrantDiscoveryDisclosureInputSchema = z
+  .object({
+    organisationId: OrganisationIdSchema,
+    engagementId: EngagementIdSchema.optional(),
+    personId: PersonIdSchema,
+    disclosureClass: DiscoveryDisclosureClassSchema,
+    expiresAt: IsoDatetimeSchema.optional(),
+    expectedVersion: z.number().int().nonnegative().default(0),
+    reason: NonEmptySchema.max(400),
+    idempotencyKey: NonEmptySchema.max(120),
+  })
+  .strict();
+
+export const RevokeDiscoveryDisclosureInputSchema = z
+  .object({
+    organisationId: OrganisationIdSchema,
+    grantId: DiscoveryDisclosureGrantIdSchema,
+    revokeReason: NonEmptySchema.max(400),
+    expectedVersion: z.number().int().positive(),
+    reason: NonEmptySchema.max(400),
+    idempotencyKey: NonEmptySchema.max(120),
+  })
+  .strict();
+
+export const RecordClientDiscoveryConsentInputSchema = z
+  .object({
+    dimension: ConsentDimensionSchema,
+    decision: z.enum(["GRANTED", "DECLINED", "WITHDRAWN", "NOT_APPLICABLE"]),
+    policyVersion: NonEmptySchema.max(80).optional(),
+    wordingEdition: NonEmptySchema.max(80).optional(),
+    idempotencyKey: NonEmptySchema.max(120).optional(),
+  })
+  .strict();
+
 export const S05A_CANONICAL_COLLECTIONS = [
   "engagementOpportunities",
   "discoveryEngagements",
@@ -546,6 +668,8 @@ export const S05A_CANONICAL_COLLECTIONS = [
   "coverageCatalogueEditions",
   "coverageRequirements",
   "coverageAssessments",
+  "discoveryDisclosureGrants",
+  "extractionOutcomes",
 ] as const;
 
 export type CoverageState = z.infer<typeof CoverageStateSchema>;
@@ -568,3 +692,10 @@ export type CandidateAssertionProposal = z.infer<typeof CandidateAssertionPropos
 export type MoneyDto = z.infer<typeof MoneyDtoSchema>;
 export type QuantityDto = z.infer<typeof QuantityDtoSchema>;
 export type PredicateAst = z.infer<typeof PredicateAstSchema>;
+export type DiscoveryDisclosureClass = z.infer<typeof DiscoveryDisclosureClassSchema>;
+export type ExtractionDisposition = z.infer<typeof ExtractionDispositionSchema>;
+export type ExtractionOutcome = z.infer<typeof ExtractionOutcomeSchema>;
+export type DiscoveryDisclosureGrant = z.infer<typeof DiscoveryDisclosureGrantSchema>;
+export type GrantDiscoveryDisclosureInput = z.infer<typeof GrantDiscoveryDisclosureInputSchema>;
+export type RevokeDiscoveryDisclosureInput = z.infer<typeof RevokeDiscoveryDisclosureInputSchema>;
+export type RecordClientDiscoveryConsentInput = z.infer<typeof RecordClientDiscoveryConsentInputSchema>;

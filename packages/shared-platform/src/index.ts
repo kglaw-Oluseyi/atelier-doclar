@@ -803,11 +803,13 @@ export {
   EOS_S05A_INTELLIGENCE_MIGRATION_ID,
   EOS_S05A_INTELLIGENCE_V2_MIGRATION_ID,
   EOS_S05A_INTELLIGENCE_V3_MIGRATION_ID,
+  EOS_S05A_DISCLOSURE_V5_MIGRATION_ID,
   applyEosS05AToSnapshot,
   migrateEosS05A,
   migrateEosS05AIntelligence,
   migrateEosS05AIntelligenceV2,
   migrateEosS05AIntelligenceV3,
+  migrateEosS05ADisclosureV5,
 } from "./eec-migration.js";
 export {
   evaluateBudgetExpr,
@@ -858,7 +860,14 @@ export {
 } from "./eec-schemas.js";
 export { addMoney, exactHash, moneyFromDto, moneyToDto, nfc } from "./eec-hash.js";
 export { buildDiscoveryWorkspace, eecPermissionAllowed, type DiscoveryWorkspace, type EecCapabilities } from "./eec-projections.js";
-export { extractFixtureProposals, sanitiseInertText } from "./eec-extraction.js";
+export { extractFixtureProposals, extractGuestCountCandidates, sanitiseInertText } from "./eec-extraction.js";
+export {
+  decideDiscoveryDisclosure,
+  resolveArtefactDisclosureClass,
+  RESTRICTED_EVIDENCE_LABEL,
+} from "./eec-discovery-disclosure.js";
+export { governingGuestCountFromBrief } from "./eec-operations.js";
+export { clientSafeHeading } from "./eec-projections.js";
 export * as engagementIntake from "./engagement-intake/index.js";
 export * as discoveryIntelligence from "./discovery-intelligence/index.js";
 export * as eventBrief from "./event-brief/index.js";

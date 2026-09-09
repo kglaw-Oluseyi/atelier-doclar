@@ -6,9 +6,11 @@ import {
   CoverageCatalogueEditionSchema,
   CoverageRequirementSchema,
   DiscoveryConsentRecordSchema,
+  DiscoveryDisclosureGrantSchema,
   DiscoveryEngagementSchema,
   DiscoveryParticipantSchema,
   EngagementOpportunitySchema,
+  ExtractionOutcomeSchema,
   InterviewSessionSchema,
   S05AMigrationReceiptSchema,
   S05A_CANONICAL_COLLECTIONS,
@@ -88,6 +90,8 @@ const S05A_COLLECTION_SCHEMAS = {
   coverageCatalogueEditions: CoverageCatalogueEditionSchema.array(),
   coverageRequirements: CoverageRequirementSchema.array(),
   coverageAssessments: CoverageAssessmentSchema.array(),
+  discoveryDisclosureGrants: DiscoveryDisclosureGrantSchema.array(),
+  extractionOutcomes: ExtractionOutcomeSchema.array(),
   s05aMigrationReceipts: S05AMigrationReceiptSchema.array(),
 } as const;
 

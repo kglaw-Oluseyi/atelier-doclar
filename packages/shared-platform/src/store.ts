@@ -144,9 +144,11 @@ import type {
   CoverageCatalogueEdition,
   CoverageRequirement,
   DiscoveryConsentRecord,
+  DiscoveryDisclosureGrant,
   DiscoveryEngagement,
   DiscoveryParticipant,
   EngagementOpportunity,
+  ExtractionOutcome,
   InterviewSession,
   S05AMigrationReceipt,
   SourceArtefact,
@@ -392,6 +394,8 @@ export interface PlatformSnapshot {
   coverageCatalogueEditions: CoverageCatalogueEdition[];
   coverageRequirements: CoverageRequirement[];
   coverageAssessments: CoverageAssessment[];
+  discoveryDisclosureGrants: DiscoveryDisclosureGrant[];
+  extractionOutcomes: ExtractionOutcome[];
   s05aMigrationReceipts: S05AMigrationReceipt[];
   eventBriefDrafts: EventBriefDraft[];
   eventBriefEditions: EventBriefEdition[];
@@ -622,6 +626,8 @@ export function emptySnapshot(): PlatformSnapshot {
     coverageCatalogueEditions: [],
     coverageRequirements: [],
     coverageAssessments: [],
+    discoveryDisclosureGrants: [],
+    extractionOutcomes: [],
     s05aMigrationReceipts: [],
     eventBriefDrafts: [],
     eventBriefEditions: [],
@@ -836,6 +842,8 @@ export function normalizeSnapshot(input: PlatformSnapshot): PlatformSnapshot {
     coverageCatalogueEditions: input.coverageCatalogueEditions ?? [],
     coverageRequirements: input.coverageRequirements ?? [],
     coverageAssessments: input.coverageAssessments ?? [],
+    discoveryDisclosureGrants: input.discoveryDisclosureGrants ?? [],
+    extractionOutcomes: input.extractionOutcomes ?? [],
     s05aMigrationReceipts: input.s05aMigrationReceipts ?? [],
     eventBriefDrafts: input.eventBriefDrafts ?? [],
     eventBriefEditions: input.eventBriefEditions ?? [],

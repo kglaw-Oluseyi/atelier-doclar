@@ -9,6 +9,7 @@ import { seedBudgetCatalogueOnSnap } from "./eec-intelligence.js";
 import { applyQuantityRulesToCatalogue, retireUnsupportedRulePricesOnSnap, seedBudgetKnowledgeOnSnap } from "./eec-s05a-depth.js";
 import { seedCalendarDefinitionOnSnap } from "./eec-s05a-completion.js";
 import { migrateEosS05AEvaluationV4 } from "./eec-evaluation-migration.js";
+import { resolveArtefactDisclosureClass } from "./eec-discovery-disclosure.js";
 import { exactHash as intelligenceHash } from "./eec-hash.js";
 import { normalizeSnapshot, type PlatformSnapshot } from "./store.js";
 
@@ -16,6 +17,7 @@ export const EOS_S05A_MIGRATION_ID = "EOS-S05A-DISCOVERY-V1" as const;
 export const EOS_S05A_INTELLIGENCE_MIGRATION_ID = "EOS-S05A-INTELLIGENCE-V1" as const;
 export const EOS_S05A_INTELLIGENCE_V2_MIGRATION_ID = "EOS-S05A-INTELLIGENCE-V2" as const;
 export const EOS_S05A_INTELLIGENCE_V3_MIGRATION_ID = "EOS-S05A-INTELLIGENCE-V3" as const;
+export const EOS_S05A_DISCLOSURE_V5_MIGRATION_ID = "EOS-S05A-DISCLOSURE-V5" as const;
 export { EOS_S05A_EVALUATION_MIGRATION_ID } from "./eec-evaluation-migration.js";
 export const EOS_S05A_MIGRATION_CHECKSUM = createHash("sha256")
   .update(`${EOS_S05A_MIGRATION_ID}:additive-discovery-collections:synthetic-coverage-catalogue`)
@@ -314,10 +316,46 @@ export function migrateEosS05AIntelligenceV3(input: PlatformSnapshot, now: strin
   return { status: "APPLIED", snapshot: snap, created, receipt };
 }
 
+export function migrateEosS05ADisclosureV5(input: PlatformSnapshot, now: string): S05AIntelligenceMigrationResult {
+  const snap = normalizeSnapshot(structuredClone(input));
+  const existing = snap.s05aIntelligenceReceipts.find((item) => item.migrationId === EOS_S05A_DISCLOSURE_V5_MIGRATION_ID);
+  if (existing) {
+    return { status: "REPLAYED", snapshot: snap, created: existing.createdRecords, receipt: existing };
+  }
+  const created: string[] = [];
+  for (const artefact of snap.sourceArtefacts) {
+    if (artefact.disclosureClass) continue;
+    const segments = snap.sourceSegments.filter((item) => item.artefactId === artefact.id);
+    const assertions = snap.candidateAssertions.filter((item) => item.engagementId === artefact.engagementId);
+    artefact.disclosureClass = resolveArtefactDisclosureClass(artefact, assertions, segments);
+    artefact.disclosureBackfillRule = "ASSERTION_SENSITIVITY_ELSE_OPERATIONAL";
+    artefact.updatedAt = now;
+    created.push(`disclosure:${artefact.id}:${artefact.disclosureClass}`);
+  }
+  const receipt = {
+    id: deterministicUuid("disclosure-receipt-v5"),
+    organisationId: snap.organisations[0]?.id ?? "00000000-0000-4000-8000-000000000001",
+    migrationId: EOS_S05A_DISCLOSURE_V5_MIGRATION_ID,
+    checksum: intelligenceHash({ id: EOS_S05A_DISCLOSURE_V5_MIGRATION_ID, created }),
+    status: "APPLIED" as const,
+    createdRecords: created,
+    schemaVersion: SCHEMA_VERSION,
+    version: 1,
+    createdAt: now,
+    updatedAt: now,
+  };
+  snap.s05aIntelligenceReceipts.push(receipt);
+  validateS05APersistedCollections(snap);
+  return { status: "APPLIED", snapshot: snap, created, receipt };
+}
+
 export function applyEosS05AToSnapshot(snap: PlatformSnapshot, now: string): PlatformSnapshot {
-  return migrateEosS05AEvaluationV4(
-    migrateEosS05AIntelligenceV3(
-      migrateEosS05AIntelligenceV2(migrateEosS05AIntelligence(migrateEosS05A(snap, now).snapshot, now).snapshot, now).snapshot,
+  return migrateEosS05ADisclosureV5(
+    migrateEosS05AEvaluationV4(
+      migrateEosS05AIntelligenceV3(
+        migrateEosS05AIntelligenceV2(migrateEosS05AIntelligence(migrateEosS05A(snap, now).snapshot, now).snapshot, now).snapshot,
+        now,
+      ).snapshot,
       now,
     ).snapshot,
     now,

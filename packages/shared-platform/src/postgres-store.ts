@@ -151,6 +151,8 @@ const COLLECTIONS: Collection[] = [
   "coverageCatalogueEditions",
   "coverageRequirements",
   "coverageAssessments",
+  "discoveryDisclosureGrants",
+  "extractionOutcomes",
   "s05aMigrationReceipts",
   "eventBriefDrafts",
   "eventBriefEditions",

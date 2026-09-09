@@ -882,7 +882,12 @@ export const S05AIntelligenceReceiptSchema = z
   .object({
     id: UuidSchema,
     organisationId: OrganisationIdSchema,
-    migrationId: z.enum(["EOS-S05A-INTELLIGENCE-V1", "EOS-S05A-INTELLIGENCE-V2", "EOS-S05A-INTELLIGENCE-V3"]),
+    migrationId: z.enum([
+      "EOS-S05A-INTELLIGENCE-V1",
+      "EOS-S05A-INTELLIGENCE-V2",
+      "EOS-S05A-INTELLIGENCE-V3",
+      "EOS-S05A-DISCLOSURE-V5",
+    ]),
     checksum: NonEmptySchema.max(128),
     status: z.enum(["APPLIED", "REPLAYED"]),
     createdRecords: z.array(z.string()),

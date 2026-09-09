@@ -371,6 +371,8 @@ export const PERMISSION_KEYS = [
   "discovery.source.view",
   "discovery.source.manage",
   "discovery.assertion.review",
+  "discovery.confidential.reveal",
+  "discovery.confidential.grant",
   "brief.view",
   "brief.author",
   "brief.submit",
@@ -619,6 +621,8 @@ export const S05A_SENSITIVE_PERMISSIONS = [
   "change.propagate",
   "executiveCommand.view",
   "executiveCommand.evaluate",
+  "discovery.confidential.reveal",
+  "discovery.confidential.grant",
 ] as const;
 
 export const ASSERTION_KINDS = [
@@ -659,6 +663,17 @@ export const SENSITIVITY_CLASSES = [
   "SECURITY",
   "FINANCIAL",
   "CONFIDENTIAL_SURPRISE",
+] as const;
+
+export const DISCOVERY_DISCLOSURE_CLASSES = [
+  "OPERATIONAL",
+  "CLIENT_VISIBLE",
+  "FINANCIAL_RESTRICTED",
+  "HEALTH_ACCESSIBILITY_RESTRICTED",
+  "SECURITY_RESTRICTED",
+  "CULTURAL_RELIGIOUS_RESTRICTED",
+  "CONFIDENTIAL_SURPRISE",
+  "PRINCIPAL_PRIVATE",
 ] as const;
 
 export const COVERAGE_STATES = [
