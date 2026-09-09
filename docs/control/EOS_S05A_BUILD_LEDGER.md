@@ -1,9 +1,9 @@
 # EOS-S05A Build Ledger
 
 **Slice ID:** `EOS-S05A`
-**Prompt Control ID:** `MD-PR-S047` (Budget Studio override of MD-PR-S046; prior `MD-PR-S045` / `MD-PR-S043` / `MD-PR-S041`)
-**Starting baseline for MD-PR-S047:** `5c7d6356b5a618bc315f1b88cc76c844f7d659f1`
-**Application/test SHA:** `abe2e20308990dc3f31e74f799c717903205d1a8`
+**Prompt Control ID:** `MD-PR-S049` (action-result truth of MD-PR-S048; prior `MD-PR-S047` / `MD-PR-S045` / `MD-PR-S043` / `MD-PR-S041`)
+**Starting baseline for MD-PR-S049:** `dd959d3fe3eb076b45991b29167557b45b890e68`
+**Application/test SHA:** `315669da798c26219f7b3c7e16a2cb65783fdd90`
 **Status:** `IMPLEMENTED / NOT ACCEPTED`
 **Production:** unauthorised
 **Catalogue accepted-slice count:** remains 5
@@ -220,6 +220,41 @@ S046 remaining defects are remediated. EOS-S05A remains NOT ACCEPTED. No TDR was
 | Live focused S047 (first run on `e75ed0ee`) | Journeys 1, 2, 4 PASS; Journey 3 FAIL (`persisted version conflict` on superseded 350); Journey 5 FAIL (reload re-focused heading) |
 | Live Event OS deploy (supersede version + focus once) | `f892dfe6-fe2b-465d-a69d-56b34494d4bc` SUCCESS at `abe2e20308990dc3f31e74f799c717903205d1a8` |
 | Live focused S047 (after persist/focus fix) | PASS — 5/5 against `https://event-os-production-bc8d.up.railway.app` |
+| Control Tower | not deployed |
+| Claude / EOS-S06 / acceptance | not run / not started / not accepted |
+| `productionAuthorised` | false, unchanged |
+
+## MD-PR-S049 action-result truth, provenance and focus
+
+S048 remaining defects are remediated. The Budget calculation engine was not reopened. EOS-S05A remains NOT ACCEPTED. No TDR was manufactured.
+
+| Field | Value |
+|-------|-------|
+| Controlling pack | `docs/control/eos-s05a/MD_PR_S049_EOS_S05A_ACTION_RESULT_TRUTH_AND_FOCUS.md` |
+| Starting baseline | `dd959d3fe3eb076b45991b29167557b45b890e68` |
+| Application SHA | `315669da798c26219f7b3c7e16a2cb65783fdd90` |
+| Feature commit | `8c8db26751c071cd2ed893ab2b95cbf72c35d0c9` |
+| Live focus corrections | `bf159b556c1f6ef6e8572775282567834f6e566d`, `315669da798c26219f7b3c7e16a2cb65783fdd90` |
+| Corpus edition / hash | `s05a-eval-v6` / `4ee2bac7104bb06330ebb95e08e9600878795f902a05302b5e500571e5c9c454` |
+| Case count | 46 executable cases |
+| Focused S049 unit/integration | PASS after first-run mutate-effect, generated-time, and client-import corrections |
+| `pnpm typecheck` | PASS |
+| `pnpm --filter @maison-doclar/shared-platform test` | 403 pass / 0 fail |
+| `pnpm --filter @maison-doclar/event-os test` | 91 pass / 0 fail |
+| `pnpm programme:validate` | PASS |
+| `pnpm --filter @maison-doclar/event-os build` | PASS after first-run client barrel import of `node:crypto` |
+| `git diff --check` | PASS |
+| Focused S049 Playwright | PASS — 3/3 locally after first-run locator/session/lock assertion corrections |
+| Changed-risk S047 Playwright | PASS — Journey 2 + 5 locally (2/2). Full Budget arithmetic journey not rerun. |
+| Live Event OS deploy (corpus) | `903c2536-3f5c-42b5-bf2c-75167aa4e1cc` SUCCESS at `8c8db26751c071cd2ed893ab2b95cbf72c35d0c9` |
+| Live health before CEO corpus | `alive`/`ready` true; `POSTGRES`/`APPLIED`; `productionAuthorised` false; layout READY/READY; evaluation `STALE` / blocked |
+| Live CEO fixture run | `PASSED`; cases passed 46 / failed 0; zero-tolerance clear; hash `4ee2bac7104bb06330ebb95e08e9600878795f902a05302b5e500571e5c9c454`; run `1ecbeec4-b343-4b1a-9fa4-be9a5eaa822a`; completed `2026-09-09T22:21:10.748Z`; correlation `88594f86-dfec-45bc-8109-947a599bf1ff` |
+| Live after corpus | `s05aEvaluationBlocked` false; `s05aReleaseReady` true |
+| Live focused S049 (first run on `8c8db26`) | Journeys A and C PASS; Journey B FAIL (heading still focused after F5) |
+| Live Event OS deploy (reload must not steal focus) | `ba3d5a2b-9545-44f0-9bc1-fc631d42c4df` SUCCESS at `bf159b556c1f6ef6e8572775282567834f6e566d` |
+| Live focused S049 (on `bf159b5`) | Journeys A and C PASS; Journey B FAIL (denial heading inactive — consume blurred first focus) |
+| Live Event OS deploy (keep first focus until F5) | `5ddb009c-4462-4c7f-b9d5-de957f39e342` SUCCESS at `315669da798c26219f7b3c7e16a2cb65783fdd90` |
+| Live focused S049 (after focus-release fix) | PASS — 3/3 against `https://event-os-production-bc8d.up.railway.app` |
 | Control Tower | not deployed |
 | Claude / EOS-S06 / acceptance | not run / not started / not accepted |
 | `productionAuthorised` | false, unchanged |

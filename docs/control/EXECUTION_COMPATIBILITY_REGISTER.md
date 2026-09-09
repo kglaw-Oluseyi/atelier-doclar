@@ -306,3 +306,16 @@ Milestone 4 is authorised on the Milestone 1–3 contracts. Historic S5-01–S5-
 | Claude-in-Chrome | Not run. Ready for focused Claude verification after AI CTO review. |
 | EOS-S06 / `MD-PR-S036` | RETAINED. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. |
 | `productionAuthorised` | RETAINED false. Not changed. |
+
+## Addendum — 2026-09-09 EOS-S05A action-result truth and focus (`MD-PR-S049`)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| MD-PR-S048 replay `Did data change: Yes` / drifting generated time / focus on `<body>` / global F5 retry lock | SUPERSEDED by `MD-PR-S049` product remediation. Findings remain recorded; disposition is implemented, not accepted. |
+| Evaluation corpus `s05a-eval-v5` / 44 cases | SUPERSEDED as the current executable edition. Current edition is `s05a-eval-v6` / 46 cases / hash `4ee2bac7104bb06330ebb95e08e9600878795f902a05302b5e500571e5c9c454`. Prior PASSED run `7aa7b7d0-e334-452f-8370-709e9a03457c` is STALE and was not restamped. |
+| Budget calculation engine 360→350→340/335 | RETAINED. Not reopened. Event Brief remains 360. |
+| Catalogue accepted-slice count | RETAINED at 5. |
+| Control Tower | Compatibility-only. Not a deploy target for this run. |
+| Claude-in-Chrome | Not run. Ready for targeted Claude verification after AI CTO review. |
+| EOS-S06 / `MD-PR-S036` | RETAINED. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. |
+| `productionAuthorised` | RETAINED false. Not changed. |

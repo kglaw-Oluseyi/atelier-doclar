@@ -1,7 +1,7 @@
 # Current State
 
-**Updated:** MD-PR-S047 EOS-S05A Budget Studio override execution (2026-09-09)
-**Prompt Control ID:** MD-PR-S047
+**Updated:** MD-PR-S049 EOS-S05A action-result truth, provenance and focus (2026-09-09)
+**Prompt Control ID:** MD-PR-S049
 **Milestone:** `EOS-S05` ACCEPTED — catalogue accepted-slice count 5; `EOS-S05A` IMPLEMENTED / NOT ACCEPTED (not catalogue); EOS-S06 not authorised
 
 MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is ACCEPTED. EOS-S02 is ACCEPTED. EOS-S03 is ACCEPTED. EOS-S04 is CLOSED / ACCEPTED (`PASS WITH OBSERVATIONS`). EOS-S05 is ACCEPTED. Catalogue accepted-slice count is 5. Native coverage is 62/62. S4-61 is satisfied for technical review only. S4-62 is satisfied for controlled technical acceptance/handover only. Independent, specialist and CEO production gates remain unsigned.
@@ -106,7 +106,7 @@ MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is A
 **EOS-S05A IMPLEMENTATION AUTHORISED: YES — whole slice `EEC-00`–`EEC-45` under `MD-PR-S038`, product-depth under `MD-PR-S039`, final completion under `MD-PR-S040`, executable evaluation remediation under `MD-PR-S041`**
 **EOS-S05A ACCEPTED: NO**
 **EOS-S05A STATUS: IMPLEMENTED / NOT ACCEPTED**
-**EOS-S05A PROMPT CONTROL ID: MD-PR-S047**
+**EOS-S05A PROMPT CONTROL ID: MD-PR-S049**
 **EOS-S05A CATALOGUE SLICE: NO**
 **EOS-S05A LATER UNITS: EEC-11–EEC-44 IMPLEMENTED / NOT ACCEPTED; EEC-45 NOT CURSOR ACCEPTANCE**
 **EOS-S05A CANONICAL CORPUS: docs/control/eos-s05a/**
@@ -150,7 +150,7 @@ Event OS S01–S03 remain formally accepted. EOS-S04 is CLOSED / ACCEPTED after 
 
 **MD-PR-UX001:** Cross-slice Event OS UX quality uplift across accepted EOS-S01–EOS-S05 surfaces. Does not accept a new slice, reopen EOS-S01–EOS-S05, consume `MD-PR-S036`, or authorise production. Evidence: `docs/control/MD_PR_UX001.md`.
 
-**EOS-S05A:** `IMPLEMENTED / NOT ACCEPTED` on `2026-09-09`. `MD-PR-S047` remediates MD-PR-S046 Budget Studio override and missing-record findings (typed 350/340 as immutable scenario assumptions, durable calculation identifiers before redirect, contradiction-result focus). Starting SHA `5c7d6356b5a618bc315f1b88cc76c844f7d659f1`. Ending application SHA `abe2e20308990dc3f31e74f799c717903205d1a8`. Catalogue accepted-slice count remains 5. `MD-PR-S036` is not consumed. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. Production remains unauthorised. Claude was not run. Control Tower was not deployed. EOS-S05A is not accepted. Controlling pack: `docs/control/eos-s05a/MD_PR_S047_EOS_S05A_BUDGET_STUDIO_OVERRIDE_EXECUTION_PACK.md`. Live CEO fixture `s05a-eval-v5` (44/0) `PASSED` on run `7aa7b7d0-e334-452f-8370-709e9a03457c`. Prior `s05a-eval-v4` pass is `STALE` and was not restamped. Live focused S047 Playwright 5/5 after a first-run Journey 3 persist conflict was corrected. MD-PR-S045 truthful-decision surfaces were not reopened except changed-risk S045/S043 Playwright. Staff-reviewed-but-unpublished is not governing Budget truth.
+**EOS-S05A:** `IMPLEMENTED / NOT ACCEPTED` on `2026-09-09`. `MD-PR-S049` remediates MD-PR-S048 action-result findings (shared APPLIED/REPLAYED/NOT_APPLIED truth, durable `calculationGeneratedAt`, scoped retry locks, reusable focus-after-action). The Budget engine 360→350→340/335 arithmetic, immutable scenario lineage and Event Brief were not reopened. Starting SHA `dd959d3fe3eb076b45991b29167557b45b890e68`. Ending application SHA `315669da798c26219f7b3c7e16a2cb65783fdd90`. Catalogue accepted-slice count remains 5. `MD-PR-S036` is not consumed. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. Production remains unauthorised. Claude was not run. Control Tower was not deployed. EOS-S05A is not accepted. Controlling pack: `docs/control/eos-s05a/MD_PR_S049_EOS_S05A_ACTION_RESULT_TRUTH_AND_FOCUS.md`. Live CEO fixture `s05a-eval-v6` (46/0) `PASSED` on run `1ecbeec4-b343-4b1a-9fa4-be9a5eaa822a`. Prior `s05a-eval-v5` pass is `STALE` and was not restamped. Live focused S049 Playwright 3/3 after first-run Journey B F5-focus and consume-blur failures were corrected. MD-PR-S047 Budget Studio surfaces were not reopened except changed-risk S047 Playwright.
 
 Historical sentence “Implementation of EOS-S04A–F is not authorised as a product slice” applied before CEO S04A–S04F implementation authority. For S04A–S04F that sentence is superseded. The EOS-S04E and EOS-S04F controlled slice pack filenames still contain `DRAFT`. Current programme status for S04E is `ACCEPTED`. Current programme status for S04F is `ACCEPTED`. Historical `IN_REVIEW / NOT READY` on 2026-09-08 remains dated history.
 
