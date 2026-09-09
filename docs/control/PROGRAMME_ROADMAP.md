@@ -70,7 +70,7 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 | EOS-S04E | ACCEPTED — Event Blueprint, Journey & Host Experience; not a catalogue slice; SHA `05b91bb62dcc20357666bef4ff9bfa1d0cef11b2`; `MD-PR-S024` / `MD-PR-S025` |
 | EOS-S04F | ACCEPTED — Language, Cultural Text & Multilingual Editions; not a catalogue slice; SHA `a4795e83c929bf24591f52c2224eb4b588c23ef3`; `MD-PR-S026` / `MD-PR-S027` |
 | EOS-S05 | ACCEPTED — Venue registry and spatial layout; catalogue slice; SHA `eba137712c65c6f59b77fe2a88a8f4a277228cd9`; `MD-PR-S028`–`MD-PR-S035` |
-| EOS-S05A | REMEDIATED / NOT ACCEPTED — Discovery, Investment & Executive Event Command; not a catalogue slice; `MD-PR-S039`; `EEC-00`–`EEC-10` complete; `EEC-11`–`EEC-45` PARTIAL |
+| EOS-S05A | IMPLEMENTED / NOT ACCEPTED — Discovery, Investment & Executive Event Command; not a catalogue slice; `MD-PR-S040`; `EEC-11`–`EEC-44` implemented |
 | EOS-S06 | NOT_STARTED / NOT_AUTHORISED — seating allocation; `MD-PR-S036` is recommended only and is not implementation authority |
 | All others | NOT_STARTED, READY, or BLOCKED only by valid Event OS / Event-Day dependencies |
 
@@ -78,7 +78,7 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 
 | Band | Content |
 |------|---------|
-| Now | Event OS S01–S05 accepted (catalogue count 5); EOS-S04A–F ACCEPTED (not catalogue slices); EOS-S05A REMEDIATED / NOT ACCEPTED (not catalogue); production unsigned; no real communication or translation provider |
+| Now | Event OS S01–S05 accepted (catalogue count 5); EOS-S04A–F ACCEPTED (not catalogue slices); EOS-S05A IMPLEMENTED / NOT ACCEPTED (not catalogue); production unsigned; no real communication or translation provider |
 | Next | Independent AI CTO review and whole-slice Claude verification of EOS-S05A. EOS-S06 remains unauthorised; recommended control ID `MD-PR-S036` is not implementation authority |
 | Later | Event OS S01 after a new authorised instruction; Runtime after Event OS foundations |
 | Held | All 693 product/recon prompts except CT0/CT1 wrappers; EOS-S06 |

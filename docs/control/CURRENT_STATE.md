@@ -1,8 +1,8 @@
 # Current State
 
-**Updated:** MD-PR-S039 EOS-S05A product-depth remediation (2026-09-09)
-**Prompt Control ID:** MD-PR-S039
-**Milestone:** `EOS-S05` ACCEPTED — catalogue accepted-slice count 5; `EOS-S05A` REMEDIATED / NOT ACCEPTED (not catalogue); EOS-S06 not authorised
+**Updated:** MD-PR-S040 EOS-S05A final product-completion tranche (2026-09-09)
+**Prompt Control ID:** MD-PR-S040
+**Milestone:** `EOS-S05` ACCEPTED — catalogue accepted-slice count 5; `EOS-S05A` IMPLEMENTED / NOT ACCEPTED (not catalogue); EOS-S06 not authorised
 
 MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is ACCEPTED. EOS-S02 is ACCEPTED. EOS-S03 is ACCEPTED. EOS-S04 is CLOSED / ACCEPTED (`PASS WITH OBSERVATIONS`). EOS-S05 is ACCEPTED. Catalogue accepted-slice count is 5. Native coverage is 62/62. S4-61 is satisfied for technical review only. S4-62 is satisfied for controlled technical acceptance/handover only. Independent, specialist and CEO production gates remain unsigned.
 
@@ -103,12 +103,12 @@ MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is A
 **EOS-S05 CATALOGUE SLICE: YES**
 **EOS-S05A TITLE: Discovery, Investment & Executive Event Command**
 **EOS-S05A PRINCIPAL EXPERIENCE: Executive Event Command**
-**EOS-S05A IMPLEMENTATION AUTHORISED: YES — whole slice `EEC-00`–`EEC-45` under `MD-PR-S038`, then product-depth remediation under `MD-PR-S039`**
+**EOS-S05A IMPLEMENTATION AUTHORISED: YES — whole slice `EEC-00`–`EEC-45` under `MD-PR-S038`, product-depth under `MD-PR-S039`, final completion under `MD-PR-S040`**
 **EOS-S05A ACCEPTED: NO**
-**EOS-S05A STATUS: REMEDIATED / NOT ACCEPTED**
-**EOS-S05A PROMPT CONTROL ID: MD-PR-S039**
+**EOS-S05A STATUS: IMPLEMENTED / NOT ACCEPTED**
+**EOS-S05A PROMPT CONTROL ID: MD-PR-S040**
 **EOS-S05A CATALOGUE SLICE: NO**
-**EOS-S05A LATER UNITS: EEC-11–EEC-45 PARTIAL / NOT ACCEPTED**
+**EOS-S05A LATER UNITS: EEC-11–EEC-44 IMPLEMENTED / NOT ACCEPTED; EEC-45 NOT CURSOR ACCEPTANCE**
 **EOS-S05A CANONICAL CORPUS: docs/control/eos-s05a/**
 **EOS-S06 IMPLEMENTATION AUTHORISED: NO**
 **EOS-S06 STATUS: NOT_STARTED / NOT_AUTHORISED**
@@ -150,7 +150,7 @@ Event OS S01–S03 remain formally accepted. EOS-S04 is CLOSED / ACCEPTED after 
 
 **MD-PR-UX001:** Cross-slice Event OS UX quality uplift across accepted EOS-S01–EOS-S05 surfaces. Does not accept a new slice, reopen EOS-S01–EOS-S05, consume `MD-PR-S036`, or authorise production. Evidence: `docs/control/MD_PR_UX001.md`.
 
-**EOS-S05A:** `REMEDIATED / NOT ACCEPTED` on `2026-09-09` by George Lawson under `MD-PR-S039`. Application SHA `f645a39362c6aab0796df1d65c7c02d946732a2a` from starting SHA `566df703672209007da9ee3de180a8913a7be78b`. S038 recorded `EEC-11`–`EEC-45` complete while several units were scaffolds. S039 preserves the foundation, adds governed budget/roadmap/interview/command depth, and corrects the completion record. `EEC-00`–`EEC-10` remain complete. `EEC-11`–`EEC-45` are PARTIAL and not accepted. Catalogue accepted-slice count remains 5. `MD-PR-S036` is not consumed. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. Production remains unauthorised. Canonical corpus: `docs/control/eos-s05a/`. Ratification: `docs/control/EOS_S05A_RATIFICATION.md`. Claude-in-Chrome remains deferred. EOS-S05A is not accepted.
+**EOS-S05A:** `IMPLEMENTED / NOT ACCEPTED` on `2026-09-09` by George Lawson under `MD-PR-S040`. Starting SHA `934e91e74324fb5aed2a7ebb8de129b12af782f8`. Application/test SHA `5aca600d98430f224849ee18f5075e83c47eafa7`. Completes the S039 PARTIAL/MISSING product gaps: client review editions, Brief Review Workbench, client investment, calendar roadmap, interview corpus, evaluation/red-team runner and Event Command drill-downs. `TDR-S05A-003`–`005` are CLOSED. Catalogue accepted-slice count remains 5. `MD-PR-S036` is not consumed. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. Production remains unauthorised. Canonical corpus: `docs/control/eos-s05a/`. Ratification: `docs/control/EOS_S05A_RATIFICATION.md`. Claude-in-Chrome remains deferred. EOS-S05A is not accepted.
 
 Historical sentence “Implementation of EOS-S04A–F is not authorised as a product slice” applied before CEO S04A–S04F implementation authority. For S04A–S04F that sentence is superseded. The EOS-S04E and EOS-S04F controlled slice pack filenames still contain `DRAFT`. Current programme status for S04E is `ACCEPTED`. Current programme status for S04F is `ACCEPTED`. Historical `IN_REVIEW / NOT READY` on 2026-09-08 remains dated history.
 

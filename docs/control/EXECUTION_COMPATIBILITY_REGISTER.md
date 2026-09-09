@@ -257,3 +257,14 @@ Milestone 4 is authorised on the Milestone 1–3 contracts. Historic S5-01–S5-
 | Control Tower | Compatibility-only. Not a deploy target. |
 | Claude-in-Chrome | Not run. Still deferred. |
 | EOS-S06 / `MD-PR-S036` | RETAINED. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. |
+
+## Addendum — 2026-09-09 EOS-S05A final product-completion (`MD-PR-S040`)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| `EEC-11`–`EEC-45` PARTIAL after `MD-PR-S039` | SUPERSEDED for implementation units. S040 completes remaining product gaps. EOS-S05A remains NOT ACCEPTED. |
+| TDR-S05A-003 / 004 / 005 | CLOSED. Evaluation corpus, client investment route and calendar placement exist. |
+| Catalogue accepted-slice count | RETAINED at 5. |
+| Control Tower | Compatibility-only. Not a deploy target. |
+| Claude-in-Chrome | Not run. Still deferred. |
+| EOS-S06 / `MD-PR-S036` | RETAINED. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. |
