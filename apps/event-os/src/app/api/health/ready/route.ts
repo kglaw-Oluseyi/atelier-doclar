@@ -23,6 +23,8 @@ export async function GET(): Promise<Response> {
       s05aInterviewCorpus: s05a.interviewCorpusEdition,
       s05aEvaluationStatus: s05a.evaluationStatus,
       s05aEvaluationBlocked: s05a.evaluationBlocked,
+      s05aReleaseReady: s05a.releaseReady ?? false,
+      s05aEvaluationBlockingReasons: s05a.blockingReasons ?? [],
       s05aCalendarReady: s05a.calendarReady,
     });
   } catch (error) {

@@ -7,6 +7,7 @@ import { discoveryPermissions, resolveDiscoveryOrganisation } from "../../../ser
 import { guardedActor } from "../../../server/guard";
 import { getRuntime } from "../../../server/runtime";
 import { operationalStateFromCode } from "../../../server/operational-state";
+import { EecEvaluationPanel } from "../../../components/eec-evaluation-panel";
 
 function moneyLabel(minor?: string) {
   if (!minor) return "Not declared";
@@ -42,6 +43,10 @@ export default async function ExecutiveEventCommandPage({
   const engagementId = typeof query.engagementId === "string" ? query.engagementId : undefined;
   const command = getRuntime().service.getExecutiveCommand(actor, organisation.id, eventId, engagementId);
   const decision = command.decisions?.[0];
+  const evaluation = getRuntime().service.getS05AEvaluationReadiness(actor, organisation.id);
+  const latestRun = evaluation.lastRunId
+    ? getRuntime().service.getS05AEvaluationRun(actor, organisation.id, evaluation.lastRunId)
+    : undefined;
   return (
     <AppShell person={person} organisationName={organisation.displayName} current="/app/command">
       <AtelierPageHeader
@@ -193,6 +198,40 @@ export default async function ExecutiveEventCommandPage({
             <p className="empty">No change proposal is waiting.</p>
           )}
         </section>
+        <EecEvaluationPanel
+          organisationId={organisation.id}
+          canRun={permissions.evaluate}
+          model={{
+            status: evaluation.status,
+            blocked: evaluation.blocked,
+            releaseReady: evaluation.releaseReady,
+            blockingReasons: evaluation.blockingReasons,
+            currentCorpusEdition: evaluation.currentCorpusEdition,
+            currentOrchestratorVersion: evaluation.currentOrchestratorVersion,
+            currentProviderVersion: evaluation.currentProviderVersion,
+            currentProjectionPolicyVersion: evaluation.currentProjectionPolicyVersion,
+            lastRunId: evaluation.lastRunId,
+            lastRunAt: evaluation.lastRunAt,
+            passedCount: evaluation.passedCount,
+            failedCount: evaluation.failedCount,
+            zeroToleranceFailed: latestRun?.zeroToleranceFailed,
+            corpusHash: latestRun?.corpusHash ?? evaluation.currentCorpusHash,
+            correlationId: latestRun?.correlationId,
+            diagnostics: (latestRun?.caseResults ?? [])
+              .filter((item) => item.verdict !== "PASSED")
+              .flatMap((item) =>
+                item.observations
+                  .filter((observation) => !observation.passed)
+                  .map((observation) => ({
+                    caseId: item.caseId,
+                    code: observation.code,
+                    expectedSummary: observation.expectedSummary,
+                    observedSummary: observation.observedSummary,
+                    category: latestRun?.zeroToleranceFailures.find((failure) => failure.caseId === item.caseId)?.category,
+                  })),
+              ),
+          }}
+        />
       </div>
     </AppShell>
   );

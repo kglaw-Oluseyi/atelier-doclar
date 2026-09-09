@@ -2163,3 +2163,16 @@ body.atelier {
     border-bottom: 1px solid var(--md-line);
   }
 }
+
+.eec-evaluation-panel,
+.eec-evaluation-panel p,
+.eec-evaluation-panel li,
+.eec-evaluation-panel summary {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.eec-evaluation-panel button:disabled {
+  cursor: not-allowed;
+}

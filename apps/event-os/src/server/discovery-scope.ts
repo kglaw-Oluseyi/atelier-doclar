@@ -22,6 +22,7 @@ export function discoveryPermissions(person: Person, organisationId: string) {
     changeTriage: authorize({ actor: actorSnap, permission: "change.triage", scope }).allow,
     changeDecide: authorize({ actor: actorSnap, permission: "change.decide", scope }).allow,
     command: authorize({ actor: actorSnap, permission: "executiveCommand.view", scope }).allow,
+    evaluate: authorize({ actor: actorSnap, permission: "executiveCommand.evaluate", scope }).allow,
   };
 }
 

@@ -117,6 +117,7 @@ export function actionLabel(actionType: string): string {
     "change.assess": "Assess change impact",
     "change.decide": "Decide change proposal",
     "command.view": "Review executive command",
+    "evaluation.run": "Run fixture assurance",
   };
   return labels[actionType] ?? actionType.replaceAll(".", " ");
 }
