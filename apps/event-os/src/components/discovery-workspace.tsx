@@ -138,6 +138,7 @@ export function DiscoveryWorkspaceView({
       <AtelierStateFocus
         targetId="resolved-contradiction-heading"
         active={
+          Boolean(presented?.shouldConsume) &&
           Boolean(presented?.view) &&
           presented?.view?.kind === "success" &&
           presented.actionType === "discovery.conflict"
@@ -146,7 +147,12 @@ export function DiscoveryWorkspaceView({
       />
       <AtelierStateFocus
         targetId="operational-state-title"
-        active={Boolean(presented?.view && presented.view.kind !== "success" && resultSection === "discovery-assertions")}
+        active={Boolean(
+          presented?.shouldConsume &&
+            presented?.view &&
+            presented.view.kind !== "success" &&
+            resultSection === "discovery-assertions",
+        )}
         onceKey={[presented?.correlationId, presented?.subjectId, "operational-state-title"].filter(Boolean).join(":")}
       />
       <p className="lede" data-testid="discovery-next-action">

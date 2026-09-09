@@ -1,4 +1,5 @@
 import type { PresentedActionResult } from "../server/action-result";
+import { shouldRequestActionResultFocus } from "./action-result-focus";
 import { ActionResultConsumer } from "./action-result-consumer";
 import { AtelierOperationalState } from "./atelier-operational-state";
 import { AtelierStateFocus } from "./atelier-state-focus";
@@ -16,11 +17,12 @@ export function ActionResultBanner({
 }) {
   if (!presented.view) return <ActionResultConsumer enabled={false} />;
   const focusTarget = presented.focusTargetId ?? "operational-state-title";
-  const shouldFocus =
-    presented.view.kind === "conflict" ||
-    presented.view.kind === "forbidden" ||
-    presented.view.kind === "validation" ||
-    (focusOnSuccess && (presented.view.kind === "success" || Boolean(presented.application)));
+  const shouldFocus = shouldRequestActionResultFocus({
+    shouldConsume: presented.shouldConsume,
+    viewKind: presented.view.kind,
+    application: presented.application,
+    focusOnSuccess,
+  });
   const onceKey = [presented.correlationId, presented.actionType, presented.subjectId, focusTarget]
     .filter(Boolean)
     .join(":");

@@ -6,6 +6,11 @@ import {
   safeActionResultTargetId,
 } from "@maison-doclar/shared-platform";
 import {
+  actionResultFocusStorageKey,
+  shouldRequestActionResultFocus,
+  shouldStealActionResultFocus,
+} from "../src/components/action-result-focus.ts";
+import {
   buildActionResult,
   presentActionResult,
   sessionHashFromToken,
@@ -211,6 +216,31 @@ describe("EOS-S049 action-result truth, focus and scoped retry locks", () => {
     assert.equal(afterConsume.retryLock, undefined);
     assert.equal(afterConsume.mutationLocked, false);
     assert.equal(afterConsume.shouldConsume, false);
+  });
+
+  it("consumed or refreshed results must not steal heading focus", () => {
+    const conflict = {
+      shouldConsume: true,
+      viewKind: "conflict",
+      focusOnSuccess: true,
+    };
+    assert.equal(shouldRequestActionResultFocus(conflict), true);
+    assert.equal(shouldRequestActionResultFocus({ ...conflict, shouldConsume: false }), false);
+    assert.equal(shouldStealActionResultFocus({ active: true, navigationType: "navigate" }), true);
+    assert.equal(shouldStealActionResultFocus({ active: true, navigationType: "reload" }), false);
+    assert.equal(shouldStealActionResultFocus({ active: true, alreadyPresented: true }), false);
+    const first = actionResultFocusStorageKey({
+      pathname: "/app/discovery/engagement",
+      targetId: "operational-state-title",
+      onceKey: "corr:budget.calculate:subject:operational-state-title",
+    });
+    const afterHash = actionResultFocusStorageKey({
+      pathname: "/app/discovery/engagement",
+      targetId: "operational-state-title",
+      onceKey: "corr:budget.calculate:subject:operational-state-title",
+    });
+    assert.equal(first, afterHash);
+    assert.doesNotMatch(first ?? "", /#/);
   });
 
   it("action result from another subject does not affect this page", () => {

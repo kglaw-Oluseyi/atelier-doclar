@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { actionResultFocusStorageKey, shouldStealActionResultFocus } from "./action-result-focus";
 
 const ALLOWED_FOCUS_TARGETS = new Set([
   "operational-state",
@@ -8,6 +9,16 @@ const ALLOWED_FOCUS_TARGETS = new Set([
   "resolved-contradiction-heading",
   "placeholder-validation",
 ]);
+
+function navigationType(): string | undefined {
+  const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+  return nav?.type;
+}
+
+function blurIfHeld(targetId: string) {
+  const node = document.getElementById(targetId);
+  if (node && document.activeElement === node) node.blur();
+}
 
 export function AtelierStateFocus({
   targetId,
@@ -19,16 +30,33 @@ export function AtelierStateFocus({
   onceKey?: string;
 }) {
   useEffect(() => {
-    if (!active) return;
     if (!ALLOWED_FOCUS_TARGETS.has(targetId)) return;
-    const route = `${window.location.pathname}${window.location.hash}`;
-    const storageKey = onceKey ? `atelier-focus:${route}:${targetId}:${onceKey}` : undefined;
-    if (storageKey && window.sessionStorage.getItem(storageKey) === "1") return;
+    const storageKey = actionResultFocusStorageKey({
+      pathname: window.location.pathname,
+      targetId,
+      onceKey,
+    });
+    const alreadyPresented = storageKey ? window.sessionStorage.getItem(storageKey) === "1" : false;
+    const steal = shouldStealActionResultFocus({
+      active,
+      navigationType: navigationType(),
+      alreadyPresented,
+    });
+    if (!steal) {
+      if (storageKey && active) window.sessionStorage.setItem(storageKey, "1");
+      blurIfHeld(targetId);
+      requestAnimationFrame(() => blurIfHeld(targetId));
+      return;
+    }
     const deadline = Date.now() + 12_000;
     const timers: number[] = [];
     let observer: MutationObserver | undefined;
     const focus = () => {
       if (Date.now() > deadline) {
+        observer?.disconnect();
+        return;
+      }
+      if (storageKey && window.sessionStorage.getItem(storageKey) === "1") {
         observer?.disconnect();
         return;
       }
