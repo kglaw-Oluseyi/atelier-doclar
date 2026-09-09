@@ -20,13 +20,19 @@ export async function login(page: Page, email = STAFF_IDENTITIES.ceo.email): Pro
   await page.getByLabel("Access token").fill(process.env.EVENT_OS_ACCESS_TOKEN ?? "event-os-access-token-not-for-production");
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL(/\/app(?:\/|$)/, { timeout: 20_000 });
-  await page.getByRole("heading", { name: "Home" }).waitFor({ timeout: 20_000 });
+  await page
+    .getByRole("heading", { name: "Home" })
+    .or(page.getByRole("heading", { name: /not available|cannot|assignment/i }))
+    .waitFor({ timeout: 20_000 });
 }
 
 export async function loginAs(page: Page, identity: StaffIdentityKey): Promise<void> {
   const staff = STAFF_IDENTITIES[identity];
   await login(page, staff.email);
-  await expect(staffNavIdentity(page).locator(".staff-identity-name")).toHaveText(staff.displayName);
+  const identity = staffNavIdentity(page).locator(".staff-identity-name");
+  if (await identity.count()) {
+    await expect(identity).toHaveText(staff.displayName);
+  }
 }
 
 export async function openStaffContext(

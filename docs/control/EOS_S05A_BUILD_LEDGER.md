@@ -40,6 +40,7 @@
 | Live whole-slice private-object assert | Test defect then product defect (S039) | Immediate retrieve count raced the reload; live store then rejected `discovery/` keys as unsafe | Wait for retrieve or failure; allow governed `discovery/` object keys | Live E2E rerun |
 | Live revoked client link still readable | Product defect (S039) | Expired or revoked tokens used the staff AUTH_REQUIRED public copy “Sign in is required.” | Client access now returns “This review link is not available.” | Live E2E rerun |
 | Live Event Command showed an older enquiry | Product defect (S039) | Command selected the first persisted engagement, so a later converted journey was invisible | Default to the latest updated engagement and add a selector | Live E2E rerun |
+| Live SysAdmin Home crashed after sign-in | Product defect (S039) | Home called listEvents/listClients without catching a SysAdmin business-authority denial | Treat those reads as empty assigned work | Live E2E rerun |
 
 ## Carried debt
 

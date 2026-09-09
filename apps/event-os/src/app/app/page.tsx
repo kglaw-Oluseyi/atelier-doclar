@@ -8,8 +8,15 @@ export default async function HomeAppPage() {
   const runtime = getRuntime();
   const organisations = runtime.service.listOrganisations(actor);
   const organisation = organisations[0];
-  const events = organisation ? runtime.service.listEvents(actor, organisation.id) : [];
-  const clients = organisation ? runtime.service.listClients(actor, organisation.id) : [];
+  let events: Awaited<ReturnType<typeof runtime.service.listEvents>> = [];
+  let clients: Awaited<ReturnType<typeof runtime.service.listClients>> = [];
+  try {
+    events = organisation ? runtime.service.listEvents(actor, organisation.id) : [];
+    clients = organisation ? runtime.service.listClients(actor, organisation.id) : [];
+  } catch {
+    events = [];
+    clients = [];
+  }
   const briefs = events.map((event) => {
     let guestCount = 0;
     let attention = 0;
