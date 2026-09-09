@@ -312,6 +312,9 @@ test("S047 production break: typed 350 must become effective driver and catering
   assert.ok(guestDriven(successor, "CATERING_HEAD").every((step) => step.value === "340"));
   const prior = service.getBudgetCalculationResult(planner, organisationId, engagement.id, first.id);
   assert.ok(guestDriven(prior, "CATERING_HEAD").every((step) => step.value === "350"));
+  assert.equal(prior.status, "SUPERSEDED");
+  assert.equal(prior.version, first.version + 1);
+  assert.ok(prior.version > first.version, "Postgres persist rejects a same-version body change on the superseded 350 edition");
   const briefAfter = governingGuestCountFromBrief(service.currentSnapshot(), engagement.id);
   if (briefAfter.kind === "CURRENT_BRIEF") assert.equal(briefAfter.count, "360");
   assert.throws(

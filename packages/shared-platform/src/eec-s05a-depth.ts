@@ -767,6 +767,8 @@ export function calculateBudgetScenarioDeepOnSnap(
   for (const previous of snap.budgetScenarioEditions.filter((item) => item.organisationId === input.organisationId && item.purpose === input.purpose && item.current && item.engagementId === input.engagementId)) {
     previous.current = false;
     previous.status = "SUPERSEDED";
+    previous.version += 1;
+    previous.updatedAt = now;
   }
   snap.budgetScenarioEditions.push(record);
   persistSensitivity(snap, record, now);

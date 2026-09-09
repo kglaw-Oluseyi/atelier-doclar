@@ -136,7 +136,12 @@ export function DiscoveryWorkspaceView({
       <DiscoveryScrollRestore section={resultSection} />
       <AtelierStateFocus
         targetId="resolved-contradiction-heading"
-        active={presented?.view?.kind === "success" && presented.actionType === "discovery.conflict"}
+        active={
+          Boolean(presented?.shouldConsume) &&
+          presented?.view?.kind === "success" &&
+          presented.actionType === "discovery.conflict"
+        }
+        onceKey={presented?.correlationId}
       />
       <AtelierStateFocus
         targetId="operational-state"

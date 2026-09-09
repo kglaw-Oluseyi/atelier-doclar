@@ -5,12 +5,16 @@ import { useEffect } from "react";
 export function AtelierStateFocus({
   targetId,
   active,
+  onceKey,
 }: {
   targetId: string;
   active: boolean;
+  onceKey?: string;
 }) {
   useEffect(() => {
     if (!active) return;
+    const storageKey = onceKey ? `atelier-focus:${targetId}:${onceKey}` : undefined;
+    if (storageKey && window.sessionStorage.getItem(storageKey) === "1") return;
     const deadline = Date.now() + 12_000;
     const timers: number[] = [];
     let observer: MutationObserver | undefined;
@@ -23,6 +27,7 @@ export function AtelierStateFocus({
       if (!node) return;
       node.scrollIntoView({ block: "start", behavior: "auto" });
       if (typeof node.focus === "function") node.focus();
+      if (storageKey) window.sessionStorage.setItem(storageKey, "1");
       observer?.disconnect();
     };
     focus();
@@ -36,6 +41,6 @@ export function AtelierStateFocus({
       for (const timer of timers) window.clearTimeout(timer);
       observer?.disconnect();
     };
-  }, [active, targetId]);
+  }, [active, onceKey, targetId]);
   return null;
 }
