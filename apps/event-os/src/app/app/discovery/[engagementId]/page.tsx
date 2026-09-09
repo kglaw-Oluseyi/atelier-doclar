@@ -77,6 +77,24 @@ export default async function DiscoveryWorkspacePage({
   const querySection =
     typeof query.section === "string" && /^[a-z][a-z0-9-]{0,80}$/.test(query.section) ? query.section : undefined;
   const resultSection = presentedSection ?? querySection;
+  const scenarioEditionId =
+    typeof query.scenarioEditionId === "string" && /^[0-9a-f-]{36}$/i.test(query.scenarioEditionId)
+      ? query.scenarioEditionId
+      : undefined;
+  const calculationResultId =
+    typeof query.calculationResultId === "string" && /^[0-9a-f-]{36}$/i.test(query.calculationResultId)
+      ? query.calculationResultId
+      : undefined;
+  const namedResult =
+    scenarioEditionId || calculationResultId
+      ? intelligence.scenarios.find(
+          (item) =>
+            item.id === scenarioEditionId ||
+            item.id === calculationResultId ||
+            item.calculationResultId === calculationResultId,
+        )
+      : undefined;
+  const missingNamedResult = Boolean((scenarioEditionId || calculationResultId) && !namedResult);
   const clientToken =
     typeof query.clientToken === "string" && /^[0-9a-f-]{36}$/i.test(query.clientToken) ? query.clientToken : undefined;
   const issuedPath = await readIssuedDiscoveryPath(`${person.id}:${engagementId}`);
@@ -120,6 +138,11 @@ export default async function DiscoveryWorkspacePage({
         reloadAction={refreshDiscoveryRecordAction}
         reloadPath={`/app/discovery/${engagementId}`}
       />
+      {missingNamedResult ? (
+        <AtelierOperationalState
+          state={operationalStateFromCode("NOT_FOUND", "The named budget calculation is not available in this engagement.")}
+        />
+      ) : null}
       <IntelligenceWorkspaceView
         organisationId={organisation.id}
         engagementId={engagementId}
@@ -139,6 +162,16 @@ export default async function DiscoveryWorkspacePage({
         canDecideChange={permissions.changeDecide}
         canManageSource={permissions.manageSource}
         clientPath={clientPath}
+        presented={presented}
+        resultSection={resultSection}
+        recoveredGuestCount={
+          typeof query.guestCountOverride === "string" && /^\d+$/.test(query.guestCountOverride)
+            ? query.guestCountOverride
+            : undefined
+        }
+        recoveredGuestReason={
+          typeof query.guestCountOverrideReason === "string" ? query.guestCountOverrideReason.slice(0, 80) : undefined
+        }
       />
     </AppShell>
   );

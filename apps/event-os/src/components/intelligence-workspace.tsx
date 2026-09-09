@@ -1,6 +1,9 @@
 import { formatMoneyMinor } from "@maison-doclar/shared-platform";
 import { CanonicalHash } from "./canonical-evidence";
 import { IdempotencyField, PendingSubmit } from "./atelier-pending-submit";
+import { BudgetCalculateForm, BudgetGuestCountField } from "./budget-calculate-form";
+import { ActionResultBanner } from "./action-result-banner";
+import type { PresentedActionResult } from "../server/action-result";
 import {
   assessChangeImpactAction,
   calculateBudgetScenarioAction,
@@ -47,6 +50,10 @@ export function IntelligenceWorkspaceView({
   canDecideChange,
   canManageSource,
   clientPath,
+  presented,
+  resultSection,
+  recoveredGuestCount,
+  recoveredGuestReason,
 }: {
   organisationId: string;
   engagementId: string;
@@ -66,6 +73,10 @@ export function IntelligenceWorkspaceView({
   canDecideChange: boolean;
   canManageSource: boolean;
   clientPath?: string;
+  presented?: PresentedActionResult;
+  resultSection?: string;
+  recoveredGuestCount?: string;
+  recoveredGuestReason?: string;
 }) {
   const currentEdition = intelligence.editions.find((item) => item.current);
   return (
@@ -275,6 +286,11 @@ export function IntelligenceWorkspaceView({
       </section>
 
       <section id="budget-studio" className="form programme-form">
+        {presented && resultSection === "budget-studio" ? (
+          <div data-testid="discovery-receipt-budget-studio">
+            <ActionResultBanner presented={presented} focusOnSuccess={false} />
+          </div>
+        ) : null}
         <h2>Planner Budget Studio</h2>
         <p className="lede">
           Figures are deterministic forecasts, not payments. A missing or synthetic price stays partial or blocked. Lower-spend scenarios stay first-class. Protected lines cannot be dropped to force a total.
@@ -296,6 +312,38 @@ export function IntelligenceWorkspaceView({
                   <span className="md-status">{scenario.alignment.toLowerCase()}</span>{" "}
                   <span className="md-status">{scenario.calculationStatus.toLowerCase()}</span>
                 </p>
+                {(() => {
+                  const guest = scenario.effectiveDrivers?.find((item) => item.code === "guest.target_count");
+                  const governing = guest?.governingValue ?? (intelligence.guestPrefill.kind === "CURRENT_BRIEF" ? intelligence.guestPrefill.count : undefined);
+                  const variance =
+                    guest && governing ? Number(guest.value) - Number(governing) : undefined;
+                  return guest ? (
+                    <div data-testid="budget-scenario-assumption">
+                      <p>
+                        {guest.provenanceKind === "SCENARIO_OVERRIDE"
+                          ? `Scenario assumption: ${guest.value} guests`
+                          : `Effective calculation value: ${guest.value} guests`}
+                      </p>
+                      {governing ? <p data-testid="budget-governing-brief">Current Event Brief: {governing} guests</p> : null}
+                      {variance !== undefined && variance !== 0 ? (
+                        <p data-testid="budget-guest-variance">
+                          {variance > 0 ? `+${variance}` : `−${Math.abs(variance)}`} guests
+                        </p>
+                      ) : null}
+                      {guest.reason ? <p data-testid="budget-override-reason">{guest.reason}</p> : null}
+                      <p>The Event Brief remains unchanged.</p>
+                      <p>
+                        <a href="#brief-review">Open the governing Event Brief</a>
+                      </p>
+                      <p className="lede">
+                        {scenario.status.toLowerCase()} · generated {scenario.updatedAt}
+                      </p>
+                      <p className="lede">
+                        Result {scenario.calculationResultId ?? scenario.id} · <CanonicalHash value={scenario.resultHash} />
+                      </p>
+                    </div>
+                  ) : null;
+                })()}
                 <p>
                   Expected {moneyLabel(scenario.expectedMinor, scenario.currency)} · low {moneyLabel(scenario.lowMinor, scenario.currency)} ·
                   high {moneyLabel(scenario.highMinor, scenario.currency)}
@@ -379,10 +427,16 @@ export function IntelligenceWorkspaceView({
           </form>
         ) : null}
         {canCalculateBudget ? (
-          <form action={calculateBudgetScenarioAction} data-testid="budget-calculate-form">
+          <BudgetCalculateForm action={calculateBudgetScenarioAction}>
             <IdempotencyField />
             <input type="hidden" name="organisationId" value={organisationId} />
             <input type="hidden" name="engagementId" value={engagementId} />
+            {intelligence.guestPrefill?.kind === "CURRENT_BRIEF" ? (
+              <>
+                <input type="hidden" name="governingBriefEditionId" value={intelligence.guestPrefill.briefEditionId} />
+                <input type="hidden" name="governingBriefContentHash" value={intelligence.guestPrefill.briefContentHash} />
+              </>
+            ) : null}
             <label>
               Purpose
               <select name="purpose" defaultValue="PROTECT_PRIORITIES">
@@ -403,46 +457,22 @@ export function IntelligenceWorkspaceView({
                 ))}
               </select>
             </label>
-            <label>
-              Guest count
-              <input
-                name="guests"
-                required
-                inputMode="numeric"
-                defaultValue={intelligence.guestPrefill?.kind === "CURRENT_BRIEF" ? intelligence.guestPrefill.count : ""}
-                placeholder={intelligence.guestPrefill?.kind === "CURRENT_BRIEF" ? undefined : "Enter a planning count"}
-              />
-            </label>
-            {intelligence.guestPrefill?.kind === "CURRENT_BRIEF" ? (
-              <p data-testid="budget-guest-source">
-                From current Event Brief. Edition hash {intelligence.guestPrefill.contentHash.slice(0, 12)} is secondary provenance.
-                Changing this value becomes a labelled scenario assumption and does not rewrite the brief.
-              </p>
-            ) : intelligence.guestPrefill?.kind === "UNRESOLVED_CONTRADICTION" ? (
-              <p data-testid="budget-guest-unknown">
-                The guest-count contradiction must be resolved before Budget Studio can use it.{" "}
-                <a href={`/app/discovery/${engagementId}#discovery-assertions`}>Open the contradiction</a>. An example such as 180 is
-                not the event value.
-              </p>
-            ) : intelligence.guestPrefill?.kind === "BRIEF_NOT_CURRENT" ? (
-              <p data-testid="budget-guest-unknown">
-                A guest count is recorded, but the Event Brief is still awaiting{" "}
-                {intelligence.guestPrefill.latestBriefState === "SUBMITTED" ? "approval" : "approval/publication"}. Budget Studio will
-                not treat it as governing yet. <a href={`#brief-review`}>Open Event Brief</a>. An example such as 180 is not the event
-                value.
-              </p>
-            ) : (
-              <p data-testid="budget-guest-unknown">
-                The current Event Brief records the guest count as unknown. An example such as 180 is not the event value.
-              </p>
-            )}
-            {intelligence.guestPrefill?.kind === "CURRENT_BRIEF" ? null : (
-                <label>
-                  <input type="checkbox" name="assumptionAcknowledged" value="1" /> I am entering a planning assumption, not a confirmed brief fact
-                </label>
-            )}
+            <BudgetGuestCountField
+              governingKind={intelligence.guestPrefill?.kind}
+              governingCount={intelligence.guestPrefill?.kind === "CURRENT_BRIEF" ? intelligence.guestPrefill.count : undefined}
+              briefHash={intelligence.guestPrefill?.kind === "CURRENT_BRIEF" ? intelligence.guestPrefill.contentHash : undefined}
+              currentOverride={
+                recoveredGuestCount ??
+                [...intelligence.scenarios]
+                  .reverse()
+                  .find((item) => item.current)
+                  ?.effectiveDrivers?.find((item) => item.code === "guest.target_count" && item.provenanceKind === "SCENARIO_OVERRIDE")
+                  ?.value
+              }
+              recoveredReason={recoveredGuestReason}
+            />
             <PendingSubmit locked={mutationLocked}>Calculate scenario</PendingSubmit>
-          </form>
+          </BudgetCalculateForm>
         ) : (
           <p className="lede">Budget calculation is blocked for this assignment.</p>
         )}

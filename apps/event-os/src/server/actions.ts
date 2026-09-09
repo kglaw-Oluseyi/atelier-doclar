@@ -8,6 +8,7 @@ import {
   PlatformError,
   discoverySourceObjectKey,
   formatExtractionInvocationReceipt,
+  parseBudgetCalculateFormData,
   type AgeBand,
   type Honorific,
 } from "@maison-doclar/shared-platform";
@@ -15,7 +16,7 @@ import { fixturesAllowed } from "./config";
 import { consumeActionFlash, consumeIssuedAccessFlash, rememberIssuedDiscoveryPath, writeActionResult, writeAudiencePreviewFlash, writeIssuedAccessFlash, writeIssuedDiscoveryPath, writeRecoveredMarker } from "./action-flash";
 import { buildActionResult, resultHref, sessionHashFromToken, successMessageForOk } from "./action-result";
 import { classifyActionError } from "./operational-state";
-import { getRuntime, withDurable } from "./runtime";
+import { flushRuntime, getRuntime, withDurable } from "./runtime";
 import { fulfillLayoutExport } from "./layout-export-fulfill";
 import { clearStaffSessionCookie, readStaffSessionCookie, writeStaffSessionCookie } from "./staff-session-cookie";
 import { requireActor } from "./with-session";
@@ -128,7 +129,7 @@ function actorBind(
 
 async function finishAction(
   bind: ActionBind,
-  outcome: { ok: string; extra?: Record<string, string>; message?: string } | { error: unknown },
+  outcome: { ok: string; extra?: Record<string, string>; message?: string } | { error: unknown; extra?: Record<string, string> },
 ): Promise<never> {
   if ("error" in outcome) {
     rethrowRedirect(outcome.error);
@@ -148,7 +149,7 @@ async function finishAction(
         guestId: bind.guestId,
       }),
     );
-    redirect(resultHref(bind.scopePath, bind.correlationId));
+    redirect(resultHref(bind.scopePath, bind.correlationId, outcome.extra));
   }
   await writeActionResult(
     buildActionResult({
@@ -4102,20 +4103,40 @@ export async function calculateBudgetScenarioAction(formData: FormData): Promise
     const { actor } = await requireActor();
     const engagementId = String(formData.get("engagementId") ?? "");
     const bind = actorBind(actor, `/app/discovery/${engagementId}`, "budget.calculate");
+    const recovered = {
+      section: "budget-studio",
+      ...(String(formData.get("guestCountOverride") ?? "").trim()
+        ? { guestCountOverride: String(formData.get("guestCountOverride")).trim() }
+        : {}),
+      ...(String(formData.get("guestCountOverrideReason") ?? "").trim()
+        ? { guestCountOverrideReason: String(formData.get("guestCountOverrideReason")).trim().slice(0, 80) }
+        : {}),
+    };
     try {
-      getRuntime().service.calculateBudgetScenario(actor, {
-        organisationId: String(formData.get("organisationId") ?? ""),
-        engagementId,
-        purpose: String(formData.get("purpose") ?? "PROTECT_PRIORITIES"),
-        archetype: String(formData.get("archetype") ?? "WEDDING"),
-        guests: String(formData.get("guests") ?? "").trim(),
-        assumptionAcknowledged: String(formData.get("assumptionAcknowledged") ?? "") === "1",
-        reason: String(formData.get("reason") ?? "Calculate budget").trim() || "Calculate budget",
-        idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
+      const command = parseBudgetCalculateFormData(formData);
+      const calculated = getRuntime().service.calculateBudgetScenario(actor, {
+        ...command,
+        purpose: command.purpose ?? "PROTECT_PRIORITIES",
+        archetype: command.archetype ?? "WEDDING",
+        reason: command.reason ?? "Calculate budget",
       });
-      await finishAction(bind, { ok: "budget.calculate", extra: { section: "budget-studio" } });
+      await flushRuntime();
+      const persisted = getRuntime().service.getBudgetCalculationResult(
+        actor,
+        command.organisationId,
+        command.engagementId ?? engagementId,
+        calculated.calculationResultId ?? calculated.id,
+      );
+      await finishAction(bind, {
+        ok: "budget.calculate",
+        extra: {
+          section: "budget-studio",
+          scenarioEditionId: persisted.id,
+          calculationResultId: persisted.calculationResultId ?? persisted.id,
+        },
+      });
     } catch (error) {
-      await finishAction(bind, { error });
+      await finishAction(bind, { error, extra: recovered });
     }
   });
 }

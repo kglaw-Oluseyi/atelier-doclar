@@ -155,10 +155,13 @@ test("S045 Journey 3 — Budget Studio keeps the governing brief gate", async ({
   await expect(page.getByTestId("budget-guest-source")).toContainText("From current Event Brief", { timeout: 20_000 });
   await expect(page.getByLabel("Guest count")).toHaveValue("360");
   await page.getByLabel("Guest count").fill("410");
+  await expect(page.getByTestId("budget-guest-source")).toContainText("Scenario assumption");
+  await page.getByTestId("budget-guest-reason").fill("Synthetic planning increase to 410");
   await page.getByRole("button", { name: "Calculate scenario" }).click();
   await expect(page.getByTestId("budget-scenario-list")).toBeVisible({ timeout: 20_000 });
-  await expect(page.getByTestId("budget-guest-source")).toContainText("From current Event Brief");
-  await expect(page.getByLabel("Guest count")).toHaveValue("360");
+  await expect(page.getByTestId("budget-scenario-assumption")).toContainText("Scenario assumption: 410 guests");
+  await expect(page.getByTestId("budget-governing-brief")).toContainText("Current Event Brief: 360 guests");
+  await expect(page.getByLabel("Guest count")).toHaveValue("410");
 
   const unknownName = `S045 unknown ${Date.now()}`;
   await openFreshDiscovery(page, unknownName);

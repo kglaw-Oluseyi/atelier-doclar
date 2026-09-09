@@ -13,6 +13,7 @@ import {
   reviewDiscoveryAssertionAction,
 } from "../server/actions";
 import { ContradictionResolveForm, type ContradictionCandidate } from "./contradiction-resolve-form";
+import { AtelierStateFocus } from "./atelier-state-focus";
 
 const CONSENT_DIMENSIONS = [
   ["PARTICIPATION", "Participation"],
@@ -133,6 +134,14 @@ export function DiscoveryWorkspaceView({
   return (
     <div className="discovery-workspace" data-testid="discovery-workspace">
       <DiscoveryScrollRestore section={resultSection} />
+      <AtelierStateFocus
+        targetId="resolved-contradiction-heading"
+        active={presented?.view?.kind === "success" && presented.actionType === "discovery.conflict"}
+      />
+      <AtelierStateFocus
+        targetId="operational-state"
+        active={Boolean(presented?.view && presented.view.kind !== "success" && resultSection === "discovery-assertions")}
+      />
       <p className="lede" data-testid="discovery-next-action">
         Next: {workspace.nextAction}
       </p>
@@ -519,7 +528,11 @@ export function DiscoveryWorkspaceView({
                   )}
                 </article>
               ))}
-            {workspace.conflicts.filter((item) => item.status === "RESOLVED").length > 0 ? <h3>Resolved contradictions</h3> : null}
+            {workspace.conflicts.filter((item) => item.status === "RESOLVED").length > 0 ? (
+              <section aria-labelledby="resolved-contradiction-heading">
+                <h3 id="resolved-contradiction-heading" tabIndex={-1}>
+                  Contradiction resolved
+                </h3>
             {workspace.conflicts
               .filter((item) => item.status === "RESOLVED")
               .map((conflict) => {
@@ -549,6 +562,8 @@ export function DiscoveryWorkspaceView({
                   </article>
                 );
               })}
+              </section>
+            ) : null}
           </div>
         ) : null}
         {workspace.assertions.length === 0 ? (
