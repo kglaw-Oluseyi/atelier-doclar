@@ -40,7 +40,7 @@ export type InterviewQuestionDef = {
 
 export const INTERVIEW_CORPUS: readonly InterviewQuestionDef[] = [
   { key: "welcome", edition: INTERVIEW_CORPUS_EDITION, phase: "WELCOME", purpose: "Explain the consultation.", omissionRisk: "LOW", topicKeys: [], prompt: "Welcome. This conversation helps Maison Doclar understand your event with care. We will ask one question at a time, and you may pause whenever you need.", clientRationale: "You should know why we are speaking before we ask anything else.", applicability: "ALWAYS", sensitivity: "STANDARD", confirmationRequired: false, earliestPhase: "FIRST_CONTACT", latestSafePhase: "DISCOVERY", fatigueWeight: 0 },
-  { key: "consent", edition: INTERVIEW_CORPUS_EDITION, phase: "CONSENT", purpose: "Record conversation consent.", omissionRisk: "HIGH", topicKeys: ["consent.participation"], prompt: "We will use your answers only to plan this engagement. You may say unknown, not yet, not applicable, or prefer not to answer at any time. Do you consent to continue this conversation?", clientRationale: "Consent keeps this a private planning conversation, not an open record.", applicability: "ALWAYS", sensitivity: "SENSITIVE", confirmationRequired: true, earliestPhase: "FIRST_CONTACT", latestSafePhase: "DISCOVERY", fatigueWeight: 1 },
+  { key: "consent", edition: INTERVIEW_CORPUS_EDITION, phase: "CONSENT", purpose: "Record conversation consent.", omissionRisk: "HIGH", topicKeys: ["consent.participation"], prompt: "The choices below record each kind of consent separately. Participation, recording, transcription, AI analysis, source retention and de-identified learning are not one bundled yes. When you are ready, tell us you wish to continue.", clientRationale: "Each consent stays independent so you can decline optional processing without ending the relationship.", applicability: "ALWAYS", sensitivity: "SENSITIVE", confirmationRequired: true, earliestPhase: "FIRST_CONTACT", latestSafePhase: "DISCOVERY", fatigueWeight: 1 },
   { key: "principals", edition: INTERVIEW_CORPUS_EDITION, phase: "PRINCIPALS", purpose: "Identify participating principals.", omissionRisk: "HIGH", topicKeys: ["people.principals"], prompt: "Who are the participating principals we should address, and how should we refer to each person?", clientRationale: "We will not treat one voice as unanimous if several people decide.", applicability: "ALWAYS", sensitivity: "STANDARD", confirmationRequired: true, earliestPhase: "FIRST_CONTACT", latestSafePhase: "DISCOVERY", fatigueWeight: 1 },
   { key: "address", edition: INTERVIEW_CORPUS_EDITION, phase: "ADDRESS", purpose: "Preferred form of address.", omissionRisk: "MEDIUM", topicKeys: ["people.address"], prompt: "What form of address would you like us to use?", clientRationale: "Names and titles come from you; we will not infer them.", applicability: "ALWAYS", sensitivity: "STANDARD", confirmationRequired: true, earliestPhase: "FIRST_CONTACT", latestSafePhase: "DISCOVERY", fatigueWeight: 1 },
   { key: "language", edition: INTERVIEW_CORPUS_EDITION, phase: "LANGUAGE", purpose: "Language preference without inference.", omissionRisk: "MEDIUM", topicKeys: ["language.preference"], prompt: "Which language would you prefer for this conversation? We will not infer this from names or tone.", clientRationale: "Language is a stated preference, not a guess.", applicability: "ALWAYS", sensitivity: "STANDARD", confirmationRequired: true, earliestPhase: "FIRST_CONTACT", latestSafePhase: "DISCOVERY", fatigueWeight: 1 },
@@ -89,8 +89,13 @@ function settledTopic(snap: PlatformSnapshot, engagementId: string, topicKey: st
       item.topicKeys.includes(topicKey) &&
       ["CLIENT_DIRECT", "UNKNOWN", "NOT_YET", "NOT_APPLICABLE", "PREFER_NOT"].includes(item.answerSource),
   );
+  const participationGranted =
+    topicKey === "consent.participation" &&
+    snap.discoveryConsentRecords.some(
+      (item) => item.engagementId === engagementId && item.dimension === "PARTICIPATION" && item.decision === "GRANTED",
+    );
   const conflicted = snap.coverageAssessments.some((item) => item.engagementId === engagementId && item.topicKey === topicKey && (item.state === "CONFLICTED" || item.state === "STALE"));
-  return (confirmed || answered) && !conflicted;
+  return (confirmed || answered || participationGranted) && !conflicted;
 }
 
 function questionApplies(question: InterviewQuestionDef, eventType: string, snap: PlatformSnapshot, engagementId: string): boolean {

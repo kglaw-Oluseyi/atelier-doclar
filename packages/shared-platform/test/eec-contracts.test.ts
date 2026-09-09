@@ -41,6 +41,11 @@ test("EEC-02 role grants stay least-privilege", () => {
   assert.equal(director.includes("executiveCommand.evaluate"), false);
   assert.ok(director.includes("brief.decide"));
   assert.ok(auditor.includes("engagement.view"));
+  assert.ok(ceo.includes("discovery.confidential.reveal"));
+  assert.ok(planner.includes("discovery.confidential.reveal"));
+  assert.equal(auditor.includes("discovery.confidential.reveal"), false);
+  assert.equal(admin.includes("discovery.confidential.reveal"), false);
+  assert.equal(admin.includes("discovery.confidential.grant"), false);
 });
 
 test("EEC-03 money never uses floating point and hashes stay stable", () => {

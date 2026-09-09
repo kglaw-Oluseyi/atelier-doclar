@@ -17,7 +17,7 @@ const versioned = {
 };
 
 export const EVALUATION_CONTRACT_VERSION = "s05a-eval-contract-v1";
-export const EVALUATION_CORPUS_EDITION = "s05a-eval-v2";
+export const EVALUATION_CORPUS_EDITION = "s05a-eval-v3";
 export const EVALUATION_ORCHESTRATOR_VERSION = "s05a-orchestrator-v2";
 export const EVALUATION_PROVIDER_VERSION = "fixture-inactive-v1";
 export const EVALUATION_PROJECTION_POLICY_VERSION = "client-projection-v2";
@@ -113,6 +113,8 @@ export const EvaluationActionSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("RUN_BUDGET"), scenario: z.string() }).strict(),
   z.object({ kind: z.literal("PROJECT_CLIENT") }).strict(),
   z.object({ kind: z.literal("PROJECT_STAFF") }).strict(),
+  z.object({ kind: z.literal("PROJECT_AUDITOR") }).strict(),
+  z.object({ kind: z.literal("PROJECT_ADMIN") }).strict(),
   z.object({ kind: z.literal("PROJECT_OTHER_ENGAGEMENT") }).strict(),
 ]);
 
@@ -157,6 +159,18 @@ export const EvaluationStaffNoteSeedSchema = z
     kind: z.enum(["STAFF_NOTE", "INTERNAL_MARGIN", "VENDOR_NEGOTIATION", "CLIENT_SAFE"]),
     text: z.string().min(1).max(2000),
     topicKey: z.string().min(1).max(80),
+    disclosureClass: z
+      .enum([
+        "OPERATIONAL",
+        "CLIENT_VISIBLE",
+        "FINANCIAL_RESTRICTED",
+        "HEALTH_ACCESSIBILITY_RESTRICTED",
+        "SECURITY_RESTRICTED",
+        "CULTURAL_RELIGIOUS_RESTRICTED",
+        "CONFIDENTIAL_SURPRISE",
+        "PRINCIPAL_PRIVATE",
+      ])
+      .optional(),
   })
   .strict();
 

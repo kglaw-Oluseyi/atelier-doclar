@@ -16,6 +16,34 @@ function wordNumber(value: string): string {
   return lookup[value.toLowerCase()] ?? value;
 }
 
+export function extractGuestCountCandidates(text: string): Array<{ count: string; approximation: boolean }> {
+  const found = new Map<string, { count: string; approximation: boolean }>();
+  const add = (count: string | undefined, approximation: boolean) => {
+    if (!count || !/^\d{2,4}$/.test(count)) return;
+    const existing = found.get(count);
+    if (!existing) found.set(count, { count, approximation });
+  };
+  for (const match of text.matchAll(/\b(?:approximately|around|about|roughly|closer to)\s+(\d{2,4})\s+(?:guests?|invitees|people)\b/gi)) {
+    add(match[1], true);
+  }
+  for (const match of text.matchAll(/\b(\d{2,4})\s+(?:guests?|invitees)\b/gi)) {
+    add(match[1], false);
+  }
+  const rather = text.match(
+    /guest count[^.]*?\b(?:around|approximately|about)?\s*(\d{2,4})\b[^.]*?\brather than\s+(\d{2,4})\b/i,
+  );
+  if (rather) {
+    add(rather[1], true);
+    add(rather[2], false);
+  }
+  const preference = text.match(/\b(\d{2,4})\s+is the current preference[^.]*?\b(\d{2,4})\s+is another principal/i);
+  if (preference) {
+    add(preference[1], false);
+    add(preference[2], false);
+  }
+  return [...found.values()];
+}
+
 export function extractFixtureProposals(segments: readonly SourceSegment[]): CandidateAssertionProposal[] {
   const proposals: CandidateAssertionProposal[] = [];
   for (const segment of segments) {
@@ -37,16 +65,17 @@ export function extractFixtureProposals(segments: readonly SourceSegment[]): Can
         sensitivity: "STANDARD",
       });
     } else {
-      const guestMatch = text.match(/\b(\d{2,4})\s+(guests?|invitees)\b/i);
-      if (guestMatch) {
+      for (const guest of extractGuestCountCandidates(text)) {
         proposals.push({
           kind: "FACT",
           topicKey: "guest.target_count",
-          value: { count: guestMatch[1], unit: "guests" },
+          value: { count: guest.count, unit: "guests" },
           sourceSegmentIds: [segment.id],
           directness: "DIRECT_STATEMENT",
-          confidence: "HIGH",
-          rationale: "The source names a guest count.",
+          confidence: guest.approximation ? "MEDIUM" : "HIGH",
+          rationale: guest.approximation
+            ? `The source names an approximate guest count of ${guest.count}.`
+            : `The source names a guest count of ${guest.count}.`,
           sensitivity: "STANDARD",
         });
       }

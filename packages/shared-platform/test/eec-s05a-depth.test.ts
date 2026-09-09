@@ -228,6 +228,7 @@ test("no-repeat interview, correction lineage and token revoke", () => {
     reason: "client",
     idempotencyKey: "depth-token",
   });
+  service.recordClientDiscoveryConsentByToken(access.token, { dimension: "PARTICIPATION", decision: "GRANTED" });
   const first = service.recordClientInterviewTurnByToken(access.token, {
     answerSource: "CLIENT_DIRECT",
     directClientText: "We understand and consent.",

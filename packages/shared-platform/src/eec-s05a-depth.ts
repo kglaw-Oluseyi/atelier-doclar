@@ -448,6 +448,9 @@ export function calculateBudgetScenarioDeepOnSnap(
     guests: string;
     excludeCodes?: string[];
     manualAssumptions?: { key: string; value: string; unit: string }[];
+    guestSourceKind?: "BRIEF" | "SCENARIO";
+    sourceAssertionId?: string;
+    assumptionAcknowledged?: boolean;
   },
   now: string,
   actorPersonId: string,
@@ -458,6 +461,9 @@ export function calculateBudgetScenarioDeepOnSnap(
   const template = snap.budgetTemplateEditions.find((item) => item.organisationId === input.organisationId && item.archetype === input.archetype && item.current);
   if (!template) throw new PlatformError("NOT_FOUND", "budget template was not found");
   const items = snap.costItemDefinitions.filter((item) => item.organisationId === input.organisationId);
+  if (!/^\d+$/.test(input.guests)) {
+    throw new PlatformError("VALIDATION_FAILED", "guest count must be a whole number");
+  }
   const guests = BigInt(input.guests);
   const bom = instantiateBom({ template, items, guests, purpose: input.purpose, excludeCodes: input.excludeCodes });
   const assumption: BudgetAssumption = {
@@ -468,9 +474,11 @@ export function calculateBudgetScenarioDeepOnSnap(
     key: "guest.target_count",
     value: input.guests,
     unit: "guests",
-    sourceKind: "SCENARIO",
-    confidence: "MEDIUM",
-    confirmed: true,
+    sourceKind: input.guestSourceKind ?? "SCENARIO",
+    sourceAssertionId: input.sourceAssertionId,
+    labelledManualAssumption: input.guestSourceKind === "SCENARIO" ? true : undefined,
+    confidence: input.guestSourceKind === "BRIEF" ? "HIGH" : "MEDIUM",
+    confirmed: input.guestSourceKind === "BRIEF",
     stale: false,
     version: 1,
     ...stamp(now),

@@ -4,15 +4,22 @@ import { PlatformError } from "./errors.js";
 import { completenessDimensions, evaluatePredicate, rankGap } from "./eec-coverage.js";
 import { assertProposalSupported, extractFixtureProposals, sanitiseInertText } from "./eec-extraction.js";
 import { assertHumanConfirmation, exactHash, nfc } from "./eec-hash.js";
+import {
+  disclosureClassFromSensitivity,
+  resolveArtefactDisclosureClass,
+} from "./eec-discovery-disclosure.js";
 import type {
   AssertionConflict,
   CandidateAssertion,
   CoverageAssessment,
   CreateOpportunityInput,
   DiscoveryConsentRecord,
+  DiscoveryDisclosureGrant,
   DiscoveryEngagement,
   DiscoveryParticipant,
   EngagementOpportunity,
+  ExtractionDisposition,
+  ExtractionOutcome,
   InterviewSession,
   SourceArtefact,
   SourceSegment,
@@ -21,10 +28,12 @@ import type {
 import {
   AddParticipantInputSchema,
   ExtractAssertionsInputSchema,
+  GrantDiscoveryDisclosureInputSchema,
   RecordDiscoveryConsentInputSchema,
   RecordSourceArtefactInputSchema,
   ResolveConflictInputSchema,
   ReviewAssertionInputSchema,
+  RevokeDiscoveryDisclosureInputSchema,
   SessionLifecycleInputSchema,
   UpdateOpportunityInputSchema,
 } from "./eec-schemas.js";
@@ -37,6 +46,8 @@ type RecordDiscoveryConsentInput = z.infer<typeof RecordDiscoveryConsentInputSch
 type SessionLifecycleInput = z.infer<typeof SessionLifecycleInputSchema>;
 type RecordSourceArtefactInput = z.infer<typeof RecordSourceArtefactInputSchema>;
 type ExtractAssertionsInput = z.infer<typeof ExtractAssertionsInputSchema>;
+type GrantDiscoveryDisclosureInput = z.infer<typeof GrantDiscoveryDisclosureInputSchema>;
+type RevokeDiscoveryDisclosureInput = z.infer<typeof RevokeDiscoveryDisclosureInputSchema>;
 type ReviewAssertionInput = z.infer<typeof ReviewAssertionInputSchema>;
 type ResolveConflictInput = z.infer<typeof ResolveConflictInputSchema>;
 
@@ -206,6 +217,29 @@ function latestConsent(
     })[0]?.item;
 }
 
+export function latestConsentFor(
+  snap: PlatformSnapshot,
+  engagementId: string,
+  dimension: DiscoveryConsentRecord["dimension"],
+  participantId?: string,
+  source?: DiscoveryConsentRecord["source"],
+): DiscoveryConsentRecord | undefined {
+  return snap.discoveryConsentRecords
+    .map((item, index) => ({ item, index }))
+    .filter(
+      ({ item }) =>
+        item.engagementId === engagementId &&
+        item.dimension === dimension &&
+        consentScopeMatches(item, participantId) &&
+        (source ? item.source === source : true),
+    )
+    .sort((left, right) => {
+      const decided = right.item.decidedAt.localeCompare(left.item.decidedAt);
+      if (decided !== 0) return decided;
+      return right.index - left.index;
+    })[0]?.item;
+}
+
 export function consentIsActive(
   snap: PlatformSnapshot,
   engagementId: string,
@@ -246,6 +280,7 @@ export function recordDiscoveryConsentOnSnap(
     withdrawnAt: input.decision === "WITHDRAWN" ? now : undefined,
     legalBasisPlaceholder: input.legalBasisPlaceholder,
     actorPersonId,
+    source: "STAFF",
     organisationId: input.organisationId,
     version: 1,
     ...stamp(now),
@@ -338,6 +373,7 @@ export function recordSourceArtefactOnSnap(
     objectKey: input.objectKey,
     byteChecksum: input.byteChecksum,
     language: input.language,
+    disclosureClass: input.disclosureClass ?? "OPERATIONAL",
     organisationId: input.organisationId,
     version: 1,
     ...stamp(now),
@@ -361,13 +397,34 @@ export function recordSourceArtefactOnSnap(
   return { artefact, segment };
 }
 
+function sourceContentHashFor(artefact: SourceArtefact, segments: readonly SourceSegment[]): string {
+  return exactHash({
+    artefactId: artefact.id,
+    version: artefact.version,
+    segments: segments.map((item) => ({ id: item.id, contentHash: item.contentHash })),
+  });
+}
+
+function countDispositions(dispositions: readonly ExtractionDisposition[]) {
+  return {
+    consideredCount: new Set(dispositions.map((item) => item.sourceSegmentId)).size,
+    proposedCount: dispositions.filter((item) => item.kind === "ASSERTION_PROPOSED").length,
+    duplicateCount: dispositions.filter((item) => item.kind === "DUPLICATE_SUPPORTED").length,
+    noMaterialCount: dispositions.filter((item) => item.kind === "NO_MATERIAL_ASSERTION").length,
+    needsReviewCount: dispositions.filter((item) => item.kind === "NEEDS_HUMAN_REVIEW").length,
+    rejectedCount: dispositions.filter((item) => item.kind === "REJECTED_UNSUPPORTED").length,
+    failureCount: 0,
+  };
+}
+
 export function extractAssertionsOnSnap(
   snap: PlatformSnapshot,
   input: ExtractAssertionsInput,
   now: string,
   actorPersonId: string,
   actorKind?: string,
-): CandidateAssertion[] {
+  options?: { providerMode?: "DETERMINISTIC" | "UNAVAILABLE" | "MALFORMED" },
+): ExtractionOutcome {
   if (!consentIsActive(snap, input.engagementId, "AI_ANALYSIS")) {
     throw new PlatformError("VALIDATION_FAILED", "AI analysis consent is required");
   }
@@ -375,11 +432,84 @@ export function extractAssertionsOnSnap(
   if (!artefact || artefact.engagementId !== input.engagementId || artefact.organisationId !== input.organisationId) {
     throw new PlatformError("NOT_FOUND", "source artefact was not found");
   }
+  if (input.expectedVersion > 0 && artefact.version !== input.expectedVersion) {
+    throw new PlatformError("VERSION_CONFLICT", "stale source version cannot be reported as extracted");
+  }
   const segments = snap.sourceSegments.filter((item) => item.artefactId === artefact.id);
+  const contentHash = sourceContentHashFor(artefact, segments);
+  const existingOutcome = snap.extractionOutcomes.find(
+    (item) =>
+      item.artefactId === artefact.id &&
+      item.artefactVersion === artefact.version &&
+      item.sourceContentHash === contentHash,
+  );
+  if (existingOutcome) {
+    return existingOutcome;
+  }
+  if (options?.providerMode === "UNAVAILABLE") {
+    const dispositions: ExtractionDisposition[] = segments.map((segment) => ({
+      kind: "NEEDS_HUMAN_REVIEW" as const,
+      sourceSegmentId: segment.id,
+      explanationCode: "PROVIDER_UNAVAILABLE",
+      safeSummary: "The fixture extractor was unavailable. The original source is unchanged.",
+    }));
+    const outcome: ExtractionOutcome = {
+      id: randomUUID(),
+      engagementId: input.engagementId,
+      artefactId: artefact.id,
+      artefactVersion: artefact.version,
+      sourceContentHash: contentHash,
+      dispositions,
+      ...countDispositions(dispositions),
+      failureCount: 1,
+      idempotencyKey: input.idempotencyKey,
+      organisationId: input.organisationId,
+      version: 1,
+      ...stamp(now),
+    };
+    snap.extractionOutcomes.push(outcome);
+    throw new PlatformError("DEPENDENCY_UNAVAILABLE", "fixture provider is unavailable");
+  }
+  if (options?.providerMode === "MALFORMED") {
+    const dispositions: ExtractionDisposition[] = segments.map((segment) => ({
+      kind: "REJECTED_UNSUPPORTED" as const,
+      sourceSegmentId: segment.id,
+      explanationCode: "MALFORMED_PROVIDER_OUTPUT",
+    }));
+    const outcome: ExtractionOutcome = {
+      id: randomUUID(),
+      engagementId: input.engagementId,
+      artefactId: artefact.id,
+      artefactVersion: artefact.version,
+      sourceContentHash: contentHash,
+      dispositions,
+      ...countDispositions(dispositions),
+      failureCount: 1,
+      idempotencyKey: input.idempotencyKey,
+      organisationId: input.organisationId,
+      version: 1,
+      ...stamp(now),
+    };
+    snap.extractionOutcomes.push(outcome);
+    return outcome;
+  }
   const created: CandidateAssertion[] = [];
+  const dispositions: ExtractionDisposition[] = [];
+  const proposalsBySegment = new Map<string, number>();
   for (const proposal of extractFixtureProposals(segments)) {
-    assertProposalSupported(proposal, segments, input.engagementId, input.organisationId);
-    assertHumanConfirmation(actorKind, "PROPOSED");
+    const sourceSegmentId = proposal.sourceSegmentIds[0];
+    if (!sourceSegmentId) continue;
+    try {
+      assertProposalSupported(proposal, segments, input.engagementId, input.organisationId);
+      assertHumanConfirmation(actorKind, "PROPOSED");
+    } catch (error) {
+      dispositions.push({
+        kind: "REJECTED_UNSUPPORTED",
+        sourceSegmentId,
+        explanationCode: error instanceof PlatformError ? error.code : "UNSUPPORTED_CITATION",
+      });
+      continue;
+    }
     const already = snap.candidateAssertions.find(
       (item) =>
         item.engagementId === input.engagementId &&
@@ -387,7 +517,16 @@ export function extractAssertionsOnSnap(
         exactHash(item.structuredValue) === exactHash(proposal.value) &&
         item.sourceSegmentIds.join() === proposal.sourceSegmentIds.join(),
     );
-    if (already) continue;
+    if (already) {
+      dispositions.push({
+        kind: "DUPLICATE_SUPPORTED",
+        sourceSegmentId,
+        existingAssertionId: already.id,
+        explanationCode: "IDEMPOTENT_RETRY",
+      });
+      proposalsBySegment.set(sourceSegmentId, (proposalsBySegment.get(sourceSegmentId) ?? 0) + 1);
+      continue;
+    }
     const record: CandidateAssertion = {
       id: randomUUID(),
       engagementId: input.engagementId,
@@ -417,10 +556,127 @@ export function extractAssertionsOnSnap(
     };
     snap.candidateAssertions.push(record);
     created.push(record);
+    dispositions.push({
+      kind: "ASSERTION_PROPOSED",
+      sourceSegmentId,
+      assertionId: record.id,
+    });
+    proposalsBySegment.set(sourceSegmentId, (proposalsBySegment.get(sourceSegmentId) ?? 0) + 1);
+    const nextClass = disclosureClassFromSensitivity(proposal.sensitivity);
+    if (nextClass !== "OPERATIONAL" && resolveArtefactDisclosureClass(artefact) === "OPERATIONAL") {
+      artefact.disclosureClass = nextClass;
+      artefact.updatedAt = now;
+    }
+  }
+  for (const segment of segments) {
+    if (proposalsBySegment.has(segment.id)) continue;
+    if (INJECTION_MARKERS_LOCAL.test(segment.text)) {
+      dispositions.push({
+        kind: "REJECTED_UNSUPPORTED",
+        sourceSegmentId: segment.id,
+        explanationCode: "INJECTION_MARKER",
+      });
+      continue;
+    }
+    dispositions.push({
+      kind: "NO_MATERIAL_ASSERTION",
+      sourceSegmentId: segment.id,
+      explanationCode: "NO_SUPPORTED_PATTERN",
+    });
   }
   detectConflictsOnSnap(snap, input.engagementId, input.organisationId, now);
   refreshCoverageOnSnap(snap, input.engagementId, now);
-  return created;
+  const outcome: ExtractionOutcome = {
+    id: randomUUID(),
+    engagementId: input.engagementId,
+    artefactId: artefact.id,
+    artefactVersion: artefact.version,
+    sourceContentHash: contentHash,
+    dispositions,
+    ...countDispositions(dispositions),
+    idempotencyKey: input.idempotencyKey,
+    organisationId: input.organisationId,
+    version: 1,
+    ...stamp(now),
+  };
+  snap.extractionOutcomes.push(outcome);
+  return outcome;
+}
+
+const INJECTION_MARKERS_LOCAL = /ignore (all|previous) instructions|system prompt|<script|javascript:/i;
+
+export function grantDiscoveryDisclosureOnSnap(
+  snap: PlatformSnapshot,
+  input: GrantDiscoveryDisclosureInput,
+  now: string,
+  actorPersonId: string,
+): DiscoveryDisclosureGrant {
+  const grant: DiscoveryDisclosureGrant = {
+    id: randomUUID(),
+    organisationId: input.organisationId,
+    engagementId: input.engagementId,
+    personId: input.personId,
+    disclosureClass: input.disclosureClass,
+    grantedByPersonId: actorPersonId,
+    expiresAt: input.expiresAt,
+    reason: input.reason,
+    version: 1,
+    ...stamp(now),
+  };
+  snap.discoveryDisclosureGrants.push(grant);
+  return grant;
+}
+
+export function revokeDiscoveryDisclosureOnSnap(
+  snap: PlatformSnapshot,
+  input: RevokeDiscoveryDisclosureInput,
+  now: string,
+): DiscoveryDisclosureGrant {
+  const grant = snap.discoveryDisclosureGrants.find((item) => item.id === input.grantId && item.organisationId === input.organisationId);
+  if (!grant) throw new PlatformError("NOT_FOUND", "disclosure grant was not found");
+  if (grant.version !== input.expectedVersion) {
+    throw new PlatformError("VERSION_CONFLICT", "stale disclosure grant");
+  }
+  grant.revokedAt = now;
+  grant.revokeReason = input.revokeReason;
+  grant.version += 1;
+  grant.updatedAt = now;
+  return grant;
+}
+
+export function governingGuestCountFromBrief(
+  snap: PlatformSnapshot,
+  engagementId: string,
+):
+  | { kind: "CONFIRMED"; count: string; editionId: string; contentHash: string; assertionId: string }
+  | { kind: "UNRESOLVED_CONTRADICTION" }
+  | { kind: "UNKNOWN" } {
+  const openConflict = snap.assertionConflicts.find(
+    (item) => item.engagementId === engagementId && item.topicKey === "guest.target_count" && item.status === "OPEN",
+  );
+  if (openConflict) return { kind: "UNRESOLVED_CONTRADICTION" };
+  const edition = [...snap.eventBriefEditions]
+    .reverse()
+    .find((item) => item.engagementId === engagementId && item.current && (item.status === "APPROVED" || item.status === "PUBLISHED"));
+  if (!edition) return { kind: "UNKNOWN" };
+  const assertions = snap.candidateAssertions.filter(
+    (item) =>
+      edition.assertionIds.includes(item.id) &&
+      item.topicKey === "guest.target_count" &&
+      ["CLIENT_CONFIRMED", "GOVERNING", "STAFF_REVIEWED"].includes(item.confirmationState),
+  );
+  const counts = [...new Set(assertions.map((item) => String((item.structuredValue as { count?: string })?.count ?? "")))].filter(Boolean);
+  if (counts.length === 1 && assertions[0]) {
+    return {
+      kind: "CONFIRMED",
+      count: counts[0]!,
+      editionId: edition.id,
+      contentHash: edition.contentHash,
+      assertionId: assertions[0].id,
+    };
+  }
+  if (counts.length > 1) return { kind: "UNRESOLVED_CONTRADICTION" };
+  return { kind: "UNKNOWN" };
 }
 
 export function reviewAssertionOnSnap(

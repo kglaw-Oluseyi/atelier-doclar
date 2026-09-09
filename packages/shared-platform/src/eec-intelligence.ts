@@ -514,6 +514,9 @@ export function calculateBudgetScenarioOnSnap(
     archetype: string;
     guests: string;
     excludeCodes?: string[];
+    guestSourceKind?: "BRIEF" | "SCENARIO";
+    sourceAssertionId?: string;
+    assumptionAcknowledged?: boolean;
   },
   now: string,
   actorPersonId: string,

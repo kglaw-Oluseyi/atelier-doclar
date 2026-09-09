@@ -3,6 +3,7 @@ import { loadNonProductionFixtures } from "./bootstrap.js";
 import { SCHEMA_VERSION } from "./constants.js";
 import { exactHash, nfc } from "./eec-hash.js";
 import { calculateBudgetScenarioOnSnap, issueDiscoveryClientAccessOnSnap, runFixtureAiJobOnSnap } from "./eec-intelligence.js";
+import { buildDiscoveryWorkspace, eecPermissionAllowed } from "./eec-projections.js";
 import { instantiateRoadmapFromTemplateOnSnap, recordConversationTurnOnSnap, seedBudgetKnowledgeOnSnap } from "./eec-s05a-depth.js";
 import {
   addParticipantOnSnap,
@@ -174,6 +175,7 @@ export function buildIsolatedEvaluationHarness(
         kind: "STAFF_NOTE",
         title: note.topicKey,
         text: note.text,
+        disclosureClass: note.disclosureClass,
         reason: "evaluation-staff-note",
         idempotencyKey: `${caseDef.id}-note-${note.topicKey}`,
       }),
@@ -511,7 +513,11 @@ export function buildIsolatedEvaluationHarness(
             staffPersonId,
             "HUMAN",
           );
-          created.push(...extracted.map((item) => item.id));
+          created.push(
+            ...extracted.dispositions
+              .filter((item) => item.kind === "ASSERTION_PROPOSED")
+              .map((item) => item.assertionId),
+          );
         }
         adapters?.afterExtract?.(current, caseDef);
         adapters?.afterConflictDetect?.(current, caseDef);
@@ -685,6 +691,36 @@ export function buildIsolatedEvaluationHarness(
         };
         store.replace(current);
         return { ok: true, recordIds: [engagement.id] };
+      }
+      if (action.kind === "PROJECT_AUDITOR") {
+        const live = store.snapshot();
+        const liveEngagement = live.discoveryEngagements.find((item) => item.id === engagement.id);
+        const liveOpportunity = live.engagementOpportunities.find((item) => item.id === opportunity.id);
+        if (!liveEngagement || !liveOpportunity) throw new PlatformError("NOT_FOUND", "discovery engagement was not found");
+        const keys = ["engagement.view", "discovery.session.view", "discovery.source.view"] as const;
+        lastClientProjection = buildDiscoveryWorkspace({
+          opportunity: liveOpportunity,
+          engagement: liveEngagement,
+          participants: live.discoveryParticipants.filter((item) => item.engagementId === engagement.id),
+          consents: live.discoveryConsentRecords.filter((item) => item.engagementId === engagement.id),
+          sessions: live.interviewSessions.filter((item) => item.engagementId === engagement.id),
+          artefacts: live.sourceArtefacts.filter((item) => item.engagementId === engagement.id),
+          segments: live.sourceSegments.filter((item) => item.engagementId === engagement.id),
+          assertions: live.candidateAssertions.filter((item) => item.engagementId === engagement.id),
+          conflicts: live.assertionConflicts.filter((item) => item.engagementId === engagement.id),
+          assessments: live.coverageAssessments.filter((item) => item.engagementId === engagement.id),
+          extractionOutcomes: live.extractionOutcomes.filter((item) => item.engagementId === engagement.id),
+          capabilities: eecPermissionAllowed(keys),
+          permissionKeys: keys,
+          grants: live.discoveryDisclosureGrants.filter((item) => item.organisationId === organisationId),
+          actorPersonId: FIXTURE_IDS.personAuditor,
+          now,
+        });
+        store.replace(live);
+        return { ok: true, recordIds: [engagement.id] };
+      }
+      if (action.kind === "PROJECT_ADMIN") {
+        throw new PlatformError("FORBIDDEN", "this assignment cannot view discovery conversations");
       }
       if (action.kind === "PROJECT_OTHER_ENGAGEMENT") {
         const tokenProjection = {
