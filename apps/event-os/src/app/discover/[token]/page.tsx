@@ -2,7 +2,12 @@ import { GuestFrame } from "../../../components/guest-frame";
 import { ClientSessionNav } from "../../../components/client-session-nav";
 import { PlatformError } from "@maison-doclar/shared-platform";
 import { IdempotencyField, PendingSubmit } from "../../../components/atelier-pending-submit";
-import { recordClientBriefDecisionAction, recordClientInterviewTurnAction } from "../../../server/actions";
+import {
+  extractClientDiscoveryAssertionsAction,
+  recordClientBriefDecisionAction,
+  recordClientDiscoveryConsentAction,
+  recordClientInterviewTurnAction,
+} from "../../../server/actions";
 import { getRuntime, ensureRuntime } from "../../../server/runtime";
 
 export default async function DiscoveryClientPage({
@@ -28,13 +33,23 @@ export default async function DiscoveryClientPage({
   }
   const next = projection.nextQuestion;
   return (
-    <GuestFrame host="Maison Doclar" eventName={projection.engagementReference}>
+    <GuestFrame host="Maison Doclar" eventName={projection.clientSafeHeading ?? "Your Maison Doclar consultation"}>
       <ClientSessionNav token={token} current="conversation" />
       <p className="lede">
-        This is a Maison Doclar consultation, not a form. We keep your words distinct from any interpretation we propose. You may pause, say unknown, not yet, not applicable, or prefer not to answer.
+        This is a Maison Doclar consultation, not a form. A human planner may continue the conversation; a deterministic fixture is used for extraction when you permit AI analysis. Declining optional processing will not end the relationship. You may pause or ask for a human at any time.
       </p>
-      {query.ok === "1" ? <p>Your answer was saved. You can continue or stop here.</p> : null}
+      <details>
+        <summary>Internal reference</summary>
+        <p>{projection.engagementReference}</p>
+      </details>
+      {query.ok === "1" || query.ok === "extract" ? (
+        <p data-testid="client-consent-receipt">Your choice was saved. You can continue or stop here.</p>
+      ) : null}
       {query.error === "1" ? <p>That answer could not be recorded. Nothing else changed.</p> : null}
+      {query.error === "ai-consent" ? (
+        <p data-testid="client-ai-blocked">AI analysis is blocked until you grant that specific consent.</p>
+      ) : null}
+      <ClientConsentPanel token={token} consents={projection.consents ?? []} query={query} />
       {projection.turns?.length ? (
         <p data-testid="interview-progress">
           Saved progress: {projection.turns.length} answered turn{projection.turns.length === 1 ? "" : "s"}. We will not re-ask settled information unless it is conflicted or stale.
@@ -80,6 +95,8 @@ export default async function DiscoveryClientPage({
             </form>
           ) : null}
         </section>
+      ) : projection.interviewBlockedReason === "PARTICIPATION_CONSENT_REQUIRED" ? (
+        <p data-testid="client-interview-blocked">The conversation continues after you decide participation. Declining optional processing will not end the relationship.</p>
       ) : (
         <p>There is no outstanding interview question. You may still review what we understood.</p>
       )}
@@ -132,5 +149,104 @@ export default async function DiscoveryClientPage({
         </ul>
       )}
     </GuestFrame>
+  );
+}
+
+const CLIENT_CONSENT_COPY = [
+  {
+    dimension: "PARTICIPATION",
+    label: "Participation",
+    required: true,
+    why: "So we know you are willing to continue this planning conversation.",
+  },
+  {
+    dimension: "AUDIO_RECORDING",
+    label: "Audio recording",
+    required: false,
+    why: "Only if a recording is made. You can participate without it.",
+  },
+  {
+    dimension: "TRANSCRIPTION",
+    label: "Transcription",
+    required: false,
+    why: "Lets us keep a written record of what was said.",
+  },
+  {
+    dimension: "AI_ANALYSIS",
+    label: "AI analysis",
+    required: false,
+    why: "Lets a deterministic fixture propose facts from your words. It never becomes governing truth on its own.",
+  },
+  {
+    dimension: "SOURCE_RETENTION",
+    label: "Source retention",
+    required: false,
+    why: "Keeps the source notes for this engagement according to the recorded policy.",
+  },
+  {
+    dimension: "DEIDENTIFIED_BENCHMARKING",
+    label: "De-identified learning",
+    required: false,
+    why: "Optional use of de-identified data for later benchmark intelligence. Independent of planning this event.",
+  },
+] as const;
+
+function ClientConsentPanel({
+  token,
+  consents,
+  query,
+}: {
+  token: string;
+  consents: Array<{ dimension: string; decision: string }>;
+  query: Record<string, string | string[] | undefined>;
+}) {
+  const savedDimension = typeof query.consent === "string" ? query.consent : undefined;
+  return (
+    <section id="client-consent" className="form programme-form" data-testid="client-consent">
+      <h2>Your consent choices</h2>
+      <p className="lede">
+        Each choice is saved on its own. Required versus optional is marked. Select all optional is not preselected and still
+        leaves every dimension editable.
+      </p>
+      <ul className="atelier-queue" data-testid="client-consent-list">
+        {CLIENT_CONSENT_COPY.map((item) => {
+          const current = consents.find((row) => row.dimension === item.dimension);
+          const decision = current?.decision ?? "UNDECIDED";
+          return (
+            <li key={item.dimension} className="discovery-card" data-testid={`client-consent-${item.dimension}`}>
+              <p>
+                <strong>{item.label}</strong>{" "}
+                <span className="md-status">{item.required ? "Required to continue" : "Optional"}</span>{" "}
+                <span className="md-status" data-tone={decision === "GRANTED" ? "ok" : decision === "DECLINED" || decision === "WITHDRAWN" ? "warn" : undefined}>
+                  {decision === "UNDECIDED" ? "Not yet decided" : decision.toLowerCase()}
+                </span>
+              </p>
+              <p className="lede">Why we ask: {item.why}</p>
+              {savedDimension === item.dimension ? <p data-testid="client-consent-dimension-receipt">Saved for {item.label}.</p> : null}
+              <form action={recordClientDiscoveryConsentAction}>
+                <IdempotencyField />
+                <input type="hidden" name="token" value={token} />
+                <input type="hidden" name="dimension" value={item.dimension} />
+                <label>
+                  Decision
+                  <select name="decision" defaultValue={decision === "GRANTED" ? "WITHDRAWN" : "GRANTED"}>
+                    <option value="GRANTED">Grant</option>
+                    <option value="DECLINED">Decline</option>
+                    <option value="WITHDRAWN">Withdraw</option>
+                    {!item.required ? <option value="NOT_APPLICABLE">Not applicable</option> : null}
+                  </select>
+                </label>
+                <PendingSubmit className="secondary">Save {item.label.toLowerCase()}</PendingSubmit>
+              </form>
+            </li>
+          );
+        })}
+      </ul>
+      <form action={extractClientDiscoveryAssertionsAction} data-testid="client-ai-extract">
+        <IdempotencyField />
+        <input type="hidden" name="token" value={token} />
+        <PendingSubmit className="secondary">Ask Maison to extract proposals</PendingSubmit>
+      </form>
+    </section>
   );
 }

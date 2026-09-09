@@ -28,7 +28,7 @@ export default async function ClientReviewPage({
   }
   const review = projection.review;
   return (
-    <GuestFrame host="Maison Doclar" eventName={projection.engagementReference}>
+    <GuestFrame host="Maison Doclar" eventName={projection.clientSafeHeading ?? "Your Maison Doclar consultation"}>
       <ClientSessionNav token={token} current="review" />
       <p className="lede">Your event as we understand it. Confirming this edition does not approve the internal brief and does not create a staff role.</p>
       {query.ok === "1" ? <p data-testid="client-review-receipt">Your review was recorded.</p> : null}

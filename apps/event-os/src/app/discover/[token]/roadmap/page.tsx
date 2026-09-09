@@ -19,7 +19,7 @@ export default async function ClientRoadmapPage({ params }: { params: Promise<{ 
   }
   const roadmap = projection.clientRoadmap;
   return (
-    <GuestFrame host="Maison Doclar" eventName={projection.engagementReference}>
+    <GuestFrame host="Maison Doclar" eventName={projection.clientSafeHeading ?? "Your Maison Doclar consultation"}>
       <ClientSessionNav token={token} current="roadmap" />
       <section className="form programme-form" data-testid="client-roadmap">
         <h2>What we need from you</h2>

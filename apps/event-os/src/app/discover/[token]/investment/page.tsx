@@ -28,7 +28,7 @@ export default async function ClientInvestmentPage({
   }
   const investment = projection.investment;
   return (
-    <GuestFrame host="Maison Doclar" eventName={projection.engagementReference}>
+    <GuestFrame host="Maison Doclar" eventName={projection.clientSafeHeading ?? "Your Maison Doclar consultation"}>
       <ClientSessionNav token={token} current="investment" />
       <section className="form programme-form" data-testid="client-investment">
         <h2>Planning investment</h2>

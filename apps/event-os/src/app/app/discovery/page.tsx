@@ -66,6 +66,10 @@ export default async function DiscoveryIndexPage({
             <input name="displayReference" required maxLength={160} placeholder="Adéwálé family enquiry" />
           </label>
           <label>
+            Client-visible event name
+            <input name="eventConceptLabel" maxLength={200} placeholder="Adéwálé family celebration" />
+          </label>
+          <label>
             How it arrived
             <select name="enquiryChannel" defaultValue="DIRECT">
               <option value="DIRECT">Direct</option>
