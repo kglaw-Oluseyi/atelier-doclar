@@ -1,9 +1,9 @@
 # EOS-S05A Build Ledger
 
 **Slice ID:** `EOS-S05A`
-**Prompt Control ID:** `MD-PR-S043` (human-verification remediation of MD-PR-S042; prior evaluation `MD-PR-S041`)
-**Starting baseline for MD-PR-S043:** `30ea2899955f06c8b7a5a5a84b6d2b9a7a352cb1`
-**Application/test SHA:** `0201df901343c35610c6a36308d21b775bb29a32`
+**Prompt Control ID:** `MD-PR-S045` (truthful-decision remediation of MD-PR-S044; prior `MD-PR-S043` / `MD-PR-S041`)
+**Starting baseline for MD-PR-S045:** `a795947bd2c3bd2ff16cccaa1fbe26fd5cd6d77d`
+**Application/test SHA:** `e63313de72018840075b853841da97d08ab13a42`
 **Status:** `IMPLEMENTED / NOT ACCEPTED`
 **Production:** unauthorised
 **Catalogue accepted-slice count:** remains 5
@@ -153,6 +153,35 @@ S042 findings are remediated. EOS-S05A remains NOT ACCEPTED. No TDR was manufact
 | Live focused S043 (first run on `258fb34`) | Journeys 1–3 PASS; Journey 4 FAIL (page-top jump / stale consent section). Corrected and rerun locally 4/4. |
 | Live Event OS deploy (scroll restore) | `abb88b86-ca24-4479-af4d-57acd937de69` SUCCESS at `6e2cfd8e1eb4242256fa1784a5c78a92087f4422` |
 | Live focused S043 (after restore fix) | PASS — 4/4 against `https://event-os-production-bc8d.up.railway.app` |
+| Control Tower | not deployed |
+| Claude / EOS-S06 / acceptance | not run / not started / not accepted |
+| `productionAuthorised` | false, unchanged |
+
+## MD-PR-S045 final truthful-decision remediation
+
+S044 remaining defects are remediated. EOS-S05A remains NOT ACCEPTED. No TDR was manufactured. MD-PR-S044 auditor masking / client isolation / accessibility were not reopened. Staff-reviewed-but-unpublished is not governing Budget truth. Approved unpublished Event Briefs remain the canonical eligible Budget source.
+
+| Field | Value |
+|-------|-------|
+| Controlling pack | `docs/control/eos-s05a/MD_PR_S045_EOS_S05A_FINAL_TRUTHFUL_DECISION_REMEDIATION.md` |
+| Starting baseline | `a795947bd2c3bd2ff16cccaa1fbe26fd5cd6d77d` |
+| Application SHA | `e63313de72018840075b853841da97d08ab13a42` |
+| Corpus edition / hash | `s05a-eval-v4` / `47c2c5b3b4c1c0df13f863d7f071361a34e2a41fee33c4750210d5dc4a4efa4d` |
+| Case count | 41 executable cases |
+| Focused S045 unit/integration | PASS after first-run stale-version and maker-permission corrections (`packages/shared-platform/test/eec-s045-remediation.test.ts`) |
+| `pnpm typecheck` | PASS |
+| `pnpm --filter @maison-doclar/shared-platform test` | 393 pass / 0 fail |
+| `pnpm --filter @maison-doclar/event-os test` | 81 pass / 0 fail |
+| `pnpm programme:validate` | PASS |
+| `pnpm --filter @maison-doclar/event-os build` | PASS |
+| `git diff --check` | PASS |
+| Focused S045 Playwright | PASS — 3/3 after first-run Journey 2/3 assertion corrections. Live 3/3 first run. |
+| Changed-risk S043 Playwright | PASS locally after copy update; Journey 2 first run failed on retired `Extraction completed` wording |
+| Live Event OS deploy | `495c5174-d3c2-4986-8ed5-162fb6a256db` SUCCESS at `e63313de72018840075b853841da97d08ab13a42` |
+| Live health before CEO corpus | `alive`/`ready` true; `POSTGRES`/`APPLIED`; `productionAuthorised` false; layout READY/READY; evaluation `STALE` / blocked |
+| Live CEO fixture run | `PASSED`; cases passed 41 / failed 0; zero-tolerance clear; hash `47c2c5b3b4c1c0df13f863d7f071361a34e2a41fee33c4750210d5dc4a4efa4d`; run `fe4ef61e-c133-4ea7-b4db-067feed17c00`; completed `2026-09-09T11:55:01.976Z` |
+| Live after corpus | `s05aEvaluationBlocked` false; `s05aReleaseReady` true |
+| Live focused S045 Playwright | PASS — 3/3 against `https://event-os-production-bc8d.up.railway.app` |
 | Control Tower | not deployed |
 | Claude / EOS-S06 / acceptance | not run / not started / not accepted |
 | `productionAuthorised` | false, unchanged |

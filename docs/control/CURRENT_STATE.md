@@ -1,7 +1,7 @@
 # Current State
 
-**Updated:** MD-PR-S043 EOS-S05A consolidated human-verification remediation (2026-09-09)
-**Prompt Control ID:** MD-PR-S043
+**Updated:** MD-PR-S045 EOS-S05A final truthful-decision remediation (2026-09-09)
+**Prompt Control ID:** MD-PR-S045
 **Milestone:** `EOS-S05` ACCEPTED — catalogue accepted-slice count 5; `EOS-S05A` IMPLEMENTED / NOT ACCEPTED (not catalogue); EOS-S06 not authorised
 
 MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is ACCEPTED. EOS-S02 is ACCEPTED. EOS-S03 is ACCEPTED. EOS-S04 is CLOSED / ACCEPTED (`PASS WITH OBSERVATIONS`). EOS-S05 is ACCEPTED. Catalogue accepted-slice count is 5. Native coverage is 62/62. S4-61 is satisfied for technical review only. S4-62 is satisfied for controlled technical acceptance/handover only. Independent, specialist and CEO production gates remain unsigned.
@@ -106,7 +106,7 @@ MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is A
 **EOS-S05A IMPLEMENTATION AUTHORISED: YES — whole slice `EEC-00`–`EEC-45` under `MD-PR-S038`, product-depth under `MD-PR-S039`, final completion under `MD-PR-S040`, executable evaluation remediation under `MD-PR-S041`**
 **EOS-S05A ACCEPTED: NO**
 **EOS-S05A STATUS: IMPLEMENTED / NOT ACCEPTED**
-**EOS-S05A PROMPT CONTROL ID: MD-PR-S041**
+**EOS-S05A PROMPT CONTROL ID: MD-PR-S045**
 **EOS-S05A CATALOGUE SLICE: NO**
 **EOS-S05A LATER UNITS: EEC-11–EEC-44 IMPLEMENTED / NOT ACCEPTED; EEC-45 NOT CURSOR ACCEPTANCE**
 **EOS-S05A CANONICAL CORPUS: docs/control/eos-s05a/**
@@ -150,7 +150,7 @@ Event OS S01–S03 remain formally accepted. EOS-S04 is CLOSED / ACCEPTED after 
 
 **MD-PR-UX001:** Cross-slice Event OS UX quality uplift across accepted EOS-S01–EOS-S05 surfaces. Does not accept a new slice, reopen EOS-S01–EOS-S05, consume `MD-PR-S036`, or authorise production. Evidence: `docs/control/MD_PR_UX001.md`.
 
-**EOS-S05A:** `IMPLEMENTED / NOT ACCEPTED` on `2026-09-09`. `MD-PR-S043` remediates MD-PR-S042 human-verification findings (confidential disclosure, extraction outcomes, dimension-specific client consent, related UX). Starting SHA `30ea2899955f06c8b7a5a5a84b6d2b9a7a352cb1`. Ending application SHA `6e2cfd8e1eb4242256fa1784a5c78a92087f4422`. Catalogue accepted-slice count remains 5. `MD-PR-S036` is not consumed. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. Production remains unauthorised. Claude was not run. Control Tower was not deployed. EOS-S05A is not accepted. Controlling pack: `docs/control/eos-s05a/MD_PR_S043_EOS_S05A_CONSOLIDATED_HUMAN_VERIFICATION_REMEDIATION.md`. Live CEO fixture `s05a-eval-v3` (37/0) `PASSED`. Live focused S043 Playwright 4/4 after a first-run Journey 4 failure that was corrected.
+**EOS-S05A:** `IMPLEMENTED / NOT ACCEPTED` on `2026-09-09`. `MD-PR-S045` remediates MD-PR-S044 truthful-decision findings (idempotent extraction receipts, identity-bound contradiction choice, Budget Studio governing-brief copy). Starting SHA `a795947bd2c3bd2ff16cccaa1fbe26fd5cd6d77d`. Ending application SHA `e63313de72018840075b853841da97d08ab13a42`. Catalogue accepted-slice count remains 5. `MD-PR-S036` is not consumed. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. Production remains unauthorised. Claude was not run. Control Tower was not deployed. EOS-S05A is not accepted. Controlling pack: `docs/control/eos-s05a/MD_PR_S045_EOS_S05A_FINAL_TRUTHFUL_DECISION_REMEDIATION.md`. Live CEO fixture `s05a-eval-v4` (41/0) `PASSED` on run `fe4ef61e-c133-4ea7-b4db-067feed17c00`. Prior `s05a-eval-v3` pass is `STALE` and was not restamped. Live focused S045 Playwright 3/3. MD-PR-S044 auditor masking / client isolation / accessibility were not reopened. Staff-reviewed-but-unpublished is not governing Budget truth.
 
 Historical sentence “Implementation of EOS-S04A–F is not authorised as a product slice” applied before CEO S04A–S04F implementation authority. For S04A–S04F that sentence is superseded. The EOS-S04E and EOS-S04F controlled slice pack filenames still contain `DRAFT`. Current programme status for S04E is `ACCEPTED`. Current programme status for S04F is `ACCEPTED`. Historical `IN_REVIEW / NOT READY` on 2026-09-08 remains dated history.
 

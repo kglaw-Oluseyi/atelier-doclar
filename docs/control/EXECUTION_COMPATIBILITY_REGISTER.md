@@ -280,3 +280,17 @@ Milestone 4 is authorised on the Milestone 1–3 contracts. Historic S5-01–S5-
 | Claude-in-Chrome | Not run. Still deferred. Ready for focused Claude re-verification after AI CTO review. |
 | EOS-S06 / `MD-PR-S036` | RETAINED. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. |
 | `productionAuthorised` | RETAINED false. Not changed. |
+
+## Addendum — 2026-09-09 EOS-S05A final truthful-decision remediation (`MD-PR-S045`)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| MD-PR-S044 extraction receipt false success / relative contradiction choice / Budget prefill from non-governing brief | SUPERSEDED by `MD-PR-S045` product remediation. Findings remain recorded; disposition is implemented, not accepted. |
+| Evaluation corpus `s05a-eval-v3` / 37 cases | SUPERSEDED as the current executable edition. Current edition is `s05a-eval-v4` / 41 cases / hash `47c2c5b3b4c1c0df13f863d7f071361a34e2a41fee33c4750210d5dc4a4efa4d`. Prior PASSED runs are STALE and were not restamped. |
+| Approved unpublished Event Brief | RETAINED as canonical eligible Budget source together with `PUBLISHED`. Not broadened to WORKING or SUBMITTED. |
+| Staff-reviewed-but-unpublished guest count | RETAINED as not governing Budget truth. |
+| Catalogue accepted-slice count | RETAINED at 5. |
+| Control Tower | Compatibility-only. Not a deploy target for this run. |
+| Claude-in-Chrome | Not run. Ready for narrow Claude re-verification after AI CTO review. |
+| EOS-S06 / `MD-PR-S036` | RETAINED. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. |
+| `productionAuthorised` | RETAINED false. Not changed. |

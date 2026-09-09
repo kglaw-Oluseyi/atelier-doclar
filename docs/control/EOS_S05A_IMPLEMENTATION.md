@@ -1,12 +1,12 @@
 # EOS-S05A Implementation Record
 
 **Slice ID:** `EOS-S05A`
-**Prompt Control ID:** `MD-PR-S043` (human-verification remediation; prior evaluation `MD-PR-S041`)
+**Prompt Control ID:** `MD-PR-S045` (truthful-decision remediation; prior `MD-PR-S043` / `MD-PR-S041`)
 **Title:** Discovery, Investment & Executive Event Command
 **Status:** `IMPLEMENTED / NOT ACCEPTED`
-**Starting baseline for MD-PR-S043:** `30ea2899955f06c8b7a5a5a84b6d2b9a7a352cb1`
-**Application/test SHA:** `6e2cfd8e1eb4242256fa1784a5c78a92087f4422`
-**Live Event OS deploy:** `abb88b86-ca24-4479-af4d-57acd937de69`
+**Starting baseline for MD-PR-S045:** `a795947bd2c3bd2ff16cccaa1fbe26fd5cd6d77d`
+**Application/test SHA:** `e63313de72018840075b853841da97d08ab13a42`
+**Live Event OS deploy:** `495c5174-d3c2-4986-8ed5-162fb6a256db`
 **Catalogue slice:** no — accepted-slice count remains 5
 **Production:** unauthorised
 
@@ -90,6 +90,18 @@ MD-PR-S042 independent verification found three related release blockers plus as
 | Related UX | Raw engagement code as client heading; save jumped to page top; Budget Studio seeded `180`; Admin label `Identity unavailable` | Client-safe heading; section-local receipts and scroll restore; prefill only from current confirmed brief guest count; Admin `Event scope restricted` / `Assignment identity restricted` |
 
 No new defect-specific TDR is opened. Established safe debt is unchanged.
+
+## MD-PR-S045 truthful-decision remediation
+
+MD-PR-S044 established two remaining defects plus a Budget Studio intelligibility gap. `MD-PR-S045` remediates them without weakening the governing-brief gate. This is not acceptance.
+
+| Finding | Observed defect | S045 disposition |
+|---------|-----------------|------------------|
+| A | Idempotent extraction replay created no duplicate assertion but the receipt still said `1 proposed, 0 duplicate` | Durable `ExtractionOutcome` history is unchanged. The current invocation returns `newlyProposedCount` / `existingLinkedCount` / `replayed`. Identical source identity/version does not write a second `assertion.proposed` creation audit. |
+| B | `Supersede earlier value` bound the first recorded assertion, so 320 governed when the operator chose 360 | Operators select an explicit candidate by assertion identity. Server command `SELECT_GOVERNING_ASSERTION` validates IDs against this contradiction. Legacy `SELECT`/`selectedAssertionId` remains valid. Relative earlier/later labels are removed. |
+| Budget | Prefill was attempted from working/submitted or staff-reviewed-only facts | Adapter returns `CURRENT_BRIEF` only for the current `APPROVED` or `PUBLISHED` edition. Approved unpublished remains intentionally eligible. `BRIEF_NOT_CURRENT` / `UNRESOLVED_CONTRADICTION` / `UNKNOWN` do not prefill. Arbitrary `180` is not inserted. Maker/checker remains: the submitting maker cannot decide the edition. |
+
+MD-PR-S044 auditor masking, client isolation and accessibility were not reopened. Staff-reviewed-but-unpublished is not governing Budget truth. No new defect-specific TDR is opened. EOS-S05A is not accepted. Claude was not run. EOS-S06 was not started. Control Tower was not deployed. `productionAuthorised` remains false.
 
 ## Exclusions that remain in force
 
