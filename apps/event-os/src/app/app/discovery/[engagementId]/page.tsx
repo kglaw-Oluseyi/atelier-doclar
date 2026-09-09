@@ -60,9 +60,8 @@ export default async function DiscoveryWorkspacePage({
     resultId: typeof query.result === "string" ? query.result : undefined,
     actorPersonId: person.id,
   });
-  const resultSection =
-    (typeof query.section === "string" && /^[a-z][a-z0-9-]{0,80}$/.test(query.section) ? query.section : undefined) ??
-    (presented.actionType === "discovery.consent"
+  const presentedSection =
+    presented.actionType === "discovery.consent"
       ? "discovery-consent"
       : presented.actionType === "discovery.session" || presented.actionType === "discovery.participant"
         ? "discovery-session"
@@ -74,7 +73,10 @@ export default async function DiscoveryWorkspacePage({
               ? "budget-studio"
               : presented.actionType === "brief.client_access"
                 ? "brief-review"
-                : undefined);
+                : undefined;
+  const querySection =
+    typeof query.section === "string" && /^[a-z][a-z0-9-]{0,80}$/.test(query.section) ? query.section : undefined;
+  const resultSection = presentedSection ?? querySection;
   const clientToken =
     typeof query.clientToken === "string" && /^[0-9a-f-]{36}$/i.test(query.clientToken) ? query.clientToken : undefined;
   const issuedPath = await readIssuedDiscoveryPath(`${person.id}:${engagementId}`);

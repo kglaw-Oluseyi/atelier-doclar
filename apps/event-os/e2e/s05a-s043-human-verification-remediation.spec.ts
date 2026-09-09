@@ -174,14 +174,14 @@ test("S043 Journey 4 — UX and accessibility sample", async ({ page, browser })
   await openFreshDiscovery(page, name, "Family celebration");
   await grantStaffConsent(page, ["Save participation", "Save AI analysis"]);
   await page.locator("#discovery-evidence").scrollIntoViewIfNeeded();
-  const before = await page.evaluate(() => window.scrollY);
   await page.getByLabel("What was said").fill("We are planning for 320 guests.");
+  await page.getByRole("button", { name: "Save note" }).scrollIntoViewIfNeeded();
+  const before = await page.evaluate(() => window.scrollY);
+  expect(before, "save starts mid-page").toBeGreaterThan(40);
   await page.getByRole("button", { name: "Save note" }).click();
   await expect(page.getByTestId("discovery-evidence-list")).toContainText("320 guests", { timeout: 20_000 });
   await expect(page.getByTestId("discovery-receipt-discovery-evidence")).toBeVisible();
-  await expect
-    .poll(async () => page.evaluate(() => window.scrollY), { timeout: 5_000 })
-    .toBeGreaterThan(Math.max(40, before - 80));
+  await expect(page.getByTestId("discovery-evidence-list")).toBeInViewport({ timeout: 8_000 });
   await page.getByRole("button", { name: "Extract proposals" }).click();
   await expect(page.getByTestId("discovery-assertion-list")).toContainText("320", { timeout: 20_000 });
   await page.getByRole("button", { name: "Review proposal" }).first().click();

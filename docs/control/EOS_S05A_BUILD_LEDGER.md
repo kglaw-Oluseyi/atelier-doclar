@@ -144,8 +144,13 @@ S042 findings are remediated. EOS-S05A remains NOT ACCEPTED. No TDR was manufact
 | `pnpm programme:validate` | PASS |
 | `pnpm --filter @maison-doclar/event-os build` | PASS |
 | `git diff --check` | PASS |
-| Focused S043 Playwright | PASS — 4/4 after first-run Journey 3/4 failures (issue-access `clientPath` abort; section receipt/scroll) |
+| Focused S043 Playwright | PASS — 4/4 after first-run Journey 3/4 failures (issue-access `clientPath` abort; section receipt/scroll). Live first-run Journey 4 failed: save left `section=discovery-consent` after an aborted redirect and jumped to page top; presented-action section now wins over the stale query. |
 | S05A regression Playwright | PASS — discovery-foundation, evaluation-readiness, responsive, whole-slice (4/4) |
+| Live Event OS deploy (V5 persist) | `76325971-a669-4aa8-bdc3-9c6a467005e3` SUCCESS at `258fb34ad1368b4a537297be534ee931c2225198` |
+| Live health before CEO corpus | `alive`/`ready` true; `POSTGRES`/`APPLIED`; `productionAuthorised` false; layout READY/READY; evaluation `STALE` / blocked |
+| Live CEO fixture run | `PASSED`; cases passed 37 / failed 0; zero-tolerance clear; hash `5a7c208aed31aa0b0ef47ae1553370c3d259254468f2eac7e3eb3cff6e21169c`; run `c035ba09-06ec-48f0-bf0a-2445ea12e999` |
+| Live after corpus | `s05aEvaluationBlocked` false; `s05aReleaseReady` true |
+| Live focused S043 (first run on `258fb34`) | Journeys 1–3 PASS; Journey 4 FAIL (page-top jump / stale consent section). Corrected and rerun locally 4/4. |
 | Control Tower | not deployed |
 | Claude / EOS-S06 / acceptance | not run / not started / not accepted |
 | `productionAuthorised` | false, unchanged |

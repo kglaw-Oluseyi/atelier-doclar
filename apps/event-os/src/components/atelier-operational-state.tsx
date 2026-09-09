@@ -23,7 +23,7 @@ export function AtelierOperationalState({
       data-retry-safe={state.retrySafe ? "true" : "false"}
       data-testid={state.correlationId ? "action-result-banner" : undefined}
       aria-labelledby={`${id}-title`}
-      tabIndex={state.kind === "conflict" ? -1 : undefined}
+      tabIndex={state.kind === "conflict" || state.kind === "success" ? -1 : undefined}
       id={id}
       {...(role ? { role } : {})}
     >

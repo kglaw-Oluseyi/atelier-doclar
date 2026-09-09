@@ -307,6 +307,10 @@ describe("EOS-S04D action-result lifecycle", () => {
     assert.equal(verifyActionResult(signed, SECRET)?.actionType, "forecast.run");
     assert.equal(resultHref(SCOPE, "ffffffff-ffff-4fff-8fff-ffffffffffff").includes("ok="), false);
     assert.match(resultHref(SCOPE, "ffffffff-ffff-4fff-8fff-ffffffffffff"), /result=ffffffff-ffff-4fff-8fff-ffffffffffff/);
+    assert.match(
+      resultHref(SCOPE, "ffffffff-ffff-4fff-8fff-ffffffffffff", { section: "discovery-evidence" }),
+      /#discovery-evidence$/,
+    );
   });
 
   it("11. consume is bound to the presented correlation id", () => {

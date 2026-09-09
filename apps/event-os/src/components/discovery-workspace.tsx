@@ -109,7 +109,7 @@ export function DiscoveryWorkspaceView({
 
   return (
     <div className="discovery-workspace" data-testid="discovery-workspace">
-      <DiscoveryScrollRestore />
+      <DiscoveryScrollRestore section={resultSection} />
       <p className="lede" data-testid="discovery-next-action">
         Next: {workspace.nextAction}
       </p>
@@ -292,7 +292,11 @@ export function DiscoveryWorkspaceView({
 
       <section id="discovery-evidence" className="form programme-form">
         {workspace.artefacts.length > 0 ? (
-          <div data-testid="discovery-receipt-discovery-evidence">
+          <div
+            data-testid="discovery-receipt-discovery-evidence"
+            tabIndex={resultSection === "discovery-evidence" ? -1 : undefined}
+            autoFocus={resultSection === "discovery-evidence"}
+          >
             {resultSection === "discovery-evidence" && presented?.view ? (
               <ActionResultBanner
                 presented={presented}
