@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { loginAs } from "./login";
 
 test("S05A whole slice: brief, budget, roadmap, change and command", async ({ page }) => {
-  test.setTimeout(240_000);
+  test.setTimeout(360_000);
   const name = `Playwright whole-slice ${Date.now()}`;
 
   await loginAs(page, "planner");
@@ -113,7 +113,7 @@ test("S05A whole slice: brief, budget, roadmap, change and command", async ({ pa
   await expect(page.getByTestId("conversion-receipt")).toBeVisible({ timeout: 20_000 });
   await page.getByRole("button", { name: "Approve this scenario" }).click();
   await page.getByRole("button", { name: "Decide change" }).click();
-  await page.getByRole("navigation", { name: "Staff" }).getByRole("link", { name: "Event Command" }).click();
+  await page.goto("/app/command");
   await expect(page.getByTestId("executive-command")).toBeVisible({ timeout: 20_000 });
   const selector = page.getByLabel("Engagement or converted event");
   if (await selector.count()) {

@@ -32,6 +32,7 @@ export default defineConfig({
         env: {
           ...process.env,
           PORT: "3020",
+          NODE_OPTIONS: [process.env.NODE_OPTIONS, "--max-old-space-size=8192"].filter(Boolean).join(" "),
           EVENT_OS_ALLOW_FIXTURES: "1",
           EVENT_OS_TEST_NOW: "2026-09-05T14:00:00.000Z",
           CI: process.env.CI ?? "1",
