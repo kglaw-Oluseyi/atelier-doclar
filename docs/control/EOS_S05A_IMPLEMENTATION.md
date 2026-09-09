@@ -6,6 +6,7 @@
 **Status:** `IMPLEMENTED / NOT ACCEPTED`
 **Starting baseline for MD-PR-S040:** `934e91e74324fb5aed2a7ebb8de129b12af782f8`
 **Application/test SHA:** `5aca600d98430f224849ee18f5075e83c47eafa7`
+**Live Event OS deploy:** `42b3f98b-7a4b-431d-9270-41b1286133be`
 **Catalogue slice:** no — accepted-slice count remains 5
 **Production:** unauthorised
 

@@ -60,8 +60,24 @@ S038/S039 first-run failures remain historical in prior commits and are not reop
 | `pnpm --filter @maison-doclar/event-os build` | PASS |
 | `git diff --check` | PASS |
 | Local whole-slice / responsive E2E | PASS — whole-slice 1.1m; responsive 18.3s at 360 / 768 / 1440 / 200% zoom |
-| Live whole-slice / responsive E2E | After Event OS deploy of GitHub `main` |
+| Live whole-slice / responsive E2E | PASS — 2 passed in 46.3s on `https://event-os-production-bc8d.up.railway.app` |
 
 ## Deployment
 
-Event OS is the only deploy target. Control Tower remains `64642db9-db60-497b-a207-3d5d92fbcae3` and is not redeployed. Deployment is not acceptance.
+Event OS only. Control Tower was not deployed (recent Control Tower rows remain `SKIPPED`).
+
+| Field | Value |
+|-------|-------|
+| Upload deploy | `63178182-b7e1-40ae-8a76-59d138dcc1ea` SUCCESS (superseded by SHA stamp) |
+| Live deploy | `42b3f98b-7a4b-431d-9270-41b1286133be` SUCCESS |
+| GitHub / live SHA | `eb1463bacb670549fab272f657eddbfbf220f746` |
+| `alive` / `ready` | true |
+| Persistence / migrations | `POSTGRES` / `APPLIED` |
+| `productionAuthorised` | false |
+| Layout store / export | READY / READY |
+| Interview corpus | `s05a-interview-v2` |
+| Evaluation | `UNRUN` (truthful; fixture corpus passed locally; live has no executed run) |
+| Evaluation blocked | false |
+| Calendar | READY |
+
+Deployment is not acceptance.
