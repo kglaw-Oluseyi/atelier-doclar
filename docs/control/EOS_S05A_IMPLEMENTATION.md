@@ -5,8 +5,8 @@
 **Title:** Discovery, Investment & Executive Event Command
 **Status:** `IMPLEMENTED / NOT ACCEPTED`
 **Starting baseline for MD-PR-S043:** `30ea2899955f06c8b7a5a5a84b6d2b9a7a352cb1`
-**Application/test SHA:** `0201df901343c35610c6a36308d21b775bb29a32`
-**Live Event OS deploy:** `d8e57477-d046-4cc4-8e66-abc841591d4b`
+**Application/test SHA:** `6e2cfd8e1eb4242256fa1784a5c78a92087f4422`
+**Live Event OS deploy:** `abb88b86-ca24-4479-af4d-57acd937de69`
 **Catalogue slice:** no — accepted-slice count remains 5
 **Production:** unauthorised
 

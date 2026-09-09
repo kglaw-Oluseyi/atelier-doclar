@@ -151,6 +151,8 @@ S042 findings are remediated. EOS-S05A remains NOT ACCEPTED. No TDR was manufact
 | Live CEO fixture run | `PASSED`; cases passed 37 / failed 0; zero-tolerance clear; hash `5a7c208aed31aa0b0ef47ae1553370c3d259254468f2eac7e3eb3cff6e21169c`; run `c035ba09-06ec-48f0-bf0a-2445ea12e999` |
 | Live after corpus | `s05aEvaluationBlocked` false; `s05aReleaseReady` true |
 | Live focused S043 (first run on `258fb34`) | Journeys 1–3 PASS; Journey 4 FAIL (page-top jump / stale consent section). Corrected and rerun locally 4/4. |
+| Live Event OS deploy (scroll restore) | `abb88b86-ca24-4479-af4d-57acd937de69` SUCCESS at `6e2cfd8e1eb4242256fa1784a5c78a92087f4422` |
+| Live focused S043 (after restore fix) | PASS — 4/4 against `https://event-os-production-bc8d.up.railway.app` |
 | Control Tower | not deployed |
 | Claude / EOS-S06 / acceptance | not run / not started / not accepted |
 | `productionAuthorised` | false, unchanged |
