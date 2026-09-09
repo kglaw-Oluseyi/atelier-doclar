@@ -268,7 +268,8 @@ test("no-repeat interview, correction lineage and token revoke", () => {
   });
   assert.throws(
     () => service.getClientDiscoveryProjection(access.token),
-    (error: unknown) => error instanceof PlatformError && error.code === "AUTH_REQUIRED",
+    (error: unknown) =>
+      error instanceof PlatformError && error.code === "AUTH_REQUIRED" && error.publicMessage === "This review link is not available.",
   );
   const expired = service.issueDiscoveryClientAccess(planner, {
     organisationId,

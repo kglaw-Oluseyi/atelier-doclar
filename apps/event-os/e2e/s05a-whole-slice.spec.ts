@@ -79,7 +79,7 @@ test("S05A whole slice: brief, budget, roadmap, change and command", async ({ pa
   await expect(clientPage).not.toHaveURL(/\/app\/command/);
   await clientPage.close();
   await guest.close();
-  await page.getByRole("button", { name: "Revoke client conversation access" }).click();
+  await page.getByRole("button", { name: "Revoke client conversation access" }).last().click();
   await expect(page.getByTestId("client-access-list")).toContainText("revoked", { timeout: 20_000 });
   const revoked = await page.context().browser()!.newContext();
   const revokedPage = await revoked.newPage();

@@ -258,7 +258,9 @@ export function resolveDiscoveryClientAccess(snap: PlatformSnapshot, token: stri
   const hash = createHash("sha256").update(token).digest("hex");
   const record = snap.discoveryClientAccess.find((item) => item.tokenHash === hash);
   if (!record || record.revokedAt || record.expiresAt <= now) {
-    throw new PlatformError("AUTH_REQUIRED", "discovery client access is not available");
+    throw new PlatformError("AUTH_REQUIRED", "discovery client access is not available", {
+      publicMessage: "This review link is not available.",
+    });
   }
   return record;
 }
