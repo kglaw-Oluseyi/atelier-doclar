@@ -419,6 +419,7 @@ test("S043 disclosure migration V5 backfills and replays without rewriting sourc
   const migrated = applied.snapshot.sourceArtefacts.find((item) => item.id === artefact.id);
   assert.equal(migrated?.disclosureClass, "OPERATIONAL");
   assert.equal(migrated?.disclosureBackfillRule, "ASSERTION_SENSITIVITY_ELSE_OPERATIONAL");
+  assert.equal(migrated?.version, artefact.version + 1);
   assert.equal(migrated?.title, originalTitle);
   assert.equal(applied.snapshot.sourceSegments.find((item) => item.artefactId === artefact.id)?.text, originalText);
   const replay = migrateEosS05ADisclosureV5(applied.snapshot, NOW);

@@ -16,7 +16,7 @@ import { applyEosS05AssuranceToSnapshot } from "./layout-assurance-migration.js"
 import { migrateEosS05A, migrateEosS05ADisclosureV5, migrateEosS05AIntelligence, migrateEosS05AIntelligenceV2, migrateEosS05AIntelligenceV3 } from "./eec-migration.js";
 import { migrateEosS05AEvaluationV4 } from "./eec-evaluation-migration.js";
 import { loadNonProductionFixtures } from "./bootstrap.js";
-import { seededPermissions, seededRoles } from "./catalog.js";
+import { permissionIdForKey, permissionsForRole, roleKeyForId, seededPermissions, seededRoles } from "./catalog.js";
 import type { PgQueryable } from "./postgres-schema.js";
 import { PlatformService, type PlatformServiceOptions } from "./service.js";
 import type { PlatformSnapshot, PlatformStore } from "./store.js";
@@ -170,6 +170,27 @@ export function ensureMissingCatalogueRecords(store: PlatformStore): void {
     if (roleIds.has(role.id)) continue;
     snap.roles.push(role);
     changed = true;
+  }
+  const existingGrants = new Set(snap.rolePermissions.map((item) => `${item.roleId}:${item.permissionId}`));
+  const s043Keys = ["discovery.confidential.reveal", "discovery.confidential.grant"] as const;
+  for (const role of snap.roles) {
+    const key = roleKeyForId(role.id);
+    if (!key) continue;
+    const allowed = new Set(permissionsForRole(key));
+    for (const permissionKey of s043Keys) {
+      if (!allowed.has(permissionKey)) continue;
+      const permissionId = permissionIdForKey(permissionKey);
+      const grantKey = `${role.id}:${permissionId}`;
+      if (existingGrants.has(grantKey)) continue;
+      snap.rolePermissions.push({
+        roleId: role.id,
+        permissionId,
+        effect: "ALLOW",
+        createdAt: role.updatedAt,
+      });
+      existingGrants.add(grantKey);
+      changed = true;
+    }
   }
   if (changed) store.replace(snap);
 }

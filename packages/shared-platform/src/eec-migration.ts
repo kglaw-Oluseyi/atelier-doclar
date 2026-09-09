@@ -329,6 +329,7 @@ export function migrateEosS05ADisclosureV5(input: PlatformSnapshot, now: string)
     const assertions = snap.candidateAssertions.filter((item) => item.engagementId === artefact.engagementId);
     artefact.disclosureClass = resolveArtefactDisclosureClass(artefact, assertions, segments);
     artefact.disclosureBackfillRule = "ASSERTION_SENSITIVITY_ELSE_OPERATIONAL";
+    artefact.version += 1;
     artefact.updatedAt = now;
     created.push(`disclosure:${artefact.id}:${artefact.disclosureClass}`);
   }
