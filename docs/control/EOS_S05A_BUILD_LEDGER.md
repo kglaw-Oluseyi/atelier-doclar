@@ -41,6 +41,7 @@
 | Live revoked client link still readable | Product defect (S039) | Expired or revoked tokens used the staff AUTH_REQUIRED public copy “Sign in is required.” | Client access now returns “This review link is not available.” | Live E2E rerun |
 | Live Event Command showed an older enquiry | Product defect (S039) | Command selected the first persisted engagement, so a later converted journey was invisible | Default to the latest updated engagement and add a selector | Live E2E rerun |
 | Live SysAdmin Home crashed after sign-in | Product defect (S039) | Home called listEvents/listClients without catching a SysAdmin business-authority denial | Treat those reads as empty assigned work | Live E2E rerun |
+| Live whole-slice after Home fix | Test defect (S039) | `loginAs` shadowed the staff `identity` argument, so Playwright could not load the S05A specs | Rename the signed-in display name | Live E2E passed on `f645a39362c6aab0796df1d65c7c02d946732a2a` |
 
 ## Carried debt
 
@@ -54,4 +55,10 @@
 
 ## Deployment
 
-Event OS is the only deploy target. Control Tower is not redeployed. Deployment is not acceptance.
+Event OS is the only deploy target. Control Tower remains `64642db9-db60-497b-a207-3d5d92fbcae3` and is not redeployed.
+
+Application SHA with complete gates and live whole-slice/responsive E2E: `f645a39362c6aab0796df1d65c7c02d946732a2a`.
+
+Verified Event OS deployment at that SHA: `c0d1ab98-4fc8-4cdc-a5ab-a6caee4161b0` SUCCESS. Ready: `alive: true`, `ready: true`, `POSTGRES`, `APPLIED`, `productionAuthorised: false`, `layoutAssetStore: READY`, `layoutExport: READY`.
+
+A later documentation-only evidence commit may move GitHub `main`; Event OS is redeployed for SHA parity. Deployment is not acceptance.
