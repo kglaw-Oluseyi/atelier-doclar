@@ -676,7 +676,7 @@ export function decideChangeOnSnap(
 
 export function runFixtureAiJobOnSnap(
   snap: PlatformSnapshot,
-  input: { organisationId: string; engagementId?: string; kind: AiJob["kind"] },
+  input: { organisationId: string; engagementId?: string; kind: AiJob["kind"]; unavailable?: boolean },
   now: string,
 ): AiJob {
   if (input.engagementId && !consentIsAiAllowed(snap, input.engagementId)) {
@@ -687,9 +687,9 @@ export function runFixtureAiJobOnSnap(
     organisationId: input.organisationId,
     engagementId: input.engagementId,
     kind: input.kind,
-    status: "SUCCEEDED",
-    providerState: "FIXTURE",
-    output: { proposal: true, governing: false },
+    status: input.unavailable ? "FAILED" : "SUCCEEDED",
+    providerState: input.unavailable ? "UNAVAILABLE" : "FIXTURE",
+    output: { proposal: !input.unavailable, governing: false },
     version: 1,
     ...stamp(now),
   };

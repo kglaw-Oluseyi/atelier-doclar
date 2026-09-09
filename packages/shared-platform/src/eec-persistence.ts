@@ -63,6 +63,12 @@ import {
   VendorPriceCardEditionSchema,
   VendorPriceCardSchema,
 } from "./eec-intelligence-schemas.js";
+import {
+  AiEvaluationCaseResultSchema,
+  AiEvaluationRunLeaseSchema,
+  S05AEvaluationMigrationReceiptSchema,
+  S05A_EVALUATION_COLLECTIONS,
+} from "./eec-evaluation-schemas.js";
 import type { PlatformSnapshot } from "./store.js";
 
 export const S05A_UNKNOWN_FIELDS_POLICY = "REJECT" as const;
@@ -133,6 +139,12 @@ const S05A_INTELLIGENCE_SCHEMAS = {
   eventCalendarOverlays: EventCalendarOverlaySchema.array(),
 } as const;
 
+const S05A_EVALUATION_SCHEMAS = {
+  aiEvaluationCaseResults: AiEvaluationCaseResultSchema.array(),
+  aiEvaluationRunLeases: AiEvaluationRunLeaseSchema.array(),
+  s05aEvaluationMigrationReceipts: S05AEvaluationMigrationReceiptSchema.array(),
+} as const;
+
 export function validateS05APersistedCollections(snapshot: PlatformSnapshot): void {
   for (const collection of S05A_STORE_COLLECTIONS) {
     const parsed = S05A_COLLECTION_SCHEMAS[collection].safeParse(snapshot[collection]);
@@ -144,6 +156,14 @@ export function validateS05APersistedCollections(snapshot: PlatformSnapshot): vo
   }
   for (const collection of S05A_INTELLIGENCE_COLLECTIONS) {
     const parsed = S05A_INTELLIGENCE_SCHEMAS[collection].safeParse(snapshot[collection]);
+    if (!parsed.success) {
+      throw new PlatformError("VALIDATION_FAILED", `invalid ${collection}`, {
+        details: parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`),
+      });
+    }
+  }
+  for (const collection of S05A_EVALUATION_COLLECTIONS) {
+    const parsed = S05A_EVALUATION_SCHEMAS[collection].safeParse(snapshot[collection]);
     if (!parsed.success) {
       throw new PlatformError("VALIDATION_FAILED", `invalid ${collection}`, {
         details: parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`),

@@ -200,6 +200,11 @@ import type {
   VendorPriceCardEdition,
 } from "./eec-intelligence-schemas.js";
 import type {
+  AiEvaluationCaseResult,
+  AiEvaluationRunLease,
+  S05AEvaluationMigrationReceipt,
+} from "./eec-evaluation-schemas.js";
+import type {
   GuestDuplicateCandidate,
   GuestHousehold,
   GuestIntakeBatch,
@@ -409,6 +414,9 @@ export interface PlatformSnapshot {
   impactAssessments: ImpactAssessment[];
   aiJobs: AiJob[];
   aiEvaluationRuns: AiEvaluationRun[];
+  aiEvaluationCaseResults: AiEvaluationCaseResult[];
+  aiEvaluationRunLeases: AiEvaluationRunLease[];
+  s05aEvaluationMigrationReceipts: S05AEvaluationMigrationReceipt[];
   s05aIntelligenceReceipts: S05AIntelligenceReceipt[];
   vendorPriceCards: VendorPriceCard[];
   vendorPriceCardEditions: VendorPriceCardEdition[];
@@ -636,6 +644,9 @@ export function emptySnapshot(): PlatformSnapshot {
     impactAssessments: [],
     aiJobs: [],
     aiEvaluationRuns: [],
+    aiEvaluationCaseResults: [],
+    aiEvaluationRunLeases: [],
+    s05aEvaluationMigrationReceipts: [],
     s05aIntelligenceReceipts: [],
     vendorPriceCards: [],
     vendorPriceCardEditions: [],
@@ -847,6 +858,9 @@ export function normalizeSnapshot(input: PlatformSnapshot): PlatformSnapshot {
     impactAssessments: input.impactAssessments ?? [],
     aiJobs: input.aiJobs ?? [],
     aiEvaluationRuns: input.aiEvaluationRuns ?? [],
+    aiEvaluationCaseResults: input.aiEvaluationCaseResults ?? [],
+    aiEvaluationRunLeases: input.aiEvaluationRunLeases ?? [],
+    s05aEvaluationMigrationReceipts: input.s05aEvaluationMigrationReceipts ?? [],
     s05aIntelligenceReceipts: input.s05aIntelligenceReceipts ?? [],
     vendorPriceCards: input.vendorPriceCards ?? [],
     vendorPriceCardEditions: input.vendorPriceCardEditions ?? [],

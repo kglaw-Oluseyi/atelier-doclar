@@ -8,6 +8,7 @@ import type { S05AIntelligenceReceipt } from "./eec-intelligence-schemas.js";
 import { seedBudgetCatalogueOnSnap } from "./eec-intelligence.js";
 import { applyQuantityRulesToCatalogue, retireUnsupportedRulePricesOnSnap, seedBudgetKnowledgeOnSnap } from "./eec-s05a-depth.js";
 import { seedCalendarDefinitionOnSnap } from "./eec-s05a-completion.js";
+import { migrateEosS05AEvaluationV4 } from "./eec-evaluation-migration.js";
 import { exactHash as intelligenceHash } from "./eec-hash.js";
 import { normalizeSnapshot, type PlatformSnapshot } from "./store.js";
 
@@ -15,6 +16,7 @@ export const EOS_S05A_MIGRATION_ID = "EOS-S05A-DISCOVERY-V1" as const;
 export const EOS_S05A_INTELLIGENCE_MIGRATION_ID = "EOS-S05A-INTELLIGENCE-V1" as const;
 export const EOS_S05A_INTELLIGENCE_V2_MIGRATION_ID = "EOS-S05A-INTELLIGENCE-V2" as const;
 export const EOS_S05A_INTELLIGENCE_V3_MIGRATION_ID = "EOS-S05A-INTELLIGENCE-V3" as const;
+export { EOS_S05A_EVALUATION_MIGRATION_ID } from "./eec-evaluation-migration.js";
 export const EOS_S05A_MIGRATION_CHECKSUM = createHash("sha256")
   .update(`${EOS_S05A_MIGRATION_ID}:additive-discovery-collections:synthetic-coverage-catalogue`)
   .digest("hex");
@@ -313,8 +315,11 @@ export function migrateEosS05AIntelligenceV3(input: PlatformSnapshot, now: strin
 }
 
 export function applyEosS05AToSnapshot(snap: PlatformSnapshot, now: string): PlatformSnapshot {
-  return migrateEosS05AIntelligenceV3(
-    migrateEosS05AIntelligenceV2(migrateEosS05AIntelligence(migrateEosS05A(snap, now).snapshot, now).snapshot, now).snapshot,
+  return migrateEosS05AEvaluationV4(
+    migrateEosS05AIntelligenceV3(
+      migrateEosS05AIntelligenceV2(migrateEosS05AIntelligence(migrateEosS05A(snap, now).snapshot, now).snapshot, now).snapshot,
+      now,
+    ).snapshot,
     now,
   ).snapshot;
 }

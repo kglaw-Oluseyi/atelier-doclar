@@ -393,15 +393,42 @@ export const AiEvaluationRunSchema = z
     modelVersion: NonEmptySchema.max(80),
     providerVersion: z.string().max(80).optional(),
     orchestratorVersion: z.string().max(80).optional(),
-    status: z.enum(["PASSED", "FAILED", "BLOCKED"]).optional(),
+    status: z.enum(["PASSED", "FAILED", "BLOCKED", "QUEUED", "RUNNING", "CANCELLED"]).optional(),
     zeroToleranceFailed: z.boolean(),
     metrics: z.record(z.string(), z.string()),
     inputCaseHashes: z.array(NonEmptySchema.max(128)).optional(),
-    zeroToleranceFailures: z.array(NonEmptySchema.max(240)).optional(),
+    zeroToleranceFailures: z
+      .array(
+        z.union([
+          z.string().max(240),
+          z
+            .object({
+              category: z.string().min(1).max(80),
+              caseId: z.string().min(1).max(80),
+              observationCode: z.string().min(1).max(80),
+              summary: z.string().min(1).max(400),
+            })
+            .strict(),
+        ]),
+      )
+      .optional(),
     caseEvidence: z.array(z.string().max(400)).optional(),
     durationMs: z.string().regex(/^\d+$/).optional(),
     correlationId: z.string().max(80).optional(),
     executedAt: IsoDatetimeSchema.optional(),
+    corpusHash: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+    projectionPolicyVersion: z.string().max(80).optional(),
+    evaluationContractVersion: z.string().max(80).optional(),
+    applicationSha: z.string().max(64).optional(),
+    caseCount: z.number().int().nonnegative().optional(),
+    passedCount: z.number().int().nonnegative().optional(),
+    failedCount: z.number().int().nonnegative().optional(),
+    errorCount: z.number().int().nonnegative().optional(),
+    startedAt: IsoDatetimeSchema.optional(),
+    completedAt: IsoDatetimeSchema.optional(),
+    requestedByPersonId: PersonIdSchema.optional(),
+    idempotencyKey: z.string().max(160).optional(),
+    compatibilityStatus: z.enum(["CURRENT", "INCOMPATIBLE", "LEGACY"]).optional(),
     ...versioned,
   })
   .strict();

@@ -191,6 +191,7 @@ const PERMISSION_IDS: Record<PermissionKey, string> = {
   "change.decide": "11111111-1111-4111-8111-111111111172",
   "change.propagate": "11111111-1111-4111-8111-111111111173",
   "executiveCommand.view": "11111111-1111-4111-8111-111111111174",
+  "executiveCommand.evaluate": "11111111-1111-4111-8111-111111111175",
 };
 
 const ROLE_IDS: Record<(typeof SYSTEM_ROLE_KEYS)[number], string> = {

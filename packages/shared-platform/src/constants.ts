@@ -395,6 +395,7 @@ export const PERMISSION_KEYS = [
   "change.decide",
   "change.propagate",
   "executiveCommand.view",
+  "executiveCommand.evaluate",
 ] as const;
 
 export const SYSTEM_ROLE_KEYS = [
@@ -617,6 +618,7 @@ export const S05A_SENSITIVE_PERMISSIONS = [
   "change.decide",
   "change.propagate",
   "executiveCommand.view",
+  "executiveCommand.evaluate",
 ] as const;
 
 export const ASSERTION_KINDS = [

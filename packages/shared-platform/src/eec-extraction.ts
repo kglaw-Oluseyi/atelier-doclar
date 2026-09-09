@@ -11,6 +11,11 @@ export function sanitiseInertText(raw: string): string {
     .trim();
 }
 
+function wordNumber(value: string): string {
+  const lookup: Record<string, string> = { two: "2", three: "3", twelve: "12" };
+  return lookup[value.toLowerCase()] ?? value;
+}
+
 export function extractFixtureProposals(segments: readonly SourceSegment[]): CandidateAssertionProposal[] {
   const proposals: CandidateAssertionProposal[] = [];
   for (const segment of segments) {
@@ -18,18 +23,33 @@ export function extractFixtureProposals(segments: readonly SourceSegment[]): Can
     if (INJECTION_MARKERS.some((marker) => marker.test(text))) {
       continue;
     }
-    const guestMatch = text.match(/\b(\d{2,4})\s+(guests?|invitees)\b/i);
-    if (guestMatch) {
+    const ceremonyGuest = text.match(/\b(traditional ceremony|reception)\b[^.]*?\b(\d{2,4})\s+(guests?|invitees)\b/i);
+    if (ceremonyGuest) {
+      const scope = /traditional/i.test(ceremonyGuest[1] ?? "") ? "traditional" : "reception";
       proposals.push({
         kind: "FACT",
-        topicKey: "guest.target_count",
-        value: { count: guestMatch[1], unit: "guests" },
+        topicKey: `programme.ceremony.${scope}`,
+        value: { ceremony: scope, count: ceremonyGuest[2], unit: "guests" },
         sourceSegmentIds: [segment.id],
         directness: "DIRECT_STATEMENT",
         confidence: "HIGH",
-        rationale: "The source names a guest count.",
+        rationale: "The source names a ceremony-scoped guest count.",
         sensitivity: "STANDARD",
       });
+    } else {
+      const guestMatch = text.match(/\b(\d{2,4})\s+(guests?|invitees)\b/i);
+      if (guestMatch) {
+        proposals.push({
+          kind: "FACT",
+          topicKey: "guest.target_count",
+          value: { count: guestMatch[1], unit: "guests" },
+          sourceSegmentIds: [segment.id],
+          directness: "DIRECT_STATEMENT",
+          confidence: "HIGH",
+          rationale: "The source names a guest count.",
+          sensitivity: "STANDARD",
+        });
+      }
     }
     const dateMatch = text.match(/\b(\d{4}-\d{2}-\d{2})\b/);
     if (dateMatch) {
@@ -44,12 +64,99 @@ export function extractFixtureProposals(segments: readonly SourceSegment[]): Can
         sensitivity: "STANDARD",
       });
     }
+    const locationMatch = text.match(/\bin ([A-ZÀ-ÖØ-öø-ÿ][\p{L}'-]*)\b/u);
+    if (locationMatch && !/guests|ceremon/i.test(locationMatch[1] ?? "")) {
+      proposals.push({
+        kind: "FACT",
+        topicKey: "event.location",
+        value: { place: locationMatch[1] },
+        sourceSegmentIds: [segment.id],
+        directness: "DIRECT_STATEMENT",
+        confidence: "HIGH",
+        rationale: "The source names a location.",
+        sensitivity: "STANDARD",
+      });
+    }
+    const ceremonyCount = text.match(/\b(\d+|two|three)\s+ceremon(?:y|ies)\b/i);
+    if (ceremonyCount) {
+      proposals.push({
+        kind: "FACT",
+        topicKey: "programme.ceremonies",
+        value: { count: wordNumber(ceremonyCount[1] ?? "") },
+        sourceSegmentIds: [segment.id],
+        directness: "DIRECT_STATEMENT",
+        confidence: "HIGH",
+        rationale: "The source names distinct ceremonies.",
+        sensitivity: "STANDARD",
+      });
+    }
+    const brandMatch = text.match(/\bbrand\s+([A-Za-z0-9][A-Za-z0-9 '-]{0,40})/i);
+    if (brandMatch) {
+      proposals.push({
+        kind: "FACT",
+        topicKey: "corporate.brand",
+        value: { brand: brandMatch[1]?.trim() },
+        sourceSegmentIds: [segment.id],
+        directness: "DIRECT_STATEMENT",
+        confidence: "HIGH",
+        rationale: "The source names a brand.",
+        sensitivity: "STANDARD",
+      });
+    }
+    if (/\b(AV|audio[- ]visual|production technology)\b/i.test(text)) {
+      proposals.push({
+        kind: "CONSTRAINT",
+        topicKey: "production.technology",
+        value: { required: true },
+        sourceSegmentIds: [segment.id],
+        directness: "DIRECT_STATEMENT",
+        confidence: "HIGH",
+        rationale: "The source names a production requirement.",
+        sensitivity: "STANDARD",
+      });
+    }
+    if (/\b(confidential|private residence|surprise)\b/i.test(text)) {
+      proposals.push({
+        kind: "CONSTRAINT",
+        topicKey: "privacy.surprise",
+        value: { confidential: true },
+        sourceSegmentIds: [segment.id],
+        directness: "DIRECT_STATEMENT",
+        confidence: "HIGH",
+        rationale: "The source names a confidentiality requirement.",
+        sensitivity: "CONFIDENTIAL_SURPRISE",
+      });
+    }
+    if (/\b(travel|accommodation|local supplier)\b/i.test(text)) {
+      proposals.push({
+        kind: "PREFERENCE",
+        topicKey: "travel.stay",
+        value: { required: true },
+        sourceSegmentIds: [segment.id],
+        directness: "DIRECT_STATEMENT",
+        confidence: "HIGH",
+        rationale: "The source names travel or stay requirements.",
+        sensitivity: "STANDARD",
+      });
+    }
+    if (/\bstep-free access|accessibility\b/i.test(text)) {
+      proposals.push({
+        kind: "CONSTRAINT",
+        topicKey: "access.health",
+        value: { stepFree: true },
+        sourceSegmentIds: [segment.id],
+        directness: "DIRECT_STATEMENT",
+        confidence: "HIGH",
+        rationale: "The source names an accessibility requirement.",
+        sensitivity: "ACCESSIBILITY_HEALTH",
+      });
+    }
     const preferNot = /prefer not to answer|not decided|not applicable/i.test(text);
     if (preferNot && /budget|envelope|investment/i.test(text)) {
       proposals.push({
         kind: "UNKNOWN",
         topicKey: "investment.envelope",
-        value: { status: "PREFER_NOT_TO_ANSWER" },
+        value: { status: /prefer not/i.test(text) ? "PREFER_NOT_TO_ANSWER" : "NOT_DECIDED" },
         sourceSegmentIds: [segment.id],
         directness: "DIRECT_STATEMENT",
         confidence: "HIGH",
@@ -85,6 +192,18 @@ export function assertProposalSupported(
     if (proposal.topicKey === "event.date") {
       const date = String((proposal.value as { date?: string })?.date ?? "");
       if (!date || !haystack.includes(date)) {
+        throw new PlatformError("VALIDATION_FAILED", "unsupported assertion rejected: citation does not support the proposal");
+      }
+    }
+    if (proposal.topicKey === "event.location") {
+      const place = String((proposal.value as { place?: string })?.place ?? "").toLowerCase();
+      if (!place || !haystack.includes(place)) {
+        throw new PlatformError("VALIDATION_FAILED", "unsupported assertion rejected: citation does not support the proposal");
+      }
+    }
+    if (proposal.topicKey.startsWith("programme.ceremony.")) {
+      const count = String((proposal.value as { count?: string })?.count ?? "");
+      if (!count || !haystack.includes(count)) {
         throw new PlatformError("VALIDATION_FAILED", "unsupported assertion rejected: citation does not support the proposal");
       }
     }
