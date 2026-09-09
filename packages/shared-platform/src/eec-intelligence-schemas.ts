@@ -210,12 +210,18 @@ export const BudgetAssumptionSchema = z
     value: NonEmptySchema.max(80),
     unit: NonEmptySchema.max(32),
     sourceAssertionId: UuidSchema.optional(),
-    sourceKind: z.enum(["BRIEF", "MANUAL", "SCENARIO"]).optional(),
+    sourceKind: z.enum(["BRIEF", "MANUAL", "SCENARIO", "SCENARIO_OVERRIDE"]).optional(),
     confidence: z.enum(["LOW", "MEDIUM", "HIGH"]).optional(),
     expiresAt: IsoDatetimeSchema.optional(),
     confirmed: z.boolean(),
     stale: z.boolean(),
     labelledManualAssumption: z.boolean().optional(),
+    governingValue: z.string().max(80).optional(),
+    governingBriefEditionId: UuidSchema.optional(),
+    governingAssertionId: UuidSchema.optional(),
+    reason: z.string().max(500).optional(),
+    createdByPersonId: PersonIdSchema.optional(),
+    driverCode: z.string().max(80).optional(),
     ...versioned,
   })
   .strict();
@@ -247,6 +253,27 @@ export const BudgetScenarioEditionSchema = z
     contingencyBasis: z.string().max(200).optional(),
     warnings: z.array(z.string().max(240)).optional(),
     missingDrivers: z.array(z.string().max(80)).optional(),
+    governingBriefEditionId: UuidSchema.optional(),
+    governingBriefContentHash: z.string().max(128).optional(),
+    calculationResultId: UuidSchema.optional(),
+    supersedesScenarioEditionId: UuidSchema.optional(),
+    guestCountOverrideReason: z.string().max(500).optional(),
+    effectiveDrivers: z
+      .array(
+        z
+          .object({
+            code: NonEmptySchema.max(80),
+            value: z.string().max(40),
+            provenanceKind: z.enum(["CURRENT_BRIEF", "SCENARIO_OVERRIDE"]),
+            assumptionId: UuidSchema.optional(),
+            governingValue: z.string().max(40).optional(),
+            governingBriefEditionId: UuidSchema.optional(),
+            governingAssertionId: UuidSchema.optional(),
+            reason: z.string().max(500).optional(),
+          })
+          .strict(),
+      )
+      .optional(),
     ...versioned,
   })
   .strict();
@@ -603,6 +630,8 @@ export const BudgetLineSchema = z
     ruleEditionHash: z.string().max(128),
     warnings: z.array(z.string().max(240)),
     unresolvedAssumptions: z.array(z.string().max(200)),
+    assumptionId: UuidSchema.optional(),
+    effectiveDriverValue: z.string().max(40).optional(),
     contentHash: NonEmptySchema.max(128),
     ...versioned,
   })

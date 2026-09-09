@@ -872,6 +872,17 @@ export {
   governingGuestCountFromBrief,
   toExtractionInvocation,
 } from "./eec-operations.js";
+export {
+  MAX_GUEST_COUNT,
+  GUEST_TARGET_COUNT,
+  CalculateBudgetScenarioCommandSchema,
+  parseBudgetCalculateFormData,
+  parseCalculateBudgetScenarioCommand,
+  prepareBudgetScenarioCalculation,
+  resolveEffectiveBudgetDrivers,
+  assertBudgetFormDataMatchesVisible,
+  describeEffectiveGuestDriver,
+} from "./eec-budget-override.js";
 export { clientSafeHeading } from "./eec-projections.js";
 export * as engagementIntake from "./engagement-intake/index.js";
 export * as discoveryIntelligence from "./discovery-intelligence/index.js";

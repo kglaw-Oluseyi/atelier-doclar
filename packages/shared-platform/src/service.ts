@@ -9,6 +9,8 @@ import { localFixtureAccessAuthority, type AccessAuthority } from "./access-auth
 import type { LayoutBinaryStore } from "./layout-asset-store.js";
 import { permissionIdForKey, roleIdForKey, roleKeyForId, seededPermissions, seededRoles, isSystemAdministratorRole } from "./catalog.js";
 import { PlatformError } from "./errors.js";
+import { exactHash } from "./eec-hash.js";
+import { parseCalculateBudgetScenarioCommand, prepareBudgetScenarioCalculation } from "./eec-budget-override.js";
 import { assertNamedHuman } from "./identity.js";
 import { lineageFixtureMark } from "./fixtures.js";
 import { emptyMasterEventFile } from "./mef.js";
@@ -7094,48 +7096,83 @@ export class PlatformService {
   }
 
   calculateBudgetScenario(actor: ActorContext, raw: unknown) {
-    const input = raw as Parameters<typeof calculateBudgetScenarioOnSnap>[1] & {
-      reason?: string;
-      idempotencyKey?: string;
-      assumptionAcknowledged?: boolean;
-    };
+    const extra = raw as { excludeCodes?: string[]; manualAssumptions?: { key: string; value: string; unit: string }[] };
+    const command = parseCalculateBudgetScenarioCommand(raw);
     return this.mutate(actor, {
       permission: "budget.calculate",
-      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      scope: { organisationId: command.organisationId, eventId: command.eventId },
       action: "budget.calculated",
       resourceType: "budget_scenario",
-      reason: input.reason,
-      idempotencyKey: input.idempotencyKey,
+      reason: command.reason,
+      idempotencyKey: command.idempotencyKey,
+      payloadHash: exactHash({
+        organisationId: command.organisationId,
+        engagementId: command.engagementId ?? "",
+        purpose: command.purpose ?? "PROTECT_PRIORITIES",
+        archetype: command.archetype ?? "WEDDING",
+        guests: command.guestCountOverride ?? command.guests ?? "",
+        reason: command.guestCountOverrideReason ?? "",
+      }),
+      alreadyApplied: (snap) => {
+        const purpose = command.purpose ?? "PROTECT_PRIORITIES";
+        const guests = String(command.guestCountOverride ?? command.guests ?? "");
+        const reason = command.guestCountOverrideReason ?? "";
+        return snap.budgetScenarioEditions.find(
+          (item) =>
+            item.organisationId === command.organisationId &&
+            item.engagementId === command.engagementId &&
+            item.purpose === purpose &&
+            (item.effectiveDrivers ?? []).some((driver) => driver.code === "guest.target_count" && driver.value === guests) &&
+            (item.guestCountOverrideReason ?? "") === reason,
+        );
+      },
+      replayIfAlreadyApplied: true,
       run: (snap, ctx) => {
-        if (input.engagementId) {
-          const governing = governingGuestCountFromBrief(snap, input.engagementId);
-          if (governing.kind !== "CURRENT_BRIEF") {
-            if (input.assumptionAcknowledged === false) {
-              throw new PlatformError("VALIDATION_FAILED", "a planning guest-count assumption must be acknowledged before calculation");
-            }
-            return calculateBudgetScenarioOnSnap(
-              snap,
-              { ...input, guestSourceKind: "SCENARIO" },
-              ctx.now,
-              actor.personId,
-            );
-          }
-          const overridden = input.guests !== governing.count;
-          return calculateBudgetScenarioOnSnap(
-            snap,
-            {
-              ...input,
-              guestSourceKind: overridden ? "SCENARIO" : "BRIEF",
-              sourceAssertionId: governing.assertionId,
-              assumptionAcknowledged: overridden || input.assumptionAcknowledged,
-            },
-            ctx.now,
-            actor.personId,
-          );
-        }
-        return calculateBudgetScenarioOnSnap(snap, input, ctx.now, actor.personId);
+        const prepared = prepareBudgetScenarioCalculation(snap, command);
+        return calculateBudgetScenarioOnSnap(
+          snap,
+          {
+            organisationId: command.organisationId,
+            engagementId: command.engagementId,
+            eventId: command.eventId,
+            purpose: command.purpose ?? "PROTECT_PRIORITIES",
+            archetype: command.archetype ?? "WEDDING",
+            guests: prepared.guests,
+            excludeCodes: extra.excludeCodes,
+            manualAssumptions: extra.manualAssumptions,
+            guestSourceKind: prepared.guestSourceKind,
+            sourceAssertionId: prepared.sourceAssertionId,
+            assumptionAcknowledged: prepared.assumptionAcknowledged,
+            guestCountOverride: prepared.guestCountOverride,
+            guestCountOverrideReason: prepared.guestCountOverrideReason,
+            governingGuestCount: prepared.governingGuestCount,
+            governingBriefEditionId: prepared.governingBriefEditionId,
+            governingBriefContentHash: prepared.governingBriefContentHash,
+            governingAssertionId: prepared.governingAssertionId,
+            effectiveDrivers: prepared.effectiveDrivers,
+            scenarioAssumptions: prepared.scenarioAssumptions,
+            expectedScenarioVersion: command.expectedScenarioVersion,
+          },
+          ctx.now,
+          actor.personId,
+        );
       },
     });
+  }
+
+  getBudgetCalculationResult(actor: ActorContext, organisationId: string, engagementId: string, calculationResultId: string) {
+    const { snap } = this.authorizeQuery(actor, "engagement.view", { organisationId });
+    const record = snap.budgetScenarioEditions.find(
+      (item) => item.id === calculationResultId || item.calculationResultId === calculationResultId,
+    );
+    if (!record) throw new PlatformError("NOT_FOUND", "budget calculation result was not found");
+    if (record.organisationId !== organisationId) {
+      throw new PlatformError("SCOPE_MISMATCH", "budget calculation result is not in this organisation");
+    }
+    if (record.engagementId && record.engagementId !== engagementId) {
+      throw new PlatformError("SCOPE_MISMATCH", "budget calculation result is not in this engagement");
+    }
+    return record;
   }
 
   decideBudgetScenario(actor: ActorContext, raw: unknown) {
@@ -7359,6 +7396,7 @@ export class PlatformService {
       calendar: snap.calendarDefinitions.find((item) => item.organisationId === organisationId && item.current),
       evaluation: [...snap.aiEvaluationRuns].reverse().find((item) => item.organisationId === organisationId),
       guestPrefill,
+      assumptions: snap.budgetAssumptions.filter((item) => item.engagementId === engagementId),
       workbench: {
         coverage: snap.coverageAssessments
           .filter((item) => item.engagementId === engagementId)

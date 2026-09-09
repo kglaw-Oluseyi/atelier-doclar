@@ -514,9 +514,19 @@ export function calculateBudgetScenarioOnSnap(
     archetype: string;
     guests: string;
     excludeCodes?: string[];
+    manualAssumptions?: { key: string; value: string; unit: string }[];
     guestSourceKind?: "BRIEF" | "SCENARIO";
     sourceAssertionId?: string;
     assumptionAcknowledged?: boolean;
+    guestCountOverride?: number;
+    guestCountOverrideReason?: string;
+    governingGuestCount?: number;
+    governingBriefEditionId?: string;
+    governingBriefContentHash?: string;
+    governingAssertionId?: string;
+    effectiveDrivers?: readonly import("./eec-budget-override.js").EffectiveBudgetDriver[];
+    scenarioAssumptions?: readonly import("./eec-budget-override.js").BudgetScenarioAssumptionInput[];
+    expectedScenarioVersion?: number;
   },
   now: string,
   actorPersonId: string,

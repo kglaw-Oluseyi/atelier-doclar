@@ -25,6 +25,12 @@ import type {
   VendorPriceCardEdition,
 } from "./eec-intelligence-schemas.js";
 import { applyCalendarDatesToMilestones, nextGovernedInterviewFromCorpus, seedCalendarDefinitionOnSnap } from "./eec-s05a-completion.js";
+import {
+  GUEST_TARGET_COUNT,
+  describeEffectiveGuestDriver,
+  type EffectiveBudgetDriver,
+  type BudgetScenarioAssumptionInput,
+} from "./eec-budget-override.js";
 import { PlatformError } from "./errors.js";
 import type { PlatformSnapshot } from "./store.js";
 
@@ -451,6 +457,15 @@ export function calculateBudgetScenarioDeepOnSnap(
     guestSourceKind?: "BRIEF" | "SCENARIO";
     sourceAssertionId?: string;
     assumptionAcknowledged?: boolean;
+    guestCountOverride?: number;
+    guestCountOverrideReason?: string;
+    governingGuestCount?: number;
+    governingBriefEditionId?: string;
+    governingBriefContentHash?: string;
+    governingAssertionId?: string;
+    effectiveDrivers?: readonly EffectiveBudgetDriver[];
+    scenarioAssumptions?: readonly BudgetScenarioAssumptionInput[];
+    expectedScenarioVersion?: number;
   },
   now: string,
   actorPersonId: string,
@@ -461,29 +476,48 @@ export function calculateBudgetScenarioDeepOnSnap(
   const template = snap.budgetTemplateEditions.find((item) => item.organisationId === input.organisationId && item.archetype === input.archetype && item.current);
   if (!template) throw new PlatformError("NOT_FOUND", "budget template was not found");
   const items = snap.costItemDefinitions.filter((item) => item.organisationId === input.organisationId);
-  if (!/^\d+$/.test(input.guests)) {
+  const guestDriver = input.effectiveDrivers?.find((item) => item.code === GUEST_TARGET_COUNT);
+  const guestsText = guestDriver ? String(guestDriver.value) : input.guests;
+  if (!/^\d+$/.test(guestsText)) {
     throw new PlatformError("VALIDATION_FAILED", "guest count must be a whole number");
   }
-  const guests = BigInt(input.guests);
+  const guests = BigInt(guestsText);
   const bom = instantiateBom({ template, items, guests, purpose: input.purpose, excludeCodes: input.excludeCodes });
   const assumption: BudgetAssumption = {
     id: randomUUID(),
     organisationId: input.organisationId,
     engagementId: input.engagementId,
     eventId: input.eventId,
-    key: "guest.target_count",
-    value: input.guests,
-    unit: "guests",
-    sourceKind: input.guestSourceKind ?? "SCENARIO",
-    sourceAssertionId: input.sourceAssertionId,
+    key: GUEST_TARGET_COUNT,
+    driverCode: GUEST_TARGET_COUNT,
+    value: guestsText,
+    unit: "PERSON",
+    sourceKind:
+      input.guestSourceKind === "BRIEF"
+        ? "BRIEF"
+        : input.governingGuestCount !== undefined && input.guestSourceKind === "SCENARIO"
+          ? "SCENARIO_OVERRIDE"
+          : "SCENARIO",
+    sourceAssertionId: input.sourceAssertionId ?? input.governingAssertionId,
     labelledManualAssumption: input.guestSourceKind === "SCENARIO" ? true : undefined,
     confidence: input.guestSourceKind === "BRIEF" ? "HIGH" : "MEDIUM",
     confirmed: input.guestSourceKind === "BRIEF",
     stale: false,
+    governingValue: input.governingGuestCount !== undefined ? String(input.governingGuestCount) : undefined,
+    governingBriefEditionId: input.governingBriefEditionId,
+    governingAssertionId: input.governingAssertionId,
+    reason: input.guestCountOverrideReason,
+    createdByPersonId: actorPersonId,
     version: 1,
     ...stamp(now),
   };
   snap.budgetAssumptions.push(assumption);
+  const boundDrivers = (input.effectiveDrivers ?? []).map((item) =>
+    item.provenance.kind === "SCENARIO_OVERRIDE"
+      ? { ...item, provenance: { ...item.provenance, assumptionId: assumption.id } }
+      : item,
+  );
+  const boundGuest = boundDrivers.find((item) => item.code === GUEST_TARGET_COUNT) ?? guestDriver;
   for (const extra of input.manualAssumptions ?? []) {
     snap.budgetAssumptions.push({
       id: randomUUID(),
@@ -511,7 +545,12 @@ export function calculateBudgetScenarioDeepOnSnap(
     ...snap.locationFactorEditions.filter((item) => item.organisationId === input.organisationId && item.current).map((item) => item.contentHash),
     ...snap.seasonWindowEditions.filter((item) => item.organisationId === input.organisationId && item.current).map((item) => item.contentHash),
   ];
-  const assumptionSetHash = exactHash({ guests: input.guests, extras: input.manualAssumptions ?? [] });
+  const assumptionSetHash = exactHash({
+    guests: guestsText,
+    source: assumption.sourceKind,
+    reason: input.guestCountOverrideReason ?? "",
+    extras: input.manualAssumptions ?? [],
+  });
   const bomRecord: BudgetBomSnapshot = {
     id: randomUUID(),
     organisationId: input.organisationId,
@@ -534,6 +573,26 @@ export function calculateBudgetScenarioDeepOnSnap(
   };
   snap.budgetBomSnapshots.push(bomRecord);
   const traces: BudgetScenarioEdition["trace"] = [];
+  if (boundGuest) {
+    traces.push({
+      op: "EFFECTIVE_DRIVER",
+      detail: describeEffectiveGuestDriver(boundGuest),
+      value: String(boundGuest.value),
+    });
+    traces.push({
+      op: "DRIVER_PROVENANCE",
+      detail:
+        boundGuest.provenance.kind === "SCENARIO_OVERRIDE"
+          ? `SCENARIO_OVERRIDE:${boundGuest.provenance.reason}`.slice(0, 240)
+          : "CURRENT_BRIEF",
+      value: String(boundGuest.value),
+    });
+    traces.push({
+      op: "BRIEF_UNCHANGED",
+      detail: "Event Brief was not changed.",
+      value: input.governingGuestCount !== undefined ? String(input.governingGuestCount) : guestsText,
+    });
+  }
   const warnings: string[] = [];
   let expected = 0n;
   let low = 0n;
@@ -566,7 +625,7 @@ export function calculateBudgetScenarioDeepOnSnap(
     const rule = snap.costRuleEditions.find((item) => item.organisationId === input.organisationId && item.costItemCode === candidate.code && item.current);
     const expression = rule ? parseBudgetExpr(rule.expression) : { kind: "PRICE_REF" as const, itemCode: candidate.code };
     const result = evaluateBudgetExpr(expression, {
-      drivers: { "guest.target_count": input.guests },
+      drivers: { [GUEST_TARGET_COUNT]: guestsText },
       prices,
       ruleEditionHash: rule?.contentHash ?? exactHash(expression),
     });
@@ -586,9 +645,11 @@ export function calculateBudgetScenarioDeepOnSnap(
       itemCode: candidate.code,
       inclusionReason: `${candidate.classification} from ${template.archetype} template`,
       classification: candidate.classification,
-      quantity: candidate.driverKey === "guest.target_count" ? input.guests : "1",
+      quantity: candidate.driverKey === GUEST_TARGET_COUNT ? guestsText : "1",
       unit: candidate.unit ?? "event",
       quantityDriverKey: candidate.driverKey,
+      assumptionId: candidate.driverKey === GUEST_TARGET_COUNT ? assumption.id : undefined,
+      effectiveDriverValue: candidate.driverKey === GUEST_TARGET_COUNT ? guestsText : undefined,
       priceSource: lookup.winner.basis,
       priceEvidenceDate: lookup.winner.evidenceDate,
       priceConfidence: lookup.winner.confidence,
@@ -628,7 +689,9 @@ export function calculateBudgetScenarioDeepOnSnap(
   const inputHash = exactHash({
     bom: bomRecord.contentHash,
     purpose: input.purpose,
-    guests: input.guests,
+    guests: guestsText,
+    source: assumption.sourceKind,
+    reason: input.guestCountOverrideReason ?? "",
     excluded: bom.excluded,
     evidence: bom.included.map((item) => selectPriceSource(snap, input.organisationId, item.code, now).winner?.hash ?? "missing"),
   });
@@ -636,8 +699,15 @@ export function calculateBudgetScenarioDeepOnSnap(
   if (calculationStatus !== "COMPLETE") {
     warnings.push("This is not a complete current-price budget. Missing or synthetic evidence remains.");
   }
+  const previousCurrent = snap.budgetScenarioEditions.find(
+    (item) => item.organisationId === input.organisationId && item.purpose === input.purpose && item.current && item.engagementId === input.engagementId,
+  );
+  if (input.expectedScenarioVersion !== undefined && previousCurrent && previousCurrent.version !== input.expectedScenarioVersion) {
+    throw new PlatformError("VERSION_CONFLICT", "stale budget scenario");
+  }
+  const recordId = randomUUID();
   const record: BudgetScenarioEdition = {
-    id: randomUUID(),
+    id: recordId,
     organisationId: input.organisationId,
     engagementId: input.engagementId,
     eventId: input.eventId,
@@ -661,6 +731,32 @@ export function calculateBudgetScenarioDeepOnSnap(
     contingencyBasis: contingency ? `${contingency.basis}:${contingency.percent ?? contingency.money?.minor ?? "0"}` : undefined,
     warnings,
     missingDrivers: bom.missingDrivers,
+    governingBriefEditionId: input.governingBriefEditionId,
+    governingBriefContentHash: input.governingBriefContentHash,
+    calculationResultId: recordId,
+    supersedesScenarioEditionId: previousCurrent?.id,
+    guestCountOverrideReason: input.guestCountOverrideReason,
+    effectiveDrivers: boundDrivers.map((item) => ({
+      code: item.code,
+      value: String(item.value),
+      provenanceKind: item.provenance.kind,
+      assumptionId:
+        item.provenance.kind === "SCENARIO_OVERRIDE" && item.provenance.assumptionId
+          ? item.provenance.assumptionId
+          : item.provenance.kind === "SCENARIO_OVERRIDE"
+            ? assumption.id
+            : undefined,
+      governingValue: item.provenance.kind === "SCENARIO_OVERRIDE" ? String(item.provenance.governingValue) : undefined,
+      governingBriefEditionId:
+        item.provenance.kind === "SCENARIO_OVERRIDE" && item.provenance.governingBriefEditionId
+          ? item.provenance.governingBriefEditionId
+          : undefined,
+      governingAssertionId:
+        item.provenance.kind === "SCENARIO_OVERRIDE" && item.provenance.governingAssertionId
+          ? item.provenance.governingAssertionId
+          : undefined,
+      reason: item.provenance.kind === "SCENARIO_OVERRIDE" ? item.provenance.reason : undefined,
+    })),
     version: 1,
     ...stamp(now),
   };

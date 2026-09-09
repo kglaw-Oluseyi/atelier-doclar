@@ -414,13 +414,14 @@ test("S045 budget: candidate, working, submitted, unresolved, eligible 360, over
     purpose: "PROTECT_PRIORITIES",
     archetype: "WEDDING",
     guests: "410",
+    guestCountOverrideReason: "Synthetic planning increase to 410",
     assumptionAcknowledged: true,
     reason: "override",
     idempotencyKey: "budget-override",
   });
   assert.ok(scenario.id);
   const assumption = service.currentSnapshot().budgetAssumptions.find((item) => item.engagementId === engagement.id);
-  assert.equal(assumption?.sourceKind, "SCENARIO");
+  assert.equal(assumption?.sourceKind, "SCENARIO_OVERRIDE");
   const still = governingGuestCountFromBrief(service.currentSnapshot(), engagement.id);
   if (still.kind === "CURRENT_BRIEF") assert.equal(still.count, "360");
   void approved;
