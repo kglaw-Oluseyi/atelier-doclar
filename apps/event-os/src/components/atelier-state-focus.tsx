@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import { actionResultFocusStorageKey, shouldStealActionResultFocus } from "./action-result-focus";
+import {
+  actionResultFocusStorageKey,
+  shouldReleaseActionResultFocus,
+  shouldStealActionResultFocus,
+} from "./action-result-focus";
 
 const ALLOWED_FOCUS_TARGETS = new Set([
   "operational-state",
@@ -37,15 +41,18 @@ export function AtelierStateFocus({
       onceKey,
     });
     const alreadyPresented = storageKey ? window.sessionStorage.getItem(storageKey) === "1" : false;
+    const nav = navigationType();
     const steal = shouldStealActionResultFocus({
       active,
-      navigationType: navigationType(),
+      navigationType: nav,
       alreadyPresented,
     });
     if (!steal) {
       if (storageKey && active) window.sessionStorage.setItem(storageKey, "1");
-      blurIfHeld(targetId);
-      requestAnimationFrame(() => blurIfHeld(targetId));
+      if (shouldReleaseActionResultFocus({ navigationType: nav })) {
+        blurIfHeld(targetId);
+        requestAnimationFrame(() => blurIfHeld(targetId));
+      }
       return;
     }
     const deadline = Date.now() + 12_000;

@@ -30,3 +30,7 @@ export function shouldStealActionResultFocus(input: {
   if (input.alreadyPresented) return false;
   return true;
 }
+
+export function shouldReleaseActionResultFocus(input: { navigationType?: string }): boolean {
+  return input.navigationType === "reload";
+}

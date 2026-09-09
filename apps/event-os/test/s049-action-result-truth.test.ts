@@ -7,6 +7,7 @@ import {
 } from "@maison-doclar/shared-platform";
 import {
   actionResultFocusStorageKey,
+  shouldReleaseActionResultFocus,
   shouldRequestActionResultFocus,
   shouldStealActionResultFocus,
 } from "../src/components/action-result-focus.ts";
@@ -229,6 +230,8 @@ describe("EOS-S049 action-result truth, focus and scoped retry locks", () => {
     assert.equal(shouldStealActionResultFocus({ active: true, navigationType: "navigate" }), true);
     assert.equal(shouldStealActionResultFocus({ active: true, navigationType: "reload" }), false);
     assert.equal(shouldStealActionResultFocus({ active: true, alreadyPresented: true }), false);
+    assert.equal(shouldReleaseActionResultFocus({ navigationType: "navigate" }), false);
+    assert.equal(shouldReleaseActionResultFocus({ navigationType: "reload" }), true);
     const first = actionResultFocusStorageKey({
       pathname: "/app/discovery/engagement",
       targetId: "operational-state-title",
