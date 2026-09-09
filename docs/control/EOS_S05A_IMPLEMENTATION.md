@@ -1,12 +1,12 @@
 # EOS-S05A Implementation Record
 
 **Slice ID:** `EOS-S05A`
-**Prompt Control ID:** `MD-PR-S040`
+**Prompt Control ID:** `MD-PR-S041` (evaluation remediation; prior completion `MD-PR-S040`)
 **Title:** Discovery, Investment & Executive Event Command
 **Status:** `IMPLEMENTED / NOT ACCEPTED`
-**Starting baseline for MD-PR-S040:** `934e91e74324fb5aed2a7ebb8de129b12af782f8`
-**Application/test SHA:** `5aca600d98430f224849ee18f5075e83c47eafa7`
-**Live Event OS deploy:** `42b3f98b-7a4b-431d-9270-41b1286133be`
+**Starting baseline for MD-PR-S041:** `9556ca4e47e548bd424049159b7f9b6758eef05c`
+**Application/test SHA:** `0201df901343c35610c6a36308d21b775bb29a32`
+**Live Event OS deploy:** `d8e57477-d046-4cc4-8e66-abc841591d4b`
 **Catalogue slice:** no — accepted-slice count remains 5
 **Production:** unauthorised
 
@@ -37,7 +37,7 @@ This record tracks implementation against the ratified corpus. It is not an acce
 | `EEC-26`–`EEC-32` | COMPLETE — calendar working-day placement and client roadmap |
 | `EEC-33`–`EEC-36` | COMPLETE — fixture AI proposal-only; hash-bound change adapters |
 | `EEC-37`–`EEC-38` | COMPLETE — versioned interview corpus and no-repeat orchestration |
-| `EEC-39` | COMPLETE — executable evaluation corpus against the fixture boundary |
+| `EEC-39` | COMPLETE under `MD-PR-S041` — executable corpus, runner, persisted case results and fail-closed readiness. The S040 boolean self-report evaluator is removed. |
 | `EEC-40` | COMPLETE — decision-first Event Command with drill-downs |
 | `EEC-41`–`EEC-44` | COMPLETE as implementation evidence; Claude is an independent later gate |
 | `EEC-45` | NOT_APPLICABLE — acceptance is not this authority |
@@ -67,7 +67,7 @@ S039 PARTIAL/MISSING rows are reassessed against functional and test evidence. S
 | EEC-30–EEC-31 Roadmap Studio / client roadmap | IMPLEMENTED_AND_PROVEN | Staff calendar list plus dedicated client roadmap |
 | EEC-32–EEC-36 Change intelligence | IMPLEMENTED_AND_PROVEN | Unchanged S039 proof |
 | EEC-37–EEC-38 Conversational interview | IMPLEMENTED_AND_PROVEN | Versioned corpus, overlays, fatigue pause, no-repeat |
-| EEC-39 Evaluation corpus | IMPLEMENTED_AND_PROVEN | Executable fixture corpus; zero-tolerance failures persist (`TDR-S05A-003` closed) |
+| EEC-39 Evaluation corpus | IMPLEMENTED_AND_PROVEN | `MD-PR-S041` executable probes replace the S040 boolean self-report; V4 migration; 33 persisted case results; negative controls detect unsafe adapters (`TDR-S05A-003` closed on the actual runner) |
 | EEC-40 Executive Event Command | IMPLEMENTED_AND_PROVEN | Review status, exceptions, investment/roadmap/change drill-downs |
 | EEC-41–EEC-44 Assurance | IMPLEMENTED_AND_PROVEN | Implementation and automated/live evidence; Claude remains deferred |
 | EEC-45 Acceptance | NOT_APPLICABLE | This run is not acceptance authority |
@@ -76,7 +76,7 @@ S039 PARTIAL/MISSING rows are reassessed against functional and test evidence. S
 
 S040 preserves the S039 engines and completes the remaining product gaps: client review editions, Brief Review Workbench, client investment, Lagos-configurable calendars, interview coverage corpus, evaluation/red-team runner, and Event Command drill-downs.
 
-`TDR-S05A-003`, `TDR-S05A-004` and `TDR-S05A-005` are CLOSED. EOS-S05A is not accepted. Claude-in-Chrome was not run. EOS-S06 was not started. Control Tower was not deployed.
+`TDR-S05A-003`, `TDR-S05A-004` and `TDR-S05A-005` are CLOSED. `MD-PR-S041` closed EEC-39 only after the executable runner, case-result persistence, negative controls and live CEO fixture pass existed. EOS-S05A is not accepted. Claude-in-Chrome was not run. EOS-S06 was not started. Control Tower was not deployed.
 
 ## Exclusions that remain in force
 
