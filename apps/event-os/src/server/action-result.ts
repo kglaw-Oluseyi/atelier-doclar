@@ -1,5 +1,14 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
-import { PLATFORM_ERROR_CODES, type PlatformErrorCode } from "@maison-doclar/shared-platform";
+import {
+  PLATFORM_ERROR_CODES,
+  isActionApplication,
+  parseUuidList,
+  safeActionResultTargetId,
+  type ActionApplication,
+  type DurableMutationEffect,
+  type PlatformErrorCode,
+  type RetryLock,
+} from "@maison-doclar/shared-platform";
 import {
   isPlatformErrorCode,
   operationalStateFromCode,
@@ -26,6 +35,16 @@ export interface ActionResult {
   createdAt: string;
   eventId?: string;
   guestId?: string;
+  application?: ActionApplication;
+  didDataChange?: boolean;
+  createdRecordIds?: string[];
+  updatedRecordIds?: string[];
+  reusedRecordIds?: string[];
+  retrySafe?: boolean;
+  actionScope?: string;
+  subjectId?: string;
+  targetId?: string;
+  attemptedVersion?: number;
 }
 
 export interface PresentedActionResult {
@@ -35,6 +54,10 @@ export interface PresentedActionResult {
   actionType?: string;
   correlationId?: string;
   status?: ActionResultStatus;
+  application?: ActionApplication;
+  retryLock?: RetryLock;
+  focusTargetId?: string;
+  subjectId?: string;
 }
 
 const UUID =
@@ -190,6 +213,16 @@ export function parseActionResultPayload(raw: unknown): ActionResult | undefined
   if (typeof parsed.createdAt !== "string" || Number.isNaN(Date.parse(parsed.createdAt))) return undefined;
   const eventId = scopedId(parsed.eventId);
   const guestId = scopedId(parsed.guestId);
+  const subjectId = scopedId(parsed.subjectId);
+  const application = isActionApplication(parsed.application) ? parsed.application : undefined;
+  const targetId =
+    typeof parsed.targetId === "string" && parsed.targetId.length > 0 && parsed.targetId.length <= 80
+      ? safeActionResultTargetId(parsed.targetId)
+      : undefined;
+  const attemptedVersion =
+    typeof parsed.attemptedVersion === "number" && Number.isInteger(parsed.attemptedVersion) && parsed.attemptedVersion >= 0
+      ? parsed.attemptedVersion
+      : undefined;
   const result: ActionResult = {
     v: 1,
     sessionHash: parsed.sessionHash,
@@ -203,6 +236,16 @@ export function parseActionResultPayload(raw: unknown): ActionResult | undefined
     createdAt: parsed.createdAt,
     ...(eventId ? { eventId } : {}),
     ...(guestId ? { guestId } : {}),
+    ...(application ? { application } : {}),
+    ...(typeof parsed.didDataChange === "boolean" ? { didDataChange: parsed.didDataChange } : {}),
+    ...(Array.isArray(parsed.createdRecordIds) ? { createdRecordIds: parseUuidList(parsed.createdRecordIds) } : {}),
+    ...(Array.isArray(parsed.updatedRecordIds) ? { updatedRecordIds: parseUuidList(parsed.updatedRecordIds) } : {}),
+    ...(Array.isArray(parsed.reusedRecordIds) ? { reusedRecordIds: parseUuidList(parsed.reusedRecordIds) } : {}),
+    ...(typeof parsed.retrySafe === "boolean" ? { retrySafe: parsed.retrySafe } : {}),
+    ...(typeof parsed.actionScope === "string" && ACTION_TYPE.test(parsed.actionScope) ? { actionScope: parsed.actionScope } : {}),
+    ...(subjectId ? { subjectId } : {}),
+    ...(targetId ? { targetId } : {}),
+    ...(attemptedVersion !== undefined ? { attemptedVersion } : {}),
   };
   if (!actionResultHasNoSecrets(result)) return undefined;
   if (result.status === "SUCCESS" && result.code !== "SUCCESS") return undefined;
@@ -263,20 +306,33 @@ function viewFromResult(result: ActionResult): OperationalStateView {
   const replayedExtraction =
     result.status === "SUCCESS" &&
     Boolean(result.message?.includes("No new proposals") || result.message?.includes("already linked to this source"));
+  const replayed = result.application === "REPLAYED" || replayedExtraction;
   const view =
     result.status === "SUCCESS"
       ? operationalStateFromCode("SUCCESS", result.message)
       : operationalStateFromCode(result.code as PlatformErrorCode, result.message);
+  const dataChanged =
+    result.didDataChange === false || result.application === "NOT_APPLIED" || result.application === "REPLAYED" || replayed
+      ? ("no" as const)
+      : result.didDataChange === true
+        ? ("yes" as const)
+        : view.dataChanged;
   return {
     ...view,
-    ...(replayedExtraction
+    ...(replayed && result.actionType === "budget.calculate"
       ? {
-          title: "No new proposals were created",
-          whatHappened: result.message ?? "The existing proposal is already linked to this source.",
-          dataChanged: "no" as const,
+          title: "Existing calculation reused",
+          whatHappened: result.message || "No data changed. This request matches the stored scenario and calculation.",
           tone: "brass" as const,
         }
-      : {}),
+      : replayedExtraction
+        ? {
+            title: "No new proposals were created",
+            whatHappened: result.message ?? "The existing proposal is already linked to this source.",
+            tone: "brass" as const,
+          }
+        : {}),
+    dataChanged,
     actionType: result.actionType,
     actionLabel: actionLabel(result.actionType),
     correlationId: result.correlationId,
@@ -360,13 +416,26 @@ export function presentActionResult(input: {
     return { shouldConsume: false, mutationLocked: false };
   }
   const conflict = stored.status === "FAILURE" && stored.code === "VERSION_CONFLICT";
+  const retryLock: RetryLock | undefined =
+    conflict && stored.subjectId
+      ? {
+          actionScope: stored.actionScope ?? stored.actionType,
+          subjectId: stored.subjectId,
+          attemptedVersion: stored.attemptedVersion ?? 0,
+          correlationId: stored.correlationId,
+        }
+      : undefined;
   return {
     view: viewFromResult(stored),
-    shouldConsume: !conflict,
-    mutationLocked: conflict,
+    shouldConsume: true,
+    mutationLocked: conflict && !retryLock,
     actionType: stored.actionType,
     correlationId: stored.correlationId,
     status: stored.status,
+    application: stored.application ?? (stored.status === "SUCCESS" ? "APPLIED" : "NOT_APPLIED"),
+    retryLock,
+    focusTargetId: safeActionResultTargetId(stored.targetId),
+    subjectId: stored.subjectId,
   };
 }
 
@@ -382,7 +451,19 @@ export function buildActionResult(input: {
   eventId?: string;
   guestId?: string;
   createdAt?: string;
+  application?: ActionApplication;
+  didDataChange?: boolean;
+  createdRecordIds?: string[];
+  updatedRecordIds?: string[];
+  reusedRecordIds?: string[];
+  retrySafe?: boolean;
+  actionScope?: string;
+  subjectId?: string;
+  targetId?: string;
+  attemptedVersion?: number;
+  effect?: DurableMutationEffect;
 }): ActionResult {
+  const effect = input.effect;
   const parsed = parseActionResultPayload({
     v: 1,
     sessionHash: input.sessionHash,
@@ -396,6 +477,16 @@ export function buildActionResult(input: {
     createdAt: input.createdAt ?? new Date().toISOString(),
     ...(input.eventId ? { eventId: input.eventId } : {}),
     ...(input.guestId ? { guestId: input.guestId } : {}),
+    application: input.application ?? effect?.application,
+    didDataChange: input.didDataChange ?? effect?.didDataChange,
+    createdRecordIds: input.createdRecordIds ?? effect?.createdRecordIds,
+    updatedRecordIds: input.updatedRecordIds ?? effect?.updatedRecordIds,
+    reusedRecordIds: input.reusedRecordIds ?? effect?.reusedRecordIds,
+    retrySafe: input.retrySafe ?? effect?.retrySafe,
+    actionScope: input.actionScope ?? input.actionType,
+    ...(input.subjectId ? { subjectId: input.subjectId } : {}),
+    ...(input.targetId ? { targetId: safeActionResultTargetId(input.targetId) } : {}),
+    ...(input.attemptedVersion !== undefined ? { attemptedVersion: input.attemptedVersion } : {}),
   });
   if (!parsed) {
     throw new Error("action result payload was refused");

@@ -734,6 +734,7 @@ export function calculateBudgetScenarioDeepOnSnap(
     governingBriefEditionId: input.governingBriefEditionId,
     governingBriefContentHash: input.governingBriefContentHash,
     calculationResultId: recordId,
+    calculationGeneratedAt: now,
     supersedesScenarioEditionId: previousCurrent?.id,
     guestCountOverrideReason: input.guestCountOverrideReason,
     effectiveDrivers: boundDrivers.map((item) => ({

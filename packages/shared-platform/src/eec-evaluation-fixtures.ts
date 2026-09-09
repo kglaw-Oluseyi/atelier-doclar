@@ -3,7 +3,7 @@ import { loadNonProductionFixtures } from "./bootstrap.js";
 import { SCHEMA_VERSION } from "./constants.js";
 import { exactHash, nfc } from "./eec-hash.js";
 import { calculateBudgetScenarioOnSnap, createBriefDraftOnSnap, decideBriefEditionOnSnap, issueDiscoveryClientAccessOnSnap, runFixtureAiJobOnSnap, submitBriefEditionOnSnap } from "./eec-intelligence.js";
-import { parseCalculateBudgetScenarioCommand, prepareBudgetScenarioCalculation } from "./eec-budget-override.js";
+import { findReusableBudgetScenario, parseCalculateBudgetScenarioCommand, prepareBudgetScenarioCalculation } from "./eec-budget-override.js";
 import { buildDiscoveryWorkspace, eecPermissionAllowed } from "./eec-projections.js";
 import { instantiateRoadmapFromTemplateOnSnap, recordConversationTurnOnSnap, seedBudgetKnowledgeOnSnap } from "./eec-s05a-depth.js";
 import {
@@ -725,6 +725,16 @@ export function buildIsolatedEvaluationHarness(
             governingBriefContentHash: action.staleBriefHash ? "0".repeat(64) : undefined,
           });
           const prepared = prepareBudgetScenarioCalculation(current, command);
+          const reused = findReusableBudgetScenario(current, {
+            organisationId,
+            engagementId: engagement.id,
+            purpose: "PROTECT_INVESTMENT",
+            guests: prepared.guests,
+            guestCountOverrideReason: prepared.guestCountOverrideReason,
+          });
+          if (reused) {
+            recordIds.push(reused.id);
+          } else {
           const scenario = calculateBudgetScenarioOnSnap(
             current,
             {
@@ -749,6 +759,7 @@ export function buildIsolatedEvaluationHarness(
             staffPersonId,
           );
           recordIds.push(scenario.id);
+          }
         }
         adapters?.afterBudget?.(current, caseDef);
         store.replace(current);

@@ -23,11 +23,12 @@ export function AtelierOperationalState({
       data-retry-safe={state.retrySafe ? "true" : "false"}
       data-testid={state.correlationId ? "action-result-banner" : undefined}
       aria-labelledby={`${id}-title`}
-      tabIndex={state.kind === "conflict" || state.kind === "success" ? -1 : undefined}
       id={id}
       {...(role ? { role } : {})}
     >
-      <h2 id={`${id}-title`}>{state.title}</h2>
+      <h2 id={`${id}-title`} tabIndex={-1}>
+        {state.title}
+      </h2>
       <dl>
         <div>
           <dt>What happened</dt>
@@ -52,7 +53,9 @@ export function AtelierOperationalState({
               {state.resultStatus === "SUCCESS"
                 ? state.title.includes("No new proposals")
                   ? "Recorded — no new proposals"
-                  : "Succeeded"
+                  : state.title.includes("Existing calculation reused")
+                    ? "Existing calculation reused"
+                    : "Succeeded"
                 : "Not applied"}
             </dd>
           </div>
@@ -65,7 +68,7 @@ export function AtelierOperationalState({
         ) : null}
         <div>
           <dt>Did data change</dt>
-          <dd>{dataChangedLabel(state.dataChanged)}</dd>
+          <dd data-testid="action-result-data-changed">{dataChangedLabel(state.dataChanged)}</dd>
         </div>
         <div>
           <dt>What you may do next</dt>

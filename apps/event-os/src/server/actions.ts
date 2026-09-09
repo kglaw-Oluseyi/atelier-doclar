@@ -14,6 +14,11 @@ import {
 } from "@maison-doclar/shared-platform";
 import { fixturesAllowed } from "./config";
 import { consumeActionFlash, consumeIssuedAccessFlash, rememberIssuedDiscoveryPath, writeActionResult, writeAudiencePreviewFlash, writeIssuedAccessFlash, writeIssuedDiscoveryPath, writeRecoveredMarker } from "./action-flash";
+import {
+  notAppliedMutationEffect,
+  safeActionResultTargetId,
+  type DurableMutationEffect,
+} from "@maison-doclar/shared-platform";
 import { buildActionResult, resultHref, sessionHashFromToken, successMessageForOk } from "./action-result";
 import { classifyActionError } from "./operational-state";
 import { flushRuntime, getRuntime, withDurable } from "./runtime";
@@ -97,6 +102,9 @@ type ActionBind = {
   actorPersonId: string;
   eventId?: string;
   guestId?: string;
+  subjectId?: string;
+  targetId?: string;
+  attemptedVersion?: number;
 };
 
 function unsignedBind(scopePath: string, actionType: string, eventId?: string, guestId?: string): ActionBind {
@@ -116,6 +124,7 @@ function actorBind(
   actionType: string,
   eventId?: string,
   guestId?: string,
+  extras?: { subjectId?: string; targetId?: string; attemptedVersion?: number },
 ): ActionBind {
   return {
     actionType,
@@ -124,12 +133,17 @@ function actorBind(
     actorPersonId: actor.personId,
     ...(eventId ? { eventId } : {}),
     ...(guestId ? { guestId } : {}),
+    ...(extras?.subjectId ? { subjectId: extras.subjectId } : {}),
+    ...(extras?.targetId ? { targetId: safeActionResultTargetId(extras.targetId) } : {}),
+    ...(extras?.attemptedVersion !== undefined ? { attemptedVersion: extras.attemptedVersion } : {}),
   };
 }
 
 async function finishAction(
   bind: ActionBind,
-  outcome: { ok: string; extra?: Record<string, string>; message?: string } | { error: unknown; extra?: Record<string, string> },
+  outcome:
+    | { ok: string; extra?: Record<string, string>; message?: string; effect?: DurableMutationEffect }
+    | { error: unknown; extra?: Record<string, string>; effect?: DurableMutationEffect },
 ): Promise<never> {
   if ("error" in outcome) {
     rethrowRedirect(outcome.error);
@@ -147,10 +161,16 @@ async function finishAction(
         message: classified.message,
         eventId: bind.eventId,
         guestId: bind.guestId,
+        effect: outcome.effect ?? notAppliedMutationEffect(classified.code !== "VERSION_CONFLICT"),
+        subjectId: bind.subjectId,
+        targetId: bind.targetId ?? "operational-state-title",
+        attemptedVersion: bind.attemptedVersion,
       }),
     );
     redirect(resultHref(bind.scopePath, bind.correlationId, outcome.extra));
   }
+  const effect = outcome.effect;
+  const replayed = effect?.application === "REPLAYED";
   await writeActionResult(
     buildActionResult({
       sessionHash: sessionHashFromToken((await readStaffSessionCookie()) ?? ""),
@@ -160,9 +180,18 @@ async function finishAction(
       correlationId: bind.correlationId,
       status: "SUCCESS",
       code: "SUCCESS",
-      message: (outcome.message ?? successMessageForOk(outcome.ok)).slice(0, 400),
+      message: (
+        outcome.message ??
+        (replayed && bind.actionType === "budget.calculate"
+          ? "No data changed. This request matches the stored scenario and calculation."
+          : successMessageForOk(outcome.ok))
+      ).slice(0, 400),
       eventId: bind.eventId,
       guestId: bind.guestId,
+      effect,
+      subjectId: bind.subjectId,
+      targetId: bind.targetId ?? (bind.actionType === "discovery.conflict" ? "resolved-contradiction-heading" : "operational-state-title"),
+      attemptedVersion: bind.attemptedVersion,
     }),
   );
   redirect(resultHref(bind.scopePath, bind.correlationId, outcome.extra));
@@ -4102,7 +4131,10 @@ export async function calculateBudgetScenarioAction(formData: FormData): Promise
   return await withDurable(async () => {
     const { actor } = await requireActor();
     const engagementId = String(formData.get("engagementId") ?? "");
-    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "budget.calculate");
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "budget.calculate", undefined, undefined, {
+      subjectId: engagementId,
+      targetId: "operational-state-title",
+    });
     const recovered = {
       section: "budget-studio",
       ...(String(formData.get("guestCountOverride") ?? "").trim()
@@ -4129,6 +4161,7 @@ export async function calculateBudgetScenarioAction(formData: FormData): Promise
       );
       await finishAction(bind, {
         ok: "budget.calculate",
+        effect: getRuntime().service.consumeLastMutationEffect(),
         extra: {
           section: "budget-studio",
           scenarioEditionId: persisted.id,
@@ -4145,18 +4178,24 @@ export async function decideBudgetScenarioAction(formData: FormData): Promise<vo
   return await withDurable(async () => {
     const { actor } = await requireActor();
     const engagementId = String(formData.get("engagementId") ?? "");
-    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "budget.decide");
+    const scenarioId = String(formData.get("scenarioId") ?? "");
+    const expectedVersion = Number(formData.get("expectedVersion") ?? 1);
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "budget.decide", undefined, undefined, {
+      subjectId: scenarioId,
+      targetId: "operational-state-title",
+      attemptedVersion: expectedVersion,
+    });
     try {
       getRuntime().service.decideBudgetScenario(actor, {
         organisationId: String(formData.get("organisationId") ?? ""),
-        scenarioId: String(formData.get("scenarioId") ?? ""),
-        expectedVersion: Number(formData.get("expectedVersion") ?? 1),
+        scenarioId,
+        expectedVersion,
         reason: String(formData.get("reason") ?? "Approve budget scenario").trim() || "Approve budget scenario",
         idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
       });
-      await finishAction(bind, { ok: "budget.decide" });
+      await finishAction(bind, { ok: "budget.decide", extra: { section: "budget-studio" } });
     } catch (error) {
-      await finishAction(bind, { error });
+      await finishAction(bind, { error, extra: { section: "budget-studio" } });
     }
   });
 }
@@ -4354,7 +4393,10 @@ export async function resolveDiscoveryConflictAction(formData: FormData): Promis
   return await withDurable(async () => {
     const { actor } = await requireActor();
     const engagementId = String(formData.get("engagementId") ?? "");
-    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "discovery.conflict");
+    const bind = actorBind(actor, `/app/discovery/${engagementId}`, "discovery.conflict", undefined, undefined, {
+      subjectId: String(formData.get("conflictId") ?? engagementId),
+      targetId: "resolved-contradiction-heading",
+    });
     try {
       const supersededAssertionIds = formData
         .getAll("supersededAssertionIds")

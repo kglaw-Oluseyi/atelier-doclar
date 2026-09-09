@@ -145,7 +145,7 @@ describe("EOS-S04D action-result lifecycle", () => {
       eventId: EVENT,
     });
     assert.equal(locked.mutationLocked, true);
-    assert.equal(locked.shouldConsume, false);
+    assert.equal(locked.shouldConsume, true);
     assert.equal(locked.view?.kind, "conflict");
     const afterReload = presentActionResult({
       stored: undefined,

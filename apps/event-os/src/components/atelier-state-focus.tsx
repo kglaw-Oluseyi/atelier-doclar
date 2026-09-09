@@ -2,6 +2,13 @@
 
 import { useEffect } from "react";
 
+const ALLOWED_FOCUS_TARGETS = new Set([
+  "operational-state",
+  "operational-state-title",
+  "resolved-contradiction-heading",
+  "placeholder-validation",
+]);
+
 export function AtelierStateFocus({
   targetId,
   active,
@@ -13,7 +20,9 @@ export function AtelierStateFocus({
 }) {
   useEffect(() => {
     if (!active) return;
-    const storageKey = onceKey ? `atelier-focus:${targetId}:${onceKey}` : undefined;
+    if (!ALLOWED_FOCUS_TARGETS.has(targetId)) return;
+    const route = `${window.location.pathname}${window.location.hash}`;
+    const storageKey = onceKey ? `atelier-focus:${route}:${targetId}:${onceKey}` : undefined;
     if (storageKey && window.sessionStorage.getItem(storageKey) === "1") return;
     const deadline = Date.now() + 12_000;
     const timers: number[] = [];

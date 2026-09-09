@@ -882,7 +882,26 @@ export {
   resolveEffectiveBudgetDrivers,
   assertBudgetFormDataMatchesVisible,
   describeEffectiveGuestDriver,
+  findReusableBudgetScenario,
 } from "./eec-budget-override.js";
+export {
+  ACTION_APPLICATIONS,
+  ACTION_RESULT_FOCUS_TARGETS,
+  appliedMutationEffect,
+  budgetGeneratedTimeLabel,
+  isActionApplication,
+  isAllowedActionResultTarget,
+  notAppliedMutationEffect,
+  parseUuidList,
+  replayedMutationEffect,
+  retryLockApplies,
+  safeActionResultTargetId,
+  type ActionApplication,
+  type ActionResultFocusTarget,
+  type ActionResultTarget,
+  type DurableMutationEffect,
+  type RetryLock,
+} from "./durable-mutation-effect.js";
 export { clientSafeHeading } from "./eec-projections.js";
 export * as engagementIntake from "./engagement-intake/index.js";
 export * as discoveryIntelligence from "./discovery-intelligence/index.js";

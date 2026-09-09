@@ -1,5 +1,6 @@
 import { sanitiseInertText } from "./eec-extraction.js";
 import { nfc } from "./eec-hash.js";
+import { budgetGeneratedTimeLabel } from "./durable-mutation-effect.js";
 import { governingGuestCountFromBrief } from "./eec-operations.js";
 import type { EvaluationObservationResult, ExpectedObservation, ZeroToleranceCategory } from "./eec-evaluation-schemas.js";
 import type { PlatformSnapshot } from "./store.js";
@@ -471,6 +472,44 @@ export function observeExpected(ctx: ProbeContext): EvaluationObservationResult 
       `${hashes.size}/${scenarios.length}`,
     );
   }
+  if (expected.kind === "BUDGET_REPLAY_NO_DATA_CHANGE") {
+    const scenarios = snap.budgetScenarioEditions.filter((item) => item.engagementId === engagementId);
+    const reusedId = scenarios[0]?.id;
+    const replayHits = reusedId
+      ? ctx.outcomes.filter((item) => item.ok && item.recordIds.includes(reusedId)).length
+      : 0;
+    const passed = scenarios.length === 1 && replayHits >= 2;
+    return result(
+      expected,
+      passed,
+      passed ? "BUDGET_REPLAY_REUSED" : "BUDGET_REPLAY_CREATED",
+      "identical replay reuses the stored calculation and does not change data",
+      `${replayHits} hits / ${scenarios.length} scenarios`,
+      reusedId ? [reusedId] : [],
+    );
+  }
+  if (expected.kind === "BUDGET_GENERATED_TIME_STABLE") {
+    const first = snap.budgetScenarioEditions.find(
+      (item) =>
+        item.engagementId === engagementId &&
+        (item.effectiveDrivers ?? []).some((driver) => driver.code === "guest.target_count" && driver.value === "350"),
+    );
+    const generated = first ? budgetGeneratedTimeLabel(first) : "";
+    const passed = Boolean(
+      first &&
+        generated &&
+        generated !== "Generation time unavailable for this legacy result" &&
+        (first.calculationGeneratedAt ?? first.createdAt) === generated,
+    );
+    return result(
+      expected,
+      passed,
+      passed ? "BUDGET_GENERATED_TIME_STABLE" : "BUDGET_GENERATED_TIME_DRIFT",
+      "immutable generated time survives successor calculations",
+      first ? `${generated} vs updated ${first.updatedAt}` : "missing 350 result",
+      first ? [first.id] : [],
+    );
+  }
   if (expected.kind === "BUDGET_FAILURE_NO_SUCCESS") {
     const failed = ctx.outcomes.some((item) => !item.ok);
     const overrideCreated = snap.budgetScenarioEditions.some((item) =>
@@ -535,7 +574,9 @@ export function categoryForFailedObservation(observation: EvaluationObservationR
         observation.kind === "BUDGET_BRIEF_COUNT" ||
         observation.kind === "BUDGET_RESULT_RETRIEVABLE" ||
         observation.kind === "BUDGET_HASH_DISTINCT" ||
-        observation.kind === "BUDGET_FAILURE_NO_SUCCESS"
+        observation.kind === "BUDGET_FAILURE_NO_SUCCESS" ||
+        observation.kind === "BUDGET_REPLAY_NO_DATA_CHANGE" ||
+        observation.kind === "BUDGET_GENERATED_TIME_STABLE"
       ) {
         return "FALSE_SUCCESS";
       }

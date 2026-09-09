@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState, type ReactNode } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 
 export function PendingSubmit({
@@ -11,6 +11,7 @@ export function PendingSubmit({
   pendingLabel = "Saving…",
   locked = false,
   lockedLabel = "Reload before retrying",
+  lockOnceKey,
   blocked = false,
   blockedLabel,
 }: {
@@ -21,11 +22,19 @@ export function PendingSubmit({
   pendingLabel?: string;
   locked?: boolean;
   lockedLabel?: string;
+  lockOnceKey?: string;
   blocked?: boolean;
   blockedLabel?: string;
 }) {
   const { pending } = useFormStatus();
-  const disabled = pending || locked || blocked;
+  const [lockFresh, setLockFresh] = useState(true);
+  useEffect(() => {
+    if (!locked || !lockOnceKey) return;
+    const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+    if (nav?.type === "reload") setLockFresh(false);
+  }, [locked, lockOnceKey]);
+  const effectiveLocked = locked && (lockOnceKey ? lockFresh : true);
+  const disabled = pending || effectiveLocked || blocked;
   return (
     <button
       type="submit"
@@ -35,8 +44,10 @@ export function PendingSubmit({
       disabled={disabled}
       aria-busy={pending}
       aria-disabled={disabled}
+      title={effectiveLocked ? lockedLabel : undefined}
+      style={{ cursor: disabled ? "not-allowed" : "pointer" }}
     >
-      {pending ? pendingLabel : locked ? lockedLabel : blocked ? blockedLabel ?? children : children}
+      {pending ? pendingLabel : effectiveLocked ? lockedLabel : blocked ? blockedLabel ?? children : children}
     </button>
   );
 }

@@ -1,4 +1,4 @@
-import { formatMoneyMinor } from "@maison-doclar/shared-platform";
+import { budgetGeneratedTimeLabel, formatMoneyMinor, retryLockApplies } from "@maison-doclar/shared-platform";
 import { CanonicalHash } from "./canonical-evidence";
 import { IdempotencyField, PendingSubmit } from "./atelier-pending-submit";
 import { BudgetCalculateForm, BudgetGuestCountField } from "./budget-calculate-form";
@@ -29,6 +29,15 @@ type Intelligence = ReturnType<
 
 function moneyLabel(minor: string, currency = "NGN") {
   return formatMoneyMinor(minor, currency);
+}
+
+function actionLocked(
+  presented: PresentedActionResult | undefined,
+  mutationLocked: boolean,
+  identity: { actionScope: string; subjectId: string; attemptedVersion?: number },
+) {
+  if (presented?.retryLock) return retryLockApplies(presented.retryLock, identity);
+  return mutationLocked;
 }
 
 export function IntelligenceWorkspaceView({
@@ -130,7 +139,9 @@ export function IntelligenceWorkspaceView({
             <input type="hidden" name="organisationId" value={organisationId} />
             <input type="hidden" name="engagementId" value={engagementId} />
             <input type="hidden" name="reason" value="Create working brief" />
-            <PendingSubmit locked={mutationLocked}>Create working brief</PendingSubmit>
+            <PendingSubmit locked={actionLocked(presented, mutationLocked, { actionScope: "brief.draft", subjectId: engagementId })}>
+              Create working brief
+            </PendingSubmit>
           </form>
         ) : null}
         {canSubmitBrief && intelligence.draft ? (
@@ -147,7 +158,9 @@ export function IntelligenceWorkspaceView({
                 <option value="APPROVED">Approved</option>
               </select>
             </label>
-            <PendingSubmit locked={mutationLocked}>Submit brief edition</PendingSubmit>
+            <PendingSubmit locked={actionLocked(presented, mutationLocked, { actionScope: "brief.submit", subjectId: engagementId })}>
+              Submit brief edition
+            </PendingSubmit>
           </form>
         ) : null}
         {canDecideBrief && currentEdition && currentEdition.status === "SUBMITTED" ? (
@@ -164,7 +177,9 @@ export function IntelligenceWorkspaceView({
                 <option value="REJECT">Reject</option>
               </select>
             </label>
-            <PendingSubmit locked={mutationLocked}>Decide brief</PendingSubmit>
+            <PendingSubmit locked={actionLocked(presented, mutationLocked, { actionScope: "brief.decide", subjectId: currentEdition.id })}>
+              Decide brief
+            </PendingSubmit>
           </form>
         ) : null}
         {canPublishBrief && currentEdition && currentEdition.status === "APPROVED" ? (
@@ -174,7 +189,9 @@ export function IntelligenceWorkspaceView({
             <input type="hidden" name="engagementId" value={engagementId} />
             <input type="hidden" name="editionId" value={currentEdition.id} />
             <input type="hidden" name="expectedVersion" value={currentEdition.version} />
-            <PendingSubmit locked={mutationLocked}>Publish brief</PendingSubmit>
+            <PendingSubmit locked={actionLocked(presented, mutationLocked, { actionScope: "brief.publish", subjectId: currentEdition.id })}>
+              Publish brief
+            </PendingSubmit>
           </form>
         ) : null}
         {canAuthorBrief ? (
@@ -288,7 +305,7 @@ export function IntelligenceWorkspaceView({
       <section id="budget-studio" className="form programme-form">
         {presented && resultSection === "budget-studio" ? (
           <div data-testid="discovery-receipt-budget-studio">
-            <ActionResultBanner presented={presented} focusOnSuccess={false} />
+            <ActionResultBanner presented={presented} />
           </div>
         ) : null}
         <h2>Planner Budget Studio</h2>
@@ -335,8 +352,8 @@ export function IntelligenceWorkspaceView({
                       <p>
                         <a href="#brief-review">Open the governing Event Brief</a>
                       </p>
-                      <p className="lede">
-                        {scenario.status.toLowerCase()} · generated {scenario.updatedAt}
+                      <p className="lede" data-testid="budget-generated-time">
+                        {scenario.status.toLowerCase()} · generated {budgetGeneratedTimeLabel(scenario)}
                       </p>
                       <p className="lede">
                         Result {scenario.calculationResultId ?? scenario.id} · <CanonicalHash value={scenario.resultHash} />
@@ -386,19 +403,43 @@ export function IntelligenceWorkspaceView({
                     <input type="hidden" name="scenarioId" value={scenario.id} />
                     <input type="hidden" name="expectedVersion" value={scenario.version} />
                     <input type="hidden" name="expectedHash" value={scenario.resultHash} />
-                    <PendingSubmit className="secondary" locked={mutationLocked}>
+                    <PendingSubmit
+                      className="secondary"
+                      locked={actionLocked(presented, mutationLocked, {
+                        actionScope: "budget.calculate",
+                        subjectId: scenario.id,
+                        attemptedVersion: scenario.version,
+                      })}
+                    >
                       Submit immutable scenario
                     </PendingSubmit>
                   </form>
                 ) : null}
-                {canDecideBudget && (scenario.status === "DRAFT" || scenario.status === "SUBMITTED") ? (
+                {canDecideBudget &&
+                (scenario.status === "DRAFT" ||
+                  scenario.status === "SUBMITTED" ||
+                  actionLocked(presented, mutationLocked, {
+                    actionScope: "budget.decide",
+                    subjectId: scenario.id,
+                    attemptedVersion: scenario.version,
+                  })) ? (
                   <form action={decideBudgetScenarioAction}>
                     <IdempotencyField />
                     <input type="hidden" name="organisationId" value={organisationId} />
                     <input type="hidden" name="engagementId" value={engagementId} />
                     <input type="hidden" name="scenarioId" value={scenario.id} />
                     <input type="hidden" name="expectedVersion" value={scenario.version} />
-                    <PendingSubmit locked={mutationLocked}>Approve this scenario</PendingSubmit>
+                    <PendingSubmit
+                      locked={actionLocked(presented, mutationLocked, {
+                        actionScope: "budget.decide",
+                        subjectId: scenario.id,
+                        attemptedVersion: scenario.version,
+                      })}
+                      lockOnceKey={presented?.retryLock?.correlationId}
+                      lockedLabel="Reload before retrying this scenario decision"
+                    >
+                      Approve this scenario
+                    </PendingSubmit>
                   </form>
                 ) : null}
               </li>
@@ -471,7 +512,12 @@ export function IntelligenceWorkspaceView({
               }
               recoveredReason={recoveredGuestReason}
             />
-            <PendingSubmit locked={mutationLocked}>Calculate scenario</PendingSubmit>
+            <PendingSubmit
+              locked={actionLocked(presented, mutationLocked, { actionScope: "budget.calculate", subjectId: engagementId })}
+              lockedLabel="Reload before retrying this calculation"
+            >
+              Calculate scenario
+            </PendingSubmit>
           </BudgetCalculateForm>
         ) : (
           <p className="lede">Budget calculation is blocked for this assignment.</p>

@@ -10,7 +10,13 @@ import type { LayoutBinaryStore } from "./layout-asset-store.js";
 import { permissionIdForKey, roleIdForKey, roleKeyForId, seededPermissions, seededRoles, isSystemAdministratorRole } from "./catalog.js";
 import { PlatformError } from "./errors.js";
 import { exactHash } from "./eec-hash.js";
-import { parseCalculateBudgetScenarioCommand, prepareBudgetScenarioCalculation } from "./eec-budget-override.js";
+import { findReusableBudgetScenario, parseCalculateBudgetScenarioCommand, prepareBudgetScenarioCalculation } from "./eec-budget-override.js";
+import {
+  appliedMutationEffect,
+  notAppliedMutationEffect,
+  replayedMutationEffect,
+  type DurableMutationEffect,
+} from "./durable-mutation-effect.js";
 import { assertNamedHuman } from "./identity.js";
 import { lineageFixtureMark } from "./fixtures.js";
 import { emptyMasterEventFile } from "./mef.js";
@@ -789,10 +795,22 @@ function parseStrict<T>(schema: { safeParse: (value: unknown) => { success: true
 }
 
 export class PlatformService {
+  private lastMutationEffect: DurableMutationEffect | undefined;
+
   constructor(
     private readonly store: PlatformStore,
     private readonly options: PlatformServiceOptions = {},
   ) {}
+
+  consumeLastMutationEffect(): DurableMutationEffect | undefined {
+    const effect = this.lastMutationEffect;
+    this.lastMutationEffect = undefined;
+    return effect;
+  }
+
+  peekLastMutationEffect(): DurableMutationEffect | undefined {
+    return this.lastMutationEffect;
+  }
 
   private accessAuthority(): AccessAuthority {
     return this.options.accessAuthority ?? localFixtureAccessAuthority();
@@ -7113,19 +7131,14 @@ export class PlatformService {
         guests: command.guestCountOverride ?? command.guests ?? "",
         reason: command.guestCountOverrideReason ?? "",
       }),
-      alreadyApplied: (snap) => {
-        const purpose = command.purpose ?? "PROTECT_PRIORITIES";
-        const guests = String(command.guestCountOverride ?? command.guests ?? "");
-        const reason = command.guestCountOverrideReason ?? "";
-        return snap.budgetScenarioEditions.find(
-          (item) =>
-            item.organisationId === command.organisationId &&
-            item.engagementId === command.engagementId &&
-            item.purpose === purpose &&
-            (item.effectiveDrivers ?? []).some((driver) => driver.code === "guest.target_count" && driver.value === guests) &&
-            (item.guestCountOverrideReason ?? "") === reason,
-        );
-      },
+      alreadyApplied: (snap) =>
+        findReusableBudgetScenario(snap, {
+          organisationId: command.organisationId,
+          engagementId: command.engagementId,
+          purpose: command.purpose ?? "PROTECT_PRIORITIES",
+          guests: String(command.guestCountOverride ?? command.guests ?? ""),
+          guestCountOverrideReason: command.guestCountOverrideReason,
+        }),
       replayIfAlreadyApplied: true,
       run: (snap, ctx) => {
         const prepared = prepareBudgetScenarioCalculation(snap, command);
@@ -7450,10 +7463,14 @@ export class PlatformService {
       const existing = snap.idempotency.find((item) => item.key === input.idempotencyKey);
       if (existing) {
         if (input.payloadHash && existing.hash !== input.payloadHash) {
+          this.lastMutationEffect = notAppliedMutationEffect(false);
           throw new PlatformError("IDEMPOTENCY_CONFLICT", "idempotency key was reused with a different payload");
         }
         const reused = this.lookupByRef(snap, input.resourceType, existing.resultRef);
-        if (reused) return reused as T;
+        if (reused) {
+          this.recordReplay(snap, input, reused, now, actor);
+          return reused as T;
+        }
       }
     }
     const resource = input.resourceId
@@ -7461,6 +7478,7 @@ export class PlatformService {
       : { type: input.resourceType, organisationId: input.scope.organisationId, clientId: input.scope.clientId, eventId: input.scope.eventId };
     const decision = this.decide(actorSnap, input.permission, input.scope, resource, actor);
     if (!decision.allow) {
+      this.lastMutationEffect = notAppliedMutationEffect(false);
       this.writeAudit(snap, {
         action: input.action,
         outcome: "DENIED",
@@ -7479,7 +7497,10 @@ export class PlatformService {
     }
     if (input.replayIfAlreadyApplied && input.alreadyApplied) {
       const reused = input.alreadyApplied(snap);
-      if (reused) return reused;
+      if (reused) {
+        this.recordReplay(snap, input, reused, now, actor);
+        return reused;
+      }
     }
     try {
       const before = input.resourceId ? this.lookupByRef(snap, input.resourceType, input.resourceId) : undefined;
@@ -7509,12 +7530,16 @@ export class PlatformService {
         afterHash: stableHash(result),
         occurredAt: now,
       });
+      this.lastMutationEffect = appliedMutationEffect(result.id);
       this.store.replace(snap);
       return result;
     } catch (error) {
       if (error instanceof PlatformError && error.code === "VERSION_CONFLICT" && input.alreadyApplied) {
         const reused = input.alreadyApplied(this.store.snapshot());
-        if (reused) return reused;
+        if (reused) {
+          this.recordReplay(this.store.snapshot(), input, reused, now, actor);
+          return reused;
+        }
       }
       if (
         error instanceof PlatformError &&
@@ -7537,7 +7562,42 @@ export class PlatformService {
         });
         this.store.replace(failed);
       }
+      this.lastMutationEffect = notAppliedMutationEffect(false);
       throw error;
+    }
+  }
+
+  private recordReplay<T extends { id?: string }>(
+    snap: PlatformSnapshot,
+    input: {
+      action: string;
+      resourceType: string;
+      resourceId?: string;
+      reason?: string;
+      idempotencyKey?: string;
+      scope: ScopeInput;
+    },
+    reused: T,
+    now: string,
+    actor: ActorContext,
+  ): void {
+    this.lastMutationEffect = replayedMutationEffect(reused.id);
+    if (input.action === "budget.calculated") {
+      this.writeAudit(snap, {
+        action: "budget.calculation.replayed",
+        outcome: "SUCCESS",
+        actorPersonId: actor.personId,
+        organisationId: input.scope.organisationId,
+        clientId: input.scope.clientId,
+        eventId: input.scope.eventId,
+        resourceType: input.resourceType,
+        resourceId: reused.id ?? input.resourceId,
+        correlationId: actor.correlationId,
+        idempotencyKey: input.idempotencyKey,
+        reason: "Existing calculation reused. No data changed.",
+        occurredAt: now,
+      });
+      this.store.replace(snap);
     }
   }
 

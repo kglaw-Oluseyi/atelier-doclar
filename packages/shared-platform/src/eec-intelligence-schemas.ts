@@ -256,6 +256,7 @@ export const BudgetScenarioEditionSchema = z
     governingBriefEditionId: UuidSchema.optional(),
     governingBriefContentHash: z.string().max(128).optional(),
     calculationResultId: UuidSchema.optional(),
+    calculationGeneratedAt: IsoDatetimeSchema.optional(),
     supersedesScenarioEditionId: UuidSchema.optional(),
     guestCountOverrideReason: z.string().max(500).optional(),
     effectiveDrivers: z

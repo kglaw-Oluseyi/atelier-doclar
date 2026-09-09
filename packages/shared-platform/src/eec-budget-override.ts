@@ -369,4 +369,26 @@ export function budgetCalculationPayloadHash(command: CalculateBudgetScenarioCom
   });
 }
 
+export function findReusableBudgetScenario(
+  snap: PlatformSnapshot,
+  input: {
+    organisationId: string;
+    engagementId?: string;
+    purpose?: string;
+    guests: string;
+    guestCountOverrideReason?: string;
+  },
+) {
+  const purpose = input.purpose ?? "PROTECT_PRIORITIES";
+  const reason = input.guestCountOverrideReason ?? "";
+  return snap.budgetScenarioEditions.find(
+    (item) =>
+      item.organisationId === input.organisationId &&
+      item.engagementId === input.engagementId &&
+      item.purpose === purpose &&
+      (item.effectiveDrivers ?? []).some((driver) => driver.code === GUEST_TARGET_COUNT && driver.value === input.guests) &&
+      (item.guestCountOverrideReason ?? "") === reason,
+  );
+}
+
 export type { BudgetGuestCountSource };

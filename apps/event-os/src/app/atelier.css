@@ -2199,3 +2199,9 @@ body.atelier {
 .eec-evaluation-panel button:disabled {
   cursor: not-allowed;
 }
+
+.discovery-workspace [id],
+.atelier-state,
+.atelier-state h2 {
+  scroll-margin-top: 4.75rem;
+}

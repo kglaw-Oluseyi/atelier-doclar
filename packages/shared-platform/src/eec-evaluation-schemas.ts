@@ -17,7 +17,7 @@ const versioned = {
 };
 
 export const EVALUATION_CONTRACT_VERSION = "s05a-eval-contract-v1";
-export const EVALUATION_CORPUS_EDITION = "s05a-eval-v5";
+export const EVALUATION_CORPUS_EDITION = "s05a-eval-v6";
 export const EVALUATION_ORCHESTRATOR_VERSION = "s05a-orchestrator-v2";
 export const EVALUATION_PROVIDER_VERSION = "fixture-inactive-v1";
 export const EVALUATION_PROJECTION_POLICY_VERSION = "client-projection-v2";
@@ -184,6 +184,8 @@ export const ExpectedObservationSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("BUDGET_RESULT_RETRIEVABLE") }).strict(),
   z.object({ kind: z.literal("BUDGET_HASH_DISTINCT") }).strict(),
   z.object({ kind: z.literal("BUDGET_FAILURE_NO_SUCCESS") }).strict(),
+  z.object({ kind: z.literal("BUDGET_REPLAY_NO_DATA_CHANGE") }).strict(),
+  z.object({ kind: z.literal("BUDGET_GENERATED_TIME_STABLE") }).strict(),
 ]);
 
 export const EvaluationPrincipalSeedSchema = z
@@ -285,6 +287,8 @@ export const EvaluationObservationResultSchema = z
       "BUDGET_RESULT_RETRIEVABLE",
       "BUDGET_HASH_DISTINCT",
       "BUDGET_FAILURE_NO_SUCCESS",
+      "BUDGET_REPLAY_NO_DATA_CHANGE",
+      "BUDGET_GENERATED_TIME_STABLE",
     ]),
     passed: z.boolean(),
     code: z.string().min(1).max(80),

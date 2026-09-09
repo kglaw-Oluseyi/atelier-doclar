@@ -3,6 +3,7 @@ import type { PresentedActionResult } from "../server/action-result";
 import { ActionResultBanner } from "./action-result-banner";
 import { CanonicalHash, CanonicalId, HistoryDisclosure } from "./canonical-evidence";
 import { DiscoveryScrollRestore } from "./discovery-scroll-restore";
+import { retryLockApplies } from "@maison-doclar/shared-platform";
 import { IdempotencyField, PendingSubmit } from "./atelier-pending-submit";
 import {
   addDiscoveryParticipantAction,
@@ -137,15 +138,16 @@ export function DiscoveryWorkspaceView({
       <AtelierStateFocus
         targetId="resolved-contradiction-heading"
         active={
-          Boolean(presented?.shouldConsume) &&
+          Boolean(presented?.view) &&
           presented?.view?.kind === "success" &&
           presented.actionType === "discovery.conflict"
         }
-        onceKey={presented?.correlationId}
+        onceKey={[presented?.correlationId, presented?.subjectId, "resolved-contradiction-heading"].filter(Boolean).join(":")}
       />
       <AtelierStateFocus
-        targetId="operational-state"
+        targetId="operational-state-title"
         active={Boolean(presented?.view && presented.view.kind !== "success" && resultSection === "discovery-assertions")}
+        onceKey={[presented?.correlationId, presented?.subjectId, "operational-state-title"].filter(Boolean).join(":")}
       />
       <p className="lede" data-testid="discovery-next-action">
         Next: {workspace.nextAction}
@@ -526,7 +528,15 @@ export function DiscoveryWorkspaceView({
                       conflictId={conflict.id}
                       expectedVersion={conflict.version}
                       candidates={contradictionCandidates(workspace, conflict.assertionIds)}
-                      mutationLocked={mutationLocked}
+                      mutationLocked={
+                        presented?.retryLock
+                          ? retryLockApplies(presented.retryLock, {
+                              actionScope: "discovery.conflict",
+                              subjectId: conflict.id,
+                              attemptedVersion: conflict.version,
+                            })
+                          : mutationLocked
+                      }
                     />
                   ) : (
                     <p className="lede">Resolving a contradiction is blocked for this assignment.</p>
