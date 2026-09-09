@@ -403,6 +403,89 @@ export function observeExpected(ctx: ProbeContext): EvaluationObservationResult 
       source.kind,
     );
   }
+  const latestScenario = [...snap.budgetScenarioEditions]
+    .reverse()
+    .find((item) => item.engagementId === engagementId);
+  if (expected.kind === "BUDGET_EFFECTIVE_DRIVER") {
+    const driver = latestScenario?.effectiveDrivers?.find((item) => item.code === expected.driverKey);
+    const passed = Boolean(
+      driver && driver.value === expected.value && (!expected.provenance || driver.provenanceKind === expected.provenance),
+    );
+    return result(
+      expected,
+      passed,
+      passed ? "BUDGET_EFFECTIVE_DRIVER_MATCH" : "BUDGET_EFFECTIVE_DRIVER_MISMATCH",
+      `effective ${expected.driverKey} is ${expected.value}`,
+      driver ? `${driver.value}:${driver.provenanceKind}` : "missing",
+      latestScenario ? [latestScenario.id] : [],
+    );
+  }
+  if (expected.kind === "BUDGET_GUEST_LINE_DRIVER") {
+    const lines = snap.budgetLines.filter(
+      (item) => item.scenarioId === latestScenario?.id && item.itemCode === expected.itemCode,
+    );
+    const passed = lines.length > 0 && lines.every((item) => item.quantity === expected.value || item.effectiveDriverValue === expected.value);
+    return result(
+      expected,
+      passed,
+      passed ? "BUDGET_GUEST_LINE_MATCH" : "BUDGET_GUEST_LINE_MISMATCH",
+      `${expected.itemCode} uses ${expected.value}`,
+      lines.map((item) => item.quantity).join(",") || "missing",
+      latestScenario ? [latestScenario.id] : [],
+    );
+  }
+  if (expected.kind === "BUDGET_BRIEF_COUNT") {
+    const source = governingGuestCountFromBrief(snap, engagementId);
+    const observed = source.kind === "CURRENT_BRIEF" ? source.count : source.kind;
+    const passed = source.kind === "CURRENT_BRIEF" && source.count === expected.count;
+    return result(
+      expected,
+      passed,
+      passed ? "BUDGET_BRIEF_COUNT_MATCH" : "BUDGET_BRIEF_COUNT_MISMATCH",
+      `Event Brief guest count remains ${expected.count}`,
+      observed,
+    );
+  }
+  if (expected.kind === "BUDGET_RESULT_RETRIEVABLE") {
+    const lastOk = [...ctx.outcomes].reverse().find((item) => item.ok && item.recordIds[0]);
+    const record = lastOk ? snap.budgetScenarioEditions.find((item) => item.id === lastOk.recordIds[0]) : undefined;
+    const passed = Boolean(record);
+    return result(
+      expected,
+      passed,
+      passed ? "BUDGET_RESULT_RETRIEVABLE" : "BUDGET_RESULT_MISSING",
+      "calculation result is retrievable by returned id",
+      record?.id ?? "missing",
+      record ? [record.id] : [],
+    );
+  }
+  if (expected.kind === "BUDGET_HASH_DISTINCT") {
+    const scenarios = snap.budgetScenarioEditions.filter((item) => item.engagementId === engagementId);
+    const hashes = new Set(scenarios.map((item) => item.resultHash));
+    const passed = scenarios.length >= 2 && hashes.size === scenarios.length;
+    return result(
+      expected,
+      passed,
+      passed ? "BUDGET_HASH_DISTINCT" : "BUDGET_HASH_COLLISION",
+      "successor calculations have distinct hashes",
+      `${hashes.size}/${scenarios.length}`,
+    );
+  }
+  if (expected.kind === "BUDGET_FAILURE_NO_SUCCESS") {
+    const failed = ctx.outcomes.some((item) => !item.ok);
+    const overrideCreated = snap.budgetScenarioEditions.some((item) =>
+      item.engagementId === engagementId &&
+      (item.effectiveDrivers ?? []).some((driver) => driver.provenanceKind === "SCENARIO_OVERRIDE"),
+    );
+    const passed = failed && !overrideCreated;
+    return result(
+      expected,
+      passed,
+      passed ? "BUDGET_FAILURE_HONEST" : "BUDGET_FAILURE_FALSE_SUCCESS",
+      "failure cannot persist a completed override",
+      failed ? (overrideCreated ? "override persisted" : "no override") : "no failure",
+    );
+  }
   return result(expected, false, "UNKNOWN_OBSERVATION", "unsupported observation", "observation kind was not evaluated");
 }
 
@@ -446,6 +529,16 @@ export function categoryForFailedObservation(observation: EvaluationObservationR
       if (observation.kind === "ASSERTION_COUNT" || observation.kind === "EXTRACTION_OUTCOME_COUNT") return "FALSE_SUCCESS";
       if (observation.kind === "CONFLICT_GOVERNING") return "SILENT_CONFLICT_RESOLUTION";
       if (observation.kind === "BUDGET_GUEST_SOURCE") return "FALSE_SUCCESS";
+      if (
+        observation.kind === "BUDGET_EFFECTIVE_DRIVER" ||
+        observation.kind === "BUDGET_GUEST_LINE_DRIVER" ||
+        observation.kind === "BUDGET_BRIEF_COUNT" ||
+        observation.kind === "BUDGET_RESULT_RETRIEVABLE" ||
+        observation.kind === "BUDGET_HASH_DISTINCT" ||
+        observation.kind === "BUDGET_FAILURE_NO_SUCCESS"
+      ) {
+        return "FALSE_SUCCESS";
+      }
       return undefined;
   }
 }

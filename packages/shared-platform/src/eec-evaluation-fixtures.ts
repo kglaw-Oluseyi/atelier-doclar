@@ -3,6 +3,7 @@ import { loadNonProductionFixtures } from "./bootstrap.js";
 import { SCHEMA_VERSION } from "./constants.js";
 import { exactHash, nfc } from "./eec-hash.js";
 import { calculateBudgetScenarioOnSnap, createBriefDraftOnSnap, decideBriefEditionOnSnap, issueDiscoveryClientAccessOnSnap, runFixtureAiJobOnSnap, submitBriefEditionOnSnap } from "./eec-intelligence.js";
+import { parseCalculateBudgetScenarioCommand, prepareBudgetScenarioCalculation } from "./eec-budget-override.js";
 import { buildDiscoveryWorkspace, eecPermissionAllowed } from "./eec-projections.js";
 import { instantiateRoadmapFromTemplateOnSnap, recordConversationTurnOnSnap, seedBudgetKnowledgeOnSnap } from "./eec-s05a-depth.js";
 import {
@@ -711,6 +712,19 @@ export function buildIsolatedEvaluationHarness(
           );
           recordIds.push(result.edition.id);
         } else {
+          const guests = action.guests ?? "180";
+          const command = parseCalculateBudgetScenarioCommand({
+            organisationId,
+            engagementId: engagement.id,
+            purpose: "PROTECT_INVESTMENT",
+            archetype: caseDef.eventType === "CORPORATE" ? "CORPORATE" : "WEDDING",
+            guests,
+            guestCountOverrideReason: action.guestCountOverrideReason,
+            assumptionAcknowledged: true,
+            idempotencyKey: `${caseDef.id}-budget-${action.scenario}`,
+            governingBriefContentHash: action.staleBriefHash ? "0".repeat(64) : undefined,
+          });
+          const prepared = prepareBudgetScenarioCalculation(current, command);
           const scenario = calculateBudgetScenarioOnSnap(
             current,
             {
@@ -718,7 +732,18 @@ export function buildIsolatedEvaluationHarness(
               engagementId: engagement.id,
               purpose: "PROTECT_INVESTMENT",
               archetype: caseDef.eventType === "CORPORATE" ? "CORPORATE" : "WEDDING",
-              guests: "180",
+              guests: prepared.guests,
+              guestSourceKind: prepared.guestSourceKind,
+              sourceAssertionId: prepared.sourceAssertionId,
+              assumptionAcknowledged: prepared.assumptionAcknowledged,
+              guestCountOverride: prepared.guestCountOverride,
+              guestCountOverrideReason: prepared.guestCountOverrideReason,
+              governingGuestCount: prepared.governingGuestCount,
+              governingBriefEditionId: prepared.governingBriefEditionId,
+              governingBriefContentHash: prepared.governingBriefContentHash,
+              governingAssertionId: prepared.governingAssertionId,
+              effectiveDrivers: prepared.effectiveDrivers,
+              scenarioAssumptions: prepared.scenarioAssumptions,
             },
             now,
             staffPersonId,

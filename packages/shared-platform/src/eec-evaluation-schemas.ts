@@ -17,7 +17,7 @@ const versioned = {
 };
 
 export const EVALUATION_CONTRACT_VERSION = "s05a-eval-contract-v1";
-export const EVALUATION_CORPUS_EDITION = "s05a-eval-v4";
+export const EVALUATION_CORPUS_EDITION = "s05a-eval-v5";
 export const EVALUATION_ORCHESTRATOR_VERSION = "s05a-orchestrator-v2";
 export const EVALUATION_PROVIDER_VERSION = "fixture-inactive-v1";
 export const EVALUATION_PROJECTION_POLICY_VERSION = "client-projection-v2";
@@ -120,7 +120,16 @@ export const EvaluationActionSchema = z.discriminatedUnion("kind", [
       narrative: z.string().optional(),
     })
     .strict(),
-  z.object({ kind: z.literal("RUN_BUDGET"), scenario: z.string() }).strict(),
+  z
+    .object({
+      kind: z.literal("RUN_BUDGET"),
+      scenario: z.string(),
+      guests: z.string().optional(),
+      guestCountOverrideReason: z.string().optional(),
+      staleBriefHash: z.boolean().optional(),
+      expectErrorCode: z.string().optional(),
+    })
+    .strict(),
   z.object({ kind: z.literal("PROJECT_CLIENT") }).strict(),
   z.object({ kind: z.literal("PROJECT_STAFF") }).strict(),
   z.object({ kind: z.literal("PROJECT_AUDITOR") }).strict(),
@@ -162,6 +171,19 @@ export const ExpectedObservationSchema = z.discriminatedUnion("kind", [
       sourceKind: z.enum(["CURRENT_BRIEF", "BRIEF_NOT_CURRENT", "UNRESOLVED_CONTRADICTION", "UNKNOWN", "NOT_APPLICABLE"]),
     })
     .strict(),
+  z
+    .object({
+      kind: z.literal("BUDGET_EFFECTIVE_DRIVER"),
+      driverKey: z.string(),
+      value: z.string(),
+      provenance: z.enum(["CURRENT_BRIEF", "SCENARIO_OVERRIDE"]).optional(),
+    })
+    .strict(),
+  z.object({ kind: z.literal("BUDGET_GUEST_LINE_DRIVER"), itemCode: z.string(), value: z.string() }).strict(),
+  z.object({ kind: z.literal("BUDGET_BRIEF_COUNT"), count: z.string() }).strict(),
+  z.object({ kind: z.literal("BUDGET_RESULT_RETRIEVABLE") }).strict(),
+  z.object({ kind: z.literal("BUDGET_HASH_DISTINCT") }).strict(),
+  z.object({ kind: z.literal("BUDGET_FAILURE_NO_SUCCESS") }).strict(),
 ]);
 
 export const EvaluationPrincipalSeedSchema = z
@@ -257,6 +279,12 @@ export const EvaluationObservationResultSchema = z
       "EXTRACTION_OUTCOME_COUNT",
       "CONFLICT_GOVERNING",
       "BUDGET_GUEST_SOURCE",
+      "BUDGET_EFFECTIVE_DRIVER",
+      "BUDGET_GUEST_LINE_DRIVER",
+      "BUDGET_BRIEF_COUNT",
+      "BUDGET_RESULT_RETRIEVABLE",
+      "BUDGET_HASH_DISTINCT",
+      "BUDGET_FAILURE_NO_SUCCESS",
     ]),
     passed: z.boolean(),
     code: z.string().min(1).max(80),
