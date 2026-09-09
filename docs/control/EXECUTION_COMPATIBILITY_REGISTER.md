@@ -294,3 +294,15 @@ Milestone 4 is authorised on the Milestone 1–3 contracts. Historic S5-01–S5-
 | Claude-in-Chrome | Not run. Ready for narrow Claude re-verification after AI CTO review. |
 | EOS-S06 / `MD-PR-S036` | RETAINED. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. |
 | `productionAuthorised` | RETAINED false. Not changed. |
+
+## Addendum — 2026-09-09 EOS-S05A Budget Studio override execution (`MD-PR-S047`)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| MD-PR-S046 typed 350/340 discarded / missing-record redirect / contradiction focus to body | SUPERSEDED by `MD-PR-S047` product remediation. Findings remain recorded; disposition is implemented, not accepted. |
+| Evaluation corpus `s05a-eval-v4` / 41 cases | SUPERSEDED as the current executable edition. Current edition is `s05a-eval-v5` / 44 cases / hash `bba37d57763b6d383ff08a7306deff44a4bfb82f281321947b3774820b3ddd71`. Prior PASSED runs are STALE and were not restamped. |
+| Catalogue accepted-slice count | RETAINED at 5. |
+| Control Tower | Compatibility-only. Not a deploy target for this run. |
+| Claude-in-Chrome | Not run. Ready for focused Claude verification after AI CTO review. |
+| EOS-S06 / `MD-PR-S036` | RETAINED. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. |
+| `productionAuthorised` | RETAINED false. Not changed. |

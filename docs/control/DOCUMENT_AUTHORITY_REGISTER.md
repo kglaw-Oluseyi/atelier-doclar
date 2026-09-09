@@ -299,3 +299,13 @@ This addendum does not rewrite the B0 row set or earlier addenda. Catalogue acce
 | MD-PR-S045 remediation pack | `docs/control/eos-s05a/MD_PR_S045_EOS_S05A_FINAL_TRUTHFUL_DECISION_REMEDIATION.md` | CONTROLLING IMPLEMENTATION AUTHORITY for this remediation | Remediation of MD-PR-S044 findings. Does not accept EOS-S05A. |
 | EOS-S05A implementation record | `docs/control/EOS_S05A_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | S045 disposition recorded. Not acceptance. |
 | EOS-S05A build ledger | `docs/control/EOS_S05A_BUILD_LEDGER.md` | IMPLEMENTATION LEDGER | S045 local gates and corpus edition `s05a-eval-v4`. |
+
+## Addendum — 2026-09-09 EOS-S05A Budget Studio override execution (`MD-PR-S047`)
+
+This addendum does not rewrite the B0 row set or earlier addenda. Catalogue accepted-slice count remains 5. EOS-S06 remains unauthorised. Production remains unauthorised. EOS-S05A is not accepted. Claude was not run. Control Tower was not deployed.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| MD-PR-S047 execution pack | `docs/control/eos-s05a/MD_PR_S047_EOS_S05A_BUDGET_STUDIO_OVERRIDE_EXECUTION_PACK.md` | CONTROLLING IMPLEMENTATION AUTHORITY for this remediation | Remediation of MD-PR-S046 Budget Studio override findings. Does not accept EOS-S05A. |
+| EOS-S05A implementation record | `docs/control/EOS_S05A_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | S047 disposition recorded in current-state / ledger / evidence. Not acceptance. |
+| EOS-S05A build ledger | `docs/control/EOS_S05A_BUILD_LEDGER.md` | IMPLEMENTATION LEDGER | S047 local gates and corpus edition `s05a-eval-v5`. |

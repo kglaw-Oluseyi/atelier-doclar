@@ -1,9 +1,9 @@
 # EOS-S05A Build Ledger
 
 **Slice ID:** `EOS-S05A`
-**Prompt Control ID:** `MD-PR-S045` (truthful-decision remediation of MD-PR-S044; prior `MD-PR-S043` / `MD-PR-S041`)
-**Starting baseline for MD-PR-S045:** `a795947bd2c3bd2ff16cccaa1fbe26fd5cd6d77d`
-**Application/test SHA:** `e63313de72018840075b853841da97d08ab13a42`
+**Prompt Control ID:** `MD-PR-S047` (Budget Studio override of MD-PR-S046; prior `MD-PR-S045` / `MD-PR-S043` / `MD-PR-S041`)
+**Starting baseline for MD-PR-S047:** `5c7d6356b5a618bc315f1b88cc76c844f7d659f1`
+**Application/test SHA:** `abe2e20308990dc3f31e74f799c717903205d1a8`
 **Status:** `IMPLEMENTED / NOT ACCEPTED`
 **Production:** unauthorised
 **Catalogue accepted-slice count:** remains 5
@@ -40,6 +40,13 @@
 | `git diff --check` | Implementation defect (S041) | Extra blank line at EOF in `eec-s05a-completion.ts` | Strip trailing blank line | PASS |
 | `PLAYWRIGHT_PROD=1` / `next start` | Environment defect (S040) | Production runtime requires `DATABASE_URL` | Use Next.js dev with a larger heap | Local E2E pass |
 | Local whole-slice timeout | Tooling defect (S040) | Next.js restarted at the memory threshold; staff nav click after the decide-change banner stayed on Discovery | Direct `/app/command` navigation, 360s timeout, `--max-old-space-size=8192` | Whole-slice 1.1m pass; responsive 18s pass |
+| S047 unit `guestCountOverride: 350` | Implementation defect (S047) | Engine consumed only `input.guests` string; numeric 350 never mapped | Parse command → `guestCountOverride` number → engine `guests` string + effective drivers | Focused S047 unit pass |
+| S047 eval first corpus | Implementation defect (S047) | New probes used `outcomes` not `ctx.outcomes`; empty UUID strings on `effectiveDrivers` | Use `ctx.outcomes`; omit empty UUID fields | Corpus cases pass |
+| S043 `sourceKind` | Implementation defect (S047) | No-brief planning assumption labelled `SCENARIO_OVERRIDE` | Keep `SCENARIO` unless a governing brief override exists | Shared-platform 400/0 |
+| S047 Playwright first local | Test/UI defect (S047) | `useState(initial)` hydrated empty; macOS Control+A appended `350360`; two Extract buttons; Unicode minus vs `-`; `#brief-review` hash navigation | Controlled `edited ?? override ?? governing`; Meta+A; `.last()` extract; typographic minus; in-page brief link | Local S047 5/5 |
+| S045 batched after S043 | Environment flake (S047) | Save note did not persist after Next.js ECONNRESET; last receipt remained Add participant | Rerun S045 alone | S045 3/3 |
+| Live S047 Journey 3 | Implementation defect (S047) | Superseding 350 changed body at version 1; Postgres persist threw; `withDurable` finally replaced redirect with `error.tsx` | Increment superseded edition version | Live S047 5/5 |
+| Live S047 Journey 5 | Implementation defect (S047) | Reload still presented success and `AtelierStateFocus` retried for 12s | Focus only when `shouldConsume`; sessionStorage once-key | Live S047 5/5 |
 
 S038/S039 first-run failures remain historical in prior commits and are not reopened.
 
@@ -182,6 +189,37 @@ S044 remaining defects are remediated. EOS-S05A remains NOT ACCEPTED. No TDR was
 | Live CEO fixture run | `PASSED`; cases passed 41 / failed 0; zero-tolerance clear; hash `47c2c5b3b4c1c0df13f863d7f071361a34e2a41fee33c4750210d5dc4a4efa4d`; run `fe4ef61e-c133-4ea7-b4db-067feed17c00`; completed `2026-09-09T11:55:01.976Z` |
 | Live after corpus | `s05aEvaluationBlocked` false; `s05aReleaseReady` true |
 | Live focused S045 Playwright | PASS — 3/3 against `https://event-os-production-bc8d.up.railway.app` |
+| Control Tower | not deployed |
+| Claude / EOS-S06 / acceptance | not run / not started / not accepted |
+| `productionAuthorised` | false, unchanged |
+
+## MD-PR-S047 Budget Studio override execution
+
+S046 remaining defects are remediated. EOS-S05A remains NOT ACCEPTED. No TDR was manufactured. A typed Budget Studio override now crosses form → command → immutable assumption → effective driver → BOM → trace → durable result → refresh/reopen. The Event Brief stays 360.
+
+| Field | Value |
+|-------|-------|
+| Controlling pack | `docs/control/eos-s05a/MD_PR_S047_EOS_S05A_BUDGET_STUDIO_OVERRIDE_EXECUTION_PACK.md` |
+| Starting baseline | `5c7d6356b5a618bc315f1b88cc76c844f7d659f1` |
+| Application SHA | `abe2e20308990dc3f31e74f799c717903205d1a8` |
+| Corpus edition / hash | `s05a-eval-v5` / `bba37d57763b6d383ff08a7306deff44a4bfb82f281321947b3774820b3ddd71` |
+| Case count | 44 executable cases |
+| Focused S047 unit/integration | PASS after first-run mapping, empty-UUID persist, and S043 `sourceKind` corrections |
+| `pnpm typecheck` | PASS |
+| `pnpm --filter @maison-doclar/shared-platform test` | 400 pass / 0 fail |
+| `pnpm --filter @maison-doclar/event-os test` | 84 pass / 0 fail |
+| `pnpm programme:validate` | PASS |
+| `pnpm --filter @maison-doclar/event-os build` | PASS |
+| `git diff --check` | PASS |
+| Focused S047 Playwright | PASS — 5/5 locally after first-run input/locator/trace assertion corrections |
+| Changed-risk S045 / S043 Playwright | PASS — S043 4/4 first run; S045 3/3 after a batched Save-note flake |
+| Live Event OS deploy (corpus) | `9db99aab-cfcd-4cb9-97ce-153bfd01e220` SUCCESS at `e75ed0ee49c15d8148cd0868e8a1c64d581d8c7f` |
+| Live health before CEO corpus | `alive`/`ready` true; `POSTGRES`/`APPLIED`; `productionAuthorised` false; layout READY/READY; evaluation `STALE` / blocked |
+| Live CEO fixture run | `PASSED`; cases passed 44 / failed 0; zero-tolerance clear; hash `bba37d57763b6d383ff08a7306deff44a4bfb82f281321947b3774820b3ddd71`; run `7aa7b7d0-e334-452f-8370-709e9a03457c`; completed `2026-09-09T20:01:14.476Z` |
+| Live after corpus | `s05aEvaluationBlocked` false; `s05aReleaseReady` true |
+| Live focused S047 (first run on `e75ed0ee`) | Journeys 1, 2, 4 PASS; Journey 3 FAIL (`persisted version conflict` on superseded 350); Journey 5 FAIL (reload re-focused heading) |
+| Live Event OS deploy (supersede version + focus once) | `f892dfe6-fe2b-465d-a69d-56b34494d4bc` SUCCESS at `abe2e20308990dc3f31e74f799c717903205d1a8` |
+| Live focused S047 (after persist/focus fix) | PASS — 5/5 against `https://event-os-production-bc8d.up.railway.app` |
 | Control Tower | not deployed |
 | Claude / EOS-S06 / acceptance | not run / not started / not accepted |
 | `productionAuthorised` | false, unchanged |
