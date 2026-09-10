@@ -27,7 +27,6 @@ export class FileBackedPlatformStore extends MemoryPlatformStore {
   }
 
   override snapshot(): PlatformSnapshot {
-    this.hydrateFromDisk();
     return super.snapshot();
   }
 

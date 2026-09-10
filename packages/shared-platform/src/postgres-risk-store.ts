@@ -58,6 +58,30 @@ export class PostgresRiskProtectionStore implements RiskProtectionStore {
     throw new PlatformError("VALIDATION_FAILED", "postgres risk store loadOrganisation is async; use loadOrganisationAsync");
   }
 
+  async loadAuthorityProjectionAsync(organisationId: string): Promise<Pick<RiskProtectionState, "riskRuleEditions" | "riskSourceEditions" | "riskAuthorityGovernanceReceipts">> {
+    const tables = [
+      { table: "risk_rule_editions", collection: "riskRuleEditions" },
+      { table: "risk_source_editions", collection: "riskSourceEditions" },
+      { table: "risk_authority_governance_receipts", collection: "riskAuthorityGovernanceReceipts" },
+    ] as const;
+    const state = {
+      riskRuleEditions: [] as RiskProtectionState["riskRuleEditions"],
+      riskSourceEditions: [] as RiskProtectionState["riskSourceEditions"],
+      riskAuthorityGovernanceReceipts: [] as RiskProtectionState["riskAuthorityGovernanceReceipts"],
+    };
+    for (const mapping of tables) {
+      const result = await this.client.query<{ body: unknown }>(
+        `SELECT body FROM ${mapping.table} WHERE organisation_id = $1`,
+        [organisationId],
+      );
+      const rows = result.rows
+        .map((row) => (typeof row.body === "string" ? JSON.parse(row.body) : row.body) as { organisationId?: string })
+        .filter((item) => item.organisationId === organisationId);
+      (state as unknown as Record<string, unknown[]>)[mapping.collection] = rows;
+    }
+    return state;
+  }
+
   async loadOrganisationAsync(organisationId: string): Promise<RiskProtectionState> {
     const state = emptyRiskState();
     for (const mapping of RISK_SQL_TABLES) {

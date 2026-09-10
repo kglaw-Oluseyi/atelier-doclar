@@ -1,10 +1,11 @@
 import { expect, test } from "@playwright/test";
 import { loginAs, openStaffContext } from "./login";
-import { ALPHA_PROTECTION, assembleWorkingDraft, evaluateAlphaOne, expectActionOutcome, prepareApprovedRule } from "./s060-helpers";
+import { ALPHA_PROTECTION, assembleWorkingDraft, evaluateAlphaOne, expectActionOutcome, prepareApprovedRule, recoverRecordedFixtureAuthority } from "./s060-helpers";
 
 test("S060 planner director CEO exact-hash publish leaves last-known-good visible", async ({ page, browser }) => {
   test.setTimeout(240_000);
-  await prepareApprovedRule(page, browser);
+  const recorded = await prepareApprovedRule(page, browser);
+  try {
   const planner = await openStaffContext(browser, "planner");
   await evaluateAlphaOne(planner.page);
   await assembleWorkingDraft(planner.page);
@@ -41,4 +42,7 @@ test("S060 planner director CEO exact-hash publish leaves last-known-good visibl
   expect((await ceo.page.getByTestId("client-protection-dossier").innerText()).length).toBeGreaterThan(20);
   expect(publishedCopy.length).toBeGreaterThan(20);
   await ceo.context.close();
+  } finally {
+    await recoverRecordedFixtureAuthority(browser, recorded);
+  }
 });

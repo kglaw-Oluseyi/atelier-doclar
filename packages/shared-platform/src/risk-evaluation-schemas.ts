@@ -1,10 +1,10 @@
 import { z } from "zod";
 
-export const S05B_EVALUATION_CONTRACT_VERSION = "s05b-eval-contract-v5";
-export const S05B_EVALUATION_CORPUS_EDITION = "s05b-eval-v5";
-export const S05B_EVALUATION_ORCHESTRATOR_VERSION = "s05b-orchestrator-v5";
-export const S05B_EVALUATION_PROVIDER_VERSION = "fixture-inactive-v5";
-export const S05B_EVALUATION_PROJECTION_POLICY_VERSION = "risk-projection-v5";
+export const S05B_EVALUATION_CONTRACT_VERSION = "s05b-eval-contract-v6";
+export const S05B_EVALUATION_CORPUS_EDITION = "s05b-eval-v6";
+export const S05B_EVALUATION_ORCHESTRATOR_VERSION = "s05b-orchestrator-v6";
+export const S05B_EVALUATION_PROVIDER_VERSION = "fixture-inactive-v6";
+export const S05B_EVALUATION_PROJECTION_POLICY_VERSION = "risk-projection-v6";
 
 export const S05B_ZERO_TOLERANCE = [
   "FABRICATED_COVERAGE",
@@ -114,6 +114,10 @@ export const S05BEvaluationActionSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("BUDGET_CONCURRENT_STALE") }).strict(),
   z.object({ kind: z.literal("RETAINED_AUTHORITY_HISTORY") }).strict(),
   z.object({ kind: z.literal("AUTHORITY_REVIEW_SUCCESSOR") }).strict(),
+  z.object({ kind: z.literal("CLASSIFY_FIXTURE") }).strict(),
+  z.object({ kind: z.literal("WITHDRAW_FIXTURE") }).strict(),
+  z.object({ kind: z.literal("BATCH_WITHDRAW_REJECT") }).strict(),
+  z.object({ kind: z.literal("INTERRUPTED_FIXTURE_LINEAGE") }).strict(),
 ]);
 
 export const S05BAssertionSchema = z.discriminatedUnion("kind", [

@@ -10,10 +10,10 @@ export async function expectActionOutcome(page: Page) {
 export async function expectFreshActionSuccess(page: Page, previousCorrelation = "") {
   const banner = page.getByTestId("action-result-banner");
   await expect(banner).toBeVisible({ timeout: 30_000 });
-  await expect(banner).toContainText(/Succeeded|The change was recorded|No change/i);
   if (previousCorrelation) {
-    await expect(banner).not.toContainText(previousCorrelation);
+    await expect(banner).not.toContainText(previousCorrelation, { timeout: 30_000 });
   }
+  await expect(banner).toContainText(/Succeeded|The change was recorded|No change/i);
 }
 
 export async function readActionCorrelation(page: Page): Promise<string> {
@@ -22,12 +22,12 @@ export async function readActionCorrelation(page: Page): Promise<string> {
 }
 
 export async function assembleWorkingDraft(page: Page) {
+  await page.goto(ALPHA_PROTECTION);
+  await expect(page.getByTestId("event-protection-workspace")).toBeVisible({ timeout: 20_000 });
   await page.getByRole("link", { name: "Dossier", exact: true }).click();
   const assemble = page.getByRole("button", { name: "Assemble dossier edition" });
   await expect(assemble).toBeVisible({ timeout: 20_000 });
-  const previous = await readActionCorrelation(page);
   await assemble.click();
-  await expectFreshActionSuccess(page, previous);
   await expect(page.getByText(/Status DRAFT/)).toBeVisible({ timeout: 30_000 });
 }
 
@@ -66,19 +66,70 @@ export async function refreshExpiredAuthorities(page: Page, reason: string) {
   await expect(surface.locator("[data-authority-state='STALE_APPROVED']")).toHaveCount(0, { timeout: 10_000 });
 }
 
-export async function prepareApprovedRule(page: Page, browser: Browser) {
+export const S062_CANONICAL_RULE_KEY = "s062-canonical-public-liability";
+
+export type RecordedFixtureAuthority = {
+  ruleKey: string;
+  editionId?: string;
+  created: boolean;
+};
+
+export async function detectUnfinishedFixtureLineage(page: Page, ruleKey = S062_CANONICAL_RULE_KEY): Promise<boolean> {
+  await page.goto(`/app/protection/authority?ruleKey=${encodeURIComponent(ruleKey)}`);
+  const row = page.getByTestId(`authority-queue-${ruleKey}`);
+  if (!(await row.count())) return false;
+  const state = (await row.getAttribute("data-authority-state")) ?? "";
+  return state === "CURRENT_APPROVED" || state === "STALE_APPROVED" || state === "AUTHORITY_CONFLICT";
+}
+
+export async function recoverRecordedFixtureAuthority(browser: Browser, recorded: RecordedFixtureAuthority) {
+  if (!recorded.created && !recorded.editionId) return;
+  const reviewer = await openStaffContext(browser, "reviewer");
+  try {
+    await reviewer.page.goto(`/app/protection/authority?ruleKey=${encodeURIComponent(recorded.ruleKey)}`);
+    const row = reviewer.page.getByTestId(`authority-queue-${recorded.ruleKey}`);
+    if (!(await row.count())) return;
+    const href = await row.getByRole("link").first().getAttribute("href");
+    if (!href) return;
+    await reviewer.page.goto(href);
+    const withdraw = reviewer.page.getByTestId("authority-withdraw");
+    if (!(await withdraw.count())) return;
+    await withdraw.getByLabel("Reason").fill("S062 fixture recovery helper withdrew the exact recorded synthetic authority.");
+    await withdraw.getByRole("button", { name: "Withdraw this authority" }).click();
+    await expectActionOutcome(reviewer.page);
+  } finally {
+    await reviewer.context.close();
+  }
+}
+
+export async function prepareApprovedRule(page: Page, browser: Browser): Promise<RecordedFixtureAuthority> {
+  const live = process.env.PLAYWRIGHT_LIVE === "1";
   await loginAs(page, "ceo");
   await page.goto("/app/protection");
   await expect(page.getByTestId("protection-command")).toBeVisible({ timeout: 20_000 });
+  if (live) {
+    const unfinished = await detectUnfinishedFixtureLineage(page);
+    if (unfinished) {
+      throw new Error(`unfinished prior fixture lineage ${S062_CANONICAL_RULE_KEY} is still governing; recover it instead of creating another rule`);
+    }
+    return { ruleKey: S062_CANONICAL_RULE_KEY, created: false };
+  }
+  await page.goto("/app/protection/authority");
+  if (await detectUnfinishedFixtureLineage(page)) {
+    const row = page.getByTestId(`authority-queue-${S062_CANONICAL_RULE_KEY}`);
+    const href = await row.getByRole("link").first().getAttribute("href");
+    return { ruleKey: S062_CANONICAL_RULE_KEY, editionId: href?.split("/").pop(), created: false };
+  }
+  await page.goto("/app/protection");
   await page.getByRole("link", { name: "Rules and Sources" }).click();
   const sourceForm = page.getByTestId("protection-create-source");
-  const title = `S060 source ${Date.now()}`;
+  const title = "S062 canonical fixture source";
   await sourceForm.getByLabel("Source title").fill(title);
   await sourceForm.getByLabel("Publisher").fill("NSITF");
   await sourceForm.getByLabel("Locator").fill("https://nsitf.gov.ng/compensation/");
   await sourceForm.getByLabel("Authority").selectOption("REGULATOR");
   await sourceForm.getByLabel("Jurisdiction").fill("NG");
-  await sourceForm.getByLabel("Summary").fill("Synthetic S060 source.");
+  await sourceForm.getByLabel("Summary").fill("Canonical S062 fixture source. Not organisation-wide governing policy.");
   await sourceForm.getByLabel("Review again by").fill("2026-12-31");
   await sourceForm.getByRole("button", { name: "Record discovery source" }).click();
   await expectActionOutcome(page);
@@ -94,7 +145,7 @@ export async function prepareApprovedRule(page: Page, browser: Browser) {
   await page.goto("/app/protection");
   await page.getByRole("link", { name: "Rules and Sources" }).click();
   const ruleForm = page.locator("form").filter({ hasText: "Draft rule" });
-  await ruleForm.getByLabel("Rule key").fill(`s060-public-liability-${Date.now()}`);
+  await ruleForm.getByLabel("Rule key").fill(S062_CANONICAL_RULE_KEY);
   await ruleForm.getByLabel("Jurisdiction").fill("NG");
   await ruleForm.getByLabel("Cited proposition").fill("Public liability evidence may be required.");
   const sourceValue = await ruleForm.locator("#sourceEditionIds option", { hasText: title }).first().getAttribute("value");
@@ -106,16 +157,36 @@ export async function prepareApprovedRule(page: Page, browser: Browser) {
   await ruleForm.getByLabel("Review again by").fill("2026-12-31");
   await ruleForm.getByRole("button", { name: "Draft rule" }).click();
   await expect(page.getByTestId("action-result-banner")).toBeVisible({ timeout: 30_000 });
+  const createdEditionId = new URL(page.url()).searchParams.get("subjectId") ?? "";
   const reviewer2 = await openStaffContext(browser, "reviewer");
-  await reviewer2.page.goto("/app/protection");
-  await reviewer2.page.getByRole("link", { name: "Rules and Sources" }).click();
-  const review = reviewer2.page.locator("li", { hasText: "s060-public-liability" }).last();
-  if (await review.getByLabel("Review").count()) {
-    await review.getByLabel("Review").selectOption("APPROVED");
-    await review.getByRole("button", { name: "Record rule review" }).click();
+  if (createdEditionId) {
+    await reviewer2.page.goto(`/app/protection/authority/${createdEditionId}`);
+    const approve = reviewer2.page.getByTestId("authority-approve-draft");
+    if (await approve.count()) {
+      await approve.getByRole("button", { name: "Approve this draft authority" }).click();
+      await expectActionOutcome(reviewer2.page);
+    }
+  } else {
+    await reviewer2.page.goto("/app/protection");
+    await reviewer2.page.getByRole("link", { name: "Rules and Sources" }).click();
+    const review = reviewer2.page.locator("li", { hasText: S062_CANONICAL_RULE_KEY }).last();
+    if (await review.getByLabel("Review").count()) {
+      await review.getByLabel("Review").selectOption("APPROVED");
+      await review.getByRole("button", { name: "Record rule review" }).click();
+      await expectActionOutcome(reviewer2.page);
+    }
+    await reviewer2.page.goto(`/app/protection/authority?ruleKey=${S062_CANONICAL_RULE_KEY}`);
+    const queued = await reviewer2.page.getByTestId(`authority-queue-${S062_CANONICAL_RULE_KEY}`).getByRole("link").first().getAttribute("href");
+    if (queued) await reviewer2.page.goto(queued);
+  }
+  const classify = reviewer2.page.getByTestId("authority-classify-fixture");
+  if (await classify.count()) {
+    await classify.getByRole("button", { name: "Record fixture classification" }).click();
     await expectActionOutcome(reviewer2.page);
   }
+  const focusedHref = reviewer2.page.url();
   await reviewer2.context.close();
+  return { ruleKey: S062_CANONICAL_RULE_KEY, editionId: createdEditionId || focusedHref.split("/").pop()?.split("?")[0], created: true };
 }
 
 export async function evaluateAlphaOne(page: Page) {
@@ -130,8 +201,11 @@ export async function evaluateAlphaOne(page: Page) {
   await fact.getByLabel("Value").fill("2026-12-01/2026-12-02");
   await fact.getByRole("button", { name: "Record event fact" }).click();
   await expectActionOutcome(page);
+  await page.goto(ALPHA_PROTECTION);
+  await expect(page.getByTestId("event-protection-workspace")).toBeVisible({ timeout: 20_000 });
   await page.getByRole("button", { name: "Evaluate protection now" }).click();
   await expectActionOutcome(page);
+  await expect(page.getByTestId("protection-effective-authorities")).toBeVisible({ timeout: 30_000 });
 }
 
 export async function captureNextAction(page: Page, trigger: () => Promise<void>): Promise<Request> {

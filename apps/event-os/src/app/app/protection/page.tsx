@@ -355,6 +355,11 @@ export default async function ProtectionCommandPage({
       <section id="protection-authority" className="atelier-panel" data-testid="protection-authority-review">
         <h2>Governing authority review</h2>
         <p>Historic drafts remain visible as history. Only one approved exact-hash edition per rule key governs applicability.</p>
+        <p>
+          <a href="/app/protection/authority" data-testid="authority-queue-link">
+            Open focused authority queue
+          </a>
+        </p>
         <ul>
           {(overview.effectiveAuthorities ?? []).map((item) => (
             <li key={item.ruleId} data-testid={`authority-${item.ruleKey}`} data-authority-state={item.authorityState}>

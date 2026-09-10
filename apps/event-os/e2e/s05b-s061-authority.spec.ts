@@ -138,9 +138,8 @@ test("S061 governing authority, publication and client access", async ({ page, b
   const client = await browser.newContext();
   const clientPage = await client.newPage();
   await clientPage.goto(tokenPath);
-  await expect(clientPage.getByTestId("client-dossier-session").or(clientPage.getByTestId("client-protection-dossier")).or(clientPage.getByTestId("client-dossier-denied"))).toBeVisible({
-    timeout: 20_000,
-  });
+  await expect(clientPage.getByTestId("client-dossier-session")).toBeVisible({ timeout: 20_000 });
+  await expect(clientPage.getByTestId("client-protection-dossier")).toBeVisible();
   await expect(clientPage.getByRole("navigation", { name: "Staff" })).toHaveCount(0);
   await client.close();
 

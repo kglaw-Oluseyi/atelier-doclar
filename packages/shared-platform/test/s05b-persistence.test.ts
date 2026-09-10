@@ -5,7 +5,7 @@ import { MemoryPlatformPg, PostgresPlatformStore } from "../src/postgres-store.j
 import { PostgresRiskProtectionRepository, PostgresRiskProtectionStore } from "../src/postgres-risk-store.js";
 import { backfillNormalizedRiskTables } from "../src/risk-normalized-migration.js";
 import { checksumFor, runPlatformMigrations } from "../src/migrations.js";
-import { EOS_S05B_NORMALIZED_MIGRATION_V3_ID, EOS_S05B_PROTECTION_V2_ID, RISK_PROTECTION_POSTGRES_SCHEMA } from "../src/risk-postgres-schema.js";
+import { EOS_S05B_NORMALIZED_MIGRATION_V3_ID, EOS_S05B_NORMALIZED_MIGRATION_V4_ID, EOS_S05B_PROTECTION_V2_ID, RISK_PROTECTION_POSTGRES_SCHEMA } from "../src/risk-postgres-schema.js";
 import { createContinuityPlanOnSnap } from "../src/risk-continuity.js";
 import { applySyntheticSeedIfNeeded } from "../src/synthetic-seed.js";
 import { emptySnapshot } from "../src/store.js";
@@ -18,6 +18,7 @@ describe("EOS-S05B normalized persistence", () => {
     const applied = pg.migrations.map((item) => item.id);
     assert.ok(applied.includes("004_risk_protection_normalized"));
     assert.ok(applied.includes(EOS_S05B_NORMALIZED_MIGRATION_V3_ID));
+    assert.ok(applied.includes(EOS_S05B_NORMALIZED_MIGRATION_V4_ID));
     const receipts = pg.riskRows.filter((row) => row.table === "risk_migration_receipts");
     assert.equal(receipts.length, 1);
     assert.equal((receipts[0]?.body as { migrationId?: string }).migrationId, EOS_S05B_PROTECTION_V2_ID);

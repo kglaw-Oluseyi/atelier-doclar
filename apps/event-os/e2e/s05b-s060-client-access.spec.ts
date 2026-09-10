@@ -1,10 +1,11 @@
 import { expect, test } from "@playwright/test";
 import { loginAs, openStaffContext } from "./login";
-import { ALPHA_PROTECTION, assembleWorkingDraft, evaluateAlphaOne, expectActionOutcome, prepareApprovedRule } from "./s060-helpers";
+import { ALPHA_PROTECTION, assembleWorkingDraft, evaluateAlphaOne, expectActionOutcome, prepareApprovedRule, recoverRecordedFixtureAuthority } from "./s060-helpers";
 
 test("S060 staff issues dossier access, client enters, revoke fails", async ({ page, browser }) => {
   test.setTimeout(240_000);
-  await prepareApprovedRule(page, browser);
+  const recorded = await prepareApprovedRule(page, browser);
+  try {
   const planner = await openStaffContext(browser, "planner");
   await evaluateAlphaOne(planner.page);
   await assembleWorkingDraft(planner.page);
@@ -37,9 +38,8 @@ test("S060 staff issues dossier access, client enters, revoke fails", async ({ p
   const client = await browser.newContext();
   const clientPage = await client.newPage();
   await clientPage.goto(tokenPath);
-  await expect(clientPage.getByTestId("client-dossier-session").or(clientPage.getByTestId("client-protection-dossier")).or(clientPage.getByTestId("client-dossier-denied"))).toBeVisible({
-    timeout: 20_000,
-  });
+  await expect(clientPage.getByTestId("client-dossier-session")).toBeVisible({ timeout: 20_000 });
+  await expect(clientPage.getByTestId("client-protection-dossier")).toBeVisible();
   await expect(clientPage.getByRole("navigation", { name: "Staff" })).toHaveCount(0);
   await client.close();
   await loginAs(page, "ceo");
@@ -52,4 +52,7 @@ test("S060 staff issues dossier access, client enters, revoke fails", async ({ p
   await revokedPage.goto(tokenPath);
   await expect(revokedPage.getByTestId("client-dossier-denied")).toBeVisible({ timeout: 20_000 });
   await revoked.close();
+  } finally {
+    await recoverRecordedFixtureAuthority(browser, recorded);
+  }
 });

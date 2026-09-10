@@ -78,6 +78,10 @@ export const S05B_EVALUATION_CASES: readonly S05BEvaluationCaseDefinition[] = [
   caseDef("S05B-AUTH-EFFECTIVE-01", "AUTHORITY_SELECTION", "Retained drafts do not govern", [{ kind: "CREATE_SOURCE" }, { kind: "APPROVE_SOURCE" }, { kind: "CREATE_RULE" }, { kind: "APPROVE_RULE" }, { kind: "RETAINED_AUTHORITY_HISTORY" }, { kind: "RECORD_FACT", factKey: "jurisdiction", value: "NG" }, { kind: "RECORD_FACT", factKey: "event_dates", value: "2026-12-01/2026-12-02" }, { kind: "EVALUATE" }], [{ kind: "STATE", state: "GAPS" }, { kind: "RECORD_COUNT", collection: "riskRuleEditions", min: 2 }], ["FABRICATED_COVERAGE"]),
   caseDef("S05B-AUTH-STALE-01", "AUTHORITY_SELECTION", "Expired review is one stale authority", [{ kind: "CREATE_SOURCE" }, { kind: "APPROVE_SOURCE" }, { kind: "CREATE_RULE", reviewExpired: true }, { kind: "APPROVE_RULE" }, { kind: "EVALUATE" }], [{ kind: "STATE", state: "STALE" }], ["FABRICATED_COVERAGE"]),
   caseDef("S05B-AUTH-RECOVERY-01", "AUTHORITY_SELECTION", "Governed successor review restores current authority", [{ kind: "CREATE_SOURCE" }, { kind: "APPROVE_SOURCE" }, { kind: "CREATE_RULE", reviewExpired: true }, { kind: "APPROVE_RULE" }, { kind: "EVALUATE" }, { kind: "AUTHORITY_REVIEW_SUCCESSOR" }, { kind: "EVALUATE" }], [{ kind: "STATE", state: "INDETERMINATE" }, { kind: "RECORD_COUNT", collection: "riskRuleEditions", min: 2 }], ["FALSE_SUCCESS"]),
+  caseDef("S05B-AUTH-FIXTURE-WITHDRAW-01", "AUTHORITY_SELECTION", "Fixture-provenance-bound withdrawal retains history", [{ kind: "CREATE_SOURCE" }, { kind: "APPROVE_SOURCE" }, { kind: "CREATE_RULE" }, { kind: "APPROVE_RULE" }, { kind: "CLASSIFY_FIXTURE" }, { kind: "WITHDRAW_FIXTURE" }], [{ kind: "STATE", state: "WITHDRAWN" }, { kind: "RECORD_COUNT", collection: "riskRuleEditions", min: 1 }], ["FALSE_SUCCESS"]),
+  caseDef("S05B-AUTH-BATCH-REJECT-01", "AUTHORITY_SELECTION", "Atomic exact-selection rejects non-fixture rows", [{ kind: "CREATE_SOURCE" }, { kind: "APPROVE_SOURCE" }, { kind: "CREATE_RULE" }, { kind: "APPROVE_RULE" }, { kind: "BATCH_WITHDRAW_REJECT" }], [{ kind: "COMMAND_DENIAL", code: "FORBIDDEN", didDataChange: false }], ["AUTHORITY_ESCALATION"]),
+  caseDef("S05B-AUTH-LINEAGE-01", "AUTHORITY_SELECTION", "Interrupted fixture lineage does not proliferate", [{ kind: "CREATE_SOURCE" }, { kind: "APPROVE_SOURCE" }, { kind: "CREATE_RULE" }, { kind: "APPROVE_RULE" }, { kind: "CLASSIFY_FIXTURE" }, { kind: "INTERRUPTED_FIXTURE_LINEAGE" }], [{ kind: "RECORD_COUNT", collection: "riskRuleEditions", eq: 1 }], ["FALSE_SUCCESS"]),
+  caseDef("S05B-AUTH-WITHDRAWN-HISTORY-01", "AUTHORITY_SELECTION", "Withdrawn synthetic authority is excluded while history remains", [{ kind: "CREATE_SOURCE" }, { kind: "APPROVE_SOURCE" }, { kind: "CREATE_RULE" }, { kind: "APPROVE_RULE" }, { kind: "CLASSIFY_FIXTURE" }, { kind: "WITHDRAW_FIXTURE" }, { kind: "RECORD_FACT", factKey: "jurisdiction", value: "NG" }, { kind: "RECORD_FACT", factKey: "event_dates", value: "2026-12-01/2026-12-02" }, { kind: "EVALUATE" }], [{ kind: "STATE", state: "WITHDRAWN" }, { kind: "STATE", state: "READY" }, { kind: "RECORD_COUNT", collection: "riskRuleEditions", min: 1 }], ["FABRICATED_COVERAGE"]),
 ];
 
 export function s05bEvaluationCorpusHash(): string {
@@ -85,7 +89,7 @@ export function s05bEvaluationCorpusHash(): string {
 }
 
 export function validateS05BEvaluationCorpus(): void {
-  if (S05B_EVALUATION_CASES.length < 1) throw new Error("s05b-eval-v5 requires an honest non-empty corpus");
+  if (S05B_EVALUATION_CASES.length < 1) throw new Error("s05b-eval-v6 requires an honest non-empty corpus");
   const signatures = new Set<string>();
   for (const item of S05B_EVALUATION_CASES) {
     S05BEvaluationCaseDefinitionSchema.parse(item);

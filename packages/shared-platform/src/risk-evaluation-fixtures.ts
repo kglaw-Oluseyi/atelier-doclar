@@ -20,6 +20,8 @@ import { hashDossierAccessToken, issueDossierAccessOnSnap, resolveDossierAccessO
 import { assembleDossierOnSnap, exportDossierOnSnap, publishedClientDossierProjection, transitionDossierOnSnap } from "./risk-projections.js";
 import { LIFE_SAFETY_PROTOCOL } from "./risk-incidents.js";
 import { recordRuleCurrentReviewOnSnap } from "./risk-authority.js";
+import { classifyFixtureAuthorityOnSnap, unfinishedFixtureLineage } from "./risk-fixture-provenance.js";
+import { withdrawExactSelectionBatchOnSnap, withdrawGoverningRuleOnSnap } from "./risk-authority-withdrawal.js";
 import {
   approveSourceEditionOnSnap,
   createEvidenceDocumentOnSnap,
@@ -72,10 +74,12 @@ function env(): {
   planner: string;
   admin: string;
   auditor: string;
+  reviewer: string;
   assignmentCeo: string;
   assignmentDirector: string;
   assignmentPlanner: string;
   assignmentAdmin: string;
+  assignmentReviewer: string;
   eventId: string;
   otherEventId: string;
   organisationId: string;
@@ -95,10 +99,12 @@ function env(): {
     planner: FIXTURE_IDS.personPlanner,
     admin: FIXTURE_IDS.personAdmin,
     auditor: FIXTURE_IDS.personAuditor,
+    reviewer: FIXTURE_IDS.personRiskReviewer,
     assignmentCeo: FIXTURE_IDS.assignCeo,
     assignmentDirector: FIXTURE_IDS.assignDirector,
     assignmentPlanner: FIXTURE_IDS.assignPlanner,
     assignmentAdmin: FIXTURE_IDS.assignAdmin,
+    assignmentReviewer: FIXTURE_IDS.assignRiskReviewer,
     eventId: FIXTURE_IDS.eventAlphaOne,
     otherEventId: FIXTURE_IDS.eventAlphaTwo,
     organisationId: FIXTURE_IDS.orgMaison,
@@ -375,6 +381,62 @@ export function executeS05BCase(caseDef: S05BEvaluationCaseDefinition, adapters:
           "2026-09-10T09:03:30.000Z",
           ctx.ceo,
         );
+      }
+      if (action.kind === "CLASSIFY_FIXTURE" && rule) {
+        classifyFixtureAuthorityOnSnap(
+          ctx.snap,
+          {
+            ...envelope(ctx, { assignmentId: ctx.assignmentReviewer }),
+            bindings: [{ editionId: rule.id, editionKind: "RULE", ruleKey: rule.ruleKey, contentHash: rule.contentHash, expectedVersion: rule.version }],
+            provenance: { environment: "NON_PRODUCTION_FIXTURE", testRunId: "s05b-eval-v6", authorityPromptId: "MD-PR-S062", createdByAutomation: true },
+            lineage: "Obsolete S060 synthetic QA authority created by S060 live maker/checker tests.",
+            productionAuthorised: false,
+          },
+          "2026-09-10T09:04:00.000Z",
+          ctx.reviewer,
+          "HUMAN",
+        );
+      }
+      if (action.kind === "WITHDRAW_FIXTURE" && rule) {
+        rule = withdrawGoverningRuleOnSnap(
+          ctx.snap,
+          {
+            ...envelope(ctx, { assignmentId: ctx.assignmentReviewer }),
+            ruleId: rule.id,
+            expectedVersion: rule.version,
+            confirmedHash: rule.contentHash,
+            reason: "Obsolete S060 synthetic QA authority from S060 live tests.",
+          },
+          "2026-09-10T09:05:00.000Z",
+          ctx.reviewer,
+          "HUMAN",
+        );
+        observed.push({ kind: "STATE", aggregateId: rule.id, state: rule.status, version: rule.version });
+      }
+      if (action.kind === "BATCH_WITHDRAW_REJECT" && rule) {
+        try {
+          withdrawExactSelectionBatchOnSnap(
+            ctx.snap,
+            {
+              ...envelope(ctx, { assignmentId: ctx.assignmentReviewer }),
+              selections: [{ editionId: rule.id, expectedVersion: rule.version, contentHash: rule.contentHash }],
+              reason: "name prefix is not provenance",
+              productionAuthorised: false,
+            },
+            "2026-09-10T09:05:00.000Z",
+            ctx.reviewer,
+            "HUMAN",
+          );
+        } catch (error) {
+          observed.push(denial(error));
+        }
+      }
+      if (action.kind === "INTERRUPTED_FIXTURE_LINEAGE" && rule) {
+        const first = unfinishedFixtureLineage(ctx.snap, ctx.organisationId, "MD-PR-S062", "s05b-eval-v6");
+        const second = unfinishedFixtureLineage(ctx.snap, ctx.organisationId, "MD-PR-S062", "s05b-eval-v6");
+        if (first && second && first.governingEditionIds.join() === second.governingEditionIds.join() && first.governingEditionIds[0] === rule.id) {
+          observed.push({ kind: "RECORD_COUNT", collection: "riskRuleEditions", count: ctx.snap.riskRuleEditions.filter((item) => item.organisationId === ctx.organisationId).length });
+        }
       }
       if (action.kind === "AUTHORITY_REVIEW_SUCCESSOR") {
         const stale = [...ctx.snap.riskRuleEditions].reverse().find((item) => item.organisationId === ctx.organisationId && item.status === "APPROVED");

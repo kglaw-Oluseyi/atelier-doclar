@@ -751,6 +751,19 @@ import {
   recordRuleCurrentReviewOnSnap,
   recordSourceCurrentReviewOnSnap,
 } from "./risk-authority.js";
+import {
+  audienceAndDecision,
+  projectRiskAuthorityDetail,
+  projectRiskAuthorityQueue,
+  projectRiskSourceDetail,
+  roleKeyFromActor,
+  type RiskAuthorityQueueQuery,
+} from "./risk-authority-queue.js";
+import {
+  classifyFixtureAuthorityOnSnap,
+  recoverFixtureAuthoritiesOnSnap,
+} from "./risk-fixture-provenance.js";
+import { withdrawExactSelectionBatchOnSnap, withdrawGoverningRuleOnSnap } from "./risk-authority-withdrawal.js";
 import { applyClauseEditionOnSnap, createClauseTemplateOnSnap, reviewClauseEditionOnSnap } from "./risk-clause-operations.js";
 import { assessVendorOnSnap, assignRosterOnSnap, decideVendorAssessmentOnSnap } from "./risk-vendor-assessment.js";
 import {
@@ -7159,6 +7172,137 @@ export class PlatformService {
     });
   }
 
+  listRiskAuthorityQueue(actor: ActorContext, query: RiskAuthorityQueueQuery) {
+    const actorSnap = this.actorSnapshot(actor);
+    const catalogue = this.decide(actorSnap, "risk.catalogue.view", { organisationId: query.organisationId }, { type: "risk_authority_queue", organisationId: query.organisationId }, actor);
+    if (!catalogue.allow) this.authorizeQuery(actor, "risk.event.view", { organisationId: query.organisationId });
+    const role = roleKeyFromActor(this.store.snapshot(), actor.personId) ?? actorSnap.roles[0]?.key;
+    const { audience, canDecide } = audienceAndDecision(role);
+    return projectRiskAuthorityQueue(
+      this.store.snapshot(),
+      query,
+      actor.now ?? new Date().toISOString(),
+      audience,
+      canDecide,
+    );
+  }
+
+  getRiskAuthorityDetail(actor: ActorContext, organisationId: string, ruleEditionId: string) {
+    const actorSnap = this.actorSnapshot(actor);
+    const catalogue = this.decide(actorSnap, "risk.catalogue.view", { organisationId }, { type: "risk_authority_detail", organisationId }, actor);
+    if (!catalogue.allow) this.authorizeQuery(actor, "risk.event.view", { organisationId });
+    const role = roleKeyFromActor(this.store.snapshot(), actor.personId) ?? actorSnap.roles[0]?.key;
+    const { audience, canDecide } = audienceAndDecision(role);
+    return projectRiskAuthorityDetail(this.store.snapshot(), organisationId, ruleEditionId, actor.now ?? new Date().toISOString(), audience, canDecide);
+  }
+
+  getRiskAuthoritySourceDetail(actor: ActorContext, organisationId: string, sourceEditionId: string) {
+    const actorSnap = this.actorSnapshot(actor);
+    const catalogue = this.decide(actorSnap, "risk.catalogue.view", { organisationId }, { type: "risk_authority_source", organisationId }, actor);
+    if (!catalogue.allow) this.authorizeQuery(actor, "risk.event.view", { organisationId });
+    const role = roleKeyFromActor(this.store.snapshot(), actor.personId) ?? actorSnap.roles[0]?.key;
+    if (audienceAndDecision(role).audience === "SYSTEM_ADMINISTRATOR") {
+      throw new PlatformError("FORBIDDEN", "System Administrator cannot open authority detail");
+    }
+    return projectRiskSourceDetail(this.store.snapshot(), organisationId, sourceEditionId, actor.now ?? new Date().toISOString());
+  }
+
+  classifyRiskFixtureAuthority(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof classifyFixtureAuthorityOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.rule.review",
+      scope: { organisationId: input.organisationId },
+      action: "risk.fixture.classify",
+      resourceType: "risk_authority_governance_receipt",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) =>
+        classifyFixtureAuthorityOnSnap(
+          snap,
+          { ...input, productionAuthorised: this.accessAuthority().productionAuthorised },
+          ctx.now,
+          actor.personId,
+          actor.actorKind,
+        ),
+    });
+  }
+
+  withdrawRiskRuleAuthority(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof withdrawGoverningRuleOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.rule.review",
+      scope: { organisationId: input.organisationId },
+      action: "risk.rule.withdraw",
+      resourceType: "risk_rule_edition",
+      resourceId: input.ruleId,
+      idempotencyKey: input.idempotencyKey,
+      alreadyApplied: (snap) => {
+        const rule = snap.riskRuleEditions.find((item) => item.id === input.ruleId && item.organisationId === input.organisationId);
+        return rule?.status === "WITHDRAWN" ? rule : undefined;
+      },
+      replayIfAlreadyApplied: true,
+      run: (snap, ctx) => withdrawGoverningRuleOnSnap(snap, input, ctx.now, actor.personId, actor.actorKind),
+    });
+  }
+
+  withdrawExactRiskAuthorities(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof withdrawExactSelectionBatchOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.rule.review",
+      scope: { organisationId: input.organisationId },
+      action: "risk.rule.withdraw.batch",
+      resourceType: "risk_authority_governance_receipt",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) =>
+        withdrawExactSelectionBatchOnSnap(
+          snap,
+          { ...input, productionAuthorised: this.accessAuthority().productionAuthorised, correlationId: actor.correlationId },
+          ctx.now,
+          actor.personId,
+          actor.actorKind,
+        ).receipt,
+    });
+  }
+
+  recoverRiskFixtureAuthorities(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof recoverFixtureAuthoritiesOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.rule.review",
+      scope: { organisationId: input.organisationId },
+      action: "risk.fixture.recover",
+      resourceType: "risk_authority_governance_receipt",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => {
+        const recovered = recoverFixtureAuthoritiesOnSnap(
+          snap,
+          { ...input, productionAuthorised: this.accessAuthority().productionAuthorised },
+          ctx.now,
+          actor.personId,
+          actor.actorKind,
+          (editionId) => {
+            const edition = snap.riskRuleEditions.find((item) => item.id === editionId && item.organisationId === input.organisationId);
+            if (!edition) throw new PlatformError("NOT_FOUND", "fixture edition is not in this organisation");
+            return withdrawGoverningRuleOnSnap(
+              snap,
+              {
+                organisationId: input.organisationId,
+                assignmentId: input.assignmentId,
+                expectedVersion: edition.version,
+                idempotencyKey: `${input.idempotencyKey}:${editionId}`,
+                ruleId: editionId,
+                confirmedHash: edition.contentHash,
+                reason: "S062 fixture recovery helper withdrew the exact recorded synthetic authority.",
+              },
+              ctx.now,
+              actor.personId,
+              actor.actorKind,
+            );
+          },
+        );
+        return { id: input.idempotencyKey, ...recovered };
+      },
+    });
+  }
+
   recordRiskAuthorityReview(actor: ActorContext, raw: unknown) {
     const input = raw as {
       organisationId: string;
@@ -7724,9 +7868,8 @@ export class PlatformService {
     return { ...grant, token };
   }
 
-  getClientDossierByToken(token: string) {
+  getClientDossierByToken(token: string, now = new Date().toISOString()) {
     const snap = this.store.snapshot();
-    const now = new Date().toISOString();
     const tokenHash = hashDossierAccessToken(token, this.atelierAccessConfig().linkPepper);
     const grant = resolveDossierAccessOnSnap(snap, tokenHash, now);
     return { grant: { id: grant.id, eventId: grant.eventId, organisationId: grant.organisationId, status: grant.status, expiresAt: grant.expiresAt }, dossier: clientDossierFromGrant(snap, grant) };
@@ -9213,6 +9356,7 @@ export class PlatformService {
       snap.commsIntelligenceAlerts,
       snap.riskSourceEditions,
       snap.riskRuleEditions,
+      snap.riskAuthorityGovernanceReceipts ?? [],
       snap.riskEvidenceDocuments,
       snap.riskPolicies,
       snap.riskPolicyEditions,

@@ -160,7 +160,7 @@ describe("EOS-S05B human-safe validation contract", () => {
   it("projects release evidence from durable evaluation rows and fails closed when unrun", () => {
     const { store } = env();
     const ready = s05bEvaluationReadinessFromSnap(store.snapshot(), people.orgMaison);
-    assert.equal(ready.corpusEdition, "s05b-eval-v5");
+    assert.equal(ready.corpusEdition, "s05b-eval-v6");
     assert.equal(ready.corpusHash, s05bEvaluationCorpusHash());
     assert.notEqual(ready.corpusHash, "a5d540db67ccb6d4e4835d8b6d113903189ad3af3ab10e1c997929bef0198617");
     assert.equal(ready.evaluationStatus, "UNRUN");

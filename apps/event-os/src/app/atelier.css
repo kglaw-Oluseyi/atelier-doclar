@@ -2310,6 +2310,25 @@ body.atelier {
   gap: 0.5rem;
 }
 
+.authority-queue-list {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.authority-queue-list li,
+[data-testid="authority-queue"],
+[data-testid="authority-detail"],
+[data-testid="authority-source-detail"],
+[data-testid="authority-detail-history"] {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .protection-queue li {
   overflow-wrap: anywhere;
 }

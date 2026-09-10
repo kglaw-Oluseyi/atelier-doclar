@@ -218,6 +218,7 @@ import type {
   RiskContinuityPlan,
   RiskCriticalFunction,
   RiskDossierEdition,
+  RiskAuthorityGovernanceReceipt,
   RiskDossierAccessGrant,
   RiskDossierExport,
   RiskDossierPublication,
@@ -545,6 +546,7 @@ export interface PlatformSnapshot {
   riskDossierPublications: RiskDossierPublication[];
   riskDossierExports: RiskDossierExport[];
   riskDossierAccessGrants: RiskDossierAccessGrant[];
+  riskAuthorityGovernanceReceipts: RiskAuthorityGovernanceReceipt[];
   riskEvaluationRuns: RiskEvaluationRun[];
   riskEvaluationCaseResults: RiskEvaluationCaseResult[];
   riskEvaluationRunLeases: RiskEvaluationRunLease[];
@@ -811,6 +813,7 @@ export function emptySnapshot(): PlatformSnapshot {
     riskDossierPublications: [],
     riskDossierExports: [],
     riskDossierAccessGrants: [],
+    riskAuthorityGovernanceReceipts: [],
     riskEvaluationRuns: [],
     riskEvaluationCaseResults: [],
     riskEvaluationRunLeases: [],
@@ -1060,6 +1063,7 @@ export function normalizeSnapshot(input: PlatformSnapshot): PlatformSnapshot {
     riskDossierPublications: input.riskDossierPublications ?? [],
     riskDossierExports: input.riskDossierExports ?? [],
     riskDossierAccessGrants: input.riskDossierAccessGrants ?? [],
+    riskAuthorityGovernanceReceipts: input.riskAuthorityGovernanceReceipts ?? [],
     riskEvaluationRuns: input.riskEvaluationRuns ?? [],
     riskEvaluationCaseResults: input.riskEvaluationCaseResults ?? [],
     riskEvaluationRunLeases: input.riskEvaluationRunLeases ?? [],

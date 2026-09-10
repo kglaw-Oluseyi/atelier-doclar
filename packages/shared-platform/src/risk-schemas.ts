@@ -901,6 +901,42 @@ export const RiskEvaluationRunLeaseSchema = z
   })
   .strict();
 
+export const RiskFixtureProvenanceSchema = z
+  .object({
+    environment: z.literal("NON_PRODUCTION_FIXTURE"),
+    testRunId: NonEmptySchema.max(80),
+    authorityPromptId: NonEmptySchema.max(80),
+    createdByAutomation: z.boolean(),
+  })
+  .strict();
+
+export const RiskAuthorityGovernanceBindingSchema = z
+  .object({
+    editionId: UuidSchema,
+    editionKind: z.enum(["RULE", "SOURCE"]),
+    ruleKey: NonEmptySchema.max(80).optional(),
+    contentHash: NonEmptySchema.max(128),
+    expectedVersion: z.number().int().positive(),
+  })
+  .strict();
+
+export const RiskAuthorityGovernanceReceiptSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    kind: z.enum(["FIXTURE_CLASSIFICATION", "EXACT_SELECTION_BATCH"]),
+    bindings: z.array(RiskAuthorityGovernanceBindingSchema).min(1).max(16),
+    provenance: RiskFixtureProvenanceSchema.optional(),
+    lineage: NonEmptySchema.max(400).optional(),
+    decision: z.enum(["CLASSIFIED", "WITHDRAWN"]).optional(),
+    reason: z.string().trim().min(1).max(2000).optional(),
+    correlationId: UuidSchema,
+    classifiedByPersonId: PersonIdSchema,
+    previewedAt: IsoDatetimeSchema.optional(),
+    ...versioned,
+  })
+  .strict();
+
 export const S05B_CANONICAL_COLLECTIONS = [
   "riskSourceEditions",
   "riskRuleEditions",
@@ -932,6 +968,7 @@ export const S05B_CANONICAL_COLLECTIONS = [
   "riskDossierPublications",
   "riskDossierExports",
   "riskDossierAccessGrants",
+  "riskAuthorityGovernanceReceipts",
   "riskEvaluationRuns",
   "riskEvaluationCaseResults",
   "riskEvaluationRunLeases",
@@ -976,3 +1013,6 @@ export type S05BMigrationReceipt = z.infer<typeof S05BMigrationReceiptSchema>;
 export type RiskEvaluationRun = z.infer<typeof RiskEvaluationRunSchema>;
 export type RiskEvaluationCaseResult = z.infer<typeof RiskEvaluationCaseResultSchema>;
 export type RiskEvaluationRunLease = z.infer<typeof RiskEvaluationRunLeaseSchema>;
+export type RiskFixtureProvenance = z.infer<typeof RiskFixtureProvenanceSchema>;
+export type RiskAuthorityGovernanceBinding = z.infer<typeof RiskAuthorityGovernanceBindingSchema>;
+export type RiskAuthorityGovernanceReceipt = z.infer<typeof RiskAuthorityGovernanceReceiptSchema>;

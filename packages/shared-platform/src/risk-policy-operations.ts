@@ -22,6 +22,7 @@ import {
   sealSensitive,
 } from "./risk-command.js";
 import { parseRiskSchema } from "./risk-form-contract.js";
+import { assertRiskGovernanceReviewer } from "./risk-fixture-provenance.js";
 import { assertGovernedProtectionParty } from "./risk-protection-parties.js";
 import { gapIdentity, inheritResidualDecision, matchCoverage, taxonomyForReasons } from "./risk-gap-engine.js";
 import { assertLegalTransition, GAP_TRANSITIONS, POLICY_EVIDENCE_TRANSITIONS } from "./risk-transitions.js";
@@ -208,6 +209,9 @@ export function reviewRuleEditionOnSnap(
 ): RiskRuleEdition {
   envelope(input, input.organisationId);
   assertProtectedHuman(snap, input.assignmentId, actorPersonId, actorKind, input.organisationId);
+  if (input.status === "WITHDRAWN") {
+    assertRiskGovernanceReviewer(snap, input.assignmentId, actorPersonId);
+  }
   const rule = snap.riskRuleEditions.find((item) => item.id === input.ruleId && item.organisationId === input.organisationId);
   if (!rule) throw new PlatformError("NOT_FOUND", "rule edition not found");
   assertExpectedVersion(rule.version, input.expectedVersion, "rule");

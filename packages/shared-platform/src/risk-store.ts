@@ -1,6 +1,7 @@
 import { PlatformError } from "./errors.js";
 import {
   S05B_CANONICAL_COLLECTIONS,
+  type RiskAuthorityGovernanceReceipt,
   type RiskDossierAccessGrant,
   type RiskDossierExport,
   type RiskDossierPublication,
@@ -20,6 +21,7 @@ export type RiskProtectionState = Pick<PlatformSnapshot, (typeof S05B_CANONICAL_
   riskDossierPublications: RiskDossierPublication[];
   riskDossierExports: RiskDossierExport[];
   riskDossierAccessGrants: RiskDossierAccessGrant[];
+  riskAuthorityGovernanceReceipts: RiskAuthorityGovernanceReceipt[];
 };
 
 export type RiskIdempotencyRecord = RiskIdempotencyReceipt;
@@ -64,6 +66,7 @@ export function emptyRiskState(): RiskProtectionState {
     riskDossierPublications: [],
     riskDossierExports: [],
     riskDossierAccessGrants: [],
+    riskAuthorityGovernanceReceipts: [],
     riskEvaluationRuns: [],
     riskEvaluationCaseResults: [],
     riskEvaluationRunLeases: [],
@@ -105,6 +108,7 @@ export function extractRiskState(snap: PlatformSnapshot, organisationId?: string
     riskDossierPublications: matches(snap.riskDossierPublications ?? []),
     riskDossierExports: matches(snap.riskDossierExports ?? []),
     riskDossierAccessGrants: matches(snap.riskDossierAccessGrants ?? []),
+    riskAuthorityGovernanceReceipts: matches(snap.riskAuthorityGovernanceReceipts ?? []),
     riskEvaluationRuns: matches(snap.riskEvaluationRuns),
     riskEvaluationCaseResults: matches(snap.riskEvaluationCaseResults),
     riskEvaluationRunLeases: matches(snap.riskEvaluationRunLeases),

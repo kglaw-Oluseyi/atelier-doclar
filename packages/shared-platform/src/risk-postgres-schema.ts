@@ -1,5 +1,6 @@
 export const EOS_S05B_NORMALIZED_MIGRATION_ID = "004_risk_protection_normalized" as const;
 export const EOS_S05B_NORMALIZED_MIGRATION_V3_ID = "005_risk_dossier_access_grants" as const;
+export const EOS_S05B_NORMALIZED_MIGRATION_V4_ID = "006_risk_authority_governance_receipts" as const;
 export const EOS_S05B_PROTECTION_V2_ID = "EOS-S05B-PROTECTION-V2" as const;
 
 export const RISK_SQL_TABLES = [
@@ -33,6 +34,7 @@ export const RISK_SQL_TABLES = [
   { table: "risk_dossier_publications", collection: "riskDossierPublications" },
   { table: "risk_dossier_exports", collection: "riskDossierExports" },
   { table: "risk_dossier_access_grants", collection: "riskDossierAccessGrants" },
+  { table: "risk_authority_governance_receipts", collection: "riskAuthorityGovernanceReceipts" },
   { table: "risk_evaluation_runs", collection: "riskEvaluationRuns" },
   { table: "risk_evaluation_case_results", collection: "riskEvaluationCaseResults" },
   { table: "risk_evaluation_run_leases", collection: "riskEvaluationRunLeases" },
@@ -106,3 +108,4 @@ CREATE TABLE IF NOT EXISTS risk_idempotency_receipts (
 `;
 
 export const RISK_PROTECTION_POSTGRES_SCHEMA_V3 = aggregateTable("risk_dossier_access_grants");
+export const RISK_PROTECTION_POSTGRES_SCHEMA_V4 = aggregateTable("risk_authority_governance_receipts");

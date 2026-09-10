@@ -94,6 +94,6 @@ test("S05B CEO evaluation panel is fail-closed before run", async ({ page }) => 
   await page.goto("/app/protection");
   const panel = page.getByTestId("s05b-evaluation-panel");
   await expect(panel).toBeVisible();
-  await expect(panel).toContainText(/s05b-eval-v5|UNRUN|STALE|FAILED|blocked/i);
+  await expect(panel).toContainText(/s05b-eval-v6|s05b-eval-v5|UNRUN|STALE|FAILED|blocked/i);
   await expect(panel).toContainText(/Release is blocked|evaluation is/i);
 });

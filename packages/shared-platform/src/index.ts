@@ -928,6 +928,9 @@ export * from "./risk-protection-parties.js";
 export * from "./risk-disclosure.js";
 export * from "./risk-applicability.js";
 export * from "./risk-authority.js";
+export * from "./risk-authority-queue.js";
+export * from "./risk-fixture-provenance.js";
+export * from "./risk-authority-withdrawal.js";
 export * from "./risk-gap-engine.js";
 export * from "./risk-policy-operations.js";
 export * from "./risk-clause-operations.js";
@@ -954,6 +957,7 @@ export {
   EOS_S05B_PROTECTION_V2_ID,
   EOS_S05B_NORMALIZED_MIGRATION_ID,
   EOS_S05B_NORMALIZED_MIGRATION_V3_ID,
+  EOS_S05B_NORMALIZED_MIGRATION_V4_ID,
   RISK_SQL_TABLES,
 } from "./risk-postgres-schema.js";
 export {

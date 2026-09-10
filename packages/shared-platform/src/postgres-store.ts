@@ -275,6 +275,7 @@ const COLLECTIONS: Collection[] = [
   "riskDossierPublications",
   "riskDossierExports",
   "riskDossierAccessGrants",
+  "riskAuthorityGovernanceReceipts",
   "riskEvaluationRuns",
   "riskEvaluationCaseResults",
   "riskEvaluationRunLeases",

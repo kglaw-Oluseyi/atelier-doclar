@@ -80,6 +80,11 @@ export const PROTECTION_PUBLIC_FIELDS = [
   "sourceId",
   "ruleId",
   "targetKind",
+  "testRunId",
+  "authorityPromptId",
+  "lineage",
+  "createdByAutomation",
+  "selections",
 ] as const;
 
 export type ProtectionPublicField = (typeof PROTECTION_PUBLIC_FIELDS)[number];
@@ -116,6 +121,11 @@ export const PROTECTION_FIELD_MESSAGES: Record<string, string> = {
   severity: "Choose an incident severity.",
   decision: "Choose a decision.",
   reason: "Enter the reason for this decision.",
+  confirmedHash: "Confirm the exact edition content hash.",
+  testRunId: "Enter the fixture test run identity.",
+  authorityPromptId: "Enter the authority prompt identity.",
+  lineage: "Enter the exact synthetic lineage.",
+  selections: "Confirm the exact selected edition bindings.",
   vendorLabel: "Enter a non-sensitive vendor label.",
   role: "Choose a roster role.",
   criticalFunctionKey: "Enter the critical function.",
@@ -347,6 +357,26 @@ export const RecordAuthorityReviewFormSchema = ProtectionCommandFormSchema.exten
   nextReviewOn: z.string().date(),
   reason: z.string().trim().min(1).max(2000),
   confirmedHash: z.string().trim().min(16).max(128),
+}).strict();
+
+export const WithdrawRiskAuthorityFormSchema = ProtectionCommandFormSchema.extend({
+  ruleId: UuidSchema,
+  confirmedHash: z.string().trim().min(16).max(128),
+  reason: z.string().trim().min(1).max(2000),
+}).strict();
+
+export const ClassifyFixtureAuthorityFormSchema = ProtectionCommandFormSchema.extend({
+  editionId: UuidSchema,
+  confirmedHash: z.string().trim().min(16).max(128),
+  testRunId: z.string().trim().min(1).max(80),
+  authorityPromptId: z.string().trim().min(1).max(80),
+  lineage: z.string().trim().min(1).max(400),
+  createdByAutomation: z.enum(["true", "false"]),
+}).strict();
+
+export const ExactSelectionWithdrawFormSchema = ProtectionCommandFormSchema.extend({
+  selections: z.string().trim().min(1).max(8000),
+  reason: z.string().trim().min(1).max(2000),
 }).strict();
 
 export const CreateRiskClauseTemplateFormSchema = ProtectionCommandFormSchema.extend({

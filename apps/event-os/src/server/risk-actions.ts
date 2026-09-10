@@ -8,7 +8,10 @@ import {
   CreateRiskPolicyFormSchema,
   CreateRiskRuleFormSchema,
   CreateRiskSourceFormSchema,
+  ClassifyFixtureAuthorityFormSchema,
+  ExactSelectionWithdrawFormSchema,
   RecordAuthorityReviewFormSchema,
+  WithdrawRiskAuthorityFormSchema,
   reviewOnToIso,
   RecordClientDossierMessageFormSchema,
   RecordRiskFactFormSchema,
@@ -19,7 +22,7 @@ import {
 } from "@maison-doclar/shared-platform";
 import { writeIssuedAccessFlash } from "./action-flash";
 import { runProtectionFormAction } from "./protection-form-action";
-import { envelope, scopePathFromForm } from "./protection-form-helpers";
+import { authorityDetailPathFromForm, envelope, scopePathFromForm } from "./protection-form-helpers";
 import { getRuntime } from "./runtime";
 
 function field(formData: FormData, name: string): string {
@@ -465,7 +468,7 @@ export async function reviewRiskRuleAction(prev: ProtectionFormState, formData: 
   return runProtectionFormAction({
     prev,
     formData,
-    scopePath: "/app/protection",
+    scopePath: authorityDetailPathFromForm(formData),
     actionType: "risk.rule.review",
     execute: (actor, data) =>
       getRuntime().service.reviewRiskRule(actor, {
@@ -831,6 +834,95 @@ export async function revokeDossierAccessAction(prev: ProtectionFormState, formD
         eventId,
         grantId: field(data, "grantId"),
       }),
+  });
+}
+
+export async function withdrawRiskAuthorityAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const editionId = field(formData, "ruleId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/protection/authority/${editionId}`,
+    actionType: "risk.rule.withdraw",
+    parse: (data) =>
+      parseFormSchema(WithdrawRiskAuthorityFormSchema, {
+        ...envelope(data),
+        ruleId: field(data, "ruleId"),
+        confirmedHash: field(data, "confirmedHash"),
+        reason: field(data, "reason"),
+      }),
+    execute: (actor, data) =>
+      getRuntime().service.withdrawRiskRuleAuthority(actor, {
+        ...envelope(data),
+        ruleId: field(data, "ruleId"),
+        confirmedHash: field(data, "confirmedHash"),
+        reason: field(data, "reason"),
+      }),
+  });
+}
+
+export async function classifyFixtureAuthorityAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const editionId = field(formData, "editionId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/protection/authority/${editionId}`,
+    actionType: "risk.fixture.classify",
+    parse: (data) =>
+      parseFormSchema(ClassifyFixtureAuthorityFormSchema, {
+        ...envelope(data),
+        editionId: field(data, "editionId"),
+        confirmedHash: field(data, "confirmedHash"),
+        testRunId: field(data, "testRunId"),
+        authorityPromptId: field(data, "authorityPromptId"),
+        lineage: field(data, "lineage"),
+        createdByAutomation: field(data, "createdByAutomation") === "true" ? "true" : "false",
+      }),
+    execute: (actor, data) =>
+      getRuntime().service.classifyRiskFixtureAuthority(actor, {
+        ...envelope(data),
+        bindings: [
+          {
+            editionId: field(data, "editionId"),
+            editionKind: "RULE" as const,
+            contentHash: field(data, "confirmedHash"),
+            expectedVersion: Number(field(data, "expectedVersion") || 0),
+          },
+        ],
+        provenance: {
+          environment: "NON_PRODUCTION_FIXTURE" as const,
+          testRunId: field(data, "testRunId"),
+          authorityPromptId: field(data, "authorityPromptId"),
+          createdByAutomation: field(data, "createdByAutomation") === "true",
+        },
+        lineage: field(data, "lineage"),
+      }),
+  });
+}
+
+export async function withdrawExactSelectionAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: "/app/protection/authority",
+    actionType: "risk.rule.withdraw.batch",
+    parse: (data) =>
+      parseFormSchema(ExactSelectionWithdrawFormSchema, {
+        ...envelope(data),
+        selections: field(data, "selections"),
+        reason: field(data, "reason"),
+      }),
+    execute: (actor, data) => {
+      const parsed = JSON.parse(field(data, "selections") || "[]") as Array<{ editionId: string; expectedVersion: number; contentHash: string }>;
+      if (!Array.isArray(parsed) || parsed.some((item) => !item.editionId || !item.contentHash || !item.expectedVersion)) {
+        throw new Error("exact edition bindings are required");
+      }
+      return getRuntime().service.withdrawExactRiskAuthorities(actor, {
+        ...envelope(data),
+        selections: parsed,
+        reason: field(data, "reason"),
+      });
+    },
   });
 }
 

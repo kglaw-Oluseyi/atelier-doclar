@@ -1,4 +1,3 @@
-import { cookies } from "next/headers";
 import { AtelierPageHeader } from "../../../components/atelier-page-header";
 import { AtelierOperationalState } from "../../../components/atelier-operational-state";
 import { getRuntime } from "../../../server/runtime";
@@ -9,15 +8,7 @@ export default async function ClientDossierTokenPage({ params }: { params: Promi
   const { token } = await params;
   const runtime = getRuntime();
   try {
-    const view = runtime.service.getClientDossierByToken(token);
-    (await cookies()).set({
-      name: "md_event_os_dossier_client",
-      value: token.slice(0, 12),
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/client-dossier",
-      maxAge: 60 * 60,
-    });
+    const view = runtime.service.getClientDossierByToken(token, process.env.EVENT_OS_TEST_NOW);
     return (
       <main className="atelier-shell" data-testid="client-dossier-session">
         <AtelierPageHeader
