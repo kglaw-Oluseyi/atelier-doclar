@@ -1,14 +1,15 @@
 # EOS-S05B Build Ledger
 
 **Slice ID:** `EOS-S05B`
-**Prompt Control ID:** `MD-PR-S054` then `MD-PR-S055` then `MD-PR-S056`
+**Prompt Control ID:** `MD-PR-S054` then `MD-PR-S055` then `MD-PR-S056` then `MD-PR-S058`
 **Starting baseline:** `f12798a28f438408527d8811be57389661c86c25`
 **MD-PR-S055 baseline:** `505c4399ba4517a972914e67b738372055da612d`
 **MD-PR-S056 baseline:** `24cc06db961986d93a60324b3101b79bc1c8c06d`
-**Application SHA:** `e3f034f6799f7745a20a36910c06452ebece7689`
+**MD-PR-S058 baseline:** `a66d39a8619cae93e9c905cba024fa8bd85662e1`
+**Application SHA:** `5e381ce7a92b04fc9293dc24f94dd42640a8835d`
 **First implementation SHA:** `d7533f3bac1a7d429778f61044862db7fd753f8f`
-**Live Event OS deployment:** `7044514b-8287-4075-8f08-14504a327f72`
-**Status:** `REMEDIATED` under `MD-PR-S056` — not accepted; Claude not run
+**Live Event OS deployment:** pending Event OS-only deploy after GitHub parity
+**Status:** `REMEDIATED` under `MD-PR-S058` — not accepted; Claude not run
 **Production:** unauthorised
 **Catalogue accepted-slice count:** remains 5
 **Implemented range:** `RPC-01`–`RPC-55` implemented; acceptance is not this authority
@@ -118,3 +119,39 @@ No new S05B technical-debt item is manufactured. Inherited carried debt remains:
 | Live CEO corpus / authenticated Playwright | held — production access token not loaded in this session |
 
 Claude not run. EOS-S05B not accepted. EOS-S06 not started.
+
+### MD-PR-S058 first-run failures (appended; MD-PR-S054/S055/S056 rows above are not rewritten)
+
+| Command | Classification | Root cause | Correction | Rerun |
+|---------|----------------|------------|------------|-------|
+| `pnpm --filter @maison-doclar/shared-platform typecheck` | Implementation defect | Unused `OrganisationIdSchema` import in `risk-form-contract.ts` | Remove the unused import | `tsc` pass |
+| `pnpm --filter @maison-doclar/event-os typecheck` | Implementation defect | `RadioNodeList` / `namedItem` union was not a valid `instanceof` target | Duck-type radio lists; return `Element \| null` | `tsc` pass |
+| `pnpm --filter @maison-doclar/event-os build` | Implementation defect | `"use server"` files exported non-async helpers `envelope` / `scopePathFromForm` | Move helpers to `protection-form-helpers.ts` | compile progressed |
+| `pnpm --filter @maison-doclar/event-os build` | Implementation defect | `"use server"` re-exported `idleProtectionFormState` object | Stop re-exporting; keep idle state in the client form | build pass |
+| Focused Playwright `s05b-human-safe-validation` | Test defect | Insurer guidance matched both the summary link and the field alert (strict mode) | Assert the field `role=alert` | locator pass |
+| Focused Playwright forged-insurer submit | Implementation defect | `platformErrorFromUnknown` used `instanceof PlatformError`, so a forged governed-party denial became an unexpected server-failure banner | Duck-type `code` against `PLATFORM_ERROR_CODES` | in-page validation pass |
+| Focused Playwright insurer/vendor chooser | Test defect | Playwright 1.51 `selectOption({ label })` rejects a RegExp | Select by option value from `hasText` | chooser pass |
+
+Passing retries do not erase the first-run failures.
+
+## Local gates (MD-PR-S058)
+
+| Gate | Result |
+|------|--------|
+| Focused shared-platform `s05b-human-safe-validation` | 8/0 |
+| Focused Event OS `s05b-human-safe-validation` | 3/0 |
+| `pnpm typecheck` | pass |
+| `pnpm --filter @maison-doclar/shared-platform test` | 447/0 |
+| `pnpm --filter @maison-doclar/event-os test` | 96/0 |
+| `pnpm programme:validate` | PASS |
+| `pnpm --filter @maison-doclar/event-os build` | pass after the two first-run `"use server"` defects |
+| `git diff --check` | clean |
+| Focused Playwright `s05b-human-safe-validation` | 5/0 after first-run locator/classification fixes |
+| Representative Protection smoke `s05b-org-authoring` | 2/0 |
+
+`s05b-eval-v3` hash `a5d540db67ccb6d4e4835d8b6d113903189ad3af3ab10e1c997929bef0198617` (46 cases) preserved. `productionAuthorised` remains false.
+
+## Live gates (MD-PR-S058)
+
+Pending Event OS-only Railway deploy after GitHub parity. Control Tower will not be deployed.
+

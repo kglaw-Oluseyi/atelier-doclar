@@ -1,15 +1,16 @@
 # EOS-S05B Implementation Record
 
 **Slice ID:** `EOS-S05B`
-**Prompt Control ID:** `MD-PR-S054` then `MD-PR-S055` then `MD-PR-S056`
+**Prompt Control ID:** `MD-PR-S054` then `MD-PR-S055` then `MD-PR-S056` then `MD-PR-S058`
 **Title:** Risk, Protection & Continuity Command
-**Status:** `REMEDIATED` under `MD-PR-S056` — not accepted; Claude not run
+**Status:** `REMEDIATED` under `MD-PR-S058` — not accepted; Claude not run
 **Starting baseline:** `f12798a28f438408527d8811be57389661c86c25`
 **MD-PR-S055 baseline:** `505c4399ba4517a972914e67b738372055da612d`
 **MD-PR-S056 baseline:** `24cc06db961986d93a60324b3101b79bc1c8c06d`
-**Application SHA:** `e3f034f6799f7745a20a36910c06452ebece7689`
+**MD-PR-S058 baseline:** `a66d39a8619cae93e9c905cba024fa8bd85662e1`
+**Application SHA:** `5e381ce7a92b04fc9293dc24f94dd42640a8835d`
 **First implementation SHA:** `d7533f3bac1a7d429778f61044862db7fd753f8f`
-**Live Event OS deployment:** `7044514b-8287-4075-8f08-14504a327f72`
+**Live Event OS deployment:** pending Event OS-only deploy after GitHub parity
 **Catalogue slice:** no — accepted-slice count remains 5
 **Production:** unauthorised
 **EOS-S06:** `NOT_STARTED / NOT_AUTHORISED`
@@ -104,5 +105,17 @@ Durable-truth and evaluation-integrity remediation executed continuously from ba
 - Budget: governing APPROVED/PUBLISHED edition is deep-cloned and fingerprinted before calculation; `activateAsCurrent: false` / `purpose: "PROTECT_INVESTMENT"`; successor and `calculationResultId` are distinct UUIDs; reload-by-id must deep-equal the clone.
 - Evaluation: `s05b-eval-v3` / `s05b-eval-contract-v3`, honest 46 cases, hash `a5d540db67ccb6d4e4835d8b6d113903189ad3af3ab10e1c997929bef0198617`. Typed observations only. Replay requires a second `REPLAYED` invocation. Unicode requires stored NFC `Yorùbá` from decomposed input. Cross-event invokes real Alpha Two `getEventProtection` / `projectRiskBudget`. Accessibility is not a domain case. `s05b-eval-v2` PASS is `STALE`.
 - Playwright: 6 changed-risk journeys plus existing focused S05B suite 13 passed / 1 skipped.
+
+Claude has not been run. EOS-S05B is not accepted. EOS-S06 is not started.
+
+## MD-PR-S058 execution (does not rewrite the MD-PR-S054, MD-PR-S055 or MD-PR-S056 reports)
+
+Human-safe validation, form recovery and release-evidence remediation executed continuously from baseline `a66d39a8619cae93e9c905cba024fa8bd85662e1`. Controlling pack: `docs/control/eos-s05b/MD_PR_S058_EOS_S05B_HUMAN_SAFE_VALIDATION_AND_RELEASE_EVIDENCE.md`. Placement commit `63886a0d1be6238ed3b738fb42d268dfd4e347a4`. Implementation SHA `5e381ce7a92b04fc9293dc24f94dd42640a8835d`. `s05b-eval-v3` corpus, contract and hash were not restamped.
+
+- Shared contract: `ProtectionFormState` + `safeParse` field mapping. Zod/schema failures are `VALIDATION_FAILED` / `NOT_APPLIED`. `platformErrorFromUnknown` duck-types `PlatformError` so Next.js module identity cannot recast expected validation as an unexpected server failure.
+- Governed party catalog: organisation-scoped insurer/vendor chooser; forged and cross-org IDs are server-denied. No second party ledger. Maison fixture insurer/vendor IDs unchanged.
+- Event OS: every material S05B mutation uses `ProtectionMutationForm` / `useActionState`. Safe values are restored; sensitive keys are cleared. Summary heading `Check the highlighted information`; `aria-invalid` / `aria-describedby`; focus on the summary or first invalid field.
+- Action results: exact pathname scope; consumed correlations are not recalled after unrelated navigation. Process-local recall remains `TDR-S04F-001`.
+- CEO release evidence: SHA, persistence, migration, `productionAuthorised`, S05A status, S05B edition/hash/counts/zero-tolerance/run/fixture/times/blocked/ready/adapters from durable evaluation rows. Plain language: fixture assurance is not production authorisation.
 
 Claude has not been run. EOS-S05B is not accepted. EOS-S06 is not started.
