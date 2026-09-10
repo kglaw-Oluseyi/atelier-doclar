@@ -87,18 +87,34 @@ test("S061 governing authority, publication and client access", async ({ page, b
   await reviewer3.page.getByRole("link", { name: "Authority review" }).click();
   const reviewSurface = reviewer3.page.getByTestId("protection-authority-review");
   await expect(reviewSurface).toBeVisible();
-  const recordForm = reviewer3.page.getByTestId(`authority-record-review-${ruleKey}`);
-  if (await recordForm.count()) {
-    await recordForm.getByLabel("Review reason").fill(`${label} governed successor review.`);
-    await recordForm.getByLabel("Review again by").fill("2026-12-31");
-    await recordForm.getByRole("button", { name: "Record current review" }).click();
-    await expectActionOutcome(reviewer3.page);
-  } else {
-    const staleForm = reviewSurface.locator("form").filter({ hasText: "Record current review" }).first();
-    await staleForm.getByLabel("Review reason").fill(`${label} governed successor review of stale Alpha authority.`);
-    await staleForm.getByLabel("Review again by").fill("2026-12-31");
-    await staleForm.getByRole("button", { name: "Record current review" }).click();
-    await expectActionOutcome(reviewer3.page);
+  for (let step = 0; step < 20; step += 1) {
+    const sourceForms = reviewSurface.locator("[data-testid^='source-record-review-']");
+    const sourceCount = await sourceForms.count();
+    let expiredSource = -1;
+    for (let index = 0; index < sourceCount; index += 1) {
+      const stamp = ((await sourceForms.nth(index).innerText()).match(/Review again by (\S+)/) ?? [])[1] ?? "";
+      if (stamp && Date.parse(stamp) <= Date.now()) {
+        expiredSource = index;
+        break;
+      }
+    }
+    if (expiredSource >= 0) {
+      const form = sourceForms.nth(expiredSource);
+      await form.getByLabel("Review reason").fill(`${label} governed source review.`);
+      await form.getByLabel("Review again by").fill("2026-12-31");
+      await form.getByRole("button", { name: "Record current source review" }).click();
+      await expectActionOutcome(reviewer3.page);
+      continue;
+    }
+    const staleForm = reviewSurface.locator("[data-authority-state='STALE_APPROVED'] form").filter({ hasText: "Record current review" }).first();
+    if (await staleForm.count()) {
+      await staleForm.getByLabel("Review reason").fill(`${label} governed successor review.`);
+      await staleForm.getByLabel("Review again by").fill("2026-12-31");
+      await staleForm.getByRole("button", { name: "Record current review" }).click();
+      await expectActionOutcome(reviewer3.page);
+      continue;
+    }
+    break;
   }
   await reviewer3.context.close();
 

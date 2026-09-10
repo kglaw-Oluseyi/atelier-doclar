@@ -95,6 +95,48 @@ function hasWithdrawnDescendant(edition: RiskRuleEdition, editions: readonly Ris
   return editions.some((item) => item.status === "WITHDRAWN" && (item.id === edition.id || reachesPredecessor(item, edition.id, rules)));
 }
 
+export function latestApprovedSourceInLineage(
+  snap: PlatformSnapshot,
+  organisationId: string,
+  sourceId: string,
+): string {
+  const org = snap.riskSourceEditions.filter((item) => item.organisationId === organisationId);
+  const children = new Map<string, RiskSourceEdition[]>();
+  for (const item of org) {
+    if (!item.supersedesEditionId) continue;
+    const list = children.get(item.supersedesEditionId) ?? [];
+    list.push(item);
+    children.set(item.supersedesEditionId, list);
+  }
+  let currentId = sourceId;
+  const seen = new Set<string>();
+  while (!seen.has(currentId)) {
+    seen.add(currentId);
+    const next = (children.get(currentId) ?? [])
+      .filter((item) => isHashBoundApproved(item))
+      .sort((left, right) =>
+        compareApprovedNewest(
+          {
+            approvedAt: left.approvedAt,
+            createdAt: left.createdAt,
+            version: left.version,
+            id: left.id,
+          } as RiskRuleEdition,
+          {
+            approvedAt: right.approvedAt,
+            createdAt: right.createdAt,
+            version: right.version,
+            id: right.id,
+          } as RiskRuleEdition,
+        ),
+      )[0];
+    if (!next) break;
+    currentId = next.id;
+  }
+  const current = org.find((item) => item.id === currentId);
+  return current && isHashBoundApproved(current) ? current.id : sourceId;
+}
+
 function inspectCitedSources(
   rule: RiskRuleEdition,
   snap: PlatformSnapshot,
@@ -380,7 +422,8 @@ export function recordRuleCurrentReviewOnSnap(
   });
   assertAuthorisedFutureReview(input.nextReviewAt, now, now);
   assertNoCompetingCurrentRule(snap, input.organisationId, rule.ruleKey, rule.id, rule.id);
-  const contentHash = exactHash({ ruleKey: rule.ruleKey, proposition: rule.proposition, sources: rule.sourceEditionIds });
+  const sourceEditionIds = [...new Set(rule.sourceEditionIds.map((sourceId) => latestApprovedSourceInLineage(snap, input.organisationId, sourceId)))].sort();
+  const contentHash = exactHash({ ruleKey: rule.ruleKey, proposition: rule.proposition, sources: sourceEditionIds });
   const successor = RiskRuleEditionSchema.parse({
     ...rule,
     id: newRiskId(),
@@ -394,6 +437,7 @@ export function recordRuleCurrentReviewOnSnap(
     submittedByPersonId: rule.submittedByPersonId ?? rule.createdByPersonId,
     submittedAt: now,
     contentHash,
+    sourceEditionIds,
     supersedesEditionId: rule.id,
     createdByPersonId: rule.createdByPersonId,
     ...riskStamp(now),

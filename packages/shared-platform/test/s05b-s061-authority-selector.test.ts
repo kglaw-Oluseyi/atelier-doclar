@@ -5,6 +5,7 @@ import { migrateEosS05B } from "../src/risk-migration.js";
 import {
   compareApprovedNewest,
   recordRuleCurrentReviewOnSnap,
+  recordSourceCurrentReviewOnSnap,
   selectEffectiveRiskAuthorities,
 } from "../src/risk-authority.js";
 import {
@@ -215,6 +216,48 @@ describe("MD-PR-S061 effective authority selector", () => {
     const selected = selectEffectiveRiskAuthorities(snap, people.orgMaison, NOW);
     assert.equal(selected[0]?.rule.id, refreshed.id);
     assert.equal(selected[0]?.authorityState, "CURRENT_APPROVED");
+  });
+
+  it("rebinds a reviewed rule to the current approved source successor", () => {
+    const { snap } = env();
+    const source = seedSource(snap);
+    const rule = approveRule(snap, draftRule(snap, source));
+    Object.assign(source, { nextReviewAt: PAST });
+    Object.assign(rule, { nextReviewAt: PAST });
+    const sourceSuccessor = recordSourceCurrentReviewOnSnap(
+      snap,
+      {
+        ...envelope({ assignmentId: people.assignRiskReviewer }),
+        sourceId: source.id,
+        expectedVersion: source.version,
+        nextReviewAt: FUTURE,
+        reason: "Refresh expired source.",
+        confirmedHash: source.contentHash,
+      },
+      NOW,
+      people.personRiskReviewer,
+      "HUMAN",
+    );
+    const afterSource = selectEffectiveRiskAuthorities(snap, people.orgMaison, NOW);
+    assert.equal(afterSource[0]?.authorityState, "STALE_APPROVED");
+    const refreshed = recordRuleCurrentReviewOnSnap(
+      snap,
+      {
+        ...envelope({ assignmentId: people.assignRiskReviewer }),
+        ruleId: afterSource[0]!.rule.id,
+        expectedVersion: afterSource[0]!.rule.version,
+        nextReviewAt: FUTURE,
+        reason: "Rebind to current approved source.",
+        confirmedHash: afterSource[0]!.rule.contentHash,
+      },
+      NOW,
+      people.personRiskReviewer,
+      "HUMAN",
+    );
+    const selected = selectEffectiveRiskAuthorities(snap, people.orgMaison, NOW);
+    assert.equal(selected[0]?.authorityState, "CURRENT_APPROVED");
+    assert.deepEqual(refreshed.sourceEditionIds, [sourceSuccessor.id]);
+    assert.equal(selected[0]?.sources[0]?.id, sourceSuccessor.id);
   });
 
   it("fails closed on ambiguous competing approved editions", () => {
