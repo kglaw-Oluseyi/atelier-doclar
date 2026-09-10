@@ -32,18 +32,21 @@ export const FIXTURE_IDS = {
   personAuditor: "00000000-0000-4000-8000-000000000045",
   personUnassigned: "00000000-0000-4000-8000-000000000046",
   personOtherOrg: "00000000-0000-4000-8000-000000000047",
+  personRiskReviewer: "00000000-0000-4000-8000-000000000048",
   membershipCeo: "00000000-0000-4000-8000-000000000051",
   membershipDirector: "00000000-0000-4000-8000-000000000052",
   membershipPlanner: "00000000-0000-4000-8000-000000000053",
   membershipAdmin: "00000000-0000-4000-8000-000000000054",
   membershipAuditor: "00000000-0000-4000-8000-000000000055",
   membershipOther: "00000000-0000-4000-8000-000000000056",
+  membershipRiskReviewer: "00000000-0000-4000-8000-000000000057",
   assignCeo: "00000000-0000-4000-8000-000000000061",
   assignDirector: "00000000-0000-4000-8000-000000000062",
   assignPlanner: "00000000-0000-4000-8000-000000000063",
   assignAdmin: "00000000-0000-4000-8000-000000000064",
   assignAuditor: "00000000-0000-4000-8000-000000000065",
   assignOther: "00000000-0000-4000-8000-000000000066",
+  assignRiskReviewer: "00000000-0000-4000-8000-000000000067",
 } as const;
 
 const AT = "2026-09-05T14:00:00.000Z";
@@ -206,6 +209,7 @@ export function fixturePersons(): Person[] {
     person(FIXTURE_IDS.personPlanner, "dev:planner@maison-doclar.test", "planner@maison-doclar.test", "Assigned Planner"),
     person(FIXTURE_IDS.personAdmin, "dev:admin@maison-doclar.test", "admin@maison-doclar.test", "System Administrator"),
     person(FIXTURE_IDS.personAuditor, "dev:auditor@maison-doclar.test", "auditor@maison-doclar.test", "Read Only Auditor"),
+    person(FIXTURE_IDS.personRiskReviewer, "dev:reviewer@maison-doclar.test", "reviewer@maison-doclar.test", "Risk Governance Reviewer"),
     person(FIXTURE_IDS.personUnassigned, "dev:unassigned@maison-doclar.test", "unassigned@maison-doclar.test", "Unassigned User"),
     person(FIXTURE_IDS.personOtherOrg, "dev:other@other-house.test", "other@other-house.test", "Other House Operator"),
   ];
@@ -231,6 +235,7 @@ export function fixtureMemberships(): Membership[] {
     membership(FIXTURE_IDS.membershipPlanner, FIXTURE_IDS.orgMaison, FIXTURE_IDS.personPlanner),
     membership(FIXTURE_IDS.membershipAdmin, FIXTURE_IDS.orgMaison, FIXTURE_IDS.personAdmin),
     membership(FIXTURE_IDS.membershipAuditor, FIXTURE_IDS.orgMaison, FIXTURE_IDS.personAuditor),
+    membership(FIXTURE_IDS.membershipRiskReviewer, FIXTURE_IDS.orgMaison, FIXTURE_IDS.personRiskReviewer),
     membership(FIXTURE_IDS.membershipOther, FIXTURE_IDS.orgOther, FIXTURE_IDS.personOtherOrg),
   ];
 }
@@ -239,7 +244,7 @@ function assignment(
   id: string,
   organisationId: string,
   personId: string,
-  roleKey: "CEO" | "EVENT_DIRECTOR" | "PLANNER" | "SYSTEM_ADMINISTRATOR" | "READ_ONLY_AUDITOR",
+  roleKey: "CEO" | "EVENT_DIRECTOR" | "PLANNER" | "SYSTEM_ADMINISTRATOR" | "READ_ONLY_AUDITOR" | "RISK_GOVERNANCE_REVIEWER",
   scope: { clientId?: string; eventId?: string },
 ): Assignment {
   const role = seededRoles().find((item) => item.key === roleKey);
@@ -274,6 +279,7 @@ export function fixtureAssignments(): Assignment[] {
     }),
     assignment(FIXTURE_IDS.assignAdmin, FIXTURE_IDS.orgMaison, FIXTURE_IDS.personAdmin, "SYSTEM_ADMINISTRATOR", {}),
     assignment(FIXTURE_IDS.assignAuditor, FIXTURE_IDS.orgMaison, FIXTURE_IDS.personAuditor, "READ_ONLY_AUDITOR", {}),
+    assignment(FIXTURE_IDS.assignRiskReviewer, FIXTURE_IDS.orgMaison, FIXTURE_IDS.personRiskReviewer, "RISK_GOVERNANCE_REVIEWER", {}),
     assignment(FIXTURE_IDS.assignOther, FIXTURE_IDS.orgOther, FIXTURE_IDS.personOtherOrg, "CEO", {}),
   ];
 }

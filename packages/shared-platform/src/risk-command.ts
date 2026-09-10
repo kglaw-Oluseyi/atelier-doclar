@@ -68,6 +68,16 @@ export function assertMakerChecker(makerPersonId: string, checkerPersonId: strin
   }
 }
 
+export function assertIndependentChecker(input: {
+  actorPersonId: string;
+  authorPersonId?: string;
+  submitterPersonId?: string;
+  action: "approve";
+}): void {
+  if (input.authorPersonId) assertMakerChecker(input.authorPersonId, input.actorPersonId, input.action);
+  if (input.submitterPersonId) assertMakerChecker(input.submitterPersonId, input.actorPersonId, input.action);
+}
+
 export function assertHumanActor(actorKind: string | undefined): void {
   if (actorKind === "AI") {
     throw new PlatformError("AI_AUTHORITY_FORBIDDEN", "AI cannot approve a governing protection decision");

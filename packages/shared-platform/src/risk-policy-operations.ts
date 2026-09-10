@@ -4,6 +4,7 @@ import { resolveApplicability } from "./risk-applicability.js";
 import {
   assertDocumentTransition,
   assertExpectedVersion,
+  assertIndependentChecker,
   assertMakerChecker,
   assertProtectedHuman,
   assertSameEvent,
@@ -85,6 +86,9 @@ export function createSourceEditionOnSnap(
     status: "DISCOVERY",
     discoveryOnly: true,
     contentHash: exactHash({ title: nfc(input.title), locator: input.locator, summary: input.summary }),
+    authorPersonId: _actorPersonId,
+    submittedByPersonId: _actorPersonId,
+    submittedAt: now,
     ...riskStamp(now),
   });
   snap.riskSourceEditions.push(record);
@@ -103,6 +107,12 @@ export function approveSourceEditionOnSnap(
   const source = snap.riskSourceEditions.find((item) => item.id === input.sourceId && item.organisationId === input.organisationId);
   if (!source) throw new PlatformError("NOT_FOUND", "source edition not found");
   assertExpectedVersion(source.version, input.expectedVersion, "source");
+  assertIndependentChecker({
+    actorPersonId,
+    authorPersonId: source.authorPersonId,
+    submitterPersonId: source.submittedByPersonId,
+    action: "approve",
+  });
   Object.assign(
     source,
     RiskSourceEditionSchema.parse({
@@ -110,6 +120,9 @@ export function approveSourceEditionOnSnap(
       status: "APPROVED",
       discoveryOnly: false,
       lastVerifiedAt: now,
+      approvedByPersonId: actorPersonId,
+      approvedAt: now,
+      approvedHash: source.contentHash,
       ...bumpVersion(source, now),
     }),
   );
@@ -159,6 +172,8 @@ export function createRuleEditionOnSnap(
     status: "DISCOVERY",
     contentHash: exactHash({ ruleKey: input.ruleKey, proposition: input.proposition, sources: input.sourceEditionIds }),
     createdByPersonId: actorPersonId,
+    submittedByPersonId: actorPersonId,
+    submittedAt: now,
     ...riskStamp(now),
   });
   snap.riskRuleEditions.push(record);
@@ -177,7 +192,14 @@ export function reviewRuleEditionOnSnap(
   const rule = snap.riskRuleEditions.find((item) => item.id === input.ruleId && item.organisationId === input.organisationId);
   if (!rule) throw new PlatformError("NOT_FOUND", "rule edition not found");
   assertExpectedVersion(rule.version, input.expectedVersion, "rule");
-  if (input.status === "APPROVED") assertMakerChecker(rule.createdByPersonId, actorPersonId, "approve");
+  if (input.status === "APPROVED") {
+    assertIndependentChecker({
+      actorPersonId,
+      authorPersonId: rule.createdByPersonId,
+      submitterPersonId: rule.submittedByPersonId ?? rule.createdByPersonId,
+      action: "approve",
+    });
+  }
   if (input.status === "APPROVED") {
     const sources = snap.riskSourceEditions.filter((item) => rule.sourceEditionIds.includes(item.id));
     if (sources.some((item) => item.status === "DISCOVERY" || item.status === "WITHDRAWN")) {
@@ -190,6 +212,7 @@ export function reviewRuleEditionOnSnap(
     reviewedByPersonId: actorPersonId,
     approvedByPersonId: input.status === "APPROVED" ? actorPersonId : rule.approvedByPersonId,
     approvedAt: input.status === "APPROVED" ? now : rule.approvedAt,
+    approvedHash: input.status === "APPROVED" ? rule.contentHash : rule.approvedHash,
     lastVerifiedAt: now,
     ...bumpVersion(rule, now),
   });

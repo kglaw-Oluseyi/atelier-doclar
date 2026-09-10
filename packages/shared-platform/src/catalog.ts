@@ -222,8 +222,12 @@ const PERMISSION_IDS: Record<PermissionKey, string> = {
   "risk.reserve.request": "11111111-1111-4111-8111-111111111202",
   "risk.reserve.authorise": "11111111-1111-4111-8111-111111111203",
   "risk.dossier.view": "11111111-1111-4111-8111-111111111204",
+  "risk.dossier.assemble": "11111111-1111-4111-8111-111111111209",
+  "risk.dossier.submit": "11111111-1111-4111-8111-111111111210",
   "risk.dossier.approve": "11111111-1111-4111-8111-111111111205",
   "risk.dossier.publish": "11111111-1111-4111-8111-111111111206",
+  "risk.dossier.export": "11111111-1111-4111-8111-111111111211",
+  "risk.dossier.client_access.manage": "11111111-1111-4111-8111-111111111212",
   "risk.export": "11111111-1111-4111-8111-111111111207",
   "risk.audit.view": "11111111-1111-4111-8111-111111111208",
 };
@@ -236,6 +240,7 @@ const ROLE_IDS: Record<(typeof SYSTEM_ROLE_KEYS)[number], string> = {
   PLANNER: "22222222-2222-4222-8222-222222222005",
   SYSTEM_ADMINISTRATOR: "22222222-2222-4222-8222-222222222006",
   READ_ONLY_AUDITOR: "22222222-2222-4222-8222-222222222007",
+  RISK_GOVERNANCE_REVIEWER: "22222222-2222-4222-8222-222222222008",
 };
 
 /**
@@ -431,7 +436,10 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "risk.incident.close",
     "risk.reserve.request",
     "risk.dossier.view",
+    "risk.dossier.assemble",
+    "risk.dossier.submit",
     "risk.dossier.approve",
+    "risk.dossier.export",
     "risk.export",
     "risk.audit.view",
   ],
@@ -591,6 +599,8 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "risk.incident.report",
     "risk.reserve.request",
     "risk.dossier.view",
+    "risk.dossier.assemble",
+    "risk.dossier.submit",
   ],
   SYSTEM_ADMINISTRATOR: [
     "organisation.view",
@@ -656,6 +666,14 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "risk.continuity.view",
     "risk.incident.view",
     "risk.dossier.view",
+    "risk.audit.view",
+  ],
+  RISK_GOVERNANCE_REVIEWER: [
+    "organisation.view",
+    "assignment.view",
+    "risk.catalogue.view",
+    "risk.rule.review",
+    "risk.rule.approve",
     "risk.audit.view",
   ],
 };

@@ -11,7 +11,7 @@ import { fixtureService, people } from "./helpers.js";
 describe("EOS-S05B evaluation v3", () => {
   it("registers an honest typed corpus and does not accept v2 as current", () => {
     validateS05BEvaluationCorpus();
-    assert.equal(S05B_EVALUATION_CORPUS_EDITION, "s05b-eval-v3");
+    assert.equal(S05B_EVALUATION_CORPUS_EDITION, "s05b-eval-v4");
     assert.ok(S05B_EVALUATION_CASES.length >= 40);
     assert.equal(
       S05B_EVALUATION_CASES.some((item) => JSON.stringify(item).includes('"passed":')),
@@ -46,7 +46,7 @@ describe("EOS-S05B evaluation v3", () => {
     }
     const ready = s05bEvaluationReadinessFromSnap(store.snapshot(), people.orgMaison);
     assert.equal(ready.evaluationStatus, "PASSED");
-    assert.equal(ready.corpusEdition, "s05b-eval-v3");
+    assert.equal(ready.corpusEdition, "s05b-eval-v4");
     assert.equal(ready.persistedResultCount, S05B_EVALUATION_CASES.length);
     assert.equal(ready.caseCount, S05B_EVALUATION_CASES.length);
   });
@@ -64,6 +64,28 @@ describe("EOS-S05B evaluation v3", () => {
     assert.ok(detectUnsafeFromObservations(priced).includes("INVENTED_PRICE"));
     const unicode = executeS05BCase(S05B_EVALUATION_CASES.find((item) => item.id === "S05B-UNICODE-01")!, { unicodeLoss: true });
     assert.ok(detectUnsafeFromObservations(unicode).includes("UNICODE_LOSS"));
+    const auditor = executeS05BCase(S05B_EVALUATION_CASES.find((item) => item.id === "S05B-AUTH-AUDITOR-DOSSIER-DENY")!);
+    assert.equal(detectUnsafeFromObservations(auditor).includes("AUTHORITY_ESCALATION"), false);
+    assert.ok(
+      detectUnsafeFromObservations([
+        ...auditor,
+        { kind: "COMMAND_DENIAL", code: "SUCCESS", didDataChange: true, auditOutcome: "SUCCESS" },
+      ]).includes("AUTHORITY_ESCALATION"),
+    );
+    const lastGood = executeS05BCase(S05B_EVALUATION_CASES.find((item) => item.id === "S05B-DOSSIER-LAST-GOOD-DURING-DRAFT")!);
+    assert.equal(detectUnsafeFromObservations(lastGood).includes("FALSE_SUCCESS"), false);
+    assert.ok(
+      detectUnsafeFromObservations(
+        lastGood.map((item) => (item.kind === "HASH" && item.name === "publication" ? { ...item, matches: false } : item)),
+      ).includes("FALSE_SUCCESS"),
+    );
+    const checkpoint = executeS05BCase(S05B_EVALUATION_CASES.find((item) => item.id === "S05B-CHECKPOINT-PROJECTION-NO-DISPATCH")!);
+    assert.equal(detectUnsafeFromObservations(checkpoint).includes("SILENT_DISPATCH"), false);
+    assert.ok(
+      detectUnsafeFromObservations([...checkpoint, { kind: "EXTERNAL_EFFECT_COUNT", effect: "checkpoint.dispatch", count: 1 }]).includes(
+        "SILENT_DISPATCH",
+      ),
+    );
   });
 
   it("treats a v2 corpus hash as stale", () => {

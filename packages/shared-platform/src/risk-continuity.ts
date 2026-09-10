@@ -422,3 +422,40 @@ export function transitionFallbackOnSnap(
 export function formatDueAt(dueAt: string, timeZone: string): string {
   return new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone }).format(new Date(dueAt));
 }
+
+export function projectCheckpointInstances(snap: PlatformSnapshot, eventId: string, now: string) {
+  const event = snap.events.find((item) => item.id === eventId);
+  return snap.riskCheckpointInstances
+    .filter((item) => item.eventId === eventId)
+    .sort((left, right) => left.dueAt.localeCompare(right.dueAt))
+    .map((instance) => {
+      const template = snap.riskCheckpointTemplates.find((item) => item.id === instance.templateId);
+      const checkIns = snap.riskCheckIns.filter((item) => item.checkpointId === instance.id);
+      const latest = checkIns.at(-1);
+      const status = derivedCheckpointStatus(instance, now, checkIns);
+      const horizon = template?.offsetHours === 72 ? "72H" : template?.offsetHours === 24 ? "24H" : template?.offsetHours === 6 ? "6H" : "CUSTOM";
+      const fn = snap.riskCriticalFunctions.find((item) => item.eventId === eventId || item.organisationId === instance.organisationId);
+      const roster = snap.riskRosterAssignments.find((item) => item.eventId === eventId);
+      return {
+        id: instance.id,
+        label: template?.title ?? "Checkpoint",
+        horizon: horizon as "72H" | "24H" | "6H" | "CUSTOM",
+        dueAt: instance.dueAt,
+        dueAtLagos: formatDueAt(instance.dueAt, "Africa/Lagos"),
+        criticalFunctionLabel: fn?.title ?? roster?.criticalFunctionKey ?? "Critical function",
+        vendorLabel: roster?.vendorLabel ?? "Vendor not labelled",
+        ownerRoleLabel: roster?.role ?? "Owner",
+        requiredEvidence: template?.requiredEvidence ?? "Vendor confirmation of readiness.",
+        status,
+        latestCheckIn: latest
+          ? { id: latest.id, response: latest.response, source: latest.source, recordedAt: latest.createdAt }
+          : undefined,
+        escalationState: snap.riskEscalationIntents.some((item) => item.eventId === eventId && item.checkpointId === instance.id)
+          ? "ESCALATED"
+          : "NONE",
+        nextAction: status === "MISSED" || status === "DUE" ? "Record check-in evidence" : "Review readiness",
+        version: instance.version,
+        eventName: event?.name,
+      };
+    });
+}

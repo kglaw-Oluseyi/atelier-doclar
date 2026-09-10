@@ -125,6 +125,8 @@ export const RISK_CHECKIN_STATES = ["SCHEDULED", "DUE", "CONFIRMED", "AT_RISK", 
 export const RISK_ACTIVATION_STATES = ["PROPOSED", "AUTHORISED", "INITIATED", "CONFIRMED", "FAILED", "CANCELLED", "CLOSED"] as const;
 export const RISK_INCIDENT_STATES = ["OPEN", "STABILISED", "RECOVERY", "CLOSED", "POST_INCIDENT_REVIEWED"] as const;
 export const RISK_DOSSIER_STATES = ["DRAFT", "SUBMITTED", "APPROVED", "PUBLISHED", "WITHDRAWN", "SUPERSEDED"] as const;
+export const RISK_DOSSIER_WORKING_STATES = ["DRAFT", "SUBMITTED", "APPROVED", "SUPERSEDED", "WITHDRAWN"] as const;
+export const RISK_DOSSIER_PUBLICATION_STATES = ["CURRENT", "SUPERSEDED", "WITHDRAWN"] as const;
 export const RISK_ADAPTER_STATES = ["INACTIVE", "MISCONFIGURED", "READY", "DEGRADED"] as const;
 export const RISK_EFFECT_STATES = ["NOT_REQUESTED", "PENDING_APPROVAL", "QUEUED", "SENT", "DELIVERED", "FAILED", "CANCELLED"] as const;
 export const RISK_EVALUATION_RUN_STATES = ["QUEUED", "RUNNING", "PASSED", "FAILED", "ERROR"] as const;
@@ -167,6 +169,12 @@ export const RiskSourceEditionSchema = z
     discoveryOnly: z.boolean(),
     contentHash: NonEmptySchema.max(128),
     supersedesEditionId: UuidSchema.optional(),
+    authorPersonId: PersonIdSchema.optional(),
+    submittedByPersonId: PersonIdSchema.optional(),
+    submittedAt: IsoDatetimeSchema.optional(),
+    approvedByPersonId: PersonIdSchema.optional(),
+    approvedAt: IsoDatetimeSchema.optional(),
+    approvedHash: NonEmptySchema.max(128).optional(),
     ...versioned,
   })
   .strict();
@@ -189,7 +197,10 @@ export const RiskRuleEditionSchema = z
     status: z.enum(RISK_AUTHORITY_STATUSES),
     approvedByPersonId: PersonIdSchema.optional(),
     approvedAt: IsoDatetimeSchema.optional(),
+    approvedHash: NonEmptySchema.max(128).optional(),
     reviewedByPersonId: PersonIdSchema.optional(),
+    submittedByPersonId: PersonIdSchema.optional(),
+    submittedAt: IsoDatetimeSchema.optional(),
     contentHash: NonEmptySchema.max(128),
     supersedesEditionId: UuidSchema.optional(),
     createdByPersonId: PersonIdSchema,
@@ -628,10 +639,15 @@ export const RiskIncidentNoteSchema = z
     organisationId: OrganisationIdSchema,
     eventId: EventIdSchema,
     incidentId: UuidSchema,
-    kind: z.enum(["FACT", "CLAIM", "HYPOTHESIS", "DECISION", "ACTION", "IMPACT"]),
+    kind: z.enum(["FACT", "CLAIM", "HYPOTHESIS", "DECISION", "ACTION", "IMPACT", "OBSERVED_FACT", "REPORTED_CLAIM", "ACTION_TAKEN"]),
     body: NonEmptySchema.max(4000),
     classification: z.enum(RISK_DISCLOSURE_CLASSES),
     actorPersonId: PersonIdSchema,
+    sourceLabel: z.string().max(160).optional(),
+    confidence: z.enum(["UNKNOWN", "LOW", "MEDIUM", "HIGH"]).optional(),
+    recordedByPersonId: PersonIdSchema.optional(),
+    recordedAt: IsoDatetimeSchema.optional(),
+    supersedesEntryId: UuidSchema.optional(),
     ...versioned,
   })
   .strict();
@@ -643,9 +659,17 @@ export const RiskLearningProposalSchema = z
     eventId: EventIdSchema,
     incidentId: UuidSchema,
     target: z.enum(["RULE", "VENDOR_INDICATOR", "CONTINUITY_TEMPLATE"]),
+    targetKind: z.enum(["VENDOR_INDICATOR", "CONTINUITY_TEMPLATE", "RISK_RULE"]).optional(),
     proposal: NonEmptySchema.max(2000),
+    proposition: NonEmptySchema.max(2000).optional(),
+    evidenceEntryIds: z.array(UuidSchema).max(16).optional(),
+    status: z.enum(["PROPOSED", "APPROVED", "REJECTED", "SUPERSEDED"]).optional(),
     adopted: z.boolean(),
     createdByPersonId: PersonIdSchema,
+    proposedByPersonId: PersonIdSchema.optional(),
+    decidedByPersonId: PersonIdSchema.optional(),
+    decidedAt: IsoDatetimeSchema.optional(),
+    reason: z.string().max(800).optional(),
     ...versioned,
   })
   .strict();
@@ -694,14 +718,20 @@ export const RiskDossierEditionSchema = z
     id: UuidSchema,
     organisationId: OrganisationIdSchema,
     eventId: EventIdSchema,
+    versionNumber: z.number().int().positive().optional(),
     status: z.enum(RISK_DOSSIER_STATES),
     componentHashes: z.array(NonEmptySchema.max(128)).max(32),
     contentHash: NonEmptySchema.max(128),
     languageApproved: z.boolean(),
+    authorPersonId: PersonIdSchema.optional(),
     submittedByPersonId: PersonIdSchema,
+    submittedAt: IsoDatetimeSchema.optional(),
     approvedByPersonId: PersonIdSchema.optional(),
+    approvedAt: IsoDatetimeSchema.optional(),
+    approvedHash: NonEmptySchema.max(128).optional(),
     publishedByPersonId: PersonIdSchema.optional(),
     publishedAt: IsoDatetimeSchema.optional(),
+    supersedesEditionId: UuidSchema.optional(),
     dispatched: z.literal(false),
     exportKind: z.enum(["NONE", "PDF"]).default("NONE"),
     limitations: NonEmptySchema.max(800),
@@ -716,10 +746,14 @@ export const RiskDossierPublicationSchema = z
     organisationId: OrganisationIdSchema,
     eventId: EventIdSchema,
     dossierId: UuidSchema,
+    editionId: UuidSchema.optional(),
+    contentHash: NonEmptySchema.max(128).optional(),
     approvedHash: NonEmptySchema.max(128),
     publicationNumber: z.number().int().positive(),
+    status: z.enum(RISK_DOSSIER_PUBLICATION_STATES).optional(),
     publishedAt: IsoDatetimeSchema,
     publishedByPersonId: PersonIdSchema,
+    supersedesPublicationId: UuidSchema.optional(),
     current: z.boolean(),
     dispatched: z.literal(false),
     clientMessages: z
@@ -756,6 +790,26 @@ export const RiskDossierExportSchema = z
     privilegeBoundToPersonId: PersonIdSchema,
     status: z.enum(["QUEUED", "COMPLETE", "FAILED"]),
     dispatched: z.literal(false),
+    ...versioned,
+  })
+  .strict();
+
+export const RiskDossierAccessGrantSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    eventId: EventIdSchema,
+    audiencePersonId: PersonIdSchema.optional(),
+    purpose: z.literal("RISK_DOSSIER"),
+    tokenHash: NonEmptySchema.max(128),
+    status: z.enum(["ACTIVE", "EXPIRED", "REVOKED"]),
+    issuedByPersonId: PersonIdSchema,
+    issuedAt: IsoDatetimeSchema,
+    expiresAt: IsoDatetimeSchema,
+    revokedByPersonId: PersonIdSchema.optional(),
+    revokedAt: IsoDatetimeSchema.optional(),
+    supersedesGrantId: UuidSchema.optional(),
+    failedExchangeCount: z.number().int().nonnegative().default(0),
     ...versioned,
   })
   .strict();
@@ -877,6 +931,7 @@ export const S05B_CANONICAL_COLLECTIONS = [
   "riskDossierEditions",
   "riskDossierPublications",
   "riskDossierExports",
+  "riskDossierAccessGrants",
   "riskEvaluationRuns",
   "riskEvaluationCaseResults",
   "riskEvaluationRunLeases",
@@ -915,6 +970,7 @@ export type RiskBudgetProjection = z.infer<typeof RiskBudgetProjectionSchema>;
 export type RiskDossierEdition = z.infer<typeof RiskDossierEditionSchema>;
 export type RiskDossierPublication = z.infer<typeof RiskDossierPublicationSchema>;
 export type RiskDossierExport = z.infer<typeof RiskDossierExportSchema>;
+export type RiskDossierAccessGrant = z.infer<typeof RiskDossierAccessGrantSchema>;
 export type RiskIdempotencyReceipt = z.infer<typeof RiskIdempotencyReceiptSchema>;
 export type S05BMigrationReceipt = z.infer<typeof S05BMigrationReceiptSchema>;
 export type RiskEvaluationRun = z.infer<typeof RiskEvaluationRunSchema>;

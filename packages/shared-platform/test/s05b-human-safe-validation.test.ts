@@ -18,6 +18,7 @@ import {
 } from "../src/risk-protection-parties.js";
 import { createPolicyOnSnap } from "../src/risk-policy-operations.js";
 import { s05bEvaluationReadinessFromSnap } from "../src/risk-evaluation-projections.js";
+import { s05bEvaluationCorpusHash } from "../src/risk-evaluation-corpus.js";
 import { actor, fixtureService, people } from "./helpers.js";
 import { migrateEosS05B } from "../src/risk-migration.js";
 
@@ -159,8 +160,9 @@ describe("EOS-S05B human-safe validation contract", () => {
   it("projects release evidence from durable evaluation rows and fails closed when unrun", () => {
     const { store } = env();
     const ready = s05bEvaluationReadinessFromSnap(store.snapshot(), people.orgMaison);
-    assert.equal(ready.corpusEdition, "s05b-eval-v3");
-    assert.equal(ready.corpusHash, "a5d540db67ccb6d4e4835d8b6d113903189ad3af3ab10e1c997929bef0198617");
+    assert.equal(ready.corpusEdition, "s05b-eval-v4");
+    assert.equal(ready.corpusHash, s05bEvaluationCorpusHash());
+    assert.notEqual(ready.corpusHash, "a5d540db67ccb6d4e4835d8b6d113903189ad3af3ab10e1c997929bef0198617");
     assert.equal(ready.evaluationStatus, "UNRUN");
     assert.equal(ready.evaluationBlocked, true);
     assert.equal(ready.releaseReady, false);

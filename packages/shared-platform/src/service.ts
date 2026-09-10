@@ -757,15 +757,18 @@ import {
   recordCheckInOnSnap,
   transitionFallbackOnSnap,
 } from "./risk-continuity.js";
-import { addIncidentNoteOnSnap, reportIncidentOnSnap, transitionIncidentOnSnap } from "./risk-incidents.js";
+import { addIncidentEntryOnSnap, addIncidentNoteOnSnap, decideLearningOnSnap, proposeLearningOnSnap, reportIncidentOnSnap, transitionIncidentOnSnap } from "./risk-incidents.js";
+import { generateDossierAccessToken, hashDossierAccessToken, issueDossierAccessOnSnap, renewDossierAccessOnSnap, resolveDossierAccessOnSnap, revokeDossierAccessOnSnap, clientDossierFromGrant } from "./risk-dossier-access.js";
 import { projectRiskBudgetOnSnap } from "./risk-budget-projection.js";
 import {
   assembleDossierOnSnap,
+  currentDossierPublication,
   eventProtectionProjection,
   exportDossierOnSnap,
   organisationProtectionProjection,
   publishedClientDossierProjection,
   protectionAudienceFromRole,
+  publishDossierOnSnap,
   recordClientDossierMessageOnSnap,
   transitionDossierOnSnap,
 } from "./risk-projections.js";
@@ -7468,7 +7471,7 @@ export class PlatformService {
   assembleRiskDossier(actor: ActorContext, raw: unknown) {
     const input = raw as Parameters<typeof assembleDossierOnSnap>[1];
     return this.mutate(actor, {
-      permission: "risk.dossier.view",
+      permission: "risk.dossier.assemble",
       scope: { organisationId: input.organisationId, eventId: input.eventId },
       action: "risk.dossier.assemble",
       resourceType: "risk_dossier_edition",
@@ -7479,12 +7482,15 @@ export class PlatformService {
 
   transitionRiskDossier(actor: ActorContext, raw: unknown) {
     const input = raw as Parameters<typeof transitionDossierOnSnap>[1];
+    if (input.to === "PUBLISHED") {
+      return this.publishRiskDossier(actor, { ...input, editionId: input.dossierId, approvedHash: input.approvedHash });
+    }
     const permission =
-      input.to === "PUBLISHED" ? "risk.dossier.publish" : input.to === "APPROVED" ? "risk.dossier.approve" : "risk.dossier.view";
+      input.to === "APPROVED" ? "risk.dossier.approve" : input.to === "SUBMITTED" ? "risk.dossier.submit" : "risk.dossier.assemble";
     return this.mutate(actor, {
       permission,
       scope: { organisationId: input.organisationId, eventId: input.eventId },
-      action: "risk.dossier.transition",
+      action: input.to === "SUBMITTED" ? "risk.dossier.submit" : input.to === "APPROVED" ? "risk.dossier.approve" : "risk.dossier.transition",
       resourceType: "risk_dossier_edition",
       resourceId: input.dossierId,
       idempotencyKey: input.idempotencyKey,
@@ -7492,10 +7498,36 @@ export class PlatformService {
     });
   }
 
+  publishRiskDossier(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof publishDossierOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.dossier.publish",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.dossier.publish",
+      resourceType: "risk_dossier_publication",
+      resourceId: input.editionId ?? input.dossierId,
+      idempotencyKey: input.idempotencyKey,
+      alreadyApplied: (snap) => {
+        const current = currentDossierPublication(snap, input.eventId);
+        const editionId = input.editionId ?? input.dossierId;
+        if (
+          current &&
+          (current.dossierId === editionId || (current as { editionId?: string }).editionId === editionId) &&
+          (current.approvedHash === input.approvedHash || current.contentHash === input.approvedHash)
+        ) {
+          return current;
+        }
+        return undefined;
+      },
+      replayIfAlreadyApplied: true,
+      run: (snap, ctx) => publishDossierOnSnap(snap, input, ctx.now, actor.personId, actor.actorKind),
+    });
+  }
+
   exportRiskDossier(actor: ActorContext, raw: unknown) {
     const input = raw as Parameters<typeof exportDossierOnSnap>[1];
     return this.mutate(actor, {
-      permission: "risk.export",
+      permission: "risk.dossier.export",
       scope: { organisationId: input.organisationId, eventId: input.eventId },
       action: "risk.dossier.export",
       resourceType: "risk_dossier_export",
@@ -7503,6 +7535,128 @@ export class PlatformService {
       idempotencyKey: input.idempotencyKey,
       run: (snap, ctx) => exportDossierOnSnap(snap, input, ctx.now, actor.personId),
     });
+  }
+
+  addRiskIncidentEntry(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof addIncidentEntryOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.incident.command",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.incident.entry",
+      resourceType: "risk_incident_note",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => addIncidentEntryOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  proposeRiskLearning(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof proposeLearningOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.incident.command",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.learning.propose",
+      resourceType: "risk_learning_proposal",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => proposeLearningOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  decideRiskLearning(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof decideLearningOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.incident.close",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.learning.decide",
+      resourceType: "risk_learning_proposal",
+      resourceId: input.proposalId,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => decideLearningOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  issueRiskDossierAccess(actor: ActorContext, raw: unknown) {
+    const input = raw as { organisationId: string; eventId: string; assignmentId: string; expectedVersion: number; idempotencyKey: string; audiencePersonId?: string };
+    const token = generateDossierAccessToken();
+    const tokenHash = hashDossierAccessToken(token, this.atelierAccessConfig().linkPepper);
+    const expiresAt = new Date(Date.parse(actor.now ?? new Date().toISOString()) + 7 * 24 * 3600_000).toISOString();
+    const grant = this.mutate(actor, {
+      permission: "risk.dossier.client_access.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.dossier.client_access.issue",
+      resourceType: "risk_dossier_access_grant",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) =>
+        issueDossierAccessOnSnap(
+          snap,
+          { ...input, tokenHash, expiresAt },
+          ctx.now,
+          actor.personId,
+        ),
+    });
+    return { ...grant, token };
+  }
+
+  revokeRiskDossierAccess(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof revokeDossierAccessOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.dossier.client_access.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.dossier.client_access.revoke",
+      resourceType: "risk_dossier_access_grant",
+      resourceId: input.grantId,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => revokeDossierAccessOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  renewRiskDossierAccess(actor: ActorContext, raw: unknown) {
+    const input = raw as { organisationId: string; eventId: string; assignmentId: string; expectedVersion: number; idempotencyKey: string; grantId: string };
+    const token = generateDossierAccessToken();
+    const tokenHash = hashDossierAccessToken(token, this.atelierAccessConfig().linkPepper);
+    const expiresAt = new Date(Date.parse(actor.now ?? new Date().toISOString()) + 7 * 24 * 3600_000).toISOString();
+    const grant = this.mutate(actor, {
+      permission: "risk.dossier.client_access.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.dossier.client_access.renew",
+      resourceType: "risk_dossier_access_grant",
+      resourceId: input.grantId,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) =>
+        renewDossierAccessOnSnap(snap, { ...input, tokenHash, expiresAt }, ctx.now, actor.personId),
+    });
+    return { ...grant, token };
+  }
+
+  getClientDossierByToken(token: string) {
+    const snap = this.store.snapshot();
+    const now = new Date().toISOString();
+    const tokenHash = hashDossierAccessToken(token, this.atelierAccessConfig().linkPepper);
+    const grant = resolveDossierAccessOnSnap(snap, tokenHash, now);
+    return { grant: { id: grant.id, eventId: grant.eventId, organisationId: grant.organisationId, status: grant.status, expiresAt: grant.expiresAt }, dossier: clientDossierFromGrant(snap, grant) };
+  }
+
+  recordClientDossierMessageByToken(token: string, raw: unknown) {
+    const snap = this.store.snapshot();
+    const now = new Date().toISOString();
+    const tokenHash = hashDossierAccessToken(token, this.atelierAccessConfig().linkPepper);
+    const grant = resolveDossierAccessOnSnap(snap, tokenHash, now);
+    const input = raw as { kind: "ACKNOWLEDGE" | "QUESTION"; body: string };
+    const publication = currentDossierPublication(snap, grant.eventId);
+    if (!publication || publication.organisationId !== grant.organisationId) {
+      throw new PlatformError("NOT_FOUND", "no published client dossier is available");
+    }
+    publication.clientMessages = [
+      ...(publication.clientMessages ?? []),
+      {
+        id: crypto.randomUUID(),
+        kind: input.kind,
+        body: String(input.body ?? "").trim(),
+        createdByPersonId: grant.audiencePersonId ?? grant.issuedByPersonId,
+        createdAt: now,
+      },
+    ];
+    this.store.replace(snap);
+    return publication;
   }
 
   recordClientDossierMessage(actor: ActorContext, raw: unknown) {

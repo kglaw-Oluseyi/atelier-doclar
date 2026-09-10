@@ -1,10 +1,10 @@
 import { z } from "zod";
 
-export const S05B_EVALUATION_CONTRACT_VERSION = "s05b-eval-contract-v3";
-export const S05B_EVALUATION_CORPUS_EDITION = "s05b-eval-v3";
-export const S05B_EVALUATION_ORCHESTRATOR_VERSION = "s05b-orchestrator-v3";
-export const S05B_EVALUATION_PROVIDER_VERSION = "fixture-inactive-v3";
-export const S05B_EVALUATION_PROJECTION_POLICY_VERSION = "risk-projection-v3";
+export const S05B_EVALUATION_CONTRACT_VERSION = "s05b-eval-contract-v4";
+export const S05B_EVALUATION_CORPUS_EDITION = "s05b-eval-v4";
+export const S05B_EVALUATION_ORCHESTRATOR_VERSION = "s05b-orchestrator-v4";
+export const S05B_EVALUATION_PROVIDER_VERSION = "fixture-inactive-v4";
+export const S05B_EVALUATION_PROJECTION_POLICY_VERSION = "risk-projection-v4";
 
 export const S05B_ZERO_TOLERANCE = [
   "FABRICATED_COVERAGE",
@@ -104,6 +104,14 @@ export const S05BEvaluationActionSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("UNAUTHENTICATED") }).strict(),
   z.object({ kind: z.literal("ADMIN_DENIED") }).strict(),
   z.object({ kind: z.literal("EXPORT") }).strict(),
+  z.object({ kind: z.literal("AUDITOR_DOSSIER") }).strict(),
+  z.object({ kind: z.literal("DOSSIER_LAST_GOOD") }).strict(),
+  z.object({ kind: z.literal("CLIENT_GRANT") }).strict(),
+  z.object({ kind: z.literal("CLIENT_GRANT_REVOKE") }).strict(),
+  z.object({ kind: z.literal("LEARNING_DECIDE") }).strict(),
+  z.object({ kind: z.literal("SOURCE_SELF_APPROVE") }).strict(),
+  z.object({ kind: z.literal("INCIDENT_ENTRIES") }).strict(),
+  z.object({ kind: z.literal("BUDGET_CONCURRENT_STALE") }).strict(),
 ]);
 
 export const S05BAssertionSchema = z.discriminatedUnion("kind", [

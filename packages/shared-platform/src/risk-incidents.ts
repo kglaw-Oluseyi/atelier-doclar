@@ -1,6 +1,7 @@
 import { PlatformError } from "./errors.js";
 import {
   assertExpectedVersion,
+  assertIndependentChecker,
   assertMakerChecker,
   assertProtectedHuman,
   assertSameEvent,
@@ -111,6 +112,47 @@ export function addIncidentNoteOnSnap(
   return record;
 }
 
+export function addIncidentEntryOnSnap(
+  snap: PlatformSnapshot,
+  input: {
+    organisationId: string;
+    eventId: string;
+    assignmentId: string;
+    expectedVersion: number;
+    idempotencyKey: string;
+    incidentId: string;
+    kind: "OBSERVED_FACT" | "REPORTED_CLAIM" | "HYPOTHESIS" | "DECISION" | "ACTION_TAKEN";
+    body: string;
+    sourceLabel?: string;
+    confidence?: "UNKNOWN" | "LOW" | "MEDIUM" | "HIGH";
+    supersedesEntryId?: string;
+  },
+  now: string,
+  actorPersonId: string,
+): RiskIncidentNote {
+  envelope(input, input.organisationId, input.eventId);
+  const incident = snap.riskIncidents.find((item) => item.id === input.incidentId && item.eventId === input.eventId);
+  if (!incident) throw new PlatformError("NOT_FOUND", "incident not found");
+  const record = RiskIncidentNoteSchema.parse({
+    id: newRiskId(),
+    organisationId: input.organisationId,
+    eventId: input.eventId,
+    incidentId: incident.id,
+    kind: input.kind,
+    body: input.body,
+    classification: incident.sensitive ? "RESTRICTED_INCIDENT" : "OPERATIONAL",
+    actorPersonId,
+    sourceLabel: input.sourceLabel,
+    confidence: input.confidence ?? "UNKNOWN",
+    recordedByPersonId: actorPersonId,
+    recordedAt: now,
+    supersedesEntryId: input.supersedesEntryId,
+    ...riskStamp(now),
+  });
+  snap.riskIncidentNotes.push(record);
+  return record;
+}
+
 export function transitionIncidentOnSnap(
   snap: PlatformSnapshot,
   input: {
@@ -170,11 +212,68 @@ export function proposeLearningOnSnap(
     eventId: input.eventId,
     incidentId: incident.id,
     target: input.target,
+    targetKind: input.target === "RULE" ? "RISK_RULE" : input.target,
     proposal: input.proposal,
+    proposition: input.proposal,
+    evidenceEntryIds: [],
+    status: "PROPOSED",
     adopted: false,
     createdByPersonId: actorPersonId,
+    proposedByPersonId: actorPersonId,
     ...riskStamp(now),
   });
   snap.riskLearningProposals.push(record);
   return record;
+}
+
+export function decideLearningOnSnap(
+  snap: PlatformSnapshot,
+  input: {
+    organisationId: string;
+    eventId: string;
+    assignmentId: string;
+    expectedVersion: number;
+    idempotencyKey: string;
+    proposalId: string;
+    status: "APPROVED" | "REJECTED" | "SUPERSEDED";
+    reason?: string;
+  },
+  now: string,
+  actorPersonId: string,
+): RiskLearningProposal {
+  envelope(input, input.organisationId, input.eventId);
+  const proposal = snap.riskLearningProposals.find((item) => item.id === input.proposalId && item.eventId === input.eventId);
+  if (!proposal) throw new PlatformError("NOT_FOUND", "learning proposal not found");
+  assertExpectedVersion(proposal.version, input.expectedVersion, "learning");
+  assertIndependentChecker({
+    actorPersonId,
+    authorPersonId: proposal.proposedByPersonId ?? proposal.createdByPersonId,
+    submitterPersonId: proposal.createdByPersonId,
+    action: "approve",
+  });
+  const targetCountBefore = {
+    rules: snap.riskRuleEditions.length,
+    vendors: snap.riskVendorAssessments.length,
+    templates: snap.riskCheckpointTemplates.length,
+  };
+  Object.assign(
+    proposal,
+    RiskLearningProposalSchema.parse({
+      ...proposal,
+      status: input.status,
+      adopted: false,
+      decidedByPersonId: actorPersonId,
+      decidedAt: now,
+      reason: input.reason,
+      ...bumpVersion(proposal, now),
+    }),
+  );
+  if (
+    snap.riskRuleEditions.length !== targetCountBefore.rules ||
+    snap.riskVendorAssessments.length !== targetCountBefore.vendors ||
+    snap.riskCheckpointTemplates.length !== targetCountBefore.templates
+  ) {
+    throw new PlatformError("INTERNAL_ERROR", "learning approval must not mutate the target domain");
+  }
+  return proposal;
 }

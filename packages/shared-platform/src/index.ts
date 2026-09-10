@@ -935,6 +935,8 @@ export * from "./risk-continuity.js";
 export * from "./risk-incidents.js";
 export * from "./risk-budget-projection.js";
 export * from "./risk-projections.js";
+export * from "./risk-dossier-access.js";
+export * from "./risk-command.js";
 export * from "./risk-ports.js";
 export * from "./risk-migration.js";
 export * from "./risk-persistence.js";

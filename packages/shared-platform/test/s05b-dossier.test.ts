@@ -91,9 +91,10 @@ describe("EOS-S05B dossier lifecycle", () => {
       /approved exact hash/,
     );
     const published = transitionDossierOnSnap(snap, { ...envelope({ assignmentId: people.assignCeo, approvedHash: approved.contentHash }), dossierId: approved.id, expectedVersion: approved.version, to: "PUBLISHED" }, "2026-09-10T09:26:00.000Z", people.personCeo, "HUMAN");
-    assert.equal(published.status, "PUBLISHED");
+    assert.equal(published.status, "APPROVED");
     assert.equal(published.dispatched, false);
     assert.equal(snap.riskDossierPublications.filter((item) => item.eventId === people.eventAlphaOne && item.current).length, 1);
+    assert.equal(snap.riskDossierPublications.find((item) => item.eventId === people.eventAlphaOne && item.current)?.status, "CURRENT");
     const exported = exportDossierOnSnap(snap, { ...envelope({ assignmentId: people.assignCeo }), dossierId: published.id, expectedVersion: published.version }, "2026-09-10T09:27:00.000Z", people.personCeo);
     assert.equal(exported.dispatched, false);
     assert.ok(exported.fullHash);

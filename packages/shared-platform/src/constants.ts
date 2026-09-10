@@ -425,8 +425,12 @@ export const PERMISSION_KEYS = [
   "risk.reserve.request",
   "risk.reserve.authorise",
   "risk.dossier.view",
+  "risk.dossier.assemble",
+  "risk.dossier.submit",
   "risk.dossier.approve",
   "risk.dossier.publish",
+  "risk.dossier.export",
+  "risk.dossier.client_access.manage",
   "risk.export",
   "risk.audit.view",
 ] as const;
@@ -439,6 +443,7 @@ export const SYSTEM_ROLE_KEYS = [
   "PLANNER",
   "SYSTEM_ADMINISTRATOR",
   "READ_ONLY_AUDITOR",
+  "RISK_GOVERNANCE_REVIEWER",
 ] as const;
 
 export const BUSINESS_PERMISSIONS: readonly string[] = [
@@ -668,6 +673,8 @@ export const S05B_SENSITIVE_PERMISSIONS = [
   "risk.reserve.authorise",
   "risk.dossier.approve",
   "risk.dossier.publish",
+  "risk.dossier.export",
+  "risk.dossier.client_access.manage",
   "risk.export",
 ] as const;
 

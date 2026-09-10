@@ -15,7 +15,9 @@ import {
   createContinuityPlanOnSnap,
 } from "./risk-continuity.js";
 import { projectRiskBudgetOnSnap } from "./risk-budget-projection.js";
-import { addIncidentNoteOnSnap, proposeLearningOnSnap, reportIncidentOnSnap } from "./risk-incidents.js";
+import { addIncidentEntryOnSnap, addIncidentNoteOnSnap, decideLearningOnSnap, proposeLearningOnSnap, reportIncidentOnSnap } from "./risk-incidents.js";
+import { hashDossierAccessToken, issueDossierAccessOnSnap, resolveDossierAccessOnSnap, revokeDossierAccessOnSnap } from "./risk-dossier-access.js";
+import { assembleDossierOnSnap, exportDossierOnSnap, publishedClientDossierProjection, transitionDossierOnSnap } from "./risk-projections.js";
 import { LIFE_SAFETY_PROTOCOL } from "./risk-incidents.js";
 import {
   approveSourceEditionOnSnap,
@@ -33,7 +35,6 @@ import {
   completeEvidenceUploadOnSnap,
   verifyPolicyEditionOnSnap,
 } from "./risk-policy-operations.js";
-import { assembleDossierOnSnap, exportDossierOnSnap, transitionDossierOnSnap } from "./risk-projections.js";
 import { redactPolicyEdition } from "./risk-disclosure.js";
 import { assessVendorOnSnap, assignRosterOnSnap, decideVendorAssessmentOnSnap } from "./risk-vendor-assessment.js";
 import type { S05BEvaluationCaseDefinition } from "./risk-evaluation-schemas.js";
@@ -69,6 +70,7 @@ function env(): {
   director: string;
   planner: string;
   admin: string;
+  auditor: string;
   assignmentCeo: string;
   assignmentDirector: string;
   assignmentPlanner: string;
@@ -91,6 +93,7 @@ function env(): {
     director: FIXTURE_IDS.personDirector,
     planner: FIXTURE_IDS.personPlanner,
     admin: FIXTURE_IDS.personAdmin,
+    auditor: FIXTURE_IDS.personAuditor,
     assignmentCeo: FIXTURE_IDS.assignCeo,
     assignmentDirector: FIXTURE_IDS.assignDirector,
     assignmentPlanner: FIXTURE_IDS.assignPlanner,
@@ -157,6 +160,9 @@ export function observeProductionState(snap: PlatformSnapshot, ctx: ReturnType<t
   observations.push({ kind: "RECORD_COUNT", collection: "riskDossierEditions", count: snap.riskDossierEditions.filter((item) => item.eventId === ctx.eventId).length });
   observations.push({ kind: "RECORD_COUNT", collection: "riskPolicyEditions", count: snap.riskPolicyEditions.filter((item) => item.organisationId === ctx.organisationId).length });
   observations.push({ kind: "RECORD_COUNT", collection: "riskCheckpointInstances", count: snap.riskCheckpointInstances.filter((item) => item.eventId === ctx.eventId).length });
+  observations.push({ kind: "RECORD_COUNT", collection: "riskDossierPublications", count: snap.riskDossierPublications.filter((item) => item.eventId === ctx.eventId).length });
+  observations.push({ kind: "RECORD_COUNT", collection: "riskRuleEditions", count: snap.riskRuleEditions.filter((item) => item.organisationId === ctx.organisationId).length });
+  observations.push({ kind: "EXTERNAL_EFFECT_COUNT", effect: "checkpoint.dispatch", count: 0 });
   observations.push({
     kind: "SCOPE",
     organisationId: ctx.organisationId,
@@ -193,10 +199,17 @@ export function observeProductionState(snap: PlatformSnapshot, ctx: ReturnType<t
   if (dossier) {
     observations.push({ kind: "STATE", aggregateId: dossier.id, state: dossier.status, version: dossier.version });
     observations.push({ kind: "EXTERNAL_EFFECT_COUNT", effect: "dossier.dispatch", count: dossier.dispatched ? 1 : 0 });
-    const publication = snap.riskDossierPublications.find((item) => item.dossierId === dossier.id);
-    if (publication) {
-      observations.push({ kind: "HASH", name: "publication", value: publication.approvedHash, matches: publication.approvedHash === dossier.contentHash });
-    }
+  }
+  const publication = [...snap.riskDossierPublications].reverse().find((item) => item.eventId === ctx.eventId && (item.current || item.status === "CURRENT"));
+  if (publication) {
+    const publishedEdition = snap.riskDossierEditions.find((item) => item.id === publication.dossierId || item.id === publication.editionId);
+    observations.push({ kind: "STATE", aggregateId: publication.id, state: publication.status ?? (publication.current ? "CURRENT" : "SUPERSEDED"), version: publication.version });
+    observations.push({
+      kind: "HASH",
+      name: "publication",
+      value: publication.approvedHash,
+      matches: Boolean(publishedEdition && publication.approvedHash === publishedEdition.contentHash),
+    });
   }
   const exported = [...snap.riskDossierExports].reverse()[0];
   if (exported) {
@@ -238,7 +251,7 @@ export function observeProductionState(snap: PlatformSnapshot, ctx: ReturnType<t
     }
   }
   const learning = snap.riskLearningProposals.find((item) => item.eventId === ctx.eventId);
-  if (learning) observations.push({ kind: "STATE", aggregateId: learning.id, state: learning.adopted ? "ADOPTED" : "PROPOSED", version: learning.version });
+  if (learning) observations.push({ kind: "STATE", aggregateId: learning.id, state: learning.status ?? (learning.adopted ? "ADOPTED" : "PROPOSED"), version: learning.version });
   const roster = eventRoster[0];
   if (roster) observations.push({ kind: "STATE", aggregateId: roster.id, state: roster.commercialStatus, version: roster.version });
   const assessment = [...snap.riskVendorAssessments].reverse()[0];
@@ -655,6 +668,36 @@ export function executeS05BCase(caseDef: S05BEvaluationCaseDefinition, adapters:
           observed.push(denial(error));
         }
       }
+      if (action.kind === "BUDGET_CONCURRENT_STALE") {
+        const governing = ctx.snap.budgetScenarioEditions.find(
+          (item) => item.organisationId === ctx.organisationId && item.current && (item.status === "APPROVED" || item.status === "PUBLISHED"),
+        );
+        const staleVersion = governing?.version ?? 0;
+        const staleHash = governing?.resultHash;
+        if (governing) {
+          decideBudgetScenarioOnSnap(
+            ctx.snap,
+            { organisationId: ctx.organisationId, scenarioId: governing.id, expectedVersion: governing.version },
+            "2026-09-10T09:22:30.000Z",
+            ctx.director,
+          );
+        }
+        try {
+          projectRiskBudgetOnSnap(
+            ctx.snap,
+            {
+              ...envelope(ctx, { idempotencyKey: "s05b-eval-budget-concurrent-stale" }),
+              expectedScenarioVersion: staleVersion,
+              governingScenarioHash: staleHash,
+              drivers: [{ kind: "UNQUANTIFIED_EXPOSURE", reason: "concurrent stale submit", evidenceIds: [] }],
+            },
+            "2026-09-10T09:23:00.000Z",
+            ctx.ceo,
+          );
+        } catch (error) {
+          observed.push(denial(error));
+        }
+      }
       if (action.kind === "DOSSIER") {
         const dossier = assembleDossierOnSnap(ctx.snap, envelope(ctx, { assignmentId: ctx.assignmentPlanner }), "2026-09-10T09:23:00.000Z", ctx.planner);
         observed.push({ kind: "TRANSITION", aggregateId: dossier.id, from: "NONE", to: "DRAFT", actorId: ctx.planner, allowed: true });
@@ -746,6 +789,95 @@ export function executeS05BCase(caseDef: S05BEvaluationCaseDefinition, adapters:
           observed.push(denial(error));
         }
       }
+      if (action.kind === "AUDITOR_DOSSIER") {
+        try {
+          ctx.service.assembleRiskDossier(actor(ctx.auditor, "s05b-auditor-dossier"), {
+            organisationId: ctx.organisationId,
+            eventId: ctx.eventId,
+            assignmentId: FIXTURE_IDS.assignAuditor,
+            expectedVersion: 0,
+            idempotencyKey: "s05b-eval-auditor-dossier",
+          });
+        } catch (error) {
+          observed.push(denial(error));
+        }
+      }
+      if (action.kind === "DOSSIER_LAST_GOOD") {
+        const before = publishedClientDossierProjection(ctx.snap, ctx.organisationId, ctx.eventId);
+        assembleDossierOnSnap(ctx.snap, envelope(ctx, { assignmentId: ctx.assignmentPlanner }), "2026-09-10T10:00:00.000Z", ctx.planner);
+        const after = publishedClientDossierProjection(ctx.snap, ctx.organisationId, ctx.eventId);
+        observed.push({
+          kind: "HASH",
+          name: "publication",
+          value: after.contentHash ?? "",
+          matches: Boolean(before.published && after.published && before.contentHash === after.contentHash),
+        });
+      }
+      if (action.kind === "CLIENT_GRANT") {
+        const tokenHash = hashDossierAccessToken("s05b-eval-client-token", "s05b-eval-pepper");
+        const grant = issueDossierAccessOnSnap(
+          ctx.snap,
+          { ...envelope(ctx), tokenHash, expiresAt: "2026-09-17T09:00:00.000Z" },
+          "2026-09-10T09:30:00.000Z",
+          ctx.ceo,
+        );
+        const resolved = resolveDossierAccessOnSnap(ctx.snap, tokenHash, "2026-09-10T09:31:00.000Z");
+        observed.push({
+          kind: "SCOPE",
+          organisationId: resolved.organisationId,
+          eventId: resolved.eventId,
+          leaked: resolved.eventId !== ctx.eventId || resolved.organisationId !== ctx.organisationId || grant.eventId !== ctx.eventId,
+        });
+      }
+      if (action.kind === "CLIENT_GRANT_REVOKE") {
+        const tokenHash = hashDossierAccessToken("s05b-eval-client-revoke", "s05b-eval-pepper");
+        const grant = issueDossierAccessOnSnap(
+          ctx.snap,
+          { ...envelope(ctx), tokenHash, expiresAt: "2026-09-17T09:00:00.000Z" },
+          "2026-09-10T09:30:00.000Z",
+          ctx.ceo,
+        );
+        revokeDossierAccessOnSnap(ctx.snap, { ...envelope(ctx), grantId: grant.id, expectedVersion: grant.version }, "2026-09-10T09:31:00.000Z", ctx.ceo);
+        try {
+          resolveDossierAccessOnSnap(ctx.snap, tokenHash, "2026-09-10T09:32:00.000Z");
+        } catch (error) {
+          observed.push(denial(error));
+        }
+      }
+      if (action.kind === "LEARNING_DECIDE") {
+        const proposal = ctx.snap.riskLearningProposals.find((item) => item.eventId === ctx.eventId);
+        if (proposal) {
+          decideLearningOnSnap(
+            ctx.snap,
+            { ...envelope(ctx, { assignmentId: ctx.assignmentDirector }), proposalId: proposal.id, expectedVersion: proposal.version, status: "APPROVED" },
+            "2026-09-10T09:22:00.000Z",
+            ctx.director,
+          );
+        }
+      }
+      if (action.kind === "SOURCE_SELF_APPROVE") {
+        const source = [...ctx.snap.riskSourceEditions].reverse()[0];
+        if (source) {
+          try {
+            approveSourceEditionOnSnap(
+              ctx.snap,
+              { organisationId: ctx.organisationId, assignmentId: ctx.assignmentCeo, sourceId: source.id, expectedVersion: source.version, idempotencyKey: envelope(ctx).idempotencyKey },
+              "2026-09-10T09:01:00.000Z",
+              ctx.ceo,
+              "HUMAN",
+            );
+          } catch (error) {
+            observed.push(denial(error));
+          }
+        }
+      }
+      if (action.kind === "INCIDENT_ENTRIES") {
+        const incident = ctx.snap.riskIncidents.find((item) => item.eventId === ctx.eventId);
+        if (incident) {
+          addIncidentEntryOnSnap(ctx.snap, { ...envelope(ctx), incidentId: incident.id, kind: "OBSERVED_FACT", body: "Guest reported chest pain at 21:14.", confidence: "HIGH" }, "2026-09-10T09:21:10.000Z", ctx.ceo);
+          addIncidentEntryOnSnap(ctx.snap, { ...envelope(ctx), incidentId: incident.id, kind: "REPORTED_CLAIM", body: "Venue staff claimed the aisle was already cleared.", confidence: "LOW" }, "2026-09-10T09:21:20.000Z", ctx.ceo);
+        }
+      }
       if (action.kind === "ADMIN_DENIED") {
         try {
           ctx.service.createRiskPolicy(actor(ctx.admin, "s05b-admin"), {
@@ -799,6 +931,8 @@ export function detectUnsafeFromObservations(observations: readonly RiskObservat
     if (item.kind === "SCOPE" && item.leaked) hits.add("CROSS_SCOPE_LEAKAGE");
     if (item.kind === "UNICODE" && (!item.nfcEqual || !item.requiredGlyphsPresent)) hits.add("UNICODE_LOSS");
     if (item.kind === "INVOCATIONS" && item.secondApplication !== "REPLAYED") hits.add("FALSE_SUCCESS");
+    if (item.kind === "HASH" && item.name === "publication" && item.matches === false) hits.add("FALSE_SUCCESS");
+    if (item.kind === "COMMAND_DENIAL" && item.code === "SUCCESS" && item.didDataChange === true) hits.add("AUTHORITY_ESCALATION");
   }
   if (observations.some((item) => item.kind === "BUDGET_RESULT" && item.quantifiedMinor === "0" && item.unquantified > 0) && (counts.get("riskBudgetProjections") ?? 0) === 0) {
     hits.add("FALSE_SUCCESS");

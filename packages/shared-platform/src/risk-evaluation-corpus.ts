@@ -65,6 +65,16 @@ export const S05B_EVALUATION_CASES: readonly S05BEvaluationCaseDefinition[] = [
   caseDef("S05B-MARKUP-01", "MALICIOUS_MARKUP", "Malicious markup stays escaped", [{ kind: "CLAUSE_REVIEW" }], [{ kind: "CONTENT_BYTES", mediaType: "text/html", forbiddenEmpty: true }], ["MALICIOUS_MARKUP"]),
   caseDef("S05B-UNICODE-01", "MULTILINGUAL_UNICODE", "Yoruba NFC", [{ kind: "CREATE_SOURCE", title: "Yoru\u0300ba\u0301" }], [{ kind: "UNICODE", requiredSubstring: "Yorùbá", storedMustBeNfc: true, inputWasDecomposed: true }], ["UNICODE_LOSS"]),
   caseDef("S05B-CONC-01", "CONCURRENCY", "Stale governing Budget version is not applied", [{ kind: "STALE_BUDGET" }], [{ kind: "COMMAND_DENIAL", code: "VERSION_CONFLICT", didDataChange: false }], ["STALE_VERSION_ACCEPTED"]),
+  caseDef("S05B-AUTH-AUDITOR-DOSSIER-DENY", "AUTHORITY", "Auditor cannot assemble a dossier", [{ kind: "AUDITOR_DOSSIER" }], [{ kind: "COMMAND_DENIAL", code: "FORBIDDEN", didDataChange: false }], ["AUTHORITY_ESCALATION"]),
+  caseDef("S05B-DOSSIER-THREE-PERSON-PUBLISH", "DOSSIER", "Planner director CEO exact-hash publish", [{ kind: "CREATE_SOURCE" }, { kind: "APPROVE_SOURCE" }, { kind: "CREATE_RULE" }, { kind: "APPROVE_RULE" }, { kind: "RECORD_FACT", factKey: "jurisdiction", value: "NG" }, { kind: "RECORD_FACT", factKey: "event_dates", value: "2026-12-01/2026-12-02" }, { kind: "EVALUATE" }, { kind: "DOSSIER" }], [{ kind: "RECORD_COUNT", collection: "riskDossierPublications", min: 1 }, { kind: "EXTERNAL_EFFECT_COUNT", effect: "dossier.dispatch", count: 0 }], ["AUTHORITY_ESCALATION"]),
+  caseDef("S05B-DOSSIER-LAST-GOOD-DURING-DRAFT", "DOSSIER", "Published client truth survives a new draft", [{ kind: "CREATE_SOURCE" }, { kind: "APPROVE_SOURCE" }, { kind: "CREATE_RULE" }, { kind: "APPROVE_RULE" }, { kind: "RECORD_FACT", factKey: "jurisdiction", value: "NG" }, { kind: "RECORD_FACT", factKey: "event_dates", value: "2026-12-01/2026-12-02" }, { kind: "EVALUATE" }, { kind: "DOSSIER" }, { kind: "DOSSIER_LAST_GOOD" }], [{ kind: "STATE", state: "CURRENT" }, { kind: "HASH", name: "publication", matches: true }], ["FALSE_SUCCESS"]),
+  caseDef("S05B-BUDGET-STALE-CONFLICT", "BUDGET", "Concurrent Budget change is VERSION_CONFLICT", [{ kind: "BUDGET" }, { kind: "BUDGET_CONCURRENT_STALE" }], [{ kind: "COMMAND_DENIAL", code: "VERSION_CONFLICT", didDataChange: false }, { kind: "BUDGET_RESULT", unquantifiedMin: 1 }], ["STALE_VERSION_ACCEPTED"]),
+  caseDef("S05B-CLIENT-GRANT-ISOLATION", "DOSSIER", "Client grant cannot open another event", [{ kind: "CREATE_SOURCE" }, { kind: "APPROVE_SOURCE" }, { kind: "CREATE_RULE" }, { kind: "APPROVE_RULE" }, { kind: "RECORD_FACT", factKey: "jurisdiction", value: "NG" }, { kind: "RECORD_FACT", factKey: "event_dates", value: "2026-12-01/2026-12-02" }, { kind: "EVALUATE" }, { kind: "DOSSIER" }, { kind: "CLIENT_GRANT" }], [{ kind: "SCOPE", leaked: false }], ["CROSS_SCOPE_LEAKAGE"]),
+  caseDef("S05B-CLIENT-GRANT-REVOKE", "DOSSIER", "Revoked client grant cannot resolve", [{ kind: "CREATE_SOURCE" }, { kind: "APPROVE_SOURCE" }, { kind: "CREATE_RULE" }, { kind: "APPROVE_RULE" }, { kind: "RECORD_FACT", factKey: "jurisdiction", value: "NG" }, { kind: "RECORD_FACT", factKey: "event_dates", value: "2026-12-01/2026-12-02" }, { kind: "EVALUATE" }, { kind: "DOSSIER" }, { kind: "CLIENT_GRANT_REVOKE" }], [{ kind: "COMMAND_DENIAL", code: "FORBIDDEN", didDataChange: false }], ["AUTHORITY_ESCALATION"]),
+  caseDef("S05B-CHECKPOINT-PROJECTION-NO-DISPATCH", "CHECKPOINT", "Checkpoint projection never dispatches", [{ kind: "CHECKPOINTS" }], [{ kind: "RECORD_COUNT", collection: "riskCheckpointInstances", min: 1 }, { kind: "EXTERNAL_EFFECT_COUNT", effect: "checkpoint.dispatch", count: 0 }], ["SILENT_DISPATCH"]),
+  caseDef("S05B-INCIDENT-STRUCTURED-EVIDENCE", "INCIDENT", "Structured fact and claim entries", [{ kind: "INCIDENT" }, { kind: "INCIDENT_ENTRIES" }], [{ kind: "CLASSIFICATION", classification: "OBSERVED_FACT" }, { kind: "CLASSIFICATION", classification: "REPORTED_CLAIM" }], ["FALSE_SUCCESS"]),
+  caseDef("S05B-LEARNING-NO-AUTO-MUTATION", "INCIDENT", "Learning approval does not mutate the target", [{ kind: "INCIDENT" }, { kind: "LEARNING" }, { kind: "LEARNING_DECIDE" }], [{ kind: "STATE", state: "APPROVED" }, { kind: "RECORD_COUNT", collection: "riskRuleEditions", eq: 0 }], ["FALSE_SUCCESS"]),
+  caseDef("S05B-SOURCE-MAKER-CHECKER", "SOURCE", "Author cannot approve a source", [{ kind: "CREATE_SOURCE" }, { kind: "SOURCE_SELF_APPROVE" }], [{ kind: "COMMAND_DENIAL", code: "FORBIDDEN", didDataChange: false }], ["AUTHORITY_ESCALATION"]),
 ];
 
 export function s05bEvaluationCorpusHash(): string {
@@ -72,7 +82,7 @@ export function s05bEvaluationCorpusHash(): string {
 }
 
 export function validateS05BEvaluationCorpus(): void {
-  if (S05B_EVALUATION_CASES.length < 1) throw new Error("s05b-eval-v3 requires an honest non-empty corpus");
+  if (S05B_EVALUATION_CASES.length < 1) throw new Error("s05b-eval-v4 requires an honest non-empty corpus");
   const signatures = new Set<string>();
   for (const item of S05B_EVALUATION_CASES) {
     S05BEvaluationCaseDefinitionSchema.parse(item);

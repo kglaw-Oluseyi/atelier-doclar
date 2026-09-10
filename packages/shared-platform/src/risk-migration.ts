@@ -9,6 +9,10 @@ export const EOS_S05B_MIGRATION_ID = "EOS-S05B-PROTECTION-V1" as const;
 export const EOS_S05B_MIGRATION_CHECKSUM = createHash("sha256")
   .update(`${EOS_S05B_MIGRATION_ID}:additive-risk-protection-collections:synthetic-checkpoint-templates`)
   .digest("hex");
+export const EOS_S05B_PROTECTION_V3_ID = "EOS-S05B-PROTECTION-V3" as const;
+export const EOS_S05B_PROTECTION_V3_CHECKSUM = createHash("sha256")
+  .update(`${EOS_S05B_PROTECTION_V3_ID}:working-edition-publication-separation:backfill-current-publications`)
+  .digest("hex");
 
 export type S05BMigrationResult = {
   status: "APPLIED" | "REPLAYED" | "FAILED";
@@ -31,11 +35,7 @@ export function migrateEosS05B(snapshot: PlatformSnapshot, now = "2026-09-10T09:
   }
   const existing = original.s05bMigrationReceipts.find((item) => item.migrationId === EOS_S05B_MIGRATION_ID && item.status === "APPLIED");
   if (existing) {
-    return {
-      status: "REPLAYED",
-      snapshot: original,
-      receipt: existing,
-    };
+    return migrateEosS05BPublicationModel(original, now, { status: "REPLAYED", receipt: existing });
   }
   const snap = structuredClone(original);
   const orgId = snap.organisations[0]?.id;
@@ -78,7 +78,76 @@ export function migrateEosS05B(snapshot: PlatformSnapshot, now = "2026-09-10T09:
   });
   snap.s05bMigrationReceipts.push(receipt);
   validateS05BPersistedCollections(snap);
-  return { status: "APPLIED", snapshot: snap, receipt };
+  return migrateEosS05BPublicationModel(snap, now, { status: "APPLIED", receipt });
+}
+
+export function migrateEosS05BPublicationModel(
+  snapshot: PlatformSnapshot,
+  now = "2026-09-10T09:00:00.000Z",
+  prior?: { status: "APPLIED" | "REPLAYED"; receipt?: S05BMigrationReceipt },
+): S05BMigrationResult {
+  const snap = structuredClone(snapshot);
+  const existing = snap.s05bMigrationReceipts.find((item) => item.migrationId === EOS_S05B_PROTECTION_V3_ID && item.status === "APPLIED");
+  if (existing) {
+    return { status: prior?.status ?? "REPLAYED", snapshot: snap, receipt: prior?.receipt ?? existing };
+  }
+  let createdPublications = 0;
+  for (const edition of snap.riskDossierEditions) {
+    if (!edition.authorPersonId) edition.authorPersonId = edition.submittedByPersonId;
+    if (!edition.versionNumber) {
+      const peers = snap.riskDossierEditions.filter((item) => item.eventId === edition.eventId);
+      edition.versionNumber = peers.findIndex((item) => item.id === edition.id) + 1;
+    }
+    if (edition.status === "PUBLISHED" && !edition.approvedHash) edition.approvedHash = edition.contentHash;
+    const hasPublication = snap.riskDossierPublications.some(
+      (item) => item.dossierId === edition.id || item.editionId === edition.id,
+    );
+    if (edition.status === "PUBLISHED" && !hasPublication) {
+      const publicationNumber = snap.riskDossierPublications.filter((item) => item.eventId === edition.eventId).length + 1;
+      snap.riskDossierPublications.push({
+        id: deterministicUuid(`publication-${edition.id}`),
+        organisationId: edition.organisationId,
+        eventId: edition.eventId,
+        dossierId: edition.id,
+        editionId: edition.id,
+        contentHash: edition.contentHash,
+        approvedHash: edition.contentHash,
+        publicationNumber,
+        status: edition.current ? "CURRENT" : "SUPERSEDED",
+        publishedAt: edition.publishedAt ?? edition.updatedAt,
+        publishedByPersonId: edition.publishedByPersonId ?? edition.approvedByPersonId ?? edition.submittedByPersonId,
+        current: Boolean(edition.current),
+        dispatched: false,
+        clientMessages: [],
+        schemaVersion: edition.schemaVersion,
+        version: 1,
+        createdAt: now,
+        updatedAt: now,
+      });
+      createdPublications += 1;
+    }
+  }
+  for (const publication of snap.riskDossierPublications) {
+    if (!publication.status) publication.status = publication.current ? "CURRENT" : "SUPERSEDED";
+    if (!publication.contentHash) publication.contentHash = publication.approvedHash;
+    if (!publication.editionId) publication.editionId = publication.dossierId;
+  }
+  const receipt = S05BMigrationReceiptSchema.parse({
+    id: deterministicUuid("receipt-v3"),
+    organisationId: snap.organisations[0]?.id,
+    migrationId: EOS_S05B_PROTECTION_V3_ID,
+    checksum: EOS_S05B_PROTECTION_V3_CHECKSUM,
+    status: "APPLIED",
+    createdRecords: { riskDossierPublications: createdPublications },
+    schemaVersion: SCHEMA_VERSION,
+    version: 1,
+    createdAt: now,
+    updatedAt: now,
+    nonProductionFixture: true,
+  });
+  snap.s05bMigrationReceipts.push(receipt);
+  validateS05BPersistedCollections(snap);
+  return { status: prior?.status ?? "APPLIED", snapshot: snap, receipt: prior?.receipt ?? receipt };
 }
 
 export function s05bMigrationIdentityHash(): string {

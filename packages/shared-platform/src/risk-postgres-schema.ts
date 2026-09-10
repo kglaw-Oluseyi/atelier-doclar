@@ -31,6 +31,7 @@ export const RISK_SQL_TABLES = [
   { table: "risk_dossier_editions", collection: "riskDossierEditions" },
   { table: "risk_dossier_publications", collection: "riskDossierPublications" },
   { table: "risk_dossier_exports", collection: "riskDossierExports" },
+  { table: "risk_dossier_access_grants", collection: "riskDossierAccessGrants" },
   { table: "risk_evaluation_runs", collection: "riskEvaluationRuns" },
   { table: "risk_evaluation_case_results", collection: "riskEvaluationCaseResults" },
   { table: "risk_evaluation_run_leases", collection: "riskEvaluationRunLeases" },

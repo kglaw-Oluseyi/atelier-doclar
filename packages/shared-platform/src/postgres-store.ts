@@ -20,7 +20,7 @@ import { overlayRiskState } from "./risk-store.js";
 import { S05B_CANONICAL_COLLECTIONS } from "./risk-schemas.js";
 import type { PgQueryable, PgQueryResult, PgTransactor } from "./postgres-schema.js";
 
-const S05B_PERSISTED_COLLECTIONS = new Set<string>([...S05B_CANONICAL_COLLECTIONS, "riskDossierPublications", "riskDossierExports"]);
+const S05B_PERSISTED_COLLECTIONS = new Set<string>([...S05B_CANONICAL_COLLECTIONS, "riskDossierPublications", "riskDossierExports", "riskDossierAccessGrants"]);
 
 type Collection = keyof Omit<PlatformSnapshot, "audit" | "idempotency">;
 
@@ -274,6 +274,7 @@ const COLLECTIONS: Collection[] = [
   "riskDossierEditions",
   "riskDossierPublications",
   "riskDossierExports",
+  "riskDossierAccessGrants",
   "riskEvaluationRuns",
   "riskEvaluationCaseResults",
   "riskEvaluationRunLeases",
