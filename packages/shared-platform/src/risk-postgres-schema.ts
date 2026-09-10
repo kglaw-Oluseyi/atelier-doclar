@@ -1,4 +1,5 @@
 export const EOS_S05B_NORMALIZED_MIGRATION_ID = "004_risk_protection_normalized" as const;
+export const EOS_S05B_NORMALIZED_MIGRATION_V3_ID = "005_risk_dossier_access_grants" as const;
 export const EOS_S05B_PROTECTION_V2_ID = "EOS-S05B-PROTECTION-V2" as const;
 
 export const RISK_SQL_TABLES = [
@@ -75,8 +76,10 @@ CREATE INDEX IF NOT EXISTS ${name}_event_idx ON ${name} (organisation_id, event_
 `;
 }
 
+const RISK_SQL_TABLES_004 = RISK_SQL_TABLES.filter((item) => item.table !== "risk_dossier_access_grants");
+
 export const RISK_PROTECTION_POSTGRES_SCHEMA = `
-${RISK_SQL_TABLES.map((item) => aggregateTable(item.table)).join("\n")}
+${RISK_SQL_TABLES_004.map((item) => aggregateTable(item.table)).join("\n")}
 
 CREATE UNIQUE INDEX IF NOT EXISTS risk_policy_editions_one_current
   ON risk_policy_editions (parent_id)
@@ -101,3 +104,5 @@ CREATE TABLE IF NOT EXISTS risk_idempotency_receipts (
   PRIMARY KEY (organisation_id, action, idempotency_key)
 );
 `;
+
+export const RISK_PROTECTION_POSTGRES_SCHEMA_V3 = aggregateTable("risk_dossier_access_grants");

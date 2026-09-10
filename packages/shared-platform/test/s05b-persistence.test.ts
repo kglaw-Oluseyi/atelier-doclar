@@ -4,7 +4,8 @@ import { SCHEMA_VERSION } from "../src/constants.js";
 import { MemoryPlatformPg, PostgresPlatformStore } from "../src/postgres-store.js";
 import { PostgresRiskProtectionRepository, PostgresRiskProtectionStore } from "../src/postgres-risk-store.js";
 import { backfillNormalizedRiskTables } from "../src/risk-normalized-migration.js";
-import { EOS_S05B_PROTECTION_V2_ID } from "../src/risk-postgres-schema.js";
+import { checksumFor, runPlatformMigrations } from "../src/migrations.js";
+import { EOS_S05B_NORMALIZED_MIGRATION_V3_ID, EOS_S05B_PROTECTION_V2_ID, RISK_PROTECTION_POSTGRES_SCHEMA } from "../src/risk-postgres-schema.js";
 import { createContinuityPlanOnSnap } from "../src/risk-continuity.js";
 import { applySyntheticSeedIfNeeded } from "../src/synthetic-seed.js";
 import { emptySnapshot } from "../src/store.js";
@@ -16,6 +17,7 @@ describe("EOS-S05B normalized persistence", () => {
     await PostgresPlatformStore.migrate(pg);
     const applied = pg.migrations.map((item) => item.id);
     assert.ok(applied.includes("004_risk_protection_normalized"));
+    assert.ok(applied.includes(EOS_S05B_NORMALIZED_MIGRATION_V3_ID));
     const receipts = pg.riskRows.filter((row) => row.table === "risk_migration_receipts");
     assert.equal(receipts.length, 1);
     assert.equal((receipts[0]?.body as { migrationId?: string }).migrationId, EOS_S05B_PROTECTION_V2_ID);
@@ -321,5 +323,30 @@ describe("EOS-S05B normalized persistence", () => {
       store.snapshot().riskEvaluationCaseResults.some((item) => item.id === "00000000-0000-4000-8000-000000000509"),
       false,
     );
+  });
+
+  it("keeps the applied 004 checksum and applies 005 for dossier access grants", async () => {
+    const first = new MemoryPlatformPg();
+    await runPlatformMigrations(first);
+    const checksum004 = first.migrations.find((item) => item.id === "004_risk_protection_normalized")?.checksum;
+    assert.equal(checksum004, checksumFor(RISK_PROTECTION_POSTGRES_SCHEMA));
+    assert.ok(first.migrations.some((item) => item.id === EOS_S05B_NORMALIZED_MIGRATION_V3_ID));
+
+    const live = new MemoryPlatformPg();
+    live.migrations.push(
+      ...first.migrations.filter((item) => item.id !== EOS_S05B_NORMALIZED_MIGRATION_V3_ID).map((item) => ({ ...item })),
+    );
+    const report = await runPlatformMigrations(live);
+    assert.equal(report.status, "APPLIED");
+    assert.ok(report.applied.includes(EOS_S05B_NORMALIZED_MIGRATION_V3_ID));
+    assert.equal(live.migrations.find((item) => item.id === "004_risk_protection_normalized")?.checksum, checksum004);
+
+    const mismatched = new MemoryPlatformPg();
+    mismatched.migrations.push({
+      id: "004_risk_protection_normalized",
+      applied_at: "2026-09-10T09:00:00.000Z",
+      checksum: "0".repeat(64),
+    });
+    await assert.rejects(() => runPlatformMigrations(mismatched), /004_risk_protection_normalized checksum mismatch/);
   });
 });

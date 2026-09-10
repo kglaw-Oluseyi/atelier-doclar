@@ -949,7 +949,12 @@ export { MemoryRiskProtectionStore, MemoryRiskProtectionRepository } from "./mem
 export { PostgresRiskProtectionStore, PostgresRiskProtectionRepository } from "./postgres-risk-store.js";
 export { writeRiskSnapshotDelta, governingEditionFingerprint } from "./risk-repository.js";
 export { backfillNormalizedRiskTables, EOS_S05B_V2_MIGRATION_CHECKSUM } from "./risk-normalized-migration.js";
-export { EOS_S05B_PROTECTION_V2_ID, EOS_S05B_NORMALIZED_MIGRATION_ID, RISK_SQL_TABLES } from "./risk-postgres-schema.js";
+export {
+  EOS_S05B_PROTECTION_V2_ID,
+  EOS_S05B_NORMALIZED_MIGRATION_ID,
+  EOS_S05B_NORMALIZED_MIGRATION_V3_ID,
+  RISK_SQL_TABLES,
+} from "./risk-postgres-schema.js";
 export {
   POLICY_EVIDENCE_TRANSITIONS,
   APPLICABILITY_TRANSITIONS,

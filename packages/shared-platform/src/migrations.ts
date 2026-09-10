@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { PLATFORM_POSTGRES_SCHEMA, type PgQueryable, type PgTransactor } from "./postgres-schema.js";
-import { RISK_PROTECTION_POSTGRES_SCHEMA } from "./risk-postgres-schema.js";
+import { RISK_PROTECTION_POSTGRES_SCHEMA, RISK_PROTECTION_POSTGRES_SCHEMA_V3 } from "./risk-postgres-schema.js";
 
 export const PLATFORM_MIGRATION_TABLE = `
 CREATE TABLE IF NOT EXISTS platform_schema_migrations (
@@ -52,6 +52,10 @@ export const PLATFORM_MIGRATIONS: readonly PlatformMigration[] = [
   {
     id: "004_risk_protection_normalized",
     sql: RISK_PROTECTION_POSTGRES_SCHEMA,
+  },
+  {
+    id: "005_risk_dossier_access_grants",
+    sql: RISK_PROTECTION_POSTGRES_SCHEMA_V3,
   },
 ];
 
