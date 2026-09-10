@@ -1,10 +1,10 @@
 # EOS-S05A Build Ledger
 
 **Slice ID:** `EOS-S05A`
-**Prompt Control ID:** `MD-PR-S051` (final decision-result focus of MD-PR-S049; prior `MD-PR-S049` / `MD-PR-S047` / `MD-PR-S045` / `MD-PR-S043` / `MD-PR-S041`)
-**Starting baseline for MD-PR-S051:** `edb0a019c4dc104678924f0e27f4796a574456ba`
+**Prompt Control ID:** `MD-PR-S053` (independent acceptance; prior `MD-PR-S051` / `MD-PR-S049` / `MD-PR-S047` / `MD-PR-S045` / `MD-PR-S043` / `MD-PR-S041`)
+**Starting baseline for MD-PR-S053:** `5f2366ca9639cc6ab422e68bffe069d1a1a96a0c`
 **Application/test SHA:** `50322fa5fdf7b46437dc9d62579e2e2ad918e762`
-**Status:** `IMPLEMENTED / NOT ACCEPTED`
+**Status:** `ACCEPTED`
 **Production:** unauthorised
 **Catalogue accepted-slice count:** remains 5
 **Implemented range:** `EEC-00`–`EEC-44` implemented; `EEC-45` not Cursor acceptance
@@ -283,4 +283,17 @@ Maker/checker denial now leaves `document.activeElement` on `#operational-state-
 | Live focused S051 | PASS — 3/3 against `https://event-os-production-bc8d.up.railway.app` (denial heading focused; F5 does not refocus; second denial focuses again) |
 | Control Tower | not deployed |
 | Claude / EOS-S06 / acceptance | not run / not started / not accepted |
+| `productionAuthorised` | false, unchanged |
+
+## MD-PR-S053 independent acceptance
+
+EOS-S05A is ACCEPTED under `MD-PR-S053`. Not a catalogue slice. Catalogue accepted-slice count remains 5. Application code was not changed. Event OS and Control Tower were not redeployed.
+
+| Field | Value |
+|-------|-------|
+| Acceptance record | `docs/control/EOS_S05A_ACCEPTANCE.md` |
+| Accepted implementation SHA | `50322fa5fdf7b46437dc9d62579e2e2ad918e762` |
+| Live deployment | `4ab04e5e-0e53-48b2-8d69-fa431b3bcb5a` already at the accepted SHA |
+| Evaluation | `s05a-eval-v6` 46/0; hash `4ee2bac7104bb06330ebb95e08e9600878795f902a05302b5e500571e5c9c454`; run `1ecbeec4-b343-4b1a-9fa4-be9a5eaa822a` |
+| Claude / EOS-S05B / EOS-S06 | verified READY under `MD-PR-S052` / not authorised / not authorised |
 | `productionAuthorised` | false, unchanged |

@@ -332,3 +332,15 @@ Milestone 4 is authorised on the Milestone 1–3 contracts. Historic S5-01–S5-
 | Claude-in-Chrome | Not run. Ready for one-action Claude verification. |
 | EOS-S06 / `MD-PR-S036` | RETAINED. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. |
 | `productionAuthorised` | RETAINED false. Not changed. |
+
+## Addendum — 2026-09-10 EOS-S05A independent acceptance (`MD-PR-S053`)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| EOS-S05A IMPLEMENTED / NOT ACCEPTED | SUPERSEDED. Current programme status is `ACCEPTED` under `MD-PR-S053`. Historic not-accepted rows remain dated history. |
+| Catalogue accepted-slice count | RETAINED at 5. EOS-S05A is not a catalogue-numbered slice. |
+| Evaluation corpus `s05a-eval-v6` / 46 cases | RETAINED. Current PASSED run remains current. |
+| EOS-S05B | PLANNING DIRECTION ONLY. Not implementation authority. Not started. |
+| Control Tower | Compatibility-only. Not a deploy target for this documentation-only record. |
+| EOS-S06 / `MD-PR-S036` | RETAINED. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. |
+| `productionAuthorised` | RETAINED false. Not changed. |

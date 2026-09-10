@@ -1,16 +1,15 @@
 # EOS-S05A Implementation Record
 
 **Slice ID:** `EOS-S05A`
-**Prompt Control ID:** `MD-PR-S045` (truthful-decision remediation; prior `MD-PR-S043` / `MD-PR-S041`)
+**Prompt Control ID:** `MD-PR-S053` (acceptance; implementation evidence remains historical)
 **Title:** Discovery, Investment & Executive Event Command
-**Status:** `IMPLEMENTED / NOT ACCEPTED`
-**Starting baseline for MD-PR-S045:** `a795947bd2c3bd2ff16cccaa1fbe26fd5cd6d77d`
-**Application/test SHA:** `e63313de72018840075b853841da97d08ab13a42`
-**Live Event OS deploy:** `495c5174-d3c2-4986-8ed5-162fb6a256db`
+**Status:** `ACCEPTED` — see `docs/control/EOS_S05A_ACCEPTANCE.md`
+**Accepted implementation SHA:** `50322fa5fdf7b46437dc9d62579e2e2ad918e762`
+**Live Event OS deploy:** `4ab04e5e-0e53-48b2-8d69-fa431b3bcb5a` (already at the accepted SHA; not redeployed)
 **Catalogue slice:** no — accepted-slice count remains 5
 **Production:** unauthorised
 
-This record tracks implementation against the ratified corpus. It is not an acceptance record.
+This record remains implementation evidence. Independent acceptance is `docs/control/EOS_S05A_ACCEPTANCE.md`. Historical sections below that say a given run is not acceptance remain dated history.
 
 ## Authority range
 
@@ -18,10 +17,10 @@ This record tracks implementation against the ratified corpus. It is not an acce
 |-------|--------|
 | Ratified specification (00–03, 02A, 05, Volumes 04A–04D) | RATIFIED |
 | `EEC-00`–`EEC-10` | IMPLEMENTED |
-| `EEC-11`–`EEC-44` | COMPLETED under `MD-PR-S040`; not accepted |
-| `EEC-45` | Outside Cursor acceptance authority |
+| `EEC-11`–`EEC-44` | ACCEPTED with the slice under `MD-PR-S053` |
+| `EEC-45` | Satisfied by `MD-PR-S053` |
 | EOS-S06 | `NOT_STARTED / NOT_AUTHORISED` |
-| Independent acceptance | NOT GRANTED |
+| Independent acceptance | GRANTED `2026-09-10` under `MD-PR-S053` at SHA `50322fa5fdf7b46437dc9d62579e2e2ad918e762` |
 
 ## Current disposition
 

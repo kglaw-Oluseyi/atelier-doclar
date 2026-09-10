@@ -328,3 +328,13 @@ This addendum does not rewrite the B0 row set or earlier addenda. Catalogue acce
 |-------|------|--------------------------|-------|
 | MD-PR-S051 prompt control | `MD-PR-S051` | CONTROLLING IMPLEMENTATION AUTHORITY for this focus correction | Remediation of the S049 maker/checker denial `activeElement === body` finding. Does not accept EOS-S05A. |
 | EOS-S05A build ledger | `docs/control/EOS_S05A_BUILD_LEDGER.md` | IMPLEMENTATION LEDGER | S051 local and live focus evidence. Corpus unchanged. |
+
+## Addendum — 2026-09-10 EOS-S05A independent acceptance (`MD-PR-S053`)
+
+This addendum does not rewrite the B0 row set or earlier addenda. Catalogue accepted-slice count remains 5. EOS-S06 remains unauthorised. EOS-S05B remains planning direction only. Production remains unauthorised. Event OS and Control Tower were not redeployed.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| EOS-S05A acceptance record | `docs/control/EOS_S05A_ACCEPTANCE.md` | CANONICAL ACCEPTANCE RECORD | Independent AI CTO acceptance under `MD-PR-S053`. Not a catalogue slice. Status `ACCEPTED` at SHA `50322fa5fdf7b46437dc9d62579e2e2ad918e762`. |
+| EOS-S05A implementation record | `docs/control/EOS_S05A_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | Historical implementation; acceptance is the S053 record. |
+| EOS-S05A build ledger | `docs/control/EOS_S05A_BUILD_LEDGER.md` | IMPLEMENTATION LEDGER | S053 acceptance stamp. |

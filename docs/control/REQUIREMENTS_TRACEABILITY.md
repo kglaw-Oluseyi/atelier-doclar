@@ -353,7 +353,7 @@
 
 ## EOS-S05A
 
-**Prompt Control ID:** `MD-PR-S037`
+**Prompt Control ID:** `MD-PR-S053` (acceptance; implementation lineage `MD-PR-S037`–`MD-PR-S051`)
 **Slice ID:** `EOS-S05A` (not a programme-catalogue accepted slice)
 
 | Requirement | Record |
@@ -361,14 +361,15 @@
 | Title | Discovery, Investment & Executive Event Command |
 | Authority | George Lawson ratification overlay `docs/control/EOS_S05A_RATIFICATION.md` |
 | Canonical corpus | `docs/control/eos-s05a/` — documents 00, 01, 02, 02A, 03, 04A–04D, 05 and the consolidated v2.0 Word pack |
-| Controlling implementation volume for this prompt | Volume 04A / `EEC-00`–`EEC-10` |
-| Later units | `EEC-11`–`EEC-45` ratified but unreleased |
+| Controlling implementation volume for this prompt | Whole-slice implementation already complete; this prompt is documentation-only acceptance |
+| Later units | `EEC-11`–`EEC-44` implemented and accepted with the slice; `EEC-45` satisfied by `MD-PR-S053` |
 | Implementation ledger | `docs/control/EOS_S05A_BUILD_LEDGER.md` |
 | Implementation record | `docs/control/EOS_S05A_IMPLEMENTATION.md` |
 | ADR | `docs/control/ADR_EOS_S05A_EXECUTIVE_EVENT_COMMAND.md` |
-| Production / Railway / real operations | Event OS deploy after Milestone A application work; Control Tower not redeployed; `productionAuthorised` remains false |
-| Status | RATIFIED / FOUNDATION MILESTONE A IMPLEMENTED / NOT ACCEPTED; catalogue accepted-slice count remains 5 |
-| Successor | EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`; `MD-PR-S036` is not consumed |
+| Production / Railway / real operations | NO — documentation-only acceptance; Event OS and Control Tower not redeployed; `productionAuthorised` remains false |
+| Status | ACCEPTED under `MD-PR-S053` at SHA `50322fa5fdf7b46437dc9d62579e2e2ad918e762`; not a catalogue slice; catalogue accepted-slice count remains 5 |
+| Acceptance record | `docs/control/EOS_S05A_ACCEPTANCE.md` |
+| Successor | EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`; `MD-PR-S036` is not consumed; EOS-S05B is planning direction only |
 
 ## EOS-S04A
 

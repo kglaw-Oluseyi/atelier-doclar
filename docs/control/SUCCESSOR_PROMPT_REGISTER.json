@@ -298,6 +298,14 @@
       "product": "EVENT_OS",
       "title": "EOS-S05A CEO Ratification and Foundation Milestone A Authority",
       "authorising_instruction": "CEO ratification of the EOS-S05A Executive Event Command corpus; canonicalise documents 00-03, 02A, 04A-04D and 05; implement EEC-00-EEC-10 only; do not start EEC-11-EEC-45 or EOS-S06, consume MD-PR-S036, invent catalogue acceptance, redeploy Control Tower, or authorise production"
+    },
+    {
+      "prompt_control_id": "MD-PR-S053",
+      "native_id": "S05A-ACCEPT",
+      "slice_id": "EOS-S05A",
+      "product": "EVENT_OS",
+      "title": "EOS-S05A Independent Acceptance Record",
+      "authorising_instruction": "Record independent AI CTO acceptance of EOS-S05A Executive Event Command at SHA 50322fa5fdf7b46437dc9d62579e2e2ad918e762; documentation only; do not change application code, redeploy Event OS or Control Tower, invent catalogue acceptance, start EOS-S06 or EOS-S05B, consume MD-PR-S036, or authorise production"
     }
   ]
 }
