@@ -262,4 +262,64 @@ describe("EOS-S05B normalized persistence", () => {
     assert.equal(pg.riskIdempotency.length, 1);
     assert.equal(pg.audit.filter((item) => (item as { action?: string }).action === "risk.policy.create").length, 1);
   });
+
+  it("hydrates a prior s05b-eval-v2 TEXT observation without failing the store", async () => {
+    const pg = new MemoryPlatformPg();
+    await PostgresPlatformStore.migrate(pg);
+    const id = "00000000-0000-4000-8000-000000000507";
+    pg.riskRows.push({
+      table: "risk_evaluation_case_results",
+      id,
+      organisation_id: people.orgMaison,
+      event_id: people.eventAlphaOne,
+      version: 1,
+      current: null,
+      status: "PASSED",
+      parent_id: "00000000-0000-4000-8000-000000000508",
+      content_hash: null,
+      submitted_by_person_id: people.personCeo,
+      approved_by_person_id: null,
+      body: {
+        id,
+        organisationId: people.orgMaison,
+        runId: "00000000-0000-4000-8000-000000000508",
+        caseId: "S05B-BUDGET-03",
+        family: "BUDGET",
+        verdict: "PASSED",
+        observations: [{ kind: "TEXT", code: "REPLAY_SAME_IDS", value: "identical budget request replays" }],
+        diagnosticSummary: "legacy v2 sentence observation",
+        zeroToleranceCategories: ["FALSE_SUCCESS"],
+        schemaVersion: SCHEMA_VERSION,
+        version: 1,
+        createdAt: "2026-09-10T09:00:00.000Z",
+        updatedAt: "2026-09-10T09:00:00.000Z",
+      },
+      created_at: "2026-09-10T09:00:00.000Z",
+      updated_at: "2026-09-10T09:00:00.000Z",
+    });
+    pg.riskRows.push({
+      table: "risk_evaluation_case_results",
+      id: "00000000-0000-4000-8000-000000000509",
+      organisation_id: people.orgMaison,
+      event_id: null,
+      version: 1,
+      current: null,
+      status: null,
+      parent_id: null,
+      content_hash: null,
+      submitted_by_person_id: null,
+      approved_by_person_id: null,
+      body: { id: "not-a-uuid", observations: "broken" },
+      created_at: "2026-09-10T09:00:00.000Z",
+      updated_at: "2026-09-10T09:00:00.000Z",
+    });
+    const store = await PostgresPlatformStore.open(pg);
+    const row = store.snapshot().riskEvaluationCaseResults.find((item) => item.id === id);
+    assert.ok(row);
+    assert.equal(row.observations[0]?.kind, "TEXT");
+    assert.equal(
+      store.snapshot().riskEvaluationCaseResults.some((item) => item.id === "00000000-0000-4000-8000-000000000509"),
+      false,
+    );
+  });
 });

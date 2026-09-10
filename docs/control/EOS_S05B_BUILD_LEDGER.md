@@ -88,6 +88,7 @@ No new S05B technical-debt item is manufactured. Inherited carried debt remains:
 | Playwright durable-truth Budget governing | Fixture/product defect | Alpha One had no current APPROVED/PUBLISHED Budget edition, so the UI showed `Governing none unchanged: false` | Idempotent `seedAlphaOneGoverningBudget`; prefer event-scoped governing; expose version/hash on the form | journey passed |
 | Playwright durable-truth stale tab | Test/product defect | Empty hidden version/hash skipped the stale check; later the conflict banner used “changed elsewhere” / “Not applied” and the regex was strict-mode dual | Seed governing; submit current version/hash; assert the conflict heading | journey passed |
 | Playwright durable-truth Dossier link | Test defect | `Dossier` also matched “Open published client dossier” | `getByRole(..., { exact: true })` | journeys passed |
+| Live Event OS ready after S056 deploy | Implementation defect | Hydrate validated historic `s05b-eval-v2` case-result observations with the v3 strict `{kind,passed,detail}` schema and refused boot | Accept historical observation extras; skip rows that still cannot parse; do not delete them | redeploy ready |
 
 ## Local gates (MD-PR-S056)
 

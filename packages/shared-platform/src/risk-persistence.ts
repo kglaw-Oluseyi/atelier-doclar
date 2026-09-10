@@ -79,6 +79,14 @@ const S05B_COLLECTION_SCHEMAS = {
 
 export function validateS05BPersistedCollections(snapshot: PlatformSnapshot): void {
   for (const collection of S05B_STORE_COLLECTIONS) {
+    if (collection === "riskEvaluationCaseResults") {
+      const kept = (snapshot.riskEvaluationCaseResults ?? []).flatMap((row) => {
+        const parsed = RiskEvaluationCaseResultSchema.safeParse(row);
+        return parsed.success ? [parsed.data] : [];
+      });
+      snapshot.riskEvaluationCaseResults = kept;
+      continue;
+    }
     const parsed = S05B_COLLECTION_SCHEMAS[collection].safeParse(snapshot[collection] ?? []);
     if (!parsed.success) {
       throw new PlatformError("VALIDATION_FAILED", `invalid ${collection}`, {

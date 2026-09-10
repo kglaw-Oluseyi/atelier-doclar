@@ -821,12 +821,12 @@ export const RiskEvaluationCaseResultSchema = z
         z
           .object({
             kind: NonEmptySchema.max(80),
-            passed: z.boolean(),
-            detail: z.string().max(400),
+            passed: z.boolean().optional().default(false),
+            detail: z.string().max(800).optional().default(""),
           })
-          .strict(),
+          .passthrough(),
       )
-      .max(32),
+      .max(64),
     diagnosticSummary: NonEmptySchema.max(800),
     zeroToleranceCategories: z.array(NonEmptySchema.max(80)).max(8),
     ...versioned,
