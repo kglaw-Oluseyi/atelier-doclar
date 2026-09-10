@@ -14,6 +14,8 @@ import { applyEosS05ToSnapshot } from "./venue-migration.js";
 import { applyEosS05ObjectsToSnapshot } from "./spatial-migration.js";
 import { applyEosS05AssuranceToSnapshot } from "./layout-assurance-migration.js";
 import { migrateEosS05A, migrateEosS05ADisclosureV5, migrateEosS05AIntelligence, migrateEosS05AIntelligenceV2, migrateEosS05AIntelligenceV3 } from "./eec-migration.js";
+import { migrateEosS05B } from "./risk-migration.js";
+import { PERMISSION_KEYS } from "./constants.js";
 import { migrateEosS05AEvaluationV4 } from "./eec-evaluation-migration.js";
 import { loadNonProductionFixtures } from "./bootstrap.js";
 import { permissionIdForKey, permissionsForRole, roleKeyForId, seededPermissions, seededRoles } from "./catalog.js";
@@ -155,6 +157,15 @@ function applyS05ALayer(store: PlatformStore, now = "2026-09-08T22:00:00.000Z"):
   ensureEosS05ACollections(store, now);
 }
 
+export function ensureEosS05BCollections(store: PlatformStore, now = "2026-09-10T09:00:00.000Z"): void {
+  const result = migrateEosS05B(store.snapshot(), now);
+  if (result.status === "APPLIED") store.replace(result.snapshot);
+}
+
+function applyS05BLayer(store: PlatformStore, now = "2026-09-10T09:00:00.000Z"): void {
+  ensureEosS05BCollections(store, now);
+}
+
 /** Replay-safe: insert missing catalogue rows only. Never rewrite accepted permission bodies. */
 export function ensureMissingCatalogueRecords(store: PlatformStore): void {
   const snap = store.snapshot();
@@ -192,6 +203,26 @@ export function ensureMissingCatalogueRecords(store: PlatformStore): void {
       changed = true;
     }
   }
+  const s05bKeys = PERMISSION_KEYS.filter((key) => key.startsWith("risk."));
+  for (const role of snap.roles) {
+    const key = roleKeyForId(role.id);
+    if (!key) continue;
+    const allowed = new Set(permissionsForRole(key));
+    for (const permissionKey of s05bKeys) {
+      if (!allowed.has(permissionKey)) continue;
+      const permissionId = permissionIdForKey(permissionKey);
+      const grantKey = `${role.id}:${permissionId}`;
+      if (existingGrants.has(grantKey)) continue;
+      snap.rolePermissions.push({
+        roleId: role.id,
+        permissionId,
+        effect: "ALLOW",
+        createdAt: role.updatedAt,
+      });
+      existingGrants.add(grantKey);
+      changed = true;
+    }
+  }
   if (changed) store.replace(snap);
 }
 
@@ -208,6 +239,7 @@ export function applySyntheticSnapshot(store: PlatformStore, options: PlatformSe
   applyS04FLayer(store);
   applyS05Layer(store);
   applyS05ALayer(store);
+  applyS05BLayer(store);
   return service;
 }
 
@@ -227,6 +259,7 @@ export async function applySyntheticSeedIfNeeded(
     applyS04FLayer(store);
     applyS05Layer(store);
   applyS05ALayer(store);
+  applyS05BLayer(store);
     return {
       service,
       seed: {
@@ -250,6 +283,7 @@ export async function applySyntheticSeedIfNeeded(
   applyS04FLayer(store);
   applyS05Layer(store);
   applyS05ALayer(store);
+  applyS05BLayer(store);
   const durable = store as { flush?: () => Promise<void> };
   if (typeof durable.flush === "function") await durable.flush();
   const recordCount = countableRecords(store.snapshot());

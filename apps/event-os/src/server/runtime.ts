@@ -8,6 +8,7 @@ import {
   applySyntheticSeedIfNeeded,
   applySyntheticSnapshot,
   ensureEosS05ACollections,
+  ensureEosS05BCollections,
   type PgQueryable,
   type PlatformStore,
 } from "@maison-doclar/shared-platform";
@@ -97,6 +98,7 @@ async function postgresRuntime(): Promise<Runtime> {
     : { service: new PlatformService(store, options), seed: undefined };
   if (!fixturesAllowed()) {
     ensureEosS05ACollections(store);
+    ensureEosS05BCollections(store);
   }
   await store.flush();
   return {

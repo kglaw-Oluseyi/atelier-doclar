@@ -726,6 +726,44 @@ import {
 } from "./eec-s05a-completion.js";
 import { executeS05AEvaluationOnSnap, requestS05AEvaluationOnSnap } from "./eec-evaluation-runner.js";
 import { listEvaluationRunSummaries, projectEvaluationRun, s05aEvaluationReadinessFromSnap, s05aReadinessFromSnap } from "./eec-evaluation-projections.js";
+import { executeS05BEvaluationOnSnap } from "./risk-evaluation-runner.js";
+import { s05bEvaluationReadinessFromSnap } from "./risk-evaluation-projections.js";
+import { adapterStates, inactivePorts } from "./risk-ports.js";
+import {
+  approveSourceEditionOnSnap,
+  completeEvidenceUploadOnSnap,
+  createEvidenceDocumentOnSnap,
+  createPolicyEditionOnSnap,
+  createPolicyOnSnap,
+  createRuleEditionOnSnap,
+  createSourceEditionOnSnap,
+  decideResidualRiskOnSnap,
+  evaluateApplicabilityOnSnap,
+  recordFactEditionOnSnap,
+  reviewRuleEditionOnSnap,
+  submitResidualDecisionOnSnap,
+  verifyPolicyEditionOnSnap,
+} from "./risk-policy-operations.js";
+import { applyClauseEditionOnSnap, reviewClauseEditionOnSnap } from "./risk-clause-operations.js";
+import { assessVendorOnSnap, assignRosterOnSnap, decideVendorAssessmentOnSnap } from "./risk-vendor-assessment.js";
+import {
+  createContinuityPlanOnSnap,
+  decideContinuityPlanOnSnap,
+  evaluateEscalationsOnSnap,
+  generateCheckpointInstancesOnSnap,
+  proposeFallbackOnSnap,
+  recordCheckInOnSnap,
+  transitionFallbackOnSnap,
+} from "./risk-continuity.js";
+import { addIncidentNoteOnSnap, reportIncidentOnSnap, transitionIncidentOnSnap } from "./risk-incidents.js";
+import { projectRiskBudgetOnSnap } from "./risk-budget-projection.js";
+import {
+  assembleDossierOnSnap,
+  eventProtectionProjection,
+  organisationProtectionProjection,
+  protectionAudienceFromRole,
+  transitionDossierOnSnap,
+} from "./risk-projections.js";
 
 export interface ActorContext {
   personId: string;
@@ -6980,6 +7018,439 @@ export class PlatformService {
     return s05aReadinessFromSnap(snap, organisationId ?? snap.organisations[0]?.id ?? "");
   }
 
+  getS05BReadiness(organisationId?: string) {
+    const snap = this.store.snapshot();
+    const orgId = organisationId ?? snap.organisations[0]?.id ?? "";
+    return {
+      ...s05bEvaluationReadinessFromSnap(snap, orgId),
+      adapters: adapterStates(inactivePorts()),
+      productionAuthorised: false,
+    };
+  }
+
+  getS05BEvaluationReadiness(actor: ActorContext, organisationId: string) {
+    this.authorizeQuery(actor, "risk.audit.view", { organisationId });
+    return s05bEvaluationReadinessFromSnap(this.store.snapshot(), organisationId);
+  }
+
+  executeS05BEvaluation(actor: ActorContext, raw: unknown) {
+    const input = raw as { organisationId: string; reason?: string; idempotencyKey?: string };
+    return this.mutate(actor, {
+      permission: "risk.audit.view",
+      scope: { organisationId: input.organisationId },
+      action: "risk.evaluation.run",
+      resourceType: "risk_evaluation_run",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) =>
+        executeS05BEvaluationOnSnap(snap, {
+          organisationId: input.organisationId,
+          requestedByPersonId: actor.personId,
+          correlationId: actor.correlationId,
+          idempotencyKey: input.idempotencyKey ?? `s05b-eval-${actor.correlationId}`,
+          applicationSha: process.env.RAILWAY_GIT_COMMIT_SHA || process.env.EVENT_OS_GIT_SHA || "local-dev",
+          now: ctx.now,
+        }),
+    });
+  }
+
+  getOrganisationProtection(actor: ActorContext, organisationId: string) {
+    const actorSnap = this.actorSnapshot(actor);
+    const catalogue = this.decide(actorSnap, "risk.catalogue.view", { organisationId }, { type: "risk_catalogue", organisationId }, actor);
+    if (!catalogue.allow) this.authorizeQuery(actor, "risk.event.view", { organisationId });
+    const role = actorSnap.roles[0]?.key ?? roleKeyForId(actorSnap.roles[0]?.id ?? "");
+    return organisationProtectionProjection(this.store.snapshot(), organisationId, protectionAudienceFromRole(role), actor.now ?? new Date().toISOString());
+  }
+
+  getEventProtection(actor: ActorContext, organisationId: string, eventId: string) {
+    this.authorizeQuery(actor, "risk.event.view", { organisationId, eventId });
+    const role = this.actorSnapshot(actor).roles[0]?.key ?? roleKeyForId(this.actorSnapshot(actor).roles[0]?.id ?? "");
+    return eventProtectionProjection(this.store.snapshot(), organisationId, eventId, protectionAudienceFromRole(role), actor.now ?? new Date().toISOString());
+  }
+
+  createRiskSource(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof createSourceEditionOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.catalogue.manage",
+      scope: { organisationId: input.organisationId },
+      action: "risk.source.create",
+      resourceType: "risk_source_edition",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => createSourceEditionOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  approveRiskSource(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof approveSourceEditionOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.rule.approve",
+      scope: { organisationId: input.organisationId },
+      action: "risk.source.approve",
+      resourceType: "risk_source_edition",
+      resourceId: input.sourceId,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => approveSourceEditionOnSnap(snap, input, ctx.now, actor.personId, actor.actorKind),
+    });
+  }
+
+  createRiskRule(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof createRuleEditionOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.catalogue.manage",
+      scope: { organisationId: input.organisationId },
+      action: "risk.rule.create",
+      resourceType: "risk_rule_edition",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => createRuleEditionOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  reviewRiskRule(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof reviewRuleEditionOnSnap>[1];
+    return this.mutate(actor, {
+      permission: input.status === "APPROVED" ? "risk.rule.approve" : "risk.rule.review",
+      scope: { organisationId: input.organisationId },
+      action: "risk.rule.review",
+      resourceType: "risk_rule_edition",
+      resourceId: input.ruleId,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => reviewRuleEditionOnSnap(snap, input, ctx.now, actor.personId, actor.actorKind),
+    });
+  }
+
+  createRiskPolicy(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof createPolicyOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.policy.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.policy.create",
+      resourceType: "risk_policy",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => createPolicyOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  createRiskPolicyEdition(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof createPolicyEditionOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.policy.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.policy.edition.create",
+      resourceType: "risk_policy_edition",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => createPolicyEditionOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  verifyRiskPolicy(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof verifyPolicyEditionOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.policy.verify",
+      scope: { organisationId: input.organisationId },
+      action: "risk.policy.verify",
+      resourceType: "risk_policy_edition",
+      resourceId: input.editionId,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => verifyPolicyEditionOnSnap(snap, input, ctx.now, actor.personId, actor.actorKind),
+    });
+  }
+
+  createRiskEvidence(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof createEvidenceDocumentOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.policy.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.evidence.create",
+      resourceType: "risk_evidence_document",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => createEvidenceDocumentOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  completeRiskEvidenceUpload(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof completeEvidenceUploadOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.policy.manage",
+      scope: { organisationId: input.organisationId },
+      action: "risk.evidence.upload",
+      resourceType: "risk_evidence_document",
+      resourceId: input.documentId,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => completeEvidenceUploadOnSnap(snap, input, ctx.now),
+    });
+  }
+
+  recordRiskFact(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof recordFactEditionOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.event.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.fact.record",
+      resourceType: "risk_fact_edition",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => recordFactEditionOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  evaluateRiskEvent(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof evaluateApplicabilityOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.event.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.event.evaluate",
+      resourceType: "risk_applicability_snapshot",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => evaluateApplicabilityOnSnap(snap, input, ctx.now, actor.personId).snapshot,
+    });
+  }
+
+  submitRiskResidual(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof submitResidualDecisionOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.event.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.residual.submit",
+      resourceType: "risk_residual_decision",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => submitResidualDecisionOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  decideRiskResidual(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof decideResidualRiskOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.event.decide",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.residual.decide",
+      resourceType: "risk_residual_decision",
+      resourceId: input.decisionId,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => decideResidualRiskOnSnap(snap, input, ctx.now, actor.personId, actor.actorKind),
+    });
+  }
+
+  applyRiskClause(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof applyClauseEditionOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.clause.draft",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.clause.apply",
+      resourceType: "risk_clause_edition",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => applyClauseEditionOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  reviewRiskClause(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof reviewClauseEditionOnSnap>[1];
+    return this.mutate(actor, {
+      permission: input.gate === "LEGAL" ? "risk.clause.legalReview" : "risk.clause.commercialApprove",
+      scope: { organisationId: input.organisationId },
+      action: "risk.clause.review",
+      resourceType: "risk_clause_edition",
+      resourceId: input.editionId,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => reviewClauseEditionOnSnap(snap, input, ctx.now, actor.personId, actor.actorKind),
+    });
+  }
+
+  assessRiskVendor(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof assessVendorOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.vendor.assess",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.vendor.assess",
+      resourceType: "risk_vendor_assessment",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => assessVendorOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  decideRiskVendor(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof decideVendorAssessmentOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.vendor.decide",
+      scope: { organisationId: input.organisationId },
+      action: "risk.vendor.decide",
+      resourceType: "risk_vendor_assessment",
+      resourceId: input.assessmentId,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => decideVendorAssessmentOnSnap(snap, input, ctx.now, actor.personId, actor.actorKind),
+    });
+  }
+
+  assignRiskRoster(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof assignRosterOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.event.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.roster.assign",
+      resourceType: "risk_roster_assignment",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => assignRosterOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  createRiskContinuityPlan(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof createContinuityPlanOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.continuity.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.continuity.create",
+      resourceType: "risk_continuity_plan",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => createContinuityPlanOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  decideRiskContinuityPlan(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof decideContinuityPlanOnSnap>[1];
+    return this.mutate(actor, {
+      permission: input.decision === "APPROVED" ? "risk.continuity.authorise" : "risk.continuity.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.continuity.decide",
+      resourceType: "risk_continuity_plan",
+      resourceId: input.planId,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => decideContinuityPlanOnSnap(snap, input, ctx.now, actor.personId, actor.actorKind),
+    });
+  }
+
+  generateRiskCheckpoints(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof generateCheckpointInstancesOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.continuity.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.checkpoint.generate",
+      resourceType: "risk_checkpoint_instance",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => generateCheckpointInstancesOnSnap(snap, input, ctx.now)[0] ?? { id: input.idempotencyKey },
+    });
+  }
+
+  recordRiskCheckIn(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof recordCheckInOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.continuity.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.checkin.record",
+      resourceType: "risk_check_in",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => recordCheckInOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  evaluateRiskEscalations(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof evaluateEscalationsOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.continuity.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.escalation.evaluate",
+      resourceType: "risk_escalation_intent",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => evaluateEscalationsOnSnap(snap, input, ctx.now, actor.personId).escalations[0] ?? { id: input.idempotencyKey },
+    });
+  }
+
+  proposeRiskFallback(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof proposeFallbackOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.continuity.manage",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.fallback.propose",
+      resourceType: "risk_fallback_activation",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => proposeFallbackOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  authoriseRiskFallback(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof transitionFallbackOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.continuity.authorise",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.fallback.authorise",
+      resourceType: "risk_fallback_activation",
+      resourceId: input.activationId,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => transitionFallbackOnSnap(snap, input, ctx.now, actor.personId, actor.actorKind),
+    });
+  }
+
+  reportRiskIncident(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof reportIncidentOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.incident.report",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.incident.report",
+      resourceType: "risk_incident",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => reportIncidentOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  addRiskIncidentNote(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof addIncidentNoteOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.incident.command",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.incident.note",
+      resourceType: "risk_incident_note",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => addIncidentNoteOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  transitionRiskIncident(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof transitionIncidentOnSnap>[1];
+    return this.mutate(actor, {
+      permission: input.to === "CLOSED" ? "risk.incident.close" : "risk.incident.command",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.incident.transition",
+      resourceType: "risk_incident",
+      resourceId: input.incidentId,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => transitionIncidentOnSnap(snap, input, ctx.now, actor.personId, actor.actorKind),
+    });
+  }
+
+  projectRiskBudget(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof projectRiskBudgetOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.reserve.request",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.budget.project",
+      resourceType: "risk_budget_projection",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => projectRiskBudgetOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  assembleRiskDossier(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof assembleDossierOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.dossier.view",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.dossier.assemble",
+      resourceType: "risk_dossier_edition",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => assembleDossierOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  transitionRiskDossier(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof transitionDossierOnSnap>[1];
+    return this.mutate(actor, {
+      permission: input.to === "PUBLISHED" ? "risk.dossier.publish" : "risk.dossier.approve",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.dossier.transition",
+      resourceType: "risk_dossier_edition",
+      resourceId: input.dossierId,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => transitionDossierOnSnap(snap, input, ctx.now, actor.personId, actor.actorKind),
+    });
+  }
+
   getS05AEvaluationReadiness(actor: ActorContext | undefined, organisationId: string) {
     if (actor) this.assertEvaluationReadAccess(actor, organisationId);
     return s05aEvaluationReadinessFromSnap(this.store.snapshot(), organisationId);
@@ -8423,6 +8894,37 @@ export class PlatformService {
       snap.contactCorrections,
       snap.commsNotifications,
       snap.commsIntelligenceAlerts,
+      snap.riskSourceEditions,
+      snap.riskRuleEditions,
+      snap.riskEvidenceDocuments,
+      snap.riskPolicies,
+      snap.riskPolicyEditions,
+      snap.riskFactEditions,
+      snap.riskApplicabilitySnapshots,
+      snap.riskGapFindings,
+      snap.riskResidualDecisions,
+      snap.riskClauseTemplates,
+      snap.riskClauseEditions,
+      snap.riskVendorEvidence,
+      snap.riskVendorAssessments,
+      snap.riskRosterAssignments,
+      snap.riskCriticalFunctions,
+      snap.riskContinuityPlans,
+      snap.riskCheckpointTemplates,
+      snap.riskCheckpointInstances,
+      snap.riskCheckIns,
+      snap.riskCommunicationIntents,
+      snap.riskEscalationIntents,
+      snap.riskFallbackActivations,
+      snap.riskIncidents,
+      snap.riskIncidentNotes,
+      snap.riskLearningProposals,
+      snap.riskBudgetProjections,
+      snap.riskDossierEditions,
+      snap.riskEvaluationRuns,
+      snap.riskEvaluationCaseResults,
+      snap.riskEvaluationRunLeases,
+      snap.s05bMigrationReceipts,
     ];
     for (const table of tables) {
       const found = table.find((item) => item.id === id);

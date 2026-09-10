@@ -73,8 +73,12 @@ export function discoverySourceObjectKey(input: {
   return `discovery/${input.organisationId}/${input.engagementId}/${input.artefactId}`;
 }
 
+export function riskSourceObjectKey(input: { organisationId: string; documentId: string }): string {
+  return `risk/${input.organisationId}/${input.documentId}`;
+}
+
 export function assertSafeObjectKey(key: string): void {
-  if (!/^(layout-(assets|exports)|discovery)\/[A-Za-z0-9._/-]+$/.test(key) || key.includes("..") || /^https?:\/\//i.test(key)) {
+  if (!/^(layout-(assets|exports)|discovery|risk)\/[A-Za-z0-9._/-]+$/.test(key) || key.includes("..") || /^https?:\/\//i.test(key)) {
     throw new Error("unsafe object key");
   }
 }

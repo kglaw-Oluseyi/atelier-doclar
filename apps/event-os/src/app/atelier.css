@@ -2196,9 +2196,38 @@ body.atelier {
   overflow-wrap: anywhere;
 }
 
-.eec-evaluation-panel button:disabled {
-  cursor: not-allowed;
+.protection-queue,
+.protection-matrix,
+.protection-card {
+  min-width: 0;
+  max-width: 100%;
 }
+
+.protection-matrix {
+  display: grid;
+  gap: 1rem;
+}
+
+.protection-card {
+  border: 1px solid color-mix(in srgb, var(--at-champagne, #b89a62) 35%, transparent);
+  padding: 1rem 1.1rem;
+  background: color-mix(in srgb, var(--at-ivory, #f5f0e8) 92%, white);
+}
+
+.protection-card h3 {
+  margin-top: 0;
+}
+
+@media (max-width: 720px) {
+  .protection-matrix {
+    grid-template-columns: 1fr;
+  }
+}
+
+.protection-queue li {
+  overflow-wrap: anywhere;
+}
+
 
 .discovery-workspace [id],
 .atelier-state,

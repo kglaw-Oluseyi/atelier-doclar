@@ -11,6 +11,7 @@ import { validateS04EPersistedCollections } from "./atelier-persistence.js";
 import { validateS04FPersistedCollections } from "./language-persistence.js";
 import { validateS05PersistedCollections } from "./venue-persistence.js";
 import { validateS05APersistedCollections } from "./eec-persistence.js";
+import { validateS05BPersistedCollections } from "./risk-persistence.js";
 import type { PgQueryable, PgQueryResult, PgTransactor } from "./postgres-schema.js";
 
 type Collection = keyof Omit<PlatformSnapshot, "audit" | "idempotency">;
@@ -236,6 +237,37 @@ const COLLECTIONS: Collection[] = [
   "commsNotifications",
   "commsIntelligenceAlerts",
   "policyVersions",
+  "riskSourceEditions",
+  "riskRuleEditions",
+  "riskEvidenceDocuments",
+  "riskPolicies",
+  "riskPolicyEditions",
+  "riskFactEditions",
+  "riskApplicabilitySnapshots",
+  "riskGapFindings",
+  "riskResidualDecisions",
+  "riskClauseTemplates",
+  "riskClauseEditions",
+  "riskVendorEvidence",
+  "riskVendorAssessments",
+  "riskRosterAssignments",
+  "riskCriticalFunctions",
+  "riskContinuityPlans",
+  "riskCheckpointTemplates",
+  "riskCheckpointInstances",
+  "riskCheckIns",
+  "riskCommunicationIntents",
+  "riskEscalationIntents",
+  "riskFallbackActivations",
+  "riskIncidents",
+  "riskIncidentNotes",
+  "riskLearningProposals",
+  "riskBudgetProjections",
+  "riskDossierEditions",
+  "riskEvaluationRuns",
+  "riskEvaluationCaseResults",
+  "riskEvaluationRunLeases",
+  "s05bMigrationReceipts",
 ];
 
 function idOf(collection: Collection, record: Record<string, unknown>): string {
@@ -289,6 +321,7 @@ export class PostgresPlatformStore implements PlatformStore {
     validateS04FPersistedCollections(normalised);
     validateS05PersistedCollections(normalised);
     validateS05APersistedCollections(normalised);
+    validateS05BPersistedCollections(normalised);
     const previous = this.snapshot();
     this.state = structuredClone(normalised);
     this.pending = this.pending
@@ -438,6 +471,7 @@ export class PostgresPlatformStore implements PlatformStore {
     validateS04FPersistedCollections(normalised);
     validateS05PersistedCollections(normalised);
     validateS05APersistedCollections(normalised);
+    validateS05BPersistedCollections(normalised);
     this.state = normalised;
   }
 }

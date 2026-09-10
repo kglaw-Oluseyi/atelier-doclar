@@ -714,6 +714,7 @@ export {
   applySyntheticSeedIfNeeded,
   applySyntheticSnapshot,
   ensureEosS05ACollections,
+  ensureEosS05BCollections,
   readSeedLedger,
 } from "./synthetic-seed.js";
 export {
@@ -797,6 +798,7 @@ export {
   SENSITIVITY_CLASSES,
   COVERAGE_STATES,
   S05A_SENSITIVE_PERMISSIONS,
+  S05B_SENSITIVE_PERMISSIONS,
 } from "./constants.js";
 export {
   EOS_S05A_MIGRATION_ID,
@@ -912,3 +914,29 @@ export * as roadmapIntelligence from "./roadmap-intelligence/index.js";
 export * as changeIntelligence from "./change-intelligence/index.js";
 export * as executiveEventCommand from "./executive-event-command/index.js";
 export * as aiAssistance from "./ai-assistance/index.js";
+export {
+  RecordScopeSchema,
+  RiskCommandEnvelopeSchema,
+  RiskDateRangeSchema,
+  RISK_POLICY_TYPES,
+  RISK_DOCUMENT_STATES,
+  S05B_CANONICAL_COLLECTIONS,
+} from "./risk-schemas.js";
+export * from "./risk-disclosure.js";
+export * from "./risk-applicability.js";
+export * from "./risk-gap-engine.js";
+export * from "./risk-policy-operations.js";
+export * from "./risk-clause-operations.js";
+export * from "./risk-vendor-assessment.js";
+export * from "./risk-continuity.js";
+export * from "./risk-incidents.js";
+export * from "./risk-budget-projection.js";
+export * from "./risk-projections.js";
+export * from "./risk-ports.js";
+export * from "./risk-migration.js";
+export * from "./risk-persistence.js";
+export * from "./risk-evaluation-schemas.js";
+export * from "./risk-evaluation-corpus.js";
+export * from "./risk-evaluation-runner.js";
+export * from "./risk-evaluation-projections.js";
+export { executeS05BCase, detectUnsafeAdapter } from "./risk-evaluation-fixtures.js";

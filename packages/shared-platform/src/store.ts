@@ -207,6 +207,39 @@ import type {
   S05AEvaluationMigrationReceipt,
 } from "./eec-evaluation-schemas.js";
 import type {
+  RiskApplicabilitySnapshot,
+  RiskBudgetProjection,
+  RiskCheckIn,
+  RiskCheckpointInstance,
+  RiskCheckpointTemplate,
+  RiskClauseEdition,
+  RiskClauseTemplate,
+  RiskCommunicationIntent,
+  RiskContinuityPlan,
+  RiskCriticalFunction,
+  RiskDossierEdition,
+  RiskEscalationIntent,
+  RiskEvaluationCaseResult,
+  RiskEvaluationRun,
+  RiskEvaluationRunLease,
+  RiskEvidenceDocument,
+  RiskFactEdition,
+  RiskFallbackActivation,
+  RiskGapFinding,
+  RiskIncident,
+  RiskIncidentNote,
+  RiskLearningProposal,
+  RiskPolicy,
+  RiskPolicyEdition,
+  RiskResidualDecision,
+  RiskRosterAssignment,
+  RiskRuleEdition,
+  RiskSourceEdition,
+  RiskVendorAssessment,
+  RiskVendorEvidence,
+  S05BMigrationReceipt,
+} from "./risk-schemas.js";
+import type {
   GuestDuplicateCandidate,
   GuestHousehold,
   GuestIntakeBatch,
@@ -479,6 +512,37 @@ export interface PlatformSnapshot {
   commsNotifications: CommsNotification[];
   commsIntelligenceAlerts: CommsIntelligenceAlert[];
   policyVersions: PolicyVersionRef[];
+  riskSourceEditions: RiskSourceEdition[];
+  riskRuleEditions: RiskRuleEdition[];
+  riskEvidenceDocuments: RiskEvidenceDocument[];
+  riskPolicies: RiskPolicy[];
+  riskPolicyEditions: RiskPolicyEdition[];
+  riskFactEditions: RiskFactEdition[];
+  riskApplicabilitySnapshots: RiskApplicabilitySnapshot[];
+  riskGapFindings: RiskGapFinding[];
+  riskResidualDecisions: RiskResidualDecision[];
+  riskClauseTemplates: RiskClauseTemplate[];
+  riskClauseEditions: RiskClauseEdition[];
+  riskVendorEvidence: RiskVendorEvidence[];
+  riskVendorAssessments: RiskVendorAssessment[];
+  riskRosterAssignments: RiskRosterAssignment[];
+  riskCriticalFunctions: RiskCriticalFunction[];
+  riskContinuityPlans: RiskContinuityPlan[];
+  riskCheckpointTemplates: RiskCheckpointTemplate[];
+  riskCheckpointInstances: RiskCheckpointInstance[];
+  riskCheckIns: RiskCheckIn[];
+  riskCommunicationIntents: RiskCommunicationIntent[];
+  riskEscalationIntents: RiskEscalationIntent[];
+  riskFallbackActivations: RiskFallbackActivation[];
+  riskIncidents: RiskIncident[];
+  riskIncidentNotes: RiskIncidentNote[];
+  riskLearningProposals: RiskLearningProposal[];
+  riskBudgetProjections: RiskBudgetProjection[];
+  riskDossierEditions: RiskDossierEdition[];
+  riskEvaluationRuns: RiskEvaluationRun[];
+  riskEvaluationCaseResults: RiskEvaluationCaseResult[];
+  riskEvaluationRunLeases: RiskEvaluationRunLease[];
+  s05bMigrationReceipts: S05BMigrationReceipt[];
   audit: AuditEvent[];
   idempotency: IdempotencyRecord[];
 }
@@ -711,6 +775,37 @@ export function emptySnapshot(): PlatformSnapshot {
     commsNotifications: [],
     commsIntelligenceAlerts: [],
     policyVersions: [],
+    riskSourceEditions: [],
+    riskRuleEditions: [],
+    riskEvidenceDocuments: [],
+    riskPolicies: [],
+    riskPolicyEditions: [],
+    riskFactEditions: [],
+    riskApplicabilitySnapshots: [],
+    riskGapFindings: [],
+    riskResidualDecisions: [],
+    riskClauseTemplates: [],
+    riskClauseEditions: [],
+    riskVendorEvidence: [],
+    riskVendorAssessments: [],
+    riskRosterAssignments: [],
+    riskCriticalFunctions: [],
+    riskContinuityPlans: [],
+    riskCheckpointTemplates: [],
+    riskCheckpointInstances: [],
+    riskCheckIns: [],
+    riskCommunicationIntents: [],
+    riskEscalationIntents: [],
+    riskFallbackActivations: [],
+    riskIncidents: [],
+    riskIncidentNotes: [],
+    riskLearningProposals: [],
+    riskBudgetProjections: [],
+    riskDossierEditions: [],
+    riskEvaluationRuns: [],
+    riskEvaluationCaseResults: [],
+    riskEvaluationRunLeases: [],
+    s05bMigrationReceipts: [],
     audit: [],
     idempotency: [],
   };
@@ -926,5 +1021,36 @@ export function normalizeSnapshot(input: PlatformSnapshot): PlatformSnapshot {
     contactCorrections: input.contactCorrections ?? [],
     commsNotifications: input.commsNotifications ?? [],
     commsIntelligenceAlerts: input.commsIntelligenceAlerts ?? [],
+    riskSourceEditions: input.riskSourceEditions ?? [],
+    riskRuleEditions: input.riskRuleEditions ?? [],
+    riskEvidenceDocuments: input.riskEvidenceDocuments ?? [],
+    riskPolicies: input.riskPolicies ?? [],
+    riskPolicyEditions: input.riskPolicyEditions ?? [],
+    riskFactEditions: input.riskFactEditions ?? [],
+    riskApplicabilitySnapshots: input.riskApplicabilitySnapshots ?? [],
+    riskGapFindings: input.riskGapFindings ?? [],
+    riskResidualDecisions: input.riskResidualDecisions ?? [],
+    riskClauseTemplates: input.riskClauseTemplates ?? [],
+    riskClauseEditions: input.riskClauseEditions ?? [],
+    riskVendorEvidence: input.riskVendorEvidence ?? [],
+    riskVendorAssessments: input.riskVendorAssessments ?? [],
+    riskRosterAssignments: input.riskRosterAssignments ?? [],
+    riskCriticalFunctions: input.riskCriticalFunctions ?? [],
+    riskContinuityPlans: input.riskContinuityPlans ?? [],
+    riskCheckpointTemplates: input.riskCheckpointTemplates ?? [],
+    riskCheckpointInstances: input.riskCheckpointInstances ?? [],
+    riskCheckIns: input.riskCheckIns ?? [],
+    riskCommunicationIntents: input.riskCommunicationIntents ?? [],
+    riskEscalationIntents: input.riskEscalationIntents ?? [],
+    riskFallbackActivations: input.riskFallbackActivations ?? [],
+    riskIncidents: input.riskIncidents ?? [],
+    riskIncidentNotes: input.riskIncidentNotes ?? [],
+    riskLearningProposals: input.riskLearningProposals ?? [],
+    riskBudgetProjections: input.riskBudgetProjections ?? [],
+    riskDossierEditions: input.riskDossierEditions ?? [],
+    riskEvaluationRuns: input.riskEvaluationRuns ?? [],
+    riskEvaluationCaseResults: input.riskEvaluationCaseResults ?? [],
+    riskEvaluationRunLeases: input.riskEvaluationRunLeases ?? [],
+    s05bMigrationReceipts: input.s05bMigrationReceipts ?? [],
   };
 }

@@ -8,6 +8,7 @@ export async function GET(): Promise<Response> {
     const runtime = await ensureRuntime();
     const layoutAssetStore = await probeLayoutAssetStore(createLayoutBinaryStoreFromEnv());
     const s05a = runtime.service.getS05AReadiness();
+    const s05b = runtime.service.getS05BReadiness();
     return NextResponse.json({
       ready: runtime.persistence !== "UNAVAILABLE",
       persistence: runtime.persistence,
@@ -26,6 +27,12 @@ export async function GET(): Promise<Response> {
       s05aReleaseReady: s05a.releaseReady ?? false,
       s05aEvaluationBlockingReasons: s05a.blockingReasons ?? [],
       s05aCalendarReady: s05a.calendarReady,
+      s05bEvaluationStatus: s05b.evaluationStatus,
+      s05bEvaluationBlocked: s05b.evaluationBlocked,
+      s05bReleaseReady: s05b.releaseReady ?? false,
+      s05bEvaluationBlockingReasons: s05b.blockingReasons ?? [],
+      s05bCorpusEdition: s05b.corpusEdition,
+      s05bAdapters: s05b.adapters,
     });
   } catch (error) {
     const code = error instanceof Error && "code" in error ? String((error as { code?: string }).code) : "INTERNAL_ERROR";
