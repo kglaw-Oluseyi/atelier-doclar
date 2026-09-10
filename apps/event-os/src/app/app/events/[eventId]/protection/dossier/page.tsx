@@ -61,7 +61,7 @@ export default async function FocusedEventDossierPage({
       </AppShell>
     );
   }
-  const workspace = runtime.service.getEventProtection(actor, organisation.id, event.id);
+  const workspace = runtime.service.getEventDossierReview(actor, organisation.id, event.id);
   const assignmentId = runtime.service.resolveActor(person.id).assignments.find((item) => item.eventId === event.id || !item.eventId)?.id ?? "";
   const presented = await loadPresentedActionResult({
     requestPath: `/app/events/${event.id}/protection/dossier`,

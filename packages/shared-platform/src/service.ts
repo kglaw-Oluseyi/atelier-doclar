@@ -781,6 +781,7 @@ import { projectRiskBudgetOnSnap } from "./risk-budget-projection.js";
 import {
   assembleDossierOnSnap,
   currentDossierPublication,
+  currentWorkingDossier,
   eventProtectionProjection,
   exportDossierOnSnap,
   organisationProtectionProjection,
@@ -790,6 +791,7 @@ import {
   recordClientDossierMessageOnSnap,
   transitionDossierOnSnap,
 } from "./risk-projections.js";
+import { redactDossier } from "./risk-disclosure.js";
 
 export interface ActorContext {
   personId: string;
@@ -7097,6 +7099,24 @@ export class PlatformService {
     }
     const role = this.actorSnapshot(actor).roles[0]?.key ?? roleKeyForId(this.actorSnapshot(actor).roles[0]?.id ?? "");
     return eventProtectionProjection(snap, organisationId, eventId, protectionAudienceFromRole(role), actor.now ?? new Date().toISOString());
+  }
+
+  getEventDossierReview(actor: ActorContext, organisationId: string, eventId: string) {
+    this.authorizeQuery(actor, "risk.event.view", { organisationId, eventId });
+    const snap = this.store.snapshot();
+    const event = snap.events.find((item) => item.id === eventId);
+    if (!event || event.organisationId !== organisationId) {
+      throw new PlatformError("SCOPE_MISMATCH", "event is outside this organisation");
+    }
+    const role = this.actorSnapshot(actor).roles[0]?.key ?? roleKeyForId(this.actorSnapshot(actor).roles[0]?.id ?? "");
+    const audience = protectionAudienceFromRole(role);
+    const working = currentWorkingDossier(snap, eventId);
+    return {
+      workingDossier: working ? redactDossier(working, audience) : undefined,
+      dossiers: snap.riskDossierEditions.filter((item) => item.eventId === eventId).map((item) => redactDossier(item, audience)),
+      publications: snap.riskDossierPublications.filter((item) => item.eventId === eventId),
+      accessGrants: (snap.riskDossierAccessGrants ?? []).filter((item) => item.eventId === eventId),
+    };
   }
 
   listGovernedProtectionParties(actor: ActorContext, organisationId: string, kind?: RiskProtectionPartyKind) {

@@ -28,7 +28,11 @@ export async function assembleWorkingDraft(page: Page) {
   const assemble = page.getByRole("button", { name: "Assemble dossier edition" });
   await expect(assemble).toBeVisible({ timeout: 20_000 });
   const previous = await readActionCorrelation(page);
-  await assemble.click({ noWaitAfter: true });
+  await assemble.evaluate((button) => {
+    const form = button.closest("form");
+    if (form instanceof HTMLFormElement) form.requestSubmit(button as HTMLButtonElement);
+    else (button as HTMLButtonElement).click();
+  });
   await expectFreshActionSuccess(page, previous);
   await expect(page.getByText(/Status DRAFT/)).toBeVisible({ timeout: 30_000 });
 }
