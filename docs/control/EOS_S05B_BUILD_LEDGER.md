@@ -57,6 +57,7 @@ Application SHA, GitHub parity, Railway deployment ID and live smoke results are
 | `pnpm typecheck` | Test defect | Concurrency fixture passed `eventId` into rule create | Remove the field | `tsc` pass |
 | Focused Playwright first run | Test defect | Two-tab creates raced so the first tab never saw a result banner; `Dossier` matched the client-dossier link; `Life safety` matched the severity option; `Policy type` matched two labelled selects | Sequential tab submits; `exact: true`; checkbox role; scoped policy-type label; persist both insurer labels after reload | 13 passed / 1 skipped |
 | Live Event OS ready after `railway up` | Implementation defect | Backfill of existing synthetic continuity plans violated `risk_continuity_plans_one_current` because every new plan was `current: true` | Demote sibling current rows before insert; unset prior event plans on create | redeploy ready |
+| Live focused Playwright | Operational / secret boundary | Sign-in failed with the local non-production default token; the production access token was not loaded into this session | Live authenticated journeys held; `/api/health/live` and `/ready` verified without secrets | health/ready pass |
 
 Later gate failures, if any, are appended after the local and live runs. Product defects are not erased because a retry later passes.
 
