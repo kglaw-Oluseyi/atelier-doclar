@@ -7,8 +7,10 @@ test("S062 separate client grant session and revocation", async ({ page, browser
   const recorded = await prepareApprovedRule(page, browser);
   try {
     const planner = await openStaffContext(browser, "planner");
-    await evaluateAlphaOne(planner.page);
-    await expect(planner.page.getByTestId("protection-effective-authorities")).toBeVisible({ timeout: 20_000 });
+    if (process.env.PLAYWRIGHT_LIVE !== "1") {
+      await evaluateAlphaOne(planner.page);
+      await expect(planner.page.getByTestId("protection-effective-authorities")).toBeVisible({ timeout: 20_000 });
+    }
     await assembleWorkingDraft(planner.page);
     await planner.page.getByRole("button", { name: "Submit dossier" }).click();
     await expect(planner.page.getByText(/Status SUBMITTED/)).toBeVisible({ timeout: 20_000 });

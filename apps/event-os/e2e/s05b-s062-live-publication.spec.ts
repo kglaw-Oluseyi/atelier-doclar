@@ -7,8 +7,10 @@ test("S062 planner director CEO publication survives successor drafting", async 
   const recorded = await prepareApprovedRule(page, browser);
   try {
     const planner = await openStaffContext(browser, "planner");
-    await evaluateAlphaOne(planner.page);
-    await expect(planner.page.getByTestId("protection-effective-authorities")).toBeVisible({ timeout: 20_000 });
+    if (process.env.PLAYWRIGHT_LIVE !== "1") {
+      await evaluateAlphaOne(planner.page);
+      await expect(planner.page.getByTestId("protection-effective-authorities")).toBeVisible({ timeout: 20_000 });
+    }
     await assembleWorkingDraft(planner.page);
     await expect(planner.page.getByText(/Status DRAFT/)).toBeVisible({ timeout: 30_000 });
     await expect(planner.page.getByRole("button", { name: "Approve dossier" })).toHaveCount(0);

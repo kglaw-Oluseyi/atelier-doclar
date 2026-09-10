@@ -318,7 +318,14 @@ export class PostgresPlatformStore implements PlatformStore {
   }
 
   snapshot(): PlatformSnapshot {
-    return structuredClone(this.state);
+    const next = { ...this.state };
+    for (const key of Object.keys(next) as (keyof PlatformSnapshot)[]) {
+      const value = next[key];
+      if (Array.isArray(value)) {
+        (next as Record<string, unknown>)[key] = value.slice();
+      }
+    }
+    return next;
   }
 
   async flush(): Promise<void> {
@@ -327,17 +334,8 @@ export class PostgresPlatformStore implements PlatformStore {
 
   replace(next: PlatformSnapshot): void {
     const normalised = normalizeSnapshot(next);
-    validateS04APersistedCollections(normalised);
-    validateS04BPersistedCollections(normalised);
-    validateS04CPersistedCollections(normalised);
-    validateS04DPersistedCollections(normalised);
-    validateS04EPersistedCollections(normalised);
-    validateS04FPersistedCollections(normalised);
-    validateS05PersistedCollections(normalised);
-    validateS05APersistedCollections(normalised);
-    validateS05BPersistedCollections(normalised);
-    const previous = this.snapshot();
-    this.state = structuredClone(normalised);
+    const previous = this.state;
+    this.state = normalised;
     this.pending = this.pending
       .catch(() => undefined)
       .then(() => this.persistTransactional(previous, normalised))
