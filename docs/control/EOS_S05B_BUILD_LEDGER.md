@@ -1,17 +1,18 @@
 # EOS-S05B Build Ledger
 
 **Slice ID:** `EOS-S05B`
-**Prompt Control ID:** `MD-PR-S054`
+**Prompt Control ID:** `MD-PR-S054` then `MD-PR-S055`
 **Starting baseline:** `f12798a28f438408527d8811be57389661c86c25`
-**Application SHA:** `9c67a6c1cf0b929f00a2c6758496cb33d4a396e6`
+**MD-PR-S055 baseline:** `505c4399ba4517a972914e67b738372055da612d`
+**Application SHA:** `4714ce5259faf235ec39c9eaac6ea7ddc8142495`
 **First implementation SHA:** `d7533f3bac1a7d429778f61044862db7fd753f8f`
 **Live Event OS deployment:** `28eb49b2-4886-4bb6-89e4-5942685e8fe7`
-**Status:** `IMPLEMENTED / NOT ACCEPTED`
+**Status:** `REMEDIATED` under `MD-PR-S055` — not accepted; Claude not run
 **Production:** unauthorised
 **Catalogue accepted-slice count:** remains 5
 **Implemented range:** `RPC-01`–`RPC-55` implemented; acceptance is not this authority
 **EOS-S06:** `NOT_STARTED / NOT_AUTHORISED`
-**Evaluation:** `s05b-eval-v1` — 16 cases; fail-closed when UNRUN
+**Evaluation:** `s05b-eval-v2` — 52 cases, contract `s05b-eval-contract-v2`; `s05b-eval-v1` PASS is honestly `STALE`
 
 Application SHA, GitHub parity, Railway deployment ID and live smoke results are recorded in the final `MD-PR-S054` consolidated report after push and Event OS deploy.
 
@@ -43,12 +44,35 @@ Application SHA, GitHub parity, Railway deployment ID and live smoke results are
 | Focused Playwright reserve assertion | Test defect | Combined regex matched both the action-result banner and the budget copy `Unknowns remain unquantified`, violating Playwright strict mode | Assert the success banner and unquantified copy separately | rerun focused Playwright 2/2 |
 | Live dossier/fallback publish | Implementation defect | Shared form envelope sent `expectedVersion=0` before the record version, so `FormData.get` always read 0 and publish/authorise always conflicted | Omit envelope version from transition forms; send only the current record version | live sequential checker publish |
 
+### MD-PR-S055 first-run failures (appended; MD-PR-S054 rows above are not rewritten)
+
+| Command | Classification | Root cause | Correction | Rerun |
+|---------|----------------|------------|------------|-------|
+| Focused S05B unit tests | Implementation defect | `RISK_BUDGET_MODEL` exceeded 40 characters; Budget `trace` was not mapped to `{op,detail,value}` | Shorten model id to `s05a-protect-investment-v1`; slice/map engine trace | budget adapter pass |
+| Focused S05B unit tests | Implementation defect | Protected decisions used CEO assignment with director person | Pass the director assignment for source/rule/vendor/fallback/dossier checker actions | protection + eval cases pass |
+| Focused S05B unit tests | Test defect | Several test idempotency keys were shorter than 12 characters | Lengthen keys (`quote-evidence-01`, transition keys) | focused tests pass |
+| `s05b-eval-v2` corpus | Test/fixture defect | `POL-02`/`DISC-03` omitted facts/rules needed for publishable dossiers; incident `CONTENT_BYTES` regex treated “has not dispatched help” as a dispatch claim | Add required rule/fact actions; require `\bhas dispatched help\b` without negation | corpus 52/0 |
+| `s05b-concurrency.test.ts` | Test defect | `createRuleEditionOnSnap` rejects `eventId`; stale dossier version was the mutated object’s current version | Drop `eventId`; capture `staleVersion` before submit | concurrency pass |
+| `pnpm --filter @maison-doclar/shared-platform test` | Implementation defect | V2 migration receipt was `nonProductionFixture: true`, so synthetic cleanup deleted it and `open()` recreated it | Migration receipts are durable, not fixture-marked | 431/0 |
+| `pnpm typecheck` | Test defect | Concurrency fixture passed `eventId` into rule create | Remove the field | `tsc` pass |
+| Focused Playwright first run | Test defect | Two-tab creates raced so the first tab never saw a result banner; `Dossier` matched the client-dossier link; `Life safety` matched the severity option; `Policy type` matched two labelled selects | Sequential tab submits; `exact: true`; checkbox role; scoped policy-type label; persist both insurer labels after reload | 13 passed / 1 skipped |
+
 Later gate failures, if any, are appended after the local and live runs. Product defects are not erased because a retry later passes.
 
 ## Carried debt
 
 No new S05B technical-debt item is manufactured. Inherited carried debt remains: permanent production identity provider unselected; external providers inactive; `TDR-S04A-011` blocking before real-client onboarding only; process-local action-result recall; `TDR-S05-002`; accepted S04/S05/S05A debt. None of that debt authorises production or starts EOS-S06.
 
-## Local gates (recorded after the implementation run)
+## Local gates (MD-PR-S055)
 
-See the consolidated `MD-PR-S054` report for exact command results, evaluation hash, Playwright, GitHub parity and Railway evidence.
+| Gate | Result |
+|------|--------|
+| `pnpm typecheck` | pass |
+| `pnpm --filter @maison-doclar/shared-platform test` | 431/0 |
+| `pnpm --filter @maison-doclar/event-os test` | 93/0 |
+| `pnpm programme:validate` | PASS |
+| `pnpm --filter @maison-doclar/event-os build` | pass |
+| `git diff --check` | clean |
+| Focused S05B Playwright | 13 passed / 1 skipped (omnibus retired) |
+
+`s05b-eval-v2` hash `992c34838aadfe6a962874dbd337fe8e1d157219bd19f9537708cf1b65373961`. See the MD-PR-S055 consolidated report for GitHub parity and Railway evidence.
