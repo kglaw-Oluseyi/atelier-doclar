@@ -331,7 +331,9 @@ describe("EOS-S05B normalized persistence", () => {
     await runPlatformMigrations(first);
     const checksum004 = first.migrations.find((item) => item.id === "004_risk_protection_normalized")?.checksum;
     assert.equal(checksum004, checksumFor(RISK_PROTECTION_POSTGRES_SCHEMA));
+    assert.equal(checksum004, "f060aafaa355b634da96d6d0a3ca75ae238679a44a3233d10b1f1b08b9349a76");
     assert.ok(first.migrations.some((item) => item.id === EOS_S05B_NORMALIZED_MIGRATION_V3_ID));
+    assert.ok(first.migrations.some((item) => item.id === EOS_S05B_NORMALIZED_MIGRATION_V4_ID));
 
     const live = new MemoryPlatformPg();
     live.migrations.push(

@@ -78,7 +78,9 @@ CREATE INDEX IF NOT EXISTS ${name}_event_idx ON ${name} (organisation_id, event_
 `;
 }
 
-const RISK_SQL_TABLES_004 = RISK_SQL_TABLES.filter((item) => item.table !== "risk_dossier_access_grants");
+const RISK_SQL_TABLES_004 = RISK_SQL_TABLES.filter(
+  (item) => item.table !== "risk_dossier_access_grants" && item.table !== "risk_authority_governance_receipts",
+);
 
 export const RISK_PROTECTION_POSTGRES_SCHEMA = `
 ${RISK_SQL_TABLES_004.map((item) => aggregateTable(item.table)).join("\n")}
