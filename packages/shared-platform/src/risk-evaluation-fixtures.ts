@@ -19,6 +19,7 @@ import { addIncidentEntryOnSnap, addIncidentNoteOnSnap, decideLearningOnSnap, pr
 import { hashDossierAccessToken, issueDossierAccessOnSnap, resolveDossierAccessOnSnap, revokeDossierAccessOnSnap } from "./risk-dossier-access.js";
 import { assembleDossierOnSnap, exportDossierOnSnap, publishedClientDossierProjection, transitionDossierOnSnap } from "./risk-projections.js";
 import { LIFE_SAFETY_PROTOCOL } from "./risk-incidents.js";
+import { recordRuleCurrentReviewOnSnap } from "./risk-authority.js";
 import {
   approveSourceEditionOnSnap,
   createEvidenceDocumentOnSnap,
@@ -348,6 +349,7 @@ export function executeS05BCase(caseDef: S05BEvaluationCaseDefinition, adapters:
             policyType: "PUBLIC_LIABILITY",
             mandatory: action.mandatory !== false,
             effectiveTo: action.stale ? "2020-01-01" : undefined,
+            nextReviewAt: action.reviewExpired ? "2026-09-10T09:04:00.000Z" : "2026-12-10T09:00:00.000Z",
           },
           "2026-09-10T09:02:00.000Z",
           ctx.ceo,
@@ -355,6 +357,43 @@ export function executeS05BCase(caseDef: S05BEvaluationCaseDefinition, adapters:
       }
       if (action.kind === "APPROVE_RULE" && rule) {
         rule = reviewRuleEditionOnSnap(ctx.snap, { ...envelope(ctx, { assignmentId: ctx.assignmentDirector }), ruleId: rule.id, status: "APPROVED", expectedVersion: rule.version }, "2026-09-10T09:03:00.000Z", ctx.director, "HUMAN");
+      }
+      if (action.kind === "RETAINED_AUTHORITY_HISTORY" && source && rule) {
+        createRuleEditionOnSnap(
+          ctx.snap,
+          {
+            ...envelope(ctx),
+            ruleKey: rule.ruleKey,
+            jurisdiction: rule.jurisdiction,
+            proposition: "Later discovery draft must not hide the approved edition.",
+            sourceEditionIds: [source.id],
+            requirementKey: rule.requirementKey,
+            policyType: rule.policyType,
+            mandatory: rule.mandatory,
+            nextReviewAt: "2026-12-10T09:00:00.000Z",
+          },
+          "2026-09-10T09:03:30.000Z",
+          ctx.ceo,
+        );
+      }
+      if (action.kind === "AUTHORITY_REVIEW_SUCCESSOR") {
+        const stale = [...ctx.snap.riskRuleEditions].reverse().find((item) => item.organisationId === ctx.organisationId && item.status === "APPROVED");
+        if (stale) {
+          rule = recordRuleCurrentReviewOnSnap(
+            ctx.snap,
+            {
+              ...envelope(ctx, { assignmentId: ctx.assignmentDirector }),
+              ruleId: stale.id,
+              expectedVersion: stale.version,
+              nextReviewAt: "2026-12-10T09:00:00.000Z",
+              reason: "Governed successor review of retained Alpha authority.",
+              confirmedHash: stale.contentHash,
+            },
+            "2026-09-10T09:10:30.000Z",
+            ctx.director,
+            "HUMAN",
+          );
+        }
       }
       if (action.kind === "RECORD_UNKNOWN_FACT") {
         recordFactEditionOnSnap(ctx.snap, { ...envelope(ctx), factKey: "jurisdiction", value: "UNKNOWN", unknown: true }, "2026-09-10T09:04:00.000Z", ctx.ceo);

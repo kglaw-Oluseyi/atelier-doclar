@@ -21,6 +21,7 @@ import {
   createRiskRuleAction,
   createRiskSourceAction,
   reviewRiskClauseAction,
+  recordAuthorityReviewAction,
   reviewRiskRuleAction,
   runS05BEvaluationAction,
   verifyRiskPolicyAction,
@@ -68,6 +69,7 @@ export default async function ProtectionCommandPage({
   const evaluation = runtime.service.getS05BReadiness(organisation.id);
   const s05a = runtime.service.getS05AReadiness(organisation.id);
   const assignmentId = runtime.service.resolveActor(person.id).assignments[0]?.id ?? "";
+  const isRiskReviewer = Boolean(permissions.ruleReview && permissions.ruleApprove && !permissions.catalogueManage);
   const presented = await loadPresentedActionResult({
     requestPath: "/app/protection",
     resultId: typeof query.result === "string" ? query.result : undefined,
@@ -88,6 +90,7 @@ export default async function ProtectionCommandPage({
         items={[
           { href: "#protection-overview", label: "Overview" },
           { href: "#protection-policies", label: "Policies" },
+          { href: "#protection-authority", label: "Authority review" },
           { href: "#protection-rules", label: "Rules and Sources" },
           { href: "#protection-clauses", label: "Clause Templates" },
           { href: "#protection-vendors", label: "Vendors" },
@@ -348,14 +351,103 @@ export default async function ProtectionCommandPage({
           </>
         ) : null}
       </section>
+      <section id="protection-authority" className="atelier-panel" data-testid="protection-authority-review">
+        <h2>Governing authority review</h2>
+        <p>Historic drafts remain visible as history. Only one approved exact-hash edition per rule key governs applicability.</p>
+        <ul>
+          {(overview.effectiveAuthorities ?? []).map((item) => (
+            <li key={item.ruleId} data-testid={`authority-${item.ruleKey}`} data-authority-state={item.authorityState}>
+              <strong>{item.ruleKey}</strong> · {item.authorityState.replaceAll("_", " ").toLowerCase()}
+              {item.governing ? " · governing edition" : " · not governing"}
+              <p>
+                Edition {item.ruleId} · Review again by {item.nextReviewAt}
+              </p>
+              {item.reasons.length ? <p>{item.reasons.join("; ")}</p> : null}
+              {item.sources.map((source) => (
+                <p key={source.id}>
+                  Cited source {source.title} · {source.status} · Review again by {source.nextReviewAt}
+                </p>
+              ))}
+              {isRiskReviewer && (item.authorityState === "STALE_APPROVED" || item.authorityState === "AUTHORITY_CONFLICT" || item.authorityState === "CURRENT_APPROVED") ? (
+                <>
+                  <ProtectionMutationForm action={recordAuthorityReviewAction} className="atelier-form protection-form" testId={`authority-record-review-${item.ruleKey}`}>
+                    <Envelope fields={{ ...envelope, expectedVersion: item.version, editionId: item.ruleId, targetKind: "RULE", reviewAction: "RECORD_CURRENT_REVIEW", confirmedHash: item.contentHash }} />
+                    <IdempotencyField />
+                    <label>
+                      Review reason
+                      <textarea name="reason" required rows={2} />
+                    </label>
+                    <label>
+                      Review again by
+                      <input type="date" name="nextReviewOn" required />
+                    </label>
+                    <button type="submit" className="button">
+                      Record current review
+                    </button>
+                  </ProtectionMutationForm>
+                  <ProtectionMutationForm action={recordAuthorityReviewAction} className="atelier-form protection-form" testId={`authority-create-successor-${item.ruleKey}`}>
+                    <Envelope fields={{ ...envelope, expectedVersion: item.version, editionId: item.ruleId, targetKind: "RULE", reviewAction: "CREATE_REVIEW_SUCCESSOR", confirmedHash: item.contentHash }} />
+                    <IdempotencyField />
+                    <label>
+                      Review reason
+                      <textarea name="reason" required rows={2} />
+                    </label>
+                    <label>
+                      Review again by
+                      <input type="date" name="nextReviewOn" required />
+                    </label>
+                    <button type="submit" className="button secondary">
+                      Create review successor
+                    </button>
+                  </ProtectionMutationForm>
+                </>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+        {(overview.sources ?? [])
+          .filter((source) => source.status === "APPROVED")
+          .map((source) =>
+            isRiskReviewer ? (
+              <ProtectionMutationForm key={source.id} action={recordAuthorityReviewAction} className="atelier-form protection-form" testId={`source-record-review-${source.id}`}>
+                <Envelope
+                  fields={{
+                    ...envelope,
+                    expectedVersion: source.version,
+                    editionId: source.id,
+                    targetKind: "SOURCE",
+                    reviewAction: "RECORD_CURRENT_REVIEW",
+                    confirmedHash: source.contentHash ?? "",
+                  }}
+                />
+                <IdempotencyField />
+                <p>
+                  Source {source.title} · Review again by {source.nextReviewAt}
+                </p>
+                <label>
+                  Review reason
+                  <textarea name="reason" required rows={2} />
+                </label>
+                <label>
+                  Review again by
+                  <input type="date" name="nextReviewOn" required />
+                </label>
+                <button type="submit" className="button secondary">
+                  Record current source review
+                </button>
+              </ProtectionMutationForm>
+            ) : null,
+          )}
+      </section>
       <section id="protection-rules" className="atelier-panel">
         <h2>Rules and sources</h2>
-        <p>Discovery sources can generate questions. Only approved rules participate in readiness.</p>
+        <p>Discovery sources can generate questions. Only approved rules participate in readiness. Unapproved and superseded editions stay as history.</p>
         <ul>
           {overview.sources.map((source) => (
             <li key={source.id}>
               {source.title} · {source.status} · {source.jurisdiction}
-              {permissions.ruleApprove && source.status !== "APPROVED" ? (
+              {source.historyOnly ? " · history" : source.governing ? " · governing source" : ""}
+              {permissions.ruleApprove && source.status !== "APPROVED" && source.status !== "SUPERSEDED" ? (
                 <ProtectionMutationForm action={approveRiskSourceAction}>
                   <Envelope fields={{ ...envelope, expectedVersion: source.version, sourceId: source.id }} />
                   <IdempotencyField />
@@ -371,7 +463,8 @@ export default async function ProtectionCommandPage({
           {overview.ruleLibrary.map((rule) => (
             <li key={rule.id}>
               {rule.ruleKey} · {rule.status} · {rule.jurisdiction} · {rule.proposition}
-              {permissions.ruleApprove && rule.status !== "APPROVED" ? (
+              {rule.historyOnly ? " · history" : rule.governing ? " · governing" : ""}
+              {permissions.ruleApprove && rule.status !== "APPROVED" && rule.status !== "SUPERSEDED" ? (
                 <ProtectionMutationForm action={reviewRiskRuleAction}>
                   <Envelope fields={{ ...envelope, expectedVersion: rule.version, ruleId: rule.id }} />
                   <label>
@@ -425,6 +518,10 @@ export default async function ProtectionCommandPage({
                 Summary
                 <textarea name="summary" required rows={3} />
               </label>
+              <label>
+                Review again by
+                <input type="date" name="nextReviewOn" required />
+              </label>
               <button type="submit" className="button">
                 Record discovery source
               </button>
@@ -474,6 +571,10 @@ export default async function ProtectionCommandPage({
                   <option value="true">Yes</option>
                   <option value="false">No</option>
                 </select>
+              </label>
+              <label>
+                Review again by
+                <input type="date" name="nextReviewOn" required />
               </label>
               <button type="submit" className="button">
                 Draft rule

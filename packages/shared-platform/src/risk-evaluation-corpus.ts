@@ -75,6 +75,9 @@ export const S05B_EVALUATION_CASES: readonly S05BEvaluationCaseDefinition[] = [
   caseDef("S05B-INCIDENT-STRUCTURED-EVIDENCE", "INCIDENT", "Structured fact and claim entries", [{ kind: "INCIDENT" }, { kind: "INCIDENT_ENTRIES" }], [{ kind: "CLASSIFICATION", classification: "OBSERVED_FACT" }, { kind: "CLASSIFICATION", classification: "REPORTED_CLAIM" }], ["FALSE_SUCCESS"]),
   caseDef("S05B-LEARNING-NO-AUTO-MUTATION", "INCIDENT", "Learning approval does not mutate the target", [{ kind: "INCIDENT" }, { kind: "LEARNING" }, { kind: "LEARNING_DECIDE" }], [{ kind: "STATE", state: "APPROVED" }, { kind: "RECORD_COUNT", collection: "riskRuleEditions", eq: 0 }], ["FALSE_SUCCESS"]),
   caseDef("S05B-SOURCE-MAKER-CHECKER", "SOURCE", "Author cannot approve a source", [{ kind: "CREATE_SOURCE" }, { kind: "SOURCE_SELF_APPROVE" }], [{ kind: "COMMAND_DENIAL", code: "FORBIDDEN", didDataChange: false }], ["AUTHORITY_ESCALATION"]),
+  caseDef("S05B-AUTH-EFFECTIVE-01", "AUTHORITY_SELECTION", "Retained drafts do not govern", [{ kind: "CREATE_SOURCE" }, { kind: "APPROVE_SOURCE" }, { kind: "CREATE_RULE" }, { kind: "APPROVE_RULE" }, { kind: "RETAINED_AUTHORITY_HISTORY" }, { kind: "RECORD_FACT", factKey: "jurisdiction", value: "NG" }, { kind: "RECORD_FACT", factKey: "event_dates", value: "2026-12-01/2026-12-02" }, { kind: "EVALUATE" }], [{ kind: "STATE", state: "GAPS" }, { kind: "RECORD_COUNT", collection: "riskRuleEditions", min: 2 }], ["FABRICATED_COVERAGE"]),
+  caseDef("S05B-AUTH-STALE-01", "AUTHORITY_SELECTION", "Expired review is one stale authority", [{ kind: "CREATE_SOURCE" }, { kind: "APPROVE_SOURCE" }, { kind: "CREATE_RULE", reviewExpired: true }, { kind: "APPROVE_RULE" }, { kind: "EVALUATE" }], [{ kind: "STATE", state: "STALE" }], ["FABRICATED_COVERAGE"]),
+  caseDef("S05B-AUTH-RECOVERY-01", "AUTHORITY_SELECTION", "Governed successor review restores current authority", [{ kind: "CREATE_SOURCE" }, { kind: "APPROVE_SOURCE" }, { kind: "CREATE_RULE", reviewExpired: true }, { kind: "APPROVE_RULE" }, { kind: "EVALUATE" }, { kind: "AUTHORITY_REVIEW_SUCCESSOR" }, { kind: "EVALUATE" }], [{ kind: "STATE", state: "INDETERMINATE" }, { kind: "RECORD_COUNT", collection: "riskRuleEditions", min: 2 }], ["FALSE_SUCCESS"]),
 ];
 
 export function s05bEvaluationCorpusHash(): string {
@@ -82,7 +85,7 @@ export function s05bEvaluationCorpusHash(): string {
 }
 
 export function validateS05BEvaluationCorpus(): void {
-  if (S05B_EVALUATION_CASES.length < 1) throw new Error("s05b-eval-v4 requires an honest non-empty corpus");
+  if (S05B_EVALUATION_CASES.length < 1) throw new Error("s05b-eval-v5 requires an honest non-empty corpus");
   const signatures = new Set<string>();
   for (const item of S05B_EVALUATION_CASES) {
     S05BEvaluationCaseDefinitionSchema.parse(item);

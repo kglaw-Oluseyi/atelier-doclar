@@ -26,6 +26,7 @@ export async function prepareApprovedRule(page: Page, browser: Browser) {
   await sourceForm.getByLabel("Authority").selectOption("REGULATOR");
   await sourceForm.getByLabel("Jurisdiction").fill("NG");
   await sourceForm.getByLabel("Summary").fill("Synthetic S060 source.");
+  await sourceForm.getByLabel("Review again by").fill("2026-12-31");
   await sourceForm.getByRole("button", { name: "Record discovery source" }).click();
   await expectActionOutcome(page);
   const reviewer = await openStaffContext(browser, "reviewer");
@@ -49,6 +50,7 @@ export async function prepareApprovedRule(page: Page, browser: Browser) {
   await ruleForm.getByLabel("Requirement key").fill("PUBLIC_LIABILITY");
   await ruleForm.getByLabel("Policy type").selectOption("PUBLIC_LIABILITY");
   await ruleForm.getByLabel("Mandatory").selectOption("false");
+  await ruleForm.getByLabel("Review again by").fill("2026-12-31");
   await ruleForm.getByRole("button", { name: "Draft rule" }).click();
   await expect(page.getByTestId("action-result-banner")).toBeVisible({ timeout: 30_000 });
   const reviewer2 = await openStaffContext(browser, "reviewer");

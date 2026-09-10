@@ -56,11 +56,13 @@ test("S05B forged insurer id is server-denied and source authoring recovers in-p
   await sourceForm.getByLabel("Authority").selectOption("REGULATOR");
   await sourceForm.getByLabel("Jurisdiction").fill("NG");
   await sourceForm.getByLabel("Summary").fill("Synthetic discovery source for recovery.");
+  await sourceForm.getByLabel("Review again by").fill("2026-12-31");
   await sourceForm.getByRole("button", { name: "Record discovery source" }).click();
   await expect(sourceForm.getByTestId("protection-validation-summary")).toBeVisible();
   await expect(sourceForm.getByLabel("Publisher")).toHaveValue("NSITF");
   await expect(sourceForm.getByLabel("Jurisdiction")).toHaveValue("NG");
   await sourceForm.getByLabel("Source title").fill("NSITF compensation guidance");
+  await sourceForm.getByLabel("Review again by").fill("2026-12-31");
   await sourceForm.getByRole("button", { name: "Record discovery source" }).click();
   await expect(page.getByText(/Protection command applied|No change/)).toBeVisible({ timeout: 20_000 });
 });
@@ -89,9 +91,9 @@ test("S05B CEO release-evidence shows exact v3 edition, hash, counts and truthfu
   await page.getByRole("link", { name: "Portfolio Insights" }).click();
   const evidence = page.getByTestId("protection-release-evidence");
   await expect(evidence).toBeVisible();
-  await expect(evidence.getByTestId("release-s05b-edition")).toHaveText("s05b-eval-v4");
-  await expect(evidence.getByTestId("release-s05b-hash")).toContainText("e09d9efe32e78387d8b49798814c2a4ce685bb2295a8803cb7b1eab7c2cfb1e0");
-  await expect(evidence.getByTestId("release-s05b-counts")).toContainText(/total 56/);
+  await expect(evidence.getByTestId("release-s05b-edition")).toHaveText("s05b-eval-v5");
+  await expect(evidence.getByTestId("release-s05b-hash")).toContainText("edf5ce4f8dd93d0b6d98c56adb0a9a3618708d54014fbfbf48da7fff66e0b4f3");
+  await expect(evidence.getByTestId("release-s05b-counts")).toContainText(/total 59/);
   await expect(evidence.getByTestId("release-s05b-zero-tolerance")).toBeVisible();
   await expect(evidence.getByTestId("release-production-authorised")).toHaveText("false");
   await expect(evidence.getByTestId("release-s05b-blocked")).toBeVisible();
@@ -99,7 +101,7 @@ test("S05B CEO release-evidence shows exact v3 edition, hash, counts and truthfu
   await expect(evidence.getByText(/Fixture assurance is not production authorisation/i)).toBeVisible();
   await page.goto("/app/admin/system");
   await expect(page.getByTestId("system-health")).toBeVisible();
-  await expect(page.getByTestId("protection-release-evidence").getByTestId("release-s05b-edition")).toHaveText("s05b-eval-v4");
+  await expect(page.getByTestId("protection-release-evidence").getByTestId("release-s05b-edition")).toHaveText("s05b-eval-v5");
 });
 
 test("S05B changed surfaces remain usable at 360px, tablet, desktop and 200% zoom", async ({ page }) => {

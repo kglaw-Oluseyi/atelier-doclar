@@ -1,5 +1,6 @@
 import { exactHash } from "./eec-hash.js";
 import { PlatformError } from "./errors.js";
+import { selectEffectiveRiskAuthorities } from "./risk-authority.js";
 import {
   assertExpectedVersion,
   assertMakerChecker,
@@ -37,6 +38,11 @@ export function organisationProtectionProjection(snap: PlatformSnapshot, organis
   const policies = snap.riskPolicies.filter((item) => item.organisationId === organisationId);
   const editions = snap.riskPolicyEditions.filter((item) => item.organisationId === organisationId && item.current);
   const rules = snap.riskRuleEditions.filter((item) => item.organisationId === organisationId);
+  const authorities = selectEffectiveRiskAuthorities(snap, organisationId, now);
+  const governingRuleIds = new Set(
+    authorities.filter((item) => item.authorityState === "CURRENT_APPROVED" || item.authorityState === "STALE_APPROVED").map((item) => item.rule.id),
+  );
+  const governingSourceIds = new Set(authorities.flatMap((item) => item.sources.map((source) => source.id)));
   const events = snap.events.filter((item) => item.organisationId === organisationId);
   const gaps = snap.riskGapFindings.filter((item) => item.organisationId === organisationId && item.state === "OPEN");
   const decisions = snap.riskResidualDecisions.filter((item) => item.organisationId === organisationId && item.status === "SUBMITTED");
@@ -59,7 +65,10 @@ export function organisationProtectionProjection(snap: PlatformSnapshot, organis
       publisher: item.publisher,
       lastVerifiedAt: item.lastVerifiedAt,
       nextReviewAt: item.nextReviewAt,
+      contentHash: item.contentHash,
       version: item.version,
+      governing: governingSourceIds.has(item.id),
+      historyOnly: !governingSourceIds.has(item.id),
     })),
     clauses: snap.riskClauseTemplates.filter((item) => item.organisationId === organisationId).map((item) => ({
       id: item.id,
@@ -120,7 +129,33 @@ export function organisationProtectionProjection(snap: PlatformSnapshot, organis
       lastVerifiedAt: item.lastVerifiedAt,
       nextReviewAt: item.nextReviewAt,
       proposition: item.proposition,
+      contentHash: item.contentHash,
+      supersedesEditionId: item.supersedesEditionId,
       version: item.version,
+      governing: governingRuleIds.has(item.id),
+      historyOnly: !governingRuleIds.has(item.id),
+    })),
+    effectiveAuthorities: authorities.map((item) => ({
+      ruleId: item.rule.id,
+      ruleKey: item.rule.ruleKey,
+      requirementKey: item.rule.requirementKey,
+      status: item.rule.status,
+      contentHash: item.rule.contentHash,
+      nextReviewAt: item.rule.nextReviewAt,
+      lastVerifiedAt: item.rule.lastVerifiedAt,
+      version: item.rule.version,
+      authorityState: item.authorityState,
+      reasons: item.reasons,
+      governing: item.authorityState === "CURRENT_APPROVED" || item.authorityState === "STALE_APPROVED",
+      sources: item.sources.map((source) => ({
+        id: source.id,
+        title: source.title,
+        status: source.status,
+        contentHash: source.contentHash,
+        nextReviewAt: source.nextReviewAt,
+        lastVerifiedAt: source.lastVerifiedAt,
+        version: source.version,
+      })),
     })),
     events: events.map((item) => ({
       id: item.id,
@@ -133,7 +168,10 @@ export function organisationProtectionProjection(snap: PlatformSnapshot, organis
 }
 
 export function eventProtectionProjection(snap: PlatformSnapshot, organisationId: string, eventId: string, audience: RiskProjectionAudience, now: string) {
-  const snapshot = [...snap.riskApplicabilitySnapshots].reverse().find((item) => item.eventId === eventId);
+  const eventSnapshots = snap.riskApplicabilitySnapshots.filter((item) => item.eventId === eventId);
+  const snapshot = [...eventSnapshots].reverse()[0];
+  const previousSnapshot = [...eventSnapshots].reverse()[1];
+  const authorities = selectEffectiveRiskAuthorities(snap, organisationId, now);
   const gaps = snap.riskGapFindings.filter((item) => item.eventId === eventId);
   const policies = snap.riskPolicyEditions.filter((item) => item.organisationId === organisationId && item.current && (item.eventId === eventId || !item.eventId));
   const incidents = snap.riskIncidents.filter((item) => item.eventId === eventId);
@@ -160,6 +198,27 @@ export function eventProtectionProjection(snap: PlatformSnapshot, organisationId
     eventId,
     overall: snapshot?.overall ?? "INDETERMINATE",
     snapshot,
+    previousSnapshot,
+    readinessChange:
+      previousSnapshot && snapshot
+        ? previousSnapshot.overall === snapshot.overall
+          ? `Readiness remained ${snapshot.overall}. Effective governing rule IDs: ${(snapshot.ruleEditionIds ?? []).join(", ") || "none"}.`
+          : `Readiness changed from ${previousSnapshot.overall} to ${snapshot.overall}. Effective governing rule IDs: ${(snapshot.ruleEditionIds ?? []).join(", ") || "none"}.`
+        : snapshot
+          ? `Current readiness ${snapshot.overall}. Effective governing rule IDs: ${(snapshot.ruleEditionIds ?? []).join(", ") || "none"}.`
+          : "No applicability snapshot has been captured yet.",
+    effectiveAuthorities: authorities.map((item) => ({
+      ruleId: item.rule.id,
+      ruleKey: item.rule.ruleKey,
+      requirementKey: item.rule.requirementKey,
+      status: item.rule.status,
+      contentHash: item.rule.contentHash,
+      nextReviewAt: item.rule.nextReviewAt,
+      authorityState: item.authorityState,
+      reasons: item.reasons,
+      governing: item.authorityState === "CURRENT_APPROVED" || item.authorityState === "STALE_APPROVED",
+      sources: item.sources.map((source) => ({ id: source.id, title: source.title, contentHash: source.contentHash, nextReviewAt: source.nextReviewAt })),
+    })),
     gaps,
     openGapCount: openGaps.length,
     overriddenGapCount: overridden,

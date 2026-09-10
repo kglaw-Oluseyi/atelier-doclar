@@ -8,6 +8,8 @@ import {
   CreateRiskPolicyFormSchema,
   CreateRiskRuleFormSchema,
   CreateRiskSourceFormSchema,
+  RecordAuthorityReviewFormSchema,
+  reviewOnToIso,
   RecordClientDossierMessageFormSchema,
   RecordRiskFactFormSchema,
   ReportIncidentFormSchema,
@@ -394,6 +396,7 @@ export async function createRiskSourceAction(prev: ProtectionFormState, formData
         authority: field(data, "authority"),
         jurisdiction: field(data, "jurisdiction"),
         summary: field(data, "summary"),
+        nextReviewOn: field(data, "nextReviewOn"),
       }),
     execute: (actor, data) =>
       getRuntime().service.createRiskSource(actor, {
@@ -406,7 +409,7 @@ export async function createRiskSourceAction(prev: ProtectionFormState, formData
         summary: field(data, "summary"),
         retrievedAt: new Date().toISOString(),
         lastVerifiedAt: new Date().toISOString(),
-        nextReviewAt: new Date().toISOString(),
+        nextReviewAt: reviewOnToIso(field(data, "nextReviewOn")),
       }),
   });
 }
@@ -441,6 +444,7 @@ export async function createRiskRuleAction(prev: ProtectionFormState, formData: 
         requirementKey: field(data, "requirementKey"),
         policyType: field(data, "policyType") || undefined,
         mandatory: field(data, "mandatory"),
+        nextReviewOn: field(data, "nextReviewOn"),
       }),
     execute: (actor, data) =>
       getRuntime().service.createRiskRule(actor, {
@@ -452,6 +456,7 @@ export async function createRiskRuleAction(prev: ProtectionFormState, formData: 
         requirementKey: field(data, "requirementKey"),
         policyType: field(data, "policyType") || undefined,
         mandatory: field(data, "mandatory") === "true",
+        nextReviewAt: reviewOnToIso(field(data, "nextReviewOn")),
       }),
   });
 }
@@ -467,6 +472,35 @@ export async function reviewRiskRuleAction(prev: ProtectionFormState, formData: 
         ...envelope(data),
         ruleId: field(data, "ruleId"),
         status: field(data, "status") || "APPROVED",
+      }),
+  });
+}
+
+export async function recordAuthorityReviewAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: "/app/protection",
+    actionType: "risk.authority.review",
+    parse: (data) =>
+      parseFormSchema(RecordAuthorityReviewFormSchema, {
+        ...envelope(data),
+        targetKind: field(data, "targetKind"),
+        reviewAction: field(data, "reviewAction"),
+        editionId: field(data, "editionId"),
+        nextReviewOn: field(data, "nextReviewOn"),
+        reason: field(data, "reason"),
+        confirmedHash: field(data, "confirmedHash"),
+      }),
+    execute: (actor, data) =>
+      getRuntime().service.recordRiskAuthorityReview(actor, {
+        ...envelope(data),
+        targetKind: field(data, "targetKind") as "RULE" | "SOURCE",
+        reviewAction: field(data, "reviewAction") as "RECORD_CURRENT_REVIEW" | "CREATE_REVIEW_SUCCESSOR",
+        editionId: field(data, "editionId"),
+        nextReviewAt: reviewOnToIso(field(data, "nextReviewOn")),
+        reason: field(data, "reason"),
+        confirmedHash: field(data, "confirmedHash"),
       }),
   });
 }

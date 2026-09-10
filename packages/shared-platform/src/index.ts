@@ -927,6 +927,7 @@ export * from "./risk-form-contract.js";
 export * from "./risk-protection-parties.js";
 export * from "./risk-disclosure.js";
 export * from "./risk-applicability.js";
+export * from "./risk-authority.js";
 export * from "./risk-gap-engine.js";
 export * from "./risk-policy-operations.js";
 export * from "./risk-clause-operations.js";

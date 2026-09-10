@@ -1,6 +1,12 @@
 import { exactHash, nfc } from "./eec-hash.js";
 import { PlatformError } from "./errors.js";
-import { resolveApplicability } from "./risk-applicability.js";
+import { resolveRequirement } from "./risk-applicability.js";
+import {
+  assertAuthorisedFutureReview,
+  assertNoCompetingCurrentRule,
+  effectiveAuthorityHashPayload,
+  selectEffectiveRiskAuthorities,
+} from "./risk-authority.js";
 import {
   assertDocumentTransition,
   assertExpectedVersion,
@@ -70,6 +76,7 @@ export function createSourceEditionOnSnap(
   _actorPersonId: string,
 ): RiskSourceEdition {
   envelope(input, input.organisationId);
+  assertAuthorisedFutureReview(input.nextReviewAt, now, input.lastVerifiedAt);
   const record = RiskSourceEditionSchema.parse({
     id: newRiskId(),
     organisationId: input.organisationId,
@@ -79,7 +86,7 @@ export function createSourceEditionOnSnap(
     authority: input.authority,
     jurisdiction: input.jurisdiction,
     retrievedAt: input.retrievedAt,
-    lastVerifiedAt: input.lastVerifiedAt,
+    lastVerifiedAt: input.retrievedAt,
     nextReviewAt: input.nextReviewAt,
     excerpt: input.excerpt,
     summary: input.summary,
@@ -113,6 +120,13 @@ export function approveSourceEditionOnSnap(
     submitterPersonId: source.submittedByPersonId,
     action: "approve",
   });
+  assertAuthorisedFutureReview(source.nextReviewAt, now, now);
+  if (source.supersedesEditionId) {
+    const predecessor = snap.riskSourceEditions.find((item) => item.id === source.supersedesEditionId && item.organisationId === input.organisationId);
+    if (predecessor && predecessor.status === "APPROVED") {
+      Object.assign(predecessor, { ...predecessor, status: "SUPERSEDED", ...bumpVersion(predecessor, now) });
+    }
+  }
   Object.assign(
     source,
     RiskSourceEditionSchema.parse({
@@ -120,6 +134,7 @@ export function approveSourceEditionOnSnap(
       status: "APPROVED",
       discoveryOnly: false,
       lastVerifiedAt: now,
+      nextReviewAt: source.nextReviewAt,
       approvedByPersonId: actorPersonId,
       approvedAt: now,
       approvedHash: source.contentHash,
@@ -145,6 +160,8 @@ export function createRuleEditionOnSnap(
     mandatory: boolean;
     effectiveFrom?: string;
     effectiveTo?: string;
+    nextReviewAt: string;
+    supersedesEditionId?: string;
   },
   now: string,
   actorPersonId: string,
@@ -155,6 +172,7 @@ export function createRuleEditionOnSnap(
     if (!source) throw new PlatformError("NOT_FOUND", "source edition is not in this organisation");
     return source;
   });
+  assertAuthorisedFutureReview(input.nextReviewAt, now, now);
   const record = RiskRuleEditionSchema.parse({
     id: newRiskId(),
     organisationId: input.organisationId,
@@ -168,9 +186,10 @@ export function createRuleEditionOnSnap(
     effectiveFrom: input.effectiveFrom,
     effectiveTo: input.effectiveTo,
     lastVerifiedAt: now,
-    nextReviewAt: now,
+    nextReviewAt: input.nextReviewAt,
     status: "DISCOVERY",
     contentHash: exactHash({ ruleKey: input.ruleKey, proposition: input.proposition, sources: input.sourceEditionIds }),
+    supersedesEditionId: input.supersedesEditionId,
     createdByPersonId: actorPersonId,
     submittedByPersonId: actorPersonId,
     submittedAt: now,
@@ -205,6 +224,14 @@ export function reviewRuleEditionOnSnap(
     if (sources.some((item) => item.status === "DISCOVERY" || item.status === "WITHDRAWN")) {
       throw new PlatformError("VALIDATION_FAILED", "an inaccessible or discovery-only source cannot silently become an approved rule");
     }
+    assertAuthorisedFutureReview(rule.nextReviewAt, now, now);
+    assertNoCompetingCurrentRule(snap, input.organisationId, rule.ruleKey, rule.id, rule.supersedesEditionId);
+    if (rule.supersedesEditionId) {
+      const predecessor = snap.riskRuleEditions.find((item) => item.id === rule.supersedesEditionId && item.organisationId === input.organisationId);
+      if (predecessor && predecessor.status === "APPROVED") {
+        Object.assign(predecessor, { ...predecessor, status: "SUPERSEDED", ...bumpVersion(predecessor, now) });
+      }
+    }
   }
   const next = RiskRuleEditionSchema.parse({
     ...rule,
@@ -213,7 +240,8 @@ export function reviewRuleEditionOnSnap(
     approvedByPersonId: input.status === "APPROVED" ? actorPersonId : rule.approvedByPersonId,
     approvedAt: input.status === "APPROVED" ? now : rule.approvedAt,
     approvedHash: input.status === "APPROVED" ? rule.contentHash : rule.approvedHash,
-    lastVerifiedAt: now,
+    lastVerifiedAt: input.status === "APPROVED" ? now : rule.lastVerifiedAt,
+    nextReviewAt: rule.nextReviewAt,
     ...bumpVersion(rule, now),
   });
   Object.assign(rule, next);
@@ -511,7 +539,7 @@ export function evaluateApplicabilityOnSnap(
   envelope(input, input.organisationId, input.eventId);
   const event = snap.events.find((item) => item.id === input.eventId && item.organisationId === input.organisationId);
   if (!event) throw new PlatformError("NOT_FOUND", "event not found");
-  const rules = snap.riskRuleEditions.filter((item) => item.organisationId === input.organisationId);
+  const authorities = selectEffectiveRiskAuthorities(snap, input.organisationId, now);
   const facts = snap.riskFactEditions.filter((item) => item.organisationId === input.organisationId && item.eventId === input.eventId);
   const policies = snap.riskPolicyEditions.filter(
     (item) =>
@@ -519,10 +547,53 @@ export function evaluateApplicabilityOnSnap(
       item.current &&
       (item.eventId === input.eventId || (!item.eventId && item.organisationId === input.organisationId)),
   );
-  const requirements = resolveApplicability({ now, facts, rules, policies });
+  const requirements = authorities.flatMap((authority) => {
+    if (authority.authorityState === "NO_APPROVED_EDITION" || authority.authorityState === "WITHDRAWN_NO_AUTHORITY") {
+      return [];
+    }
+    if (authority.authorityState === "AUTHORITY_CONFLICT") {
+      return [
+        {
+          requirementKey: authority.rule.requirementKey,
+          decision: "INDETERMINATE" as const,
+          factEditionIds: [],
+          ruleEditionId: authority.rule.id,
+          missingFacts: ["authority_conflict"],
+          trace: [{ step: "AUTHORITY", detail: authority.reasons.join("; ").slice(0, 400) }],
+        },
+      ];
+    }
+    if (authority.authorityState === "STALE_APPROVED") {
+      const unapprovedSource = authority.reasons.some((reason) => /not approved|missing or outside/.test(reason));
+      const expired = authority.reasons.some((reason) => /expired/.test(reason));
+      return [
+        {
+          requirementKey: authority.rule.requirementKey,
+          decision: unapprovedSource && !expired ? ("INDETERMINATE" as const) : ("STALE" as const),
+          factEditionIds: [],
+          ruleEditionId: authority.rule.id,
+          missingFacts: unapprovedSource && !expired ? ["approved_source"] : ["current_rule"],
+          trace: [{ step: "AUTHORITY", detail: authority.reasons.join("; ").slice(0, 400) }],
+        },
+      ];
+    }
+    return [resolveRequirement(authority.rule, { now, facts, rules: [authority.rule], policies })];
+  });
   const eventEnd = event.endsAt.slice(0, 10);
   const eventStart = event.startsAt.slice(0, 10);
-  const contentHash = exactHash({ requirements, ruleIds: rules.map((item) => item.id), factIds: facts.map((item) => item.id), policyIds: policies.map((item) => item.id) });
+  const authorityPayload = effectiveAuthorityHashPayload(authorities);
+  const factIds = facts.map((item) => item.id).sort();
+  const policyIds = policies.map((item) => item.id).sort();
+  const contentHash = exactHash({
+    requirements,
+    ruleIds: authorityPayload.governingRuleIds,
+    ruleHashes: authorityPayload.governingRuleHashes,
+    sourceIds: authorityPayload.governingSourceIds,
+    sourceHashes: authorityPayload.governingSourceHashes,
+    factIds,
+    policyIds,
+    authority: authorityPayload.authority,
+  });
   const overall = requirements.some((item) => item.decision === "INDETERMINATE" || item.decision === "STALE")
     ? requirements.some((item) => item.decision === "STALE")
       ? "STALE"
@@ -535,9 +606,9 @@ export function evaluateApplicabilityOnSnap(
     organisationId: input.organisationId,
     eventId: input.eventId,
     evaluatedAt: now,
-    ruleEditionIds: rules.map((item) => item.id),
-    factEditionIds: facts.map((item) => item.id),
-    policyEditionIds: policies.map((item) => item.id),
+    ruleEditionIds: authorityPayload.governingRuleIds,
+    factEditionIds: factIds,
+    policyEditionIds: policyIds,
     requirements,
     overall,
     contentHash,
@@ -578,7 +649,7 @@ export function evaluateApplicabilityOnSnap(
       affectedObjectIds: match.policyEditionId ? [match.policyEditionId] : [],
       explanation: reasons.join("; ") || requirement.missingFacts.join(",") || requirement.decision,
       residualDecisionId: priorDecision?.id,
-      ...(prior ? bumpVersion(prior, now) : riskStamp(now)),
+      ...(prior ? { schemaVersion: prior.schemaVersion, createdAt: prior.createdAt, ...bumpVersion(prior, now) } : riskStamp(now)),
     });
     if (prior) Object.assign(prior, gap);
     else snap.riskGapFindings.push(gap);

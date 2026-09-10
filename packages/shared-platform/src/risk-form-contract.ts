@@ -72,6 +72,14 @@ export const PROTECTION_PUBLIC_FIELDS = [
   "assumptionLabel",
   "kind",
   "status",
+  "nextReviewOn",
+  "nextReviewAt",
+  "confirmedHash",
+  "reviewAction",
+  "editionId",
+  "sourceId",
+  "ruleId",
+  "targetKind",
 ] as const;
 
 export type ProtectionPublicField = (typeof PROTECTION_PUBLIC_FIELDS)[number];
@@ -263,7 +271,7 @@ export function formDataToRecord(formData: FormData): Record<string, string | st
 }
 
 export function firstInvalidField(fieldErrors: ProtectionFieldErrors): string | undefined {
-  const preferred = ["insurerPartyId", "vendorId", "policyType", "title", "value", "decision"];
+  const preferred = ["insurerPartyId", "vendorId", "policyType", "title", "value", "decision", "nextReviewOn", "nextReviewAt", "confirmedHash", "reason"];
   return preferred.find((field) => fieldErrors[field]) ?? Object.keys(fieldErrors)[0];
 }
 
@@ -318,6 +326,7 @@ export const CreateRiskSourceFormSchema = ProtectionCommandFormSchema.extend({
   authority: z.enum(RISK_SOURCE_AUTHORITIES),
   jurisdiction: z.string().trim().min(1).max(32),
   summary: z.string().trim().min(1).max(2000),
+  nextReviewOn: z.string().date(),
 }).strict();
 
 export const CreateRiskRuleFormSchema = ProtectionCommandFormSchema.extend({
@@ -328,6 +337,16 @@ export const CreateRiskRuleFormSchema = ProtectionCommandFormSchema.extend({
   requirementKey: z.string().trim().min(1).max(80),
   policyType: z.enum(RISK_POLICY_TYPES).optional(),
   mandatory: z.enum(["true", "false"]),
+  nextReviewOn: z.string().date(),
+}).strict();
+
+export const RecordAuthorityReviewFormSchema = ProtectionCommandFormSchema.extend({
+  targetKind: z.enum(["RULE", "SOURCE"]),
+  reviewAction: z.enum(["RECORD_CURRENT_REVIEW", "CREATE_REVIEW_SUCCESSOR"]),
+  editionId: UuidSchema,
+  nextReviewOn: z.string().date(),
+  reason: z.string().trim().min(1).max(2000),
+  confirmedHash: z.string().trim().min(16).max(128),
 }).strict();
 
 export const CreateRiskClauseTemplateFormSchema = ProtectionCommandFormSchema.extend({

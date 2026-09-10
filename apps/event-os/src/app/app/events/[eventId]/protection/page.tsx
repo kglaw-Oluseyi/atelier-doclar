@@ -116,10 +116,22 @@ export default async function EventProtectionPage({
         <p className="lede" data-testid="protection-why-not-ready">
           Readiness {workspace.overall}. {workspace.whyNotReady}
         </p>
+        <p data-testid="protection-readiness-change">{workspace.readinessChange}</p>
         <p>
           {workspace.openGapCount} unresolved gaps · {workspace.overriddenGapCount} authorised residual decisions · last change {workspace.lastChange}
         </p>
         <p>Changed since review: {workspace.changedSinceReview}.</p>
+        {(workspace.effectiveAuthorities ?? []).length ? (
+          <ul data-testid="protection-effective-authorities">
+            {(workspace.effectiveAuthorities ?? []).map((item) => (
+              <li key={item.ruleId} data-authority-state={item.authorityState}>
+                {item.ruleKey} · {item.authorityState.replaceAll("_", " ").toLowerCase()}
+                {item.governing ? " · governing" : " · history only"} · {item.ruleId}
+                {item.reasons.length ? ` · ${item.reasons.join("; ")}` : ""}
+              </li>
+            ))}
+          </ul>
+        ) : null}
         {permissions.eventManage ? (
           <ProtectionMutationForm action={evaluateRiskEventAction} className="actions">
             <Envelope fields={createFields} />

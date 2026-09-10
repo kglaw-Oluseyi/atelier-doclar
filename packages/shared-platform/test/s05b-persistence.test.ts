@@ -349,4 +349,109 @@ describe("EOS-S05B normalized persistence", () => {
     });
     await assert.rejects(() => runPlatformMigrations(mismatched), /004_risk_protection_normalized checksum mismatch/);
   });
+
+  it("keeps rule history after persist and rejects a stale authority review version", async () => {
+    const { recordRuleCurrentReviewOnSnap, selectEffectiveRiskAuthorities } = await import("../src/risk-authority.js");
+    const { createRuleEditionOnSnap, createSourceEditionOnSnap, approveSourceEditionOnSnap, reviewRuleEditionOnSnap } = await import("../src/risk-policy-operations.js");
+    const pg = new MemoryPlatformPg();
+    const store = await PostgresPlatformStore.open(pg);
+    await applySyntheticSeedIfNeeded(store, pg);
+    await store.flush();
+    const snap = store.snapshot();
+    const source = createSourceEditionOnSnap(
+      snap,
+      {
+        organisationId: people.orgMaison,
+        assignmentId: people.assignCeo,
+        expectedVersion: 0,
+        idempotencyKey: "s061-persist-source",
+        title: "Persisted NSITF",
+        publisher: "NSITF",
+        locator: "https://nsitf.gov.ng/",
+        authority: "REGULATOR",
+        jurisdiction: "NG",
+        summary: "Synthetic persisted source.",
+        retrievedAt: "2026-09-10T09:00:00.000Z",
+        lastVerifiedAt: "2026-09-10T09:00:00.000Z",
+        nextReviewAt: "2026-12-10T09:00:00.000Z",
+      },
+      "2026-09-10T09:00:00.000Z",
+      people.personCeo,
+    );
+    approveSourceEditionOnSnap(
+      snap,
+      { organisationId: people.orgMaison, assignmentId: people.assignRiskReviewer, sourceId: source.id, expectedVersion: source.version, idempotencyKey: "s061-persist-source-approve" },
+      "2026-09-10T09:01:00.000Z",
+      people.personRiskReviewer,
+      "HUMAN",
+    );
+    const rule = createRuleEditionOnSnap(
+      snap,
+      {
+        organisationId: people.orgMaison,
+        assignmentId: people.assignCeo,
+        expectedVersion: 0,
+        idempotencyKey: "s061-persist-rule",
+        ruleKey: "persist-public-liability",
+        jurisdiction: "NG",
+        proposition: "Persisted governing rule.",
+        sourceEditionIds: [source.id],
+        requirementKey: "PUBLIC_LIABILITY",
+        policyType: "PUBLIC_LIABILITY",
+        mandatory: true,
+        nextReviewAt: "2026-12-10T09:00:00.000Z",
+      },
+      "2026-09-10T09:02:00.000Z",
+      people.personCeo,
+    );
+    reviewRuleEditionOnSnap(
+      snap,
+      { organisationId: people.orgMaison, assignmentId: people.assignRiskReviewer, ruleId: rule.id, status: "APPROVED", expectedVersion: rule.version, idempotencyKey: "s061-persist-rule-approve" },
+      "2026-09-10T09:03:00.000Z",
+      people.personRiskReviewer,
+      "HUMAN",
+    );
+    const historicId = rule.id;
+    const historicVersion = rule.version;
+    recordRuleCurrentReviewOnSnap(
+      snap,
+      {
+        organisationId: people.orgMaison,
+        assignmentId: people.assignRiskReviewer,
+        expectedVersion: historicVersion,
+        idempotencyKey: "s061-persist-review",
+        ruleId: historicId,
+        nextReviewAt: "2026-12-31T00:00:00.000Z",
+        reason: "Persisted successor review.",
+        confirmedHash: rule.contentHash,
+      },
+      "2026-09-10T09:04:00.000Z",
+      people.personRiskReviewer,
+      "HUMAN",
+    );
+    await store.replaceAsync(snap);
+    const reloaded = store.snapshot();
+    assert.ok(reloaded.riskRuleEditions.some((item) => item.id === historicId));
+    assert.equal(selectEffectiveRiskAuthorities(reloaded, people.orgMaison, "2026-09-10T12:00:00.000Z").some((item) => item.rule.ruleKey === "persist-public-liability" && item.authorityState === "CURRENT_APPROVED"), true);
+    await assert.rejects(
+      async () =>
+        recordRuleCurrentReviewOnSnap(
+          reloaded,
+          {
+            organisationId: people.orgMaison,
+            assignmentId: people.assignRiskReviewer,
+            expectedVersion: historicVersion,
+            idempotencyKey: "s061-persist-stale-review",
+            ruleId: historicId,
+            nextReviewAt: "2026-12-31T00:00:00.000Z",
+            reason: "Stale review must conflict.",
+            confirmedHash: rule.contentHash,
+          },
+          "2026-09-10T09:05:00.000Z",
+          people.personRiskReviewer,
+          "HUMAN",
+        ),
+      /changed since this view was loaded/,
+    );
+  });
 });

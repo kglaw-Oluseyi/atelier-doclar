@@ -279,12 +279,12 @@ describe("EOS-S05B insurance and vendor", () => {
 });
 
 describe("EOS-S05B evaluation", () => {
-  it("stays fail-closed when unrun and uses s05b-eval-v4", () => {
+  it("stays fail-closed when unrun and uses s05b-eval-v5", () => {
     const { store } = env();
     const unrun = s05bEvaluationReadinessFromSnap(store.snapshot(), people.orgMaison);
     assert.equal(unrun.evaluationStatus, "UNRUN");
     assert.equal(unrun.releaseReady, false);
-    assert.equal(unrun.corpusEdition, "s05b-eval-v4");
+    assert.equal(unrun.corpusEdition, "s05b-eval-v5");
   });
 
   it("detects fabricated coverage and false success from observations", () => {

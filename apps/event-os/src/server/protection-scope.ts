@@ -8,6 +8,7 @@ export function protectionPermissions(person: Person, organisationId: string, ev
   return {
     catalogueView: allow("risk.catalogue.view"),
     catalogueManage: allow("risk.catalogue.manage"),
+    ruleReview: allow("risk.rule.review"),
     ruleApprove: allow("risk.rule.approve"),
     policyView: allow("risk.policy.view"),
     policyManage: allow("risk.policy.manage"),

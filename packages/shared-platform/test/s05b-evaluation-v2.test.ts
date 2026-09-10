@@ -11,7 +11,7 @@ import { fixtureService, people } from "./helpers.js";
 describe("EOS-S05B evaluation v3", () => {
   it("registers an honest typed corpus and does not accept v2 as current", () => {
     validateS05BEvaluationCorpus();
-    assert.equal(S05B_EVALUATION_CORPUS_EDITION, "s05b-eval-v4");
+    assert.equal(S05B_EVALUATION_CORPUS_EDITION, "s05b-eval-v5");
     assert.ok(S05B_EVALUATION_CASES.length >= 40);
     assert.equal(
       S05B_EVALUATION_CASES.some((item) => JSON.stringify(item).includes('"passed":')),
@@ -46,7 +46,7 @@ describe("EOS-S05B evaluation v3", () => {
     }
     const ready = s05bEvaluationReadinessFromSnap(store.snapshot(), people.orgMaison);
     assert.equal(ready.evaluationStatus, "PASSED");
-    assert.equal(ready.corpusEdition, "s05b-eval-v4");
+    assert.equal(ready.corpusEdition, "s05b-eval-v5");
     assert.equal(ready.persistedResultCount, S05B_EVALUATION_CASES.length);
     assert.equal(ready.caseCount, S05B_EVALUATION_CASES.length);
   });

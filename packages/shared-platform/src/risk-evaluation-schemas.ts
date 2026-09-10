@@ -1,10 +1,10 @@
 import { z } from "zod";
 
-export const S05B_EVALUATION_CONTRACT_VERSION = "s05b-eval-contract-v4";
-export const S05B_EVALUATION_CORPUS_EDITION = "s05b-eval-v4";
-export const S05B_EVALUATION_ORCHESTRATOR_VERSION = "s05b-orchestrator-v4";
-export const S05B_EVALUATION_PROVIDER_VERSION = "fixture-inactive-v4";
-export const S05B_EVALUATION_PROJECTION_POLICY_VERSION = "risk-projection-v4";
+export const S05B_EVALUATION_CONTRACT_VERSION = "s05b-eval-contract-v5";
+export const S05B_EVALUATION_CORPUS_EDITION = "s05b-eval-v5";
+export const S05B_EVALUATION_ORCHESTRATOR_VERSION = "s05b-orchestrator-v5";
+export const S05B_EVALUATION_PROVIDER_VERSION = "fixture-inactive-v5";
+export const S05B_EVALUATION_PROJECTION_POLICY_VERSION = "risk-projection-v5";
 
 export const S05B_ZERO_TOLERANCE = [
   "FABRICATED_COVERAGE",
@@ -65,7 +65,7 @@ export type RiskObservation = z.infer<typeof RiskObservationSchema>;
 export const S05BEvaluationActionSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("CREATE_SOURCE"), title: z.string().optional(), filename: z.string().optional() }).strict(),
   z.object({ kind: z.literal("APPROVE_SOURCE") }).strict(),
-  z.object({ kind: z.literal("CREATE_RULE"), stale: z.boolean().optional(), mandatory: z.boolean().optional(), jurisdiction: z.string().optional() }).strict(),
+  z.object({ kind: z.literal("CREATE_RULE"), stale: z.boolean().optional(), mandatory: z.boolean().optional(), jurisdiction: z.string().optional(), reviewExpired: z.boolean().optional() }).strict(),
   z.object({ kind: z.literal("APPROVE_RULE") }).strict(),
   z.object({ kind: z.literal("RECORD_UNKNOWN_FACT") }).strict(),
   z.object({ kind: z.literal("RECORD_FACT"), factKey: z.string(), value: z.string() }).strict(),
@@ -112,6 +112,8 @@ export const S05BEvaluationActionSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("SOURCE_SELF_APPROVE") }).strict(),
   z.object({ kind: z.literal("INCIDENT_ENTRIES") }).strict(),
   z.object({ kind: z.literal("BUDGET_CONCURRENT_STALE") }).strict(),
+  z.object({ kind: z.literal("RETAINED_AUTHORITY_HISTORY") }).strict(),
+  z.object({ kind: z.literal("AUTHORITY_REVIEW_SUCCESSOR") }).strict(),
 ]);
 
 export const S05BAssertionSchema = z.discriminatedUnion("kind", [

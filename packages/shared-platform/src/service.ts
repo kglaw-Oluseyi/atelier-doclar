@@ -746,6 +746,11 @@ import {
   submitResidualDecisionOnSnap,
   verifyPolicyEditionOnSnap,
 } from "./risk-policy-operations.js";
+import {
+  createRuleReviewSuccessorOnSnap,
+  recordRuleCurrentReviewOnSnap,
+  recordSourceCurrentReviewOnSnap,
+} from "./risk-authority.js";
 import { applyClauseEditionOnSnap, createClauseTemplateOnSnap, reviewClauseEditionOnSnap } from "./risk-clause-operations.js";
 import { assessVendorOnSnap, assignRosterOnSnap, decideVendorAssessmentOnSnap } from "./risk-vendor-assessment.js";
 import {
@@ -7138,6 +7143,98 @@ export class PlatformService {
       resourceId: input.ruleId,
       idempotencyKey: input.idempotencyKey,
       run: (snap, ctx) => reviewRuleEditionOnSnap(snap, input, ctx.now, actor.personId, actor.actorKind),
+    });
+  }
+
+  createRiskRuleReviewSuccessor(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof createRuleReviewSuccessorOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.rule.review",
+      scope: { organisationId: input.organisationId },
+      action: "risk.rule.successor.create",
+      resourceType: "risk_rule_edition",
+      resourceId: input.ruleId,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => createRuleReviewSuccessorOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  recordRiskAuthorityReview(actor: ActorContext, raw: unknown) {
+    const input = raw as {
+      organisationId: string;
+      assignmentId: string;
+      expectedVersion: number;
+      idempotencyKey: string;
+      targetKind: "RULE" | "SOURCE";
+      reviewAction: "RECORD_CURRENT_REVIEW" | "CREATE_REVIEW_SUCCESSOR";
+      editionId: string;
+      nextReviewAt: string;
+      reason: string;
+      confirmedHash: string;
+    };
+    if (input.targetKind === "SOURCE") {
+      return this.mutate(actor, {
+        permission: "risk.rule.approve",
+        scope: { organisationId: input.organisationId },
+        action: "risk.source.review.record",
+        resourceType: "risk_source_edition",
+        resourceId: input.editionId,
+        idempotencyKey: input.idempotencyKey,
+        run: (snap, ctx) =>
+          recordSourceCurrentReviewOnSnap(
+            snap,
+            {
+              organisationId: input.organisationId,
+              assignmentId: input.assignmentId,
+              expectedVersion: input.expectedVersion,
+              idempotencyKey: input.idempotencyKey,
+              sourceId: input.editionId,
+              nextReviewAt: input.nextReviewAt,
+              reason: input.reason,
+              confirmedHash: input.confirmedHash,
+            },
+            ctx.now,
+            actor.personId,
+            actor.actorKind,
+          ),
+      });
+    }
+    if (input.reviewAction === "CREATE_REVIEW_SUCCESSOR") {
+      return this.createRiskRuleReviewSuccessor(actor, {
+        organisationId: input.organisationId,
+        assignmentId: input.assignmentId,
+        expectedVersion: input.expectedVersion,
+        idempotencyKey: input.idempotencyKey,
+        ruleId: input.editionId,
+        nextReviewAt: input.nextReviewAt,
+        reason: input.reason,
+        confirmedHash: input.confirmedHash,
+      });
+    }
+    return this.mutate(actor, {
+      permission: "risk.rule.approve",
+      scope: { organisationId: input.organisationId },
+      action: "risk.rule.review.record",
+      resourceType: "risk_rule_edition",
+      resourceId: input.editionId,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) =>
+        recordRuleCurrentReviewOnSnap(
+          snap,
+          {
+            organisationId: input.organisationId,
+            assignmentId: input.assignmentId,
+            expectedVersion: input.expectedVersion,
+            idempotencyKey: input.idempotencyKey,
+            ruleId: input.editionId,
+            nextReviewAt: input.nextReviewAt,
+            reason: input.reason,
+            confirmedHash: input.confirmedHash,
+          },
+          ctx.now,
+          actor.personId,
+          actor.actorKind,
+        ),
     });
   }
 

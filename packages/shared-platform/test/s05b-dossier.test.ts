@@ -55,6 +55,7 @@ function prepare(snap: ReturnType<typeof env>["snap"]) {
       requirementKey: "PUBLIC_LIABILITY",
       policyType: "PUBLIC_LIABILITY",
       mandatory: true,
+      nextReviewAt: "2026-12-10T09:00:00.000Z",
     },
     "2026-09-10T09:02:00.000Z",
     people.personCeo,

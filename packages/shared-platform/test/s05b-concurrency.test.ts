@@ -78,6 +78,7 @@ describe("EOS-S05B concurrency and idempotency", () => {
         requirementKey: "PUBLIC_LIABILITY",
         policyType: "PUBLIC_LIABILITY",
         mandatory: true,
+        nextReviewAt: "2026-12-10T09:00:00.000Z",
       },
       "2026-09-10T09:02:00.000Z",
       people.personCeo,
@@ -162,6 +163,106 @@ describe("EOS-S05B concurrency and idempotency", () => {
           "HUMAN",
         ),
       PlatformError,
+    );
+  });
+});
+
+describe("MD-PR-S061 authority concurrency", () => {
+  it("rejects a stale review decision and competing current authority", () => {
+    const { snap } = env();
+    const source = createSourceEditionOnSnap(
+      snap,
+      {
+        organisationId: people.orgMaison,
+        assignmentId: people.assignCeo,
+        expectedVersion: 0,
+        idempotencyKey: "s061-conc-source",
+        title: "NSITF",
+        publisher: "NSITF",
+        locator: "https://nsitf.gov.ng/",
+        authority: "REGULATOR",
+        jurisdiction: "NG",
+        summary: "Synthetic",
+        retrievedAt: "2026-09-10T09:00:00.000Z",
+        lastVerifiedAt: "2026-09-10T09:00:00.000Z",
+        nextReviewAt: "2026-12-10T09:00:00.000Z",
+      },
+      "2026-09-10T09:01:00.000Z",
+      people.personCeo,
+    );
+    approveSourceEditionOnSnap(
+      snap,
+      { organisationId: people.orgMaison, assignmentId: people.assignRiskReviewer, sourceId: source.id, expectedVersion: source.version, idempotencyKey: "s061-conc-source-approve" },
+      "2026-09-10T09:01:30.000Z",
+      people.personRiskReviewer,
+      "HUMAN",
+    );
+    const first = createRuleEditionOnSnap(
+      snap,
+      {
+        organisationId: people.orgMaison,
+        assignmentId: people.assignCeo,
+        expectedVersion: 0,
+        idempotencyKey: "s061-conc-rule-1",
+        ruleKey: "public-liability-event",
+        jurisdiction: "NG",
+        proposition: "First draft.",
+        sourceEditionIds: [source.id],
+        requirementKey: "PUBLIC_LIABILITY",
+        policyType: "PUBLIC_LIABILITY",
+        mandatory: true,
+        nextReviewAt: "2026-12-10T09:00:00.000Z",
+      },
+      "2026-09-10T09:02:00.000Z",
+      people.personCeo,
+    );
+    const second = createRuleEditionOnSnap(
+      snap,
+      {
+        organisationId: people.orgMaison,
+        assignmentId: people.assignCeo,
+        expectedVersion: 0,
+        idempotencyKey: "s061-conc-rule-2",
+        ruleKey: "public-liability-event",
+        jurisdiction: "NG",
+        proposition: "Second draft.",
+        sourceEditionIds: [source.id],
+        requirementKey: "PUBLIC_LIABILITY",
+        policyType: "PUBLIC_LIABILITY",
+        mandatory: true,
+        nextReviewAt: "2026-12-10T09:00:00.000Z",
+      },
+      "2026-09-10T09:02:10.000Z",
+      people.personCeo,
+    );
+    reviewRuleEditionOnSnap(
+      snap,
+      { organisationId: people.orgMaison, assignmentId: people.assignRiskReviewer, ruleId: first.id, status: "APPROVED", expectedVersion: first.version, idempotencyKey: "s061-conc-approve-1" },
+      "2026-09-10T09:03:00.000Z",
+      people.personRiskReviewer,
+      "HUMAN",
+    );
+    assert.throws(
+      () =>
+        reviewRuleEditionOnSnap(
+          snap,
+          { organisationId: people.orgMaison, assignmentId: people.assignRiskReviewer, ruleId: second.id, status: "APPROVED", expectedVersion: second.version, idempotencyKey: "s061-conc-approve-2" },
+          "2026-09-10T09:03:10.000Z",
+          people.personRiskReviewer,
+          "HUMAN",
+        ),
+      /competing current authority/,
+    );
+    assert.throws(
+      () =>
+        reviewRuleEditionOnSnap(
+          snap,
+          { organisationId: people.orgMaison, assignmentId: people.assignRiskReviewer, ruleId: first.id, status: "WITHDRAWN", expectedVersion: 1, idempotencyKey: "s061-conc-stale-review" },
+          "2026-09-10T09:03:20.000Z",
+          people.personRiskReviewer,
+          "HUMAN",
+        ),
+      (error: unknown) => error instanceof PlatformError && error.code === "VERSION_CONFLICT",
     );
   });
 });

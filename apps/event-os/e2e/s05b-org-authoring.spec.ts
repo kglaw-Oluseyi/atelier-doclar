@@ -20,6 +20,7 @@ test("S05B organisation policy and source authoring", async ({ page }) => {
   await sourceForm.getByLabel("Authority").selectOption("REGULATOR");
   await sourceForm.getByLabel("Jurisdiction").fill("NG");
   await sourceForm.getByLabel("Summary").fill("Synthetic discovery source for Playwright.");
+  await sourceForm.getByLabel("Review again by").fill("2026-12-31");
   await sourceForm.getByRole("button", { name: "Record discovery source" }).click();
   await expect(page.getByText(/Protection command applied|No change/)).toBeVisible({ timeout: 20_000 });
 });
