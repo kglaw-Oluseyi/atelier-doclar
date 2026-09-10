@@ -1,20 +1,21 @@
 # EOS-S05B Build Ledger
 
 **Slice ID:** `EOS-S05B`
-**Prompt Control ID:** `MD-PR-S054` then `MD-PR-S055` then `MD-PR-S056` then `MD-PR-S058`
+**Prompt Control ID:** `MD-PR-S054` then `MD-PR-S055` then `MD-PR-S056` then `MD-PR-S058` then `MD-PR-S060 V2`
 **Starting baseline:** `f12798a28f438408527d8811be57389661c86c25`
 **MD-PR-S055 baseline:** `505c4399ba4517a972914e67b738372055da612d`
 **MD-PR-S056 baseline:** `24cc06db961986d93a60324b3101b79bc1c8c06d`
 **MD-PR-S058 baseline:** `a66d39a8619cae93e9c905cba024fa8bd85662e1`
-**Application SHA:** `5e381ce7a92b04fc9293dc24f94dd42640a8835d`
+**MD-PR-S060 V2 baseline:** `2a701ed5f1f4d459eab8f30a3db9f48ab733af70`
+**Application SHA:** `3968e96d5773081fca3ae35c22d40a9f2cc1f9f8`
 **First implementation SHA:** `d7533f3bac1a7d429778f61044862db7fd753f8f`
-**Live Event OS deployment:** `1005dc92-ec0a-48d2-845f-0da134f31d66`
-**Status:** `REMEDIATED` under `MD-PR-S058` — not accepted; Claude not run
+**Live Event OS deployment:** `3cb1439a-06fe-417b-b142-c99ff97232a7`
+**Status:** `REMEDIATED` under `MD-PR-S060 V2` — not accepted; Claude not run
 **Production:** unauthorised
 **Catalogue accepted-slice count:** remains 5
 **Implemented range:** `RPC-01`–`RPC-55` implemented; acceptance is not this authority
 **EOS-S06:** `NOT_STARTED / NOT_AUTHORISED`
-**Evaluation:** `s05b-eval-v3` — 46 cases, contract `s05b-eval-contract-v3`, hash `a5d540db67ccb6d4e4835d8b6d113903189ad3af3ab10e1c997929bef0198617`; prior `s05b-eval-v2` PASS is honestly `STALE`
+**Evaluation:** `s05b-eval-v4` — 56 cases, contract `s05b-eval-contract-v4`, hash `e09d9efe32e78387d8b49798814c2a4ce685bb2295a8803cb7b1eab7c2cfb1e0`; prior `s05b-eval-v3` PASS is honestly `STALE`
 
 Application SHA, GitHub parity, Railway deployment ID and live smoke results are recorded in the final `MD-PR-S054` consolidated report after push and Event OS deploy.
 
@@ -163,6 +164,49 @@ Passing retries do not erase the first-run failures.
 | `/api/health/ready` | ready; POSTGRES; migrations APPLIED; `s05b-eval-v3`; 46 cases; hash `a5d540db67ccb6d4e4835d8b6d113903189ad3af3ab10e1c997929bef0198617`; `PASSED`; `persistedResultCount` 46; adapters INACTIVE |
 | Control Tower | not redeployed (GitHub watch SKIPPED) |
 | Live authenticated Playwright | held — production access token not loaded in this session |
+
+Claude not run. EOS-S05B not accepted. EOS-S06 not started.
+
+### MD-PR-S060 V2 first-run failures (appended; MD-PR-S054/S055/S056/S058 rows above are not rewritten)
+
+| Command | Classification | Root cause | Correction | Rerun |
+|---------|----------------|------------|------------|-------|
+| Auditor assemble unit | Implementation defect | Assemble authorised via `risk.dossier.view`; Auditor has view | Assemble requires `risk.dossier.assemble` | unit pass |
+| Last-known-good client projection | Implementation defect | Assemble demoted published editions; client required `status === PUBLISHED` | Separate `CURRENT` publications; client uses publication + hash | unit pass |
+| Protection 503 | Implementation defect | `redirect()` inside `withDurable` flushed as HTTP 503 | Persist inside durable; write result and redirect outside | unit pass |
+| Live Event OS ready after first `railway up` | Environment / migration defect | `risk_dossier_access_grants` was added to already-applied `004_risk_protection_normalized` | Forward-only `005_risk_dossier_access_grants`; freeze 004 checksum | ready APPLIED |
+| Live reviewer sign-in | Environment / seed defect | Seed version `1` replay skipped the new checker person | Additive `ensureMissingFixtureIdentities` on replay | reviewer identity present |
+| Live publication / client-access Playwright | Live-state / test defect | Retained Alpha S059 rules leave applicability `STALE`/`INDETERMINATE`; assemble banner raced | Unit + local Playwright prove publish and last-known-good; continuity locator scoped | local 6/6; live 4/6 |
+
+Passing retries do not erase the first-run failures.
+
+## Local gates (MD-PR-S060 V2)
+
+| Gate | Result |
+|------|--------|
+| Focused S060 unit (authority, publication, blockers, persistence boundary) | pass |
+| `pnpm typecheck` | pass |
+| `pnpm --filter @maison-doclar/shared-platform test` | 455/0 after first-run corrections |
+| `pnpm --filter @maison-doclar/event-os test` | 99/0 |
+| `pnpm programme:validate` | PASS |
+| `pnpm --filter @maison-doclar/event-os build` | pass |
+| `git diff --check` | clean |
+| Focused Playwright six S060 files | 6/0 locally |
+| MD-PR-S058 human-safe regression | 5/0 locally |
+
+`s05b-eval-v4` hash `e09d9efe32e78387d8b49798814c2a4ce685bb2295a8803cb7b1eab7c2cfb1e0` (56 cases). `productionAuthorised` remains false.
+
+## Live gates (MD-PR-S060 V2)
+
+| Gate | Result |
+|------|--------|
+| local = origin = GitHub `main` at Event OS deploy | `3968e96d5773081fca3ae35c22d40a9f2cc1f9f8` |
+| Event OS deployment | `3cb1439a-06fe-417b-b142-c99ff97232a7` SUCCESS |
+| `/api/health/live` | alive; `productionAuthorised: false`; SHA `3968e96d5773081fca3ae35c22d40a9f2cc1f9f8` |
+| `/api/health/ready` | ready; POSTGRES; migrations APPLIED; `s05b-eval-v4`; 56 cases; hash `e09d9efe32e78387d8b49798814c2a4ce685bb2295a8803cb7b1eab7c2cfb1e0`; `PASSED`; `persistedResultCount` 56; adapters INACTIVE |
+| Authorised CEO v4 run | `dae09ede-8fdf-4ee2-822e-39a480c61a2f` PASSED 56/56 |
+| Control Tower | not redeployed (`64642db9-db60-497b-a207-3d5d92fbcae3`) |
+| Live focused S060 Playwright | 4/6 (authority, Budget conflict, human-detail, continuity); publication and client-access held on retained Alpha STALE/INDETERMINATE protection state |
 
 Claude not run. EOS-S05B not accepted. EOS-S06 not started.
 

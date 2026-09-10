@@ -1,16 +1,17 @@
 # EOS-S05B Implementation Record
 
 **Slice ID:** `EOS-S05B`
-**Prompt Control ID:** `MD-PR-S054` then `MD-PR-S055` then `MD-PR-S056` then `MD-PR-S058`
+**Prompt Control ID:** `MD-PR-S054` then `MD-PR-S055` then `MD-PR-S056` then `MD-PR-S058` then `MD-PR-S060 V2`
 **Title:** Risk, Protection & Continuity Command
-**Status:** `REMEDIATED` under `MD-PR-S058` — not accepted; Claude not run
+**Status:** `REMEDIATED` under `MD-PR-S060 V2` — not accepted; Claude not run
 **Starting baseline:** `f12798a28f438408527d8811be57389661c86c25`
 **MD-PR-S055 baseline:** `505c4399ba4517a972914e67b738372055da612d`
 **MD-PR-S056 baseline:** `24cc06db961986d93a60324b3101b79bc1c8c06d`
 **MD-PR-S058 baseline:** `a66d39a8619cae93e9c905cba024fa8bd85662e1`
-**Application SHA:** `5e381ce7a92b04fc9293dc24f94dd42640a8835d`
+**MD-PR-S060 V2 baseline:** `2a701ed5f1f4d459eab8f30a3db9f48ab733af70`
+**Application SHA:** `3968e96d5773081fca3ae35c22d40a9f2cc1f9f8`
 **First implementation SHA:** `d7533f3bac1a7d429778f61044862db7fd753f8f`
-**Live Event OS deployment:** `1005dc92-ec0a-48d2-845f-0da134f31d66`
+**Live Event OS deployment:** `3cb1439a-06fe-417b-b142-c99ff97232a7`
 **Catalogue slice:** no — accepted-slice count remains 5
 **Production:** unauthorised
 **EOS-S06:** `NOT_STARTED / NOT_AUTHORISED`
@@ -117,5 +118,17 @@ Human-safe validation, form recovery and release-evidence remediation executed c
 - Event OS: every material S05B mutation uses `ProtectionMutationForm` / `useActionState`. Safe values are restored; sensitive keys are cleared. Summary heading `Check the highlighted information`; `aria-invalid` / `aria-describedby`; focus on the summary or first invalid field.
 - Action results: exact pathname scope; consumed correlations are not recalled after unrelated navigation. Process-local recall remains `TDR-S04F-001`.
 - CEO release evidence: SHA, persistence, migration, `productionAuthorised`, S05A status, S05B edition/hash/counts/zero-tolerance/run/fixture/times/blocked/ready/adapters from durable evaluation rows. Plain language: fixture assurance is not production authorisation.
+
+Claude has not been run. EOS-S05B is not accepted. EOS-S06 is not started.
+
+## MD-PR-S060 V2 execution (does not rewrite the MD-PR-S054–S058 reports)
+
+Authority, publication and operational-completeness remediation executed from baseline `2a701ed5f1f4d459eab8f30a3db9f48ab733af70`. Controlling pack: `docs/control/eos-s05b/MD_PR_S060_V2_PRESCRIPTIVE_EXECUTION_PACK.md` (sha256 `2618bdf5504452ed430cd2e2ad94a17c6ca3dd73553e550691bb14e4c0266d95`). The earlier S060 file was not present in the repository and was not executed. Application SHA `3968e96d5773081fca3ae35c22d40a9f2cc1f9f8`. Live Event OS deployment `3cb1439a-06fe-417b-b142-c99ff97232a7`.
+
+- Permissions: collision-free `risk.dossier.assemble` / `submit` / `export` / `client_access.manage`. Auditor cannot assemble. Event Director cannot publish. System Administrator has no `risk.dossier.*`. Fixture role `RISK_GOVERNANCE_REVIEWER` is the independent source/rule checker.
+- Publication: working editions stay `APPROVED` after publish; `CURRENT` publications are a separate aggregate; client projection uses last-known-good hash. Forward SQL `005_risk_dossier_access_grants` keeps applied `004` checksum `f060aafaa355b634da96d6d0a3ca75ae238679a44a3233d10b1f1b08b9349a76`. Snapshot migration `EOS-S05B-PROTECTION-V3` backfills publications.
+- Persistence: mutate and verify inside `withDurable`; write action result and `redirect` outside. `VERSION_CONFLICT` is not HTTP 503.
+- Client access: hash-only grants with `EVENT_OS_ATELIER_LINK_PEPPER`; separate `/client-dossier/[token]` session.
+- Evaluation: `s05b-eval-v4` / `s05b-eval-contract-v4`, 56 cases, hash `e09d9efe32e78387d8b49798814c2a4ce685bb2295a8803cb7b1eab7c2cfb1e0`. Live CEO run `dae09ede-8fdf-4ee2-822e-39a480c61a2f` PASSED 56/56 persisted 56. Prior v3 hash is not current.
 
 Claude has not been run. EOS-S05B is not accepted. EOS-S06 is not started.
