@@ -4,9 +4,9 @@
 **Prompt Control ID:** `MD-PR-S054` then `MD-PR-S055`
 **Starting baseline:** `f12798a28f438408527d8811be57389661c86c25`
 **MD-PR-S055 baseline:** `505c4399ba4517a972914e67b738372055da612d`
-**Application SHA:** `4714ce5259faf235ec39c9eaac6ea7ddc8142495`
+**Application SHA:** `6077a752955fa50f145943349b430a8a2a39efae`
 **First implementation SHA:** `d7533f3bac1a7d429778f61044862db7fd753f8f`
-**Live Event OS deployment:** `28eb49b2-4886-4bb6-89e4-5942685e8fe7`
+**Live Event OS deployment:** `1b534bcc-bd9e-45b8-9876-06f23eeb4a3e`
 **Status:** `REMEDIATED` under `MD-PR-S055` — not accepted; Claude not run
 **Production:** unauthorised
 **Catalogue accepted-slice count:** remains 5
