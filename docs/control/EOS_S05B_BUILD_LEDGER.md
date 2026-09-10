@@ -3,7 +3,9 @@
 **Slice ID:** `EOS-S05B`
 **Prompt Control ID:** `MD-PR-S054`
 **Starting baseline:** `f12798a28f438408527d8811be57389661c86c25`
-**Application SHA:** `d7533f3bac1a7d429778f61044862db7fd753f8f`
+**Application SHA:** `9c67a6c1cf0b929f00a2c6758496cb33d4a396e6`
+**First implementation SHA:** `d7533f3bac1a7d429778f61044862db7fd753f8f`
+**Live Event OS deployment:** `28eb49b2-4886-4bb6-89e4-5942685e8fe7`
 **Status:** `IMPLEMENTED / NOT ACCEPTED`
 **Production:** unauthorised
 **Catalogue accepted-slice count:** remains 5
