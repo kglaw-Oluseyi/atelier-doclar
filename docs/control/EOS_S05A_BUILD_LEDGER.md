@@ -1,9 +1,9 @@
 # EOS-S05A Build Ledger
 
 **Slice ID:** `EOS-S05A`
-**Prompt Control ID:** `MD-PR-S049` (action-result truth of MD-PR-S048; prior `MD-PR-S047` / `MD-PR-S045` / `MD-PR-S043` / `MD-PR-S041`)
-**Starting baseline for MD-PR-S049:** `dd959d3fe3eb076b45991b29167557b45b890e68`
-**Application/test SHA:** `315669da798c26219f7b3c7e16a2cb65783fdd90`
+**Prompt Control ID:** `MD-PR-S051` (final decision-result focus of MD-PR-S049; prior `MD-PR-S049` / `MD-PR-S047` / `MD-PR-S045` / `MD-PR-S043` / `MD-PR-S041`)
+**Starting baseline for MD-PR-S051:** `edb0a019c4dc104678924f0e27f4796a574456ba`
+**Application/test SHA:** `50322fa5fdf7b46437dc9d62579e2e2ad918e762`
 **Status:** `IMPLEMENTED / NOT ACCEPTED`
 **Production:** unauthorised
 **Catalogue accepted-slice count:** remains 5
@@ -255,6 +255,32 @@ S048 remaining defects are remediated. The Budget calculation engine was not reo
 | Live focused S049 (on `bf159b5`) | Journeys A and C PASS; Journey B FAIL (denial heading inactive — consume blurred first focus) |
 | Live Event OS deploy (keep first focus until F5) | `5ddb009c-4462-4c7f-b9d5-de957f39e342` SUCCESS at `315669da798c26219f7b3c7e16a2cb65783fdd90` |
 | Live focused S049 (after focus-release fix) | PASS — 3/3 against `https://event-os-production-bc8d.up.railway.app` |
+| Control Tower | not deployed |
+| Claude / EOS-S06 / acceptance | not run / not started / not accepted |
+| `productionAuthorised` | false, unchanged |
+
+## MD-PR-S051 final decision-result focus correction
+
+Maker/checker denial now leaves `document.activeElement` on `#operational-state-title`, not `<body>`. Replay truth, generated timestamps, scoped locks and the evaluation corpus were not reopened. EOS-S05A remains NOT ACCEPTED. No TDR was manufactured.
+
+| Field | Value |
+|-------|-------|
+| Prompt control | `MD-PR-S051` |
+| Starting baseline | `edb0a019c4dc104678924f0e27f4796a574456ba` |
+| Application SHA | `50322fa5fdf7b46437dc9d62579e2e2ad918e762` |
+| Corpus | unchanged `s05a-eval-v6` / 46/0 / still PASSED and release-ready |
+| First-run Playwright | FAIL — after settled hydration `document.activeElement` was `BODY` (first on second denial after F5; then on first denial once the test blurred the leftover calculate focus) |
+| Local S051 Playwright | PASS — 3/3 after consume-after-verified-focus and same-document restore |
+| Local S049 Journey B | PASS — unchanged assertions |
+| `pnpm typecheck` | PASS |
+| `pnpm --filter @maison-doclar/shared-platform test` | 403 pass / 0 fail |
+| `pnpm --filter @maison-doclar/event-os test` | 93 pass / 0 fail |
+| `pnpm programme:validate` | PASS |
+| `pnpm --filter @maison-doclar/event-os build` | PASS |
+| `git diff --check` | PASS |
+| Live Event OS deploy | `4ab04e5e-0e53-48b2-8d69-fa431b3bcb5a` SUCCESS at `50322fa5fdf7b46437dc9d62579e2e2ad918e762` |
+| Live health | `alive`/`ready` true; `POSTGRES`/`APPLIED`; `productionAuthorised` false; layout READY/READY; evaluation PASSED / not blocked |
+| Live focused S051 | PASS — 3/3 against `https://event-os-production-bc8d.up.railway.app` (denial heading focused; F5 does not refocus; second denial focuses again) |
 | Control Tower | not deployed |
 | Claude / EOS-S06 / acceptance | not run / not started / not accepted |
 | `productionAuthorised` | false, unchanged |

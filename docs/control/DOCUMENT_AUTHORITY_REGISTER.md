@@ -319,3 +319,12 @@ This addendum does not rewrite the B0 row set or earlier addenda. Catalogue acce
 | MD-PR-S049 execution pack | `docs/control/eos-s05a/MD_PR_S049_EOS_S05A_ACTION_RESULT_TRUTH_AND_FOCUS.md` | CONTROLLING IMPLEMENTATION AUTHORITY for this remediation | Remediation of MD-PR-S048 action-result truth, provenance and focus findings. Does not accept EOS-S05A. |
 | EOS-S05A implementation record | `docs/control/EOS_S05A_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | S049 disposition recorded in current-state / ledger / evidence. Not acceptance. |
 | EOS-S05A build ledger | `docs/control/EOS_S05A_BUILD_LEDGER.md` | IMPLEMENTATION LEDGER | S049 local gates and corpus edition `s05a-eval-v6`. |
+
+## Addendum — 2026-09-10 EOS-S05A final decision-result focus (`MD-PR-S051`)
+
+This addendum does not rewrite the B0 row set or earlier addenda. Catalogue accepted-slice count remains 5. EOS-S06 remains unauthorised. Production remains unauthorised. EOS-S05A is not accepted. Claude was not run. Control Tower was not deployed.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| MD-PR-S051 prompt control | `MD-PR-S051` | CONTROLLING IMPLEMENTATION AUTHORITY for this focus correction | Remediation of the S049 maker/checker denial `activeElement === body` finding. Does not accept EOS-S05A. |
+| EOS-S05A build ledger | `docs/control/EOS_S05A_BUILD_LEDGER.md` | IMPLEMENTATION LEDGER | S051 local and live focus evidence. Corpus unchanged. |

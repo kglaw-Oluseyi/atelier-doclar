@@ -319,3 +319,16 @@ Milestone 4 is authorised on the Milestone 1–3 contracts. Historic S5-01–S5-
 | Claude-in-Chrome | Not run. Ready for targeted Claude verification after AI CTO review. |
 | EOS-S06 / `MD-PR-S036` | RETAINED. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. |
 | `productionAuthorised` | RETAINED false. Not changed. |
+
+## Addendum — 2026-09-10 EOS-S05A final decision-result focus (`MD-PR-S051`)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| MD-PR-S049 denial heading visible but `document.activeElement` remains `<body>` | SUPERSEDED by `MD-PR-S051` focus sequencing. Findings remain recorded; disposition is implemented, not accepted. |
+| Evaluation corpus `s05a-eval-v6` / 46 cases | RETAINED. No corpus change. Prior PASSED run remains current. |
+| Budget calculation engine / replay / generated time / scoped locks | RETAINED. Not reopened. |
+| Catalogue accepted-slice count | RETAINED at 5. |
+| Control Tower | Compatibility-only. Not a deploy target for this run. |
+| Claude-in-Chrome | Not run. Ready for one-action Claude verification. |
+| EOS-S06 / `MD-PR-S036` | RETAINED. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. |
+| `productionAuthorised` | RETAINED false. Not changed. |
