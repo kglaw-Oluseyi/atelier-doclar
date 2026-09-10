@@ -8,7 +8,7 @@ export default async function ClientDossierTokenPage({ params }: { params: Promi
   const { token } = await params;
   const runtime = getRuntime();
   try {
-    const view = runtime.service.getClientDossierByToken(token, process.env.EVENT_OS_TEST_NOW);
+    const view = await runtime.service.getClientDossierByToken(token, process.env.EVENT_OS_TEST_NOW);
     return (
       <main className="atelier-shell" data-testid="client-dossier-session">
         <AtelierPageHeader

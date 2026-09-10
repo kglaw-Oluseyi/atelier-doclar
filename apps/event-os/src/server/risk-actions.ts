@@ -814,7 +814,7 @@ export async function issueDossierAccessAction(prev: ProtectionFormState, formDa
     scopePath: dossierScopePathFromForm(formData, `/app/events/${eventId}/protection/dossier`),
     actionType: "risk.dossier.client_access.issue",
     execute: async (actor, data) => {
-      const issued = getRuntime().service.issueRiskDossierAccess(actor, { ...envelope(data), eventId });
+      const issued = await getRuntime().service.issueRiskDossierAccess(actor, { ...envelope(data), eventId });
       await writeIssuedAccessFlash({ kind: "dossier", token: issued.token, subjectId: issued.id });
       return issued;
     },

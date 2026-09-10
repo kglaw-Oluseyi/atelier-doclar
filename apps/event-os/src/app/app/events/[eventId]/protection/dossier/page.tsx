@@ -61,7 +61,7 @@ export default async function FocusedEventDossierPage({
       </AppShell>
     );
   }
-  const workspace = runtime.service.getEventDossierReview(actor, organisation.id, event.id);
+  const workspace = await Promise.resolve(runtime.service.getEventDossierReview(actor, organisation.id, event.id));
   const assignmentId = runtime.service.resolveActor(person.id).assignments.find((item) => item.eventId === event.id || !item.eventId)?.id ?? "";
   const presented = await loadPresentedActionResult({
     requestPath: `/app/events/${event.id}/protection/dossier`,
@@ -71,7 +71,12 @@ export default async function FocusedEventDossierPage({
     eventId: event.id,
   });
   const copy = clientDossierCopy();
-  const currentDossier = workspace.workingDossier ?? workspace.dossiers.at(-1);
+  const commandEdition = workspace.workingEdition ?? workspace.workingDossier ?? workspace.dossiers.at(-1);
+  const currentDossier = workspace.workingDossier ?? commandEdition;
+  const commandVersion =
+    commandEdition && "version" in commandEdition && typeof commandEdition.version === "number" ? commandEdition.version : 1;
+  const commandId = commandEdition?.id ?? "";
+  const commandHash = commandEdition && "contentHash" in commandEdition ? String(commandEdition.contentHash ?? "") : "";
   const currentPublication = workspace.publications.find((item) => item.current || item.status === "CURRENT");
   const issuedAccess = await readIssuedAccessFlash();
   const envelopeFields = { organisationId: organisation.id, eventId: event.id, assignmentId };
@@ -133,7 +138,7 @@ export default async function FocusedEventDossierPage({
         {permissions.dossierAssemble ? (
           <ProtectionMutationForm action={assembleDossierAction} testId="protection-assemble-dossier">
             <Envelope fields={createFields} />
-            <input type="hidden" name="reason" value="S062 uniquely labelled dossier edition" />
+            <input type="hidden" name="reason" value="S063 uniquely labelled dossier edition" />
             <IdempotencyField />
             <button type="submit" className="button">
               Assemble dossier edition
@@ -142,7 +147,7 @@ export default async function FocusedEventDossierPage({
         ) : null}
         {currentDossier && permissions.dossierSubmit && currentDossier.status === "DRAFT" ? (
           <ProtectionMutationForm action={submitDossierAction}>
-            <Envelope fields={{ ...envelopeFields, expectedVersion: "version" in currentDossier ? Number(currentDossier.version) : 1, dossierId: currentDossier.id }} />
+            <Envelope fields={{ ...envelopeFields, expectedVersion: commandVersion, dossierId: commandId || currentDossier.id }} />
             <IdempotencyField />
             <button type="submit" className="button secondary">
               Submit dossier
@@ -151,7 +156,7 @@ export default async function FocusedEventDossierPage({
         ) : null}
         {currentDossier && permissions.dossierApprove && currentDossier.status === "SUBMITTED" ? (
           <ProtectionMutationForm action={approveDossierAction}>
-            <Envelope fields={{ ...envelopeFields, expectedVersion: "version" in currentDossier ? Number(currentDossier.version) : 1, dossierId: currentDossier.id }} />
+            <Envelope fields={{ ...envelopeFields, expectedVersion: commandVersion, dossierId: commandId || currentDossier.id }} />
             <IdempotencyField />
             <button type="submit" className="button">
               Approve dossier
@@ -160,9 +165,9 @@ export default async function FocusedEventDossierPage({
         ) : null}
         {currentDossier && permissions.dossierPublish && currentDossier.status === "APPROVED" ? (
           <ProtectionMutationForm action={publishDossierAction}>
-            <Envelope fields={{ ...envelopeFields, expectedVersion: "version" in currentDossier ? Number(currentDossier.version) : 1, dossierId: currentDossier.id }} />
+            <Envelope fields={{ ...envelopeFields, expectedVersion: commandVersion, dossierId: commandId || currentDossier.id }} />
             <IdempotencyField />
-            <input type="hidden" name="approvedHash" value={currentDossier.contentHash ?? ""} />
+            <input type="hidden" name="approvedHash" value={commandHash || currentDossier.contentHash || ""} />
             <button type="submit" className="button secondary">
               Publish dossier without sending
             </button>
@@ -170,7 +175,7 @@ export default async function FocusedEventDossierPage({
         ) : null}
         {currentDossier && permissions.dossierExport && (currentDossier.status === "APPROVED" || currentDossier.status === "PUBLISHED") && workspace.publications.some((item) => item.current || item.status === "CURRENT") ? (
           <ProtectionMutationForm action={exportDossierAction}>
-            <Envelope fields={{ ...envelopeFields, expectedVersion: "version" in currentDossier ? Number(currentDossier.version) : 1, dossierId: currentDossier.id }} />
+            <Envelope fields={{ ...envelopeFields, expectedVersion: commandVersion, dossierId: commandId || currentDossier.id }} />
             <IdempotencyField />
             <button type="submit" className="button secondary">
               Generate permission-safe export

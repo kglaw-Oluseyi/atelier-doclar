@@ -776,22 +776,21 @@ import {
   transitionFallbackOnSnap,
 } from "./risk-continuity.js";
 import { addIncidentEntryOnSnap, addIncidentNoteOnSnap, decideLearningOnSnap, proposeLearningOnSnap, reportIncidentOnSnap, transitionIncidentOnSnap } from "./risk-incidents.js";
-import { generateDossierAccessToken, hashDossierAccessToken, issueDossierAccessOnSnap, renewDossierAccessOnSnap, resolveDossierAccessOnSnap, revokeDossierAccessOnSnap, clientDossierFromGrant } from "./risk-dossier-access.js";
+import { revokeDossierAccessOnSnap } from "./risk-dossier-access.js";
 import { projectRiskBudgetOnSnap } from "./risk-budget-projection.js";
 import {
   assembleDossierOnSnap,
-  currentDossierPublication,
-  currentWorkingDossier,
   eventProtectionProjection,
   exportDossierOnSnap,
   organisationProtectionProjection,
-  publishedClientDossierProjection,
   protectionAudienceFromRole,
   publishDossierOnSnap,
   recordClientDossierMessageOnSnap,
   transitionDossierOnSnap,
 } from "./risk-projections.js";
-import { redactDossier } from "./risk-disclosure.js";
+import { RiskDossierCommandService } from "./risk-dossier-command-service.js";
+import { MemoryRiskDossierRepository } from "./memory-risk-dossier-store.js";
+import { PostgresPlatformStore } from "./postgres-store.js";
 
 export interface ActorContext {
   personId: string;
@@ -862,11 +861,63 @@ function parseStrict<T>(schema: { safeParse: (value: unknown) => { success: true
 
 export class PlatformService {
   private lastMutationEffect: DurableMutationEffect | undefined;
+  private dossierCommandService: RiskDossierCommandService | undefined;
 
   constructor(
     private readonly store: PlatformStore,
     private readonly options: PlatformServiceOptions = {},
   ) {}
+
+  private dossierCommands(): RiskDossierCommandService {
+    if (!this.dossierCommandService) {
+      const postgres = this.store instanceof PostgresPlatformStore ? this.store : undefined;
+      const repo = postgres ? postgres.dossierRepository() : new MemoryRiskDossierRepository(this.store);
+      this.dossierCommandService = new RiskDossierCommandService(repo, {
+        tokenPepper: () => this.atelierAccessConfig().linkPepper,
+        remember: postgres ? (overlay) => postgres.adoptRiskOverlay(overlay) : undefined,
+        onEffect: (effect) => {
+          this.lastMutationEffect = effect;
+        },
+      });
+    }
+    return this.dossierCommandService;
+  }
+
+  private assertDossierCommand(
+    actor: ActorContext,
+    permission: PermissionKey,
+    scope: { organisationId: string; eventId?: string },
+    action: string,
+    resourceType: string,
+    resourceId?: string,
+  ): void {
+    const now = actor.now ?? new Date().toISOString();
+    const actorSnap = this.actorSnapshot(actor);
+    const decision = this.decide(actorSnap, permission, scope, {
+      type: resourceType,
+      organisationId: scope.organisationId,
+      eventId: scope.eventId,
+    }, actor);
+    if (decision.allow) return;
+    this.lastMutationEffect = notAppliedMutationEffect(false);
+    if (!(this.store instanceof PostgresPlatformStore)) {
+      const snap = this.store.snapshot();
+      this.writeAudit(snap, {
+        action,
+        outcome: "DENIED",
+        actorPersonId: actor.personId,
+        organisationId: scope.organisationId,
+        eventId: scope.eventId,
+        resourceType,
+        resourceId,
+        correlationId: actor.correlationId,
+        reason: decision.reason,
+        occurredAt: now,
+      });
+      this.store.replace(snap);
+    }
+    throw this.denyError(decision.reason);
+  }
 
   consumeLastMutationEffect(): DurableMutationEffect | undefined {
     const effect = this.lastMutationEffect;
@@ -7103,20 +7154,8 @@ export class PlatformService {
 
   getEventDossierReview(actor: ActorContext, organisationId: string, eventId: string) {
     this.authorizeQuery(actor, "risk.event.view", { organisationId, eventId });
-    const snap = this.store.snapshot();
-    const event = snap.events.find((item) => item.id === eventId);
-    if (!event || event.organisationId !== organisationId) {
-      throw new PlatformError("SCOPE_MISMATCH", "event is outside this organisation");
-    }
     const role = this.actorSnapshot(actor).roles[0]?.key ?? roleKeyForId(this.actorSnapshot(actor).roles[0]?.id ?? "");
-    const audience = protectionAudienceFromRole(role);
-    const working = currentWorkingDossier(snap, eventId);
-    return {
-      workingDossier: working ? redactDossier(working, audience) : undefined,
-      dossiers: snap.riskDossierEditions.filter((item) => item.eventId === eventId).map((item) => redactDossier(item, audience)),
-      publications: snap.riskDossierPublications.filter((item) => item.eventId === eventId),
-      accessGrants: (snap.riskDossierAccessGrants ?? []).filter((item) => item.eventId === eventId),
-    };
+    return this.dossierCommands().getStaffWorkspace(organisationId, eventId, protectionAudienceFromRole(role));
   }
 
   listGovernedProtectionParties(actor: ActorContext, organisationId: string, kind?: RiskProtectionPartyKind) {
@@ -7126,7 +7165,7 @@ export class PlatformService {
 
   getPublishedClientDossier(actor: ActorContext, organisationId: string, eventId: string) {
     this.authorizeQuery(actor, "risk.dossier.view", { organisationId, eventId });
-    return publishedClientDossierProjection(this.store.snapshot(), organisationId, eventId);
+    return this.dossierCommands().getClientProjection(organisationId, eventId);
   }
 
   createRiskSource(actor: ActorContext, raw: unknown) {
@@ -7731,14 +7770,8 @@ export class PlatformService {
 
   assembleRiskDossier(actor: ActorContext, raw: unknown) {
     const input = raw as Parameters<typeof assembleDossierOnSnap>[1];
-    return this.mutate(actor, {
-      permission: "risk.dossier.assemble",
-      scope: { organisationId: input.organisationId, eventId: input.eventId },
-      action: "risk.dossier.assemble",
-      resourceType: "risk_dossier_edition",
-      idempotencyKey: input.idempotencyKey,
-      run: (snap, ctx) => assembleDossierOnSnap(snap, input, ctx.now, actor.personId),
-    });
+    this.assertDossierCommand(actor, "risk.dossier.assemble", { organisationId: input.organisationId, eventId: input.eventId }, "risk.dossier.assemble", "risk_dossier_edition");
+    return this.dossierCommands().assemble(actor, input);
   }
 
   transitionRiskDossier(actor: ActorContext, raw: unknown) {
@@ -7748,54 +7781,28 @@ export class PlatformService {
     }
     const permission =
       input.to === "APPROVED" ? "risk.dossier.approve" : input.to === "SUBMITTED" ? "risk.dossier.submit" : "risk.dossier.assemble";
-    return this.mutate(actor, {
-      permission,
-      scope: { organisationId: input.organisationId, eventId: input.eventId },
-      action: input.to === "SUBMITTED" ? "risk.dossier.submit" : input.to === "APPROVED" ? "risk.dossier.approve" : "risk.dossier.transition",
-      resourceType: "risk_dossier_edition",
-      resourceId: input.dossierId,
-      idempotencyKey: input.idempotencyKey,
-      run: (snap, ctx) => transitionDossierOnSnap(snap, input, ctx.now, actor.personId, actor.actorKind),
-    });
+    const action = input.to === "SUBMITTED" ? "risk.dossier.submit" : input.to === "APPROVED" ? "risk.dossier.approve" : "risk.dossier.transition";
+    this.assertDossierCommand(actor, permission, { organisationId: input.organisationId, eventId: input.eventId }, action, "risk_dossier_edition", input.dossierId);
+    return input.to === "SUBMITTED" ? this.dossierCommands().submit(actor, input) : this.dossierCommands().approve(actor, input);
   }
 
   publishRiskDossier(actor: ActorContext, raw: unknown) {
     const input = raw as Parameters<typeof publishDossierOnSnap>[1];
-    return this.mutate(actor, {
-      permission: "risk.dossier.publish",
-      scope: { organisationId: input.organisationId, eventId: input.eventId },
-      action: "risk.dossier.publish",
-      resourceType: "risk_dossier_publication",
-      resourceId: input.editionId ?? input.dossierId,
-      idempotencyKey: input.idempotencyKey,
-      alreadyApplied: (snap) => {
-        const current = currentDossierPublication(snap, input.eventId);
-        const editionId = input.editionId ?? input.dossierId;
-        if (
-          current &&
-          (current.dossierId === editionId || (current as { editionId?: string }).editionId === editionId) &&
-          (current.approvedHash === input.approvedHash || current.contentHash === input.approvedHash)
-        ) {
-          return current;
-        }
-        return undefined;
-      },
-      replayIfAlreadyApplied: true,
-      run: (snap, ctx) => publishDossierOnSnap(snap, input, ctx.now, actor.personId, actor.actorKind),
-    });
+    this.assertDossierCommand(
+      actor,
+      "risk.dossier.publish",
+      { organisationId: input.organisationId, eventId: input.eventId },
+      "risk.dossier.publish",
+      "risk_dossier_publication",
+      input.editionId ?? input.dossierId,
+    );
+    return this.dossierCommands().publish(actor, input);
   }
 
   exportRiskDossier(actor: ActorContext, raw: unknown) {
     const input = raw as Parameters<typeof exportDossierOnSnap>[1];
-    return this.mutate(actor, {
-      permission: "risk.dossier.export",
-      scope: { organisationId: input.organisationId, eventId: input.eventId },
-      action: "risk.dossier.export",
-      resourceType: "risk_dossier_export",
-      resourceId: input.dossierId,
-      idempotencyKey: input.idempotencyKey,
-      run: (snap, ctx) => exportDossierOnSnap(snap, input, ctx.now, actor.personId),
-    });
+    this.assertDossierCommand(actor, "risk.dossier.export", { organisationId: input.organisationId, eventId: input.eventId }, "risk.dossier.export", "risk_dossier_export", input.dossierId);
+    return this.dossierCommands().export(actor, input);
   }
 
   addRiskIncidentEntry(actor: ActorContext, raw: unknown) {
@@ -7837,98 +7844,34 @@ export class PlatformService {
 
   issueRiskDossierAccess(actor: ActorContext, raw: unknown) {
     const input = raw as { organisationId: string; eventId: string; assignmentId: string; expectedVersion: number; idempotencyKey: string; audiencePersonId?: string };
-    const token = generateDossierAccessToken();
-    const tokenHash = hashDossierAccessToken(token, this.atelierAccessConfig().linkPepper);
-    const expiresAt = new Date(Date.parse(actor.now ?? new Date().toISOString()) + 7 * 24 * 3600_000).toISOString();
-    const grant = this.mutate(actor, {
-      permission: "risk.dossier.client_access.manage",
-      scope: { organisationId: input.organisationId, eventId: input.eventId },
-      action: "risk.dossier.client_access.issue",
-      resourceType: "risk_dossier_access_grant",
-      idempotencyKey: input.idempotencyKey,
-      run: (snap, ctx) =>
-        issueDossierAccessOnSnap(
-          snap,
-          { ...input, tokenHash, expiresAt },
-          ctx.now,
-          actor.personId,
-        ),
-    });
-    return { ...grant, token };
+    this.assertDossierCommand(actor, "risk.dossier.client_access.manage", { organisationId: input.organisationId, eventId: input.eventId }, "risk.dossier.client_access.issue", "risk_dossier_access_grant");
+    return this.dossierCommands().issueClientAccess(actor, input);
   }
 
   revokeRiskDossierAccess(actor: ActorContext, raw: unknown) {
     const input = raw as Parameters<typeof revokeDossierAccessOnSnap>[1];
-    return this.mutate(actor, {
-      permission: "risk.dossier.client_access.manage",
-      scope: { organisationId: input.organisationId, eventId: input.eventId },
-      action: "risk.dossier.client_access.revoke",
-      resourceType: "risk_dossier_access_grant",
-      resourceId: input.grantId,
-      idempotencyKey: input.idempotencyKey,
-      run: (snap, ctx) => revokeDossierAccessOnSnap(snap, input, ctx.now, actor.personId),
-    });
+    this.assertDossierCommand(actor, "risk.dossier.client_access.manage", { organisationId: input.organisationId, eventId: input.eventId }, "risk.dossier.client_access.revoke", "risk_dossier_access_grant", input.grantId);
+    return this.dossierCommands().revokeClientAccess(actor, input);
   }
 
   renewRiskDossierAccess(actor: ActorContext, raw: unknown) {
     const input = raw as { organisationId: string; eventId: string; assignmentId: string; expectedVersion: number; idempotencyKey: string; grantId: string };
-    const token = generateDossierAccessToken();
-    const tokenHash = hashDossierAccessToken(token, this.atelierAccessConfig().linkPepper);
-    const expiresAt = new Date(Date.parse(actor.now ?? new Date().toISOString()) + 7 * 24 * 3600_000).toISOString();
-    const grant = this.mutate(actor, {
-      permission: "risk.dossier.client_access.manage",
-      scope: { organisationId: input.organisationId, eventId: input.eventId },
-      action: "risk.dossier.client_access.renew",
-      resourceType: "risk_dossier_access_grant",
-      resourceId: input.grantId,
-      idempotencyKey: input.idempotencyKey,
-      run: (snap, ctx) =>
-        renewDossierAccessOnSnap(snap, { ...input, tokenHash, expiresAt }, ctx.now, actor.personId),
-    });
-    return { ...grant, token };
+    this.assertDossierCommand(actor, "risk.dossier.client_access.manage", { organisationId: input.organisationId, eventId: input.eventId }, "risk.dossier.client_access.renew", "risk_dossier_access_grant", input.grantId);
+    return this.dossierCommands().renewClientAccess(actor, input);
   }
 
   getClientDossierByToken(token: string, now = new Date().toISOString()) {
-    const snap = this.store.snapshot();
-    const tokenHash = hashDossierAccessToken(token, this.atelierAccessConfig().linkPepper);
-    const grant = resolveDossierAccessOnSnap(snap, tokenHash, now);
-    return { grant: { id: grant.id, eventId: grant.eventId, organisationId: grant.organisationId, status: grant.status, expiresAt: grant.expiresAt }, dossier: clientDossierFromGrant(snap, grant) };
+    return this.dossierCommands().resolveClientSession(token, now);
   }
 
   recordClientDossierMessageByToken(token: string, raw: unknown) {
-    const snap = this.store.snapshot();
-    const now = new Date().toISOString();
-    const tokenHash = hashDossierAccessToken(token, this.atelierAccessConfig().linkPepper);
-    const grant = resolveDossierAccessOnSnap(snap, tokenHash, now);
-    const input = raw as { kind: "ACKNOWLEDGE" | "QUESTION"; body: string };
-    const publication = currentDossierPublication(snap, grant.eventId);
-    if (!publication || publication.organisationId !== grant.organisationId) {
-      throw new PlatformError("NOT_FOUND", "no published client dossier is available");
-    }
-    publication.clientMessages = [
-      ...(publication.clientMessages ?? []),
-      {
-        id: crypto.randomUUID(),
-        kind: input.kind,
-        body: String(input.body ?? "").trim(),
-        createdByPersonId: grant.audiencePersonId ?? grant.issuedByPersonId,
-        createdAt: now,
-      },
-    ];
-    this.store.replace(snap);
-    return publication;
+    return this.dossierCommands().recordClientMessageByToken(token, raw);
   }
 
   recordClientDossierMessage(actor: ActorContext, raw: unknown) {
     const input = raw as Parameters<typeof recordClientDossierMessageOnSnap>[1];
-    return this.mutate(actor, {
-      permission: "risk.dossier.view",
-      scope: { organisationId: input.organisationId, eventId: input.eventId },
-      action: "risk.dossier.client-message",
-      resourceType: "risk_dossier_publication",
-      idempotencyKey: input.idempotencyKey,
-      run: (snap, ctx) => recordClientDossierMessageOnSnap(snap, input, ctx.now, actor.personId),
-    });
+    this.assertDossierCommand(actor, "risk.dossier.view", { organisationId: input.organisationId, eventId: input.eventId }, "risk.dossier.client-message", "risk_dossier_publication");
+    return this.dossierCommands().recordClientMessage(actor, input);
   }
 
   getS05AEvaluationReadiness(actor: ActorContext | undefined, organisationId: string) {

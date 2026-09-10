@@ -13,6 +13,8 @@ import { validateS05PersistedCollections } from "./venue-persistence.js";
 import { validateS05APersistedCollections } from "./eec-persistence.js";
 import { validateS05BPersistedCollections } from "./risk-persistence.js";
 import { PostgresRiskProtectionStore, PostgresRiskTransaction } from "./postgres-risk-store.js";
+import { PostgresRiskDossierRepository } from "./postgres-risk-dossier-store.js";
+import type { DossierOverlay } from "./risk-dossier-command-service.js";
 import { writeRiskSnapshotDelta } from "./risk-repository.js";
 import { backfillNormalizedRiskTables } from "./risk-normalized-migration.js";
 import { RISK_SQL_TABLES } from "./risk-postgres-schema.js";
@@ -326,6 +328,23 @@ export class PostgresPlatformStore implements PlatformStore {
       }
     }
     return next;
+  }
+
+  dossierRepository(): PostgresRiskDossierRepository {
+    return new PostgresRiskDossierRepository(this.client);
+  }
+
+  adoptRiskOverlay(overlay: DossierOverlay): void {
+    const upsert = <T extends { id: string }>(current: T[], incoming?: T[]) => {
+      if (!incoming?.length) return current;
+      const byId = new Map(current.map((item) => [item.id, item]));
+      for (const row of incoming) byId.set(row.id, row);
+      return [...byId.values()];
+    };
+    this.state.riskDossierEditions = upsert(this.state.riskDossierEditions, overlay.editions);
+    this.state.riskDossierPublications = upsert(this.state.riskDossierPublications, overlay.publications);
+    this.state.riskDossierAccessGrants = upsert(this.state.riskDossierAccessGrants, overlay.grants);
+    this.state.riskDossierExports = upsert(this.state.riskDossierExports, overlay.exports);
   }
 
   async flush(): Promise<void> {
@@ -706,6 +725,11 @@ export class MemoryPlatformPg implements PgTransactor {
       if (!row) return { rows: [], rowCount: 0 };
       return { rows: [{ version: row.version }] as T[], rowCount: 1 };
     }
+    if (sql.startsWith("SELECT body FROM platform_documents WHERE collection")) {
+      const [collection, id] = values as [string, string];
+      const rows = this.documents.filter((row) => row.collection === collection && (!id || row.id === id));
+      return { rows: rows.map((row) => ({ body: row.body })) as T[], rowCount: rows.length };
+    }
     if (sql.startsWith("SELECT collection, body FROM platform_documents")) {
       return { rows: this.documents.map((row) => ({ collection: row.collection, body: row.body })) as T[], rowCount: this.documents.length };
     }
@@ -915,6 +939,9 @@ export class MemoryPlatformPg implements PgTransactor {
         if (row.table !== table || row.id === keepId || row.current !== true) continue;
         if (byParent ? row.parent_id === scoped : row.event_id === scoped) {
           row.current = false;
+          if (row.body && typeof row.body === "object") {
+            (row.body as { current?: boolean }).current = false;
+          }
           count += 1;
         }
       }
@@ -952,27 +979,43 @@ export class MemoryPlatformPg implements PgTransactor {
       this.riskRows.splice(index, 1);
       return { rows: [], rowCount: 1 };
     }
-    if (sql.startsWith("SELECT body FROM") || sql.startsWith("SELECT body FROM")) {
-      if (sql.includes("WHERE id")) {
-        const id = String(values[0] ?? "");
-        const rows = this.riskRows.filter((row) => row.table === table && row.id === id);
-        return { rows: rows.map((row) => ({ body: row.body })) as T[], rowCount: rows.length };
-      }
+    if (sql.startsWith("SELECT COUNT")) {
+      const organisationId = values[0] ? String(values[0]) : undefined;
+      const eventId = values[1] ? String(values[1]) : undefined;
+      const count = this.riskRows.filter((row) => {
+        if (row.table !== table) return false;
+        if (organisationId && row.organisation_id !== organisationId) return false;
+        if (eventId && row.event_id !== eventId) return false;
+        return true;
+      }).length;
+      return { rows: [{ count } as T], rowCount: 1 };
+    }
+    if (sql.startsWith("SELECT body FROM") || sql.startsWith("SELECT")) {
+      const organisationId = sql.includes("organisation_id") ? String(values[0] ?? "") : undefined;
+      const eventId = sql.includes("event_id") ? String(values[1] ?? "") : undefined;
+      const idFilter = sql.includes("WHERE id") ? String(values[0] ?? "") : sql.includes("AND id =") ? String(values[2] ?? "") : undefined;
+      const hashFilter = sql.includes("content_hash") ? String(values[2] ?? values[1] ?? "") : undefined;
+      const tokenHash = sql.includes("tokenHash") ? String(values[0] ?? "") : undefined;
+      const currentOnly = sql.includes("current IS TRUE");
+      const statusActive = sql.includes("status = 'ACTIVE'");
+      const limitMatch = sql.match(/LIMIT \$(\d+)/);
+      const limit = limitMatch ? Number(values[Number(limitMatch[1]) - 1] ?? 20) : undefined;
       const rows = this.riskRows.filter((row) => {
         if (row.table !== table) return false;
-        if (sql.includes("WHERE organisation_id") && values[0]) {
-          return row.organisation_id === values[0] || row.organisation_id === "";
-        }
-        if (sql.includes("WHERE status")) {
-          return row.status === "APPLIED";
-        }
+        if (tokenHash) return (row.body as { tokenHash?: string }).tokenHash === tokenHash;
+        if (sql.includes("WHERE id") && !sql.includes("organisation_id") && row.id !== idFilter) return false;
+        if (sql.includes("WHERE id") && sql.includes("organisation_id") && row.id !== String(values[0] ?? "")) return false;
+        if (organisationId && sql.includes("organisation_id") && !sql.includes("WHERE id") && row.organisation_id !== organisationId && row.organisation_id !== "") return false;
+        if (eventId && sql.includes("event_id") && row.event_id !== eventId) return false;
+        if (hashFilter && sql.includes("content_hash") && row.content_hash !== hashFilter) return false;
+        if (idFilter && sql.includes("AND id =") && row.id !== idFilter) return false;
+        if (currentOnly && row.current !== true) return false;
+        if (statusActive && row.status !== "ACTIVE") return false;
+        if (sql.includes("WHERE status") && !statusActive && !sql.includes("organisation_id")) return row.status === "APPLIED";
         return true;
       });
-      return { rows: rows.map((row) => ({ body: row.body })) as T[], rowCount: rows.length };
-    }
-    if (sql.startsWith("SELECT")) {
-      const rows = this.riskRows.filter((row) => row.table === table);
-      return { rows: rows.map((row) => ({ body: row.body })) as T[], rowCount: rows.length };
+      const sliced = limit ? rows.slice(0, limit) : rows;
+      return { rows: sliced.map((row) => ({ body: row.body })) as T[], rowCount: sliced.length };
     }
     return { rows: [], rowCount: 0 };
   }

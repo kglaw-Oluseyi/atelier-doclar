@@ -41,7 +41,7 @@ export default async function ClientProtectionDossierPage({
       </AppShell>
     );
   }
-  const dossier = runtime.service.getPublishedClientDossier(actor, organisation.id, event.id);
+  const dossier = await Promise.resolve(runtime.service.getPublishedClientDossier(actor, organisation.id, event.id));
   const assignmentId = runtime.service.resolveActor(person.id).assignments.find((item) => item.eventId === event.id || !item.eventId)?.id ?? "";
   const presented = await loadPresentedActionResult({
     requestPath: `/app/events/${event.id}/protection/client`,

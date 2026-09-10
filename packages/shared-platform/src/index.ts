@@ -951,7 +951,16 @@ export * from "./risk-evaluation-projections.js";
 export { executeS05BCase, detectUnsafeAdapter, detectUnsafeFromObservations } from "./risk-evaluation-fixtures.js";
 export { MemoryRiskProtectionStore, MemoryRiskProtectionRepository } from "./memory-risk-store.js";
 export { PostgresRiskProtectionStore, PostgresRiskProtectionRepository } from "./postgres-risk-store.js";
+export { MemoryRiskDossierRepository } from "./memory-risk-dossier-store.js";
+export { PostgresRiskDossierRepository } from "./postgres-risk-dossier-store.js";
+export { RiskDossierCommandService } from "./risk-dossier-command-service.js";
+export {
+  buildDossierEdition,
+  decideDossierPublication,
+  decideDossierTransition,
+} from "./risk-dossier-decisions.js";
 export { writeRiskSnapshotDelta, governingEditionFingerprint } from "./risk-repository.js";
+export { assertBoundedDossierQueries } from "./risk-dossier-repository.js";
 export { backfillNormalizedRiskTables, EOS_S05B_V2_MIGRATION_CHECKSUM } from "./risk-normalized-migration.js";
 export {
   EOS_S05B_PROTECTION_V2_ID,

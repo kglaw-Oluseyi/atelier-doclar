@@ -7,7 +7,7 @@ export async function recordClientDossierTokenMessageAction(formData: FormData):
   const token = String(formData.get("token") ?? "");
   await ensureRuntime();
   await withDurable(async () => {
-    getRuntime().service.recordClientDossierMessageByToken(token, {
+    await getRuntime().service.recordClientDossierMessageByToken(token, {
       kind: String(formData.get("kind") ?? "QUESTION"),
       body: String(formData.get("body") ?? ""),
     });

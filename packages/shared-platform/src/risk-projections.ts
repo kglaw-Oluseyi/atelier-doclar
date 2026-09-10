@@ -1,4 +1,3 @@
-import { exactHash } from "./eec-hash.js";
 import { PlatformError } from "./errors.js";
 import { selectEffectiveRiskAuthorities } from "./risk-authority.js";
 import {
@@ -6,18 +5,28 @@ import {
   assertMakerChecker,
   assertProtectedHuman,
   bumpVersion,
-  newRiskId,
   extractRiskEnvelope,
-  riskStamp,
+  newRiskId,
 } from "./risk-command.js";
+import {
+  assertExactApprovedHash,
+  assertPublicationActors,
+  assertPublicationEligibility,
+  buildDossierEdition,
+  buildDossierExport,
+  clientDossierCopy,
+  decideDossierPublication,
+  decideDossierTransition,
+  isCurrentPublication,
+  isWorkingDossier,
+  publicationIsReplay,
+  requireApplicabilityForAssemble,
+} from "./risk-dossier-decisions.js";
 import { redactDossier, redactIncidentNote, redactPolicyEdition, redactVendorAssessment, type RiskProjectionAudience } from "./risk-disclosure.js";
 import { projectCheckpointInstances } from "./risk-continuity.js";
 import { listGovernedProtectionParties } from "./risk-protection-parties.js";
 import { derivedCertificateStatus } from "./risk-policy-operations.js";
 import {
-  RiskDossierEditionSchema,
-  RiskDossierExportSchema,
-  RiskDossierPublicationSchema,
   type RiskDossierEdition,
   type RiskDossierExport,
   type RiskDossierPublication,
@@ -258,35 +267,14 @@ export function eventProtectionProjection(snap: PlatformSnapshot, organisationId
   };
 }
 
-export function clientDossierCopy() {
-  return {
-    guaranteesForbidden: true,
-    phrases: {
-      evidenceReviewed: "Evidence reviewed as of the dossier date.",
-      knownGaps: "Current known gaps are listed without claiming they are exhaustive.",
-      contingencyPrepared: "A contingency plan has been prepared; it is not a guarantee of continuity.",
-      confirmationRequired: "Insurer or counsel confirmation is required before treating this as coverage or legal advice.",
-    },
-    forbidden: ["zero uncovered losses", "guaranteed continuity", "insurer will pay"],
-  };
-}
-
-const WORKING_STATUSES = new Set(["DRAFT", "SUBMITTED", "APPROVED"]);
+export { clientDossierCopy };
 
 export function currentWorkingDossier(snap: PlatformSnapshot, eventId: string): RiskDossierEdition | undefined {
-  return [...snap.riskDossierEditions]
-    .reverse()
-    .find((item) => item.eventId === eventId && item.current && WORKING_STATUSES.has(item.status));
+  return [...snap.riskDossierEditions].reverse().find((item) => item.eventId === eventId && isWorkingDossier(item));
 }
 
 export function currentDossierPublication(snap: PlatformSnapshot, eventId: string): RiskDossierPublication | undefined {
-  return [...snap.riskDossierPublications]
-    .reverse()
-    .find(
-      (item) =>
-        item.eventId === eventId &&
-        (item.status === "CURRENT" || (item.current && item.status !== "SUPERSEDED" && item.status !== "WITHDRAWN")),
-    );
+  return [...snap.riskDossierPublications].reverse().find((item) => item.eventId === eventId && isCurrentPublication(item));
 }
 
 export function publishedDossierEdition(snap: PlatformSnapshot, eventId: string): RiskDossierEdition | undefined {
@@ -309,13 +297,9 @@ export function assembleDossierOnSnap(
   actorPersonId: string,
 ): RiskDossierEdition {
   extractRiskEnvelope(input);
-  const snapshot = [...snap.riskApplicabilitySnapshots].reverse().find((item) => item.eventId === input.eventId);
-  if (!snapshot) throw new PlatformError("VALIDATION_FAILED", "dossier cannot publish while included data is missing");
-  const copy = clientDossierCopy();
-  const body = `${copy.phrases.evidenceReviewed} ${copy.phrases.knownGaps} ${copy.phrases.contingencyPrepared} ${copy.phrases.confirmationRequired}`;
-  if (copy.forbidden.some((phrase) => body.toLowerCase().includes(phrase))) {
-    throw new PlatformError("VALIDATION_FAILED", "dossier language cannot guarantee coverage");
-  }
+  const snapshot = requireApplicabilityForAssemble(
+    [...snap.riskApplicabilitySnapshots].reverse().find((item) => item.eventId === input.eventId),
+  );
   const current = currentWorkingDossier(snap, input.eventId);
   const priorCurrent = snap.riskDossierEditions.find((item) => item.eventId === input.eventId && item.current);
   if (current) {
@@ -326,23 +310,14 @@ export function assembleDossierOnSnap(
     Object.assign(priorCurrent, { ...priorCurrent, current: false, ...bumpVersion(priorCurrent, now) });
   }
   const versionNumber = snap.riskDossierEditions.filter((item) => item.eventId === input.eventId).length + 1;
-  const record = RiskDossierEditionSchema.parse({
-    id: newRiskId(),
+  const record = buildDossierEdition({
     organisationId: input.organisationId,
     eventId: input.eventId,
+    now,
+    actorPersonId,
+    snapshotHash: snapshot.contentHash,
     versionNumber,
-    status: "DRAFT",
-    componentHashes: [snapshot.contentHash],
-    contentHash: exactHash({ snapshot: snapshot.contentHash, body }),
-    languageApproved: true,
-    authorPersonId: actorPersonId,
-    submittedByPersonId: actorPersonId,
     supersedesEditionId: current?.id ?? priorCurrent?.id,
-    dispatched: false,
-    exportKind: "NONE",
-    limitations: body,
-    current: true,
-    ...riskStamp(now),
   });
   snap.riskDossierEditions.push(record);
   return record;
@@ -390,33 +365,7 @@ export function transitionDossierOnSnap(
     );
     return snap.riskDossierEditions.find((item) => item.id === dossier.id) ?? dossier;
   }
-  if (input.to === "SUBMITTED") {
-    Object.assign(
-      dossier,
-      RiskDossierEditionSchema.parse({
-        ...dossier,
-        status: "SUBMITTED",
-        submittedByPersonId: actorPersonId,
-        submittedAt: now,
-        dispatched: false,
-        ...bumpVersion(dossier, now),
-      }),
-    );
-    return dossier;
-  }
-  Object.assign(
-    dossier,
-    RiskDossierEditionSchema.parse({
-      ...dossier,
-      status: input.to,
-      current: input.to === "WITHDRAWN" || input.to === "SUPERSEDED" ? false : dossier.current,
-      approvedByPersonId: input.to === "APPROVED" ? actorPersonId : dossier.approvedByPersonId,
-      approvedAt: input.to === "APPROVED" ? now : dossier.approvedAt,
-      approvedHash: input.to === "APPROVED" ? dossier.contentHash : dossier.approvedHash,
-      dispatched: false,
-      ...bumpVersion(dossier, now),
-    }),
-  );
+  Object.assign(dossier, decideDossierTransition(dossier, input, actorPersonId, now));
   return dossier;
 }
 
@@ -443,76 +392,34 @@ export function publishDossierOnSnap(
     (item) => item.id === editionId && item.eventId === input.eventId && item.organisationId === input.organisationId,
   );
   if (!edition) throw new PlatformError("NOT_FOUND", "dossier edition not found");
-  if (edition.status !== "APPROVED" && edition.status !== "PUBLISHED") {
-    throw new PlatformError("TRANSITION_INVALID", "only an approved dossier edition can be published");
-  }
-  if (!input.approvedHash || input.approvedHash !== edition.contentHash || (edition.approvedHash && edition.approvedHash !== input.approvedHash)) {
-    throw new PlatformError("VALIDATION_FAILED", "publication requires the approved exact hash");
-  }
-  const authorPersonId = edition.authorPersonId ?? edition.submittedByPersonId;
-  assertMakerChecker(authorPersonId, actorPersonId, "publish dossier");
-  if (edition.submittedByPersonId) assertMakerChecker(edition.submittedByPersonId, actorPersonId, "publish dossier");
-  if (edition.approvedByPersonId && edition.approvedByPersonId === actorPersonId) {
-    throw new PlatformError("FORBIDDEN", "approver cannot publish; a distinct publishing authority is required");
-  }
-  assertExpectedVersion(edition.version, input.expectedVersion, "dossier");
+  assertPublicationEligibility(edition);
+  assertExactApprovedHash(edition, input.approvedHash);
+  assertPublicationActors(edition, actorPersonId);
   assertProtectedHuman(snap, input.assignmentId, actorPersonId, actorKind);
   const snapshot = snap.riskApplicabilitySnapshots.find((item) => edition.componentHashes.includes(item.contentHash));
-  if (!snapshot) throw new PlatformError("VALIDATION_FAILED", "dossier cannot publish stale or unapproved components");
-  const mandatoryIndeterminate = snapshot.requirements.some((item) => {
-    const rule = snap.riskRuleEditions.find((row) => row.id === item.ruleEditionId);
-    return item.decision === "INDETERMINATE" && Boolean(rule?.mandatory);
-  });
-  if (snapshot.overall === "STALE" || mandatoryIndeterminate) {
-    throw new PlatformError("VALIDATION_FAILED", "dossier cannot publish while included data is stale or indeterminate");
-  }
-  const existingPublication = currentDossierPublication(snap, input.eventId);
-  if (existingPublication && (existingPublication.approvedHash === edition.contentHash || existingPublication.contentHash === edition.contentHash) && (existingPublication.dossierId === edition.id || existingPublication.editionId === edition.id)) {
-    return existingPublication;
-  }
-  const priorCurrent = snap.riskDossierPublications.filter(
-    (item) => item.eventId === input.eventId && (item.current || item.status === "CURRENT"),
-  );
-  const publicationNumber = snap.riskDossierPublications.filter((item) => item.eventId === input.eventId).length + 1;
-  for (const prior of priorCurrent) {
-    Object.assign(prior, {
-      ...prior,
-      current: false,
-      status: "SUPERSEDED",
-      ...bumpVersion(prior, now),
-    });
-  }
-  const record = RiskDossierPublicationSchema.parse({
-    id: newRiskId(),
-    organisationId: input.organisationId,
-    eventId: input.eventId,
-    dossierId: edition.id,
-    editionId: edition.id,
-    contentHash: edition.contentHash,
-    approvedHash: edition.contentHash,
-    publicationNumber,
-    status: "CURRENT",
-    publishedAt: now,
-    publishedByPersonId: actorPersonId,
-    supersedesPublicationId: priorCurrent[0]?.id,
-    current: true,
-    dispatched: false,
-    clientMessages: [],
-    ...riskStamp(now),
-  });
-  snap.riskDossierPublications.push(record);
-  Object.assign(
-    edition,
-    RiskDossierEditionSchema.parse({
-      ...edition,
-      approvedHash: edition.contentHash,
-      publishedByPersonId: actorPersonId,
-      publishedAt: now,
-      exportKind: "PDF",
-      dispatched: false,
-      ...bumpVersion(edition, now),
+  const mandatoryIndeterminate = Boolean(
+    snapshot?.requirements.some((item) => {
+      const rule = snap.riskRuleEditions.find((row) => row.id === item.ruleEditionId);
+      return item.decision === "INDETERMINATE" && Boolean(rule?.mandatory);
     }),
   );
+  const existingPublication = currentDossierPublication(snap, input.eventId);
+  if (existingPublication && publicationIsReplay(existingPublication, edition)) return existingPublication;
+  const publicationNumber = snap.riskDossierPublications.filter((item) => item.eventId === input.eventId).length + 1;
+  const decided = decideDossierPublication(
+    edition,
+    existingPublication,
+    { organisationId: input.organisationId, eventId: input.eventId, expectedVersion: input.expectedVersion, approvedHash: input.approvedHash, publicationNumber },
+    actorPersonId,
+    now,
+    snapshot,
+    mandatoryIndeterminate,
+  );
+  if (decided.application === "REPLAYED") return decided.publication;
+  if (decided.priorPatch && existingPublication) Object.assign(existingPublication, decided.priorPatch);
+  snap.riskDossierPublications.push(decided.publication);
+  Object.assign(edition, decided.editionPatch);
+  const record = decided.publication;
   const verified = currentDossierPublication(snap, input.eventId);
   const verifiedEdition = publishedDossierEdition(snap, input.eventId);
   if (!verified || verified.id !== record.id || !verifiedEdition || verifiedEdition.id !== edition.id) {
@@ -541,26 +448,10 @@ export function exportDossierOnSnap(
   assertProtectedHuman(snap, input.assignmentId, actorPersonId);
   const dossier = snap.riskDossierEditions.find((item) => item.id === input.dossierId && item.eventId === input.eventId);
   const publication = currentDossierPublication(snap, input.eventId);
-  if (!dossier || !publication || (publication.dossierId !== dossier.id && publication.editionId !== dossier.id)) {
+  if (!dossier || !publication) {
     throw new PlatformError("VALIDATION_FAILED", "export requires a published dossier edition");
   }
-  const record = RiskDossierExportSchema.parse({
-    id: newRiskId(),
-    organisationId: input.organisationId,
-    eventId: input.eventId,
-    dossierId: dossier.id,
-    publicationId: publication.id,
-    publicationNumber: publication.publicationNumber,
-    marking: "PERMISSION_SAFE_CLIENT",
-    fullHash: exactHash({ dossier: dossier.contentHash, publication: publication.approvedHash, generatedAt: now }),
-    generatedAt: now,
-    generatedByPersonId: actorPersonId,
-    mediaType: "application/pdf",
-    privilegeBoundToPersonId: actorPersonId,
-    status: "COMPLETE",
-    dispatched: false,
-    ...riskStamp(now),
-  });
+  const record = buildDossierExport(dossier, publication, input, now, actorPersonId);
   snap.riskDossierExports.push(record);
   return record;
 }
