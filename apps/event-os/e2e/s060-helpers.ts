@@ -7,10 +7,63 @@ export async function expectActionOutcome(page: Page) {
   await expect(page.getByTestId("action-result-banner")).toBeVisible({ timeout: 20_000 });
 }
 
+export async function expectFreshActionSuccess(page: Page, previousCorrelation = "") {
+  const banner = page.getByTestId("action-result-banner");
+  await expect(banner).toBeVisible({ timeout: 30_000 });
+  await expect(banner).toContainText(/Succeeded|The change was recorded|No change/i);
+  if (previousCorrelation) {
+    await expect(banner).not.toContainText(previousCorrelation);
+  }
+}
+
+export async function readActionCorrelation(page: Page): Promise<string> {
+  const text = (await page.getByTestId("action-result-banner").innerText().catch(() => "")) ?? "";
+  return (text.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i) ?? [""])[0] ?? "";
+}
+
 export async function assembleWorkingDraft(page: Page) {
   await page.getByRole("link", { name: "Dossier", exact: true }).click();
-  await page.getByRole("button", { name: "Assemble dossier edition" }).click();
-  await expect(page.getByText(/Status DRAFT/)).toBeVisible({ timeout: 20_000 });
+  const assemble = page.getByRole("button", { name: "Assemble dossier edition" });
+  await expect(assemble).toBeVisible({ timeout: 20_000 });
+  const previous = await readActionCorrelation(page);
+  await assemble.click();
+  await expectFreshActionSuccess(page, previous);
+  await expect(page.getByText(/Status DRAFT/)).toBeVisible({ timeout: 30_000 });
+}
+
+export async function refreshExpiredAuthorities(page: Page, reason: string) {
+  await page.goto("/app/protection#protection-authority");
+  const surface = page.getByTestId("protection-authority-review");
+  await expect(surface).toBeVisible({ timeout: 30_000 });
+  const seen = new Set<string>();
+  for (let step = 0; step < 12; step += 1) {
+    const stale = surface.locator("[data-authority-state='STALE_APPROVED']").first();
+    if (!(await stale.count())) break;
+    const testId = (await stale.getAttribute("data-testid")) ?? `stale-${step}`;
+    const details = await stale.innerText();
+    const citedSourceId = (details.match(/cited source ([0-9a-f-]{36})/i) ?? [])[1];
+    const sourceForm = citedSourceId ? page.getByTestId(`source-record-review-${citedSourceId}`) : page.locator("none");
+    const previous = await readActionCorrelation(page);
+    if (citedSourceId && (await sourceForm.count()) && !seen.has(`source:${citedSourceId}`)) {
+      seen.add(`source:${citedSourceId}`);
+      await sourceForm.getByLabel("Review reason").fill(reason);
+      await sourceForm.getByLabel("Review again by").fill("2026-12-31");
+      await sourceForm.getByRole("button", { name: "Record current source review" }).click();
+    } else {
+      if (seen.has(testId)) {
+        throw new Error(`stale authority ${testId} remained after governed review: ${details.slice(0, 300)}`);
+      }
+      seen.add(testId);
+      const form = page.getByTestId(`authority-record-review-${testId.replace(/^authority-/, "")}`);
+      await expect(form).toBeVisible();
+      await form.getByLabel("Review reason").fill(reason);
+      await form.getByLabel("Review again by").fill("2026-12-31");
+      await form.getByRole("button", { name: "Record current review" }).click();
+    }
+    await expectFreshActionSuccess(page, previous);
+    await expect(surface).toBeVisible({ timeout: 30_000 });
+  }
+  await expect(surface.locator("[data-authority-state='STALE_APPROVED']")).toHaveCount(0, { timeout: 10_000 });
 }
 
 export async function prepareApprovedRule(page: Page, browser: Browser) {

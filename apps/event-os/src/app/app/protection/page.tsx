@@ -77,6 +77,7 @@ export default async function ProtectionCommandPage({
     organisationId: organisation.id,
   });
   const envelope = { organisationId: organisation.id, assignmentId };
+  const now = process.env.EVENT_OS_TEST_NOW?.trim() || new Date().toISOString();
   return (
     <AppShell person={person} organisationName={organisation.displayName} current="/app/protection">
       <AtelierPageHeader
@@ -368,7 +369,7 @@ export default async function ProtectionCommandPage({
                   Cited source {source.title} · {source.status} · Review again by {source.nextReviewAt}
                 </p>
               ))}
-              {isRiskReviewer && (item.authorityState === "STALE_APPROVED" || item.authorityState === "AUTHORITY_CONFLICT" || item.authorityState === "CURRENT_APPROVED") ? (
+              {isRiskReviewer && (item.authorityState === "STALE_APPROVED" || item.authorityState === "AUTHORITY_CONFLICT") ? (
                 <>
                   <ProtectionMutationForm action={recordAuthorityReviewAction} className="atelier-form protection-form" testId={`authority-record-review-${item.ruleKey}`}>
                     <Envelope fields={{ ...envelope, expectedVersion: item.version, editionId: item.ruleId, targetKind: "RULE", reviewAction: "RECORD_CURRENT_REVIEW", confirmedHash: item.contentHash }} />
@@ -406,7 +407,7 @@ export default async function ProtectionCommandPage({
           ))}
         </ul>
         {(overview.sources ?? [])
-          .filter((source) => source.status === "APPROVED")
+          .filter((source) => source.status === "APPROVED" && Boolean(source.nextReviewAt) && source.nextReviewAt <= now)
           .map((source) =>
             isRiskReviewer ? (
               <ProtectionMutationForm key={source.id} action={recordAuthorityReviewAction} className="atelier-form protection-form" testId={`source-record-review-${source.id}`}>
