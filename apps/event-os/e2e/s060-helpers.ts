@@ -7,6 +7,12 @@ export async function expectActionOutcome(page: Page) {
   await expect(page.getByTestId("action-result-banner")).toBeVisible({ timeout: 20_000 });
 }
 
+export async function assembleWorkingDraft(page: Page) {
+  await page.getByRole("link", { name: "Dossier", exact: true }).click();
+  await page.getByRole("button", { name: "Assemble dossier edition" }).click();
+  await expect(page.getByText(/Status DRAFT/)).toBeVisible({ timeout: 20_000 });
+}
+
 export async function prepareApprovedRule(page: Page, browser: Browser) {
   await loginAs(page, "ceo");
   await page.goto("/app/protection");

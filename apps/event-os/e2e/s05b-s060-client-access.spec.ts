@@ -1,15 +1,13 @@
 import { expect, test } from "@playwright/test";
 import { loginAs, openStaffContext } from "./login";
-import { ALPHA_PROTECTION, evaluateAlphaOne, expectActionOutcome, prepareApprovedRule } from "./s060-helpers";
+import { ALPHA_PROTECTION, assembleWorkingDraft, evaluateAlphaOne, expectActionOutcome, prepareApprovedRule } from "./s060-helpers";
 
 test("S060 staff issues dossier access, client enters, revoke fails", async ({ page, browser }) => {
   test.setTimeout(240_000);
   await prepareApprovedRule(page, browser);
   const planner = await openStaffContext(browser, "planner");
   await evaluateAlphaOne(planner.page);
-  await planner.page.getByRole("link", { name: "Dossier", exact: true }).click();
-  await planner.page.getByRole("button", { name: "Assemble dossier edition" }).click();
-  await expectActionOutcome(planner.page);
+  await assembleWorkingDraft(planner.page);
   await expect(planner.page.getByRole("button", { name: "Submit dossier" })).toBeVisible({ timeout: 20_000 });
   await planner.page.getByRole("button", { name: "Submit dossier" }).click();
   await expect(planner.page.getByRole("button", { name: "Submit dossier" })).toHaveCount(0, { timeout: 20_000 });
