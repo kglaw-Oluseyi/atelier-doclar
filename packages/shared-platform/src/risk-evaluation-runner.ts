@@ -1,13 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { SCHEMA_VERSION } from "./constants.js";
 import { S05B_EVALUATION_CASES, s05bEvaluationCorpusHash, validateS05BEvaluationCorpus } from "./risk-evaluation-corpus.js";
-import { detectUnsafeAdapter, executeS05BCase, type S05BEvaluationAdapters } from "./risk-evaluation-fixtures.js";
+import { detectUnsafeFromObservations, executeS05BCase, type S05BEvaluationAdapters } from "./risk-evaluation-fixtures.js";
 import {
   S05B_EVALUATION_CONTRACT_VERSION,
   S05B_EVALUATION_CORPUS_EDITION,
   S05B_EVALUATION_ORCHESTRATOR_VERSION,
   S05B_EVALUATION_PROJECTION_POLICY_VERSION,
   S05B_EVALUATION_PROVIDER_VERSION,
+  type RiskObservation,
 } from "./risk-evaluation-schemas.js";
 import { RiskEvaluationCaseResultSchema, RiskEvaluationRunLeaseSchema, RiskEvaluationRunSchema, type RiskEvaluationRun } from "./risk-schemas.js";
 import type { PlatformSnapshot } from "./store.js";
@@ -25,6 +26,11 @@ export function currentS05BEvaluationVersions() {
     projectionPolicyVersion: S05B_EVALUATION_PROJECTION_POLICY_VERSION,
     evaluationContractVersion: S05B_EVALUATION_CONTRACT_VERSION,
   };
+}
+
+function observationText(observations: readonly RiskObservation[], code: string): string | undefined {
+  const hit = observations.find((item) => item.kind === "TEXT" && item.code === code);
+  return hit && hit.kind === "TEXT" ? hit.value : undefined;
 }
 
 export function executeS05BEvaluationOnSnap(
@@ -83,8 +89,17 @@ export function executeS05BEvaluationOnSnap(
   let zeroToleranceFailed = false;
   for (const caseDef of S05B_EVALUATION_CASES) {
     const observations = executeS05BCase(caseDef, input.adapters);
-    const adapterHits = detectUnsafeAdapter(input.adapters ?? {}, observations);
-    const verdict = adapterHits.length || observations.some((item) => !item.passed) ? "FAILED" : observations.length ? "PASSED" : "ERROR";
+    const adapterHits = detectUnsafeFromObservations(observations);
+    const compared = caseDef.expected.map((item) => {
+      const actual = observationText(observations, item.code) ?? "missing";
+      return {
+        code: item.code,
+        expectedSummary: item.summary,
+        observedSummary: actual,
+        passed: actual === item.summary,
+      };
+    });
+    const verdict = adapterHits.length || compared.some((item) => !item.passed) ? "FAILED" : compared.length ? "PASSED" : "ERROR";
     if (verdict === "PASSED") passed += 1;
     else if (verdict === "ERROR") errorCount += 1;
     else failed += 1;
@@ -97,8 +112,8 @@ export function executeS05BEvaluationOnSnap(
         caseId: caseDef.id,
         family: caseDef.family,
         verdict,
-        observations,
-        diagnosticSummary: observations.map((item) => `${item.code}:${item.passed ? "pass" : "fail"}`).join("; ") || "no observations",
+        observations: compared,
+        diagnosticSummary: compared.map((item) => `${item.code}:${item.passed ? "pass" : "fail"}`).join("; ") || "no observations",
         zeroToleranceCategories: caseDef.zeroToleranceCategories,
         version: 1,
         ...stamp(input.now),

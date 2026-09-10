@@ -4,8 +4,8 @@ import { resolveApplicability } from "./risk-applicability.js";
 import {
   assertDocumentTransition,
   assertExpectedVersion,
-  assertHumanActor,
   assertMakerChecker,
+  assertProtectedHuman,
   assertSameEvent,
   assertSameOrganisation,
   bumpVersion,
@@ -15,6 +15,7 @@ import {
   sealSensitive,
 } from "./risk-command.js";
 import { gapIdentity, inheritResidualDecision, matchCoverage, taxonomyForReasons } from "./risk-gap-engine.js";
+import { assertLegalTransition, GAP_TRANSITIONS, POLICY_EVIDENCE_TRANSITIONS } from "./risk-transitions.js";
 import {
   RiskApplicabilitySnapshotSchema,
   RiskEvidenceDocumentSchema,
@@ -92,11 +93,11 @@ export function approveSourceEditionOnSnap(
   snap: PlatformSnapshot,
   input: { organisationId: string; assignmentId: string; expectedVersion: number; idempotencyKey: string; sourceId: string },
   now: string,
-  _actorPersonId: string,
+  actorPersonId: string,
   actorKind?: string,
 ): RiskSourceEdition {
   envelope(input, input.organisationId);
-  assertHumanActor(actorKind);
+  assertProtectedHuman(snap, input.assignmentId, actorPersonId, actorKind, input.organisationId);
   const source = snap.riskSourceEditions.find((item) => item.id === input.sourceId && item.organisationId === input.organisationId);
   if (!source) throw new PlatformError("NOT_FOUND", "source edition not found");
   assertExpectedVersion(source.version, input.expectedVersion, "source");
@@ -170,7 +171,7 @@ export function reviewRuleEditionOnSnap(
   actorKind?: string,
 ): RiskRuleEdition {
   envelope(input, input.organisationId);
-  assertHumanActor(actorKind);
+  assertProtectedHuman(snap, input.assignmentId, actorPersonId, actorKind, input.organisationId);
   const rule = snap.riskRuleEditions.find((item) => item.id === input.ruleId && item.organisationId === input.organisationId);
   if (!rule) throw new PlatformError("NOT_FOUND", "rule edition not found");
   assertExpectedVersion(rule.version, input.expectedVersion, "rule");
@@ -337,6 +338,7 @@ export function createPolicyEditionOnSnap(
     activityScope?: string;
     exclusionNotes?: string;
     endorsementNotes?: string;
+    assetInventoryRefs?: string[];
   },
   now: string,
   actorPersonId: string,
@@ -372,7 +374,7 @@ export function createPolicyEditionOnSnap(
     territorialScope: input.territorialScope,
     activityScope: input.activityScope,
     insuredPartyLabels: input.insuredPartyLabels,
-    assetInventoryRefs: [],
+    assetInventoryRefs: input.assetInventoryRefs ?? [],
     endorsementNotes: input.endorsementNotes,
     exclusionNotes: input.exclusionNotes,
     documentEditionId: document.id,
@@ -410,10 +412,11 @@ export function verifyPolicyEditionOnSnap(
   actorKind?: string,
 ): RiskPolicyEdition {
   envelope(input, input.organisationId);
-  assertHumanActor(actorKind);
+  assertProtectedHuman(snap, input.assignmentId, actorPersonId, actorKind);
   const edition = snap.riskPolicyEditions.find((item) => item.id === input.editionId && item.organisationId === input.organisationId);
   if (!edition) throw new PlatformError("NOT_FOUND", "policy edition not found");
   assertExpectedVersion(edition.version, input.expectedVersion, "policy edition");
+  assertLegalTransition(POLICY_EVIDENCE_TRANSITIONS, edition.verificationState, input.decision, "policy evidence");
   assertMakerChecker(edition.submittedByPersonId, actorPersonId, "verify");
   const document = snap.riskEvidenceDocuments.find((item) => item.id === edition.documentEditionId);
   if (!document) throw new PlatformError("NOT_FOUND", "cited document is inaccessible");
@@ -616,7 +619,7 @@ export function decideResidualRiskOnSnap(
   actorKind?: string,
 ): RiskResidualDecision {
   envelope(input, input.organisationId, input.eventId);
-  assertHumanActor(actorKind);
+  assertProtectedHuman(snap, input.assignmentId, actorPersonId, actorKind);
   const decision = snap.riskResidualDecisions.find((item) => item.id === input.decisionId && item.eventId === input.eventId);
   if (!decision) throw new PlatformError("NOT_FOUND", "residual-risk decision not found");
   assertExpectedVersion(decision.version, input.expectedVersion, "residual-risk decision");
@@ -632,9 +635,11 @@ export function decideResidualRiskOnSnap(
   );
   const gap = snap.riskGapFindings.find((item) => item.id === decision.gapId);
   if (gap) {
+    const nextState = input.decision === "APPROVED" ? (decision.choice === "RESOLVE_WITH_EVIDENCE" ? "RESOLVED" : "ACCEPTED_RISK") : "OPEN";
+    assertLegalTransition(GAP_TRANSITIONS, gap.state, nextState, "protection gap");
     Object.assign(gap, {
       ...gap,
-      state: input.decision === "APPROVED" ? (decision.choice === "RESOLVE_WITH_EVIDENCE" ? "RESOLVED" : "ACCEPTED_RISK") : "OPEN",
+      state: nextState,
       residualDecisionId: input.decision === "APPROVED" ? decision.id : undefined,
       ...bumpVersion(gap, now),
     });

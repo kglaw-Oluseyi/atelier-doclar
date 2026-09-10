@@ -1,5 +1,6 @@
 import { exactHash } from "./eec-hash.js";
 import { moneyFromDto } from "./eec-hash.js";
+import { calculateBudgetScenarioOnSnap } from "./eec-intelligence.js";
 import { PlatformError } from "./errors.js";
 import {
   assertSameEvent,
@@ -15,7 +16,7 @@ import {
 } from "./risk-schemas.js";
 import type { PlatformSnapshot } from "./store.js";
 
-export const RISK_BUDGET_MODEL = "s05b-exposure-model-v1";
+export const RISK_BUDGET_MODEL = "s05a-protect-investment-v1";
 
 function envelope(raw: unknown, organisationId: string, eventId?: string) {
   const parsed = extractRiskEnvelope(raw);
@@ -24,50 +25,48 @@ function envelope(raw: unknown, organisationId: string, eventId?: string) {
   return parsed;
 }
 
-export function calculateExposure(drivers: readonly RiskBudgetDriver[]): {
-  quantifiedMinor: bigint;
-  currency: string;
-  unquantifiedReasons: string[];
-  trace: RiskBudgetProjection["trace"];
-} {
-  let quantified = 0n;
-  let currency = "NGN";
+function sourcedLines(drivers: readonly RiskBudgetDriver[]) {
+  const lines: Array<{
+    code: string;
+    expectedMinor: string;
+    currency: string;
+    evidenceHash?: string;
+    labelledAssumption?: string;
+  }> = [];
   const unquantifiedReasons: string[] = [];
-  const trace: RiskBudgetProjection["trace"] = [];
   for (const driver of drivers) {
     if (driver.kind === "UNQUANTIFIED_EXPOSURE") {
       unquantifiedReasons.push(driver.reason);
-      trace.push({ op: "UNQUANTIFIED", detail: driver.reason, value: "unknown" });
       continue;
     }
     if (driver.kind === "INSURANCE_PREMIUM_ASSUMPTION") {
       if (!driver.evidenceIds.length) throw new PlatformError("VALIDATION_FAILED", "an unevidenced premium cannot be invented");
       const money = moneyFromDto(driver.money);
-      currency = money.currency;
-      quantified += money.minor;
-      trace.push({ op: "PREMIUM", detail: driver.assumptionLabel ?? "sourced premium assumption", value: money.minor.toString() });
+      lines.push({
+        code: "RISK_INSURANCE_PREMIUM",
+        expectedMinor: money.minor.toString(),
+        currency: money.currency,
+        evidenceHash: exactHash(driver.evidenceIds),
+        labelledAssumption: driver.assumptionLabel,
+      });
       continue;
     }
     if (driver.kind === "DEDUCTIBLE_EXPOSURE" || driver.kind === "FALLBACK_REPLACEMENT_EXPOSURE") {
       const money = moneyFromDto(driver.money);
-      currency = money.currency;
-      quantified += money.minor;
-      trace.push({ op: driver.kind, detail: driver.kind, value: money.minor.toString() });
+      lines.push({
+        code: driver.kind === "DEDUCTIBLE_EXPOSURE" ? "RISK_DEDUCTIBLE" : "RISK_FALLBACK_REPLACEMENT",
+        expectedMinor: money.minor.toString(),
+        currency: money.currency,
+      });
       continue;
     }
-    if (driver.kind === "CONTRACT_RETENTION") {
-      trace.push({ op: "RETENTION", detail: `basis points ${driver.basisPoints}`, value: String(driver.basisPoints) });
-      continue;
-    }
-    if (driver.kind === "CONTINUITY_RESERVE") {
-      if (driver.basis === "BUDGET_PERCENTAGE" && driver.value === 5) {
-        trace.push({ op: "RESERVE", detail: `${driver.provenance}: 5% is a labelled scenario assumption`, value: "5" });
-      } else {
-        trace.push({ op: "RESERVE", detail: driver.reason, value: String(driver.value) });
+    if (driver.kind === "CONTINUITY_RESERVE" && driver.basis === "BUDGET_PERCENTAGE") {
+      if (driver.value === 5) {
+        unquantifiedReasons.push("5% reserve is a labelled scenario assumption, not a default");
       }
     }
   }
-  return { quantifiedMinor: quantified, currency, unquantifiedReasons, trace };
+  return { lines, unquantifiedReasons };
 }
 
 export function projectRiskBudgetOnSnap(
@@ -80,35 +79,87 @@ export function projectRiskBudgetOnSnap(
     idempotencyKey: string;
     drivers: RiskBudgetDriver[];
     generatedAt?: string;
+    governingScenarioHash?: string;
+    expectedScenarioVersion?: number;
   },
   now: string,
   actorPersonId: string,
 ): RiskBudgetProjection {
   envelope(input, input.organisationId, input.eventId);
+  const contentHash = exactHash({ drivers: input.drivers });
   const existing = snap.riskBudgetProjections.find(
-    (item) => item.organisationId === input.organisationId && item.eventId === input.eventId && item.contentHash === exactHash({ drivers: input.drivers }),
+    (item) => item.organisationId === input.organisationId && item.eventId === input.eventId && item.contentHash === contentHash,
   );
   if (existing) return existing;
   const governing = snap.budgetScenarioEditions.find(
-    (item) => item.organisationId === input.organisationId && (item.eventId === input.eventId || !item.eventId) && item.current && (item.status === "APPROVED" || item.status === "PUBLISHED"),
+    (item) =>
+      item.organisationId === input.organisationId &&
+      (item.eventId === input.eventId || !item.eventId) &&
+      item.current &&
+      (item.status === "APPROVED" || item.status === "PUBLISHED"),
   );
-  const computed = calculateExposure(input.drivers);
+  if (input.governingScenarioHash && governing && governing.resultHash !== input.governingScenarioHash) {
+    throw new PlatformError("VERSION_CONFLICT", "stale Budget hash/version is NOT_APPLIED");
+  }
+  if (input.expectedScenarioVersion !== undefined && governing && governing.version !== input.expectedScenarioVersion) {
+    throw new PlatformError("VERSION_CONFLICT", "stale Budget hash/version is NOT_APPLIED");
+  }
+  const converted = sourcedLines(input.drivers);
+  const guests =
+    governing?.effectiveDrivers?.find((item) => item.code === "guest.target_count")?.value ??
+    "1";
   const generatedAt = input.generatedAt ?? now;
+  const successor = calculateBudgetScenarioOnSnap(
+    snap,
+    {
+      organisationId: input.organisationId,
+      engagementId: governing?.engagementId,
+      eventId: input.eventId,
+      purpose: "PROTECT_INVESTMENT",
+      archetype: "WEDDING",
+      guests,
+      expectedScenarioVersion: input.expectedScenarioVersion,
+      riskSourcedLines: converted.lines,
+      manualAssumptions: converted.unquantifiedReasons.map(() => ({
+        key: "RISK_UNQUANTIFIED",
+        value: "unknown",
+        unit: "NOTE",
+      })),
+    },
+    generatedAt,
+    actorPersonId,
+  );
+  const engineSourced = snap.budgetLines.filter(
+    (item) => item.scenarioId === successor.id && item.itemCode.startsWith("RISK_"),
+  );
+  const sourcedMinor = engineSourced.reduce((sum, line) => sum + BigInt(line.expectedMinor), 0n);
+  if (governing && governing.current !== true && governing.status !== "APPROVED" && governing.status !== "PUBLISHED") {
+    throw new PlatformError("VALIDATION_FAILED", "risk must not mutate an approved or published Budget edition");
+  }
+  const stillGoverning = governing ? snap.budgetScenarioEditions.find((item) => item.id === governing.id) : undefined;
+  if (stillGoverning && governing && stillGoverning.status !== governing.status) {
+    throw new PlatformError("VALIDATION_FAILED", "risk must not mutate an approved or published Budget edition");
+  }
   const record = RiskBudgetProjectionSchema.parse({
     id: newRiskId(),
     organisationId: input.organisationId,
     eventId: input.eventId,
     budgetScenarioEditionId: governing?.id,
+    successorScenarioEditionId: successor.id,
     governingScenarioUnchanged: true,
     drivers: input.drivers,
-    quantifiedMinor: computed.quantifiedMinor.toString(),
-    currency: computed.currency,
-    unquantifiedReasons: computed.unquantifiedReasons,
+    quantifiedMinor: sourcedMinor.toString(),
+    currency: successor.currency,
+    unquantifiedReasons: converted.unquantifiedReasons,
     modelEdition: RISK_BUDGET_MODEL,
-    trace: computed.trace,
-    generatedAt,
+    trace: (successor.trace ?? []).slice(0, 32).map((step) => ({
+      op: String(step.op).slice(0, 40),
+      detail: String(step.detail).slice(0, 400),
+      value: String(step.value).slice(0, 80),
+    })),
+    generatedAt: successor.calculationGeneratedAt ?? generatedAt,
     createdByPersonId: actorPersonId,
-    contentHash: exactHash({ drivers: input.drivers }),
+    contentHash,
     ...riskStamp(generatedAt),
   });
   snap.riskBudgetProjections.push(record);

@@ -1,8 +1,8 @@
 import { PlatformError } from "./errors.js";
 import {
   assertExpectedVersion,
-  assertHumanActor,
   assertMakerChecker,
+  assertProtectedHuman,
   assertSameEvent,
   assertSameOrganisation,
   bumpVersion,
@@ -134,7 +134,7 @@ export function transitionIncidentOnSnap(
     throw new PlatformError("TRANSITION_INVALID", `incident cannot move from ${incident.state} to ${input.to}`);
   }
   if (input.to === "CLOSED") {
-    assertHumanActor(actorKind);
+    assertProtectedHuman(snap, input.assignmentId, actorPersonId, actorKind, input.organisationId);
     const openActions = snap.riskIncidentNotes.filter((item) => item.incidentId === incident.id && item.kind === "ACTION");
     const residual = snap.riskResidualDecisions.find((item) => item.eventId === input.eventId && item.status === "APPROVED");
     if (openActions.length && !residual) {

@@ -744,7 +744,7 @@ import {
   submitResidualDecisionOnSnap,
   verifyPolicyEditionOnSnap,
 } from "./risk-policy-operations.js";
-import { applyClauseEditionOnSnap, reviewClauseEditionOnSnap } from "./risk-clause-operations.js";
+import { applyClauseEditionOnSnap, createClauseTemplateOnSnap, reviewClauseEditionOnSnap } from "./risk-clause-operations.js";
 import { assessVendorOnSnap, assignRosterOnSnap, decideVendorAssessmentOnSnap } from "./risk-vendor-assessment.js";
 import {
   createContinuityPlanOnSnap,
@@ -760,8 +760,11 @@ import { projectRiskBudgetOnSnap } from "./risk-budget-projection.js";
 import {
   assembleDossierOnSnap,
   eventProtectionProjection,
+  exportDossierOnSnap,
   organisationProtectionProjection,
+  publishedClientDossierProjection,
   protectionAudienceFromRole,
+  recordClientDossierMessageOnSnap,
   transitionDossierOnSnap,
 } from "./risk-projections.js";
 
@@ -7064,8 +7067,18 @@ export class PlatformService {
 
   getEventProtection(actor: ActorContext, organisationId: string, eventId: string) {
     this.authorizeQuery(actor, "risk.event.view", { organisationId, eventId });
+    const snap = this.store.snapshot();
+    const event = snap.events.find((item) => item.id === eventId);
+    if (!event || event.organisationId !== organisationId) {
+      throw new PlatformError("SCOPE_MISMATCH", "event is outside this organisation");
+    }
     const role = this.actorSnapshot(actor).roles[0]?.key ?? roleKeyForId(this.actorSnapshot(actor).roles[0]?.id ?? "");
-    return eventProtectionProjection(this.store.snapshot(), organisationId, eventId, protectionAudienceFromRole(role), actor.now ?? new Date().toISOString());
+    return eventProtectionProjection(snap, organisationId, eventId, protectionAudienceFromRole(role), actor.now ?? new Date().toISOString());
+  }
+
+  getPublishedClientDossier(actor: ActorContext, organisationId: string, eventId: string) {
+    this.authorizeQuery(actor, "risk.dossier.view", { organisationId, eventId });
+    return publishedClientDossierProjection(this.store.snapshot(), organisationId, eventId);
   }
 
   createRiskSource(actor: ActorContext, raw: unknown) {
@@ -7226,6 +7239,18 @@ export class PlatformService {
       resourceId: input.decisionId,
       idempotencyKey: input.idempotencyKey,
       run: (snap, ctx) => decideResidualRiskOnSnap(snap, input, ctx.now, actor.personId, actor.actorKind),
+    });
+  }
+
+  createRiskClauseTemplate(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof createClauseTemplateOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.clause.draft",
+      scope: { organisationId: input.organisationId },
+      action: "risk.clause.template.create",
+      resourceType: "risk_clause_template",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => createClauseTemplateOnSnap(snap, input, ctx.now, actor.personId),
     });
   }
 
@@ -7440,14 +7465,41 @@ export class PlatformService {
 
   transitionRiskDossier(actor: ActorContext, raw: unknown) {
     const input = raw as Parameters<typeof transitionDossierOnSnap>[1];
+    const permission =
+      input.to === "PUBLISHED" ? "risk.dossier.publish" : input.to === "APPROVED" ? "risk.dossier.approve" : "risk.dossier.view";
     return this.mutate(actor, {
-      permission: input.to === "PUBLISHED" ? "risk.dossier.publish" : "risk.dossier.approve",
+      permission,
       scope: { organisationId: input.organisationId, eventId: input.eventId },
       action: "risk.dossier.transition",
       resourceType: "risk_dossier_edition",
       resourceId: input.dossierId,
       idempotencyKey: input.idempotencyKey,
       run: (snap, ctx) => transitionDossierOnSnap(snap, input, ctx.now, actor.personId, actor.actorKind),
+    });
+  }
+
+  exportRiskDossier(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof exportDossierOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.export",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.dossier.export",
+      resourceType: "risk_dossier_export",
+      resourceId: input.dossierId,
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => exportDossierOnSnap(snap, input, ctx.now, actor.personId),
+    });
+  }
+
+  recordClientDossierMessage(actor: ActorContext, raw: unknown) {
+    const input = raw as Parameters<typeof recordClientDossierMessageOnSnap>[1];
+    return this.mutate(actor, {
+      permission: "risk.dossier.view",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "risk.dossier.client-message",
+      resourceType: "risk_dossier_publication",
+      idempotencyKey: input.idempotencyKey,
+      run: (snap, ctx) => recordClientDossierMessageOnSnap(snap, input, ctx.now, actor.personId),
     });
   }
 

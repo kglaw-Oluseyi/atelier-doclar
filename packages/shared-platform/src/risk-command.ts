@@ -3,6 +3,7 @@ import { SCHEMA_VERSION } from "./constants.js";
 import { exactHash } from "./eec-hash.js";
 import { PlatformError } from "./errors.js";
 import { RiskCommandEnvelopeSchema } from "./risk-schemas.js";
+import type { PlatformSnapshot } from "./store.js";
 
 export function riskStamp(now: string, version = 1) {
   return {
@@ -74,6 +75,39 @@ export function assertHumanActor(actorKind: string | undefined): void {
   if (actorKind === "AI") {
     throw new PlatformError("AI_AUTHORITY_FORBIDDEN", "AI cannot approve a governing protection decision");
   }
+}
+
+export function reloadDurableAssignment(
+  snap: PlatformSnapshot,
+  assignmentId: string,
+  actorPersonId: string,
+  organisationId?: string,
+) {
+  const assignment = snap.assignments.find((item) => item.id === assignmentId);
+  if (!assignment || assignment.status !== "ACTIVE") {
+    throw new PlatformError("FORBIDDEN", "current assignment is required");
+  }
+  if (assignment.personId !== actorPersonId) {
+    throw new PlatformError("FORBIDDEN", "assignment does not belong to this person");
+  }
+  if (organisationId && assignment.organisationId !== organisationId) {
+    throw new PlatformError("SCOPE_MISMATCH", "assignment is outside this organisation");
+  }
+  const person = snap.persons.find((item) => item.id === actorPersonId);
+  if (!person || person.status !== "ACTIVE") {
+    throw new PlatformError("FORBIDDEN", "durable person identity is not active");
+  }
+  return { assignment, person, human: true as const };
+}
+
+export function assertProtectedHuman(
+  snap: PlatformSnapshot,
+  assignmentId: string,
+  actorPersonId: string,
+  _callerActorKind?: string,
+  organisationId?: string,
+): void {
+  reloadDurableAssignment(snap, assignmentId, actorPersonId, organisationId);
 }
 
 export const DOCUMENT_TRANSITIONS: Record<string, readonly string[]> = {

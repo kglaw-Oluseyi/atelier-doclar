@@ -1,0 +1,89 @@
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+import { S05B_EVALUATION_CASES, validateS05BEvaluationCorpus } from "../src/risk-evaluation-corpus.js";
+import { S05B_EVALUATION_CORPUS_EDITION } from "../src/risk-evaluation-schemas.js";
+import { detectUnsafeFromObservations, executeS05BCase } from "../src/risk-evaluation-fixtures.js";
+import { executeS05BEvaluationOnSnap } from "../src/risk-evaluation-runner.js";
+import { s05bEvaluationReadinessFromSnap } from "../src/risk-evaluation-projections.js";
+import { migrateEosS05B } from "../src/risk-migration.js";
+import { fixtureService, people } from "./helpers.js";
+
+describe("EOS-S05B evaluation v2", () => {
+  it("requires at least 50 observation-based cases and does not accept v1 as current", () => {
+    validateS05BEvaluationCorpus();
+    assert.ok(S05B_EVALUATION_CASES.length >= 50);
+    assert.equal(S05B_EVALUATION_CORPUS_EDITION, "s05b-eval-v2");
+    assert.equal(
+      S05B_EVALUATION_CASES.some((item) => JSON.stringify(item).includes('"passed":')),
+      false,
+    );
+  });
+
+  it("runs the current corpus against production functions", () => {
+    const { store } = fixtureService();
+    const migrated = migrateEosS05B(store.snapshot());
+    store.replace(migrated.snapshot);
+    const snap = store.snapshot();
+    const run = executeS05BEvaluationOnSnap(snap, {
+      organisationId: people.orgMaison,
+      requestedByPersonId: people.personCeo,
+      correlationId: "eval-v2",
+      idempotencyKey: "eval-v2-key-01",
+      applicationSha: "local-dev",
+      now: "2026-09-10T10:00:00.000Z",
+    });
+    store.replace(snap);
+    if (run.status !== "PASSED") {
+      const failed = store.snapshot().riskEvaluationCaseResults.filter((item) => item.runId === run.id && item.verdict !== "PASSED");
+      assert.equal(run.status, "PASSED", failed.map((item) => `${item.caseId}:${item.diagnosticSummary}`).join(" | "));
+    }
+    const ready = s05bEvaluationReadinessFromSnap(store.snapshot(), people.orgMaison);
+    assert.equal(ready.evaluationStatus, "PASSED");
+    assert.equal(ready.corpusEdition, "s05b-eval-v2");
+  });
+
+  it("detects negative controls from corrupted observations, not adapter flags", () => {
+    const clean = executeS05BCase(S05B_EVALUATION_CASES.find((item) => item.id === "S05B-APP-01")!);
+    assert.equal(detectUnsafeFromObservations(clean).includes("FABRICATED_COVERAGE"), false);
+    const fabricated = executeS05BCase(S05B_EVALUATION_CASES.find((item) => item.id === "S05B-APP-01")!, { fabricateCoverage: true });
+    assert.ok(detectUnsafeFromObservations(fabricated).includes("FABRICATED_COVERAGE"));
+    const roster = executeS05BCase(S05B_EVALUATION_CASES.find((item) => item.id === "S05B-ROSTER-01")!);
+    assert.equal(detectUnsafeFromObservations(roster).includes("FALSE_SUCCESS"), false);
+    const falsed = executeS05BCase(S05B_EVALUATION_CASES.find((item) => item.id === "S05B-ROSTER-01")!, { falseSuccess: true });
+    assert.ok(detectUnsafeFromObservations(falsed).includes("FALSE_SUCCESS"));
+    const priced = executeS05BCase(S05B_EVALUATION_CASES.find((item) => item.id === "S05B-BUDGET-01")!, { inventPremium: true });
+    assert.ok(detectUnsafeFromObservations(priced).includes("INVENTED_PRICE"));
+  });
+
+  it("treats a v1 corpus hash as stale", () => {
+    const { store } = fixtureService();
+    const snap = store.snapshot();
+    snap.riskEvaluationRuns.push({
+      id: "00000000-0000-4000-8000-000000000401",
+      organisationId: people.orgMaison,
+      corpusEdition: "s05b-eval-v1",
+      corpusHash: "old",
+      orchestratorVersion: "s05b-orchestrator-v1",
+      providerVersion: "fixture-inactive-v1",
+      projectionPolicyVersion: "risk-projection-v1",
+      evaluationContractVersion: "s05b-eval-contract-v1",
+      applicationSha: "old",
+      status: "PASSED",
+      caseCount: 16,
+      passedCount: 16,
+      failedCount: 0,
+      errorCount: 0,
+      zeroToleranceFailed: false,
+      requestedByPersonId: people.personCeo,
+      correlationId: "old",
+      idempotencyKey: "old",
+      version: 1,
+      schemaVersion: 1,
+      createdAt: "2026-09-10T09:00:00.000Z",
+      updatedAt: "2026-09-10T09:00:00.000Z",
+    } as never);
+    const ready = s05bEvaluationReadinessFromSnap(snap, people.orgMaison);
+    assert.equal(ready.evaluationStatus, "STALE");
+    assert.equal(ready.releaseReady, false);
+  });
+});

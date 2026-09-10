@@ -466,6 +466,13 @@ export function calculateBudgetScenarioDeepOnSnap(
     effectiveDrivers?: readonly EffectiveBudgetDriver[];
     scenarioAssumptions?: readonly BudgetScenarioAssumptionInput[];
     expectedScenarioVersion?: number;
+    riskSourcedLines?: Array<{
+      code: string;
+      expectedMinor: string;
+      currency: string;
+      evidenceHash?: string;
+      labelledAssumption?: string;
+    }>;
   },
   now: string,
   actorPersonId: string,
@@ -667,6 +674,46 @@ export function calculateBudgetScenarioDeepOnSnap(
       ...stamp(now),
     };
     snap.budgetLines.push(line);
+  }
+  for (const sourced of input.riskSourcedLines ?? []) {
+    const expression: BudgetExpr = { kind: "CONST_MONEY", valueMinor: sourced.expectedMinor, currency: sourced.currency };
+    const result = evaluateBudgetExpr(expression, { drivers: { [GUEST_TARGET_COUNT]: guestsText }, prices: {}, ruleEditionHash: sourced.evidenceHash ?? exactHash(expression) });
+    if (result.value.kind !== "MONEY" || !result.value.minor) {
+      throw new PlatformError("VALIDATION_FAILED", "risk-sourced budget lines must resolve as money");
+    }
+    const minor = BigInt(result.value.minor);
+    expected += minor;
+    low += minor;
+    high += minor;
+    traces.push({
+      op: "RISK_DRIVER",
+      detail: sourced.labelledAssumption ?? sourced.code,
+      value: minor.toString(),
+    });
+    snap.budgetLines.push({
+      id: randomUUID(),
+      organisationId: input.organisationId,
+      scenarioId: "pending",
+      itemCode: sourced.code,
+      inclusionReason: sourced.labelledAssumption ?? "Sourced risk driver through accepted Budget engine",
+      classification: "REQUIRED",
+      quantity: "1",
+      unit: "event",
+      priceSource: "RISK_SOURCED_CONST_MONEY",
+      priceConfidence: sourced.labelledAssumption ? "LOW" : "MEDIUM",
+      stale: false,
+      synthetic: false,
+      expectedMinor: minor.toString(),
+      lowMinor: minor.toString(),
+      highMinor: minor.toString(),
+      currency: sourced.currency,
+      ruleEditionHash: result.ruleEditionHash,
+      warnings: sourced.labelledAssumption ? [sourced.labelledAssumption] : [],
+      unresolvedAssumptions: [],
+      contentHash: exactHash({ item: sourced.code, minor: minor.toString(), evidence: sourced.evidenceHash ?? "" }),
+      version: 1,
+      ...stamp(now),
+    });
   }
   const contingency = snap.contingencyRuleEditions.find((item) => item.organisationId === input.organisationId && item.current);
   let contingencyMinor = 0n;

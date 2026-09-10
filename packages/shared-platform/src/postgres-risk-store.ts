@@ -1,0 +1,196 @@
+import { PlatformError } from "./errors.js";
+import type { PgQueryable, PgTransactor } from "./postgres-schema.js";
+import { EOS_S05B_PROTECTION_V2_ID, RISK_SQL_TABLES, type RiskSqlCollection } from "./risk-postgres-schema.js";
+import { emptyRiskState, type RiskIdempotencyRecord, type RiskProtectionState, type RiskProtectionStore } from "./risk-store.js";
+import type { PlatformSnapshot } from "./store.js";
+
+type Versioned = { id: string; version: number; organisationId?: string; eventId?: string; createdAt?: string; updatedAt?: string };
+
+function hasTransaction(client: PgQueryable): client is PgTransactor {
+  return typeof (client as PgTransactor).transaction === "function";
+}
+
+function columns(record: Record<string, unknown>) {
+  const status = record.status ?? record.state ?? record.verificationState;
+  const parent = record.policyId ?? record.planId ?? record.incidentId ?? record.dossierId ?? record.runId ?? record.templateId ?? record.supersedesEditionId;
+  const submitted = record.submittedByPersonId ?? record.createdByPersonId ?? record.reportedByPersonId ?? record.uploadedByPersonId ?? record.recordedByPersonId;
+  const approved = record.approvedByPersonId ?? record.verifiedByPersonId ?? record.authorisedByPersonId ?? record.publishedByPersonId;
+  return {
+    id: String(record.id),
+    organisation_id: record.organisationId ? String(record.organisationId) : "",
+    event_id: record.eventId ? String(record.eventId) : null,
+    version: Number(record.version ?? 1),
+    current: typeof record.current === "boolean" ? record.current : null,
+    status: status ? String(status) : null,
+    parent_id: parent ? String(parent) : null,
+    content_hash: record.contentHash ? String(record.contentHash) : null,
+    submitted_by_person_id: submitted ? String(submitted) : null,
+    approved_by_person_id: approved ? String(approved) : null,
+    body: JSON.stringify(record),
+    created_at: String(record.createdAt ?? new Date().toISOString()),
+    updated_at: String(record.updatedAt ?? record.createdAt ?? new Date().toISOString()),
+  };
+}
+
+export class PostgresRiskProtectionStore implements RiskProtectionStore {
+  constructor(private readonly client: PgQueryable) {}
+
+  async loadAll(): Promise<RiskProtectionState> {
+    const state = emptyRiskState();
+    for (const mapping of RISK_SQL_TABLES) {
+      const result = await this.client.query<{ body: unknown }>(`SELECT body FROM ${mapping.table}`);
+      const rows = result.rows.map((row) => (typeof row.body === "string" ? JSON.parse(row.body) : row.body));
+      (state as unknown as Record<string, unknown[]>)[mapping.collection] = rows;
+    }
+    return state;
+  }
+
+  loadOrganisation(_organisationId: string): RiskProtectionState {
+    throw new PlatformError("VALIDATION_FAILED", "postgres risk store loadOrganisation is async; use loadOrganisationAsync");
+  }
+
+  async loadOrganisationAsync(organisationId: string): Promise<RiskProtectionState> {
+    const state = emptyRiskState();
+    for (const mapping of RISK_SQL_TABLES) {
+      const result = await this.client.query<{ body: unknown }>(
+        `SELECT body FROM ${mapping.table} WHERE organisation_id = $1 OR organisation_id = ''`,
+        [organisationId],
+      );
+      const rows = result.rows
+        .map((row) => (typeof row.body === "string" ? JSON.parse(row.body) : row.body) as { organisationId?: string })
+        .filter((item) => !item.organisationId || item.organisationId === organisationId);
+      (state as unknown as Record<string, unknown[]>)[mapping.collection] = rows;
+    }
+    return state;
+  }
+
+  persistFromSnapshot(_previous: PlatformSnapshot, _next: PlatformSnapshot, _organisationId?: string): void {
+    throw new PlatformError("VALIDATION_FAILED", "postgres risk store persistFromSnapshot is async; use persistFromSnapshotAsync");
+  }
+
+  async persistFromSnapshotAsync(previous: PlatformSnapshot, next: PlatformSnapshot, organisationId?: string): Promise<void> {
+    const run = async (tx: PgQueryable) => {
+      for (const mapping of RISK_SQL_TABLES) {
+        await this.persistCollection(tx, mapping.table, mapping.collection, previous, next, organisationId);
+      }
+    };
+    if (hasTransaction(this.client)) await this.client.transaction(run);
+    else await run(this.client);
+  }
+
+  private async persistCollection(
+    tx: PgQueryable,
+    table: string,
+    collection: RiskSqlCollection,
+    previous: PlatformSnapshot,
+    next: PlatformSnapshot,
+    organisationId?: string,
+  ): Promise<void> {
+    const prevRows = (((previous as unknown as Record<string, Versioned[]>)[collection] ?? []) as Versioned[]).filter(
+      (item) => !organisationId || item.organisationId === organisationId,
+    );
+    const nextRows = (((next as unknown as Record<string, Versioned[]>)[collection] ?? []) as Versioned[]).filter(
+      (item) => !organisationId || item.organisationId === organisationId,
+    );
+    const prevById = new Map(prevRows.map((item) => [item.id, item]));
+    const nextIds = new Set(nextRows.map((item) => item.id));
+    for (const row of nextRows) {
+      const cols = columns(row as unknown as Record<string, unknown>);
+      const existed = prevById.get(row.id);
+      if (!existed) {
+        await tx.query(
+          `INSERT INTO ${table} (id, organisation_id, event_id, version, current, status, parent_id, content_hash, submitted_by_person_id, approved_by_person_id, body, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12,$13)`,
+          [
+            cols.id,
+            cols.organisation_id,
+            cols.event_id,
+            cols.version,
+            cols.current,
+            cols.status,
+            cols.parent_id,
+            cols.content_hash,
+            cols.submitted_by_person_id,
+            cols.approved_by_person_id,
+            cols.body,
+            cols.created_at,
+            cols.updated_at,
+          ],
+        );
+        continue;
+      }
+      if (JSON.stringify(existed) === JSON.stringify(row)) continue;
+      if (row.version <= existed.version) {
+        throw new PlatformError("VERSION_CONFLICT", "stale risk aggregate write was not rescued", {
+          publicMessage: "This record changed while you were editing. Reload before saving.",
+        });
+      }
+      const updated = await tx.query(
+        `UPDATE ${table} SET organisation_id=$3, event_id=$4, version=$5, current=$6, status=$7, parent_id=$8, content_hash=$9, submitted_by_person_id=$10, approved_by_person_id=$11, body=$12::jsonb, updated_at=$13 WHERE id=$1 AND version=$2`,
+        [
+          cols.id,
+          existed.version,
+          cols.organisation_id,
+          cols.event_id,
+          cols.version,
+          cols.current,
+          cols.status,
+          cols.parent_id,
+          cols.content_hash,
+          cols.submitted_by_person_id,
+          cols.approved_by_person_id,
+          cols.body,
+          cols.updated_at,
+        ],
+      );
+      if (!updated.rowCount) {
+        throw new PlatformError("VERSION_CONFLICT", "stale risk aggregate write was not rescued", {
+          publicMessage: "This record changed while you were editing. Reload before saving.",
+        });
+      }
+    }
+    for (const existed of prevRows) {
+      if (nextIds.has(existed.id)) continue;
+      await tx.query(`DELETE FROM ${table} WHERE id=$1 AND version=$2`, [existed.id, existed.version]);
+    }
+  }
+
+  getIdempotency(organisationId: string, action: string, key: string): RiskIdempotencyRecord | undefined {
+    void organisationId;
+    void action;
+    void key;
+    return undefined;
+  }
+
+  async getIdempotencyAsync(organisationId: string, action: string, key: string): Promise<RiskIdempotencyRecord | undefined> {
+    const result = await this.client.query<RiskIdempotencyRecord>(
+      "SELECT organisation_id AS \"organisationId\", action, idempotency_key AS \"idempotencyKey\", result_ref AS \"resultRef\", hash, created_at AS \"createdAt\" FROM risk_idempotency_receipts WHERE organisation_id=$1 AND action=$2 AND idempotency_key=$3",
+      [organisationId, action, key],
+    );
+    return result.rows[0];
+  }
+
+  putIdempotency(record: RiskIdempotencyRecord): void {
+    void this.putIdempotencyAsync(record);
+  }
+
+  async putIdempotencyAsync(record: RiskIdempotencyRecord): Promise<void> {
+    await this.client.query(
+      "INSERT INTO risk_idempotency_receipts (organisation_id, action, idempotency_key, result_ref, hash, created_at) VALUES ($1,$2,$3,$4,$5,$6)",
+      [record.organisationId, record.action, record.idempotencyKey, record.resultRef, record.hash, record.createdAt],
+    );
+  }
+
+  normalizedAuthority(): boolean {
+    return true;
+  }
+
+  async normalizedAuthorityAsync(): Promise<boolean> {
+    const result = await this.client.query<{ body: unknown }>(
+      "SELECT body FROM risk_migration_receipts WHERE status = 'APPLIED'",
+    );
+    return result.rows.some((row) => {
+      const body = typeof row.body === "string" ? JSON.parse(row.body) : row.body;
+      return (body as { migrationId?: string }).migrationId === EOS_S05B_PROTECTION_V2_ID;
+    });
+  }
+}

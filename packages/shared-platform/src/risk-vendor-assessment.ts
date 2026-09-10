@@ -2,8 +2,8 @@ import { exactHash } from "./eec-hash.js";
 import { PlatformError } from "./errors.js";
 import {
   assertExpectedVersion,
-  assertHumanActor,
   assertMakerChecker,
+  assertProtectedHuman,
   assertSameEvent,
   assertSameOrganisation,
   bumpVersion,
@@ -161,7 +161,7 @@ export function decideVendorAssessmentOnSnap(
   actorKind?: string,
 ): RiskVendorAssessment {
   envelope(input, input.organisationId);
-  assertHumanActor(actorKind);
+  assertProtectedHuman(snap, input.assignmentId, actorPersonId, actorKind, input.organisationId);
   const assessment = snap.riskVendorAssessments.find((item) => item.id === input.assessmentId && item.organisationId === input.organisationId);
   if (!assessment) throw new PlatformError("NOT_FOUND", "vendor assessment not found");
   assertExpectedVersion(assessment.version, input.expectedVersion, "vendor assessment");

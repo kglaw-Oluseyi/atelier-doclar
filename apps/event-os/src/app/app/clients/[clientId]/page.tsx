@@ -58,6 +58,9 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ c
                 <Link className="button" href={`/app/events/${event.id}`}>
                   Open event
                 </Link>
+                <Link className="button secondary" href={`/app/events/${event.id}/protection/client`}>
+                  Published protection dossier
+                </Link>
               </p>
             </article>
           ))}

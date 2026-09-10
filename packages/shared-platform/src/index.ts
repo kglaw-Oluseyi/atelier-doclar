@@ -939,4 +939,20 @@ export * from "./risk-evaluation-schemas.js";
 export * from "./risk-evaluation-corpus.js";
 export * from "./risk-evaluation-runner.js";
 export * from "./risk-evaluation-projections.js";
-export { executeS05BCase, detectUnsafeAdapter } from "./risk-evaluation-fixtures.js";
+export { executeS05BCase, detectUnsafeAdapter, detectUnsafeFromObservations } from "./risk-evaluation-fixtures.js";
+export { MemoryRiskProtectionStore } from "./memory-risk-store.js";
+export { PostgresRiskProtectionStore } from "./postgres-risk-store.js";
+export { backfillNormalizedRiskTables, EOS_S05B_V2_MIGRATION_CHECKSUM } from "./risk-normalized-migration.js";
+export { EOS_S05B_PROTECTION_V2_ID, EOS_S05B_NORMALIZED_MIGRATION_ID, RISK_SQL_TABLES } from "./risk-postgres-schema.js";
+export {
+  POLICY_EVIDENCE_TRANSITIONS,
+  APPLICABILITY_TRANSITIONS,
+  GAP_TRANSITIONS,
+  CLAUSE_TRANSITIONS,
+  VENDOR_ASSESSMENT_TRANSITIONS,
+  CHECKIN_TRANSITIONS,
+  FALLBACK_TRANSITIONS,
+  INCIDENT_TRANSITIONS,
+  DOSSIER_TRANSITIONS,
+  assertLegalTransition,
+} from "./risk-transitions.js";

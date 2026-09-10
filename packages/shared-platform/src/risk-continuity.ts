@@ -2,8 +2,8 @@ import { exactHash } from "./eec-hash.js";
 import { PlatformError } from "./errors.js";
 import {
   assertExpectedVersion,
-  assertHumanActor,
   assertMakerChecker,
+  assertProtectedHuman,
   assertSameEvent,
   assertSameOrganisation,
   bumpVersion,
@@ -148,7 +148,7 @@ export function decideContinuityPlanOnSnap(
   if (!plan) throw new PlatformError("NOT_FOUND", "continuity plan not found");
   assertExpectedVersion(plan.version, input.expectedVersion, "continuity plan");
   if (input.decision === "APPROVED") {
-    assertHumanActor(actorKind);
+    assertProtectedHuman(snap, input.assignmentId, actorPersonId, actorKind, input.organisationId);
     assertMakerChecker(plan.submittedByPersonId, actorPersonId, "approve continuity plan");
   }
   Object.assign(
@@ -394,7 +394,7 @@ export function transitionFallbackOnSnap(
     throw new PlatformError("TRANSITION_INVALID", `fallback cannot move from ${activation.status} to ${input.to}`);
   }
   if (input.to === "AUTHORISED") {
-    assertHumanActor(actorKind);
+    assertProtectedHuman(snap, input.assignmentId, actorPersonId, actorKind, input.organisationId);
     const plan = snap.riskContinuityPlans.find((item) => item.id === activation.planId);
     if (plan) assertMakerChecker(plan.submittedByPersonId, actorPersonId, "authorise fallback");
     if (activation.proposedByPersonId === actorPersonId) {

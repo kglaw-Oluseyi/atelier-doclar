@@ -2,7 +2,7 @@ import { exactHash } from "./eec-hash.js";
 import { PlatformError } from "./errors.js";
 import {
   assertExpectedVersion,
-  assertHumanActor,
+  assertProtectedHuman,
   assertMakerChecker,
   assertSameEvent,
   assertSameOrganisation,
@@ -138,7 +138,7 @@ export function reviewClauseEditionOnSnap(
   actorKind?: string,
 ): RiskClauseEdition {
   envelope(input, input.organisationId);
-  assertHumanActor(actorKind);
+  assertProtectedHuman(snap, input.assignmentId, actorPersonId, actorKind, input.organisationId);
   const edition = snap.riskClauseEditions.find((item) => item.id === input.editionId && item.organisationId === input.organisationId);
   if (!edition) throw new PlatformError("NOT_FOUND", "clause edition not found");
   assertExpectedVersion(edition.version, input.expectedVersion, "clause edition");

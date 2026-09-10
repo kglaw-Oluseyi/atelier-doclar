@@ -709,6 +709,67 @@ export const RiskDossierEditionSchema = z
   })
   .strict();
 
+export const RiskDossierPublicationSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    eventId: EventIdSchema,
+    dossierId: UuidSchema,
+    approvedHash: NonEmptySchema.max(128),
+    publicationNumber: z.number().int().positive(),
+    publishedAt: IsoDatetimeSchema,
+    publishedByPersonId: PersonIdSchema,
+    current: z.boolean(),
+    dispatched: z.literal(false),
+    clientMessages: z
+      .array(
+        z
+          .object({
+            id: UuidSchema,
+            kind: z.enum(["ACKNOWLEDGE", "QUESTION"]),
+            body: NonEmptySchema.max(800),
+            createdByPersonId: PersonIdSchema,
+            createdAt: IsoDatetimeSchema,
+          })
+          .strict(),
+      )
+      .max(32)
+      .default([]),
+    ...versioned,
+  })
+  .strict();
+
+export const RiskDossierExportSchema = z
+  .object({
+    id: UuidSchema,
+    organisationId: OrganisationIdSchema,
+    eventId: EventIdSchema,
+    dossierId: UuidSchema,
+    publicationId: UuidSchema,
+    publicationNumber: z.number().int().positive(),
+    marking: NonEmptySchema.max(80),
+    fullHash: NonEmptySchema.max(128),
+    generatedAt: IsoDatetimeSchema,
+    generatedByPersonId: PersonIdSchema,
+    mediaType: NonEmptySchema.max(80),
+    privilegeBoundToPersonId: PersonIdSchema,
+    status: z.enum(["QUEUED", "COMPLETE", "FAILED"]),
+    dispatched: z.literal(false),
+    ...versioned,
+  })
+  .strict();
+
+export const RiskIdempotencyReceiptSchema = z
+  .object({
+    organisationId: OrganisationIdSchema,
+    action: NonEmptySchema.max(80),
+    idempotencyKey: NonEmptySchema.max(200),
+    resultRef: UuidSchema,
+    hash: NonEmptySchema.max(128),
+    createdAt: IsoDatetimeSchema,
+  })
+  .strict();
+
 export const S05BMigrationReceiptSchema = z
   .object({
     id: UuidSchema,
@@ -814,6 +875,8 @@ export const S05B_CANONICAL_COLLECTIONS = [
   "riskLearningProposals",
   "riskBudgetProjections",
   "riskDossierEditions",
+  "riskDossierPublications",
+  "riskDossierExports",
   "riskEvaluationRuns",
   "riskEvaluationCaseResults",
   "riskEvaluationRunLeases",
@@ -850,6 +913,9 @@ export type RiskLearningProposal = z.infer<typeof RiskLearningProposalSchema>;
 export type RiskBudgetDriver = z.infer<typeof RiskBudgetDriverSchema>;
 export type RiskBudgetProjection = z.infer<typeof RiskBudgetProjectionSchema>;
 export type RiskDossierEdition = z.infer<typeof RiskDossierEditionSchema>;
+export type RiskDossierPublication = z.infer<typeof RiskDossierPublicationSchema>;
+export type RiskDossierExport = z.infer<typeof RiskDossierExportSchema>;
+export type RiskIdempotencyReceipt = z.infer<typeof RiskIdempotencyReceiptSchema>;
 export type S05BMigrationReceipt = z.infer<typeof S05BMigrationReceiptSchema>;
 export type RiskEvaluationRun = z.infer<typeof RiskEvaluationRunSchema>;
 export type RiskEvaluationCaseResult = z.infer<typeof RiskEvaluationCaseResultSchema>;

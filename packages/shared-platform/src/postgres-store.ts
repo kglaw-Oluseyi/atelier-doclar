@@ -12,7 +12,14 @@ import { validateS04FPersistedCollections } from "./language-persistence.js";
 import { validateS05PersistedCollections } from "./venue-persistence.js";
 import { validateS05APersistedCollections } from "./eec-persistence.js";
 import { validateS05BPersistedCollections } from "./risk-persistence.js";
+import { PostgresRiskProtectionStore } from "./postgres-risk-store.js";
+import { backfillNormalizedRiskTables } from "./risk-normalized-migration.js";
+import { RISK_SQL_TABLES } from "./risk-postgres-schema.js";
+import { overlayRiskState } from "./risk-store.js";
+import { S05B_CANONICAL_COLLECTIONS } from "./risk-schemas.js";
 import type { PgQueryable, PgQueryResult, PgTransactor } from "./postgres-schema.js";
+
+const S05B_PERSISTED_COLLECTIONS = new Set<string>([...S05B_CANONICAL_COLLECTIONS, "riskDossierPublications", "riskDossierExports"]);
 
 type Collection = keyof Omit<PlatformSnapshot, "audit" | "idempotency">;
 
@@ -264,6 +271,8 @@ const COLLECTIONS: Collection[] = [
   "riskLearningProposals",
   "riskBudgetProjections",
   "riskDossierEditions",
+  "riskDossierPublications",
+  "riskDossierExports",
   "riskEvaluationRuns",
   "riskEvaluationCaseResults",
   "riskEvaluationRunLeases",
@@ -289,11 +298,13 @@ export class PostgresPlatformStore implements PlatformStore {
   readonly productionStatus: StoreProductionStatus = PRODUCTION_STORE_STATUS;
   private state: PlatformSnapshot = emptySnapshot();
   private pending: Promise<void> = Promise.resolve();
+  private riskNormalized = false;
 
   constructor(private readonly client: PgQueryable) {}
 
   static async migrate(client: PgQueryable): Promise<void> {
     await runPlatformMigrations(client);
+    await backfillNormalizedRiskTables(client);
   }
 
   static async open(client: PgQueryable): Promise<PostgresPlatformStore> {
@@ -341,6 +352,7 @@ export class PostgresPlatformStore implements PlatformStore {
   private async persistTransactional(previous: PlatformSnapshot, normalised: PlatformSnapshot): Promise<void> {
     const run = async (tx: PgQueryable) => {
       for (const collection of COLLECTIONS) {
+        if (this.riskNormalized && S05B_PERSISTED_COLLECTIONS.has(collection)) continue;
         const previousById = new Map(
           (previous[collection] as Array<Record<string, unknown>>).map((item) => [idOf(collection, item), item]),
         );
@@ -415,6 +427,9 @@ export class PostgresPlatformStore implements PlatformStore {
           // exists at another version, that is a stale delete and conflicts.
         }
       }
+      if (this.riskNormalized) {
+        await new PostgresRiskProtectionStore(tx).persistFromSnapshotAsync(previous, normalised);
+      }
       for (const entry of normalised.audit) {
         if (!previous.audit.some((item) => item.id === entry.id)) {
           await tx.query(
@@ -453,10 +468,16 @@ export class PostgresPlatformStore implements PlatformStore {
     const docs = await this.client.query<{ collection: Collection; body: unknown }>(
       "SELECT collection, body FROM platform_documents",
     );
+    const riskStore = new PostgresRiskProtectionStore(this.client);
+    this.riskNormalized = await riskStore.normalizedAuthorityAsync();
     for (const row of docs.rows) {
+      if (this.riskNormalized && S05B_PERSISTED_COLLECTIONS.has(row.collection)) continue;
       const table = next[row.collection];
       if (!Array.isArray(table)) continue;
       table.push(asBody(row.body));
+    }
+    if (this.riskNormalized) {
+      overlayRiskState(next, await riskStore.loadAll());
     }
     const audit = await this.client.query<{ body: unknown }>("SELECT body FROM platform_audit");
     next.audit = audit.rows.map((row) => asBody<AuditEvent>(row.body));
@@ -474,6 +495,32 @@ export class PostgresPlatformStore implements PlatformStore {
     validateS05BPersistedCollections(normalised);
     this.state = normalised;
   }
+}
+
+interface MemoryRiskRow {
+  table: string;
+  id: string;
+  organisation_id: string;
+  event_id: string | null;
+  version: number;
+  current: boolean | null;
+  status: string | null;
+  parent_id: string | null;
+  content_hash: string | null;
+  submitted_by_person_id: string | null;
+  approved_by_person_id: string | null;
+  body: unknown;
+  created_at: string;
+  updated_at: string;
+}
+
+interface MemoryIdempotencyRiskRow {
+  organisation_id: string;
+  action: string;
+  idempotency_key: string;
+  result_ref: string;
+  hash: string;
+  created_at: string;
 }
 
 interface MemoryDocumentRow {
@@ -506,6 +553,8 @@ export class MemoryPlatformPg implements PgTransactor {
     collections: unknown;
     confirmed: boolean;
   }> = [];
+  readonly riskRows: MemoryRiskRow[] = [];
+  readonly riskIdempotency: MemoryIdempotencyRiskRow[] = [];
   private failNext = false;
   private snapshot: {
     documents: MemoryDocumentRow[];
@@ -514,6 +563,8 @@ export class MemoryPlatformPg implements PgTransactor {
     migrations: Array<{ id: string; applied_at: string; checksum: string }>;
     seeds: MemoryPlatformPg["seeds"];
     cleanup: MemoryPlatformPg["cleanup"];
+    riskRows: MemoryRiskRow[];
+    riskIdempotency: MemoryIdempotencyRiskRow[];
   } | undefined;
 
   failNextWrite(): void {
@@ -528,6 +579,8 @@ export class MemoryPlatformPg implements PgTransactor {
       migrations: structuredClone(this.migrations),
       seeds: structuredClone(this.seeds),
       cleanup: structuredClone(this.cleanup),
+      riskRows: structuredClone(this.riskRows),
+      riskIdempotency: structuredClone(this.riskIdempotency),
     };
     try {
       const result = await fn(this);
@@ -547,6 +600,8 @@ export class MemoryPlatformPg implements PgTransactor {
     this.migrations.splice(0, this.migrations.length, ...this.snapshot.migrations);
     this.seeds.splice(0, this.seeds.length, ...this.snapshot.seeds);
     this.cleanup.splice(0, this.cleanup.length, ...this.snapshot.cleanup);
+    this.riskRows.splice(0, this.riskRows.length, ...this.snapshot.riskRows);
+    this.riskIdempotency.splice(0, this.riskIdempotency.length, ...this.snapshot.riskIdempotency);
     this.snapshot = undefined;
   }
 
@@ -574,6 +629,8 @@ export class MemoryPlatformPg implements PgTransactor {
         migrations: structuredClone(this.migrations),
         seeds: structuredClone(this.seeds),
         cleanup: structuredClone(this.cleanup),
+        riskRows: structuredClone(this.riskRows),
+        riskIdempotency: structuredClone(this.riskIdempotency),
       };
       return { rows: [], rowCount: 0 };
     }
@@ -586,6 +643,9 @@ export class MemoryPlatformPg implements PgTransactor {
       return { rows: [], rowCount: 0 };
     }
     if (sql.startsWith("CREATE TABLE")) return { rows: [], rowCount: 0 };
+    if (sql.startsWith("CREATE INDEX") || sql.startsWith("CREATE UNIQUE INDEX")) return { rows: [], rowCount: 0 };
+    const riskHandled = this.execRiskSql<T>(sql, values);
+    if (riskHandled) return riskHandled;
     if (this.failNext && sql.startsWith("INSERT")) {
       this.failNext = false;
       throw new Error("synthetic write failure");
@@ -721,5 +781,146 @@ export class MemoryPlatformPg implements PgTransactor {
       return { rows: [], rowCount: 1 };
     }
     throw new Error(`unsupported test SQL: ${sql}`);
+  }
+
+  private execRiskSql<T extends object>(sql: string, values: unknown[]): PgQueryResult<T> | undefined {
+    const tableMatch = sql.match(/\b(risk_[a-z_]+)\b/);
+    if (!tableMatch) return undefined;
+    const table = tableMatch[1] ?? "";
+    if (table === "risk_idempotency_receipts") {
+      if (sql.startsWith("INSERT INTO risk_idempotency_receipts")) {
+        const [organisationId, action, key, resultRef, hash, createdAt] = values as string[];
+        if (this.riskIdempotency.some((row) => row.organisation_id === organisationId && row.action === action && row.idempotency_key === key)) {
+          throw new Error("unique_violation");
+        }
+        this.riskIdempotency.push({
+          organisation_id: String(organisationId ?? ""),
+          action: String(action ?? ""),
+          idempotency_key: String(key ?? ""),
+          result_ref: String(resultRef ?? ""),
+          hash: String(hash ?? ""),
+          created_at: String(createdAt ?? ""),
+        });
+        return { rows: [], rowCount: 1 };
+      }
+      if (sql.startsWith("SELECT")) {
+        const rows = this.riskIdempotency.filter(
+          (row) =>
+            (!values[0] || row.organisation_id === values[0]) &&
+            (!values[1] || row.action === values[1]) &&
+            (!values[2] || row.idempotency_key === values[2]),
+        );
+        return {
+          rows: rows.map((row) => ({
+            organisationId: row.organisation_id,
+            action: row.action,
+            idempotencyKey: row.idempotency_key,
+            resultRef: row.result_ref,
+            hash: row.hash,
+            createdAt: row.created_at,
+          })) as T[],
+          rowCount: rows.length,
+        };
+      }
+      return { rows: [], rowCount: 0 };
+    }
+    if (!RISK_SQL_TABLES.some((item) => item.table === table)) return undefined;
+    if (this.failNext && sql.startsWith("INSERT INTO")) {
+      this.failNext = false;
+      throw new Error("synthetic write failure");
+    }
+    if (sql.startsWith("INSERT INTO")) {
+      const [
+        id,
+        organisationId,
+        eventId,
+        version,
+        current,
+        status,
+        parentId,
+        contentHash,
+        submittedBy,
+        approvedBy,
+        bodyJson,
+        createdAt,
+        updatedAt,
+      ] = values as [
+        string,
+        string,
+        string | null,
+        number,
+        boolean | null,
+        string | null,
+        string | null,
+        string | null,
+        string | null,
+        string | null,
+        string,
+        string,
+        string,
+      ];
+      if (this.riskRows.some((row) => row.table === table && row.id === id)) throw new Error("unique_violation");
+      this.riskRows.push({
+        table,
+        id,
+        organisation_id: organisationId,
+        event_id: eventId,
+        version,
+        current,
+        status,
+        parent_id: parentId,
+        content_hash: contentHash,
+        submitted_by_person_id: submittedBy,
+        approved_by_person_id: approvedBy,
+        body: typeof bodyJson === "string" ? JSON.parse(bodyJson) : bodyJson,
+        created_at: createdAt,
+        updated_at: updatedAt,
+      });
+      return { rows: [], rowCount: 1 };
+    }
+    if (sql.startsWith("UPDATE")) {
+      const id = String(values[0]);
+      const expectedVersion = Number(values[1]);
+      const row = this.riskRows.find((item) => item.table === table && item.id === id);
+      if (!row || Number(row.version) !== expectedVersion) return { rows: [], rowCount: 0 };
+      row.organisation_id = String(values[2] ?? row.organisation_id);
+      row.event_id = (values[3] as string | null) ?? null;
+      row.version = Number(values[4]);
+      row.current = (values[5] as boolean | null) ?? null;
+      row.status = (values[6] as string | null) ?? null;
+      row.parent_id = (values[7] as string | null) ?? null;
+      row.content_hash = (values[8] as string | null) ?? null;
+      row.submitted_by_person_id = (values[9] as string | null) ?? null;
+      row.approved_by_person_id = (values[10] as string | null) ?? null;
+      row.body = typeof values[11] === "string" ? JSON.parse(String(values[11])) : values[11];
+      row.updated_at = String(values[12] ?? row.updated_at);
+      return { rows: [], rowCount: 1 };
+    }
+    if (sql.startsWith("DELETE FROM")) {
+      const id = String(values[0]);
+      const version = Number(values[1]);
+      const index = this.riskRows.findIndex((row) => row.table === table && row.id === id && Number(row.version) === version);
+      if (index < 0) return { rows: [], rowCount: 0 };
+      this.riskRows.splice(index, 1);
+      return { rows: [], rowCount: 1 };
+    }
+    if (sql.startsWith("SELECT body FROM") || sql.startsWith("SELECT body FROM")) {
+      const rows = this.riskRows.filter((row) => {
+        if (row.table !== table) return false;
+        if (sql.includes("WHERE organisation_id") && values[0]) {
+          return row.organisation_id === values[0] || row.organisation_id === "";
+        }
+        if (sql.includes("WHERE status")) {
+          return row.status === "APPLIED";
+        }
+        return true;
+      });
+      return { rows: rows.map((row) => ({ body: row.body })) as T[], rowCount: rows.length };
+    }
+    if (sql.startsWith("SELECT")) {
+      const rows = this.riskRows.filter((row) => row.table === table);
+      return { rows: rows.map((row) => ({ body: row.body })) as T[], rowCount: rows.length };
+    }
+    return { rows: [], rowCount: 0 };
   }
 }

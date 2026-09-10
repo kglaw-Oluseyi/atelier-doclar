@@ -27,6 +27,9 @@ export function protectionPermissions(person: Person, organisationId: string, ev
     dossierView: allow("risk.dossier.view"),
     dossierApprove: allow("risk.dossier.approve"),
     dossierPublish: allow("risk.dossier.publish"),
+    dossierExport: allow("risk.export"),
     auditView: allow("risk.audit.view"),
+    clauseCommercial: allow("risk.clause.commercialApprove"),
+    vendorView: allow("risk.vendor.view"),
   };
 }

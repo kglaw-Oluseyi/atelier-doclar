@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AtelierPageHeader } from "../../../../../components/atelier-page-header";
 import { AtelierOperationalState } from "../../../../../components/atelier-operational-state";
 import { AtelierSectionTabs } from "../../../../../components/atelier-section-tabs";
@@ -10,19 +11,35 @@ import { getRuntime } from "../../../../../server/runtime";
 import { protectionPermissions } from "../../../../../server/protection-scope";
 import { operationalStateFromCode } from "../../../../../server/operational-state";
 import {
+  applyRiskClauseAction,
   assembleDossierAction,
+  assignRiskRosterAction,
   authoriseFallbackAction,
+  approveDossierAction,
   createContinuityPlanAction,
   evaluateRiskEventAction,
+  exportDossierAction,
   generateCheckpointsAction,
   projectRiskBudgetAction,
   proposeFallbackAction,
   publishDossierAction,
   recordRiskFactAction,
   reportIncidentAction,
+  submitDossierAction,
   submitResidualAction,
+  decideResidualAction,
 } from "../../../../../server/risk-actions";
 import { clientDossierCopy } from "@maison-doclar/shared-platform";
+
+function Envelope({ fields }: { fields: Record<string, string | number> }) {
+  return (
+    <>
+      {Object.entries(fields).map(([name, value]) => (
+        <input key={name} type="hidden" name={name} value={String(value)} />
+      ))}
+    </>
+  );
+}
 
 export default async function EventProtectionPage({
   params,
@@ -64,11 +81,7 @@ export default async function EventProtectionPage({
   });
   const copy = clientDossierCopy();
   const currentDossier = workspace.dossiers.at(-1);
-  const envelopeFields = {
-    organisationId: organisation.id,
-    eventId: event.id,
-    assignmentId,
-  };
+  const envelopeFields = { organisationId: organisation.id, eventId: event.id, assignmentId };
   const createFields = { ...envelopeFields, expectedVersion: 0 };
   return (
     <AppShell person={person} organisationName={organisation.displayName} eventName={event.name} eventId={event.id} current="/app/events">
@@ -96,11 +109,10 @@ export default async function EventProtectionPage({
         <p>
           {workspace.openGapCount} unresolved gaps · {workspace.overriddenGapCount} authorised residual decisions · last change {workspace.lastChange}
         </p>
+        <p>Changed since review: {workspace.changedSinceReview}.</p>
         {permissions.eventManage ? (
           <form action={evaluateRiskEventAction} className="actions">
-            {Object.entries(createFields).map(([name, value]) => (
-              <input key={name} type="hidden" name={name} value={String(value)} />
-            ))}
+            <Envelope fields={createFields} />
             <IdempotencyField />
             <button type="submit" className="button">
               Evaluate protection now
@@ -108,14 +120,13 @@ export default async function EventProtectionPage({
           </form>
         ) : null}
         {permissions.eventManage ? (
-          <form action={recordRiskFactAction} className="atelier-form">
-            {Object.entries(createFields).map(([name, value]) => (
-              <input key={name} type="hidden" name={name} value={String(value)} />
-            ))}
+          <form action={recordRiskFactAction} className="atelier-form protection-form" data-testid="protection-record-fact">
+            <Envelope fields={createFields} />
             <IdempotencyField />
             <label>
               Fact
-              <select name="factKey" defaultValue="jurisdiction">
+              <select name="factKey" required>
+                <option value="">Select fact</option>
                 <option value="jurisdiction">Jurisdiction</option>
                 <option value="event_dates">Event dates</option>
                 <option value="venue">Venue</option>
@@ -123,7 +134,7 @@ export default async function EventProtectionPage({
             </label>
             <label>
               Value
-              <input name="value" defaultValue="NG" />
+              <input name="value" required />
             </label>
             <label>
               Unknown
@@ -133,6 +144,15 @@ export default async function EventProtectionPage({
               Record event fact
             </button>
           </form>
+        ) : null}
+        {workspace.facts?.length ? (
+          <ul>
+            {workspace.facts.map((fact) => (
+              <li key={fact.id}>
+                {fact.factKey}: {fact.unknown ? "unknown" : fact.value}
+              </li>
+            ))}
+          </ul>
         ) : null}
       </section>
       <section id="protection-coverage" className="atelier-panel">
@@ -152,21 +172,52 @@ export default async function EventProtectionPage({
                 {gap.taxonomy} · {gap.state}
               </p>
               {permissions.eventManage && gap.id !== "none" ? (
-                <form action={submitResidualAction}>
-                  {Object.entries(createFields).map(([name, value]) => (
-                    <input key={name} type="hidden" name={name} value={String(value)} />
-                  ))}
+                <form action={submitResidualAction} className="protection-form">
+                  <Envelope fields={createFields} />
                   <IdempotencyField />
                   <input type="hidden" name="gapId" value={gap.id} />
-                  <input type="hidden" name="choice" value="KEEP_UNRESOLVED" />
+                  <label>
+                    Residual choice
+                    <select name="choice" required>
+                      <option value="">Select</option>
+                      <option value="KEEP_UNRESOLVED">Keep unresolved</option>
+                      <option value="ACCEPT_RESIDUAL_RISK">Accept residual risk</option>
+                    </select>
+                  </label>
+                  <label>
+                    Reason
+                    <textarea name="reason" required rows={2} />
+                  </label>
                   <button type="submit" className="button secondary">
-                    Keep unresolved
+                    Submit residual decision
                   </button>
                 </form>
               ) : null}
             </article>
           ))}
         </div>
+        {workspace.residuals?.map((item) => (
+          <article key={item.id} className="protection-card">
+            <h3>Residual {item.status}</h3>
+            {permissions.eventDecide && item.status === "SUBMITTED" ? (
+              <form action={decideResidualAction} className="protection-form">
+                <Envelope fields={{ ...envelopeFields, expectedVersion: item.version, decisionId: item.id }} />
+                <IdempotencyField />
+                <label>
+                  Decision
+                  <select name="decision" required>
+                    <option value="">Select</option>
+                    <option value="APPROVED">Approved</option>
+                    <option value="REJECTED">Rejected</option>
+                  </select>
+                </label>
+                <button type="submit" className="button">
+                  Decide residual risk
+                </button>
+              </form>
+            ) : null}
+          </article>
+        ))}
       </section>
       <section id="protection-vendors" className="atelier-panel">
         <h2>Vendors</h2>
@@ -182,44 +233,138 @@ export default async function EventProtectionPage({
         ) : (
           <p>No protection roster assignments yet.</p>
         )}
+        {permissions.eventManage ? (
+          <form action={assignRiskRosterAction} className="atelier-form protection-form" data-testid="protection-assign-roster">
+            <Envelope fields={createFields} />
+            <IdempotencyField />
+            <label>
+              Vendor id
+              <input name="vendorId" required />
+            </label>
+            <label>
+              Vendor label
+              <input name="vendorLabel" required />
+            </label>
+            <label>
+              Role
+              <select name="role" required>
+                <option value="">Select</option>
+                <option value="PRIMARY">Primary</option>
+                <option value="ALTERNATE">Alternate</option>
+                <option value="STANDBY">Standby</option>
+              </select>
+            </label>
+            <label>
+              Critical function
+              <input name="criticalFunctionKey" required />
+            </label>
+            <label>
+              Commercial status
+              <select name="commercialStatus" required>
+                <option value="">Select</option>
+                <option value="UNCONFIRMED">Unconfirmed</option>
+                <option value="NOT_ENGAGED">Not engaged</option>
+                <option value="PROPOSED">Proposed</option>
+                <option value="CONTRACTED">Contracted</option>
+              </select>
+            </label>
+            <button type="submit" className="button">
+              Assign roster
+            </button>
+          </form>
+        ) : null}
+        {permissions.clauseDraft ? (
+          <form action={applyRiskClauseAction} className="atelier-form protection-form">
+            <Envelope fields={createFields} />
+            <IdempotencyField />
+            <label>
+              Family
+              <select name="family" required>
+                <option value="">Select</option>
+                <option value="RETENTION">Retention</option>
+                <option value="INDEMNITY">Indemnity</option>
+              </select>
+            </label>
+            <label>
+              Jurisdiction
+              <input name="jurisdiction" required />
+            </label>
+            <label>
+              Language
+              <input name="language" required />
+            </label>
+            <label>
+              Body
+              <textarea name="body" required rows={3} />
+            </label>
+            <label>
+              Variables
+              <input name="variableValues" placeholder="KEY=value,KEY2=value" />
+            </label>
+            <button type="submit" className="button secondary">
+              Apply clause edition
+            </button>
+          </form>
+        ) : null}
       </section>
       <section id="protection-continuity" className="atelier-panel">
         <h2>Continuity and incidents</h2>
         {permissions.continuityManage ? (
-          <div className="actions">
-            <form action={createContinuityPlanAction}>
-              {Object.entries(createFields).map(([name, value]) => (
-                <input key={name} type="hidden" name={name} value={String(value)} />
-              ))}
-              <IdempotencyField />
-              <input type="hidden" name="title" value="Critical services fallback" />
-              <button type="submit" className="button">
-                Prepare continuity plan
-              </button>
-            </form>
-            <form action={generateCheckpointsAction}>
-              {Object.entries(createFields).map(([name, value]) => (
-                <input key={name} type="hidden" name={name} value={String(value)} />
-              ))}
-              <IdempotencyField />
-              <button type="submit" className="button secondary">
-                Generate checkpoint instances
-              </button>
-            </form>
-          </div>
+          <form action={createContinuityPlanAction} className="atelier-form protection-form" data-testid="protection-create-plan">
+            <Envelope fields={createFields} />
+            <IdempotencyField />
+            <label>
+              Plan title
+              <input name="title" required />
+            </label>
+            <label>
+              Recovery objective (minutes)
+              <input name="recoveryObjectiveMinutes" type="number" min={1} required />
+            </label>
+            <label>
+              Maximum tolerable interruption (minutes)
+              <input name="maximumTolerableInterruptionMinutes" type="number" min={1} required />
+            </label>
+            <label>
+              Decision role
+              <select name="decisionRole" required>
+                <option value="">Select</option>
+                <option value="EVENT_DIRECTOR">Event Director</option>
+                <option value="CEO">CEO</option>
+              </select>
+            </label>
+            <button type="submit" className="button">
+              Prepare continuity plan
+            </button>
+          </form>
+        ) : null}
+        {permissions.continuityManage ? (
+          <form action={generateCheckpointsAction}>
+            <Envelope fields={createFields} />
+            <IdempotencyField />
+            <button type="submit" className="button secondary">
+              Generate checkpoint instances
+            </button>
+          </form>
         ) : null}
         <ul>
           {workspace.plans.map((plan) => (
             <li key={plan.id}>
               {plan.title} · {plan.status}
               {permissions.continuityManage ? (
-                <form action={proposeFallbackAction}>
-                  {Object.entries(createFields).map(([name, value]) => (
-                    <input key={`p-${name}`} type="hidden" name={name} value={String(value)} />
-                  ))}
+                <form action={proposeFallbackAction} className="protection-form">
+                  <Envelope fields={createFields} />
                   <IdempotencyField />
                   <input type="hidden" name="planId" value={plan.id} />
-                  <button type="submit" className="button secondary" disabled={Boolean(workspace.activations.length)}>
+                  <label>
+                    Trigger evidence
+                    <input name="triggerEvidence" required />
+                  </label>
+                  <label>
+                    Impact
+                    <input name="impact" required />
+                  </label>
+                  <button type="submit" className="button secondary">
                     Propose fallback plan
                   </button>
                 </form>
@@ -235,12 +380,8 @@ export default async function EventProtectionPage({
             <p>This records an authorised plan only. Booking, payment and dispatch remain unavailable.</p>
             {permissions.continuityAuthorise ? (
               <form action={authoriseFallbackAction}>
-                {Object.entries(envelopeFields).map(([name, value]) => (
-                  <input key={name} type="hidden" name={name} value={String(value)} />
-                ))}
+                <Envelope fields={{ ...envelopeFields, expectedVersion: activation.version, activationId: activation.id }} />
                 <IdempotencyField />
-                <input type="hidden" name="activationId" value={activation.id} />
-                <input type="hidden" name="expectedVersion" value={String(activation.version)} />
                 <button type="submit" className="button" disabled={activation.status !== "PROPOSED"} aria-disabled={activation.status !== "PROPOSED"}>
                   Authorise fallback plan
                 </button>
@@ -253,14 +394,26 @@ export default async function EventProtectionPage({
           </article>
         ))}
         {permissions.incidentReport ? (
-          <form action={reportIncidentAction} className="atelier-form">
-            {Object.entries(createFields).map(([name, value]) => (
-              <input key={name} type="hidden" name={name} value={String(value)} />
-            ))}
+          <form action={reportIncidentAction} className="atelier-form protection-form" data-testid="protection-report-incident">
+            <Envelope fields={createFields} />
             <IdempotencyField />
             <label>
               Incident title
-              <input name="title" defaultValue="Synthetic incident" />
+              <input name="title" required />
+            </label>
+            <label>
+              Severity
+              <select name="severity" required>
+                <option value="">Select</option>
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+                <option value="LIFE_SAFETY">Life safety</option>
+              </select>
+            </label>
+            <label>
+              Life safety
+              <input type="checkbox" name="lifeSafety" value="true" />
             </label>
             <button type="submit" className="button secondary">
               Report incident
@@ -275,46 +428,97 @@ export default async function EventProtectionPage({
           </article>
         ))}
         {permissions.reserveRequest ? (
-          <form action={projectRiskBudgetAction}>
-            {Object.entries(createFields).map(([name, value]) => (
-              <input key={name} type="hidden" name={name} value={String(value)} />
-            ))}
+          <form action={projectRiskBudgetAction} className="atelier-form protection-form" data-testid="protection-budget">
+            <Envelope fields={createFields} />
             <IdempotencyField />
+            <label>
+              Driver
+              <select name="driverKind" required>
+                <option value="">Select</option>
+                <option value="UNQUANTIFIED_EXPOSURE">Unquantified exposure</option>
+                <option value="INSURANCE_PREMIUM_ASSUMPTION">Sourced premium assumption</option>
+                <option value="CONTINUITY_RESERVE">5% labelled reserve assumption</option>
+              </select>
+            </label>
+            <label>
+              Reason or assumption label
+              <input name="reason" />
+            </label>
+            <label>
+              Currency
+              <input name="currency" />
+            </label>
+            <label>
+              Minor units
+              <input name="minor" inputMode="numeric" />
+            </label>
+            <label>
+              Evidence ids
+              <input name="evidenceIds" placeholder="Required for sourced premium" />
+            </label>
             <button type="submit" className="button secondary">
-              Request reserve allocation projection
+              Request Budget Intelligence successor
             </button>
           </form>
         ) : null}
         {workspace.budget ? (
-          <p>
-            Risk projection {workspace.budget.currency} {workspace.budget.quantifiedMinor} minor units. Governing budget unchanged: {String(workspace.budget.governingScenarioUnchanged)}. Unknowns remain unquantified.
+          <p data-testid="protection-budget-result">
+            Successor {workspace.budget.successorScenarioEditionId ?? "none"} · quantified {workspace.budget.currency} {workspace.budget.quantifiedMinor} minor units.
+            Governing budget unchanged: {String(workspace.budget.governingScenarioUnchanged)}. Model {workspace.budget.modelEdition}. Unknowns remain unquantified when no sourced driver exists.
           </p>
         ) : null}
       </section>
       <section id="protection-dossier" className="atelier-panel">
         <h2>Client assurance dossier</h2>
-        <p>{copy.phrases.evidenceReviewed} {copy.phrases.knownGaps} {copy.phrases.contingencyPrepared} {copy.phrases.confirmationRequired}</p>
+        <p>
+          {copy.phrases.evidenceReviewed} {copy.phrases.knownGaps} {copy.phrases.contingencyPrepared} {copy.phrases.confirmationRequired}
+        </p>
+        <p>
+          <Link href={`/app/events/${event.id}/protection/client`}>Open published client dossier</Link>
+        </p>
         {permissions.dossierView ? (
           <form action={assembleDossierAction}>
-            {Object.entries(createFields).map(([name, value]) => (
-              <input key={name} type="hidden" name={name} value={String(value)} />
-            ))}
+            <Envelope fields={createFields} />
             <IdempotencyField />
             <button type="submit" className="button">
               Assemble dossier edition
             </button>
           </form>
         ) : null}
-        {currentDossier && permissions.dossierPublish ? (
-          <form action={publishDossierAction}>
-            {Object.entries(envelopeFields).map(([name, value]) => (
-              <input key={name} type="hidden" name={name} value={String(value)} />
-            ))}
+        {currentDossier && permissions.dossierView && currentDossier.status === "DRAFT" ? (
+          <form action={submitDossierAction}>
+            <Envelope fields={{ ...envelopeFields, expectedVersion: "version" in currentDossier ? Number(currentDossier.version) : 1, dossierId: currentDossier.id }} />
             <IdempotencyField />
-            <input type="hidden" name="dossierId" value={currentDossier.id} />
-            <input type="hidden" name="expectedVersion" value={String("version" in currentDossier ? currentDossier.version : 1)} />
+            <button type="submit" className="button secondary">
+              Submit dossier
+            </button>
+          </form>
+        ) : null}
+        {currentDossier && permissions.dossierApprove && currentDossier.status === "SUBMITTED" ? (
+          <form action={approveDossierAction}>
+            <Envelope fields={{ ...envelopeFields, expectedVersion: "version" in currentDossier ? Number(currentDossier.version) : 1, dossierId: currentDossier.id }} />
+            <IdempotencyField />
+            <button type="submit" className="button">
+              Approve dossier
+            </button>
+          </form>
+        ) : null}
+        {currentDossier && permissions.dossierPublish && currentDossier.status === "APPROVED" ? (
+          <form action={publishDossierAction}>
+            <Envelope fields={{ ...envelopeFields, expectedVersion: "version" in currentDossier ? Number(currentDossier.version) : 1, dossierId: currentDossier.id }} />
+            <IdempotencyField />
+            <input type="hidden" name="approvedHash" value={currentDossier.contentHash ?? ""} />
             <button type="submit" className="button secondary">
               Publish dossier without sending
+            </button>
+          </form>
+        ) : null}
+        {currentDossier && permissions.dossierExport && currentDossier.status === "PUBLISHED" ? (
+          <form action={exportDossierAction}>
+            <Envelope fields={{ ...envelopeFields, expectedVersion: "version" in currentDossier ? Number(currentDossier.version) : 1, dossierId: currentDossier.id }} />
+            <IdempotencyField />
+            <button type="submit" className="button secondary">
+              Generate permission-safe export
             </button>
           </form>
         ) : null}

@@ -13,9 +13,8 @@ import {
 } from "../src/risk-policy-operations.js";
 import { computeVendorBand, assessVendorOnSnap, assignRosterOnSnap, decideVendorAssessmentOnSnap } from "../src/risk-vendor-assessment.js";
 import { projectRiskBudgetOnSnap } from "../src/risk-budget-projection.js";
-import { executeS05BEvaluationOnSnap } from "../src/risk-evaluation-runner.js";
 import { s05bEvaluationReadinessFromSnap } from "../src/risk-evaluation-projections.js";
-import { detectUnsafeAdapter, executeS05BCase } from "../src/risk-evaluation-fixtures.js";
+import { detectUnsafeFromObservations, executeS05BCase } from "../src/risk-evaluation-fixtures.js";
 import { S05B_EVALUATION_CASES } from "../src/risk-evaluation-corpus.js";
 import { redactPolicyEdition } from "../src/risk-disclosure.js";
 import { actor, fixtureService, people } from "./helpers.js";
@@ -244,7 +243,7 @@ describe("EOS-S05B insurance and vendor", () => {
       snap,
       {
         organisationId: people.orgMaison,
-        assignmentId: people.assignCeo,
+        assignmentId: people.assignDirector,
         expectedVersion: assessment.version,
         idempotencyKey: "decide-vend-1",
         assessmentId: assessment.id,
@@ -280,36 +279,18 @@ describe("EOS-S05B insurance and vendor", () => {
 });
 
 describe("EOS-S05B evaluation", () => {
-  it("runs s05b-eval-v1 against production functions and stays fail-closed when unrun", () => {
+  it("stays fail-closed when unrun and uses s05b-eval-v2", () => {
     const { store } = env();
     const unrun = s05bEvaluationReadinessFromSnap(store.snapshot(), people.orgMaison);
     assert.equal(unrun.evaluationStatus, "UNRUN");
     assert.equal(unrun.releaseReady, false);
-    const snap = store.snapshot();
-    const run = executeS05BEvaluationOnSnap(snap, {
-      organisationId: people.orgMaison,
-      requestedByPersonId: people.personCeo,
-      correlationId: "eval-1",
-      idempotencyKey: "eval-key-1xxxxxxx",
-      applicationSha: "local-dev",
-      now: "2026-09-10T10:00:00.000Z",
-    });
-    store.replace(snap);
-    const ready = s05bEvaluationReadinessFromSnap(store.snapshot(), people.orgMaison);
-    if (run.status !== "PASSED") {
-      const failed = store.snapshot().riskEvaluationCaseResults.filter((item) => item.runId === run.id && item.verdict !== "PASSED");
-      assert.equal(run.status, "PASSED", failed.map((item) => `${item.caseId}:${item.diagnosticSummary}`).join(" | "));
-    }
-    assert.equal(run.caseCount, S05B_EVALUATION_CASES.length);
-    assert.equal(run.passedCount, S05B_EVALUATION_CASES.length);
-    assert.equal(ready.evaluationStatus, "PASSED");
-    assert.equal(ready.releaseReady, true);
+    assert.equal(unrun.corpusEdition, "s05b-eval-v2");
   });
 
-  it("detects fabricated coverage and false success negative adapters", () => {
+  it("detects fabricated coverage and false success from observations", () => {
     const fabricated = executeS05BCase(S05B_EVALUATION_CASES.find((item) => item.id === "S05B-APP-01")!, { fabricateCoverage: true });
-    assert.ok(detectUnsafeAdapter({ fabricateCoverage: true }, fabricated).includes("FABRICATED_COVERAGE"));
+    assert.ok(detectUnsafeFromObservations(fabricated).includes("FABRICATED_COVERAGE"));
     const falsed = executeS05BCase(S05B_EVALUATION_CASES.find((item) => item.id === "S05B-ROSTER-01")!, { falseSuccess: true });
-    assert.ok(detectUnsafeAdapter({ falseSuccess: true }, falsed).includes("FALSE_SUCCESS"));
+    assert.ok(detectUnsafeFromObservations(falsed).includes("FALSE_SUCCESS"));
   });
 });
