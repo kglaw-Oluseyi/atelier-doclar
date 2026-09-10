@@ -34,3 +34,23 @@ export function shouldStealActionResultFocus(input: {
 export function shouldReleaseActionResultFocus(input: { navigationType?: string }): boolean {
   return input.navigationType === "reload";
 }
+
+export function prefersReducedMotion(media = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches): boolean {
+  return media();
+}
+
+export function actionResultScrollBehavior(reducedMotion: boolean): ScrollBehavior {
+  return reducedMotion ? "auto" : "smooth";
+}
+
+export function shouldAttemptActionResultFocus(input: {
+  active: boolean;
+  correlationId?: string;
+  alreadyStored?: boolean;
+  focusedInDocument?: boolean;
+}): "focus" | "restore" | "skip" {
+  if (input.correlationId && input.focusedInDocument) return "restore";
+  if (!input.active || !input.correlationId) return "skip";
+  if (input.alreadyStored) return "skip";
+  return "focus";
+}

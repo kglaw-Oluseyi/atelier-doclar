@@ -144,6 +144,7 @@ export function DiscoveryWorkspaceView({
           presented.actionType === "discovery.conflict"
         }
         onceKey={[presented?.correlationId, presented?.subjectId, "resolved-contradiction-heading"].filter(Boolean).join(":")}
+        correlationId={presented?.correlationId}
       />
       <AtelierStateFocus
         targetId="operational-state-title"
@@ -154,6 +155,7 @@ export function DiscoveryWorkspaceView({
             resultSection === "discovery-assertions",
         )}
         onceKey={[presented?.correlationId, presented?.subjectId, "operational-state-title"].filter(Boolean).join(":")}
+        correlationId={presented?.correlationId}
       />
       <p className="lede" data-testid="discovery-next-action">
         Next: {workspace.nextAction}

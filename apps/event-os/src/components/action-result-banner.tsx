@@ -28,14 +28,25 @@ export function ActionResultBanner({
     .join(":");
   return (
     <>
-      <AtelierStateFocus targetId={focusTarget} active={shouldFocus} onceKey={onceKey} />
-      <AtelierStateFocus targetId="placeholder-validation" active={presented.view.kind === "validation"} onceKey={onceKey} />
+      <AtelierStateFocus
+        targetId={focusTarget}
+        active={shouldFocus}
+        onceKey={onceKey}
+        correlationId={presented.correlationId}
+        consumeAfterFocus={shouldFocus}
+      />
+      <AtelierStateFocus
+        targetId="placeholder-validation"
+        active={presented.view.kind === "validation" && shouldFocus}
+        onceKey={onceKey}
+        correlationId={presented.correlationId}
+      />
       <AtelierOperationalState
         state={presented.view}
         reloadAction={presented.mutationLocked || presented.retryLock ? reloadAction : undefined}
         reloadFields={presented.mutationLocked || presented.retryLock ? reloadFields : undefined}
       />
-      <ActionResultConsumer enabled={presented.shouldConsume} correlationId={presented.correlationId} />
+      <ActionResultConsumer enabled={presented.shouldConsume && !shouldFocus} correlationId={presented.correlationId} />
     </>
   );
 }
