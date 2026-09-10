@@ -5,9 +5,9 @@
 **Starting baseline:** `f12798a28f438408527d8811be57389661c86c25`
 **MD-PR-S055 baseline:** `505c4399ba4517a972914e67b738372055da612d`
 **MD-PR-S056 baseline:** `24cc06db961986d93a60324b3101b79bc1c8c06d`
-**Application SHA:** `ab09ff0ca6567b672e242466e092a3f13f375064`
+**Application SHA:** `e3f034f6799f7745a20a36910c06452ebece7689`
 **First implementation SHA:** `d7533f3bac1a7d429778f61044862db7fd753f8f`
-**Live Event OS deployment:** `1b534bcc-bd9e-45b8-9876-06f23eeb4a3e`
+**Live Event OS deployment:** `7044514b-8287-4075-8f08-14504a327f72`
 **Status:** `REMEDIATED` under `MD-PR-S056` — not accepted; Claude not run
 **Production:** unauthorised
 **Catalogue accepted-slice count:** remains 5
@@ -104,4 +104,17 @@ No new S05B technical-debt item is manufactured. Inherited carried debt remains:
 | Changed-risk Playwright `s05b-durable-truth` | 6/0 |
 | Existing focused S05B Playwright | 13 passed / 1 skipped |
 
-`s05b-eval-v3` hash `a5d540db67ccb6d4e4835d8b6d113903189ad3af3ab10e1c997929bef0198617` (46 cases). Live SHA, GitHub parity and Railway deployment are stamped after push and Event OS deploy. Claude not run. EOS-S05B not accepted. EOS-S06 not started.
+`s05b-eval-v3` hash `a5d540db67ccb6d4e4835d8b6d113903189ad3af3ab10e1c997929bef0198617` (46 cases).
+
+## Live gates (MD-PR-S056)
+
+| Gate | Result |
+|------|--------|
+| local = origin = GitHub `main` at deploy | `e3f034f6799f7745a20a36910c06452ebece7689` |
+| Event OS deployment | `7044514b-8287-4075-8f08-14504a327f72` SUCCESS |
+| `/api/health/live` | alive; `productionAuthorised: false`; SHA `e3f034f6799f7745a20a36910c06452ebece7689` |
+| `/api/health/ready` | ready; POSTGRES; migrations APPLIED; `s05b-eval-v3`; 46 cases; hash `a5d540db67ccb6d4e4835d8b6d113903189ad3af3ab10e1c997929bef0198617`; `STALE` / blocked; `persistedResultCount` 0; adapters INACTIVE |
+| Control Tower | not redeployed |
+| Live CEO corpus / authenticated Playwright | held — production access token not loaded in this session |
+
+Claude not run. EOS-S05B not accepted. EOS-S06 not started.

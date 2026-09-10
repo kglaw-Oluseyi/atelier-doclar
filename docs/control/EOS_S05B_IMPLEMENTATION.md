@@ -7,9 +7,9 @@
 **Starting baseline:** `f12798a28f438408527d8811be57389661c86c25`
 **MD-PR-S055 baseline:** `505c4399ba4517a972914e67b738372055da612d`
 **MD-PR-S056 baseline:** `24cc06db961986d93a60324b3101b79bc1c8c06d`
-**Application SHA:** `ab09ff0ca6567b672e242466e092a3f13f375064`
+**Application SHA:** `e3f034f6799f7745a20a36910c06452ebece7689`
 **First implementation SHA:** `d7533f3bac1a7d429778f61044862db7fd753f8f`
-**Live Event OS deployment:** `1b534bcc-bd9e-45b8-9876-06f23eeb4a3e`
+**Live Event OS deployment:** `7044514b-8287-4075-8f08-14504a327f72`
 **Catalogue slice:** no — accepted-slice count remains 5
 **Production:** unauthorised
 **EOS-S06:** `NOT_STARTED / NOT_AUTHORISED`
