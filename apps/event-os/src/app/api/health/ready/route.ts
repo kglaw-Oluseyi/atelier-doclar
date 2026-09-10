@@ -32,6 +32,10 @@ export async function GET(): Promise<Response> {
       s05bReleaseReady: s05b.releaseReady ?? false,
       s05bEvaluationBlockingReasons: s05b.blockingReasons ?? [],
       s05bCorpusEdition: s05b.corpusEdition,
+      s05bCorpusHash: s05b.corpusHash,
+      s05bCaseCount: s05b.caseCount,
+      s05bPersistedResultCount: s05b.persistedResultCount,
+      s05bZeroToleranceFailed: s05b.zeroToleranceFailed,
       s05bAdapters: s05b.adapters,
     });
   } catch (error) {

@@ -431,6 +431,18 @@ export default async function EventProtectionPage({
           <form action={projectRiskBudgetAction} className="atelier-form protection-form" data-testid="protection-budget">
             <Envelope fields={createFields} />
             <IdempotencyField />
+            <input
+              type="hidden"
+              name="expectedScenarioVersion"
+              data-testid="budget-expected-scenario-version"
+              value={workspace.governingBudget?.version ?? ""}
+            />
+            <input
+              type="hidden"
+              name="governingScenarioHash"
+              data-testid="budget-governing-hash"
+              value={workspace.governingBudget?.resultHash ?? ""}
+            />
             <label>
               Driver
               <select name="driverKind" required>
@@ -463,8 +475,9 @@ export default async function EventProtectionPage({
         ) : null}
         {workspace.budget ? (
           <p data-testid="protection-budget-result">
-            Successor {workspace.budget.successorScenarioEditionId ?? "none"} · quantified {workspace.budget.currency} {workspace.budget.quantifiedMinor} minor units.
-            Governing budget unchanged: {String(workspace.budget.governingScenarioUnchanged)}. Model {workspace.budget.modelEdition}. Unknowns remain unquantified when no sourced driver exists.
+            Governing {workspace.budget.budgetScenarioEditionId ?? "none"} unchanged: {String(workspace.budget.governingScenarioUnchanged)}.
+            Successor {workspace.budget.successorScenarioEditionId ?? "none"} · calculation {workspace.budget.calculationResultId ?? "none"} · quantified {workspace.budget.currency} {workspace.budget.quantifiedMinor} minor units.
+            Model {workspace.budget.modelEdition}. Unknowns remain unquantified when no sourced driver exists.
           </p>
         ) : null}
       </section>

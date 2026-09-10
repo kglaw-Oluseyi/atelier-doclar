@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { PgQueryable } from "./postgres-schema.js";
+import { RISK_SQL_TABLES } from "./risk-postgres-schema.js";
 import { SYNTHETIC_SEED_ID } from "./synthetic-seed.js";
 import { emptySnapshot, type PlatformSnapshot } from "./store.js";
 
@@ -130,6 +131,13 @@ export function assertCleanupProjectScope(
   if (explicitScope === EVENT_OS_CLEANUP_PROJECT_NAME) return;
   if (!env.DATABASE_URL && !projectId && !projectName) return;
   throw new Error("Cleanup preview refused: not bound to Railway project atelier-doclar.");
+}
+
+export async function purgeNormalizedRiskTables(client: PgQueryable): Promise<void> {
+  for (const mapping of RISK_SQL_TABLES) {
+    await client.query(`DELETE FROM ${mapping.table}`);
+  }
+  await client.query("DELETE FROM risk_idempotency_receipts");
 }
 
 export function applySyntheticCleanup(snap: PlatformSnapshot): PlatformSnapshot {

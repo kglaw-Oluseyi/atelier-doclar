@@ -723,6 +723,7 @@ export {
   EVENT_OS_CLEANUP_PROJECT_ID,
   EVENT_OS_CLEANUP_PROJECT_NAME,
   applySyntheticCleanup,
+  purgeNormalizedRiskTables,
   assertCleanupConfirmation,
   assertCleanupProjectScope,
   classifySyntheticCleanupAttribution,
@@ -940,8 +941,9 @@ export * from "./risk-evaluation-corpus.js";
 export * from "./risk-evaluation-runner.js";
 export * from "./risk-evaluation-projections.js";
 export { executeS05BCase, detectUnsafeAdapter, detectUnsafeFromObservations } from "./risk-evaluation-fixtures.js";
-export { MemoryRiskProtectionStore } from "./memory-risk-store.js";
-export { PostgresRiskProtectionStore } from "./postgres-risk-store.js";
+export { MemoryRiskProtectionStore, MemoryRiskProtectionRepository } from "./memory-risk-store.js";
+export { PostgresRiskProtectionStore, PostgresRiskProtectionRepository } from "./postgres-risk-store.js";
+export { writeRiskSnapshotDelta, governingEditionFingerprint } from "./risk-repository.js";
 export { backfillNormalizedRiskTables, EOS_S05B_V2_MIGRATION_CHECKSUM } from "./risk-normalized-migration.js";
 export { EOS_S05B_PROTECTION_V2_ID, EOS_S05B_NORMALIZED_MIGRATION_ID, RISK_SQL_TABLES } from "./risk-postgres-schema.js";
 export {

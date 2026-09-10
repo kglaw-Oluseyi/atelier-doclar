@@ -9,6 +9,7 @@ import {
   S05B_EVALUATION_PROJECTION_POLICY_VERSION,
   S05B_EVALUATION_PROVIDER_VERSION,
   type RiskObservation,
+  type S05BAssertion,
 } from "./risk-evaluation-schemas.js";
 import { RiskEvaluationCaseResultSchema, RiskEvaluationRunLeaseSchema, RiskEvaluationRunSchema, type RiskEvaluationRun } from "./risk-schemas.js";
 import type { PlatformSnapshot } from "./store.js";
@@ -28,9 +29,73 @@ export function currentS05BEvaluationVersions() {
   };
 }
 
-function observationText(observations: readonly RiskObservation[], code: string): string | undefined {
-  const hit = observations.find((item) => item.kind === "TEXT" && item.code === code);
-  return hit && hit.kind === "TEXT" ? hit.value : undefined;
+export function assertionHolds(expected: S05BAssertion, observations: readonly RiskObservation[]): boolean {
+  if (expected.kind === "COMMAND_DENIAL") {
+    return observations.some((item) => item.kind === "COMMAND_DENIAL" && item.code === expected.code && item.didDataChange === expected.didDataChange);
+  }
+  if (expected.kind === "RECORD_COUNT") {
+    return observations.some(
+      (item) =>
+        item.kind === "RECORD_COUNT" &&
+        item.collection === expected.collection &&
+        (expected.eq === undefined || item.count === expected.eq) &&
+        (expected.min === undefined || item.count >= expected.min),
+    );
+  }
+  if (expected.kind === "STATE") {
+    return observations.some((item) => item.kind === "STATE" && item.state === expected.state);
+  }
+  if (expected.kind === "EXTERNAL_EFFECT_COUNT") {
+    return observations.some((item) => item.kind === "EXTERNAL_EFFECT_COUNT" && item.effect === expected.effect && item.count === expected.count);
+  }
+  if (expected.kind === "PROJECTION_OMITS") {
+    return observations.some((item) => item.kind === "PROJECTION_OMITS" && item.path === expected.path && (expected.forbiddenEmpty ? item.forbiddenValuesFound.length === 0 : true));
+  }
+  if (expected.kind === "BUDGET_RESULT") {
+    return observations.some(
+      (item) =>
+        item.kind === "BUDGET_RESULT" &&
+        (expected.quantifiedMinor === undefined || item.quantifiedMinor === expected.quantifiedMinor) &&
+        (expected.unquantifiedMin === undefined || item.unquantified >= expected.unquantifiedMin),
+    );
+  }
+  if (expected.kind === "CONTENT_BYTES") {
+    return observations.some((item) => item.kind === "CONTENT_BYTES" && item.mediaType === expected.mediaType && (expected.forbiddenEmpty ? item.forbiddenValuesFound.length === 0 : true));
+  }
+  if (expected.kind === "INVOCATIONS") {
+    return observations.some(
+      (item) =>
+        item.kind === "INVOCATIONS" &&
+        item.action === expected.action &&
+        (expected.sameIds ? item.firstResultId === item.secondResultId : true) &&
+        item.secondApplication === expected.secondApplication &&
+        item.firstGeneratedAt === item.secondGeneratedAt &&
+        item.firstRecordCount === item.secondRecordCount,
+    );
+  }
+  if (expected.kind === "UNICODE") {
+    return observations.some(
+      (item) =>
+        item.kind === "UNICODE" &&
+        item.stored.includes(expected.requiredSubstring) &&
+        item.requiredGlyphsPresent &&
+        (expected.storedMustBeNfc ? item.nfcEqual : true) &&
+        (expected.inputWasDecomposed ? item.input !== item.stored && item.input.normalize("NFD") === item.input : true),
+    );
+  }
+  if (expected.kind === "CLASSIFICATION") {
+    return observations.some((item) => item.kind === "CLASSIFICATION" && item.classification === expected.classification);
+  }
+  if (expected.kind === "TRANSITION") {
+    return observations.some((item) => item.kind === "TRANSITION" && item.to === expected.to && item.allowed === expected.allowed);
+  }
+  if (expected.kind === "HASH") {
+    return observations.some((item) => item.kind === "HASH" && item.name === expected.name && item.matches === expected.matches);
+  }
+  if (expected.kind === "SCOPE") {
+    return observations.some((item) => item.kind === "SCOPE" && item.leaked === expected.leaked);
+  }
+  return false;
 }
 
 export function executeS05BEvaluationOnSnap(
@@ -90,15 +155,11 @@ export function executeS05BEvaluationOnSnap(
   for (const caseDef of S05B_EVALUATION_CASES) {
     const observations = executeS05BCase(caseDef, input.adapters);
     const adapterHits = detectUnsafeFromObservations(observations);
-    const compared = caseDef.expected.map((item) => {
-      const actual = observationText(observations, item.code) ?? "missing";
-      return {
-        code: item.code,
-        expectedSummary: item.summary,
-        observedSummary: actual,
-        passed: actual === item.summary,
-      };
-    });
+    const compared = caseDef.expected.map((item) => ({
+      kind: item.kind,
+      passed: assertionHolds(item, observations),
+      detail: JSON.stringify(item).slice(0, 400),
+    }));
     const verdict = adapterHits.length || compared.some((item) => !item.passed) ? "FAILED" : compared.length ? "PASSED" : "ERROR";
     if (verdict === "PASSED") passed += 1;
     else if (verdict === "ERROR") errorCount += 1;
@@ -113,7 +174,7 @@ export function executeS05BEvaluationOnSnap(
         family: caseDef.family,
         verdict,
         observations: compared,
-        diagnosticSummary: compared.map((item) => `${item.code}:${item.passed ? "pass" : "fail"}`).join("; ") || "no observations",
+        diagnosticSummary: compared.map((item) => `${item.kind}:${item.passed ? "pass" : "fail"}`).join("; ") || "no observations",
         zeroToleranceCategories: caseDef.zeroToleranceCategories,
         version: 1,
         ...stamp(input.now),

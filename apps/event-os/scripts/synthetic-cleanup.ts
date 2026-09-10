@@ -10,6 +10,7 @@ import {
   PostgresPlatformStore,
   SYNTHETIC_CLEANUP_CONFIRMATION,
   applySyntheticCleanup,
+  purgeNormalizedRiskTables,
   assertCleanupConfirmation,
   assertCleanupProjectScope,
   classifySyntheticCleanupAttribution,
@@ -111,6 +112,7 @@ try {
     process.exit(0);
   }
   assertCleanupConfirmation(confirmation ?? "");
+  await purgeNormalizedRiskTables(client);
   store.replace(applySyntheticCleanup(store.snapshot()));
   await store.flush();
   await recordCleanupAudit(client, { ...preview, mode: "EXECUTED" }, { mode: "EXECUTED", confirmed: true });

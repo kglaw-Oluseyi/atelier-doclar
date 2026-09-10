@@ -1,18 +1,19 @@
 # EOS-S05B Build Ledger
 
 **Slice ID:** `EOS-S05B`
-**Prompt Control ID:** `MD-PR-S054` then `MD-PR-S055`
+**Prompt Control ID:** `MD-PR-S054` then `MD-PR-S055` then `MD-PR-S056`
 **Starting baseline:** `f12798a28f438408527d8811be57389661c86c25`
 **MD-PR-S055 baseline:** `505c4399ba4517a972914e67b738372055da612d`
+**MD-PR-S056 baseline:** `24cc06db961986d93a60324b3101b79bc1c8c06d`
 **Application SHA:** `6077a752955fa50f145943349b430a8a2a39efae`
 **First implementation SHA:** `d7533f3bac1a7d429778f61044862db7fd753f8f`
 **Live Event OS deployment:** `1b534bcc-bd9e-45b8-9876-06f23eeb4a3e`
-**Status:** `REMEDIATED` under `MD-PR-S055` — not accepted; Claude not run
+**Status:** `REMEDIATED` under `MD-PR-S056` — not accepted; Claude not run
 **Production:** unauthorised
 **Catalogue accepted-slice count:** remains 5
 **Implemented range:** `RPC-01`–`RPC-55` implemented; acceptance is not this authority
 **EOS-S06:** `NOT_STARTED / NOT_AUTHORISED`
-**Evaluation:** `s05b-eval-v2` — 52 cases, contract `s05b-eval-contract-v2`; `s05b-eval-v1` PASS is honestly `STALE`
+**Evaluation:** `s05b-eval-v3` — 46 cases, contract `s05b-eval-contract-v3`, hash `a5d540db67ccb6d4e4835d8b6d113903189ad3af3ab10e1c997929bef0198617`; prior `s05b-eval-v2` PASS is honestly `STALE`
 
 Application SHA, GitHub parity, Railway deployment ID and live smoke results are recorded in the final `MD-PR-S054` consolidated report after push and Event OS deploy.
 
@@ -78,3 +79,28 @@ No new S05B technical-debt item is manufactured. Inherited carried debt remains:
 | Focused S05B Playwright | 13 passed / 1 skipped (omnibus retired) |
 
 `s05b-eval-v2` hash `992c34838aadfe6a962874dbd337fe8e1d157219bd19f9537708cf1b65373961`. See the MD-PR-S055 consolidated report for GitHub parity and Railway evidence.
+
+### MD-PR-S056 first-run failures (appended; MD-PR-S054/S055 rows above are not rewritten)
+
+| Command | Classification | Root cause | Correction | Rerun |
+|---------|----------------|------------|------------|-------|
+| `persistence-integration` cleanup dry-run | Implementation defect | Removing DELETE-by-absence left fixture-flagged `risk_*` rows after in-memory cleanup + persist | Confirmed cleanup calls explicit `purgeNormalizedRiskTables`; snapshot persist still cannot delete by absence | 11/0 then full package 438/0 |
+| Playwright durable-truth Budget governing | Fixture/product defect | Alpha One had no current APPROVED/PUBLISHED Budget edition, so the UI showed `Governing none unchanged: false` | Idempotent `seedAlphaOneGoverningBudget`; prefer event-scoped governing; expose version/hash on the form | journey passed |
+| Playwright durable-truth stale tab | Test/product defect | Empty hidden version/hash skipped the stale check; later the conflict banner used “changed elsewhere” / “Not applied” and the regex was strict-mode dual | Seed governing; submit current version/hash; assert the conflict heading | journey passed |
+| Playwright durable-truth Dossier link | Test defect | `Dossier` also matched “Open published client dossier” | `getByRole(..., { exact: true })` | journeys passed |
+
+## Local gates (MD-PR-S056)
+
+| Gate | Result |
+|------|--------|
+| `pnpm --filter @maison-doclar/shared-platform typecheck` | pass |
+| `pnpm --filter @maison-doclar/event-os typecheck` | pass |
+| `pnpm --filter @maison-doclar/shared-platform test` | 438/0 |
+| `pnpm --filter @maison-doclar/event-os test` | 93/0 |
+| `pnpm programme:validate` | PASS |
+| `pnpm --filter @maison-doclar/event-os build` | pass |
+| `git diff --check` | clean |
+| Changed-risk Playwright `s05b-durable-truth` | 6/0 |
+| Existing focused S05B Playwright | 13 passed / 1 skipped |
+
+`s05b-eval-v3` hash `a5d540db67ccb6d4e4835d8b6d113903189ad3af3ab10e1c997929bef0198617` (46 cases). Live SHA, GitHub parity and Railway deployment are stamped after push and Event OS deploy. Claude not run. EOS-S05B not accepted. EOS-S06 not started.

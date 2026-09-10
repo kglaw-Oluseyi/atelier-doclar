@@ -11,6 +11,7 @@ import {
   EVENT_OS_CLEANUP_PROJECT_NAME,
   SYNTHETIC_CLEANUP_CONFIRMATION,
   applySyntheticCleanup,
+  purgeNormalizedRiskTables,
   assertCleanupConfirmation,
   assertCleanupProjectScope,
   classifySyntheticCleanupAttribution,
@@ -153,6 +154,7 @@ describe("platform persistence integration", () => {
     const cleaned = applySyntheticCleanup(before);
     const afterPreview = previewSyntheticCleanup(cleaned);
     assert.equal(afterPreview.total, 0);
+    await purgeNormalizedRiskTables(db);
     store.replace(cleaned);
     await store.flush();
     await recordCleanupAudit(db, { ...preview, mode: "EXECUTED" }, { mode: "EXECUTED", confirmed: true });

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { S05B_EVALUATION_CASES, validateS05BEvaluationCorpus } from "../src/risk-evaluation-corpus.js";
+import { S05B_EVALUATION_CASES, s05bEvaluationCorpusHash, validateS05BEvaluationCorpus } from "../src/risk-evaluation-corpus.js";
 import { S05B_EVALUATION_CORPUS_EDITION } from "../src/risk-evaluation-schemas.js";
 import { detectUnsafeFromObservations, executeS05BCase } from "../src/risk-evaluation-fixtures.js";
 import { executeS05BEvaluationOnSnap } from "../src/risk-evaluation-runner.js";
@@ -8,15 +8,22 @@ import { s05bEvaluationReadinessFromSnap } from "../src/risk-evaluation-projecti
 import { migrateEosS05B } from "../src/risk-migration.js";
 import { fixtureService, people } from "./helpers.js";
 
-describe("EOS-S05B evaluation v2", () => {
-  it("requires at least 50 observation-based cases and does not accept v1 as current", () => {
+describe("EOS-S05B evaluation v3", () => {
+  it("registers an honest typed corpus and does not accept v2 as current", () => {
     validateS05BEvaluationCorpus();
-    assert.ok(S05B_EVALUATION_CASES.length >= 50);
-    assert.equal(S05B_EVALUATION_CORPUS_EDITION, "s05b-eval-v2");
+    assert.equal(S05B_EVALUATION_CORPUS_EDITION, "s05b-eval-v3");
+    assert.ok(S05B_EVALUATION_CASES.length >= 40);
     assert.equal(
       S05B_EVALUATION_CASES.some((item) => JSON.stringify(item).includes('"passed":')),
       false,
     );
+    assert.equal(
+      S05B_EVALUATION_CASES.some((item) => item.family === "ACCESSIBILITY"),
+      false,
+    );
+    const signatures = new Set(S05B_EVALUATION_CASES.map((item) => JSON.stringify({ actions: item.actions, expected: item.expected })));
+    assert.equal(signatures.size, S05B_EVALUATION_CASES.length);
+    assert.ok(s05bEvaluationCorpusHash().length > 16);
   });
 
   it("runs the current corpus against production functions", () => {
@@ -27,8 +34,8 @@ describe("EOS-S05B evaluation v2", () => {
     const run = executeS05BEvaluationOnSnap(snap, {
       organisationId: people.orgMaison,
       requestedByPersonId: people.personCeo,
-      correlationId: "eval-v2",
-      idempotencyKey: "eval-v2-key-01",
+      correlationId: "eval-v3",
+      idempotencyKey: "eval-v3-key-01",
       applicationSha: "local-dev",
       now: "2026-09-10T10:00:00.000Z",
     });
@@ -39,7 +46,9 @@ describe("EOS-S05B evaluation v2", () => {
     }
     const ready = s05bEvaluationReadinessFromSnap(store.snapshot(), people.orgMaison);
     assert.equal(ready.evaluationStatus, "PASSED");
-    assert.equal(ready.corpusEdition, "s05b-eval-v2");
+    assert.equal(ready.corpusEdition, "s05b-eval-v3");
+    assert.equal(ready.persistedResultCount, S05B_EVALUATION_CASES.length);
+    assert.equal(ready.caseCount, S05B_EVALUATION_CASES.length);
   });
 
   it("detects negative controls from corrupted observations, not adapter flags", () => {
@@ -53,24 +62,26 @@ describe("EOS-S05B evaluation v2", () => {
     assert.ok(detectUnsafeFromObservations(falsed).includes("FALSE_SUCCESS"));
     const priced = executeS05BCase(S05B_EVALUATION_CASES.find((item) => item.id === "S05B-BUDGET-01")!, { inventPremium: true });
     assert.ok(detectUnsafeFromObservations(priced).includes("INVENTED_PRICE"));
+    const unicode = executeS05BCase(S05B_EVALUATION_CASES.find((item) => item.id === "S05B-UNICODE-01")!, { unicodeLoss: true });
+    assert.ok(detectUnsafeFromObservations(unicode).includes("UNICODE_LOSS"));
   });
 
-  it("treats a v1 corpus hash as stale", () => {
+  it("treats a v2 corpus hash as stale", () => {
     const { store } = fixtureService();
     const snap = store.snapshot();
     snap.riskEvaluationRuns.push({
       id: "00000000-0000-4000-8000-000000000401",
       organisationId: people.orgMaison,
-      corpusEdition: "s05b-eval-v1",
+      corpusEdition: "s05b-eval-v2",
       corpusHash: "old",
-      orchestratorVersion: "s05b-orchestrator-v1",
-      providerVersion: "fixture-inactive-v1",
-      projectionPolicyVersion: "risk-projection-v1",
-      evaluationContractVersion: "s05b-eval-contract-v1",
+      orchestratorVersion: "s05b-orchestrator-v2",
+      providerVersion: "fixture-inactive-v2",
+      projectionPolicyVersion: "risk-projection-v2",
+      evaluationContractVersion: "s05b-eval-contract-v2",
       applicationSha: "old",
       status: "PASSED",
-      caseCount: 16,
-      passedCount: 16,
+      caseCount: 52,
+      passedCount: 52,
       failedCount: 0,
       errorCount: 0,
       zeroToleranceFailed: false,
@@ -79,10 +90,11 @@ describe("EOS-S05B evaluation v2", () => {
       idempotencyKey: "old",
       version: 1,
       schemaVersion: 1,
-      createdAt: "2026-09-10T09:00:00.000Z",
-      updatedAt: "2026-09-10T09:00:00.000Z",
-    } as never);
-    const ready = s05bEvaluationReadinessFromSnap(snap, people.orgMaison);
+      createdAt: "2026-09-01T00:00:00.000Z",
+      updatedAt: "2026-09-01T00:00:00.000Z",
+    });
+    store.replace(snap);
+    const ready = s05bEvaluationReadinessFromSnap(store.snapshot(), people.orgMaison);
     assert.equal(ready.evaluationStatus, "STALE");
     assert.equal(ready.releaseReady, false);
   });

@@ -1,4 +1,4 @@
-import { exactHash } from "./eec-hash.js";
+import { exactHash, nfc } from "./eec-hash.js";
 import { PlatformError } from "./errors.js";
 import { resolveApplicability } from "./risk-applicability.js";
 import {
@@ -70,7 +70,7 @@ export function createSourceEditionOnSnap(
   const record = RiskSourceEditionSchema.parse({
     id: newRiskId(),
     organisationId: input.organisationId,
-    title: input.title,
+    title: nfc(input.title),
     publisher: input.publisher,
     locator: input.locator,
     authority: input.authority,
@@ -82,7 +82,7 @@ export function createSourceEditionOnSnap(
     summary: input.summary,
     status: "DISCOVERY",
     discoveryOnly: true,
-    contentHash: exactHash({ title: input.title, locator: input.locator, summary: input.summary }),
+    contentHash: exactHash({ title: nfc(input.title), locator: input.locator, summary: input.summary }),
     ...riskStamp(now),
   });
   snap.riskSourceEditions.push(record);

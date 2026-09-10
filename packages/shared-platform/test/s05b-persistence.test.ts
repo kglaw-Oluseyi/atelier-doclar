@@ -2,10 +2,12 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { SCHEMA_VERSION } from "../src/constants.js";
 import { MemoryPlatformPg, PostgresPlatformStore } from "../src/postgres-store.js";
+import { PostgresRiskProtectionRepository, PostgresRiskProtectionStore } from "../src/postgres-risk-store.js";
 import { backfillNormalizedRiskTables } from "../src/risk-normalized-migration.js";
 import { EOS_S05B_PROTECTION_V2_ID } from "../src/risk-postgres-schema.js";
 import { createContinuityPlanOnSnap } from "../src/risk-continuity.js";
 import { applySyntheticSeedIfNeeded } from "../src/synthetic-seed.js";
+import { emptySnapshot } from "../src/store.js";
 import { people } from "./helpers.js";
 
 describe("EOS-S05B normalized persistence", () => {
@@ -131,5 +133,133 @@ describe("EOS-S05B normalized persistence", () => {
     pg.failNextWrite();
     await assert.rejects(() => backfillNormalizedRiskTables(pg));
     assert.equal(pg.riskRows.filter((row) => row.table === "risk_migration_receipts").length, 0);
+  });
+
+  it("does not physically delete immutable rows that are absent from a later snapshot", async () => {
+    const pg = new MemoryPlatformPg();
+    await PostgresPlatformStore.migrate(pg);
+    const store = new PostgresRiskProtectionStore(pg);
+    const previous = emptySnapshot();
+    const first = emptySnapshot();
+    first.riskPolicies.push({
+      id: "00000000-0000-4000-8000-000000000501",
+      organisationId: people.orgMaison,
+      policyType: "PUBLIC_LIABILITY",
+      insurerPartyId: "00000000-0000-4000-8000-000000000202",
+      insurerLabel: "Durable insurer",
+      createdByPersonId: people.personCeo,
+      schemaVersion: SCHEMA_VERSION,
+      version: 1,
+      createdAt: "2026-09-10T09:00:00.000Z",
+      updatedAt: "2026-09-10T09:00:00.000Z",
+    } as (typeof first.riskPolicies)[0]);
+    await store.persistFromSnapshotAsync(previous, first);
+    const partial = emptySnapshot();
+    await store.persistFromSnapshotAsync(first, partial);
+    assert.equal(pg.riskRows.filter((row) => row.table === "risk_policies" && row.id === "00000000-0000-4000-8000-000000000501").length, 1);
+  });
+
+  it("rolls back a domain write when audit or idempotency fails in the same transaction", async () => {
+    const pg = new MemoryPlatformPg();
+    await PostgresPlatformStore.migrate(pg);
+    const repo = new PostgresRiskProtectionRepository(pg);
+    pg.failNextAuditWrite();
+    await assert.rejects(() =>
+      repo.transaction(async (tx) => {
+        await tx.insertImmutable("riskPolicies", {
+          id: "00000000-0000-4000-8000-000000000502",
+          organisationId: people.orgMaison,
+          version: 1,
+          createdAt: "2026-09-10T09:00:00.000Z",
+          updatedAt: "2026-09-10T09:00:00.000Z",
+        });
+        await tx.appendAudit({
+          id: "00000000-0000-4000-8000-000000000503",
+          occurredAt: "2026-09-10T09:00:00.000Z",
+          action: "risk.policy.create",
+          outcome: "SUCCESS",
+          organisationId: people.orgMaison,
+        } as never);
+        return true;
+      }),
+    );
+    assert.equal(pg.riskRows.filter((row) => row.id === "00000000-0000-4000-8000-000000000502").length, 0);
+    assert.equal(pg.audit.length, 0);
+  });
+
+  it("lets only one of two concurrent versioned writers apply", async () => {
+    const pg = new MemoryPlatformPg();
+    await PostgresPlatformStore.migrate(pg);
+    const repo = new PostgresRiskProtectionRepository(pg);
+    await repo.transaction(async (tx) => {
+      await tx.insertImmutable("riskPolicies", {
+        id: "00000000-0000-4000-8000-000000000504",
+        organisationId: people.orgMaison,
+        version: 1,
+        createdAt: "2026-09-10T09:00:00.000Z",
+        updatedAt: "2026-09-10T09:00:00.000Z",
+      });
+    });
+    await repo.transaction(async (tx) => {
+      await tx.updateVersioned("riskPolicies", "00000000-0000-4000-8000-000000000504", 1, {
+        id: "00000000-0000-4000-8000-000000000504",
+        organisationId: people.orgMaison,
+        version: 2,
+        updatedAt: "2026-09-10T09:01:00.000Z",
+      });
+    });
+    await assert.rejects(
+      () =>
+        repo.transaction(async (tx) => {
+          await tx.updateVersioned("riskPolicies", "00000000-0000-4000-8000-000000000504", 1, {
+            id: "00000000-0000-4000-8000-000000000504",
+            organisationId: people.orgMaison,
+            version: 3,
+            updatedAt: "2026-09-10T09:02:00.000Z",
+          });
+        }),
+      /stale risk aggregate/,
+    );
+    const row = pg.riskRows.find((item) => item.id === "00000000-0000-4000-8000-000000000504");
+    assert.equal(row?.version, 2);
+  });
+
+  it("replays an idempotent receipt without manufacturing a second success audit", async () => {
+    const pg = new MemoryPlatformPg();
+    await PostgresPlatformStore.migrate(pg);
+    const repo = new PostgresRiskProtectionRepository(pg);
+    const receipt = {
+      organisationId: people.orgMaison,
+      action: "risk.policy.create",
+      idempotencyKey: "persist-replay-01",
+      resultRef: "00000000-0000-4000-8000-000000000505",
+      hash: "abc",
+      createdAt: "2026-09-10T09:00:00.000Z",
+    };
+    const first = await repo.transaction(async (tx) => {
+      await tx.insertImmutable("riskPolicies", {
+        id: receipt.resultRef,
+        organisationId: people.orgMaison,
+        version: 1,
+        createdAt: receipt.createdAt,
+        updatedAt: receipt.createdAt,
+      });
+      await tx.appendAudit({
+        id: "00000000-0000-4000-8000-000000000506",
+        occurredAt: receipt.createdAt,
+        action: "risk.policy.create",
+        outcome: "SUCCESS",
+        organisationId: people.orgMaison,
+      } as never);
+      return tx.insertIdempotency(receipt);
+    });
+    const second = await repo.transaction(async (tx) => {
+      const existing = await tx.getIdempotency({ organisationId: people.orgMaison }, receipt.action, receipt.idempotencyKey);
+      assert.ok(existing);
+      return tx.insertIdempotency(receipt);
+    });
+    assert.equal(first.resultRef, second.resultRef);
+    assert.equal(pg.riskIdempotency.length, 1);
+    assert.equal(pg.audit.filter((item) => (item as { action?: string }).action === "risk.policy.create").length, 1);
   });
 });

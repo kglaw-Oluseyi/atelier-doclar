@@ -10,16 +10,21 @@ export type S05BEvaluationReadiness = {
   corpusEdition: string;
   corpusHash: string;
   caseCount: number;
+  persistedResultCount: number;
+  zeroToleranceFailed: boolean;
   lastRunId?: string;
 };
 
 export function s05bEvaluationReadinessFromSnap(snap: PlatformSnapshot, organisationId: string): S05BEvaluationReadiness {
   const versions = currentS05BEvaluationVersions();
   const latest = [...snap.riskEvaluationRuns].reverse().find((item) => item.organisationId === organisationId);
+  const persistedResultCount = latest ? snap.riskEvaluationCaseResults.filter((item) => item.runId === latest.id).length : 0;
   const base = {
     corpusEdition: versions.corpusEdition,
     corpusHash: versions.corpusHash,
     caseCount: S05B_EVALUATION_CASES.length,
+    persistedResultCount,
+    zeroToleranceFailed: latest?.zeroToleranceFailed ?? false,
     lastRunId: latest?.id,
   };
   if (!latest) {

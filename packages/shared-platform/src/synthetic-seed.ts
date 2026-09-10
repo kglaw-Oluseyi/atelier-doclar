@@ -15,6 +15,8 @@ import { applyEosS05ObjectsToSnapshot } from "./spatial-migration.js";
 import { applyEosS05AssuranceToSnapshot } from "./layout-assurance-migration.js";
 import { migrateEosS05A, migrateEosS05ADisclosureV5, migrateEosS05AIntelligence, migrateEosS05AIntelligenceV2, migrateEosS05AIntelligenceV3 } from "./eec-migration.js";
 import { migrateEosS05B } from "./risk-migration.js";
+import { calculateBudgetScenarioOnSnap, decideBudgetScenarioOnSnap } from "./eec-intelligence.js";
+import { FIXTURE_IDS } from "./fixtures.js";
 import { PERMISSION_KEYS } from "./constants.js";
 import { migrateEosS05AEvaluationV4 } from "./eec-evaluation-migration.js";
 import { loadNonProductionFixtures } from "./bootstrap.js";
@@ -157,9 +159,42 @@ function applyS05ALayer(store: PlatformStore, now = "2026-09-08T22:00:00.000Z"):
   ensureEosS05ACollections(store, now);
 }
 
+function seedAlphaOneGoverningBudget(store: PlatformStore, now: string): void {
+  const snap = store.snapshot();
+  if (!snap.events.some((item) => item.id === FIXTURE_IDS.eventAlphaOne)) return;
+  const hasGoverning = snap.budgetScenarioEditions.some(
+    (item) =>
+      item.organisationId === FIXTURE_IDS.orgMaison &&
+      item.current &&
+      (item.status === "APPROVED" || item.status === "PUBLISHED") &&
+      (item.eventId === FIXTURE_IDS.eventAlphaOne || !item.eventId),
+  );
+  if (hasGoverning) return;
+  const draft = calculateBudgetScenarioOnSnap(
+    snap,
+    {
+      organisationId: FIXTURE_IDS.orgMaison,
+      eventId: FIXTURE_IDS.eventAlphaOne,
+      purpose: "PROTECT_INVESTMENT",
+      archetype: "WEDDING",
+      guests: "120",
+    },
+    now,
+    FIXTURE_IDS.personCeo,
+  );
+  decideBudgetScenarioOnSnap(
+    snap,
+    { organisationId: FIXTURE_IDS.orgMaison, scenarioId: draft.id, expectedVersion: draft.version },
+    now,
+    FIXTURE_IDS.personDirector,
+  );
+  store.replace(snap);
+}
+
 export function ensureEosS05BCollections(store: PlatformStore, now = "2026-09-10T09:00:00.000Z"): void {
   const result = migrateEosS05B(store.snapshot(), now);
   if (result.status === "APPLIED") store.replace(result.snapshot);
+  seedAlphaOneGoverningBudget(store, now);
 }
 
 function applyS05BLayer(store: PlatformStore, now = "2026-09-10T09:00:00.000Z"): void {

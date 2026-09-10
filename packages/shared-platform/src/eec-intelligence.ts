@@ -527,6 +527,8 @@ export function calculateBudgetScenarioOnSnap(
     effectiveDrivers?: readonly import("./eec-budget-override.js").EffectiveBudgetDriver[];
     scenarioAssumptions?: readonly import("./eec-budget-override.js").BudgetScenarioAssumptionInput[];
     expectedScenarioVersion?: number;
+    branchFromScenarioEditionId?: string;
+    activateAsCurrent?: boolean;
     riskSourcedLines?: Array<{
       code: string;
       expectedMinor: string;

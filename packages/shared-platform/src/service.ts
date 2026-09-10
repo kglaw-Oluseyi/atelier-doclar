@@ -7447,6 +7447,13 @@ export class PlatformService {
       action: "risk.budget.project",
       resourceType: "risk_budget_projection",
       idempotencyKey: input.idempotencyKey,
+      alreadyApplied: (snap) => {
+        const contentHash = exactHash({ drivers: input.drivers });
+        return snap.riskBudgetProjections.find(
+          (item) => item.organisationId === input.organisationId && item.eventId === input.eventId && item.contentHash === contentHash,
+        );
+      },
+      replayIfAlreadyApplied: true,
       run: (snap, ctx) => projectRiskBudgetOnSnap(snap, input, ctx.now, actor.personId),
     });
   }

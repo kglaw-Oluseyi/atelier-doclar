@@ -12,7 +12,8 @@ import { validateS04FPersistedCollections } from "./language-persistence.js";
 import { validateS05PersistedCollections } from "./venue-persistence.js";
 import { validateS05APersistedCollections } from "./eec-persistence.js";
 import { validateS05BPersistedCollections } from "./risk-persistence.js";
-import { PostgresRiskProtectionStore } from "./postgres-risk-store.js";
+import { PostgresRiskProtectionStore, PostgresRiskTransaction } from "./postgres-risk-store.js";
+import { writeRiskSnapshotDelta } from "./risk-repository.js";
 import { backfillNormalizedRiskTables } from "./risk-normalized-migration.js";
 import { RISK_SQL_TABLES } from "./risk-postgres-schema.js";
 import { overlayRiskState } from "./risk-store.js";
@@ -427,24 +428,13 @@ export class PostgresPlatformStore implements PlatformStore {
           // exists at another version, that is a stale delete and conflicts.
         }
       }
+      const riskTx = new PostgresRiskTransaction(tx);
       if (this.riskNormalized) {
-        await new PostgresRiskProtectionStore(tx).persistFromSnapshotAsync(previous, normalised);
+        await writeRiskSnapshotDelta(riskTx, previous, normalised);
       }
       for (const entry of normalised.audit) {
         if (!previous.audit.some((item) => item.id === entry.id)) {
-          await tx.query(
-            "INSERT INTO platform_audit (id, occurred_at, organisation_id, client_id, event_id, action, outcome, body) VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb)",
-            [
-              entry.id,
-              entry.occurredAt,
-              entry.organisationId ?? null,
-              entry.clientId ?? null,
-              entry.eventId ?? null,
-              entry.action,
-              entry.outcome,
-              JSON.stringify(entry),
-            ],
-          );
+          await riskTx.appendAudit(entry);
         }
       }
       for (const entry of normalised.idempotency) {
@@ -453,6 +443,19 @@ export class PostgresPlatformStore implements PlatformStore {
             "INSERT INTO platform_idempotency (key, action, hash, result_ref, created_at, body) VALUES ($1, $2, $3, $4, $5, $6::jsonb)",
             [entry.key, entry.action, entry.hash, entry.resultRef, entry.createdAt, JSON.stringify(entry)],
           );
+          if (entry.action.startsWith("risk.")) {
+            const audit = normalised.audit.find((item) => item.idempotencyKey === entry.key && item.organisationId);
+            if (audit?.organisationId) {
+              await riskTx.insertIdempotency({
+                organisationId: audit.organisationId,
+                action: entry.action,
+                idempotencyKey: entry.key,
+                resultRef: entry.resultRef,
+                hash: entry.hash,
+                createdAt: entry.createdAt,
+              });
+            }
+          }
         }
       }
     };
@@ -556,6 +559,7 @@ export class MemoryPlatformPg implements PgTransactor {
   readonly riskRows: MemoryRiskRow[] = [];
   readonly riskIdempotency: MemoryIdempotencyRiskRow[] = [];
   private failNext = false;
+  private failNextAudit = false;
   private snapshot: {
     documents: MemoryDocumentRow[];
     audit: unknown[];
@@ -569,6 +573,10 @@ export class MemoryPlatformPg implements PgTransactor {
 
   failNextWrite(): void {
     this.failNext = true;
+  }
+
+  failNextAuditWrite(): void {
+    this.failNextAudit = true;
   }
 
   async transaction<T>(fn: (client: PgQueryable) => Promise<T>): Promise<T> {
@@ -766,6 +774,10 @@ export class MemoryPlatformPg implements PgTransactor {
       return { rows: [], rowCount: 1 };
     }
     if (sql.startsWith("INSERT INTO platform_audit")) {
+      if (this.failNextAudit) {
+        this.failNextAudit = false;
+        throw new Error("synthetic audit write failure");
+      }
       this.audit.push(JSON.parse(String(values[7])));
       return { rows: [], rowCount: 1 };
     }
@@ -802,6 +814,11 @@ export class MemoryPlatformPg implements PgTransactor {
           created_at: String(createdAt ?? ""),
         });
         return { rows: [], rowCount: 1 };
+      }
+      if (sql.startsWith("DELETE FROM risk_idempotency_receipts") && values.length === 0) {
+        const count = this.riskIdempotency.length;
+        this.riskIdempotency.splice(0, count);
+        return { rows: [], rowCount: count };
       }
       if (sql.startsWith("SELECT")) {
         const rows = this.riskIdempotency.filter(
@@ -910,6 +927,12 @@ export class MemoryPlatformPg implements PgTransactor {
       row.updated_at = String(values[12] ?? row.updated_at);
       return { rows: [], rowCount: 1 };
     }
+    if (sql.startsWith("DELETE FROM") && values.length === 0) {
+      const remaining = this.riskRows.filter((row) => row.table !== table);
+      const count = this.riskRows.length - remaining.length;
+      this.riskRows.splice(0, this.riskRows.length, ...remaining);
+      return { rows: [], rowCount: count };
+    }
     if (sql.startsWith("DELETE FROM")) {
       const id = String(values[0]);
       const version = Number(values[1]);
@@ -919,6 +942,11 @@ export class MemoryPlatformPg implements PgTransactor {
       return { rows: [], rowCount: 1 };
     }
     if (sql.startsWith("SELECT body FROM") || sql.startsWith("SELECT body FROM")) {
+      if (sql.includes("WHERE id")) {
+        const id = String(values[0] ?? "");
+        const rows = this.riskRows.filter((row) => row.table === table && row.id === id);
+        return { rows: rows.map((row) => ({ body: row.body })) as T[], rowCount: rows.length };
+      }
       const rows = this.riskRows.filter((row) => {
         if (row.table !== table) return false;
         if (sql.includes("WHERE organisation_id") && values[0]) {

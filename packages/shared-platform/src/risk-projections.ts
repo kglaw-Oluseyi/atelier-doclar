@@ -139,6 +139,14 @@ export function eventProtectionProjection(snap: PlatformSnapshot, organisationId
   const activations = snap.riskFallbackActivations.filter((item) => item.eventId === eventId);
   const dossiers = snap.riskDossierEditions.filter((item) => item.eventId === eventId);
   const budget = [...snap.riskBudgetProjections].reverse().find((item) => item.eventId === eventId);
+  const approvedCurrent = snap.budgetScenarioEditions.filter(
+    (item) =>
+      item.organisationId === organisationId &&
+      item.current &&
+      (item.status === "APPROVED" || item.status === "PUBLISHED"),
+  );
+  const governingBudget =
+    approvedCurrent.find((item) => item.eventId === eventId) ?? approvedCurrent.find((item) => !item.eventId);
   const openGaps = gaps.filter((item) => item.state === "OPEN" || item.state === "REOPENED");
   const overridden = gaps.filter((item) => item.state === "ACCEPTED_RISK").length;
   return {
@@ -170,6 +178,9 @@ export function eventProtectionProjection(snap: PlatformSnapshot, organisationId
     functions: snap.riskCriticalFunctions.filter((item) => item.eventId === eventId || item.organisationId === organisationId),
     changedSinceReview: snapshot?.evaluatedAt ?? now,
     budget,
+    governingBudget: governingBudget
+      ? { id: governingBudget.id, version: governingBudget.version, resultHash: governingBudget.resultHash }
+      : undefined,
     lastChange: snapshot?.evaluatedAt ?? now,
   };
 }

@@ -1,11 +1,12 @@
 # EOS-S05B Implementation Record
 
 **Slice ID:** `EOS-S05B`
-**Prompt Control ID:** `MD-PR-S054` then `MD-PR-S055`
+**Prompt Control ID:** `MD-PR-S054` then `MD-PR-S055` then `MD-PR-S056`
 **Title:** Risk, Protection & Continuity Command
-**Status:** `REMEDIATED` under `MD-PR-S055` — not accepted; Claude not run
+**Status:** `REMEDIATED` under `MD-PR-S056` — not accepted; Claude not run
 **Starting baseline:** `f12798a28f438408527d8811be57389661c86c25`
 **MD-PR-S055 baseline:** `505c4399ba4517a972914e67b738372055da612d`
+**MD-PR-S056 baseline:** `24cc06db961986d93a60324b3101b79bc1c8c06d`
 **Application SHA:** `6077a752955fa50f145943349b430a8a2a39efae`
 **First implementation SHA:** `d7533f3bac1a7d429778f61044862db7fd753f8f`
 **Live Event OS deployment:** `1b534bcc-bd9e-45b8-9876-06f23eeb4a3e`
@@ -94,3 +95,14 @@ Remediation executed continuously from baseline `505c4399ba4517a972914e67b738372
 - Phase F: focused persistence/budget/dossier/transitions/eval/permissions/continuity/concurrency tests; 13 focused Playwright journeys; omnibus smoke retired.
 
 Remaining debt that is not a substitute for the above: in-process `PlatformService.mutate` still clones a working snapshot; Postgres writes changed risk rows only. Policy evidence create-as-`SUBMITTED` remains a pragmatic shortcut vs DRAFT→SUBMITTED→VERIFIED. Source/rule one-current indexes are not as complete as policy/dossier unique current indexes.
+
+## MD-PR-S056 execution (does not rewrite the MD-PR-S054 or MD-PR-S055 reports)
+
+Durable-truth and evaluation-integrity remediation executed continuously from baseline `24cc06db961986d93a60324b3101b79bc1c8c06d`. Controlling pack: `docs/control/eos-s05b/MD_PR_S056_EOS_S05B_DURABLE_TRUTH_AND_EVALUATION_INTEGRITY.md` (MD5 `9d3566085ab6835a506e38c26e12e3f7`).
+
+- Persistence: generic snapshot-absence `DELETE` removed. `writeRiskSnapshotDelta` issues only `INSERT` of new immutable rows and versioned `UPDATE` (with explicit current-edition demotion). Domain write, `platform_audit`, `platform_idempotency` and `risk_idempotency_receipts` share one database transaction. Partial-hydrate persist cannot erase existing risk rows. Confirmed synthetic cleanup uses a separate `purgeNormalizedRiskTables` retention command.
+- Budget: governing APPROVED/PUBLISHED edition is deep-cloned and fingerprinted before calculation; `activateAsCurrent: false` / `purpose: "PROTECT_INVESTMENT"`; successor and `calculationResultId` are distinct UUIDs; reload-by-id must deep-equal the clone.
+- Evaluation: `s05b-eval-v3` / `s05b-eval-contract-v3`, honest 46 cases, hash `a5d540db67ccb6d4e4835d8b6d113903189ad3af3ab10e1c997929bef0198617`. Typed observations only. Replay requires a second `REPLAYED` invocation. Unicode requires stored NFC `Yorùbá` from decomposed input. Cross-event invokes real Alpha Two `getEventProtection` / `projectRiskBudget`. Accessibility is not a domain case. `s05b-eval-v2` PASS is `STALE`.
+- Playwright: 6 changed-risk journeys plus existing focused S05B suite 13 passed / 1 skipped.
+
+Claude has not been run. EOS-S05B is not accepted. EOS-S06 is not started.

@@ -466,6 +466,8 @@ export function calculateBudgetScenarioDeepOnSnap(
     effectiveDrivers?: readonly EffectiveBudgetDriver[];
     scenarioAssumptions?: readonly BudgetScenarioAssumptionInput[];
     expectedScenarioVersion?: number;
+    branchFromScenarioEditionId?: string;
+    activateAsCurrent?: boolean;
     riskSourcedLines?: Array<{
       code: string;
       expectedMinor: string;
@@ -752,7 +754,9 @@ export function calculateBudgetScenarioDeepOnSnap(
   if (input.expectedScenarioVersion !== undefined && previousCurrent && previousCurrent.version !== input.expectedScenarioVersion) {
     throw new PlatformError("VERSION_CONFLICT", "stale budget scenario");
   }
+  const activateAsCurrent = input.activateAsCurrent !== false;
   const recordId = randomUUID();
+  const calculationResultId = randomUUID();
   const record: BudgetScenarioEdition = {
     id: recordId,
     organisationId: input.organisationId,
@@ -770,7 +774,7 @@ export function calculateBudgetScenarioDeepOnSnap(
     resultHash: exactHash({ expected: expected.toString(), low: low.toString(), high: high.toString(), inputHash, traces }),
     trace: traces,
     submittedByPersonId: actorPersonId,
-    current: true,
+    current: activateAsCurrent,
     bomSnapshotId: bomRecord.id,
     assumptionSetHash,
     evidenceHashes: observationHashes,
@@ -780,9 +784,9 @@ export function calculateBudgetScenarioDeepOnSnap(
     missingDrivers: bom.missingDrivers,
     governingBriefEditionId: input.governingBriefEditionId,
     governingBriefContentHash: input.governingBriefContentHash,
-    calculationResultId: recordId,
+    calculationResultId,
     calculationGeneratedAt: now,
-    supersedesScenarioEditionId: previousCurrent?.id,
+    supersedesScenarioEditionId: input.branchFromScenarioEditionId ?? previousCurrent?.id,
     guestCountOverrideReason: input.guestCountOverrideReason,
     effectiveDrivers: boundDrivers.map((item) => ({
       code: item.code,
@@ -812,11 +816,13 @@ export function calculateBudgetScenarioDeepOnSnap(
   for (const line of snap.budgetLines.filter((item) => item.scenarioId === "pending")) {
     line.scenarioId = record.id;
   }
-  for (const previous of snap.budgetScenarioEditions.filter((item) => item.organisationId === input.organisationId && item.purpose === input.purpose && item.current && item.engagementId === input.engagementId)) {
-    previous.current = false;
-    previous.status = "SUPERSEDED";
-    previous.version += 1;
-    previous.updatedAt = now;
+  if (activateAsCurrent) {
+    for (const previous of snap.budgetScenarioEditions.filter((item) => item.organisationId === input.organisationId && item.purpose === input.purpose && item.current && item.engagementId === input.engagementId)) {
+      previous.current = false;
+      previous.status = "SUPERSEDED";
+      previous.version += 1;
+      previous.updatedAt = now;
+    }
   }
   snap.budgetScenarioEditions.push(record);
   persistSensitivity(snap, record, now);

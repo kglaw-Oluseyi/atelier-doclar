@@ -674,6 +674,7 @@ export const RiskBudgetProjectionSchema = z
     eventId: EventIdSchema,
     budgetScenarioEditionId: UuidSchema.optional(),
     successorScenarioEditionId: UuidSchema.optional(),
+    calculationResultId: UuidSchema.optional(),
     governingScenarioUnchanged: z.boolean(),
     drivers: z.array(RiskBudgetDriverSchema).max(16),
     quantifiedMinor: z.string().regex(/^-?\d+$/),
@@ -819,10 +820,9 @@ export const RiskEvaluationCaseResultSchema = z
       .array(
         z
           .object({
-            code: NonEmptySchema.max(80),
-            expectedSummary: z.string().max(400),
-            observedSummary: z.string().max(400),
+            kind: NonEmptySchema.max(80),
             passed: z.boolean(),
+            detail: z.string().max(400),
           })
           .strict(),
       )

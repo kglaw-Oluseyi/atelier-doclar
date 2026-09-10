@@ -9,6 +9,7 @@ import {
   extractRiskEnvelope,
   riskStamp,
 } from "./risk-command.js";
+import { governingEditionFingerprint } from "./risk-repository.js";
 import {
   RiskBudgetProjectionSchema,
   type RiskBudgetDriver,
@@ -69,6 +70,22 @@ function sourcedLines(drivers: readonly RiskBudgetDriver[]) {
   return { lines, unquantifiedReasons };
 }
 
+function assertGoverningUnchanged(
+  before: ReturnType<typeof governingEditionFingerprint>,
+  clone: object,
+  reloaded: Parameters<typeof governingEditionFingerprint>[0] | undefined,
+): void {
+  if (!reloaded) {
+    throw new PlatformError("VALIDATION_FAILED", "risk must not mutate an approved or published Budget edition");
+  }
+  if (clone === reloaded) {
+    throw new PlatformError("VALIDATION_FAILED", "risk must not mutate an approved or published Budget edition");
+  }
+  if (JSON.stringify(before) !== JSON.stringify(governingEditionFingerprint(reloaded))) {
+    throw new PlatformError("VALIDATION_FAILED", "risk must not mutate an approved or published Budget edition");
+  }
+}
+
 export function projectRiskBudgetOnSnap(
   snap: PlatformSnapshot,
   input: {
@@ -91,19 +108,23 @@ export function projectRiskBudgetOnSnap(
     (item) => item.organisationId === input.organisationId && item.eventId === input.eventId && item.contentHash === contentHash,
   );
   if (existing) return existing;
-  const governing = snap.budgetScenarioEditions.find(
+  const approvedCurrent = snap.budgetScenarioEditions.filter(
     (item) =>
       item.organisationId === input.organisationId &&
-      (item.eventId === input.eventId || !item.eventId) &&
       item.current &&
       (item.status === "APPROVED" || item.status === "PUBLISHED"),
   );
+  const governing =
+    approvedCurrent.find((item) => item.eventId === input.eventId) ??
+    approvedCurrent.find((item) => !item.eventId);
   if (input.governingScenarioHash && governing && governing.resultHash !== input.governingScenarioHash) {
     throw new PlatformError("VERSION_CONFLICT", "stale Budget hash/version is NOT_APPLIED");
   }
   if (input.expectedScenarioVersion !== undefined && governing && governing.version !== input.expectedScenarioVersion) {
     throw new PlatformError("VERSION_CONFLICT", "stale Budget hash/version is NOT_APPLIED");
   }
+  const governingClone = governing ? structuredClone(governing) : undefined;
+  const governingBefore = governingClone ? governingEditionFingerprint(governingClone) : undefined;
   const converted = sourcedLines(input.drivers);
   const guests =
     governing?.effectiveDrivers?.find((item) => item.code === "guest.target_count")?.value ??
@@ -119,6 +140,8 @@ export function projectRiskBudgetOnSnap(
       archetype: "WEDDING",
       guests,
       expectedScenarioVersion: input.expectedScenarioVersion,
+      branchFromScenarioEditionId: governing?.id,
+      activateAsCurrent: false,
       riskSourcedLines: converted.lines,
       manualAssumptions: converted.unquantifiedReasons.map(() => ({
         key: "RISK_UNQUANTIFIED",
@@ -129,16 +152,19 @@ export function projectRiskBudgetOnSnap(
     generatedAt,
     actorPersonId,
   );
+  if (governing && governingClone && governingBefore) {
+    const reloaded = snap.budgetScenarioEditions.find((item) => item.id === governingClone.id);
+    if (!reloaded) {
+      throw new PlatformError("VALIDATION_FAILED", "risk must not mutate an approved or published Budget edition");
+    }
+    assertGoverningUnchanged(governingBefore, governingClone, reloaded);
+  }
   const engineSourced = snap.budgetLines.filter(
     (item) => item.scenarioId === successor.id && item.itemCode.startsWith("RISK_"),
   );
   const sourcedMinor = engineSourced.reduce((sum, line) => sum + BigInt(line.expectedMinor), 0n);
-  if (governing && governing.current !== true && governing.status !== "APPROVED" && governing.status !== "PUBLISHED") {
-    throw new PlatformError("VALIDATION_FAILED", "risk must not mutate an approved or published Budget edition");
-  }
-  const stillGoverning = governing ? snap.budgetScenarioEditions.find((item) => item.id === governing.id) : undefined;
-  if (stillGoverning && governing && stillGoverning.status !== governing.status) {
-    throw new PlatformError("VALIDATION_FAILED", "risk must not mutate an approved or published Budget edition");
+  if (!successor.calculationResultId || successor.calculationResultId === successor.id) {
+    throw new PlatformError("VALIDATION_FAILED", "Budget calculation result must have its own identity");
   }
   const record = RiskBudgetProjectionSchema.parse({
     id: newRiskId(),
@@ -146,7 +172,8 @@ export function projectRiskBudgetOnSnap(
     eventId: input.eventId,
     budgetScenarioEditionId: governing?.id,
     successorScenarioEditionId: successor.id,
-    governingScenarioUnchanged: true,
+    calculationResultId: successor.calculationResultId,
+    governingScenarioUnchanged: Boolean(governing && governing.current && (governing.status === "APPROVED" || governing.status === "PUBLISHED")),
     drivers: input.drivers,
     quantifiedMinor: sourcedMinor.toString(),
     currency: successor.currency,
