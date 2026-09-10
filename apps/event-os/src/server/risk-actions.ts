@@ -22,7 +22,7 @@ import {
 } from "@maison-doclar/shared-platform";
 import { writeIssuedAccessFlash } from "./action-flash";
 import { runProtectionFormAction } from "./protection-form-action";
-import { authorityDetailPathFromForm, envelope, scopePathFromForm } from "./protection-form-helpers";
+import { authorityDetailPathFromForm, dossierScopePathFromForm, envelope, scopePathFromForm } from "./protection-form-helpers";
 import { getRuntime } from "./runtime";
 
 function field(formData: FormData, name: string): string {
@@ -193,7 +193,7 @@ export async function assembleDossierAction(prev: ProtectionFormState, formData:
   return runProtectionFormAction({
     prev,
     formData,
-    scopePath: `/app/events/${eventId}/protection`,
+    scopePath: dossierScopePathFromForm(formData, `/app/events/${eventId}/protection/dossier`),
     actionType: "risk.dossier.assemble",
     execute: (actor, data) => getRuntime().service.assembleRiskDossier(actor, { ...envelope(data), eventId }),
   });
@@ -204,7 +204,7 @@ export async function publishDossierAction(prev: ProtectionFormState, formData: 
   return runProtectionFormAction({
     prev,
     formData,
-    scopePath: `/app/events/${eventId}/protection`,
+    scopePath: dossierScopePathFromForm(formData, `/app/events/${eventId}/protection/dossier`),
     actionType: "risk.dossier.publish",
     execute: (actor, data) =>
       getRuntime().service.publishRiskDossier(actor, {
@@ -651,7 +651,7 @@ export async function submitDossierAction(prev: ProtectionFormState, formData: F
   return runProtectionFormAction({
     prev,
     formData,
-    scopePath: `/app/events/${eventId}/protection`,
+    scopePath: dossierScopePathFromForm(formData, `/app/events/${eventId}/protection/dossier`),
     actionType: "risk.dossier.submit",
     execute: (actor, data) =>
       getRuntime().service.transitionRiskDossier(actor, {
@@ -668,7 +668,7 @@ export async function approveDossierAction(prev: ProtectionFormState, formData: 
   return runProtectionFormAction({
     prev,
     formData,
-    scopePath: `/app/events/${eventId}/protection`,
+    scopePath: dossierScopePathFromForm(formData, `/app/events/${eventId}/protection/dossier`),
     actionType: "risk.dossier.approve",
     execute: (actor, data) =>
       getRuntime().service.transitionRiskDossier(actor, {
@@ -811,7 +811,7 @@ export async function issueDossierAccessAction(prev: ProtectionFormState, formDa
   return runProtectionFormAction({
     prev,
     formData,
-    scopePath: `/app/events/${eventId}/protection`,
+    scopePath: dossierScopePathFromForm(formData, `/app/events/${eventId}/protection/dossier`),
     actionType: "risk.dossier.client_access.issue",
     execute: async (actor, data) => {
       const issued = getRuntime().service.issueRiskDossierAccess(actor, { ...envelope(data), eventId });
@@ -826,7 +826,7 @@ export async function revokeDossierAccessAction(prev: ProtectionFormState, formD
   return runProtectionFormAction({
     prev,
     formData,
-    scopePath: `/app/events/${eventId}/protection`,
+    scopePath: dossierScopePathFromForm(formData, `/app/events/${eventId}/protection/dossier`),
     actionType: "risk.dossier.client_access.revoke",
     execute: (actor, data) =>
       getRuntime().service.revokeRiskDossierAccess(actor, {

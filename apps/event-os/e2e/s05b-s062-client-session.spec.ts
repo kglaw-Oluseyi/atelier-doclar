@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { loginAs, openStaffContext } from "./login";
-import { ALPHA_PROTECTION, assembleWorkingDraft, evaluateAlphaOne, expectActionOutcome, prepareApprovedRule, recoverRecordedFixtureAuthority } from "./s060-helpers";
+import { ALPHA_DOSSIER, assembleWorkingDraft, evaluateAlphaOne, expectActionOutcome, prepareApprovedRule, recoverRecordedFixtureAuthority } from "./s060-helpers";
 
 test("S062 separate client grant session and revocation", async ({ page, browser }) => {
-  test.setTimeout(240_000);
+  test.setTimeout(process.env.PLAYWRIGHT_LIVE === "1" ? 360_000 : 240_000);
   const recorded = await prepareApprovedRule(page, browser);
   try {
     const planner = await openStaffContext(browser, "planner");
@@ -14,17 +14,14 @@ test("S062 separate client grant session and revocation", async ({ page, browser
     await expect(planner.page.getByText(/Status SUBMITTED/)).toBeVisible({ timeout: 20_000 });
     await planner.context.close();
     const director = await openStaffContext(browser, "director");
-    await director.page.goto(ALPHA_PROTECTION);
-    await director.page.getByRole("link", { name: "Dossier", exact: true }).click();
+    await director.page.goto(ALPHA_DOSSIER);
     await director.page.getByRole("button", { name: "Approve dossier" }).click();
     await expectActionOutcome(director.page);
     await director.context.close();
     await loginAs(page, "ceo");
-    await page.goto(ALPHA_PROTECTION);
-    await page.getByRole("link", { name: "Dossier", exact: true }).click();
+    await page.goto(ALPHA_DOSSIER);
     await page.getByRole("button", { name: "Publish dossier without sending" }).click();
     await expectActionOutcome(page);
-    await page.getByRole("link", { name: "Dossier", exact: true }).click();
     await page.getByRole("button", { name: "Issue client dossier access" }).click();
     await expectActionOutcome(page);
     const tokenLine = page.getByTestId("issued-dossier-token");
@@ -48,8 +45,7 @@ test("S062 separate client grant session and revocation", async ({ page, browser
     await clientPage.getByRole("button", { name: "Record client note" }).click();
     await client.close();
     await loginAs(page, "ceo");
-    await page.goto(ALPHA_PROTECTION);
-    await page.getByRole("link", { name: "Dossier", exact: true }).click();
+    await page.goto(ALPHA_DOSSIER);
     await page.getByRole("button", { name: "Revoke client access" }).click();
     await expectActionOutcome(page);
     const revoked = await browser.newContext();

@@ -434,13 +434,14 @@ export class PostgresPlatformStore implements PlatformStore {
       if (this.riskNormalized) {
         await writeRiskSnapshotDelta(riskTx, previous, normalised);
       }
+      const previousAuditIds = new Set(previous.audit.map((item) => item.id));
       for (const entry of normalised.audit) {
-        if (!previous.audit.some((item) => item.id === entry.id)) {
-          await riskTx.appendAudit(entry);
-        }
+        if (previousAuditIds.has(entry.id)) continue;
+        await riskTx.appendAudit(entry);
       }
+      const previousIdempotencyKeys = new Set(previous.idempotency.map((item) => item.key));
       for (const entry of normalised.idempotency) {
-        if (!previous.idempotency.some((item) => item.key === entry.key)) {
+        if (!previousIdempotencyKeys.has(entry.key)) {
           await tx.query(
             "INSERT INTO platform_idempotency (key, action, hash, result_ref, created_at, body) VALUES ($1, $2, $3, $4, $5, $6::jsonb)",
             [entry.key, entry.action, entry.hash, entry.resultRef, entry.createdAt, JSON.stringify(entry)],

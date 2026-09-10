@@ -635,6 +635,8 @@ export default async function EventProtectionPage({
           {copy.phrases.evidenceReviewed} {copy.phrases.knownGaps} {copy.phrases.contingencyPrepared} {copy.phrases.confirmationRequired}
         </p>
         <p>
+          <Link href={`/app/events/${event.id}/protection/dossier`}>Open focused dossier review</Link>
+          {" · "}
           <Link href={`/app/events/${event.id}/protection/client`}>Preview permission-safe client dossier</Link>
         </p>
         {permissions.dossierManageClientAccess ? (

@@ -2,6 +2,7 @@ import { expect, type Browser, type Page, type Request } from "@playwright/test"
 import { loginAs, openStaffContext } from "./login";
 
 export const ALPHA_PROTECTION = "/app/events/00000000-0000-4000-8000-000000000021/protection";
+export const ALPHA_DOSSIER = `${ALPHA_PROTECTION}/dossier`;
 
 export async function expectActionOutcome(page: Page) {
   await expect(page.getByTestId("action-result-banner")).toBeVisible({ timeout: 20_000 });
@@ -22,13 +23,12 @@ export async function readActionCorrelation(page: Page): Promise<string> {
 }
 
 export async function assembleWorkingDraft(page: Page) {
-  await page.goto(ALPHA_PROTECTION);
-  await expect(page.getByTestId("event-protection-workspace")).toBeVisible({ timeout: 20_000 });
-  await page.getByRole("link", { name: "Dossier", exact: true }).click();
+  await page.goto(ALPHA_DOSSIER);
+  await expect(page.getByTestId("focused-dossier-workspace")).toBeVisible({ timeout: 40_000 });
   const assemble = page.getByRole("button", { name: "Assemble dossier edition" });
   await expect(assemble).toBeVisible({ timeout: 20_000 });
   const previous = await readActionCorrelation(page);
-  await assemble.click();
+  await assemble.click({ noWaitAfter: true });
   await expectFreshActionSuccess(page, previous);
   await expect(page.getByText(/Status DRAFT/)).toBeVisible({ timeout: 30_000 });
 }
@@ -193,19 +193,26 @@ export async function prepareApprovedRule(page: Page, browser: Browser): Promise
 
 export async function evaluateAlphaOne(page: Page) {
   await page.goto(ALPHA_PROTECTION);
-  await expect(page.getByTestId("event-protection-workspace")).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByTestId("event-protection-workspace")).toBeVisible({ timeout: 40_000 });
+  const workspace = page.getByTestId("event-protection-workspace");
+  const hasJurisdiction = (await workspace.getByText(/jurisdiction:\s*NG/i).count()) > 0;
+  const hasDates = (await workspace.getByText(/event_dates:\s*2026-12-01\/2026-12-02/i).count()) > 0;
   const fact = page.getByTestId("protection-record-fact");
-  await fact.getByLabel("Fact").selectOption("jurisdiction");
-  await fact.getByLabel("Value").fill("NG");
-  await fact.getByRole("button", { name: "Record event fact" }).click();
-  await expectActionOutcome(page);
-  await fact.getByLabel("Fact").selectOption("event_dates");
-  await fact.getByLabel("Value").fill("2026-12-01/2026-12-02");
-  await fact.getByRole("button", { name: "Record event fact" }).click();
-  await expectActionOutcome(page);
+  if (!hasJurisdiction) {
+    await fact.getByLabel("Fact").selectOption("jurisdiction");
+    await fact.getByLabel("Value").fill("NG");
+    await fact.getByRole("button", { name: "Record event fact" }).click({ noWaitAfter: true });
+    await expectActionOutcome(page);
+  }
+  if (!hasDates) {
+    await fact.getByLabel("Fact").selectOption("event_dates");
+    await fact.getByLabel("Value").fill("2026-12-01/2026-12-02");
+    await fact.getByRole("button", { name: "Record event fact" }).click({ noWaitAfter: true });
+    await expectActionOutcome(page);
+  }
   await page.goto(ALPHA_PROTECTION);
-  await expect(page.getByTestId("event-protection-workspace")).toBeVisible({ timeout: 20_000 });
-  await page.getByRole("button", { name: "Evaluate protection now" }).click();
+  await expect(page.getByTestId("event-protection-workspace")).toBeVisible({ timeout: 40_000 });
+  await page.getByRole("button", { name: "Evaluate protection now" }).click({ noWaitAfter: true });
   await expectActionOutcome(page);
   await expect(page.getByTestId("protection-effective-authorities")).toBeVisible({ timeout: 30_000 });
 }

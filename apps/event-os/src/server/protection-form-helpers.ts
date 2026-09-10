@@ -14,6 +14,11 @@ export function scopePathFromForm(formData: FormData, fallback = "/app/protectio
   return eventId ? `/app/events/${eventId}/protection` : fallback;
 }
 
+export function dossierScopePathFromForm(formData: FormData, fallback = "/app/protection"): string {
+  const eventId = String(formData.get("eventId") ?? "");
+  return eventId ? `/app/events/${eventId}/protection/dossier` : fallback;
+}
+
 export function authorityDetailPathFromForm(formData: FormData, fallback = "/app/protection"): string {
   const raw = String(formData.get("returnPath") ?? "");
   return /^\/app\/protection\/authority\/[0-9a-f-]{36}$/i.test(raw) ? raw : fallback;

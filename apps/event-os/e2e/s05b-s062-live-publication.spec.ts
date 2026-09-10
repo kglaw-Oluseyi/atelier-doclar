@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { loginAs, openStaffContext } from "./login";
-import { ALPHA_PROTECTION, assembleWorkingDraft, evaluateAlphaOne, expectActionOutcome, prepareApprovedRule, recoverRecordedFixtureAuthority } from "./s060-helpers";
+import { ALPHA_DOSSIER, ALPHA_PROTECTION, assembleWorkingDraft, evaluateAlphaOne, expectActionOutcome, prepareApprovedRule, recoverRecordedFixtureAuthority } from "./s060-helpers";
 
 test("S062 planner director CEO publication survives successor drafting", async ({ page, browser }) => {
-  test.setTimeout(240_000);
+  test.setTimeout(process.env.PLAYWRIGHT_LIVE === "1" ? 360_000 : 240_000);
   const recorded = await prepareApprovedRule(page, browser);
   try {
     const planner = await openStaffContext(browser, "planner");
@@ -18,8 +18,7 @@ test("S062 planner director CEO publication survives successor drafting", async 
     await planner.context.close();
 
     const director = await openStaffContext(browser, "director");
-    await director.page.goto(ALPHA_PROTECTION);
-    await director.page.getByRole("link", { name: "Dossier", exact: true }).click();
+    await director.page.goto(ALPHA_DOSSIER);
     await expect(director.page.getByRole("button", { name: "Publish dossier without sending" })).toHaveCount(0);
     await expect(director.page.getByRole("button", { name: "Approve dossier" })).toBeVisible({ timeout: 20_000 });
     await director.page.getByRole("button", { name: "Approve dossier" }).click();
@@ -28,8 +27,7 @@ test("S062 planner director CEO publication survives successor drafting", async 
     await director.context.close();
 
     const ceo = await openStaffContext(browser, "ceo");
-    await ceo.page.goto(ALPHA_PROTECTION);
-    await ceo.page.getByRole("link", { name: "Dossier", exact: true }).click();
+    await ceo.page.goto(ALPHA_DOSSIER);
     await expect(ceo.page.getByRole("button", { name: "Publish dossier without sending" })).toBeVisible();
     await ceo.page.getByRole("button", { name: "Publish dossier without sending" }).click();
     await expectActionOutcome(ceo.page);
