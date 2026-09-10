@@ -85,6 +85,129 @@ describe("EOS-S05B normalized persistence", () => {
     assert.equal(pg.riskRows.filter((row) => row.table === "risk_migration_receipts").length, 1);
   });
 
+  it("demotes the prior current dossier when a successor cites supersedesEditionId", async () => {
+    const pg = new MemoryPlatformPg();
+    await PostgresPlatformStore.migrate(pg);
+    const store = new PostgresRiskProtectionStore(pg);
+    const approvedId = "00000000-0000-4000-8000-000000000611";
+    const successorId = "00000000-0000-4000-8000-000000000612";
+    const previous = emptySnapshot();
+    previous.riskDossierEditions.push({
+      id: approvedId,
+      organisationId: people.orgMaison,
+      eventId: people.eventAlphaOne,
+      versionNumber: 1,
+      status: "APPROVED",
+      componentHashes: ["cd5de9a58084"],
+      contentHash: "cd5de9a58084",
+      languageApproved: true,
+      submittedByPersonId: people.personPlanner,
+      dispatched: false,
+      exportKind: "NONE",
+      limitations: "Evidence reviewed as of the dossier date.",
+      current: true,
+      schemaVersion: SCHEMA_VERSION,
+      version: 1,
+      createdAt: "2026-09-10T09:00:00.000Z",
+      updatedAt: "2026-09-10T09:00:00.000Z",
+    } as (typeof previous.riskDossierEditions)[0]);
+    const next = emptySnapshot();
+    next.riskDossierEditions.push({
+      ...previous.riskDossierEditions[0]!,
+      current: false,
+      version: 2,
+      updatedAt: "2026-09-10T10:00:00.000Z",
+    });
+    next.riskDossierEditions.push({
+      id: successorId,
+      organisationId: people.orgMaison,
+      eventId: people.eventAlphaOne,
+      versionNumber: 2,
+      status: "DRAFT",
+      componentHashes: ["cd5de9a58084"],
+      contentHash: "s062-successor-hash",
+      languageApproved: true,
+      submittedByPersonId: people.personPlanner,
+      supersedesEditionId: approvedId,
+      dispatched: false,
+      exportKind: "NONE",
+      limitations: "Evidence reviewed as of the dossier date.",
+      current: true,
+      schemaVersion: SCHEMA_VERSION,
+      version: 1,
+      createdAt: "2026-09-10T10:00:00.000Z",
+      updatedAt: "2026-09-10T10:00:00.000Z",
+    } as (typeof next.riskDossierEditions)[0]);
+    await store.persistFromSnapshotAsync(emptySnapshot(), previous);
+    await store.persistFromSnapshotAsync(previous, next);
+    const currents = pg.riskRows.filter((row) => row.table === "risk_dossier_editions" && row.current === true && row.event_id === people.eventAlphaOne);
+    assert.equal(currents.length, 1);
+    assert.equal(currents[0]?.id, successorId);
+  });
+
+  it("demotes the prior current publication when a successor cites a different dossierId", async () => {
+    const pg = new MemoryPlatformPg();
+    await PostgresPlatformStore.migrate(pg);
+    const store = new PostgresRiskProtectionStore(pg);
+    const firstPub = "00000000-0000-4000-8000-000000000621";
+    const secondPub = "00000000-0000-4000-8000-000000000622";
+    const firstEdition = "00000000-0000-4000-8000-000000000623";
+    const secondEdition = "00000000-0000-4000-8000-000000000624";
+    const previous = emptySnapshot();
+    previous.riskDossierPublications.push({
+      id: firstPub,
+      organisationId: people.orgMaison,
+      eventId: people.eventAlphaOne,
+      dossierId: firstEdition,
+      editionId: firstEdition,
+      approvedHash: "approved-hash-one",
+      publicationNumber: 1,
+      status: "CURRENT",
+      publishedAt: "2026-09-10T09:30:00.000Z",
+      publishedByPersonId: people.personCeo,
+      current: true,
+      dispatched: false,
+      clientMessages: [],
+      schemaVersion: SCHEMA_VERSION,
+      version: 1,
+      createdAt: "2026-09-10T09:30:00.000Z",
+      updatedAt: "2026-09-10T09:30:00.000Z",
+    } as (typeof previous.riskDossierPublications)[0]);
+    const next = emptySnapshot();
+    next.riskDossierPublications.push({
+      ...previous.riskDossierPublications[0]!,
+      current: false,
+      status: "SUPERSEDED",
+      version: 2,
+      updatedAt: "2026-09-10T10:30:00.000Z",
+    });
+    next.riskDossierPublications.push({
+      id: secondPub,
+      organisationId: people.orgMaison,
+      eventId: people.eventAlphaOne,
+      dossierId: secondEdition,
+      editionId: secondEdition,
+      approvedHash: "approved-hash-two",
+      publicationNumber: 2,
+      status: "CURRENT",
+      publishedAt: "2026-09-10T10:30:00.000Z",
+      publishedByPersonId: people.personCeo,
+      supersedesPublicationId: firstPub,
+      current: true,
+      dispatched: false,
+      clientMessages: [],
+      schemaVersion: SCHEMA_VERSION,
+      version: 1,
+      createdAt: "2026-09-10T10:30:00.000Z",
+      updatedAt: "2026-09-10T10:30:00.000Z",
+    } as (typeof next.riskDossierPublications)[0]);
+    await store.persistFromSnapshotAsync(emptySnapshot(), previous);
+    await store.persistFromSnapshotAsync(previous, next);
+    const currents = pg.riskRows.filter((row) => row.table === "risk_dossier_publications" && row.current === true && row.event_id === people.eventAlphaOne);
+    assert.equal(currents.length, 1);
+    assert.equal(currents[0]?.id, secondPub);
+  });
+
   it("demotes prior current continuity plans so one-current indexes hold", async () => {
     const pg = new MemoryPlatformPg();
     const store = await PostgresPlatformStore.open(pg);

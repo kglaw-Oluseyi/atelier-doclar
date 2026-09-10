@@ -27,7 +27,9 @@ export async function assembleWorkingDraft(page: Page) {
   await page.getByRole("link", { name: "Dossier", exact: true }).click();
   const assemble = page.getByRole("button", { name: "Assemble dossier edition" });
   await expect(assemble).toBeVisible({ timeout: 20_000 });
+  const previous = await readActionCorrelation(page);
   await assemble.click();
+  await expectFreshActionSuccess(page, previous);
   await expect(page.getByText(/Status DRAFT/)).toBeVisible({ timeout: 30_000 });
 }
 

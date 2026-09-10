@@ -879,6 +879,16 @@ export class MemoryPlatformPg implements PgTransactor {
         string,
       ];
       if (this.riskRows.some((row) => row.table === table && row.id === id)) throw new Error("unique_violation");
+      if (current === true) {
+        const eventScoped =
+          table === "risk_continuity_plans" || table === "risk_dossier_editions" || table === "risk_dossier_publications";
+        const conflict = this.riskRows.some((row) => {
+          if (row.table !== table || row.current !== true) return false;
+          if (table === "risk_policy_editions") return row.parent_id === parentId && parentId != null;
+          return eventScoped && row.event_id === eventId && eventId != null;
+        });
+        if (conflict) throw new Error("duplicate key value violates unique constraint");
+      }
       this.riskRows.push({
         table,
         id,

@@ -19,6 +19,33 @@ function hasTransaction(client: PgQueryable): client is PgTransactor {
   return typeof (client as PgTransactor).transaction === "function";
 }
 
+const EVENT_SCOPED_CURRENT = new Set<RiskAggregateKind>([
+  "riskContinuityPlans",
+  "riskDossierEditions",
+  "riskDossierPublications",
+]);
+
+async function demoteOtherCurrent(
+  client: PgQueryable,
+  kind: RiskAggregateKind,
+  cols: { id: string; parent_id: string | null; event_id: string | null },
+): Promise<void> {
+  const table = tableForRiskKind(kind);
+  if (kind === "riskPolicyEditions" && cols.parent_id) {
+    await client.query(`UPDATE ${table} SET current = FALSE WHERE parent_id = $1 AND id <> $2 AND current IS TRUE`, [
+      cols.parent_id,
+      cols.id,
+    ]);
+    return;
+  }
+  if (EVENT_SCOPED_CURRENT.has(kind) && cols.event_id) {
+    await client.query(`UPDATE ${table} SET current = FALSE WHERE event_id = $1 AND id <> $2 AND current IS TRUE`, [
+      cols.event_id,
+      cols.id,
+    ]);
+  }
+}
+
 function columns(record: Record<string, unknown>) {
   const status = record.status ?? record.state ?? record.verificationState;
   const parent = record.policyId ?? record.planId ?? record.incidentId ?? record.dossierId ?? record.runId ?? record.templateId ?? record.supersedesEditionId;
@@ -165,17 +192,7 @@ export class PostgresRiskTransaction implements RiskTransaction {
     const table = tableForRiskKind(kind);
     const cols = columns(record);
     if (cols.current === true) {
-      if (cols.parent_id) {
-        await this.client.query(`UPDATE ${table} SET current = FALSE WHERE parent_id = $1 AND id <> $2 AND current IS TRUE`, [
-          cols.parent_id,
-          cols.id,
-        ]);
-      } else if (cols.event_id) {
-        await this.client.query(`UPDATE ${table} SET current = FALSE WHERE event_id = $1 AND id <> $2 AND current IS TRUE`, [
-          cols.event_id,
-          cols.id,
-        ]);
-      }
+      await demoteOtherCurrent(this.client, kind, cols);
     }
     await this.client.query(
       `INSERT INTO ${table} (id, organisation_id, event_id, version, current, status, parent_id, content_hash, submitted_by_person_id, approved_by_person_id, body, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12,$13)`,
@@ -201,17 +218,7 @@ export class PostgresRiskTransaction implements RiskTransaction {
     const table = tableForRiskKind(kind);
     const cols = columns({ ...patch, id });
     if (cols.current === true) {
-      if (cols.parent_id) {
-        await this.client.query(`UPDATE ${table} SET current = FALSE WHERE parent_id = $1 AND id <> $2 AND current IS TRUE`, [
-          cols.parent_id,
-          cols.id,
-        ]);
-      } else if (cols.event_id) {
-        await this.client.query(`UPDATE ${table} SET current = FALSE WHERE event_id = $1 AND id <> $2 AND current IS TRUE`, [
-          cols.event_id,
-          cols.id,
-        ]);
-      }
+      await demoteOtherCurrent(this.client, kind, cols);
     }
     const updated = await this.client.query(
       `UPDATE ${table} SET organisation_id=$3, event_id=$4, version=$5, current=$6, status=$7, parent_id=$8, content_hash=$9, submitted_by_person_id=$10, approved_by_person_id=$11, body=$12::jsonb, updated_at=$13 WHERE id=$1 AND version=$2`,
