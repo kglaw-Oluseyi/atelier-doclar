@@ -16,7 +16,7 @@ import { applyEosS05AssuranceToSnapshot } from "./layout-assurance-migration.js"
 import { migrateEosS05A, migrateEosS05ADisclosureV5, migrateEosS05AIntelligence, migrateEosS05AIntelligenceV2, migrateEosS05AIntelligenceV3 } from "./eec-migration.js";
 import { migrateEosS05B } from "./risk-migration.js";
 import { calculateBudgetScenarioOnSnap, decideBudgetScenarioOnSnap } from "./eec-intelligence.js";
-import { FIXTURE_IDS } from "./fixtures.js";
+import { FIXTURE_IDS, fixtureAssignments, fixtureMemberships, fixturePersons } from "./fixtures.js";
 import { PERMISSION_KEYS } from "./constants.js";
 import { migrateEosS05AEvaluationV4 } from "./eec-evaluation-migration.js";
 import { loadNonProductionFixtures } from "./bootstrap.js";
@@ -261,6 +261,28 @@ export function ensureMissingCatalogueRecords(store: PlatformStore): void {
   if (changed) store.replace(snap);
 }
 
+/** Replay-safe: insert missing synthetic identities only. Never rewrite existing people. */
+export function ensureMissingFixtureIdentities(store: PlatformStore): void {
+  const snap = store.snapshot();
+  let changed = false;
+  for (const item of fixturePersons()) {
+    if (snap.persons.some((person) => person.id === item.id)) continue;
+    snap.persons.push(item);
+    changed = true;
+  }
+  for (const item of fixtureMemberships()) {
+    if (snap.memberships.some((membership) => membership.id === item.id)) continue;
+    snap.memberships.push(item);
+    changed = true;
+  }
+  for (const item of fixtureAssignments()) {
+    if (snap.assignments.some((assignment) => assignment.id === item.id)) continue;
+    snap.assignments.push(item);
+    changed = true;
+  }
+  if (changed) store.replace(snap);
+}
+
 export function applySyntheticSnapshot(store: PlatformStore, options: PlatformServiceOptions = {}): PlatformService {
   const service =
     store.snapshot().organisations.length > 0 ? new PlatformService(store, options) : loadNonProductionFixtures(store, options);
@@ -287,6 +309,7 @@ export async function applySyntheticSeedIfNeeded(
   if (existing?.seedVersion === SYNTHETIC_SEED_VERSION) {
     const service = new PlatformService(store, options);
     ensureMissingCatalogueRecords(store);
+    ensureMissingFixtureIdentities(store);
     applyS04BLayer(store);
     applyS04CLayer(store);
     applyS04DLayer(store);

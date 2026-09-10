@@ -23,8 +23,9 @@ test("S060 checkpoints and structured incident learning are visible without disp
   await page.getByTestId("protection-report-incident").getByRole("button", { name: "Report incident" }).click();
   await expectActionOutcome(page);
   await page.getByRole("link", { name: "Continuity" }).click();
-  await expect(page.getByTestId("incident-detail")).toBeVisible({ timeout: 20_000 });
-  await expect(page.getByText("This platform has not dispatched help.")).toBeVisible();
+  const incident = page.getByTestId("incident-detail").filter({ hasText: "Structured power loss" });
+  await expect(incident).toBeVisible({ timeout: 20_000 });
+  await expect(incident.getByText("This platform has not dispatched help.")).toBeVisible();
   if (await page.getByLabel("Entry kind").count()) {
     await page.getByLabel("Entry kind").selectOption("OBSERVED_FACT");
     await page.getByLabel("Entry", { exact: true }).fill("Guest reported chest pain at 21:14.");

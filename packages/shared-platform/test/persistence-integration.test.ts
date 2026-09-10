@@ -138,6 +138,23 @@ describe("platform persistence integration", () => {
     await store.flush();
   });
 
+  it("inserts the missing risk reviewer identity on seed replay", async () => {
+    const db = new MemoryPlatformPg();
+    const store = await PostgresPlatformStore.open(db);
+    await applySyntheticSeedIfNeeded(store, db);
+    await store.flush();
+    const stripped = store.snapshot();
+    stripped.persons = stripped.persons.filter((item) => item.id !== "00000000-0000-4000-8000-000000000048");
+    stripped.memberships = stripped.memberships.filter((item) => item.id !== "00000000-0000-4000-8000-000000000057");
+    stripped.assignments = stripped.assignments.filter((item) => item.id !== "00000000-0000-4000-8000-000000000067");
+    await store.replaceAsync(stripped);
+    const replay = await applySyntheticSeedIfNeeded(store, db);
+    await store.flush();
+    assert.equal(replay.seed.replayed, true);
+    assert.ok(store.snapshot().persons.some((item) => item.email === "reviewer@maison-doclar.test"));
+    assert.ok(store.snapshot().assignments.some((item) => item.id === "00000000-0000-4000-8000-000000000067"));
+  });
+
   it("keeps cleanup dry-run non-destructive and requires confirmation", async () => {
     const db = new MemoryPlatformPg();
     const store = await PostgresPlatformStore.open(db);
