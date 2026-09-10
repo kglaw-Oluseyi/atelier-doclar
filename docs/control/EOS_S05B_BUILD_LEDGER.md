@@ -8,7 +8,7 @@
 **MD-PR-S058 baseline:** `a66d39a8619cae93e9c905cba024fa8bd85662e1`
 **Application SHA:** `5e381ce7a92b04fc9293dc24f94dd42640a8835d`
 **First implementation SHA:** `d7533f3bac1a7d429778f61044862db7fd753f8f`
-**Live Event OS deployment:** pending Event OS-only deploy after GitHub parity
+**Live Event OS deployment:** `1005dc92-ec0a-48d2-845f-0da134f31d66`
 **Status:** `REMEDIATED` under `MD-PR-S058` — not accepted; Claude not run
 **Production:** unauthorised
 **Catalogue accepted-slice count:** remains 5
@@ -131,6 +131,8 @@ Claude not run. EOS-S05B not accepted. EOS-S06 not started.
 | Focused Playwright `s05b-human-safe-validation` | Test defect | Insurer guidance matched both the summary link and the field alert (strict mode) | Assert the field `role=alert` | locator pass |
 | Focused Playwright forged-insurer submit | Implementation defect | `platformErrorFromUnknown` used `instanceof PlatformError`, so a forged governed-party denial became an unexpected server-failure banner | Duck-type `code` against `PLATFORM_ERROR_CODES` | in-page validation pass |
 | Focused Playwright insurer/vendor chooser | Test defect | Playwright 1.51 `selectOption({ label })` rejects a RegExp | Select by option value from `hasText` | chooser pass |
+| Live Event OS `/api/health/live` after first `railway up` | Environment defect | `EVENT_OS_GIT_SHA` still named the previous application commit, so health reported `e3f034f` after the new code was uploaded | Set `EVENT_OS_GIT_SHA` to `2356c5a8d15b019f0ad2387ecb07a481d52d553d` on Event OS only | live SHA match |
+| Live focused Playwright | Operational / secret boundary | Sign-in failed with the local non-production default token; the production access token was not loaded into this session | Live authenticated journeys held; `/api/health/live` and `/ready` verified without secrets | health/ready pass |
 
 Passing retries do not erase the first-run failures.
 
@@ -153,5 +155,14 @@ Passing retries do not erase the first-run failures.
 
 ## Live gates (MD-PR-S058)
 
-Pending Event OS-only Railway deploy after GitHub parity. Control Tower will not be deployed.
+| Gate | Result |
+|------|--------|
+| local = origin = GitHub `main` at deploy | `2356c5a8d15b019f0ad2387ecb07a481d52d553d` |
+| Event OS deployment | `1005dc92-ec0a-48d2-845f-0da134f31d66` SUCCESS |
+| `/api/health/live` | alive; `productionAuthorised: false`; SHA `2356c5a8d15b019f0ad2387ecb07a481d52d553d` |
+| `/api/health/ready` | ready; POSTGRES; migrations APPLIED; `s05b-eval-v3`; 46 cases; hash `a5d540db67ccb6d4e4835d8b6d113903189ad3af3ab10e1c997929bef0198617`; `PASSED`; `persistedResultCount` 46; adapters INACTIVE |
+| Control Tower | not redeployed (GitHub watch SKIPPED) |
+| Live authenticated Playwright | held — production access token not loaded in this session |
+
+Claude not run. EOS-S05B not accepted. EOS-S06 not started.
 

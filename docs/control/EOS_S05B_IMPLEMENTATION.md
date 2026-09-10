@@ -10,7 +10,7 @@
 **MD-PR-S058 baseline:** `a66d39a8619cae93e9c905cba024fa8bd85662e1`
 **Application SHA:** `5e381ce7a92b04fc9293dc24f94dd42640a8835d`
 **First implementation SHA:** `d7533f3bac1a7d429778f61044862db7fd753f8f`
-**Live Event OS deployment:** pending Event OS-only deploy after GitHub parity
+**Live Event OS deployment:** `1005dc92-ec0a-48d2-845f-0da134f31d66`
 **Catalogue slice:** no — accepted-slice count remains 5
 **Production:** unauthorised
 **EOS-S06:** `NOT_STARTED / NOT_AUTHORISED`
