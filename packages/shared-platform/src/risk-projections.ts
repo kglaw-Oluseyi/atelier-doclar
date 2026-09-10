@@ -10,6 +10,7 @@ import {
   riskStamp,
 } from "./risk-command.js";
 import { redactDossier, redactIncidentNote, redactPolicyEdition, redactVendorAssessment, type RiskProjectionAudience } from "./risk-disclosure.js";
+import { listGovernedProtectionParties } from "./risk-protection-parties.js";
 import { derivedCertificateStatus } from "./risk-policy-operations.js";
 import {
   RiskDossierEditionSchema,
@@ -123,6 +124,8 @@ export function organisationProtectionProjection(snap: PlatformSnapshot, organis
       name: item.name,
       readiness: snap.riskApplicabilitySnapshots.filter((row) => row.eventId === item.id).at(-1)?.overall ?? "INDETERMINATE",
     })),
+    insurers: listGovernedProtectionParties(snap, organisationId, "INSURER"),
+    vendorParties: listGovernedProtectionParties(snap, organisationId, "VENDOR"),
   };
 }
 
@@ -182,6 +185,8 @@ export function eventProtectionProjection(snap: PlatformSnapshot, organisationId
       ? { id: governingBudget.id, version: governingBudget.version, resultHash: governingBudget.resultHash }
       : undefined,
     lastChange: snapshot?.evaluatedAt ?? now,
+    insurers: listGovernedProtectionParties(snap, organisationId, "INSURER"),
+    vendorParties: listGovernedProtectionParties(snap, organisationId, "VENDOR"),
   };
 }
 

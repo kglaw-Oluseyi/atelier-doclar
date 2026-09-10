@@ -11,8 +11,18 @@ export type S05BEvaluationReadiness = {
   corpusHash: string;
   caseCount: number;
   persistedResultCount: number;
+  passedCount: number;
+  failedCount: number;
+  errorCount: number;
   zeroToleranceFailed: boolean;
   lastRunId?: string;
+  startedAt?: string;
+  completedAt?: string;
+  providerVersion?: string;
+  orchestratorVersion?: string;
+  evaluationContractVersion?: string;
+  applicationSha?: string;
+  fixtureIdentity?: string;
 };
 
 export function s05bEvaluationReadinessFromSnap(snap: PlatformSnapshot, organisationId: string): S05BEvaluationReadiness {
@@ -24,8 +34,18 @@ export function s05bEvaluationReadinessFromSnap(snap: PlatformSnapshot, organisa
     corpusHash: versions.corpusHash,
     caseCount: S05B_EVALUATION_CASES.length,
     persistedResultCount,
+    passedCount: latest?.passedCount ?? 0,
+    failedCount: latest?.failedCount ?? 0,
+    errorCount: latest?.errorCount ?? 0,
     zeroToleranceFailed: latest?.zeroToleranceFailed ?? false,
     lastRunId: latest?.id,
+    startedAt: latest?.createdAt,
+    completedAt: latest?.completedAt,
+    providerVersion: latest?.providerVersion,
+    orchestratorVersion: latest?.orchestratorVersion,
+    evaluationContractVersion: latest?.evaluationContractVersion,
+    applicationSha: latest?.applicationSha,
+    fixtureIdentity: latest ? `${latest.providerVersion}/${latest.orchestratorVersion}` : undefined,
   };
   if (!latest) {
     return { ...base, evaluationStatus: "UNRUN", evaluationBlocked: true, releaseReady: false, blockingReasons: ["no current evaluation run"] };

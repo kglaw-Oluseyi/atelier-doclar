@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { loginAs } from "./login";
+import { loginAs, selectOptionContaining } from "./login";
 
 test("S05B organisation clause template authoring", async ({ page }) => {
   test.setTimeout(180_000);
@@ -23,7 +23,7 @@ test("S05B organisation vendor assessment is operator-entered", async ({ page })
   await page.goto("/app/protection");
   await page.getByRole("link", { name: "Vendors" }).click();
   const assess = page.getByTestId("protection-assess-vendor");
-  await assess.getByLabel("Vendor id").fill("00000000-0000-4000-8000-000000000201");
+  await selectOptionContaining(assess.getByLabel("Vendor"), "Synthetic Venue Contractor");
   await assess.getByRole("button", { name: "Run vendor assessment" }).click();
   await expect(page.getByText(/Protection command applied|No change/)).toBeVisible({ timeout: 20_000 });
 });

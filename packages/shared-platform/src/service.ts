@@ -729,6 +729,8 @@ import { listEvaluationRunSummaries, projectEvaluationRun, s05aEvaluationReadine
 import { executeS05BEvaluationOnSnap } from "./risk-evaluation-runner.js";
 import { s05bEvaluationReadinessFromSnap } from "./risk-evaluation-projections.js";
 import { adapterStates, inactivePorts } from "./risk-ports.js";
+import { listGovernedProtectionParties, type RiskProtectionPartyKind } from "./risk-protection-parties.js";
+import { platformErrorFromUnknown } from "./risk-form-contract.js";
 import {
   approveSourceEditionOnSnap,
   completeEvidenceUploadOnSnap,
@@ -7076,6 +7078,11 @@ export class PlatformService {
     return eventProtectionProjection(snap, organisationId, eventId, protectionAudienceFromRole(role), actor.now ?? new Date().toISOString());
   }
 
+  listGovernedProtectionParties(actor: ActorContext, organisationId: string, kind?: RiskProtectionPartyKind) {
+    this.authorizeQuery(actor, kind === "VENDOR" ? "risk.vendor.view" : "risk.policy.view", { organisationId });
+    return listGovernedProtectionParties(this.store.snapshot(), organisationId, kind);
+  }
+
   getPublishedClientDossier(actor: ActorContext, organisationId: string, eventId: string) {
     this.authorizeQuery(actor, "risk.dossier.view", { organisationId, eventId });
     return publishedClientDossierProjection(this.store.snapshot(), organisationId, eventId);
@@ -8093,7 +8100,7 @@ export class PlatformService {
         this.store.replace(failed);
       }
       this.lastMutationEffect = notAppliedMutationEffect(false);
-      throw error;
+      throw platformErrorFromUnknown(error);
     }
   }
 

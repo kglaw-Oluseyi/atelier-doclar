@@ -1,511 +1,698 @@
 "use server";
 
-import { redirect } from "next/navigation";
-import { writeActionResult } from "./action-flash";
-import { buildActionResult, resultHref, sessionHashFromToken } from "./action-result";
-import { classifyActionError } from "./operational-state";
-import { getRuntime, withDurable } from "./runtime";
-import { readStaffSessionCookie } from "./staff-session-cookie";
-import { requireActor } from "./with-session";
+import {
+  AssessRiskVendorFormSchema,
+  AssignRiskRosterFormSchema,
+  CreateContinuityPlanFormSchema,
+  CreateRiskClauseTemplateFormSchema,
+  CreateRiskPolicyFormSchema,
+  CreateRiskRuleFormSchema,
+  CreateRiskSourceFormSchema,
+  RecordClientDossierMessageFormSchema,
+  RecordRiskFactFormSchema,
+  ReportIncidentFormSchema,
+  parseFormSchema,
+  stringListFromForm,
+  type ProtectionFormState,
+} from "@maison-doclar/shared-platform";
+import { runProtectionFormAction } from "./protection-form-action";
+import { envelope, scopePathFromForm } from "./protection-form-helpers";
+import { getRuntime } from "./runtime";
 
-function isNextRedirect(error: unknown): boolean {
-  return Boolean(
-    error &&
-      typeof error === "object" &&
-      "digest" in error &&
-      String((error as { digest: unknown }).digest).startsWith("NEXT_REDIRECT"),
-  );
+function field(formData: FormData, name: string): string {
+  return String(formData.get(name) ?? "");
 }
 
-async function runRiskAction(scopePath: string, actionType: string, execute: (actor: Awaited<ReturnType<typeof requireActor>>["actor"]) => { id?: string } | void): Promise<void> {
-  return await withDurable(async () => {
-    const { actor } = await requireActor();
-    const correlationId = actor.correlationId;
-    try {
-      const result = execute(actor);
-      const effect = getRuntime().service.consumeLastMutationEffect();
-      await writeActionResult(
-        buildActionResult({
-          sessionHash: sessionHashFromToken((await readStaffSessionCookie()) ?? ""),
-          actorPersonId: actor.personId,
-          scopePath,
-          actionType,
-          correlationId,
-          status: "SUCCESS",
-          code: "SUCCESS",
-          message: (effect?.application === "REPLAYED" ? "No change. This command was already applied." : "Protection command applied.").slice(0, 400),
-          application: effect?.application,
-          didDataChange: effect?.didDataChange,
-        }),
-      );
-      redirect(resultHref(scopePath, correlationId, result && "id" in (result ?? {}) ? { subjectId: String((result as { id?: string }).id ?? "") } : undefined));
-    } catch (error) {
-      if (isNextRedirect(error)) throw error;
-      const classified = classifyActionError(error);
-      await writeActionResult(
-        buildActionResult({
-          sessionHash: sessionHashFromToken((await readStaffSessionCookie()) ?? ""),
-          actorPersonId: actor.personId,
-          scopePath,
-          actionType,
-          correlationId,
-          status: "FAILURE",
-          code: classified.code,
-          message: classified.message,
-        }),
-      );
-      redirect(resultHref(scopePath, correlationId));
-    }
+export async function createRiskPolicyAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: scopePathFromForm(formData),
+    actionType: "risk.policy.create",
+    parse: (data) =>
+      parseFormSchema(CreateRiskPolicyFormSchema, {
+        organisationId: field(data, "organisationId"),
+        eventId: field(data, "eventId") || undefined,
+        assignmentId: field(data, "assignmentId"),
+        expectedVersion: field(data, "expectedVersion"),
+        idempotencyKey: field(data, "idempotencyKey"),
+        reason: field(data, "reason") || undefined,
+        policyType: field(data, "policyType"),
+        insurerPartyId: field(data, "insurerPartyId"),
+      }),
+    execute: (actor, data) =>
+      getRuntime().service.createRiskPolicy(actor, {
+        ...envelope(data),
+        policyType: field(data, "policyType"),
+        insurerPartyId: field(data, "insurerPartyId"),
+      }),
   });
 }
 
-function envelope(formData: FormData) {
-  return {
-    organisationId: String(formData.get("organisationId") ?? ""),
-    eventId: String(formData.get("eventId") ?? "") || undefined,
-    assignmentId: String(formData.get("assignmentId") ?? ""),
-    expectedVersion: Number(formData.get("expectedVersion") ?? 0),
-    idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
-    reason: String(formData.get("reason") ?? "").trim() || undefined,
-  };
+export async function evaluateRiskEventAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const eventId = field(formData, "eventId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/events/${eventId}/protection`,
+    actionType: "risk.event.evaluate",
+    execute: (actor, data) => getRuntime().service.evaluateRiskEvent(actor, envelope(data)),
+  });
 }
 
-export async function createRiskPolicyAction(formData: FormData): Promise<void> {
-  const eventId = String(formData.get("eventId") ?? "");
-  const scopePath = eventId ? `/app/events/${eventId}/protection` : "/app/protection";
-  return runRiskAction(scopePath, "risk.policy.create", (actor) =>
-    getRuntime().service.createRiskPolicy(actor, {
-      ...envelope(formData),
-      policyType: String(formData.get("policyType") ?? ""),
-      insurerPartyId: String(formData.get("insurerPartyId") ?? ""),
-      insurerLabel: String(formData.get("insurerLabel") ?? ""),
-    }),
-  );
+export async function recordRiskFactAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const eventId = field(formData, "eventId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/events/${eventId}/protection`,
+    actionType: "risk.fact.record",
+    parse: (data) =>
+      parseFormSchema(RecordRiskFactFormSchema, {
+        ...envelope(data),
+        eventId,
+        factKey: field(data, "factKey"),
+        value: field(data, "value"),
+        unknown: field(data, "unknown") === "true" ? "true" : undefined,
+      }),
+    execute: (actor, data) =>
+      getRuntime().service.recordRiskFact(actor, {
+        ...envelope(data),
+        eventId,
+        factKey: field(data, "factKey"),
+        value: field(data, "value"),
+        unknown: field(data, "unknown") === "true",
+      }),
+  });
 }
 
-export async function evaluateRiskEventAction(formData: FormData): Promise<void> {
-  const eventId = String(formData.get("eventId") ?? "");
-  return runRiskAction(`/app/events/${eventId}/protection`, "risk.event.evaluate", (actor) => getRuntime().service.evaluateRiskEvent(actor, envelope(formData)));
+export async function submitResidualAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const eventId = field(formData, "eventId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/events/${eventId}/protection`,
+    actionType: "risk.residual.submit",
+    execute: (actor, data) =>
+      getRuntime().service.submitRiskResidual(actor, {
+        ...envelope(data),
+        eventId,
+        gapId: field(data, "gapId"),
+        choice: field(data, "choice"),
+        reason: field(data, "reason"),
+      }),
+  });
 }
 
-export async function recordRiskFactAction(formData: FormData): Promise<void> {
-  const eventId = String(formData.get("eventId") ?? "");
-  return runRiskAction(`/app/events/${eventId}/protection`, "risk.fact.record", (actor) =>
-    getRuntime().service.recordRiskFact(actor, {
-      ...envelope(formData),
-      eventId,
-      factKey: String(formData.get("factKey") ?? ""),
-      value: String(formData.get("value") ?? ""),
-      unknown: String(formData.get("unknown") ?? "") === "true",
-    }),
-  );
+export async function decideResidualAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const eventId = field(formData, "eventId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/events/${eventId}/protection`,
+    actionType: "risk.residual.decide",
+    execute: (actor, data) =>
+      getRuntime().service.decideRiskResidual(actor, {
+        ...envelope(data),
+        eventId,
+        decisionId: field(data, "decisionId"),
+        decision: field(data, "decision"),
+      }),
+  });
 }
 
-export async function submitResidualAction(formData: FormData): Promise<void> {
-  const eventId = String(formData.get("eventId") ?? "");
-  return runRiskAction(`/app/events/${eventId}/protection`, "risk.residual.submit", (actor) =>
-    getRuntime().service.submitRiskResidual(actor, {
-      ...envelope(formData),
-      eventId,
-      gapId: String(formData.get("gapId") ?? ""),
-      choice: String(formData.get("choice") ?? ""),
-      reason: String(formData.get("reason") ?? ""),
-    }),
-  );
+export async function authoriseFallbackAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const eventId = field(formData, "eventId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/events/${eventId}/protection`,
+    actionType: "risk.fallback.authorise",
+    execute: (actor, data) =>
+      getRuntime().service.authoriseRiskFallback(actor, {
+        ...envelope(data),
+        eventId,
+        activationId: field(data, "activationId"),
+        to: "AUTHORISED",
+      }),
+  });
 }
 
-export async function decideResidualAction(formData: FormData): Promise<void> {
-  const eventId = String(formData.get("eventId") ?? "");
-  return runRiskAction(`/app/events/${eventId}/protection`, "risk.residual.decide", (actor) =>
-    getRuntime().service.decideRiskResidual(actor, {
-      ...envelope(formData),
-      eventId,
-      decisionId: String(formData.get("decisionId") ?? ""),
-      decision: String(formData.get("decision") ?? "APPROVED"),
-    }),
-  );
+export async function proposeFallbackAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const eventId = field(formData, "eventId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/events/${eventId}/protection`,
+    actionType: "risk.fallback.propose",
+    execute: (actor, data) =>
+      getRuntime().service.proposeRiskFallback(actor, {
+        ...envelope(data),
+        eventId,
+        planId: field(data, "planId"),
+        triggerEvidence: field(data, "triggerEvidence") || "Manual report",
+        impact: field(data, "impact") || "Service continuity at risk",
+      }),
+  });
 }
 
-export async function authoriseFallbackAction(formData: FormData): Promise<void> {
-  const eventId = String(formData.get("eventId") ?? "");
-  return runRiskAction(`/app/events/${eventId}/protection`, "risk.fallback.authorise", (actor) =>
-    getRuntime().service.authoriseRiskFallback(actor, {
-      ...envelope(formData),
-      eventId,
-      activationId: String(formData.get("activationId") ?? ""),
-      to: "AUTHORISED",
-    }),
-  );
+export async function reportIncidentAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const eventId = field(formData, "eventId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/events/${eventId}/protection`,
+    actionType: "risk.incident.report",
+    parse: (data) =>
+      parseFormSchema(ReportIncidentFormSchema, {
+        ...envelope(data),
+        eventId,
+        title: field(data, "title"),
+        severity: field(data, "severity"),
+        lifeSafety: field(data, "lifeSafety") === "true" ? "true" : undefined,
+      }),
+    execute: (actor, data) =>
+      getRuntime().service.reportRiskIncident(actor, {
+        ...envelope(data),
+        eventId,
+        title: field(data, "title"),
+        severity: field(data, "severity"),
+        lifeSafety: field(data, "lifeSafety") === "true",
+      }),
+  });
 }
 
-export async function proposeFallbackAction(formData: FormData): Promise<void> {
-  const eventId = String(formData.get("eventId") ?? "");
-  return runRiskAction(`/app/events/${eventId}/protection`, "risk.fallback.propose", (actor) =>
-    getRuntime().service.proposeRiskFallback(actor, {
-      ...envelope(formData),
-      eventId,
-      planId: String(formData.get("planId") ?? ""),
-      triggerEvidence: String(formData.get("triggerEvidence") ?? "Manual report"),
-      impact: String(formData.get("impact") ?? "Service continuity at risk"),
-    }),
-  );
+export async function assembleDossierAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const eventId = field(formData, "eventId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/events/${eventId}/protection`,
+    actionType: "risk.dossier.assemble",
+    execute: (actor, data) => getRuntime().service.assembleRiskDossier(actor, { ...envelope(data), eventId }),
+  });
 }
 
-export async function reportIncidentAction(formData: FormData): Promise<void> {
-  const eventId = String(formData.get("eventId") ?? "");
-  return runRiskAction(`/app/events/${eventId}/protection`, "risk.incident.report", (actor) =>
-    getRuntime().service.reportRiskIncident(actor, {
-      ...envelope(formData),
-      eventId,
-      title: String(formData.get("title") ?? ""),
-      severity: String(formData.get("severity") ?? ""),
-      lifeSafety: String(formData.get("lifeSafety") ?? "") === "true",
-    }),
-  );
+export async function publishDossierAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const eventId = field(formData, "eventId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/events/${eventId}/protection`,
+    actionType: "risk.dossier.publish",
+    execute: (actor, data) =>
+      getRuntime().service.transitionRiskDossier(actor, {
+        ...envelope(data),
+        eventId,
+        dossierId: field(data, "dossierId"),
+        to: "PUBLISHED",
+        approvedHash: field(data, "approvedHash"),
+      }),
+  });
 }
 
-export async function assembleDossierAction(formData: FormData): Promise<void> {
-  const eventId = String(formData.get("eventId") ?? "");
-  return runRiskAction(`/app/events/${eventId}/protection`, "risk.dossier.assemble", (actor) => getRuntime().service.assembleRiskDossier(actor, { ...envelope(formData), eventId }));
+export async function projectRiskBudgetAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const eventId = field(formData, "eventId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/events/${eventId}/protection`,
+    actionType: "risk.budget.project",
+    execute: (actor, data) => {
+      const kind = field(data, "driverKind") || "UNQUANTIFIED_EXPOSURE";
+      const evidenceIds = stringListFromForm(data.getAll("evidenceIds").map(String));
+      const drivers =
+        kind === "INSURANCE_PREMIUM_ASSUMPTION"
+          ? [{ kind, money: { currency: field(data, "currency") || "NGN", minor: field(data, "minor") }, evidenceIds, assumptionLabel: field(data, "assumptionLabel") || undefined }]
+          : kind === "CONTINUITY_RESERVE"
+            ? [{ kind, basis: "BUDGET_PERCENTAGE" as const, value: Number(field(data, "reservePercent") || 5), evidenceIds }]
+            : [{ kind: "UNQUANTIFIED_EXPOSURE" as const, reason: field(data, "reason") || "No sourced replacement quote is on file.", evidenceIds }];
+      return getRuntime().service.projectRiskBudget(actor, {
+        ...envelope(data),
+        eventId,
+        drivers,
+        governingScenarioHash: field(data, "governingScenarioHash") || undefined,
+        expectedScenarioVersion: field(data, "expectedScenarioVersion") ? Number(field(data, "expectedScenarioVersion")) : undefined,
+      });
+    },
+  });
 }
 
-export async function publishDossierAction(formData: FormData): Promise<void> {
-  const eventId = String(formData.get("eventId") ?? "");
-  return runRiskAction(`/app/events/${eventId}/protection`, "risk.dossier.publish", (actor) =>
-    getRuntime().service.transitionRiskDossier(actor, {
-      ...envelope(formData),
-      eventId,
-      dossierId: String(formData.get("dossierId") ?? ""),
-      to: "PUBLISHED",
-      approvedHash: String(formData.get("approvedHash") ?? ""),
-    }),
-  );
+export async function runS05BEvaluationAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: "/app/protection",
+    actionType: "risk.evaluation.run",
+    execute: (actor, data) =>
+      getRuntime().service.executeS05BEvaluation(actor, {
+        organisationId: field(data, "organisationId"),
+        idempotencyKey: field(data, "idempotencyKey") || crypto.randomUUID(),
+        reason: "Run S05B fixture assurance",
+      }),
+  });
 }
 
-export async function projectRiskBudgetAction(formData: FormData): Promise<void> {
-  const eventId = String(formData.get("eventId") ?? "");
-  const kind = String(formData.get("driverKind") ?? "UNQUANTIFIED_EXPOSURE");
-  const evidenceIds = String(formData.get("evidenceIds") ?? "")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-  const drivers =
-    kind === "INSURANCE_PREMIUM_ASSUMPTION"
-      ? [{ kind, money: { currency: String(formData.get("currency") ?? "NGN"), minor: String(formData.get("minor") ?? "") }, evidenceIds, assumptionLabel: String(formData.get("assumptionLabel") ?? "") || undefined }]
-      : kind === "CONTINUITY_RESERVE"
-        ? [{ kind, basis: "BUDGET_PERCENTAGE" as const, value: Number(formData.get("reservePercent") ?? 5), evidenceIds }]
-        : [{ kind: "UNQUANTIFIED_EXPOSURE" as const, reason: String(formData.get("reason") ?? "No sourced replacement quote is on file."), evidenceIds }];
-  return runRiskAction(`/app/events/${eventId}/protection`, "risk.budget.project", (actor) =>
-    getRuntime().service.projectRiskBudget(actor, {
-      ...envelope(formData),
-      eventId,
-      drivers,
-      governingScenarioHash: String(formData.get("governingScenarioHash") ?? "") || undefined,
-      expectedScenarioVersion: String(formData.get("expectedScenarioVersion") ?? "") ? Number(formData.get("expectedScenarioVersion")) : undefined,
-    }),
-  );
+export async function createContinuityPlanAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const eventId = field(formData, "eventId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/events/${eventId}/protection`,
+    actionType: "risk.continuity.create",
+    parse: (data) =>
+      parseFormSchema(CreateContinuityPlanFormSchema, {
+        ...envelope(data),
+        eventId,
+        title: field(data, "title"),
+        recoveryObjectiveMinutes: field(data, "recoveryObjectiveMinutes"),
+        maximumTolerableInterruptionMinutes: field(data, "maximumTolerableInterruptionMinutes"),
+        decisionRole: field(data, "decisionRole") || "EVENT_DIRECTOR",
+      }),
+    execute: (actor, data) =>
+      getRuntime().service.createRiskContinuityPlan(actor, {
+        ...envelope(data),
+        eventId,
+        title: field(data, "title"),
+        recoveryObjectiveMinutes: Number(field(data, "recoveryObjectiveMinutes") || 0),
+        maximumTolerableInterruptionMinutes: Number(field(data, "maximumTolerableInterruptionMinutes") || 0),
+        decisionRole: field(data, "decisionRole") || "EVENT_DIRECTOR",
+      }),
+  });
 }
 
-export async function runS05BEvaluationAction(formData: FormData): Promise<void> {
-  return runRiskAction("/app/protection", "risk.evaluation.run", (actor) =>
-    getRuntime().service.executeS05BEvaluation(actor, {
-      organisationId: String(formData.get("organisationId") ?? ""),
-      idempotencyKey: String(formData.get("idempotencyKey") ?? crypto.randomUUID()),
-      reason: "Run S05B fixture assurance",
-    }),
-  );
+export async function generateCheckpointsAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const eventId = field(formData, "eventId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/events/${eventId}/protection`,
+    actionType: "risk.checkpoint.generate",
+    execute: (actor, data) => getRuntime().service.generateRiskCheckpoints(actor, { ...envelope(data), eventId }),
+  });
 }
 
-export async function createContinuityPlanAction(formData: FormData): Promise<void> {
-  const eventId = String(formData.get("eventId") ?? "");
-  return runRiskAction(`/app/events/${eventId}/protection`, "risk.continuity.create", (actor) =>
-    getRuntime().service.createRiskContinuityPlan(actor, {
-      ...envelope(formData),
-      eventId,
-      title: String(formData.get("title") ?? ""),
-      recoveryObjectiveMinutes: Number(formData.get("recoveryObjectiveMinutes") ?? 0),
-      maximumTolerableInterruptionMinutes: Number(formData.get("maximumTolerableInterruptionMinutes") ?? 0),
-      decisionRole: String(formData.get("decisionRole") ?? "EVENT_DIRECTOR"),
-    }),
-  );
+export async function createRiskPolicyEditionAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: scopePathFromForm(formData),
+    actionType: "risk.policy.edition.create",
+    execute: (actor, data) => {
+      const insured = stringListFromForm(field(data, "insuredPartyLabels"));
+      return getRuntime().service.createRiskPolicyEdition(actor, {
+        ...envelope(data),
+        policyId: field(data, "policyId"),
+        policyNumber: field(data, "policyNumber"),
+        currency: field(data, "currency") || "NGN",
+        period: { startOn: field(data, "startOn"), endOn: field(data, "endOn") },
+        limits: [
+          {
+            coverageKey: field(data, "coverageKey") || "PUBLIC_LIABILITY",
+            limit: { currency: field(data, "currency") || "NGN", minor: field(data, "limitMinor") },
+            basis: field(data, "limitBasis") || "any one occurrence",
+          },
+        ],
+        deductibles: field(data, "deductibleMinor")
+          ? [{ coverageKey: field(data, "coverageKey") || "PUBLIC_LIABILITY", amount: { currency: field(data, "currency") || "NGN", minor: field(data, "deductibleMinor") } }]
+          : [],
+        insuredPartyLabels: insured,
+        documentEditionId: field(data, "documentEditionId"),
+        territorialScope: field(data, "territorialScope").trim() || undefined,
+        activityScope: field(data, "activityScope").trim() || undefined,
+        endorsementNotes: field(data, "endorsementNotes").trim() || undefined,
+        exclusionNotes: field(data, "exclusionNotes").trim() || undefined,
+        assetInventoryRefs: [],
+      });
+    },
+  });
 }
 
-export async function generateCheckpointsAction(formData: FormData): Promise<void> {
-  const eventId = String(formData.get("eventId") ?? "");
-  return runRiskAction(`/app/events/${eventId}/protection`, "risk.checkpoint.generate", (actor) => getRuntime().service.generateRiskCheckpoints(actor, { ...envelope(formData), eventId }));
+export async function createRiskEvidenceAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: "/app/protection",
+    actionType: "risk.evidence.create",
+    execute: (actor, data) =>
+      getRuntime().service.createRiskEvidence(actor, {
+        ...envelope(data),
+        title: field(data, "title"),
+        classification: field(data, "classification") || "POLICY_IDENTIFIER",
+        originalFilename: field(data, "originalFilename"),
+      }),
+  });
 }
 
-export async function createRiskPolicyEditionAction(formData: FormData): Promise<void> {
-  const scopePath = String(formData.get("eventId") ?? "") ? `/app/events/${String(formData.get("eventId"))}/protection` : "/app/protection";
-  const insured = String(formData.get("insuredPartyLabels") ?? "")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-  const assets = String(formData.get("assetInventoryRefs") ?? "")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-  return runRiskAction(scopePath, "risk.policy.edition.create", (actor) =>
-    getRuntime().service.createRiskPolicyEdition(actor, {
-      ...envelope(formData),
-      policyId: String(formData.get("policyId") ?? ""),
-      policyNumber: String(formData.get("policyNumber") ?? ""),
-      currency: String(formData.get("currency") ?? "NGN"),
-      period: { startOn: String(formData.get("startOn") ?? ""), endOn: String(formData.get("endOn") ?? "") },
-      limits: [
-        {
-          coverageKey: String(formData.get("coverageKey") ?? "PUBLIC_LIABILITY"),
-          limit: { currency: String(formData.get("currency") ?? "NGN"), minor: String(formData.get("limitMinor") ?? "") },
-          basis: String(formData.get("limitBasis") ?? "any one occurrence"),
-        },
-      ],
-      deductibles: String(formData.get("deductibleMinor") ?? "")
-        ? [{ coverageKey: String(formData.get("coverageKey") ?? "PUBLIC_LIABILITY"), amount: { currency: String(formData.get("currency") ?? "NGN"), minor: String(formData.get("deductibleMinor") ?? "") } }]
-        : [],
-      insuredPartyLabels: insured,
-      documentEditionId: String(formData.get("documentEditionId") ?? ""),
-      territorialScope: String(formData.get("territorialScope") ?? "").trim() || undefined,
-      activityScope: String(formData.get("activityScope") ?? "").trim() || undefined,
-      endorsementNotes: String(formData.get("endorsementNotes") ?? "").trim() || undefined,
-      exclusionNotes: String(formData.get("exclusionNotes") ?? "").trim() || undefined,
-      assetInventoryRefs: assets,
-    }),
-  );
+export async function completeRiskEvidenceUploadAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: "/app/protection",
+    actionType: "risk.evidence.upload",
+    execute: (actor, data) =>
+      getRuntime().service.completeRiskEvidenceUpload(actor, {
+        ...envelope(data),
+        documentId: field(data, "documentId"),
+        objectKey: field(data, "objectKey"),
+        byteChecksum: field(data, "byteChecksum"),
+        byteLength: Number(field(data, "byteLength") || 0),
+        contentType: field(data, "contentType") || "application/pdf",
+        scanAdapter: "INACTIVE",
+      }),
+  });
 }
 
-export async function createRiskEvidenceAction(formData: FormData): Promise<void> {
-  const scopePath = "/app/protection";
-  return runRiskAction(scopePath, "risk.evidence.create", (actor) =>
-    getRuntime().service.createRiskEvidence(actor, {
-      ...envelope(formData),
-      title: String(formData.get("title") ?? ""),
-      classification: String(formData.get("classification") ?? "POLICY_IDENTIFIER"),
-      originalFilename: String(formData.get("originalFilename") ?? ""),
-    }),
-  );
+export async function verifyRiskPolicyAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: "/app/protection",
+    actionType: "risk.policy.verify",
+    execute: (actor, data) =>
+      getRuntime().service.verifyRiskPolicy(actor, {
+        ...envelope(data),
+        editionId: field(data, "editionId"),
+        decision: field(data, "decision") || "VERIFIED",
+      }),
+  });
 }
 
-export async function completeRiskEvidenceUploadAction(formData: FormData): Promise<void> {
-  return runRiskAction("/app/protection", "risk.evidence.upload", (actor) =>
-    getRuntime().service.completeRiskEvidenceUpload(actor, {
-      ...envelope(formData),
-      documentId: String(formData.get("documentId") ?? ""),
-      objectKey: String(formData.get("objectKey") ?? ""),
-      byteChecksum: String(formData.get("byteChecksum") ?? ""),
-      byteLength: Number(formData.get("byteLength") ?? 0),
-      contentType: String(formData.get("contentType") ?? "application/pdf"),
-      scanAdapter: "INACTIVE",
-    }),
-  );
+export async function createRiskSourceAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: "/app/protection",
+    actionType: "risk.source.create",
+    parse: (data) =>
+      parseFormSchema(CreateRiskSourceFormSchema, {
+        ...envelope(data),
+        title: field(data, "title"),
+        publisher: field(data, "publisher"),
+        locator: field(data, "locator"),
+        authority: field(data, "authority"),
+        jurisdiction: field(data, "jurisdiction"),
+        summary: field(data, "summary"),
+      }),
+    execute: (actor, data) =>
+      getRuntime().service.createRiskSource(actor, {
+        ...envelope(data),
+        title: field(data, "title"),
+        publisher: field(data, "publisher"),
+        locator: field(data, "locator"),
+        authority: field(data, "authority") || "REGULATOR",
+        jurisdiction: field(data, "jurisdiction"),
+        summary: field(data, "summary"),
+        retrievedAt: new Date().toISOString(),
+        lastVerifiedAt: new Date().toISOString(),
+        nextReviewAt: new Date().toISOString(),
+      }),
+  });
 }
 
-export async function verifyRiskPolicyAction(formData: FormData): Promise<void> {
-  return runRiskAction("/app/protection", "risk.policy.verify", (actor) =>
-    getRuntime().service.verifyRiskPolicy(actor, {
-      ...envelope(formData),
-      editionId: String(formData.get("editionId") ?? ""),
-      decision: String(formData.get("decision") ?? "VERIFIED"),
-    }),
-  );
+export async function approveRiskSourceAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: "/app/protection",
+    actionType: "risk.source.approve",
+    execute: (actor, data) =>
+      getRuntime().service.approveRiskSource(actor, {
+        ...envelope(data),
+        sourceId: field(data, "sourceId"),
+      }),
+  });
 }
 
-export async function createRiskSourceAction(formData: FormData): Promise<void> {
-  return runRiskAction("/app/protection", "risk.source.create", (actor) =>
-    getRuntime().service.createRiskSource(actor, {
-      ...envelope(formData),
-      title: String(formData.get("title") ?? ""),
-      publisher: String(formData.get("publisher") ?? ""),
-      locator: String(formData.get("locator") ?? ""),
-      authority: String(formData.get("authority") ?? "REGULATOR"),
-      jurisdiction: String(formData.get("jurisdiction") ?? ""),
-      summary: String(formData.get("summary") ?? ""),
-      retrievedAt: String(formData.get("retrievedAt") ?? new Date().toISOString()),
-      lastVerifiedAt: String(formData.get("lastVerifiedAt") ?? new Date().toISOString()),
-      nextReviewAt: String(formData.get("nextReviewAt") ?? new Date().toISOString()),
-    }),
-  );
+export async function createRiskRuleAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: "/app/protection",
+    actionType: "risk.rule.create",
+    parse: (data) =>
+      parseFormSchema(CreateRiskRuleFormSchema, {
+        ...envelope(data),
+        ruleKey: field(data, "ruleKey"),
+        jurisdiction: field(data, "jurisdiction"),
+        proposition: field(data, "proposition"),
+        sourceEditionIds: data.getAll("sourceEditionIds").map(String).filter(Boolean),
+        requirementKey: field(data, "requirementKey"),
+        policyType: field(data, "policyType") || undefined,
+        mandatory: field(data, "mandatory"),
+      }),
+    execute: (actor, data) =>
+      getRuntime().service.createRiskRule(actor, {
+        ...envelope(data),
+        ruleKey: field(data, "ruleKey"),
+        jurisdiction: field(data, "jurisdiction"),
+        proposition: field(data, "proposition"),
+        sourceEditionIds: data.getAll("sourceEditionIds").map(String).filter(Boolean),
+        requirementKey: field(data, "requirementKey"),
+        policyType: field(data, "policyType") || undefined,
+        mandatory: field(data, "mandatory") === "true",
+      }),
+  });
 }
 
-export async function approveRiskSourceAction(formData: FormData): Promise<void> {
-  return runRiskAction("/app/protection", "risk.source.approve", (actor) =>
-    getRuntime().service.approveRiskSource(actor, {
-      ...envelope(formData),
-      sourceId: String(formData.get("sourceId") ?? ""),
-    }),
-  );
+export async function reviewRiskRuleAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: "/app/protection",
+    actionType: "risk.rule.review",
+    execute: (actor, data) =>
+      getRuntime().service.reviewRiskRule(actor, {
+        ...envelope(data),
+        ruleId: field(data, "ruleId"),
+        status: field(data, "status") || "APPROVED",
+      }),
+  });
 }
 
-export async function createRiskRuleAction(formData: FormData): Promise<void> {
-  return runRiskAction("/app/protection", "risk.rule.create", (actor) =>
-    getRuntime().service.createRiskRule(actor, {
-      ...envelope(formData),
-      ruleKey: String(formData.get("ruleKey") ?? ""),
-      jurisdiction: String(formData.get("jurisdiction") ?? ""),
-      proposition: String(formData.get("proposition") ?? ""),
-      sourceEditionIds: String(formData.get("sourceEditionIds") ?? "")
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean),
-      requirementKey: String(formData.get("requirementKey") ?? ""),
-      policyType: String(formData.get("policyType") ?? "") || undefined,
-      mandatory: String(formData.get("mandatory") ?? "") === "true",
-    }),
-  );
+export async function createRiskClauseTemplateAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: "/app/protection",
+    actionType: "risk.clause.template.create",
+    parse: (data) =>
+      parseFormSchema(CreateRiskClauseTemplateFormSchema, {
+        ...envelope(data),
+        family: field(data, "family"),
+        title: field(data, "title"),
+        jurisdiction: field(data, "jurisdiction"),
+        body: field(data, "body"),
+        variableKeys: field(data, "variableKeys") || undefined,
+      }),
+    execute: (actor, data) =>
+      getRuntime().service.createRiskClauseTemplate(actor, {
+        ...envelope(data),
+        family: field(data, "family") || "RETENTION",
+        title: field(data, "title"),
+        jurisdiction: field(data, "jurisdiction"),
+        body: field(data, "body"),
+        variables: field(data, "variableKeys")
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean)
+          .map((key) => ({ key, label: key, kind: "TEXT" as const })),
+      }),
+  });
 }
 
-export async function reviewRiskRuleAction(formData: FormData): Promise<void> {
-  return runRiskAction("/app/protection", "risk.rule.review", (actor) =>
-    getRuntime().service.reviewRiskRule(actor, {
-      ...envelope(formData),
-      ruleId: String(formData.get("ruleId") ?? ""),
-      status: String(formData.get("status") ?? "APPROVED"),
-    }),
-  );
+export async function applyRiskClauseAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: scopePathFromForm(formData),
+    actionType: "risk.clause.apply",
+    execute: (actor, data) =>
+      getRuntime().service.applyRiskClause(actor, {
+        ...envelope(data),
+        templateId: field(data, "templateId") || undefined,
+        family: field(data, "family") || "RETENTION",
+        jurisdiction: field(data, "jurisdiction"),
+        language: field(data, "language") || "en",
+        body: field(data, "body") || undefined,
+        variables: field(data, "variableValues")
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean)
+          .map((pair) => {
+            const [key, value] = pair.split("=");
+            return { key: (key ?? "").trim(), value: (value ?? "").trim() };
+          }),
+      }),
+  });
 }
 
-export async function createRiskClauseTemplateAction(formData: FormData): Promise<void> {
-  return runRiskAction("/app/protection", "risk.clause.template.create", (actor) =>
-    getRuntime().service.createRiskClauseTemplate(actor, {
-      ...envelope(formData),
-      family: String(formData.get("family") ?? "RETENTION"),
-      title: String(formData.get("title") ?? ""),
-      jurisdiction: String(formData.get("jurisdiction") ?? ""),
-      body: String(formData.get("body") ?? ""),
-      variables: String(formData.get("variableKeys") ?? "")
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean)
-        .map((key) => ({ key, label: key, kind: "TEXT" as const })),
-    }),
-  );
+export async function reviewRiskClauseAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: "/app/protection",
+    actionType: "risk.clause.review",
+    execute: (actor, data) =>
+      getRuntime().service.reviewRiskClause(actor, {
+        ...envelope(data),
+        editionId: field(data, "editionId"),
+        gate: field(data, "gate") || "LEGAL",
+        decision: field(data, "decision") || "APPROVED",
+      }),
+  });
 }
 
-export async function applyRiskClauseAction(formData: FormData): Promise<void> {
-  const eventId = String(formData.get("eventId") ?? "");
-  const scopePath = eventId ? `/app/events/${eventId}/protection` : "/app/protection";
-  return runRiskAction(scopePath, "risk.clause.apply", (actor) =>
-    getRuntime().service.applyRiskClause(actor, {
-      ...envelope(formData),
-      templateId: String(formData.get("templateId") ?? "") || undefined,
-      family: String(formData.get("family") ?? "RETENTION"),
-      jurisdiction: String(formData.get("jurisdiction") ?? ""),
-      language: String(formData.get("language") ?? "en"),
-      body: String(formData.get("body") ?? "") || undefined,
-      variables: String(formData.get("variableValues") ?? "")
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean)
-        .map((pair) => {
-          const [key, value] = pair.split("=");
-          return { key: (key ?? "").trim(), value: (value ?? "").trim() };
-        }),
-    }),
-  );
+export async function assessRiskVendorAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: scopePathFromForm(formData),
+    actionType: "risk.vendor.assess",
+    parse: (data) =>
+      parseFormSchema(AssessRiskVendorFormSchema, {
+        ...envelope(data),
+        vendorId: field(data, "vendorId"),
+      }),
+    execute: (actor, data) =>
+      getRuntime().service.assessRiskVendor(actor, {
+        ...envelope(data),
+        vendorId: field(data, "vendorId"),
+      }),
+  });
 }
 
-export async function reviewRiskClauseAction(formData: FormData): Promise<void> {
-  return runRiskAction("/app/protection", "risk.clause.review", (actor) =>
-    getRuntime().service.reviewRiskClause(actor, {
-      ...envelope(formData),
-      editionId: String(formData.get("editionId") ?? ""),
-      gate: String(formData.get("gate") ?? "LEGAL"),
-      decision: String(formData.get("decision") ?? "APPROVED"),
-    }),
-  );
+export async function decideRiskVendorAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: scopePathFromForm(formData),
+    actionType: "risk.vendor.decide",
+    execute: (actor, data) =>
+      getRuntime().service.decideRiskVendor(actor, {
+        ...envelope(data),
+        assessmentId: field(data, "assessmentId"),
+        decision: field(data, "decision") || "RESTRICTED",
+        reason: field(data, "reason"),
+      }),
+  });
 }
 
-export async function assessRiskVendorAction(formData: FormData): Promise<void> {
-  const eventId = String(formData.get("eventId") ?? "");
-  const scopePath = eventId ? `/app/events/${eventId}/protection` : "/app/protection";
-  return runRiskAction(scopePath, "risk.vendor.assess", (actor) =>
-    getRuntime().service.assessRiskVendor(actor, {
-      ...envelope(formData),
-      vendorId: String(formData.get("vendorId") ?? ""),
-    }),
-  );
+export async function assignRiskRosterAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const eventId = field(formData, "eventId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/events/${eventId}/protection`,
+    actionType: "risk.roster.assign",
+    parse: (data) =>
+      parseFormSchema(AssignRiskRosterFormSchema, {
+        ...envelope(data),
+        eventId,
+        vendorId: field(data, "vendorId"),
+        vendorLabel: field(data, "vendorLabel") || undefined,
+        role: field(data, "role"),
+        criticalFunctionKey: field(data, "criticalFunctionKey"),
+        commercialStatus: field(data, "commercialStatus"),
+      }),
+    execute: (actor, data) =>
+      getRuntime().service.assignRiskRoster(actor, {
+        ...envelope(data),
+        eventId,
+        vendorId: field(data, "vendorId"),
+        vendorLabel: field(data, "vendorLabel") || undefined,
+        role: field(data, "role") || "STANDBY",
+        criticalFunctionKey: field(data, "criticalFunctionKey"),
+        commercialStatus: field(data, "commercialStatus") || "UNCONFIRMED",
+      }),
+  });
 }
 
-export async function decideRiskVendorAction(formData: FormData): Promise<void> {
-  const eventId = String(formData.get("eventId") ?? "");
-  const scopePath = eventId ? `/app/events/${eventId}/protection` : "/app/protection";
-  return runRiskAction(scopePath, "risk.vendor.decide", (actor) =>
-    getRuntime().service.decideRiskVendor(actor, {
-      ...envelope(formData),
-      assessmentId: String(formData.get("assessmentId") ?? ""),
-      decision: String(formData.get("decision") ?? "RESTRICTED"),
-      reason: String(formData.get("reason") ?? ""),
-    }),
-  );
+export async function submitDossierAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const eventId = field(formData, "eventId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/events/${eventId}/protection`,
+    actionType: "risk.dossier.submit",
+    execute: (actor, data) =>
+      getRuntime().service.transitionRiskDossier(actor, {
+        ...envelope(data),
+        eventId,
+        dossierId: field(data, "dossierId"),
+        to: "SUBMITTED",
+      }),
+  });
 }
 
-export async function assignRiskRosterAction(formData: FormData): Promise<void> {
-  const eventId = String(formData.get("eventId") ?? "");
-  return runRiskAction(`/app/events/${eventId}/protection`, "risk.roster.assign", (actor) =>
-    getRuntime().service.assignRiskRoster(actor, {
-      ...envelope(formData),
-      eventId,
-      vendorId: String(formData.get("vendorId") ?? ""),
-      vendorLabel: String(formData.get("vendorLabel") ?? ""),
-      role: String(formData.get("role") ?? "STANDBY"),
-      criticalFunctionKey: String(formData.get("criticalFunctionKey") ?? ""),
-      commercialStatus: String(formData.get("commercialStatus") ?? "UNCONFIRMED"),
-    }),
-  );
+export async function approveDossierAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const eventId = field(formData, "eventId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/events/${eventId}/protection`,
+    actionType: "risk.dossier.approve",
+    execute: (actor, data) =>
+      getRuntime().service.transitionRiskDossier(actor, {
+        ...envelope(data),
+        eventId,
+        dossierId: field(data, "dossierId"),
+        to: "APPROVED",
+      }),
+  });
 }
 
-export async function submitDossierAction(formData: FormData): Promise<void> {
-  const eventId = String(formData.get("eventId") ?? "");
-  return runRiskAction(`/app/events/${eventId}/protection`, "risk.dossier.submit", (actor) =>
-    getRuntime().service.transitionRiskDossier(actor, {
-      ...envelope(formData),
-      eventId,
-      dossierId: String(formData.get("dossierId") ?? ""),
-      to: "SUBMITTED",
-    }),
-  );
+export async function exportDossierAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const eventId = field(formData, "eventId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/events/${eventId}/protection`,
+    actionType: "risk.dossier.export",
+    execute: (actor, data) =>
+      getRuntime().service.exportRiskDossier(actor, {
+        ...envelope(data),
+        eventId,
+        dossierId: field(data, "dossierId"),
+      }),
+  });
 }
 
-export async function approveDossierAction(formData: FormData): Promise<void> {
-  const eventId = String(formData.get("eventId") ?? "");
-  return runRiskAction(`/app/events/${eventId}/protection`, "risk.dossier.approve", (actor) =>
-    getRuntime().service.transitionRiskDossier(actor, {
-      ...envelope(formData),
-      eventId,
-      dossierId: String(formData.get("dossierId") ?? ""),
-      to: "APPROVED",
-    }),
-  );
+export async function recordClientDossierMessageAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const eventId = field(formData, "eventId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/events/${eventId}/protection/client`,
+    actionType: "risk.dossier.client-message",
+    parse: (data) =>
+      parseFormSchema(RecordClientDossierMessageFormSchema, {
+        ...envelope(data),
+        eventId,
+        kind: field(data, "kind") || "QUESTION",
+        body: field(data, "body"),
+      }),
+    execute: (actor, data) =>
+      getRuntime().service.recordClientDossierMessage(actor, {
+        ...envelope(data),
+        eventId,
+        kind: field(data, "kind") || "QUESTION",
+        body: field(data, "body"),
+      }),
+  });
 }
 
-export async function exportDossierAction(formData: FormData): Promise<void> {
-  const eventId = String(formData.get("eventId") ?? "");
-  return runRiskAction(`/app/events/${eventId}/protection`, "risk.dossier.export", (actor) =>
-    getRuntime().service.exportRiskDossier(actor, {
-      ...envelope(formData),
-      eventId,
-      dossierId: String(formData.get("dossierId") ?? ""),
-    }),
-  );
-}
-
-export async function recordClientDossierMessageAction(formData: FormData): Promise<void> {
-  const eventId = String(formData.get("eventId") ?? "");
-  return runRiskAction(`/app/events/${eventId}/protection/client`, "risk.dossier.client-message", (actor) =>
-    getRuntime().service.recordClientDossierMessage(actor, {
-      ...envelope(formData),
-      eventId,
-      kind: String(formData.get("kind") ?? "QUESTION"),
-      body: String(formData.get("body") ?? ""),
-    }),
-  );
-}
-
-export async function decideResidualQueueAction(formData: FormData): Promise<void> {
-  return runRiskAction("/app/protection", "risk.residual.decide", (actor) =>
-    getRuntime().service.decideRiskResidual(actor, {
-      ...envelope(formData),
-      decisionId: String(formData.get("decisionId") ?? ""),
-      decision: String(formData.get("decision") ?? "APPROVED"),
-    }),
-  );
+export async function decideResidualQueueAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: "/app/protection",
+    actionType: "risk.residual.decide",
+    execute: (actor, data) =>
+      getRuntime().service.decideRiskResidual(actor, {
+        ...envelope(data),
+        decisionId: field(data, "decisionId"),
+        decision: field(data, "decision") || "APPROVED",
+      }),
+  });
 }

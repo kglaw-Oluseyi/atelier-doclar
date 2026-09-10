@@ -3,6 +3,7 @@ import { AtelierOperationalState } from "../../../../../../components/atelier-op
 import { AppShell } from "../../../../../../components/shell";
 import { ActionResultBanner } from "../../../../../../components/action-result-banner";
 import { IdempotencyField } from "../../../../../../components/atelier-pending-submit";
+import { ProtectionMutationForm } from "../../../../../../components/protection-mutation-form";
 import { loadPresentedActionResult } from "../../../../../../server/action-flash";
 import { guardedActor } from "../../../../../../server/guard";
 import { getRuntime } from "../../../../../../server/runtime";
@@ -47,6 +48,7 @@ export default async function ClientProtectionDossierPage({
     resultId: typeof query.result === "string" ? query.result : undefined,
     actorPersonId: person.id,
     eventId: event.id,
+    organisationId: organisation.id,
   });
   return (
     <AppShell person={person} organisationName={organisation.displayName} eventName={event.name} eventId={event.id} current="/app/events">
@@ -72,7 +74,7 @@ export default async function ClientProtectionDossierPage({
                 </li>
               ))}
             </ul>
-            <form action={recordClientDossierMessageAction} className="atelier-form protection-form">
+            <ProtectionMutationForm action={recordClientDossierMessageAction} className="atelier-form protection-form">
               <input type="hidden" name="organisationId" value={organisation.id} />
               <input type="hidden" name="eventId" value={event.id} />
               <input type="hidden" name="assignmentId" value={assignmentId} />
@@ -93,7 +95,7 @@ export default async function ClientProtectionDossierPage({
               <button type="submit" className="button">
                 Send client response
               </button>
-            </form>
+            </ProtectionMutationForm>
           </>
         ) : (
           <p>No published client dossier is available yet.</p>

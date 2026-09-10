@@ -1,5 +1,6 @@
 import { AtelierPageHeader } from "../../../../components/atelier-page-header";
 import { AppShell } from "../../../../components/shell";
+import { ProtectionReleaseEvidence } from "../../../../components/protection-release-evidence";
 import { deployedSha, productionAuthorised } from "../../../../server/config";
 import { guardedActor } from "../../../../server/guard";
 import { getRuntime, persistenceLabel } from "../../../../server/runtime";
@@ -13,7 +14,10 @@ import { getRuntime, persistenceLabel } from "../../../../server/runtime";
  */
 export default async function SystemPage() {
   const { actor, person } = await guardedActor();
-  const organisation = getRuntime().service.listOrganisations(actor)[0];
+  const runtime = getRuntime();
+  const organisation = runtime.service.listOrganisations(actor)[0];
+  const evaluation = organisation ? runtime.service.getS05BReadiness(organisation.id) : undefined;
+  const s05a = organisation ? runtime.service.getS05AReadiness(organisation.id) : undefined;
   return (
     <AppShell person={person} organisationName={organisation?.displayName} current="/app/admin/system">
       <AtelierPageHeader
@@ -29,6 +33,17 @@ export default async function SystemPage() {
         <li>Production IdP: not selected</li>
         <li>Railway project: atelier-doclar (deploy-by-default; production operations gated)</li>
       </ul>
+      {evaluation ? (
+        <ProtectionReleaseEvidence
+          deployedSha={deployedSha()}
+          persistence={persistenceLabel()}
+          migrationStatus={runtime.migrationStatus}
+          productionAuthorised={productionAuthorised()}
+          s05aStatus={s05a?.evaluationStatus}
+          s05aEdition={s05a?.evaluationCorpusEdition}
+          evaluation={evaluation}
+        />
+      ) : null}
     </AppShell>
   );
 }

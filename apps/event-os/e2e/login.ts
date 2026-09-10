@@ -1,4 +1,11 @@
-import { expect, type Browser, type BrowserContext, type Page } from "@playwright/test";
+import { expect, type Browser, type BrowserContext, type Locator, type Page } from "@playwright/test";
+
+export async function selectOptionContaining(select: Locator, text: string | RegExp): Promise<void> {
+  const option = select.locator("option").filter({ hasText: text }).first();
+  const value = await option.getAttribute("value");
+  if (!value) throw new Error(`no select option matching ${String(text)}`);
+  await select.selectOption(value);
+}
 
 export const STAFF_IDENTITIES = {
   ceo: { email: "ceo@maison-doclar.test", displayName: "George Lawson", roleLabel: "CEO" },

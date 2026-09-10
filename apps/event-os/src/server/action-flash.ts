@@ -8,8 +8,8 @@ import {
   forgetActionResult,
   presentActionResult,
   recallActionResult,
-  recallLatestActionResult,
   rememberActionResult,
+  resolveStoredActionResult,
   sessionHashFromToken,
   storedResultMatchesCorrelation,
   signActionResult,
@@ -120,23 +120,26 @@ export async function loadPresentedActionResult(input: {
   actorPersonId: string;
   eventId?: string;
   guestId?: string;
+  organisationId?: string;
 }): Promise<PresentedActionResult> {
   const token = (await readStaffSessionCookie()) ?? "";
-  const latest = recallLatestActionResult(input.actorPersonId, input.requestPath);
   const cookie = await readActionResult();
-  const scopedCookie =
-    cookie && (cookie.scopePath === input.requestPath || input.requestPath.startsWith(`${cookie.scopePath}/`))
-      ? cookie
-      : undefined;
-  const stored = latest ?? scopedCookie ?? recallActionResult(input.resultId);
+  const queryStored = recallActionResult(input.resultId);
+  const stored = resolveStoredActionResult({
+    queryStored,
+    cookie,
+    requestPath: input.requestPath,
+    resultId: input.resultId,
+  });
   return presentActionResult({
     stored,
     sessionHash: sessionHashFromToken(token),
     actorPersonId: input.actorPersonId,
     requestPath: input.requestPath,
-    resultId: stored?.correlationId ?? input.resultId,
+    resultId: input.resultId ?? (stored && stored.scopePath === input.requestPath ? stored.correlationId : undefined),
     eventId: input.eventId,
     guestId: input.guestId,
+    organisationId: input.organisationId,
   });
 }
 

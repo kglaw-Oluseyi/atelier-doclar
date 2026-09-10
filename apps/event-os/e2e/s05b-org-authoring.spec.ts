@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { loginAs } from "./login";
+import { loginAs, selectOptionContaining } from "./login";
 
 test("S05B organisation policy and source authoring", async ({ page }) => {
   test.setTimeout(180_000);
@@ -9,8 +9,7 @@ test("S05B organisation policy and source authoring", async ({ page }) => {
   await page.getByRole("link", { name: "Policies" }).click();
   const policyForm = page.getByTestId("protection-create-policy");
   await policyForm.getByLabel("Policy type").selectOption("PUBLIC_LIABILITY");
-  await policyForm.getByLabel("Insurer party id").fill("00000000-0000-4000-8000-000000000202");
-  await policyForm.getByLabel("Insurer label").fill("Playwright insurer");
+  await selectOptionContaining(policyForm.getByLabel("Insurer"), "Synthetic Insurer");
   await policyForm.getByRole("button", { name: "Create policy" }).click();
   await expect(page.getByText(/Protection command applied|No change/)).toBeVisible({ timeout: 20_000 });
   await page.getByRole("link", { name: "Rules and Sources" }).click();

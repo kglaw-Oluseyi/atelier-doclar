@@ -14,6 +14,8 @@ import {
   riskStamp,
   sealSensitive,
 } from "./risk-command.js";
+import { parseRiskSchema } from "./risk-form-contract.js";
+import { assertGovernedProtectionParty } from "./risk-protection-parties.js";
 import { gapIdentity, inheritResidualDecision, matchCoverage, taxonomyForReasons } from "./risk-gap-engine.js";
 import { assertLegalTransition, GAP_TRANSITIONS, POLICY_EVIDENCE_TRANSITIONS } from "./risk-transitions.js";
 import {
@@ -297,20 +299,21 @@ export function createPolicyOnSnap(
     idempotencyKey: string;
     policyType: RiskPolicy["policyType"];
     insurerPartyId: string;
-    insurerLabel: string;
+    insurerLabel?: string;
   },
   now: string,
   actorPersonId: string,
 ): RiskPolicy {
   envelope(input, input.organisationId, input.eventId);
-  const record = RiskPolicySchema.parse({
+  const insurer = assertGovernedProtectionParty(snap, input.organisationId, input.insurerPartyId, "INSURER");
+  const record = parseRiskSchema(RiskPolicySchema, {
     id: newRiskId(),
     organisationId: input.organisationId,
     eventId: input.eventId,
     scopeKind: input.eventId ? "EVENT" : "ORGANISATION",
     policyType: input.policyType,
-    insurerPartyId: input.insurerPartyId,
-    insurerLabel: input.insurerLabel,
+    insurerPartyId: insurer.id,
+    insurerLabel: input.insurerLabel?.trim() || insurer.label,
     createdByPersonId: actorPersonId,
     ...riskStamp(now),
   });

@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { SCHEMA_VERSION } from "./constants.js";
 import { exactHash } from "./eec-hash.js";
 import { PlatformError } from "./errors.js";
+import { parseRiskSchema } from "./risk-form-contract.js";
 import { RiskCommandEnvelopeSchema } from "./risk-schemas.js";
 import type { PlatformSnapshot } from "./store.js";
 
@@ -23,11 +24,7 @@ export function newRiskId(): string {
 }
 
 export function parseRiskEnvelope(raw: unknown) {
-  const parsed = RiskCommandEnvelopeSchema.safeParse(raw);
-  if (!parsed.success) {
-    throw new PlatformError("VALIDATION_FAILED", parsed.error.issues.map((issue) => issue.message).join("; "));
-  }
-  return parsed.data;
+  return parseRiskSchema(RiskCommandEnvelopeSchema, raw);
 }
 
 export function extractRiskEnvelope(raw: unknown) {

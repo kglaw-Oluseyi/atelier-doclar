@@ -2241,6 +2241,63 @@ body.atelier {
   gap: 0.25rem;
 }
 
+.protection-form input,
+.protection-form textarea {
+  cursor: text;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.protection-form select {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.protection-form button:disabled,
+.protection-form [aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+.protection-validation-summary {
+  border: 2px solid currentColor;
+  padding: 0.75rem;
+  min-width: 0;
+}
+
+.protection-validation-summary h3 {
+  margin: 0 0 0.5rem;
+}
+
+.protection-field-error {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.protection-identifier-block dd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.protection-identifier,
+.protection-release-list dd {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  user-select: all;
+}
+
+.protection-release-evidence,
+.protection-release-list {
+  min-width: 0;
+}
+
+.protection-release-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
 .protection-headline-list a {
   text-decoration: underline;
 }

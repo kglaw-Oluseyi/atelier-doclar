@@ -11,6 +11,8 @@ import {
   extractRiskEnvelope,
   riskStamp,
 } from "./risk-command.js";
+import { parseRiskSchema } from "./risk-form-contract.js";
+import { assertGovernedProtectionParty } from "./risk-protection-parties.js";
 import {
   RiskRosterAssignmentSchema,
   RiskVendorAssessmentSchema,
@@ -109,6 +111,7 @@ export function assessVendorOnSnap(
   actorPersonId: string,
 ): RiskVendorAssessment {
   envelope(input, input.organisationId, input.eventId);
+  assertGovernedProtectionParty(snap, input.organisationId, input.vendorId, "VENDOR");
   const evidence = snap.riskVendorEvidence.filter((item) => item.organisationId === input.organisationId && item.vendorId === input.vendorId);
   const missed = snap.riskCheckIns.filter((item) => item.organisationId === input.organisationId && item.response !== "CONFIRMED");
   const indicators = input.indicators ?? [
@@ -188,7 +191,7 @@ export function assignRosterOnSnap(
     expectedVersion: number;
     idempotencyKey: string;
     vendorId: string;
-    vendorLabel: string;
+    vendorLabel?: string;
     role: RiskRosterAssignment["role"];
     criticalFunctionKey: string;
     commercialStatus: RiskRosterAssignment["commercialStatus"];
@@ -201,15 +204,16 @@ export function assignRosterOnSnap(
   actorPersonId: string,
 ): RiskRosterAssignment {
   envelope(input, input.organisationId, input.eventId);
+  const vendor = assertGovernedProtectionParty(snap, input.organisationId, input.vendorId, "VENDOR");
   if (input.booked && !input.bookedAuthority) {
     throw new PlatformError("VALIDATION_FAILED", "an assignment cannot be labelled booked without source authority");
   }
-  const record = RiskRosterAssignmentSchema.parse({
+  const record = parseRiskSchema(RiskRosterAssignmentSchema, {
     id: newRiskId(),
     organisationId: input.organisationId,
     eventId: input.eventId,
     vendorId: input.vendorId,
-    vendorLabel: input.vendorLabel,
+    vendorLabel: input.vendorLabel?.trim() || vendor.label,
     canonicalVendorAssignmentId: input.canonicalVendorAssignmentId,
     role: input.role,
     criticalFunctionKey: input.criticalFunctionKey,

@@ -35,6 +35,7 @@ export interface ActionResult {
   createdAt: string;
   eventId?: string;
   guestId?: string;
+  organisationId?: string;
   application?: ActionApplication;
   didDataChange?: boolean;
   createdRecordIds?: string[];
@@ -141,6 +142,10 @@ export function actionLabel(actionType: string): string {
     "change.decide": "Decide change proposal",
     "command.view": "Review executive command",
     "evaluation.run": "Run fixture assurance",
+    "risk.policy.create": "Create protection policy",
+    "risk.evaluation.run": "Run S05B fixture assurance",
+    "risk.source.create": "Record discovery source",
+    "risk.vendor.assess": "Run vendor assessment",
   };
   return labels[actionType] ?? actionType.replaceAll(".", " ");
 }
@@ -213,6 +218,7 @@ export function parseActionResultPayload(raw: unknown): ActionResult | undefined
   if (typeof parsed.createdAt !== "string" || Number.isNaN(Date.parse(parsed.createdAt))) return undefined;
   const eventId = scopedId(parsed.eventId);
   const guestId = scopedId(parsed.guestId);
+  const organisationId = scopedId(parsed.organisationId);
   const subjectId = scopedId(parsed.subjectId);
   const application = isActionApplication(parsed.application) ? parsed.application : undefined;
   const targetId =
@@ -236,6 +242,7 @@ export function parseActionResultPayload(raw: unknown): ActionResult | undefined
     createdAt: parsed.createdAt,
     ...(eventId ? { eventId } : {}),
     ...(guestId ? { guestId } : {}),
+    ...(organisationId ? { organisationId } : {}),
     ...(application ? { application } : {}),
     ...(typeof parsed.didDataChange === "boolean" ? { didDataChange: parsed.didDataChange } : {}),
     ...(Array.isArray(parsed.createdRecordIds) ? { createdRecordIds: parseUuidList(parsed.createdRecordIds) } : {}),
@@ -377,11 +384,47 @@ export function forgetActionResult(correlationId: string | undefined): void {
   if (!correlationId) return;
   const row = RECENT_RESULTS.get(correlationId);
   RECENT_RESULTS.delete(correlationId);
-  if (!row) return;
-  const key = scopeKey(row.result.actorPersonId, row.result.scopePath);
-  if (LATEST_BY_SCOPE.get(key)?.result.correlationId === correlationId) {
-    LATEST_BY_SCOPE.delete(key);
+  if (row) {
+    const key = scopeKey(row.result.actorPersonId, row.result.scopePath);
+    if (LATEST_BY_SCOPE.get(key)?.result.correlationId === correlationId) {
+      LATEST_BY_SCOPE.delete(key);
+    }
   }
+  CONSUMED_CORRELATIONS.add(correlationId);
+}
+
+const CONSUMED_CORRELATIONS = new Set<string>();
+
+export function markActionResultConsumed(correlationId: string | undefined): void {
+  if (!correlationId || !UUID.test(correlationId)) return;
+  CONSUMED_CORRELATIONS.add(correlationId);
+  forgetActionResult(correlationId);
+}
+
+export function isActionResultConsumed(correlationId: string | undefined): boolean {
+  return Boolean(correlationId && CONSUMED_CORRELATIONS.has(correlationId));
+}
+
+export function resolveStoredActionResult(input: {
+  queryStored?: ActionResult;
+  cookie?: ActionResult;
+  requestPath: string;
+  resultId?: string;
+}): ActionResult | undefined {
+  const request = input.requestPath.split("?")[0] ?? input.requestPath;
+  const exactCookie =
+    input.cookie &&
+    input.cookie.scopePath === request &&
+    (!input.resultId || input.cookie.correlationId === input.resultId) &&
+    !isActionResultConsumed(input.cookie.correlationId)
+      ? input.cookie
+      : undefined;
+  if (input.resultId) {
+    if (input.queryStored?.correlationId === input.resultId) return input.queryStored;
+    if (exactCookie?.correlationId === input.resultId) return exactCookie;
+    return undefined;
+  }
+  return exactCookie;
 }
 
 export function storedResultMatchesCorrelation(
@@ -399,6 +442,7 @@ export function presentActionResult(input: {
   resultId?: string;
   guestId?: string;
   eventId?: string;
+  organisationId?: string;
 }): PresentedActionResult {
   const stored = input.stored;
   if (!stored) {
@@ -413,6 +457,9 @@ export function presentActionResult(input: {
     return { shouldConsume: false, mutationLocked: false };
   }
   if (stored.guestId && input.guestId && stored.guestId !== input.guestId) {
+    return { shouldConsume: false, mutationLocked: false };
+  }
+  if (stored.organisationId && input.organisationId && stored.organisationId !== input.organisationId) {
     return { shouldConsume: false, mutationLocked: false };
   }
   const conflict = stored.status === "FAILURE" && stored.code === "VERSION_CONFLICT";
@@ -450,6 +497,7 @@ export function buildActionResult(input: {
   message: string;
   eventId?: string;
   guestId?: string;
+  organisationId?: string;
   createdAt?: string;
   application?: ActionApplication;
   didDataChange?: boolean;
@@ -477,6 +525,7 @@ export function buildActionResult(input: {
     createdAt: input.createdAt ?? new Date().toISOString(),
     ...(input.eventId ? { eventId: input.eventId } : {}),
     ...(input.guestId ? { guestId: input.guestId } : {}),
+    ...(input.organisationId ? { organisationId: input.organisationId } : {}),
     application: input.application ?? effect?.application,
     didDataChange: input.didDataChange ?? effect?.didDataChange,
     createdRecordIds: input.createdRecordIds ?? effect?.createdRecordIds,

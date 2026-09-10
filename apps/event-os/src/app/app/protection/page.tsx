@@ -4,9 +4,12 @@ import { AtelierSectionTabs } from "../../../components/atelier-section-tabs";
 import { AppShell } from "../../../components/shell";
 import { ActionResultBanner } from "../../../components/action-result-banner";
 import { IdempotencyField } from "../../../components/atelier-pending-submit";
+import { ProtectionMutationForm } from "../../../components/protection-mutation-form";
+import { ProtectionReleaseEvidence } from "../../../components/protection-release-evidence";
 import { loadPresentedActionResult } from "../../../server/action-flash";
+import { deployedSha, productionAuthorised } from "../../../server/config";
 import { guardedActor } from "../../../server/guard";
-import { getRuntime } from "../../../server/runtime";
+import { getRuntime, persistenceLabel } from "../../../server/runtime";
 import { protectionPermissions } from "../../../server/protection-scope";
 import {
   approveRiskSourceAction,
@@ -60,13 +63,16 @@ export default async function ProtectionCommandPage({
       </AppShell>
     );
   }
-  const overview = getRuntime().service.getOrganisationProtection(actor, organisation.id);
-  const evaluation = getRuntime().service.getS05BReadiness(organisation.id);
-  const assignmentId = getRuntime().service.resolveActor(person.id).assignments[0]?.id ?? "";
+  const runtime = getRuntime();
+  const overview = runtime.service.getOrganisationProtection(actor, organisation.id);
+  const evaluation = runtime.service.getS05BReadiness(organisation.id);
+  const s05a = runtime.service.getS05AReadiness(organisation.id);
+  const assignmentId = runtime.service.resolveActor(person.id).assignments[0]?.id ?? "";
   const presented = await loadPresentedActionResult({
     requestPath: "/app/protection",
     resultId: typeof query.result === "string" ? query.result : undefined,
     actorPersonId: person.id,
+    organisationId: organisation.id,
   });
   const envelope = { organisationId: organisation.id, assignmentId };
   return (
@@ -141,7 +147,7 @@ export default async function ProtectionCommandPage({
                 {item.period.startOn} – {item.period.endOn} · {item.verificationState}
               </p>
               {permissions.policyVerify ? (
-                <form action={verifyRiskPolicyAction} className="protection-form">
+                <ProtectionMutationForm action={verifyRiskPolicyAction} className="protection-form">
                   <Envelope fields={{ ...envelope, expectedVersion: item.version, editionId: item.id }} />
                   <IdempotencyField />
                   <label>
@@ -155,38 +161,44 @@ export default async function ProtectionCommandPage({
                   <button type="submit" className="button secondary">
                     Record verification
                   </button>
-                </form>
+                </ProtectionMutationForm>
               ) : null}
             </article>
           ))}
         </div>
         {permissions.policyManage ? (
           <>
-            <form action={createRiskPolicyAction} className="atelier-form protection-form" data-testid="protection-create-policy">
+            <ProtectionMutationForm action={createRiskPolicyAction} className="atelier-form protection-form" testId="protection-create-policy">
               <Envelope fields={{ ...envelope, expectedVersion: 0 }} />
               <IdempotencyField />
-              <label>
+              <label htmlFor="policyType">
                 Policy type
-                <select name="policyType" required>
+                <select id="policyType" name="policyType" required>
                   <option value="">Select type</option>
                   <option value="PUBLIC_LIABILITY">Public liability</option>
                   <option value="EVENT_CANCELLATION">Event cancellation</option>
                   <option value="EMPLOYEE_COMPENSATION">Employee compensation</option>
                 </select>
               </label>
-              <label>
-                Insurer party id
-                <input name="insurerPartyId" required autoComplete="off" />
+              <label htmlFor="insurerPartyId">
+                Insurer
+                <select id="insurerPartyId" name="insurerPartyId" required={overview.insurers.length > 0}>
+                  <option value="">Select insurer</option>
+                  {overview.insurers.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.label} — {item.disambiguation}
+                    </option>
+                  ))}
+                </select>
               </label>
-              <label>
-                Insurer label
-                <input name="insurerLabel" required autoComplete="off" />
-              </label>
+              {overview.insurers.length ? null : (
+                <p data-testid="insurer-empty">No eligible insurer is on the governed party register for this organisation.</p>
+              )}
               <button type="submit" className="button">
                 Create policy
               </button>
-            </form>
-            <form action={createRiskEvidenceAction} className="atelier-form protection-form">
+            </ProtectionMutationForm>
+            <ProtectionMutationForm action={createRiskEvidenceAction} className="atelier-form protection-form">
               <Envelope fields={{ ...envelope, expectedVersion: 0 }} />
               <IdempotencyField />
               <label>
@@ -209,8 +221,8 @@ export default async function ProtectionCommandPage({
               <button type="submit" className="button secondary">
                 Register evidence document
               </button>
-            </form>
-            <form action={completeRiskEvidenceUploadAction} className="atelier-form protection-form">
+            </ProtectionMutationForm>
+            <ProtectionMutationForm action={completeRiskEvidenceUploadAction} className="atelier-form protection-form">
               <Envelope fields={envelope} />
               <IdempotencyField />
               <label>
@@ -247,8 +259,8 @@ export default async function ProtectionCommandPage({
               <button type="submit" className="button secondary">
                 Complete evidence upload
               </button>
-            </form>
-            <form action={createRiskPolicyEditionAction} className="atelier-form protection-form" data-testid="protection-create-edition">
+            </ProtectionMutationForm>
+            <ProtectionMutationForm action={createRiskPolicyEditionAction} className="atelier-form protection-form" testId="protection-create-edition">
               <Envelope fields={envelope} />
               <IdempotencyField />
               <label>
@@ -303,10 +315,6 @@ export default async function ProtectionCommandPage({
                 <input name="insuredPartyLabels" required placeholder="Comma-separated labels" />
               </label>
               <label>
-                Asset inventory refs
-                <input name="assetInventoryRefs" placeholder="Comma-separated UUIDs" />
-              </label>
-              <label>
                 Territorial scope
                 <input name="territorialScope" />
               </label>
@@ -336,7 +344,7 @@ export default async function ProtectionCommandPage({
               <button type="submit" className="button">
                 Save policy edition
               </button>
-            </form>
+            </ProtectionMutationForm>
           </>
         ) : null}
       </section>
@@ -348,13 +356,13 @@ export default async function ProtectionCommandPage({
             <li key={source.id}>
               {source.title} · {source.status} · {source.jurisdiction}
               {permissions.ruleApprove && source.status !== "APPROVED" ? (
-                <form action={approveRiskSourceAction}>
+                <ProtectionMutationForm action={approveRiskSourceAction}>
                   <Envelope fields={{ ...envelope, expectedVersion: source.version, sourceId: source.id }} />
                   <IdempotencyField />
                   <button type="submit" className="button secondary">
                     Approve source
                   </button>
-                </form>
+                </ProtectionMutationForm>
               ) : null}
             </li>
           ))}
@@ -364,7 +372,7 @@ export default async function ProtectionCommandPage({
             <li key={rule.id}>
               {rule.ruleKey} · {rule.status} · {rule.jurisdiction} · {rule.proposition}
               {permissions.ruleApprove && rule.status !== "APPROVED" ? (
-                <form action={reviewRiskRuleAction}>
+                <ProtectionMutationForm action={reviewRiskRuleAction}>
                   <Envelope fields={{ ...envelope, expectedVersion: rule.version, ruleId: rule.id }} />
                   <label>
                     Review
@@ -378,14 +386,14 @@ export default async function ProtectionCommandPage({
                   <button type="submit" className="button secondary">
                     Record rule review
                   </button>
-                </form>
+                </ProtectionMutationForm>
               ) : null}
             </li>
           ))}
         </ul>
         {permissions.catalogueManage ? (
           <>
-            <form action={createRiskSourceAction} className="atelier-form protection-form" data-testid="protection-create-source">
+            <ProtectionMutationForm action={createRiskSourceAction} className="atelier-form protection-form" testId="protection-create-source">
               <Envelope fields={{ ...envelope, expectedVersion: 0 }} />
               <IdempotencyField />
               <label>
@@ -420,8 +428,8 @@ export default async function ProtectionCommandPage({
               <button type="submit" className="button">
                 Record discovery source
               </button>
-            </form>
-            <form action={createRiskRuleAction} className="atelier-form protection-form">
+            </ProtectionMutationForm>
+            <ProtectionMutationForm action={createRiskRuleAction} className="atelier-form protection-form">
               <Envelope fields={{ ...envelope, expectedVersion: 0 }} />
               <IdempotencyField />
               <label>
@@ -436,10 +444,17 @@ export default async function ProtectionCommandPage({
                 Cited proposition
                 <textarea name="proposition" required rows={3} />
               </label>
-              <label>
-                Source edition ids
-                <input name="sourceEditionIds" required placeholder="Comma-separated UUIDs" />
+              <label htmlFor="sourceEditionIds">
+                Source editions
+                <select id="sourceEditionIds" name="sourceEditionIds" multiple required size={Math.min(6, Math.max(3, overview.sources.length + 1))}>
+                  {overview.sources.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.title} · {item.jurisdiction}
+                    </option>
+                  ))}
+                </select>
               </label>
+              {overview.sources.length ? null : <p>Record a discovery source before drafting a rule.</p>}
               <label>
                 Requirement key
                 <input name="requirementKey" required />
@@ -463,7 +478,7 @@ export default async function ProtectionCommandPage({
               <button type="submit" className="button">
                 Draft rule
               </button>
-            </form>
+            </ProtectionMutationForm>
           </>
         ) : null}
       </section>
@@ -486,7 +501,7 @@ export default async function ProtectionCommandPage({
               </p>
               <p>{item.enforceabilityClaimed ? "Enforceability claimed" : "Not claimed as enforceable"}</p>
               {permissions.clauseLegal || permissions.clauseCommercial ? (
-                <form action={reviewRiskClauseAction} className="protection-form">
+                <ProtectionMutationForm action={reviewRiskClauseAction} className="protection-form">
                   <Envelope fields={{ ...envelope, expectedVersion: item.version, editionId: item.id }} />
                   <IdempotencyField />
                   <label>
@@ -509,13 +524,13 @@ export default async function ProtectionCommandPage({
                   <button type="submit" className="button secondary">
                     Record clause decision
                   </button>
-                </form>
+                </ProtectionMutationForm>
               ) : null}
             </article>
           ))}
         </div>
         {permissions.clauseDraft ? (
-          <form action={createRiskClauseTemplateAction} className="atelier-form protection-form" data-testid="protection-create-clause">
+          <ProtectionMutationForm action={createRiskClauseTemplateAction} className="atelier-form protection-form" testId="protection-create-clause">
             <Envelope fields={{ ...envelope, expectedVersion: 0 }} />
             <IdempotencyField />
             <label>
@@ -546,7 +561,7 @@ export default async function ProtectionCommandPage({
             <button type="submit" className="button">
               Save clause template
             </button>
-          </form>
+          </ProtectionMutationForm>
         ) : null}
       </section>
       <section id="protection-vendors" className="atelier-panel">
@@ -564,7 +579,7 @@ export default async function ProtectionCommandPage({
                 </p>
               ))}
               {permissions.vendorDecide ? (
-                <form action={decideRiskVendorAction} className="protection-form">
+                <ProtectionMutationForm action={decideRiskVendorAction} className="protection-form">
                   <Envelope fields={{ ...envelope, expectedVersion: "version" in item ? Number(item.version) : 1, assessmentId: item.id }} />
                   <IdempotencyField />
                   <label>
@@ -583,23 +598,33 @@ export default async function ProtectionCommandPage({
                   <button type="submit" className="button secondary">
                     Record vendor decision
                   </button>
-                </form>
+                </ProtectionMutationForm>
               ) : null}
             </article>
           ))}
         </div>
         {permissions.vendorAssess ? (
-          <form action={assessRiskVendorAction} className="atelier-form protection-form" data-testid="protection-assess-vendor">
+          <ProtectionMutationForm action={assessRiskVendorAction} className="atelier-form protection-form" testId="protection-assess-vendor">
             <Envelope fields={{ ...envelope, expectedVersion: 0 }} />
             <IdempotencyField />
-            <label>
-              Vendor id
-              <input name="vendorId" required />
+            <label htmlFor="vendorId">
+              Vendor
+              <select id="vendorId" name="vendorId" required={overview.vendorParties.length > 0}>
+                <option value="">Select vendor</option>
+                {overview.vendorParties.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.label} — {item.disambiguation}
+                  </option>
+                ))}
+              </select>
             </label>
+            {overview.vendorParties.length ? null : (
+              <p data-testid="vendor-empty">No eligible vendor is on the governed party register for this organisation.</p>
+            )}
             <button type="submit" className="button">
               Run vendor assessment
             </button>
-          </form>
+          </ProtectionMutationForm>
         ) : null}
       </section>
       <section id="protection-renewals" className="atelier-panel">
@@ -635,14 +660,23 @@ export default async function ProtectionCommandPage({
         <p>
           S05B evaluation is {evaluation.evaluationStatus}. {evaluation.evaluationBlocked ? "Release is blocked." : "Current complete pass is fixture-release-ready."} Corpus {evaluation.corpusEdition} · {evaluation.caseCount} cases.
         </p>
+        <ProtectionReleaseEvidence
+          deployedSha={deployedSha()}
+          persistence={persistenceLabel()}
+          migrationStatus={runtime.migrationStatus}
+          productionAuthorised={productionAuthorised()}
+          s05aStatus={s05a.evaluationStatus}
+          s05aEdition={s05a.evaluationCorpusEdition}
+          evaluation={evaluation}
+        />
         {permissions.auditView ? (
-          <form action={runS05BEvaluationAction}>
+          <ProtectionMutationForm action={runS05BEvaluationAction}>
             <input type="hidden" name="organisationId" value={organisation.id} />
             <IdempotencyField />
             <button type="submit" className="button">
               Run S05B fixture assurance
             </button>
-          </form>
+          </ProtectionMutationForm>
         ) : null}
       </section>
     </AppShell>

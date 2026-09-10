@@ -1,4 +1,4 @@
-import { PLATFORM_ERROR_CODES, PlatformError, type PlatformErrorCode } from "@maison-doclar/shared-platform";
+import { PLATFORM_ERROR_CODES, PlatformError, isZodLikeError, type PlatformErrorCode } from "@maison-doclar/shared-platform";
 
 export const OPERATIONAL_STATE_KINDS = [
   "loading",
@@ -180,7 +180,23 @@ export function classifyActionError(error: unknown): {
   code: PlatformErrorCode;
   message: string;
 } {
+  if (isZodLikeError(error)) {
+    return {
+      kind: "validation",
+      code: "VALIDATION_FAILED",
+      message: "The submitted information is not valid.",
+    };
+  }
   if (isPlatformErrorLike(error)) {
+    if (error.code === "VALIDATION_FAILED") {
+      const message = platformErrorMessage(error);
+      const looksInternal = /invalid uuid|invalid_type|too_small|expected |received |\{|\[/.test(message) || message.includes("    at ");
+      return {
+        kind: "validation",
+        code: error.code,
+        message: looksInternal ? "The submitted information is not valid." : message,
+      };
+    }
     return {
       kind: KIND_BY_CODE[error.code],
       code: error.code,
@@ -199,7 +215,7 @@ export function classifyActionError(error: unknown): {
     return {
       kind: "server_failure",
       code: "INTERNAL_ERROR",
-      message: error.message.includes("    at ") ? "The request could not be completed." : error.message,
+      message: "The request could not be completed.",
     };
   }
   return {

@@ -923,6 +923,8 @@ export {
   RISK_DOCUMENT_STATES,
   S05B_CANONICAL_COLLECTIONS,
 } from "./risk-schemas.js";
+export * from "./risk-form-contract.js";
+export * from "./risk-protection-parties.js";
 export * from "./risk-disclosure.js";
 export * from "./risk-applicability.js";
 export * from "./risk-gap-engine.js";
