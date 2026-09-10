@@ -105,6 +105,9 @@ export function createContinuityPlanOnSnap(
   actorPersonId: string,
 ): RiskContinuityPlan {
   envelope(input, input.organisationId, input.eventId);
+  for (const plan of snap.riskContinuityPlans) {
+    if (plan.eventId === input.eventId && plan.current) plan.current = false;
+  }
   const record = RiskContinuityPlanSchema.parse({
     id: newRiskId(),
     organisationId: input.organisationId,

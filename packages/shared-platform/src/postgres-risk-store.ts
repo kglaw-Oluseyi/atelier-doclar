@@ -97,6 +97,19 @@ export class PostgresRiskProtectionStore implements RiskProtectionStore {
     for (const row of nextRows) {
       const cols = columns(row as unknown as Record<string, unknown>);
       const existed = prevById.get(row.id);
+      if (cols.current === true) {
+        if (cols.parent_id) {
+          await tx.query(`UPDATE ${table} SET current = FALSE WHERE parent_id = $1 AND id <> $2 AND current IS TRUE`, [
+            cols.parent_id,
+            cols.id,
+          ]);
+        } else if (cols.event_id) {
+          await tx.query(`UPDATE ${table} SET current = FALSE WHERE event_id = $1 AND id <> $2 AND current IS TRUE`, [
+            cols.event_id,
+            cols.id,
+          ]);
+        }
+      }
       if (!existed) {
         await tx.query(
           `INSERT INTO ${table} (id, organisation_id, event_id, version, current, status, parent_id, content_hash, submitted_by_person_id, approved_by_person_id, body, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12,$13)`,

@@ -878,6 +878,20 @@ export class MemoryPlatformPg implements PgTransactor {
       });
       return { rows: [], rowCount: 1 };
     }
+    if (sql.startsWith("UPDATE") && sql.includes("SET current = FALSE")) {
+      const keepId = String(values[1]);
+      const scoped = String(values[0]);
+      const byParent = sql.includes("parent_id");
+      let count = 0;
+      for (const row of this.riskRows) {
+        if (row.table !== table || row.id === keepId || row.current !== true) continue;
+        if (byParent ? row.parent_id === scoped : row.event_id === scoped) {
+          row.current = false;
+          count += 1;
+        }
+      }
+      return { rows: [], rowCount: count };
+    }
     if (sql.startsWith("UPDATE")) {
       const id = String(values[0]);
       const expectedVersion = Number(values[1]);

@@ -56,6 +56,7 @@ Application SHA, GitHub parity, Railway deployment ID and live smoke results are
 | `pnpm --filter @maison-doclar/shared-platform test` | Implementation defect | V2 migration receipt was `nonProductionFixture: true`, so synthetic cleanup deleted it and `open()` recreated it | Migration receipts are durable, not fixture-marked | 431/0 |
 | `pnpm typecheck` | Test defect | Concurrency fixture passed `eventId` into rule create | Remove the field | `tsc` pass |
 | Focused Playwright first run | Test defect | Two-tab creates raced so the first tab never saw a result banner; `Dossier` matched the client-dossier link; `Life safety` matched the severity option; `Policy type` matched two labelled selects | Sequential tab submits; `exact: true`; checkbox role; scoped policy-type label; persist both insurer labels after reload | 13 passed / 1 skipped |
+| Live Event OS ready after `railway up` | Implementation defect | Backfill of existing synthetic continuity plans violated `risk_continuity_plans_one_current` because every new plan was `current: true` | Demote sibling current rows before insert; unset prior event plans on create | redeploy ready |
 
 Later gate failures, if any, are appended after the local and live runs. Product defects are not erased because a retry later passes.
 

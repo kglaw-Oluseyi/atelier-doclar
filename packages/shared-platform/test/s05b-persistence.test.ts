@@ -4,6 +4,8 @@ import { SCHEMA_VERSION } from "../src/constants.js";
 import { MemoryPlatformPg, PostgresPlatformStore } from "../src/postgres-store.js";
 import { backfillNormalizedRiskTables } from "../src/risk-normalized-migration.js";
 import { EOS_S05B_PROTECTION_V2_ID } from "../src/risk-postgres-schema.js";
+import { createContinuityPlanOnSnap } from "../src/risk-continuity.js";
+import { applySyntheticSeedIfNeeded } from "../src/synthetic-seed.js";
 import { people } from "./helpers.js";
 
 describe("EOS-S05B normalized persistence", () => {
@@ -76,6 +78,50 @@ describe("EOS-S05B normalized persistence", () => {
     assert.equal(first.status, "REPLAYED");
     assert.equal(second.status, "REPLAYED");
     assert.equal(pg.riskRows.filter((row) => row.table === "risk_migration_receipts").length, 1);
+  });
+
+  it("demotes prior current continuity plans so one-current indexes hold", async () => {
+    const pg = new MemoryPlatformPg();
+    const store = await PostgresPlatformStore.open(pg);
+    await applySyntheticSeedIfNeeded(store, pg);
+    await store.flush();
+    const snap = store.snapshot();
+    createContinuityPlanOnSnap(
+      snap,
+      {
+        organisationId: people.orgMaison,
+        eventId: people.eventAlphaOne,
+        assignmentId: people.assignCeo,
+        expectedVersion: 0,
+        idempotencyKey: "persist-plan-one-01",
+        title: "First current plan",
+        recoveryObjectiveMinutes: 30,
+        maximumTolerableInterruptionMinutes: 60,
+        decisionRole: "CEO",
+      },
+      "2026-09-10T10:00:00.000Z",
+      people.personCeo,
+    );
+    createContinuityPlanOnSnap(
+      snap,
+      {
+        organisationId: people.orgMaison,
+        eventId: people.eventAlphaOne,
+        assignmentId: people.assignCeo,
+        expectedVersion: 0,
+        idempotencyKey: "persist-plan-two-01",
+        title: "Second current plan",
+        recoveryObjectiveMinutes: 45,
+        maximumTolerableInterruptionMinutes: 90,
+        decisionRole: "CEO",
+      },
+      "2026-09-10T10:01:00.000Z",
+      people.personCeo,
+    );
+    for (const plan of snap.riskContinuityPlans.filter((item) => item.eventId === people.eventAlphaOne)) plan.current = true;
+    await store.replaceAsync(snap);
+    const currents = pg.riskRows.filter((row) => row.table === "risk_continuity_plans" && row.current === true && row.event_id === people.eventAlphaOne);
+    assert.equal(currents.length, 1);
   });
 
   it("rolls back a partial backfill failure", async () => {
