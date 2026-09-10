@@ -443,8 +443,14 @@ export default async function ProtectionCommandPage({
       <section id="protection-rules" className="atelier-panel">
         <h2>Rules and sources</h2>
         <p>Discovery sources can generate questions. Only approved rules participate in readiness. Unapproved and superseded editions stay as history.</p>
+        <p>
+          {overview.sources.filter((source) => source.historyOnly && source.status !== "DISCOVERY" && source.status !== "COUNSEL_REVIEWED").length} historic
+          source editions remain on the durable record and do not govern.
+        </p>
         <ul>
-          {overview.sources.map((source) => (
+          {overview.sources
+            .filter((source) => !source.historyOnly || source.status === "DISCOVERY" || source.status === "COUNSEL_REVIEWED")
+            .map((source) => (
             <li key={source.id}>
               {source.title} · {source.status} · {source.jurisdiction}
               {source.historyOnly ? " · history" : source.governing ? " · governing source" : ""}
@@ -460,8 +466,14 @@ export default async function ProtectionCommandPage({
             </li>
           ))}
         </ul>
+        <p>
+          {overview.ruleLibrary.filter((rule) => rule.historyOnly && rule.status !== "DISCOVERY" && rule.status !== "COUNSEL_REVIEWED").length} historic rule
+          editions remain on the durable record and do not govern.
+        </p>
         <ul>
-          {overview.ruleLibrary.map((rule) => (
+          {overview.ruleLibrary
+            .filter((rule) => !rule.historyOnly || rule.status === "DISCOVERY" || rule.status === "COUNSEL_REVIEWED")
+            .map((rule) => (
             <li key={rule.id}>
               {rule.ruleKey} · {rule.status} · {rule.jurisdiction} · {rule.proposition}
               {rule.historyOnly ? " · history" : rule.governing ? " · governing" : ""}
