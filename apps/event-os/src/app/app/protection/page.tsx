@@ -500,6 +500,11 @@ export default async function ProtectionCommandPage({
                 Legal {item.legalReviewStatus} · Commercial {item.commercialApprovalStatus}
               </p>
               <p>{item.enforceabilityClaimed ? "Enforceability claimed" : "Not claimed as enforceable"}</p>
+              {"renderedBody" in item && item.renderedBody ? (
+                <pre data-testid="clause-rendered-body" className="clause-body">
+                  {String(item.renderedBody)}
+                </pre>
+              ) : null}
               {permissions.clauseLegal || permissions.clauseCommercial ? (
                 <ProtectionMutationForm action={reviewRiskClauseAction} className="protection-form">
                   <Envelope fields={{ ...envelope, expectedVersion: item.version, editionId: item.id }} />
@@ -567,9 +572,13 @@ export default async function ProtectionCommandPage({
       <section id="protection-vendors" className="atelier-panel">
         <h2>Vendors</h2>
         <div className="protection-matrix">
-          {overview.vendors.map((item) => (
-            <article key={item.id} className="protection-card">
-              <h3>{item.vendorId}</h3>
+          {overview.vendors.map((item) => {
+            const party = overview.vendorParties.find((row) => row.id === item.vendorId);
+            return (
+            <article key={item.id} className="protection-card" data-testid="vendor-assessment-card">
+              <h3>{party?.label ?? "Governed vendor"}</h3>
+              <p>{party?.disambiguation ?? "Organisation vendor register"}</p>
+              {permissions.catalogueManage ? <p className="technical-provenance">Technical provenance {item.vendorId}</p> : null}
               <p>
                 Band {item.band} · {item.humanDecision ?? "no human decision"}
               </p>
@@ -601,7 +610,8 @@ export default async function ProtectionCommandPage({
                 </ProtectionMutationForm>
               ) : null}
             </article>
-          ))}
+            );
+          })}
         </div>
         {permissions.vendorAssess ? (
           <ProtectionMutationForm action={assessRiskVendorAction} className="atelier-form protection-form" testId="protection-assess-vendor">

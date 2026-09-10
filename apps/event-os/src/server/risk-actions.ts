@@ -15,6 +15,7 @@ import {
   stringListFromForm,
   type ProtectionFormState,
 } from "@maison-doclar/shared-platform";
+import { writeIssuedAccessFlash } from "./action-flash";
 import { runProtectionFormAction } from "./protection-form-action";
 import { envelope, scopePathFromForm } from "./protection-form-helpers";
 import { getRuntime } from "./runtime";
@@ -201,11 +202,11 @@ export async function publishDossierAction(prev: ProtectionFormState, formData: 
     scopePath: `/app/events/${eventId}/protection`,
     actionType: "risk.dossier.publish",
     execute: (actor, data) =>
-      getRuntime().service.transitionRiskDossier(actor, {
+      getRuntime().service.publishRiskDossier(actor, {
         ...envelope(data),
         eventId,
+        editionId: field(data, "dossierId"),
         dossierId: field(data, "dossierId"),
-        to: "PUBLISHED",
         approvedHash: field(data, "approvedHash"),
       }),
   });
@@ -678,6 +679,123 @@ export async function recordClientDossierMessageAction(prev: ProtectionFormState
         eventId,
         kind: field(data, "kind") || "QUESTION",
         body: field(data, "body"),
+      }),
+  });
+}
+
+export async function recordCheckInAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const eventId = field(formData, "eventId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/events/${eventId}/protection`,
+    actionType: "risk.checkpoint.checkin",
+    execute: (actor, data) =>
+      getRuntime().service.recordRiskCheckIn(actor, {
+        ...envelope(data),
+        eventId,
+        checkpointId: field(data, "checkpointId"),
+        response: field(data, "response") || "CONFIRMED",
+        source: "STAFF",
+        note: field(data, "note") || undefined,
+      }),
+  });
+}
+
+export async function evaluateCheckpointEscalationsAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const eventId = field(formData, "eventId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/events/${eventId}/protection`,
+    actionType: "risk.checkpoint.escalate",
+    execute: (actor, data) => getRuntime().service.evaluateRiskEscalations(actor, { ...envelope(data), eventId }),
+  });
+}
+
+export async function addIncidentEntryAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const eventId = field(formData, "eventId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/events/${eventId}/protection`,
+    actionType: "risk.incident.entry",
+    execute: (actor, data) =>
+      getRuntime().service.addRiskIncidentEntry(actor, {
+        ...envelope(data),
+        eventId,
+        incidentId: field(data, "incidentId"),
+        kind: field(data, "kind") || "OBSERVED_FACT",
+        body: field(data, "body"),
+        sourceLabel: field(data, "sourceLabel") || undefined,
+        confidence: field(data, "confidence") || "UNKNOWN",
+      }),
+  });
+}
+
+export async function proposeLearningAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const eventId = field(formData, "eventId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/events/${eventId}/protection`,
+    actionType: "risk.learning.propose",
+    execute: (actor, data) =>
+      getRuntime().service.proposeRiskLearning(actor, {
+        ...envelope(data),
+        eventId,
+        incidentId: field(data, "incidentId"),
+        target: field(data, "target") || "RULE",
+        proposal: field(data, "proposal"),
+      }),
+  });
+}
+
+export async function decideLearningAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const eventId = field(formData, "eventId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/events/${eventId}/protection`,
+    actionType: "risk.learning.decide",
+    execute: (actor, data) =>
+      getRuntime().service.decideRiskLearning(actor, {
+        ...envelope(data),
+        eventId,
+        proposalId: field(data, "proposalId"),
+        status: field(data, "status") || "APPROVED",
+        reason: field(data, "reason") || undefined,
+      }),
+  });
+}
+
+export async function issueDossierAccessAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const eventId = field(formData, "eventId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/events/${eventId}/protection`,
+    actionType: "risk.dossier.client_access.issue",
+    execute: async (actor, data) => {
+      const issued = getRuntime().service.issueRiskDossierAccess(actor, { ...envelope(data), eventId });
+      await writeIssuedAccessFlash({ kind: "dossier", token: issued.token, subjectId: issued.id });
+      return issued;
+    },
+  });
+}
+
+export async function revokeDossierAccessAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  const eventId = field(formData, "eventId");
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: `/app/events/${eventId}/protection`,
+    actionType: "risk.dossier.client_access.revoke",
+    execute: (actor, data) =>
+      getRuntime().service.revokeRiskDossierAccess(actor, {
+        ...envelope(data),
+        eventId,
+        grantId: field(data, "grantId"),
       }),
   });
 }

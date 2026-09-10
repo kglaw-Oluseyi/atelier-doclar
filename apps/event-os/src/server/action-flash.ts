@@ -172,7 +172,7 @@ const ISSUED_ACCESS_COOKIE = "md_event_os_issued_access";
 const AUDIENCE_PREVIEW_COOKIE = "md_event_os_offer_preview";
 
 export type IssuedAccessFlash = {
-  kind: "guest" | "vendor" | "atelier";
+  kind: "guest" | "vendor" | "atelier" | "dossier";
   token: string;
   subjectId: string;
 };
@@ -237,7 +237,7 @@ export async function readIssuedAccessFlash(): Promise<IssuedAccessFlash | undef
   if (!raw) return undefined;
   try {
     const parsed = JSON.parse(raw) as { kind?: unknown; token?: unknown; subjectId?: unknown };
-    if (parsed.kind !== "guest" && parsed.kind !== "vendor" && parsed.kind !== "atelier") return undefined;
+    if (parsed.kind !== "guest" && parsed.kind !== "vendor" && parsed.kind !== "atelier" && parsed.kind !== "dossier") return undefined;
     if (typeof parsed.token !== "string" || parsed.token.length < 16 || parsed.token.length > 200) return undefined;
     if (typeof parsed.subjectId !== "string" || parsed.subjectId.length > 80) return undefined;
     return { kind: parsed.kind, token: parsed.token, subjectId: parsed.subjectId };

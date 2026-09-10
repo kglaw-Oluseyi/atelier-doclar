@@ -1,0 +1,57 @@
+import { expect, test } from "@playwright/test";
+import { loginAs, openStaffContext } from "./login";
+import { ALPHA_PROTECTION, evaluateAlphaOne, expectActionOutcome, prepareApprovedRule } from "./s060-helpers";
+
+test("S060 staff issues dossier access, client enters, revoke fails", async ({ page, browser }) => {
+  test.setTimeout(240_000);
+  await prepareApprovedRule(page, browser);
+  const planner = await openStaffContext(browser, "planner");
+  await evaluateAlphaOne(planner.page);
+  await planner.page.getByRole("link", { name: "Dossier", exact: true }).click();
+  await planner.page.getByRole("button", { name: "Assemble dossier edition" }).click();
+  await expectActionOutcome(planner.page);
+  await expect(planner.page.getByRole("button", { name: "Submit dossier" })).toBeVisible({ timeout: 20_000 });
+  await planner.page.getByRole("button", { name: "Submit dossier" }).click();
+  await expect(planner.page.getByRole("button", { name: "Submit dossier" })).toHaveCount(0, { timeout: 20_000 });
+  await expect(planner.page.getByText(/Status SUBMITTED/)).toBeVisible({ timeout: 20_000 });
+  await planner.context.close();
+  const director = await openStaffContext(browser, "director");
+  await director.page.goto(ALPHA_PROTECTION);
+  await director.page.getByRole("link", { name: "Dossier", exact: true }).click();
+  await expect(director.page.getByRole("button", { name: "Approve dossier" })).toBeVisible({ timeout: 20_000 });
+  await director.page.getByRole("button", { name: "Approve dossier" }).click();
+  await expectActionOutcome(director.page);
+  await director.context.close();
+  await loginAs(page, "ceo");
+  await page.goto(ALPHA_PROTECTION);
+  await page.getByRole("link", { name: "Dossier", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Publish dossier without sending" })).toBeVisible({ timeout: 20_000 });
+  await page.getByRole("button", { name: "Publish dossier without sending" }).click();
+  await expectActionOutcome(page);
+  await page.getByRole("link", { name: "Dossier", exact: true }).click();
+  await page.getByRole("button", { name: "Issue client dossier access" }).click();
+  await expectActionOutcome(page);
+  const tokenLine = page.getByTestId("issued-dossier-token");
+  await expect(tokenLine).toBeVisible({ timeout: 20_000 });
+  const tokenPath = ((await tokenLine.innerText()).match(/\/client-dossier\/[A-Za-z0-9_-]+/) ?? [""])[0] ?? "";
+  expect(tokenPath).toMatch(/\/client-dossier\//);
+  await page.goto("/sign-in");
+  const client = await browser.newContext();
+  const clientPage = await client.newPage();
+  await clientPage.goto(tokenPath);
+  await expect(clientPage.getByTestId("client-dossier-session").or(clientPage.getByTestId("client-protection-dossier")).or(clientPage.getByTestId("client-dossier-denied"))).toBeVisible({
+    timeout: 20_000,
+  });
+  await expect(clientPage.getByRole("navigation", { name: "Staff" })).toHaveCount(0);
+  await client.close();
+  await loginAs(page, "ceo");
+  await page.goto(ALPHA_PROTECTION);
+  await page.getByRole("link", { name: "Dossier", exact: true }).click();
+  await page.getByRole("button", { name: "Revoke client access" }).click();
+  await expectActionOutcome(page);
+  const revoked = await browser.newContext();
+  const revokedPage = await revoked.newPage();
+  await revokedPage.goto(tokenPath);
+  await expect(revokedPage.getByTestId("client-dossier-denied")).toBeVisible({ timeout: 20_000 });
+  await revoked.close();
+});

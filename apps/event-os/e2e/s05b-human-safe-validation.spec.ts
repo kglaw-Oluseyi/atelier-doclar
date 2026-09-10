@@ -89,9 +89,9 @@ test("S05B CEO release-evidence shows exact v3 edition, hash, counts and truthfu
   await page.getByRole("link", { name: "Portfolio Insights" }).click();
   const evidence = page.getByTestId("protection-release-evidence");
   await expect(evidence).toBeVisible();
-  await expect(evidence.getByTestId("release-s05b-edition")).toHaveText("s05b-eval-v3");
-  await expect(evidence.getByTestId("release-s05b-hash")).toContainText("a5d540db67ccb6d4e4835d8b6d113903189ad3af3ab10e1c997929bef0198617");
-  await expect(evidence.getByTestId("release-s05b-counts")).toContainText(/total 46/);
+  await expect(evidence.getByTestId("release-s05b-edition")).toHaveText("s05b-eval-v4");
+  await expect(evidence.getByTestId("release-s05b-hash")).toContainText("e09d9efe32e78387d8b49798814c2a4ce685bb2295a8803cb7b1eab7c2cfb1e0");
+  await expect(evidence.getByTestId("release-s05b-counts")).toContainText(/total 56/);
   await expect(evidence.getByTestId("release-s05b-zero-tolerance")).toBeVisible();
   await expect(evidence.getByTestId("release-production-authorised")).toHaveText("false");
   await expect(evidence.getByTestId("release-s05b-blocked")).toBeVisible();
@@ -99,7 +99,7 @@ test("S05B CEO release-evidence shows exact v3 edition, hash, counts and truthfu
   await expect(evidence.getByText(/Fixture assurance is not production authorisation/i)).toBeVisible();
   await page.goto("/app/admin/system");
   await expect(page.getByTestId("system-health")).toBeVisible();
-  await expect(page.getByTestId("protection-release-evidence").getByTestId("release-s05b-edition")).toHaveText("s05b-eval-v3");
+  await expect(page.getByTestId("protection-release-evidence").getByTestId("release-s05b-edition")).toHaveText("s05b-eval-v4");
 });
 
 test("S05B changed surfaces remain usable at 360px, tablet, desktop and 200% zoom", async ({ page }) => {

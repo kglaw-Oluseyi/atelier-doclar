@@ -6,7 +6,7 @@ import { AppShell } from "../../../../../components/shell";
 import { ActionResultBanner } from "../../../../../components/action-result-banner";
 import { IdempotencyField } from "../../../../../components/atelier-pending-submit";
 import { ProtectionMutationForm } from "../../../../../components/protection-mutation-form";
-import { loadPresentedActionResult } from "../../../../../server/action-flash";
+import { loadPresentedActionResult, readIssuedAccessFlash } from "../../../../../server/action-flash";
 import { guardedActor } from "../../../../../server/guard";
 import { getRuntime } from "../../../../../server/runtime";
 import { protectionPermissions } from "../../../../../server/protection-scope";
@@ -29,6 +29,13 @@ import {
   submitDossierAction,
   submitResidualAction,
   decideResidualAction,
+  recordCheckInAction,
+  evaluateCheckpointEscalationsAction,
+  addIncidentEntryAction,
+  proposeLearningAction,
+  decideLearningAction,
+  issueDossierAccessAction,
+  revokeDossierAccessAction,
 } from "../../../../../server/risk-actions";
 import { clientDossierCopy } from "@maison-doclar/shared-platform";
 
@@ -82,7 +89,8 @@ export default async function EventProtectionPage({
     eventId: event.id,
   });
   const copy = clientDossierCopy();
-  const currentDossier = workspace.dossiers.at(-1);
+  const currentDossier = workspace.workingDossier ?? workspace.dossiers.at(-1);
+  const issuedAccess = await readIssuedAccessFlash();
   const envelopeFields = { organisationId: organisation.id, eventId: event.id, assignmentId };
   const createFields = { ...envelopeFields, expectedVersion: 0 };
   return (
@@ -355,6 +363,53 @@ export default async function EventProtectionPage({
             </button>
           </ProtectionMutationForm>
         ) : null}
+        <p>Communications are inactive. No external reminder was dispatched.</p>
+        <ol className="checkpoint-command-list" data-testid="checkpoint-instances">
+          {(workspace.checkpointInstances ?? []).length ? null : (
+            <li>No checkpoint instances yet. Communications are inactive. No external reminder was dispatched.</li>
+          )}
+          {(workspace.checkpointInstances ?? []).map((item) => (
+            <li key={item.id} className="protection-card">
+              <h3>{item.label}</h3>
+              <p>
+                Horizon {item.horizon} · due {item.dueAtLagos} Lagos · {item.criticalFunctionLabel} · {item.vendorLabel} · owner {item.ownerRoleLabel}
+              </p>
+              <p>
+                Status {item.status}
+                {item.status === "MISSED" || item.status === "DUE" ? " — overdue or unknown" : ""}
+              </p>
+              <p>Required evidence: {item.requiredEvidence}</p>
+              {item.latestCheckIn ? <p>Latest check-in {item.latestCheckIn.response} from {item.latestCheckIn.source}</p> : null}
+              <p>Escalation {item.escalationState}. Next action: {item.nextAction}. No external reminder was dispatched.</p>
+              {permissions.continuityManage ? (
+                <ProtectionMutationForm action={recordCheckInAction}>
+                  <Envelope fields={{ ...envelopeFields, expectedVersion: item.version, checkpointId: item.id }} />
+                  <IdempotencyField />
+                  <label>
+                    Check-in
+                    <select name="response" required>
+                      <option value="CONFIRMED">Confirmed</option>
+                      <option value="AT_RISK">At risk</option>
+                      <option value="UNAVAILABLE">Unavailable</option>
+                    </select>
+                  </label>
+                  <button type="submit" className="button secondary">
+                    Record check-in
+                  </button>
+                </ProtectionMutationForm>
+              ) : null}
+            </li>
+          ))}
+        </ol>
+        {permissions.continuityManage ? (
+          <ProtectionMutationForm action={evaluateCheckpointEscalationsAction}>
+            <Envelope fields={createFields} />
+            <IdempotencyField />
+            <button type="submit" className="button secondary">
+              Evaluate internal escalation
+            </button>
+          </ProtectionMutationForm>
+        ) : null}
         <ul>
           {workspace.plans.map((plan) => (
             <li key={plan.id}>
@@ -429,10 +484,87 @@ export default async function EventProtectionPage({
           </ProtectionMutationForm>
         ) : null}
         {workspace.incidents.map((incident) => (
-          <article key={incident.id} className="protection-card">
+          <article key={incident.id} className="protection-card" data-testid="incident-detail">
             <h3>{incident.title}</h3>
-            <p>{incident.state}</p>
+            <p>{incident.state} · {incident.phaseLabel ?? "phase unknown"} · {incident.lifeSafety ? "life safety" : "no life-safety flag"}</p>
             {incident.protocol ? <p data-testid="life-safety-protocol">{incident.protocol}</p> : null}
+            <p>If anyone is in immediate danger, follow Maison Doclar emergency procedures and contact human emergency services. This platform has not dispatched help.</p>
+            <ul>
+              {(incident.notes ?? []).map((note) => (
+                <li key={note.id}>
+                  {note.kind}: {note.body}
+                </li>
+              ))}
+            </ul>
+            {permissions.incidentCommand ? (
+              <ProtectionMutationForm action={addIncidentEntryAction}>
+                <Envelope fields={createFields} />
+                <IdempotencyField />
+                <input type="hidden" name="incidentId" value={incident.id} />
+                <label>
+                  Entry kind
+                  <select name="kind" required>
+                    <option value="OBSERVED_FACT">Observed fact</option>
+                    <option value="REPORTED_CLAIM">Reported claim</option>
+                    <option value="HYPOTHESIS">Hypothesis</option>
+                    <option value="DECISION">Decision</option>
+                    <option value="ACTION_TAKEN">Action taken</option>
+                  </select>
+                </label>
+                <label>
+                  Entry
+                  <textarea name="body" required rows={2} />
+                </label>
+                <button type="submit" className="button secondary">
+                  Add structured entry
+                </button>
+              </ProtectionMutationForm>
+            ) : null}
+            {permissions.incidentCommand ? (
+              <ProtectionMutationForm action={proposeLearningAction}>
+                <Envelope fields={createFields} />
+                <IdempotencyField />
+                <input type="hidden" name="incidentId" value={incident.id} />
+                <label>
+                  Target
+                  <select name="target" required>
+                    <option value="RULE">Risk rule</option>
+                    <option value="VENDOR_INDICATOR">Vendor indicator</option>
+                    <option value="CONTINUITY_TEMPLATE">Continuity template</option>
+                  </select>
+                </label>
+                <label>
+                  Proposition
+                  <textarea name="proposal" required rows={2} />
+                </label>
+                <button type="submit" className="button secondary">
+                  Propose learning
+                </button>
+              </ProtectionMutationForm>
+            ) : null}
+          </article>
+        ))}
+        {(workspace.learnings ?? []).map((item) => (
+          <article key={item.id} className="protection-card">
+            <h3>Learning {item.status ?? "PROPOSED"}</h3>
+            <p>{item.proposition ?? item.proposal}</p>
+            <p>Approval authorises a separate governed successor. It does not rewrite the target.</p>
+            {permissions.incidentCommand ? (
+              <ProtectionMutationForm action={decideLearningAction}>
+                <Envelope fields={{ ...envelopeFields, expectedVersion: item.version, proposalId: item.id }} />
+                <IdempotencyField />
+                <label>
+                  Decision
+                  <select name="status" required>
+                    <option value="APPROVED">Approve</option>
+                    <option value="REJECTED">Reject</option>
+                  </select>
+                </label>
+                <button type="submit" className="button secondary">
+                  Review learning
+                </button>
+              </ProtectionMutationForm>
+            ) : null}
           </article>
         ))}
         {permissions.reserveRequest ? (
@@ -491,10 +623,39 @@ export default async function EventProtectionPage({
           {copy.phrases.evidenceReviewed} {copy.phrases.knownGaps} {copy.phrases.contingencyPrepared} {copy.phrases.confirmationRequired}
         </p>
         <p>
-          <Link href={`/app/events/${event.id}/protection/client`}>Open published client dossier</Link>
+          <Link href={`/app/events/${event.id}/protection/client`}>Preview permission-safe client dossier</Link>
         </p>
-        {permissions.dossierView ? (
-          <ProtectionMutationForm action={assembleDossierAction}>
+        {permissions.dossierManageClientAccess ? (
+          <ProtectionMutationForm action={issueDossierAccessAction}>
+            <Envelope fields={createFields} />
+            <IdempotencyField />
+            <button type="submit" className="button secondary">
+              Issue client dossier access
+            </button>
+          </ProtectionMutationForm>
+        ) : null}
+        <p>Issuing access creates access. It does not send it.</p>
+        {issuedAccess?.kind === "dossier" ? (
+          <p data-testid="issued-dossier-token">
+            One-time client path /client-dossier/{issuedAccess.token}
+          </p>
+        ) : null}
+        {(workspace.accessGrants ?? []).filter((item) => item.status === "ACTIVE").map((grant) => (
+          <p key={grant.id}>
+            Active grant expires {grant.expiresAt}
+            {permissions.dossierManageClientAccess ? (
+              <ProtectionMutationForm action={revokeDossierAccessAction}>
+                <Envelope fields={{ ...envelopeFields, expectedVersion: grant.version, grantId: grant.id }} />
+                <IdempotencyField />
+                <button type="submit" className="button secondary">
+                  Revoke client access
+                </button>
+              </ProtectionMutationForm>
+            ) : null}
+          </p>
+        ))}
+        {permissions.dossierAssemble ? (
+          <ProtectionMutationForm action={assembleDossierAction} testId="protection-assemble-dossier">
             <Envelope fields={createFields} />
             <IdempotencyField />
             <button type="submit" className="button">
@@ -502,7 +663,7 @@ export default async function EventProtectionPage({
             </button>
           </ProtectionMutationForm>
         ) : null}
-        {currentDossier && permissions.dossierView && currentDossier.status === "DRAFT" ? (
+        {currentDossier && permissions.dossierSubmit && currentDossier.status === "DRAFT" ? (
           <ProtectionMutationForm action={submitDossierAction}>
             <Envelope fields={{ ...envelopeFields, expectedVersion: "version" in currentDossier ? Number(currentDossier.version) : 1, dossierId: currentDossier.id }} />
             <IdempotencyField />
@@ -530,7 +691,7 @@ export default async function EventProtectionPage({
             </button>
           </ProtectionMutationForm>
         ) : null}
-        {currentDossier && permissions.dossierExport && currentDossier.status === "PUBLISHED" ? (
+        {currentDossier && permissions.dossierExport && (currentDossier.status === "APPROVED" || currentDossier.status === "PUBLISHED") && workspace.publications.some((item) => item.current || item.status === "CURRENT") ? (
           <ProtectionMutationForm action={exportDossierAction}>
             <Envelope fields={{ ...envelopeFields, expectedVersion: "version" in currentDossier ? Number(currentDossier.version) : 1, dossierId: currentDossier.id }} />
             <IdempotencyField />

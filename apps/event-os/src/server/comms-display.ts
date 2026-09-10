@@ -23,6 +23,8 @@ export function governedRoleLabel(roleKey: SystemRoleKey): string {
       return "System Administrator";
     case "READ_ONLY_AUDITOR":
       return "Read-only Auditor";
+    case "RISK_GOVERNANCE_REVIEWER":
+      return "Risk Governance Reviewer";
     default: {
       const _exhaustive: never = roleKey;
       return _exhaustive;
