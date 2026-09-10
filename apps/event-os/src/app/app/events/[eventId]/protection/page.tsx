@@ -64,12 +64,12 @@ export default async function EventProtectionPage({
   });
   const copy = clientDossierCopy();
   const currentDossier = workspace.dossiers.at(-1);
-  const hidden = {
+  const envelopeFields = {
     organisationId: organisation.id,
     eventId: event.id,
     assignmentId,
-    expectedVersion: 0,
   };
+  const createFields = { ...envelopeFields, expectedVersion: 0 };
   return (
     <AppShell person={person} organisationName={organisation.displayName} eventName={event.name} eventId={event.id} current="/app/events">
       <AtelierPageHeader
@@ -98,7 +98,7 @@ export default async function EventProtectionPage({
         </p>
         {permissions.eventManage ? (
           <form action={evaluateRiskEventAction} className="actions">
-            {Object.entries(hidden).map(([name, value]) => (
+            {Object.entries(createFields).map(([name, value]) => (
               <input key={name} type="hidden" name={name} value={String(value)} />
             ))}
             <IdempotencyField />
@@ -109,7 +109,7 @@ export default async function EventProtectionPage({
         ) : null}
         {permissions.eventManage ? (
           <form action={recordRiskFactAction} className="atelier-form">
-            {Object.entries(hidden).map(([name, value]) => (
+            {Object.entries(createFields).map(([name, value]) => (
               <input key={name} type="hidden" name={name} value={String(value)} />
             ))}
             <IdempotencyField />
@@ -153,7 +153,7 @@ export default async function EventProtectionPage({
               </p>
               {permissions.eventManage && gap.id !== "none" ? (
                 <form action={submitResidualAction}>
-                  {Object.entries(hidden).map(([name, value]) => (
+                  {Object.entries(createFields).map(([name, value]) => (
                     <input key={name} type="hidden" name={name} value={String(value)} />
                   ))}
                   <IdempotencyField />
@@ -188,7 +188,7 @@ export default async function EventProtectionPage({
         {permissions.continuityManage ? (
           <div className="actions">
             <form action={createContinuityPlanAction}>
-              {Object.entries(hidden).map(([name, value]) => (
+              {Object.entries(createFields).map(([name, value]) => (
                 <input key={name} type="hidden" name={name} value={String(value)} />
               ))}
               <IdempotencyField />
@@ -198,7 +198,7 @@ export default async function EventProtectionPage({
               </button>
             </form>
             <form action={generateCheckpointsAction}>
-              {Object.entries(hidden).map(([name, value]) => (
+              {Object.entries(createFields).map(([name, value]) => (
                 <input key={name} type="hidden" name={name} value={String(value)} />
               ))}
               <IdempotencyField />
@@ -214,7 +214,7 @@ export default async function EventProtectionPage({
               {plan.title} · {plan.status}
               {permissions.continuityManage ? (
                 <form action={proposeFallbackAction}>
-                  {Object.entries(hidden).map(([name, value]) => (
+                  {Object.entries(createFields).map(([name, value]) => (
                     <input key={`p-${name}`} type="hidden" name={name} value={String(value)} />
                   ))}
                   <IdempotencyField />
@@ -235,7 +235,7 @@ export default async function EventProtectionPage({
             <p>This records an authorised plan only. Booking, payment and dispatch remain unavailable.</p>
             {permissions.continuityAuthorise ? (
               <form action={authoriseFallbackAction}>
-                {Object.entries(hidden).map(([name, value]) => (
+                {Object.entries(envelopeFields).map(([name, value]) => (
                   <input key={name} type="hidden" name={name} value={String(value)} />
                 ))}
                 <IdempotencyField />
@@ -254,7 +254,7 @@ export default async function EventProtectionPage({
         ))}
         {permissions.incidentReport ? (
           <form action={reportIncidentAction} className="atelier-form">
-            {Object.entries(hidden).map(([name, value]) => (
+            {Object.entries(createFields).map(([name, value]) => (
               <input key={name} type="hidden" name={name} value={String(value)} />
             ))}
             <IdempotencyField />
@@ -276,7 +276,7 @@ export default async function EventProtectionPage({
         ))}
         {permissions.reserveRequest ? (
           <form action={projectRiskBudgetAction}>
-            {Object.entries(hidden).map(([name, value]) => (
+            {Object.entries(createFields).map(([name, value]) => (
               <input key={name} type="hidden" name={name} value={String(value)} />
             ))}
             <IdempotencyField />
@@ -296,7 +296,7 @@ export default async function EventProtectionPage({
         <p>{copy.phrases.evidenceReviewed} {copy.phrases.knownGaps} {copy.phrases.contingencyPrepared} {copy.phrases.confirmationRequired}</p>
         {permissions.dossierView ? (
           <form action={assembleDossierAction}>
-            {Object.entries(hidden).map(([name, value]) => (
+            {Object.entries(createFields).map(([name, value]) => (
               <input key={name} type="hidden" name={name} value={String(value)} />
             ))}
             <IdempotencyField />
@@ -307,7 +307,7 @@ export default async function EventProtectionPage({
         ) : null}
         {currentDossier && permissions.dossierPublish ? (
           <form action={publishDossierAction}>
-            {Object.entries(hidden).map(([name, value]) => (
+            {Object.entries(envelopeFields).map(([name, value]) => (
               <input key={name} type="hidden" name={name} value={String(value)} />
             ))}
             <IdempotencyField />
