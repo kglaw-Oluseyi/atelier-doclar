@@ -500,3 +500,5 @@ RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S037`. Canonical corpus p
 
 `MD-PR-S053` records independent AI CTO acceptance of EOS-S05A at SHA `50322fa5fdf7b46437dc9d62579e2e2ad918e762` after Claude `MD-PR-S052` READY. Not a catalogue slice. Catalogue accepted-slice count remains 5. Live Event OS deployment `4ab04e5e-0e53-48b2-8d69-fa431b3bcb5a` is not redeployed. Control Tower is not redeployed. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. EOS-S05B is planning direction only. Acceptance record: `docs/control/EOS_S05A_ACCEPTANCE.md`.
 
+`MD-PR-S054` implements EOS-S05B Risk, Protection & Continuity Command from the ratified corpus in `docs/control/eos-s05b/`. Status is `IMPLEMENTED / NOT ACCEPTED`. Not a catalogue slice. Catalogue accepted-slice count remains 5. Evaluation edition `s05b-eval-v1`. Production remains unauthorised. Control Tower is not redeployed. Cursor does not accept. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. Implementation record: `docs/control/EOS_S05B_IMPLEMENTATION.md`.
+

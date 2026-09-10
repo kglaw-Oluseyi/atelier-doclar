@@ -344,3 +344,14 @@ Milestone 4 is authorised on the Milestone 1–3 contracts. Historic S5-01–S5-
 | Control Tower | Compatibility-only. Not a deploy target for this documentation-only record. |
 | EOS-S06 / `MD-PR-S036` | RETAINED. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. |
 | `productionAuthorised` | RETAINED false. Not changed. |
+
+## Addendum — 2026-09-10 EOS-S05B implementation (`MD-PR-S054`)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| EOS-S05B PLANNING DIRECTION ONLY | SUPERSEDED for implementation authority only. Current programme status is `IMPLEMENTED / NOT ACCEPTED` under `MD-PR-S054`. Historic planning-direction rows remain dated history. |
+| Catalogue accepted-slice count | RETAINED at 5. EOS-S05B is not a catalogue-numbered slice. |
+| Evaluation corpus `s05b-eval-v1` | NEW. Separate from retained `s05a-eval-v6`. Fail-closed when unrun. |
+| Control Tower | Compatibility-only. Not a deploy target unless executable code changed. It did not. |
+| EOS-S06 / `MD-PR-S036` | RETAINED. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. |
+| `productionAuthorised` | RETAINED false. Not changed. |

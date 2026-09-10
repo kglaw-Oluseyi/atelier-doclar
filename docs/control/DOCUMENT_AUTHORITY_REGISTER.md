@@ -338,3 +338,14 @@ This addendum does not rewrite the B0 row set or earlier addenda. Catalogue acce
 | EOS-S05A acceptance record | `docs/control/EOS_S05A_ACCEPTANCE.md` | CANONICAL ACCEPTANCE RECORD | Independent AI CTO acceptance under `MD-PR-S053`. Not a catalogue slice. Status `ACCEPTED` at SHA `50322fa5fdf7b46437dc9d62579e2e2ad918e762`. |
 | EOS-S05A implementation record | `docs/control/EOS_S05A_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | Historical implementation; acceptance is the S053 record. |
 | EOS-S05A build ledger | `docs/control/EOS_S05A_BUILD_LEDGER.md` | IMPLEMENTATION LEDGER | S053 acceptance stamp. |
+
+## Addendum — 2026-09-10 EOS-S05B implementation (`MD-PR-S054`)
+
+This addendum does not rewrite the B0 row set or earlier addenda. Catalogue accepted-slice count remains 5. EOS-S05B is implemented and is not accepted. EOS-S06 remains unauthorised. Production remains unauthorised. Control Tower is not a deploy target for this run.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| MD-PR-S054 implementation authority | `docs/control/eos-s05b/MD_PR_S054_EOS_S05B_IMPLEMENTATION_AUTHORITY.md` | CONTROLLING IMPLEMENTATION AUTHORITY | Whole-slice EOS-S05B implementation. Does not accept EOS-S05B. |
+| EOS-S05B ratified corpus | `docs/control/eos-s05b/` | RATIFIED REQUIREMENTS | Documents 00–13, 14A–14D, 15. |
+| EOS-S05B implementation record | `docs/control/EOS_S05B_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | Not acceptance. |
+| EOS-S05B build ledger | `docs/control/EOS_S05B_BUILD_LEDGER.md` | IMPLEMENTATION LEDGER | First-run failures and gate evidence. |

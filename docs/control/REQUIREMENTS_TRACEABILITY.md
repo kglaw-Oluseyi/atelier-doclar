@@ -369,7 +369,24 @@
 | Production / Railway / real operations | NO — documentation-only acceptance; Event OS and Control Tower not redeployed; `productionAuthorised` remains false |
 | Status | ACCEPTED under `MD-PR-S053` at SHA `50322fa5fdf7b46437dc9d62579e2e2ad918e762`; not a catalogue slice; catalogue accepted-slice count remains 5 |
 | Acceptance record | `docs/control/EOS_S05A_ACCEPTANCE.md` |
-| Successor | EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`; `MD-PR-S036` is not consumed; EOS-S05B is planning direction only |
+| Successor | EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`; `MD-PR-S036` is not consumed; EOS-S05B later implemented under `MD-PR-S054` |
+
+## EOS-S05B
+
+**Prompt Control ID:** `MD-PR-S054`
+**Slice ID:** `EOS-S05B` (not a programme-catalogue accepted slice)
+
+| Requirement | Implementation |
+|-------------|----------------|
+| Title | Risk, Protection & Continuity Command |
+| Authority | George Lawson ratification; implementation under `MD-PR-S054` |
+| Canonical corpus | `docs/control/eos-s05b/` — documents 00–13, 14A–14D, 15 and the Word ratification pack |
+| Controlling implementation volume | Whole-slice `RPC-01`–`RPC-55` |
+| Implementation ledger | `docs/control/EOS_S05B_BUILD_LEDGER.md` |
+| Implementation record | `docs/control/EOS_S05B_IMPLEMENTATION.md` |
+| Production / Railway / real operations | NO — Event OS deploy of synthetic implementation only; Control Tower not redeployed; `productionAuthorised` remains false |
+| Status | IMPLEMENTED / NOT ACCEPTED under `MD-PR-S054`; not a catalogue slice; catalogue accepted-slice count remains 5 |
+| Successor | EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`; `MD-PR-S036` is not consumed |
 
 ## EOS-S04A
 

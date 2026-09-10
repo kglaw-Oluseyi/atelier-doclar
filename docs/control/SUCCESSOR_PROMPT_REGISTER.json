@@ -306,6 +306,14 @@
       "product": "EVENT_OS",
       "title": "EOS-S05A Independent Acceptance Record",
       "authorising_instruction": "Record independent AI CTO acceptance of EOS-S05A Executive Event Command at SHA 50322fa5fdf7b46437dc9d62579e2e2ad918e762; documentation only; do not change application code, redeploy Event OS or Control Tower, invent catalogue acceptance, start EOS-S06 or EOS-S05B, consume MD-PR-S036, or authorise production"
+    },
+    {
+      "prompt_control_id": "MD-PR-S054",
+      "native_id": "S05B-M1",
+      "slice_id": "EOS-S05B",
+      "product": "EVENT_OS",
+      "title": "EOS-S05B Risk Protection and Continuity Command Implementation Authority",
+      "authorising_instruction": "Implement the ratified EOS-S05B Risk Protection and Continuity Command corpus RPC-01-RPC-55; do not accept EOS-S05B, start EOS-S06, consume MD-PR-S036, invent catalogue acceptance, redeploy Control Tower unless executable code changed, or authorise production"
     }
   ]
 }
