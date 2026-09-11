@@ -42,11 +42,16 @@ test("S063 planner director CEO publication, last-known-good and separate client
 
     const ceo = await openStaffContext(browser, "ceo");
     await ceo.page.goto(ALPHA_DOSSIER);
+    const beforePublish = await readActionCorrelation(ceo.page);
     await ceo.page.getByRole("button", { name: "Publish dossier without sending" }).click();
-    await expectActionOutcome(ceo.page);
+    await expectFreshActionSuccess(ceo.page, beforePublish);
     const published = await ceo.page.getByTestId("focused-dossier-publication").innerText();
+    const firstPublishCorrelation = await readActionCorrelation(ceo.page);
+    await ceo.page.goto(ALPHA_DOSSIER);
+    await expect(ceo.page.getByTestId("focused-dossier-workspace")).toBeVisible({ timeout: ACTION });
     await ceo.page.getByRole("button", { name: "Publish dossier without sending" }).click();
-    await expectActionOutcome(ceo.page);
+    await expectFreshActionSuccess(ceo.page, firstPublishCorrelation);
+    await expect(ceo.page.getByTestId("action-result-banner")).toContainText(/No change|already applied/i);
     await ceo.page.getByRole("button", { name: "Assemble dossier edition" }).click();
     await expect(ceo.page.getByText(/Status DRAFT/)).toBeVisible({ timeout: ACTION });
     await expect(ceo.page.getByTestId("focused-dossier-publication")).toContainText(published.slice(0, 24));

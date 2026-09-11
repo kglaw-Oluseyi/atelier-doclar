@@ -18,8 +18,17 @@ export async function expectFreshActionSuccess(page: Page, previousCorrelation =
 }
 
 export async function readActionCorrelation(page: Page): Promise<string> {
-  const text = (await page.getByTestId("action-result-banner").innerText().catch(() => "")) ?? "";
+  const banner = page.getByTestId("action-result-banner");
+  if (!(await banner.count())) return "";
+  const text = (await banner.innerText({ timeout: 1_000 }).catch(() => "")) ?? "";
   return (text.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i) ?? [""])[0] ?? "";
+}
+
+export async function clickOnceNamed(page: Page, name: string) {
+  const button = page.getByRole("button", { name });
+  await expect(button).toBeVisible({ timeout: 30_000 });
+  await expect(button).toBeEnabled();
+  await button.click();
 }
 
 export async function assembleWorkingDraft(page: Page) {

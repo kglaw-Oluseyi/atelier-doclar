@@ -330,3 +330,98 @@ describe("EOS-S04D action-result lifecycle", () => {
     assert.equal(recallActionResult(current.correlationId), undefined);
   });
 });
+
+describe("MD-PR-S065 dossier publication result delivery", () => {
+  const dossierScope = `/app/events/${EVENT}/protection/dossier`;
+  const appliedId = "12121212-1212-4121-8121-121212121212";
+  const replayId = "13131313-1313-4131-8131-131313131313";
+
+  function dossierResult(input: { correlationId: string; application: "APPLIED" | "REPLAYED"; publicationId: string }) {
+    return buildActionResult({
+      sessionHash: sessionHashFromToken(SESSION_A),
+      actorPersonId: ACTOR_A,
+      scopePath: dossierScope,
+      actionType: "risk.dossier.publish",
+      correlationId: input.correlationId,
+      status: "SUCCESS",
+      code: "SUCCESS",
+      message:
+        input.application === "REPLAYED"
+          ? "No change. This command was already applied."
+          : "Protection command applied.",
+      eventId: EVENT,
+      application: input.application,
+      didDataChange: input.application === "APPLIED",
+      subjectId: input.publicationId,
+    });
+  }
+
+  it("writes a new correlation onto the exact dossier redirect after publish", () => {
+    const href = resultHref(dossierScope, appliedId);
+    assert.equal(href, `${dossierScope}?result=${appliedId}`);
+    const stored = dossierResult({ correlationId: appliedId, application: "APPLIED", publicationId: "14141414-1414-4141-8141-141414141414" });
+    rememberActionResult(stored);
+    const presented = presentActionResult({
+      stored: recallActionResult(appliedId),
+      sessionHash: sessionHashFromToken(SESSION_A),
+      actorPersonId: ACTOR_A,
+      requestPath: dossierScope,
+      resultId: appliedId,
+      eventId: EVENT,
+    });
+    assert.equal(presented.view?.kind, "success");
+    assert.equal(presented.correlationId, appliedId);
+    assert.equal(presented.application, "APPLIED");
+    assert.equal(presented.view?.dataChanged, "yes");
+    assert.equal(presented.shouldConsume, true);
+  });
+
+  it("keeps a replay result distinct from a stale earlier correlation", () => {
+    const first = dossierResult({ correlationId: appliedId, application: "APPLIED", publicationId: "14141414-1414-4141-8141-141414141414" });
+    const replay = dossierResult({
+      correlationId: replayId,
+      application: "REPLAYED",
+      publicationId: "14141414-1414-4141-8141-141414141414",
+    });
+    rememberActionResult(first);
+    rememberActionResult(replay);
+    const stale = presentActionResult({
+      stored: first,
+      sessionHash: sessionHashFromToken(SESSION_A),
+      actorPersonId: ACTOR_A,
+      requestPath: dossierScope,
+      resultId: replayId,
+      eventId: EVENT,
+    });
+    assert.equal(stale.view, undefined);
+    const presented = presentActionResult({
+      stored: recallActionResult(replayId),
+      sessionHash: sessionHashFromToken(SESSION_A),
+      actorPersonId: ACTOR_A,
+      requestPath: dossierScope,
+      resultId: replayId,
+      eventId: EVENT,
+    });
+    assert.equal(presented.correlationId, replayId);
+    assert.equal(presented.application, "REPLAYED");
+    assert.equal(presented.view?.dataChanged, "no");
+    assert.notEqual(presented.correlationId, first.correlationId);
+  });
+
+  it("does not forget the result until the presented correlation is consumed", () => {
+    const stored = dossierResult({ correlationId: appliedId, application: "APPLIED", publicationId: "14141414-1414-4141-8141-141414141414" });
+    rememberActionResult(stored);
+    const firstPaint = presentActionResult({
+      stored: recallActionResult(appliedId),
+      sessionHash: sessionHashFromToken(SESSION_A),
+      actorPersonId: ACTOR_A,
+      requestPath: dossierScope,
+      resultId: appliedId,
+      eventId: EVENT,
+    });
+    assert.equal(firstPaint.view?.kind, "success");
+    assert.equal(recallActionResult(appliedId)?.correlationId, appliedId);
+    forgetActionResult(appliedId);
+    assert.equal(recallActionResult(appliedId), undefined);
+  });
+});
