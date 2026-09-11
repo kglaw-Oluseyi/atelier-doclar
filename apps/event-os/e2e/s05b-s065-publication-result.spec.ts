@@ -105,7 +105,13 @@ test("S065 first publish and identical replay each show a fresh truthful result"
     expect(second.hash).toBe(first.hash);
     expect(second.number).toBe(first.number);
 
+    await ceo.page.goto(ALPHA_DOSSIER);
+    await expect(ceo.page.getByTestId("focused-dossier-workspace")).toBeVisible({ timeout: ACTION });
+    const beforeSuccessor = await readActionCorrelation(ceo.page);
+    const previousSuccessorResult = new URL(ceo.page.url()).searchParams.get("result") ?? "";
     await clickOnceNamed(ceo.page, "Assemble dossier edition");
+    await expectFreshResultQuery(ceo.page, previousSuccessorResult);
+    await expectFreshActionSuccess(ceo.page, beforeSuccessor);
     await expect(ceo.page.getByText(/Status DRAFT/)).toBeVisible({ timeout: ACTION });
     await expect(ceo.page.getByTestId("focused-dossier-publication")).toContainText(first.id);
 
