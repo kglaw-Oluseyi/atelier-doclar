@@ -28,7 +28,22 @@ export async function clickOnceNamed(page: Page, name: string) {
   const button = page.getByRole("button", { name });
   await expect(button).toBeVisible({ timeout: 30_000 });
   await expect(button).toBeEnabled();
-  await button.click();
+  await button.evaluate((element) => {
+    const form = element.closest("form");
+    if (form instanceof HTMLFormElement) form.requestSubmit(element as HTMLButtonElement);
+    else (element as HTMLButtonElement).click();
+  });
+}
+
+export async function expectFreshResultQuery(page: Page, previousResult = "") {
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  await expect
+    .poll(() => {
+      const value = new URL(page.url()).searchParams.get("result") ?? "";
+      return uuid.test(value) && value !== previousResult ? value : "";
+    }, { timeout: 30_000 })
+    .toMatch(uuid);
+  return new URL(page.url()).searchParams.get("result") ?? "";
 }
 
 export async function assembleWorkingDraft(page: Page) {

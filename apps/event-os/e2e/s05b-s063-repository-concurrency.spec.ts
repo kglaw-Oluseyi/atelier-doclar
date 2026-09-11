@@ -6,6 +6,7 @@ import {
   clickOnceNamed,
   expectActionOutcome,
   expectFreshActionSuccess,
+  expectFreshResultQuery,
   prepareApprovedRule,
   readActionCorrelation,
   recoverRecordedFixtureAuthority,
@@ -41,7 +42,9 @@ test("S063 identical live publish replays instead of creating a second CURRENT",
     await ceo.page.goto(ALPHA_DOSSIER);
     await expect(ceo.page.getByTestId("focused-dossier-workspace")).toBeVisible({ timeout: ACTION });
     const beforePublish = await readActionCorrelation(ceo.page);
+    const previousResult = new URL(ceo.page.url()).searchParams.get("result") ?? "";
     await clickOnceNamed(ceo.page, "Publish dossier without sending");
+    await expectFreshResultQuery(ceo.page, previousResult);
     await expectFreshActionSuccess(ceo.page, beforePublish);
     const first = await ceo.page.getByTestId("focused-dossier-publication").innerText();
     const firstCorrelation = await readActionCorrelation(ceo.page);
@@ -50,6 +53,7 @@ test("S063 identical live publish replays instead of creating a second CURRENT",
     await expect(ceo.page.getByRole("button", { name: "Publish dossier without sending" })).toBeVisible({ timeout: ACTION });
     const beforeReplay = await readActionCorrelation(ceo.page);
     await clickOnceNamed(ceo.page, "Publish dossier without sending");
+    await expectFreshResultQuery(ceo.page, firstCorrelation);
     await expectFreshActionSuccess(ceo.page, firstCorrelation || beforeReplay);
     await expect(ceo.page.getByTestId("action-result-banner")).toContainText(/No change|already applied/i);
     const second = await ceo.page.getByTestId("focused-dossier-publication").innerText();

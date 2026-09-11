@@ -6,6 +6,7 @@ import {
   clickOnceNamed,
   expectActionOutcome,
   expectFreshActionSuccess,
+  expectFreshResultQuery,
   prepareApprovedRule,
   readActionCorrelation,
   recoverRecordedFixtureAuthority,
@@ -73,8 +74,10 @@ test("S065 first publish and identical replay each show a fresh truthful result"
     };
     ceo.page.on("request", onRequest);
     const beforePublish = await readActionCorrelation(ceo.page);
+    const previousResult = new URL(ceo.page.url()).searchParams.get("result") ?? "";
     const publishStarted = Date.now();
     await clickOnceNamed(ceo.page, "Publish dossier without sending");
+    await expectFreshResultQuery(ceo.page, previousResult);
     await expectFreshActionSuccess(ceo.page, beforePublish);
     const publishMs = Date.now() - publishStarted;
     const banner = ceo.page.getByTestId("action-result-banner");
@@ -92,6 +95,7 @@ test("S065 first publish and identical replay each show a fresh truthful result"
     const beforeReplay = await readActionCorrelation(ceo.page);
     const replayStarted = Date.now();
     await clickOnceNamed(ceo.page, "Publish dossier without sending");
+    await expectFreshResultQuery(ceo.page, firstCorrelation);
     await expectFreshActionSuccess(ceo.page, beforeReplay || firstCorrelation);
     const replayMs = Date.now() - replayStarted;
     await expect(ceo.page.getByTestId("action-result-banner")).toContainText(/No change|already applied/i);
