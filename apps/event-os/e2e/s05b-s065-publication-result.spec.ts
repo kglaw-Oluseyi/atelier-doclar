@@ -115,8 +115,11 @@ test("S065 first publish and identical replay each show a fresh truthful result"
     await expect(ceo.page.getByText(/Status DRAFT/)).toBeVisible({ timeout: ACTION });
     await expect(ceo.page.getByTestId("focused-dossier-publication")).toContainText(first.id);
 
+    const beforeIssue = await readActionCorrelation(ceo.page);
+    const previousIssueResult = new URL(ceo.page.url()).searchParams.get("result") ?? "";
     await clickOnceNamed(ceo.page, "Issue client dossier access");
-    await expectActionOutcome(ceo.page);
+    await expectFreshResultQuery(ceo.page, previousIssueResult);
+    await expectFreshActionSuccess(ceo.page, beforeIssue);
     const tokenLine = ceo.page.getByTestId("issued-dossier-token");
     await expect(tokenLine).toBeVisible({ timeout: ACTION });
     const tokenPath = ((await tokenLine.innerText()).match(/\/client-dossier\/[A-Za-z0-9_-]{16,}/) ?? [""])[0] ?? "";
@@ -128,8 +131,12 @@ test("S065 first publish and identical replay each show a fresh truthful result"
     await clientPage.getByLabel("Message", { exact: true }).fill("S065 synthetic acknowledgement.");
     await clientPage.getByRole("button", { name: "Record client note" }).click();
     await client.close();
+    await ceo.page.goto(ALPHA_DOSSIER);
+    await expect(ceo.page.getByTestId("focused-dossier-workspace")).toBeVisible({ timeout: ACTION });
     const beforeRevoke = await readActionCorrelation(ceo.page);
+    const previousRevokeResult = new URL(ceo.page.url()).searchParams.get("result") ?? "";
     await clickOnceNamed(ceo.page, "Revoke client access");
+    await expectFreshResultQuery(ceo.page, previousRevokeResult);
     await expectFreshActionSuccess(ceo.page, beforeRevoke);
     const revoked = await browser.newContext();
     const revokedPage = await revoked.newPage();
