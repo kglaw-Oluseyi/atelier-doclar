@@ -1,15 +1,17 @@
-import { expect, test, type Page, type Request } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { openStaffContext } from "./login";
 import {
   ALPHA_DOSSIER,
   ALPHA_PROTECTION,
+  clickAndProveFreshResult,
   clickOnceNamed,
   expectActionOutcome,
   expectFreshActionSuccess,
-  expectFreshResultQuery,
   prepareApprovedRule,
   readActionCorrelation,
+  readActiveGrantIds,
   recoverRecordedFixtureAuthority,
+  revokeButtonForGrant,
 } from "./s060-helpers";
 
 const ACTION = 30_000;
@@ -65,41 +67,34 @@ test("S065 first publish and identical replay each show a fresh truthful result"
     const ceo = await openStaffContext(browser, "ceo");
     await ceo.page.goto(ALPHA_DOSSIER);
     await expect(ceo.page.getByTestId("focused-dossier-workspace")).toBeVisible({ timeout: ACTION });
-    const publishPosts: string[] = [];
-    const onRequest = (request: Request) => {
-      const body = request.postData() ?? "";
-      if (request.method() === "POST" && request.headers()["next-action"] && body.includes("approvedHash")) {
-        publishPosts.push(new URL(request.url()).pathname);
-      }
-    };
-    ceo.page.on("request", onRequest);
-    const beforePublish = await readActionCorrelation(ceo.page);
     const previousResult = new URL(ceo.page.url()).searchParams.get("result") ?? "";
     const publishStarted = Date.now();
-    await clickOnceNamed(ceo.page, "Publish dossier without sending");
-    await expectFreshResultQuery(ceo.page, previousResult);
-    await expectFreshActionSuccess(ceo.page, beforePublish);
+    const publish = await clickAndProveFreshResult(
+      ceo.page,
+      ceo.page.getByRole("button", { name: "Publish dossier without sending" }),
+      previousResult,
+    );
     const publishMs = Date.now() - publishStarted;
     const banner = ceo.page.getByTestId("action-result-banner");
     await expect(banner).toContainText(/risk dossier publish/i);
     await expect(banner).toContainText(/Did data change\s*Yes/i);
-    const firstCorrelation = await readActionCorrelation(ceo.page);
+    const firstCorrelation = publish.resultId;
     const first = publicationIdentity(await ceo.page.getByTestId("focused-dossier-publication").innerText());
     expect(first.id).toMatch(/[0-9a-f-]{36}/i);
     expect(ceo.page.url()).toContain(`result=${firstCorrelation}`);
-    expect(publishPosts.length).toBe(1);
-    ceo.page.off("request", onRequest);
 
     await ceo.page.goto(ALPHA_DOSSIER);
     await expect(ceo.page.getByTestId("focused-dossier-workspace")).toBeVisible({ timeout: ACTION });
-    const beforeReplay = await readActionCorrelation(ceo.page);
     const replayStarted = Date.now();
-    await clickOnceNamed(ceo.page, "Publish dossier without sending");
-    await expectFreshResultQuery(ceo.page, firstCorrelation);
-    await expectFreshActionSuccess(ceo.page, beforeReplay || firstCorrelation);
+    const replay = await clickAndProveFreshResult(
+      ceo.page,
+      ceo.page.getByRole("button", { name: "Publish dossier without sending" }),
+      firstCorrelation,
+    );
     const replayMs = Date.now() - replayStarted;
     await expect(ceo.page.getByTestId("action-result-banner")).toContainText(/No change|already applied/i);
     await expect(ceo.page.getByTestId("action-result-banner")).toContainText(/Did data change\s*No/i);
+    expect(replay.resultId).not.toBe(firstCorrelation);
     const second = publicationIdentity(await ceo.page.getByTestId("focused-dossier-publication").innerText());
     expect(second.id).toBe(first.id);
     expect(second.hash).toBe(first.hash);
@@ -107,19 +102,28 @@ test("S065 first publish and identical replay each show a fresh truthful result"
 
     await ceo.page.goto(ALPHA_DOSSIER);
     await expect(ceo.page.getByTestId("focused-dossier-workspace")).toBeVisible({ timeout: ACTION });
-    const beforeSuccessor = await readActionCorrelation(ceo.page);
     const previousSuccessorResult = new URL(ceo.page.url()).searchParams.get("result") ?? "";
-    await clickOnceNamed(ceo.page, "Assemble dossier edition");
-    await expectFreshResultQuery(ceo.page, previousSuccessorResult);
-    await expectFreshActionSuccess(ceo.page, beforeSuccessor);
+    await clickAndProveFreshResult(
+      ceo.page,
+      ceo.page.getByRole("button", { name: "Assemble dossier edition" }),
+      previousSuccessorResult,
+    );
     await expect(ceo.page.getByText(/Status DRAFT/)).toBeVisible({ timeout: ACTION });
     await expect(ceo.page.getByTestId("focused-dossier-publication")).toContainText(first.id);
 
-    const beforeIssue = await readActionCorrelation(ceo.page);
+    const grantIdsBeforeIssue = await readActiveGrantIds(ceo.page);
     const previousIssueResult = new URL(ceo.page.url()).searchParams.get("result") ?? "";
-    await clickOnceNamed(ceo.page, "Issue client dossier access");
-    await expectFreshResultQuery(ceo.page, previousIssueResult);
-    await expectFreshActionSuccess(ceo.page, beforeIssue);
+    await clickAndProveFreshResult(
+      ceo.page,
+      ceo.page.getByRole("button", { name: "Issue client dossier access" }),
+      previousIssueResult,
+    );
+    const issuedGrantId =
+      new URL(ceo.page.url()).searchParams.get("subjectId") ??
+      (await readActiveGrantIds(ceo.page)).find((id) => !grantIdsBeforeIssue.includes(id)) ??
+      "";
+    expect(issuedGrantId).toMatch(/^[0-9a-f-]{36}$/i);
+    expect(await readActiveGrantIds(ceo.page)).toContain(issuedGrantId);
     const tokenLine = ceo.page.getByTestId("issued-dossier-token");
     await expect(tokenLine).toBeVisible({ timeout: ACTION });
     const tokenPath = ((await tokenLine.innerText()).match(/\/client-dossier\/[A-Za-z0-9_-]{16,}/) ?? [""])[0] ?? "";
@@ -133,11 +137,17 @@ test("S065 first publish and identical replay each show a fresh truthful result"
     await client.close();
     await ceo.page.goto(ALPHA_DOSSIER);
     await expect(ceo.page.getByTestId("focused-dossier-workspace")).toBeVisible({ timeout: ACTION });
-    const beforeRevoke = await readActionCorrelation(ceo.page);
+    expect(await readActiveGrantIds(ceo.page)).toContain(issuedGrantId);
     const previousRevokeResult = new URL(ceo.page.url()).searchParams.get("result") ?? "";
-    await clickOnceNamed(ceo.page, "Revoke client access");
-    await expectFreshResultQuery(ceo.page, previousRevokeResult);
-    await expectFreshActionSuccess(ceo.page, beforeRevoke);
+    const revokeButton = revokeButtonForGrant(ceo.page, issuedGrantId);
+    await expect(revokeButton).toHaveCount(1);
+    const revokeEvidence = await clickAndProveFreshResult(ceo.page, revokeButton, previousRevokeResult, issuedGrantId);
+    await expect(ceo.page.getByTestId("action-result-banner")).toContainText(/risk dossier client_access revoke/i);
+    expect(revokeEvidence.resultId).not.toBe(previousRevokeResult);
+    console.log("S065_REVOKE_EVIDENCE", JSON.stringify({ ...revokeEvidence, issuedGrantId }));
+    await ceo.page.goto(ALPHA_DOSSIER);
+    await expect(ceo.page.getByTestId("focused-dossier-workspace")).toBeVisible({ timeout: ACTION });
+    expect(await readActiveGrantIds(ceo.page)).not.toContain(issuedGrantId);
     const revoked = await browser.newContext();
     const revokedPage = await revoked.newPage();
     await revokedPage.goto(tokenPath);
@@ -149,7 +159,20 @@ test("S065 first publish and identical replay each show a fresh truthful result"
 
     console.log(
       "S065_PUBLICATION_TIMINGS",
-      JSON.stringify({ getMs, assembleMs, submitMs, approveMs, publishMs, replayMs, publicationId: first.id, firstCorrelation }),
+      JSON.stringify({
+        getMs,
+        assembleMs,
+        submitMs,
+        approveMs,
+        publishMs,
+        replayMs,
+        publicationId: first.id,
+        firstCorrelation,
+        publish,
+        replay,
+        issuedGrantId,
+        revoke: revokeEvidence,
+      }),
     );
     expect(getMs).toBeLessThan(process.env.PLAYWRIGHT_LIVE === "1" ? 3_000 : 30_000);
     expect(assembleMs).toBeLessThan(process.env.PLAYWRIGHT_LIVE === "1" ? 10_000 : 30_000);

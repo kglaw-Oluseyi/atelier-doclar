@@ -1,4 +1,4 @@
-import { expect, type Browser, type Page, type Request } from "@playwright/test";
+import { expect, type Browser, type Locator, type Page, type Request, type Response } from "@playwright/test";
 import { loginAs, openStaffContext } from "./login";
 
 export const ALPHA_PROTECTION = "/app/events/00000000-0000-4000-8000-000000000021/protection";
@@ -35,15 +35,116 @@ export async function clickOnceNamed(page: Page, name: string) {
   });
 }
 
-export async function expectFreshResultQuery(page: Page, previousResult = "") {
+export async function expectFreshResultQuery(page: Page, previousResult = "", timeout = 30_000) {
   const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   await expect
     .poll(() => {
       const value = new URL(page.url()).searchParams.get("result") ?? "";
       return uuid.test(value) && value !== previousResult ? value : "";
-    }, { timeout: 30_000 })
+    }, { timeout })
     .toMatch(uuid);
   return new URL(page.url()).searchParams.get("result") ?? "";
+}
+
+const GRANT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isNextActionPost(request: Request) {
+  return request.method() === "POST" && Boolean(request.headers()["next-action"]);
+}
+
+function isMutationActionPost(request: Request) {
+  if (!isNextActionPost(request)) return false;
+  const contentType = request.headers()["content-type"] ?? "";
+  return /multipart\/form-data|application\/x-www-form-urlencoded/i.test(contentType);
+}
+
+export async function readActiveGrantIds(page: Page): Promise<string[]> {
+  return page.locator('input[name="grantId"]').evaluateAll((inputs) =>
+    inputs
+      .map((input) => (input as HTMLInputElement).value)
+      .filter((value) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)),
+  );
+}
+
+export function revokeButtonForGrant(page: Page, grantId: string) {
+  if (!GRANT_ID.test(grantId)) {
+    throw new Error("revoke locator requires the exact issued grant id");
+  }
+  return page
+    .locator("form")
+    .filter({ has: page.locator(`input[name="grantId"][value="${grantId}"]`) })
+    .getByRole("button", { name: "Revoke client access" });
+}
+
+export type ProvenActionClick = {
+  status: number;
+  postMs: number;
+  totalMs: number;
+  resultId: string;
+  pathname: string;
+  resultCookie: boolean;
+};
+
+export async function clickAndProveFreshResult(
+  page: Page,
+  button: Locator,
+  previousResult = "",
+  expectedBody?: string,
+): Promise<ProvenActionClick> {
+  const seen: Request[] = [];
+  const onRequest = (request: Request) => {
+    if (isMutationActionPost(request)) seen.push(request);
+  };
+  await expect(button).toBeVisible({ timeout: 30_000 });
+  await expect(button).toBeEnabled();
+  page.on("request", onRequest);
+  const started = Date.now();
+  let response: Response;
+  try {
+    const pendingRequest = page.waitForRequest(isMutationActionPost, { timeout: 30_000 });
+    await button.click({ noWaitAfter: true });
+    let request: Request;
+    try {
+      request = await pendingRequest;
+    } catch {
+      throw new Error(`click emitted no Next-action POST (seen=${seen.length}; url=${page.url()})`);
+    }
+    response = (await request.response()) ?? (await page.waitForResponse((item) => item.request() === request, { timeout: 30_000 }));
+    if (seen.length !== 1) {
+      throw new Error(`click emitted ${seen.length} Next-action POSTs; expected exactly 1`);
+    }
+    const body = request.postData() ?? request.postDataBuffer()?.toString("utf8") ?? "";
+    if (expectedBody && body && !body.includes(expectedBody)) {
+      throw new Error("Next-action POST body did not include the exact issued grant id");
+    }
+  } finally {
+    page.off("request", onRequest);
+  }
+  const postMs = Date.now() - started;
+  const remaining = Math.max(1_000, 30_000 - postMs);
+  const resultId = await expectFreshResultQuery(page, previousResult, remaining);
+  const resultCookie = (response.headers()["set-cookie"] ?? "").includes("md_event_os_action_state");
+  if (!(await page.getByTestId("action-result-banner").count())) {
+    await page.goto(page.url(), { waitUntil: "domcontentloaded" });
+  }
+  const correlation = page.getByTestId("action-result-correlation");
+  try {
+    await expect(correlation).toHaveText(resultId, { timeout: remaining });
+  } catch (error) {
+    const shown = (await correlation.innerText({ timeout: 1_000 }).catch(() => "")) || "";
+    const banners = await page.getByTestId("action-result-banner").count();
+    throw new Error(
+      `POST ${response.status()} in ${postMs}ms cookie=${resultCookie} wrote result=${resultId} but banner correlation=${shown || "missing"} banners=${banners} url=${page.url()} (${String(error).slice(0, 180)})`,
+    );
+  }
+  return {
+    status: response.status(),
+    postMs,
+    totalMs: Date.now() - started,
+    resultId,
+    pathname: new URL(response.url()).pathname,
+    resultCookie,
+  };
 }
 
 export async function assembleWorkingDraft(page: Page) {
