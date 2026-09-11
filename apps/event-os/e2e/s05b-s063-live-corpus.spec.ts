@@ -1,0 +1,32 @@
+import { expect, test } from "@playwright/test";
+import { loginAs } from "./login";
+import { expectActionOutcome } from "./s060-helpers";
+
+test("S063 live CEO corpus s05b-eval-v6 completes without restamp", async ({ page }) => {
+  test.skip(process.env.PLAYWRIGHT_LIVE !== "1", "live Railway CEO corpus only");
+  test.setTimeout(120_000);
+  await loginAs(page, "ceo");
+  await page.goto("/app/protection");
+  await expect(page.getByTestId("protection-command")).toBeVisible({ timeout: 30_000 });
+  await page.getByRole("link", { name: "Portfolio Insights" }).click();
+  const evidence = page.getByTestId("protection-release-evidence");
+  await expect(evidence).toBeVisible({ timeout: 30_000 });
+  await expect(evidence.getByTestId("release-s05b-edition")).toHaveText("s05b-eval-v6");
+  await expect(evidence.getByTestId("release-s05b-hash")).toContainText("987f4b6d1c4747074d750eb96a37df48e223627fd069003f75462c0769f15e04");
+  const started = Date.now();
+  await page.getByRole("button", { name: "Run S05B fixture assurance" }).click();
+  await expectActionOutcome(page);
+  const elapsed = Date.now() - started;
+  console.log("S063_LIVE_CEO_CORPUS_MS", elapsed);
+  expect(elapsed).toBeLessThan(30_000);
+  await expect(evidence.getByTestId("release-s05b-status")).toHaveText("PASSED", { timeout: 30_000 });
+  await expect(evidence.getByTestId("release-s05b-counts")).toContainText(/total 63/);
+  await expect(evidence.getByTestId("release-s05b-counts")).toContainText(/persisted 63|passed 63/);
+  await expect(evidence.getByTestId("release-s05b-counts")).toContainText("passed 63");
+  await expect(evidence.getByTestId("release-s05b-counts")).toContainText("persisted 63");
+  await expect(evidence.getByTestId("release-s05b-zero-tolerance")).toHaveText("clear");
+  await expect(evidence.getByTestId("release-s05b-ready")).toHaveText("true");
+  await expect(evidence.getByTestId("release-s05b-blocked")).toHaveText("false");
+  await expect(evidence.getByTestId("release-production-authorised")).toHaveText("false");
+  await expect(evidence.getByTestId("release-s05b-hash")).toContainText("987f4b6d1c4747074d750eb96a37df48e223627fd069003f75462c0769f15e04");
+});

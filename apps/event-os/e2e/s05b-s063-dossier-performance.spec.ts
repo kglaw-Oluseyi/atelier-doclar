@@ -28,6 +28,7 @@ test("S063 focused dossier GET and assemble stay inside steady-state bounds", as
     const assembleMs = Date.now() - started;
     expect(warm).toBeLessThan(30_000);
     expect(assembleMs).toBeLessThan(30_000);
+    console.log("S063_DOSSIER_TIMINGS", JSON.stringify({ warmMs: warm, assembleMs }));
     await planner.page.evaluate((ms) => {
       (window as unknown as { __s063?: { warm: number } }).__s063 = { warm: ms };
     }, warm);
