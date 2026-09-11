@@ -105,7 +105,7 @@ export function createSourceEditionOnSnap(
 
 export function approveSourceEditionOnSnap(
   snap: PlatformSnapshot,
-  input: { organisationId: string; assignmentId: string; expectedVersion: number; idempotencyKey: string; sourceId: string },
+  input: { organisationId: string; assignmentId: string; expectedVersion: number; idempotencyKey: string; sourceId: string; nextReviewAt?: string },
   now: string,
   actorPersonId: string,
   actorKind?: string,
@@ -121,7 +121,8 @@ export function approveSourceEditionOnSnap(
     submitterPersonId: source.submittedByPersonId,
     action: "approve",
   });
-  assertAuthorisedFutureReview(source.nextReviewAt, now, now);
+  const nextReviewAt = input.nextReviewAt ?? source.nextReviewAt;
+  assertAuthorisedFutureReview(nextReviewAt, now, now);
   if (source.supersedesEditionId) {
     const predecessor = snap.riskSourceEditions.find((item) => item.id === source.supersedesEditionId && item.organisationId === input.organisationId);
     if (predecessor && predecessor.status === "APPROVED") {
@@ -135,7 +136,7 @@ export function approveSourceEditionOnSnap(
       status: "APPROVED",
       discoveryOnly: false,
       lastVerifiedAt: now,
-      nextReviewAt: source.nextReviewAt,
+      nextReviewAt,
       approvedByPersonId: actorPersonId,
       approvedAt: now,
       approvedHash: source.contentHash,
@@ -237,19 +238,28 @@ export function reviewRuleEditionOnSnap(
       }
     }
   }
-  const next = RiskRuleEditionSchema.parse({
+  const next = decideRuleReviewStatus(rule, input.status, now, actorPersonId);
+  Object.assign(rule, next);
+  return rule;
+}
+
+export function decideRuleReviewStatus(
+  rule: RiskRuleEdition,
+  status: "COUNSEL_REVIEWED" | "APPROVED" | "WITHDRAWN",
+  now: string,
+  actorPersonId: string,
+): RiskRuleEdition {
+  return RiskRuleEditionSchema.parse({
     ...rule,
-    status: input.status,
+    status,
     reviewedByPersonId: actorPersonId,
-    approvedByPersonId: input.status === "APPROVED" ? actorPersonId : rule.approvedByPersonId,
-    approvedAt: input.status === "APPROVED" ? now : rule.approvedAt,
-    approvedHash: input.status === "APPROVED" ? rule.contentHash : rule.approvedHash,
-    lastVerifiedAt: input.status === "APPROVED" ? now : rule.lastVerifiedAt,
+    approvedByPersonId: status === "APPROVED" ? actorPersonId : rule.approvedByPersonId,
+    approvedAt: status === "APPROVED" ? now : rule.approvedAt,
+    approvedHash: status === "APPROVED" ? rule.contentHash : rule.approvedHash,
+    lastVerifiedAt: status === "APPROVED" ? now : rule.lastVerifiedAt,
     nextReviewAt: rule.nextReviewAt,
     ...bumpVersion(rule, now),
   });
-  Object.assign(rule, next);
-  return rule;
 }
 
 export function createEvidenceDocumentOnSnap(

@@ -1,0 +1,41 @@
+import { expect, test } from "@playwright/test";
+import { loginAs, openStaffContext } from "./login";
+import { expectActionOutcome } from "./s060-helpers";
+
+test("S067 Reviewer source approval requires an explicit future review date", async ({ page, browser }) => {
+  test.skip(process.env.PLAYWRIGHT_LIVE === "1", "local Reviewer form proof");
+  test.setTimeout(180_000);
+  const label = `S067 ${Date.now()}`;
+  await loginAs(page, "ceo");
+  await page.goto("/app/protection");
+  await expect(page.getByTestId("protection-command")).toBeVisible({ timeout: 20_000 });
+  await page.getByRole("link", { name: "Rules and Sources" }).click();
+  const sourceForm = page.getByTestId("protection-create-source");
+  const title = `${label} source`;
+  await sourceForm.getByLabel("Source title").fill(title);
+  await sourceForm.getByLabel("Publisher").fill("NSITF");
+  await sourceForm.getByLabel("Locator").fill("https://nsitf.gov.ng/compensation/");
+  await sourceForm.getByLabel("Authority").selectOption("REGULATOR");
+  await sourceForm.getByLabel("Jurisdiction").fill("NG");
+  await sourceForm.getByLabel("Summary").fill("Synthetic S067 Reviewer approval source.");
+  await sourceForm.getByLabel("Review again by").fill("2026-12-31");
+  await sourceForm.getByRole("button", { name: "Record discovery source" }).click();
+  await expectActionOutcome(page);
+
+  const reviewer = await openStaffContext(browser, "reviewer");
+  await reviewer.page.goto("/app/protection");
+  await reviewer.page.getByRole("link", { name: "Rules and Sources" }).click();
+  const row = reviewer.page.locator("li", { hasText: title });
+  const approve = row.getByRole("button", { name: "Approve source" });
+  await expect(approve).toBeVisible();
+  await row.getByLabel("Review again by").fill("2026-08-15");
+  await approve.click();
+  await expect(row.locator("[name='nextReviewOn']")).toHaveAttribute("aria-invalid", "true");
+  await row.getByLabel("Review again by").fill("2026-12-31");
+  await approve.click();
+  await expectActionOutcome(reviewer.page);
+  await reviewer.page.goto("/app/protection");
+  await reviewer.page.getByRole("link", { name: "Rules and Sources" }).click();
+  await expect(reviewer.page.locator("li", { hasText: title })).toContainText(/APPROVED/i, { timeout: 20_000 });
+  await reviewer.context.close();
+});

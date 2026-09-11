@@ -10,7 +10,7 @@ import {
   type RiskProtectionStore,
   type RiskStoreCollection,
 } from "./risk-store.js";
-import { writeRiskSnapshotDelta, type RiskAggregateKind, type RiskProtectionRepository, type RiskSafePatch, type RiskScope, type RiskTransaction, type RiskVersionedRecord } from "./risk-repository.js";
+import { writeRiskSnapshotDelta, type PlatformIdempotencyRecord, type RiskAggregateKind, type RiskProtectionRepository, type RiskSafePatch, type RiskScope, type RiskTransaction, type RiskVersionedRecord } from "./risk-repository.js";
 import { EOS_S05B_PROTECTION_V2_ID } from "./risk-postgres-schema.js";
 import type { PlatformSnapshot } from "./store.js";
 
@@ -91,13 +91,23 @@ export class MemoryRiskTransaction implements RiskTransaction {
     private readonly audit: AuditEvent[] = [],
   ) {}
 
-  async loadAggregate<T>(kind: RiskAggregateKind, id: string, scope: RiskScope): Promise<T | undefined> {
+  async loadAggregate<T>(kind: RiskAggregateKind, id: string, scope: RiskScope, _lock?: import("./risk-repository.js").RiskLock): Promise<T | undefined> {
+    void _lock;
     const rows = this.store.collection(kind as RiskStoreCollection) as Array<{ id: string; organisationId?: string; eventId?: string }>;
     const hit = rows.find((item) => item.id === id);
     if (!hit) return undefined;
     if (hit.organisationId && hit.organisationId !== scope.organisationId) return undefined;
     if (scope.eventId && hit.eventId && hit.eventId !== scope.eventId) return undefined;
     return hit as T;
+  }
+
+  async listAggregates<T>(kind: RiskAggregateKind, scope: RiskScope): Promise<T[]> {
+    const rows = this.store.collection(kind as RiskStoreCollection) as Array<{ organisationId?: string; eventId?: string }>;
+    return rows.filter((item) => {
+      if (item.organisationId && item.organisationId !== scope.organisationId) return false;
+      if (scope.eventId && item.eventId && item.eventId !== scope.eventId) return false;
+      return true;
+    }) as T[];
   }
 
   async insertImmutable(kind: RiskAggregateKind, record: RiskVersionedRecord): Promise<void> {
@@ -142,6 +152,11 @@ export class MemoryRiskTransaction implements RiskTransaction {
     }
     this.store.putIdempotency(receipt);
     return receipt;
+  }
+
+  async getPlatformIdempotency(_key: string): Promise<PlatformIdempotencyRecord | undefined> {
+    void _key;
+    return undefined;
   }
 }
 

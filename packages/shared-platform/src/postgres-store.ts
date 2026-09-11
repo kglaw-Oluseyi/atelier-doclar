@@ -12,9 +12,10 @@ import { validateS04FPersistedCollections } from "./language-persistence.js";
 import { validateS05PersistedCollections } from "./venue-persistence.js";
 import { validateS05APersistedCollections } from "./eec-persistence.js";
 import { validateS05BPersistedCollections } from "./risk-persistence.js";
-import { PostgresRiskProtectionStore, PostgresRiskTransaction } from "./postgres-risk-store.js";
+import { PostgresRiskProtectionRepository, PostgresRiskProtectionStore, PostgresRiskTransaction } from "./postgres-risk-store.js";
 import { PostgresRiskDossierRepository } from "./postgres-risk-dossier-store.js";
 import type { DossierOverlay } from "./risk-dossier-command-service.js";
+import type { AuthorityOverlay } from "./risk-authority-command-service.js";
 import { writeRiskSnapshotDelta } from "./risk-repository.js";
 import { backfillNormalizedRiskTables } from "./risk-normalized-migration.js";
 import { RISK_SQL_TABLES } from "./risk-postgres-schema.js";
@@ -325,6 +326,33 @@ export class PostgresPlatformStore implements PlatformStore {
 
   dossierRepository(): PostgresRiskDossierRepository {
     return new PostgresRiskDossierRepository(this.client);
+  }
+
+  protectionRepository(): PostgresRiskProtectionRepository {
+    return new PostgresRiskProtectionRepository(this.client);
+  }
+
+  adoptAuthorityOverlay(overlay: AuthorityOverlay): void {
+    const upsert = <T extends { id: string }>(current: T[], incoming?: T[]) => {
+      if (!incoming?.length) return current;
+      const byId = new Map(current.map((item) => [item.id, item]));
+      for (const row of incoming) byId.set(row.id, row);
+      return [...byId.values()];
+    };
+    this.state.riskRuleEditions = upsert(this.state.riskRuleEditions, overlay.rules);
+    this.state.riskAuthorityGovernanceReceipts = upsert(this.state.riskAuthorityGovernanceReceipts, overlay.receipts);
+    if (overlay.audit?.length) {
+      const seen = new Set(this.state.audit.map((item) => item.id));
+      for (const entry of overlay.audit) {
+        if (!seen.has(entry.id)) this.state.audit.push(entry);
+      }
+    }
+    if (overlay.idempotency?.length) {
+      const seen = new Set(this.state.idempotency.map((item) => `${item.action}:${item.key}`));
+      for (const record of overlay.idempotency) {
+        if (!seen.has(`${record.action}:${record.key}`)) this.state.idempotency.push(record);
+      }
+    }
   }
 
   adoptRiskOverlay(overlay: DossierOverlay): void {
@@ -799,7 +827,19 @@ export class MemoryPlatformPg implements PgTransactor {
       this.audit.push(JSON.parse(String(values[7])));
       return { rows: [], rowCount: 1 };
     }
+    if (sql.startsWith("SELECT key, action, hash, result_ref, created_at FROM platform_idempotency")) {
+      const key = String(values[0] ?? "");
+      const row = this.idempotency.find((item) => item.key === key);
+      if (!row) return { rows: [], rowCount: 0 };
+      return {
+        rows: [{ key: row.key, action: row.action, hash: row.hash, result_ref: row.resultRef, created_at: row.createdAt }] as T[],
+        rowCount: 1,
+      };
+    }
     if (sql.startsWith("INSERT INTO platform_idempotency")) {
+      if (this.idempotency.some((row) => row.key === String(values[0]))) {
+        throw new Error("unique_violation");
+      }
       this.idempotency.push({
         key: String(values[0]),
         action: String(values[1]),

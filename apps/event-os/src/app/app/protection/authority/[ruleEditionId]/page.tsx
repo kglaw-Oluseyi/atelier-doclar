@@ -20,6 +20,7 @@ import {
   S061_ADDITIONAL_QA_LINEAGE,
   S062_AUTHORITY_PROMPT_ID,
   S063_AUTHORITY_PROMPT_ID,
+  authorityOperatorLabel,
   isS061AdditionalQaRuleKey,
 } from "@maison-doclar/shared-platform";
 
@@ -100,7 +101,7 @@ export default async function AuthorityDetailPage({
       <section className="atelier-panel" data-testid="authority-detail" data-authority-state={item.authorityState} data-detail-ms={String(elapsedMs)}>
         <h2 tabIndex={-1}>Governing edition</h2>
         <p>
-          Edition {editionId} · version {item.governingVersion ?? "n/a"} · {item.authorityState.replaceAll("_", " ").toLowerCase()}
+          Edition {editionId} · version {item.governingVersion ?? "n/a"} · {authorityOperatorLabel(item.authorityState, item.authorityState === "CURRENT_APPROVED" || item.authorityState === "STALE_APPROVED")}
         </p>
         <p>{item.propositionSummary}</p>
         {hash ? <p data-testid="authority-detail-hash">Content hash {hash}</p> : null}

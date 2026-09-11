@@ -5,7 +5,9 @@ import { EOS_S05B_PROTECTION_V2_ID, RISK_SQL_TABLES } from "./risk-postgres-sche
 import {
   tableForRiskKind,
   writeRiskSnapshotDelta,
+  type PlatformIdempotencyRecord,
   type RiskAggregateKind,
+  type RiskLock,
   type RiskProtectionRepository,
   type RiskSafePatch,
   type RiskScope,
@@ -177,15 +179,28 @@ export class PostgresRiskProtectionStore implements RiskProtectionStore {
 export class PostgresRiskTransaction implements RiskTransaction {
   constructor(private readonly client: PgQueryable) {}
 
-  async loadAggregate<T>(kind: RiskAggregateKind, id: string, scope: RiskScope): Promise<T | undefined> {
+  async loadAggregate<T>(kind: RiskAggregateKind, id: string, scope: RiskScope, lock?: RiskLock): Promise<T | undefined> {
     const table = tableForRiskKind(kind);
-    const result = await this.client.query<{ body: unknown }>(`SELECT body FROM ${table} WHERE id = $1`, [id]);
+    const sql = lock === "FOR_UPDATE" ? `SELECT body FROM ${table} WHERE id = $1 FOR UPDATE` : `SELECT body FROM ${table} WHERE id = $1`;
+    const result = await this.client.query<{ body: unknown }>(sql, [id]);
     const row = result.rows[0];
     if (!row) return undefined;
     const body = (typeof row.body === "string" ? JSON.parse(row.body) : row.body) as T & { organisationId?: string; eventId?: string };
     if (body.organisationId && body.organisationId !== scope.organisationId) return undefined;
     if (scope.eventId && body.eventId && body.eventId !== scope.eventId) return undefined;
-    return body;
+    return structuredClone(body);
+  }
+
+  async listAggregates<T>(kind: RiskAggregateKind, scope: RiskScope): Promise<T[]> {
+    const table = tableForRiskKind(kind);
+    const result = await this.client.query<{ body: unknown }>(`SELECT body FROM ${table} WHERE organisation_id = $1`, [scope.organisationId]);
+    return result.rows
+      .map((row) => (typeof row.body === "string" ? JSON.parse(row.body) : row.body) as T & { organisationId?: string; eventId?: string })
+      .filter((body) => {
+        if (body.organisationId && body.organisationId !== scope.organisationId) return false;
+        if (scope.eventId && body.eventId && body.eventId !== scope.eventId) return false;
+        return true;
+      });
   }
 
   async insertImmutable(kind: RiskAggregateKind, record: RiskVersionedRecord): Promise<void> {
@@ -286,7 +301,6 @@ export class PostgresRiskTransaction implements RiskTransaction {
         "INSERT INTO risk_idempotency_receipts (organisation_id, action, idempotency_key, result_ref, hash, created_at) VALUES ($1,$2,$3,$4,$5,$6)",
         [receipt.organisationId, receipt.action, receipt.idempotencyKey, receipt.resultRef, receipt.hash, receipt.createdAt],
       );
-      return receipt;
     } catch (error) {
       const raced = await this.getIdempotency(
         { organisationId: receipt.organisationId },
@@ -297,10 +311,67 @@ export class PostgresRiskTransaction implements RiskTransaction {
         if (raced.hash !== receipt.hash || raced.resultRef !== receipt.resultRef) {
           throw new PlatformError("IDEMPOTENCY_CONFLICT", "idempotency key was reused with a different payload");
         }
+        await this.ensurePlatformIdempotency(receipt);
         return raced;
       }
       throw error;
     }
+    await this.ensurePlatformIdempotency(receipt);
+    return receipt;
+  }
+
+  private async ensurePlatformIdempotency(receipt: RiskIdempotencyRecord): Promise<void> {
+    const existing = await this.getPlatformIdempotency(receipt.idempotencyKey);
+    if (existing) {
+      if (existing.hash !== receipt.hash || existing.resultRef !== receipt.resultRef) {
+        throw new PlatformError("IDEMPOTENCY_CONFLICT", "idempotency key was reused with a different payload");
+      }
+      return;
+    }
+    try {
+      await this.client.query(
+        "INSERT INTO platform_idempotency (key, action, hash, result_ref, created_at, body) VALUES ($1, $2, $3, $4, $5, $6::jsonb)",
+        [
+          receipt.idempotencyKey,
+          receipt.action,
+          receipt.hash,
+          receipt.resultRef,
+          receipt.createdAt,
+          JSON.stringify({
+            key: receipt.idempotencyKey,
+            action: receipt.action,
+            hash: receipt.hash,
+            resultRef: receipt.resultRef,
+            createdAt: receipt.createdAt,
+          }),
+        ],
+      );
+    } catch {
+      const raced = await this.getPlatformIdempotency(receipt.idempotencyKey);
+      if (raced) {
+        if (raced.hash !== receipt.hash || raced.resultRef !== receipt.resultRef) {
+          throw new PlatformError("IDEMPOTENCY_CONFLICT", "idempotency key was reused with a different payload");
+        }
+        return;
+      }
+      throw new PlatformError("VALIDATION_FAILED", "platform idempotency receipt was not recorded");
+    }
+  }
+
+  async getPlatformIdempotency(key: string): Promise<PlatformIdempotencyRecord | undefined> {
+    const result = await this.client.query<{ key: string; action: string; hash: string; result_ref: string; created_at: string }>(
+      "SELECT key, action, hash, result_ref, created_at FROM platform_idempotency WHERE key = $1",
+      [key],
+    );
+    const row = result.rows[0];
+    if (!row) return undefined;
+    return {
+      key: row.key,
+      action: row.action,
+      hash: row.hash,
+      resultRef: row.result_ref,
+      createdAt: row.created_at,
+    };
   }
 }
 

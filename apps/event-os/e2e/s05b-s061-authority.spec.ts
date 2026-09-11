@@ -28,6 +28,7 @@ test("S061 governing authority, publication and client access", async ({ page, b
     await reviewer.page.getByRole("link", { name: "Rules and Sources" }).click();
     const approve = reviewer.page.locator("li", { hasText: title }).getByRole("button", { name: "Approve source" });
     if (await approve.count()) {
+      await reviewer.page.locator("li", { hasText: title }).getByLabel("Review again by").fill("2026-12-31");
       await approve.click();
       await expectActionOutcome(reviewer.page);
     }

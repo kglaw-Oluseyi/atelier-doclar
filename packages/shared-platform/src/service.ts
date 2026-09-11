@@ -789,7 +789,10 @@ import {
   transitionDossierOnSnap,
 } from "./risk-projections.js";
 import { RiskDossierCommandService } from "./risk-dossier-command-service.js";
+import { RiskAuthorityCommandService, type AuthorityOverlay } from "./risk-authority-command-service.js";
 import { MemoryRiskDossierRepository } from "./memory-risk-dossier-store.js";
+import { MemoryRiskProtectionRepository, MemoryRiskProtectionStore } from "./memory-risk-store.js";
+import { overlayRiskState } from "./risk-store.js";
 import { PostgresPlatformStore } from "./postgres-store.js";
 
 export interface ActorContext {
@@ -862,6 +865,7 @@ function parseStrict<T>(schema: { safeParse: (value: unknown) => { success: true
 export class PlatformService {
   private lastMutationEffect: DurableMutationEffect | undefined;
   private dossierCommandService: RiskDossierCommandService | undefined;
+  private authorityCommandService: RiskAuthorityCommandService | undefined;
 
   constructor(
     private readonly store: PlatformStore,
@@ -881,6 +885,59 @@ export class PlatformService {
       });
     }
     return this.dossierCommandService;
+  }
+
+  private authorityCommands(): RiskAuthorityCommandService {
+    const postgres = this.store instanceof PostgresPlatformStore ? this.store : undefined;
+    if (postgres) {
+      if (!this.authorityCommandService) {
+        this.authorityCommandService = new RiskAuthorityCommandService(postgres.protectionRepository(), {
+          remember: (overlay) => postgres.adoptAuthorityOverlay(overlay),
+          onEffect: (effect) => {
+            this.lastMutationEffect = effect;
+          },
+          productionAuthorised: () => this.accessAuthority().productionAuthorised,
+        });
+      }
+      return this.authorityCommandService;
+    }
+    const snap = this.store.snapshot();
+    const mem = MemoryRiskProtectionStore.fromSnapshot(snap);
+    const repo = new MemoryRiskProtectionRepository(mem, []);
+    return new RiskAuthorityCommandService(repo, {
+      remember: (overlay: AuthorityOverlay) => {
+        const next = this.store.snapshot();
+        overlayRiskState(next, mem.asSnapshot());
+        if (overlay.audit?.length) {
+          const seen = new Set(next.audit.map((item) => item.id));
+          for (const entry of overlay.audit) {
+            if (!seen.has(entry.id)) next.audit.push(entry);
+          }
+        }
+        if (overlay.idempotency?.length) {
+          const seen = new Set(next.idempotency.map((item) => `${item.action}:${item.key}`));
+          for (const record of overlay.idempotency) {
+            if (!seen.has(`${record.action}:${record.key}`)) next.idempotency.push(record);
+          }
+        }
+        this.store.replace(next);
+      },
+      onEffect: (effect) => {
+        this.lastMutationEffect = effect;
+      },
+      productionAuthorised: () => this.accessAuthority().productionAuthorised,
+    });
+  }
+
+  private assertAuthorityCommand(
+    actor: ActorContext,
+    permission: PermissionKey,
+    scope: { organisationId: string; eventId?: string },
+    action: string,
+    resourceType: string,
+    resourceId?: string,
+  ): void {
+    this.assertDossierCommand(actor, permission, scope, action, resourceType, resourceId);
   }
 
   private assertDossierCommand(
@@ -7268,58 +7325,24 @@ export class PlatformService {
 
   classifyRiskFixtureAuthority(actor: ActorContext, raw: unknown) {
     const input = raw as Parameters<typeof classifyFixtureAuthorityOnSnap>[1];
-    return this.mutate(actor, {
-      permission: "risk.rule.review",
-      scope: { organisationId: input.organisationId },
-      action: "risk.fixture.classify",
-      resourceType: "risk_authority_governance_receipt",
-      idempotencyKey: input.idempotencyKey,
-      run: (snap, ctx) =>
-        classifyFixtureAuthorityOnSnap(
-          snap,
-          { ...input, productionAuthorised: this.accessAuthority().productionAuthorised },
-          ctx.now,
-          actor.personId,
-          actor.actorKind,
-        ),
-    });
+    this.assertAuthorityCommand(actor, "risk.rule.review", { organisationId: input.organisationId }, "risk.fixture.classify", "risk_authority_governance_receipt");
+    return this.authorityCommands().classifyFixture(actor, { ...input, productionAuthorised: this.accessAuthority().productionAuthorised }, this.store.snapshot());
   }
 
   withdrawRiskRuleAuthority(actor: ActorContext, raw: unknown) {
     const input = raw as Parameters<typeof withdrawGoverningRuleOnSnap>[1];
-    return this.mutate(actor, {
-      permission: "risk.rule.review",
-      scope: { organisationId: input.organisationId },
-      action: "risk.rule.withdraw",
-      resourceType: "risk_rule_edition",
-      resourceId: input.ruleId,
-      idempotencyKey: input.idempotencyKey,
-      alreadyApplied: (snap) => {
-        const rule = snap.riskRuleEditions.find((item) => item.id === input.ruleId && item.organisationId === input.organisationId);
-        return rule?.status === "WITHDRAWN" ? rule : undefined;
-      },
-      replayIfAlreadyApplied: true,
-      run: (snap, ctx) => withdrawGoverningRuleOnSnap(snap, input, ctx.now, actor.personId, actor.actorKind),
-    });
+    this.assertAuthorityCommand(actor, "risk.rule.review", { organisationId: input.organisationId }, "risk.rule.withdraw", "risk_rule_edition", input.ruleId);
+    return this.authorityCommands().withdrawRule(actor, input, this.store.snapshot());
   }
 
   withdrawExactRiskAuthorities(actor: ActorContext, raw: unknown) {
     const input = raw as Parameters<typeof withdrawExactSelectionBatchOnSnap>[1];
-    return this.mutate(actor, {
-      permission: "risk.rule.review",
-      scope: { organisationId: input.organisationId },
-      action: "risk.rule.withdraw.batch",
-      resourceType: "risk_authority_governance_receipt",
-      idempotencyKey: input.idempotencyKey,
-      run: (snap, ctx) =>
-        withdrawExactSelectionBatchOnSnap(
-          snap,
-          { ...input, productionAuthorised: this.accessAuthority().productionAuthorised, correlationId: actor.correlationId },
-          ctx.now,
-          actor.personId,
-          actor.actorKind,
-        ).receipt,
-    });
+    this.assertAuthorityCommand(actor, "risk.rule.review", { organisationId: input.organisationId }, "risk.rule.withdraw.batch", "risk_authority_governance_receipt");
+    return this.authorityCommands().withdrawExactSelection(
+      actor,
+      { ...input, productionAuthorised: this.accessAuthority().productionAuthorised, correlationId: actor.correlationId },
+      this.store.snapshot(),
+    );
   }
 
   recoverRiskFixtureAuthorities(actor: ActorContext, raw: unknown) {

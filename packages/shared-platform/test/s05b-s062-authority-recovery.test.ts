@@ -377,12 +377,12 @@ describe("MD-PR-S062 authority queue and fixture withdrawal", () => {
     assert.equal(ceo.items[0]?.permittedActions.includes("WITHDRAW"), false);
   });
 
-  it("denies CEO self-withdrawal on the governed path", () => {
+  it("denies CEO self-withdrawal on the governed path", async () => {
     const { snap, store, service } = env();
     const source = seedSource(snap);
     const rule = approveRule(snap, draftRule(snap, source));
     store.replace(snap);
-    assert.throws(
+    await assert.rejects(
       () =>
         service.withdrawRiskRuleAuthority(actor(people.personCeo), {
           organisationId: people.orgMaison,

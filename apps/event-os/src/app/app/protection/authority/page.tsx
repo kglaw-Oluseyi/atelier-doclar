@@ -15,6 +15,7 @@ import {
   S060_SYNTHETIC_RULE_KEYS,
   S061_ADDITIONAL_QA_LINEAGE,
   S061_ADDITIONAL_QA_RULE_KEYS,
+  authorityOperatorLabel,
   type RiskAuthorityState,
 } from "@maison-doclar/shared-platform";
 
@@ -89,7 +90,12 @@ export default async function AuthorityQueuePage({
       }).items
     : [];
   const s061ExtraRows = s061ExtraPreview.filter(
-    (item) => item.isSyntheticFixture && item.governingEditionId && item.governingContentHash && S061_ADDITIONAL_QA_RULE_KEYS.includes(item.ruleKey as (typeof S061_ADDITIONAL_QA_RULE_KEYS)[number]),
+    (item) =>
+      item.isSyntheticFixture &&
+      item.governingEditionId &&
+      item.governingContentHash &&
+      item.authorityState === "CURRENT_APPROVED" &&
+      S061_ADDITIONAL_QA_RULE_KEYS.includes(item.ruleKey as (typeof S061_ADDITIONAL_QA_RULE_KEYS)[number]),
   );
   const filterHref = (next: Record<string, string | undefined>) => {
     const params = new URLSearchParams();
@@ -143,7 +149,7 @@ export default async function AuthorityQueuePage({
                 <a href={`/app/protection/authority/${item.governingEditionId ?? ""}`}>
                   {item.ruleKey}
                 </a>
-                <span className="md-status">{item.authorityState.replaceAll("_", " ").toLowerCase()}</span>
+                <span className="md-status">{authorityOperatorLabel(item.authorityState, item.authorityState === "CURRENT_APPROVED" || item.authorityState === "STALE_APPROVED")}</span>
                 <p>{item.propositionSummary}</p>
                 {item.isSyntheticFixture ? <p>Classified synthetic fixture{item.syntheticLineage ? ` · ${item.syntheticLineage}` : ""}</p> : null}
                 <p>{item.hiddenHistoryCount} historic editions hidden from this queue.</p>

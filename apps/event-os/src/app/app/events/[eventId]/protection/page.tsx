@@ -37,7 +37,7 @@ import {
   issueDossierAccessAction,
   revokeDossierAccessAction,
 } from "../../../../../server/risk-actions";
-import { clientDossierCopy } from "@maison-doclar/shared-platform";
+import { authorityOperatorLabel, clientDossierCopy } from "@maison-doclar/shared-platform";
 
 function Envelope({ fields }: { fields: Record<string, string | number> }) {
   return (
@@ -125,8 +125,10 @@ export default async function EventProtectionPage({
           <ul data-testid="protection-effective-authorities">
             {(workspace.effectiveAuthorities ?? []).map((item) => (
               <li key={item.ruleId} data-authority-state={item.authorityState}>
-                {item.ruleKey} · {item.authorityState.replaceAll("_", " ").toLowerCase()}
-                {item.governing ? " · governing" : " · history only"} · {item.ruleId}
+                <a href={`/app/protection/authority/${item.ruleId}`}>{item.ruleKey}</a>
+                {" · "}
+                {authorityOperatorLabel(item.authorityState, item.governing)}
+                {item.requirementKey ? ` · ${item.requirementKey}` : ""}
                 {item.reasons.length ? ` · ${item.reasons.join("; ")}` : ""}
               </li>
             ))}
@@ -186,13 +188,21 @@ export default async function EventProtectionPage({
           </p>
         ) : null}
         <div className="protection-matrix">
-          {(workspace.gaps.length ? workspace.gaps : [{ id: "none", requirementKey: "No open requirement", taxonomy: "UNVERIFIED_DOCUMENT", explanation: "Evaluate to produce a matrix.", state: "OPEN" }]).map((gap) => (
+          {(workspace.gaps.length ? workspace.gaps : [{ id: "none", requirementKey: "No open requirement", taxonomy: "UNVERIFIED_DOCUMENT", explanation: "Evaluate to produce a matrix.", state: "OPEN" }]).map((gap) => {
+            const requirement = gap.id === "none" ? undefined : workspace.snapshot?.requirements?.find((item) => item.requirementKey === gap.requirementKey);
+            const authority = requirement?.ruleEditionId
+              ? (workspace.effectiveAuthorities ?? []).find((item) => item.ruleId === requirement.ruleEditionId)
+              : undefined;
+            const sources = (authority?.sources ?? []).map((source) => source.title).filter(Boolean);
+            return (
             <article key={gap.id} className="protection-card">
               <h3>{gap.requirementKey}</h3>
               <p>{gap.explanation}</p>
               <p>
                 {gap.taxonomy} · {gap.state}
               </p>
+              {sources.length ? <p>Cited source {sources.join("; ")}</p> : null}
+              {authority?.ruleKey ? <p>Governing requirement {authority.ruleKey}</p> : null}
               {permissions.eventManage && gap.id !== "none" ? (
                 <ProtectionMutationForm action={submitResidualAction} className="protection-form">
                   <Envelope fields={createFields} />
@@ -216,7 +226,8 @@ export default async function EventProtectionPage({
                 </ProtectionMutationForm>
               ) : null}
             </article>
-          ))}
+            );
+          })}
         </div>
         {workspace.residuals?.map((item) => (
           <article key={item.id} className="protection-card">

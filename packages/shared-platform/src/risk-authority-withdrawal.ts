@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import { SCHEMA_VERSION } from "./constants.js";
-import { exactHash } from "./eec-hash.js";
 import { PlatformError } from "./errors.js";
 import { assertExpectedVersion, assertProtectedHuman, extractRiskEnvelope, newRiskId, riskStamp } from "./risk-command.js";
 import {
@@ -114,32 +113,11 @@ export function withdrawExactSelectionBatchOnSnap(
   if (preview.rows.some((row) => !row.isSyntheticFixture)) {
     throw new PlatformError("FORBIDDEN", "exact-selection batch rejects any row not marked synthetic fixture lineage");
   }
-  const payloadHash = exactHash({
-    organisationId: input.organisationId,
-    selections: input.selections
-      .map((item) => `${item.editionId}:${item.expectedVersion}:${item.contentHash}`)
-      .sort(),
-    reason: input.reason,
-  });
-  const existing = (snap.riskAuthorityGovernanceReceipts ?? []).find(
-    (item) =>
-      item.organisationId === input.organisationId &&
-      item.kind === "EXACT_SELECTION_BATCH" &&
-      item.reason === input.reason &&
-      exactHash({
-        organisationId: item.organisationId,
-        selections: item.bindings.map((binding) => `${binding.editionId}:${binding.expectedVersion}:${binding.contentHash}`).sort(),
-        reason: item.reason ?? "",
-      }) === payloadHash,
-  );
-  if (existing) {
-    const withdrawn = existing.bindings
-      .map((binding) => snap.riskRuleEditions.find((item) => item.id === binding.editionId))
-      .filter((item): item is RiskRuleEdition => Boolean(item));
-    return { receipt: existing, withdrawn };
-  }
-  const withdrawn = input.selections.map((selection, index) =>
-    withdrawGoverningRuleOnSnap(
+  const existing = (snap.riskAuthorityGovernanceReceipts ?? []).find((item) => sameExactSelectionReceipt(item, input.organisationId, input.selections, input.reason));
+  const withdrawnApproved = input.selections.map((selection, index) => {
+    const current = snap.riskRuleEditions.find((item) => item.id === selection.editionId && item.organisationId === input.organisationId);
+    if (current?.status === "WITHDRAWN" && current.contentHash === selection.contentHash) return current;
+    return withdrawGoverningRuleOnSnap(
       snap,
       {
         organisationId: input.organisationId,
@@ -153,31 +131,42 @@ export function withdrawExactSelectionBatchOnSnap(
       now,
       actorPersonId,
       actorKind,
-    ),
-  );
+    );
+  });
+  const mutated = withdrawnApproved.filter((item) => {
+    const selection = input.selections.find((row) => row.editionId === item.id);
+    return Boolean(selection && item.version !== selection.expectedVersion);
+  });
+  if (existing && !mutated.length) {
+    return { receipt: existing, withdrawn: withdrawnApproved };
+  }
   const correlationId = input.correlationId ?? randomUUID();
-  const bindings: RiskAuthorityGovernanceBinding[] = withdrawn.map((item) => ({
+  const bindings: RiskAuthorityGovernanceBinding[] = withdrawnApproved.map((item) => ({
     editionId: item.id,
     editionKind: "RULE",
     ruleKey: item.ruleKey,
     contentHash: item.contentHash,
     expectedVersion: item.version,
   }));
-  const receipt = RiskAuthorityGovernanceReceiptSchema.parse({
-    id: newRiskId(),
-    organisationId: input.organisationId,
-    kind: "EXACT_SELECTION_BATCH",
-    bindings,
-    decision: "WITHDRAWN",
-    reason: input.reason,
-    classifiedByPersonId: actorPersonId,
-    correlationId,
-    previewedAt: now,
-    ...riskStamp(now),
-  });
-  snap.riskAuthorityGovernanceReceipts = snap.riskAuthorityGovernanceReceipts ?? [];
-  snap.riskAuthorityGovernanceReceipts.push(receipt);
-  for (const edition of withdrawn) {
+  const receipt = existing
+    ? existing
+    : RiskAuthorityGovernanceReceiptSchema.parse({
+        id: newRiskId(),
+        organisationId: input.organisationId,
+        kind: "EXACT_SELECTION_BATCH",
+        bindings,
+        decision: "WITHDRAWN",
+        reason: input.reason,
+        classifiedByPersonId: actorPersonId,
+        correlationId,
+        previewedAt: now,
+        ...riskStamp(now),
+      });
+  if (!existing) {
+    snap.riskAuthorityGovernanceReceipts = snap.riskAuthorityGovernanceReceipts ?? [];
+    snap.riskAuthorityGovernanceReceipts.push(receipt);
+  }
+  for (const edition of mutated) {
     snap.audit.push({
       id: randomUUID(),
       occurredAt: now,
@@ -189,10 +178,25 @@ export function withdrawExactSelectionBatchOnSnap(
       organisationId: input.organisationId,
       resourceType: "risk_rule_edition",
       resourceId: edition.id,
-      correlationId,
+      correlationId: receipt.correlationId ?? correlationId,
       reason: input.reason,
       schemaVersion: SCHEMA_VERSION,
     });
   }
-  return { receipt, withdrawn };
+  return { receipt, withdrawn: withdrawnApproved };
+}
+
+export function sameExactSelectionReceipt(
+  item: RiskAuthorityGovernanceReceipt,
+  organisationId: string,
+  selections: Array<{ editionId: string; contentHash: string }>,
+  reason: string,
+): boolean {
+  if (item.organisationId !== organisationId || item.kind !== "EXACT_SELECTION_BATCH") return false;
+  if ((item.reason ?? "") !== reason) return false;
+  const left = item.bindings.map((binding) => binding.editionId).sort().join("|");
+  const right = selections.map((selection) => selection.editionId).sort().join("|");
+  if (left !== right) return false;
+  const hashes = new Map(item.bindings.map((binding) => [binding.editionId, binding.contentHash]));
+  return selections.every((selection) => hashes.get(selection.editionId) === selection.contentHash);
 }

@@ -75,6 +75,14 @@ export function reviewOnToIso(reviewOn: string): string {
   return reviewOn;
 }
 
+export function authorityOperatorLabel(state: RiskAuthorityState, governing?: boolean): string {
+  if (state === "CURRENT_APPROVED") return governing === false ? "HISTORY ONLY" : "GOVERNING";
+  if (state === "STALE_APPROVED") return "STALE";
+  if (state === "AUTHORITY_CONFLICT") return "CONFLICT";
+  if (state === "WITHDRAWN_NO_AUTHORITY") return "WITHDRAWN · HISTORY ONLY";
+  return "HISTORY ONLY";
+}
+
 function reachesPredecessor(from: RiskRuleEdition, targetId: string, rules: Map<string, RiskRuleEdition>): boolean {
   let current: RiskRuleEdition | undefined = from;
   const seen = new Set<string>();

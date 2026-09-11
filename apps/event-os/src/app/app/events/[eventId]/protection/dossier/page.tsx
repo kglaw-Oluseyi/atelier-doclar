@@ -138,7 +138,10 @@ export default async function FocusedEventDossierPage({
         {permissions.dossierAssemble ? (
           <ProtectionMutationForm action={assembleDossierAction} testId="protection-assemble-dossier">
             <Envelope fields={createFields} />
-            <input type="hidden" name="reason" value="S063 uniquely labelled dossier edition" />
+            <label>
+              Assemble reason
+              <textarea name="reason" required rows={2} defaultValue="Assemble the current working protection dossier edition." />
+            </label>
             <IdempotencyField />
             <button type="submit" className="button">
               Assemble dossier edition

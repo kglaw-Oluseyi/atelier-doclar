@@ -954,6 +954,7 @@ export { PostgresRiskProtectionStore, PostgresRiskProtectionRepository } from ".
 export { MemoryRiskDossierRepository } from "./memory-risk-dossier-store.js";
 export { PostgresRiskDossierRepository } from "./postgres-risk-dossier-store.js";
 export { RiskDossierCommandService } from "./risk-dossier-command-service.js";
+export { RiskAuthorityCommandService } from "./risk-authority-command-service.js";
 export {
   buildDossierEdition,
   decideDossierPublication,

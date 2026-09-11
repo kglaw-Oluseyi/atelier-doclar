@@ -30,6 +30,7 @@ import {
 } from "../../../server/risk-actions";
 import { operationalStateFromCode } from "../../../server/operational-state";
 import { resolveDiscoveryOrganisation } from "../../../server/discovery-scope";
+import { authorityOperatorLabel } from "@maison-doclar/shared-platform";
 
 function Envelope({ fields }: { fields: Record<string, string | number> }) {
   return (
@@ -363,10 +364,14 @@ export default async function ProtectionCommandPage({
         <ul>
           {(overview.effectiveAuthorities ?? []).map((item) => (
             <li key={item.ruleId} data-testid={`authority-${item.ruleKey}`} data-authority-state={item.authorityState}>
-              <strong>{item.ruleKey}</strong> · {item.authorityState.replaceAll("_", " ").toLowerCase()}
+              <a href={`/app/protection/authority/${item.ruleId}`}>
+                <strong>{item.ruleKey}</strong>
+              </a>
+              {" · "}
+              {authorityOperatorLabel(item.authorityState, item.governing)}
               {item.governing ? " · governing edition" : " · not governing"}
               <p>
-                Edition {item.ruleId} · Review again by {item.nextReviewAt}
+                Review again by {item.nextReviewAt}
               </p>
               {item.reasons.length ? <p>{item.reasons.join("; ")}</p> : null}
               {item.sources.map((source) => (
@@ -449,20 +454,24 @@ export default async function ProtectionCommandPage({
         <h2>Rules and sources</h2>
         <p>Discovery sources can generate questions. Only approved rules participate in readiness. Unapproved and superseded editions stay as history.</p>
         <p>
-          {overview.sources.filter((source) => source.historyOnly && source.status !== "DISCOVERY" && source.status !== "COUNSEL_REVIEWED").length} historic
+          {overview.sources.filter((source) => source.status === "SUPERSEDED" || source.status === "WITHDRAWN").length} historic
           source editions remain on the durable record and do not govern.
         </p>
         <ul>
           {overview.sources
-            .filter((source) => !source.historyOnly || source.status === "DISCOVERY" || source.status === "COUNSEL_REVIEWED")
+            .filter((source) => source.status !== "SUPERSEDED" && source.status !== "WITHDRAWN")
             .map((source) => (
             <li key={source.id}>
               {source.title} · {source.status} · {source.jurisdiction}
               {source.historyOnly ? " · history" : source.governing ? " · governing source" : ""}
               {permissions.ruleApprove && source.status !== "APPROVED" && source.status !== "SUPERSEDED" ? (
-                <ProtectionMutationForm action={approveRiskSourceAction}>
+                <ProtectionMutationForm action={approveRiskSourceAction} testId={`approve-source-${source.id}`}>
                   <Envelope fields={{ ...envelope, expectedVersion: source.version, sourceId: source.id }} />
                   <IdempotencyField />
+                  <label>
+                    Review again by
+                    <input type="date" name="nextReviewOn" required />
+                  </label>
                   <button type="submit" className="button secondary">
                     Approve source
                   </button>
@@ -472,12 +481,12 @@ export default async function ProtectionCommandPage({
           ))}
         </ul>
         <p>
-          {overview.ruleLibrary.filter((rule) => rule.historyOnly && rule.status !== "DISCOVERY" && rule.status !== "COUNSEL_REVIEWED").length} historic rule
+          {overview.ruleLibrary.filter((rule) => rule.status === "SUPERSEDED" || rule.status === "WITHDRAWN").length} historic rule
           editions remain on the durable record and do not govern.
         </p>
         <ul>
           {overview.ruleLibrary
-            .filter((rule) => !rule.historyOnly || rule.status === "DISCOVERY" || rule.status === "COUNSEL_REVIEWED")
+            .filter((rule) => rule.status !== "SUPERSEDED" && rule.status !== "WITHDRAWN")
             .map((rule) => (
             <li key={rule.id}>
               {rule.ruleKey} · {rule.status} · {rule.jurisdiction} · {rule.proposition}

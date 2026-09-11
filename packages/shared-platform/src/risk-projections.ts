@@ -182,6 +182,7 @@ export function eventProtectionProjection(snap: PlatformSnapshot, organisationId
   const previousSnapshot = [...eventSnapshots].reverse()[1];
   const authorities = selectEffectiveRiskAuthorities(snap, organisationId, now);
   const gaps = snap.riskGapFindings.filter((item) => item.eventId === eventId);
+  const currentGaps = snapshot ? gaps.filter((item) => item.snapshotId === snapshot.id) : [];
   const policies = snap.riskPolicyEditions.filter((item) => item.organisationId === organisationId && item.current && (item.eventId === eventId || !item.eventId));
   const incidents = snap.riskIncidents.filter((item) => item.eventId === eventId);
   const notes = snap.riskIncidentNotes.filter((item) => item.eventId === eventId).map((item) => redactIncidentNote(item, audience));
@@ -200,8 +201,7 @@ export function eventProtectionProjection(snap: PlatformSnapshot, organisationId
   );
   const governingBudget =
     approvedCurrent.find((item) => item.eventId === eventId) ?? approvedCurrent.find((item) => !item.eventId);
-  const openGaps = gaps.filter((item) => item.state === "OPEN" || item.state === "REOPENED");
-  const overridden = gaps.filter((item) => item.state === "ACCEPTED_RISK").length;
+  const currentOpenGaps = currentGaps.filter((item) => item.state === "OPEN" || item.state === "REOPENED");
   return {
     organisationId,
     eventId,
@@ -228,11 +228,11 @@ export function eventProtectionProjection(snap: PlatformSnapshot, organisationId
       governing: item.authorityState === "CURRENT_APPROVED" || item.authorityState === "STALE_APPROVED",
       sources: item.sources.map((source) => ({ id: source.id, title: source.title, contentHash: source.contentHash, nextReviewAt: source.nextReviewAt })),
     })),
-    gaps,
-    openGapCount: openGaps.length,
-    overriddenGapCount: overridden,
-    unresolvedCount: openGaps.length,
-    whyNotReady: openGaps[0]?.explanation ?? (snapshot?.overall === "READY" ? "Current verified evidence covers mandatory approved rules, or residual risk is authorised." : "Protection is not ready until unknowns and gaps are resolved."),
+    gaps: currentGaps,
+    openGapCount: currentGaps.filter((item) => item.state === "OPEN" || item.state === "REOPENED").length,
+    overriddenGapCount: currentGaps.filter((item) => item.state === "ACCEPTED_RISK").length,
+    unresolvedCount: currentGaps.filter((item) => item.state === "OPEN" || item.state === "REOPENED").length,
+    whyNotReady: currentOpenGaps[0]?.explanation ?? (snapshot?.overall === "READY" ? "Current verified evidence covers mandatory approved rules, or residual risk is authorised." : "Protection is not ready until unknowns and gaps are resolved."),
     policies: policies.map((item) => redactPolicyEdition(item, audience)),
     roster,
     assessments: assessments.map((item) => redactVendorAssessment(item, audience)),

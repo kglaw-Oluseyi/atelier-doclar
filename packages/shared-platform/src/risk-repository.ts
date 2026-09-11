@@ -23,13 +23,25 @@ export type RiskVersionedRecord = {
 
 export type RiskSafePatch = Record<string, unknown>;
 
+export type RiskLock = "FOR_UPDATE";
+
+export type PlatformIdempotencyRecord = {
+  key: string;
+  action: string;
+  hash: string;
+  resultRef: string;
+  createdAt: string;
+};
+
 export interface RiskTransaction {
-  loadAggregate<T>(kind: RiskAggregateKind, id: string, scope: RiskScope): Promise<T | undefined>;
+  loadAggregate<T>(kind: RiskAggregateKind, id: string, scope: RiskScope, lock?: RiskLock): Promise<T | undefined>;
+  listAggregates<T>(kind: RiskAggregateKind, scope: RiskScope): Promise<T[]>;
   insertImmutable(kind: RiskAggregateKind, record: RiskVersionedRecord): Promise<void>;
   updateVersioned(kind: RiskAggregateKind, id: string, expectedVersion: number, patch: RiskSafePatch): Promise<void>;
   appendAudit(record: AuditEvent): Promise<void>;
   getIdempotency(scope: RiskScope, action: string, key: string): Promise<RiskIdempotencyRecord | undefined>;
   insertIdempotency(receipt: RiskIdempotencyRecord): Promise<RiskIdempotencyRecord>;
+  getPlatformIdempotency(key: string): Promise<PlatformIdempotencyRecord | undefined>;
 }
 
 export interface RiskProtectionRepository {

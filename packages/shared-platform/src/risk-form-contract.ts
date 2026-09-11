@@ -126,6 +126,8 @@ export const PROTECTION_FIELD_MESSAGES: Record<string, string> = {
   authorityPromptId: "Enter the authority prompt identity.",
   lineage: "Enter the exact synthetic lineage.",
   selections: "Confirm the exact selected edition bindings.",
+  nextReviewOn: "Choose a Review again by date later than today.",
+  nextReviewAt: "Choose a Review again by date later than today.",
   vendorLabel: "Enter a non-sensitive vendor label.",
   role: "Choose a roster role.",
   criticalFunctionKey: "Enter the critical function.",
@@ -336,6 +338,11 @@ export const CreateRiskSourceFormSchema = ProtectionCommandFormSchema.extend({
   authority: z.enum(RISK_SOURCE_AUTHORITIES),
   jurisdiction: z.string().trim().min(1).max(32),
   summary: z.string().trim().min(1).max(2000),
+  nextReviewOn: z.string().date(),
+}).strict();
+
+export const ApproveRiskSourceFormSchema = ProtectionCommandFormSchema.extend({
+  sourceId: UuidSchema,
   nextReviewOn: z.string().date(),
 }).strict();
 

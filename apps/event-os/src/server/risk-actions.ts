@@ -8,6 +8,7 @@ import {
   CreateRiskPolicyFormSchema,
   CreateRiskRuleFormSchema,
   CreateRiskSourceFormSchema,
+  ApproveRiskSourceFormSchema,
   ClassifyFixtureAuthorityFormSchema,
   ExactSelectionWithdrawFormSchema,
   RecordAuthorityReviewFormSchema,
@@ -423,10 +424,17 @@ export async function approveRiskSourceAction(prev: ProtectionFormState, formDat
     formData,
     scopePath: "/app/protection",
     actionType: "risk.source.approve",
+    parse: (data) =>
+      parseFormSchema(ApproveRiskSourceFormSchema, {
+        ...envelope(data),
+        sourceId: field(data, "sourceId"),
+        nextReviewOn: field(data, "nextReviewOn"),
+      }),
     execute: (actor, data) =>
       getRuntime().service.approveRiskSource(actor, {
         ...envelope(data),
         sourceId: field(data, "sourceId"),
+        nextReviewAt: reviewOnToIso(field(data, "nextReviewOn")),
       }),
   });
 }

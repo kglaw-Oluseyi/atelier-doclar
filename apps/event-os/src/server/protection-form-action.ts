@@ -99,7 +99,7 @@ export async function runProtectionFormAction(input: {
     if (isNextRedirect(error)) throw error;
     const normalised = platformErrorFromUnknown(error);
     if (normalised.code === "VALIDATION_FAILED") {
-      const field = normalised.field ?? "form";
+      const field = normalised.field === "nextReviewAt" ? "nextReviewOn" : normalised.field ?? "form";
       const message =
         normalised.field && normalised.message && !/invalid uuid|expected |\{|\[/i.test(normalised.message)
           ? normalised.message
