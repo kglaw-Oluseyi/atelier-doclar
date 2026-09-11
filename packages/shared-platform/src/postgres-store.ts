@@ -320,14 +320,7 @@ export class PostgresPlatformStore implements PlatformStore {
   }
 
   snapshot(): PlatformSnapshot {
-    const next = { ...this.state };
-    for (const key of Object.keys(next) as (keyof PlatformSnapshot)[]) {
-      const value = next[key];
-      if (Array.isArray(value)) {
-        (next as Record<string, unknown>)[key] = value.slice();
-      }
-    }
-    return next;
+    return structuredClone(this.state);
   }
 
   dossierRepository(): PostgresRiskDossierRepository {
@@ -352,7 +345,7 @@ export class PostgresPlatformStore implements PlatformStore {
   }
 
   replace(next: PlatformSnapshot): void {
-    const normalised = normalizeSnapshot(next);
+    const normalised = structuredClone(normalizeSnapshot(next));
     const previous = this.state;
     this.state = normalised;
     this.pending = this.pending
@@ -497,15 +490,15 @@ export class PostgresPlatformStore implements PlatformStore {
       if (this.riskNormalized && S05B_PERSISTED_COLLECTIONS.has(row.collection)) continue;
       const table = next[row.collection];
       if (!Array.isArray(table)) continue;
-      table.push(asBody(row.body));
+      table.push(structuredClone(asBody(row.body)));
     }
     if (this.riskNormalized) {
       overlayRiskState(next, await riskStore.loadAll());
     }
     const audit = await this.client.query<{ body: unknown }>("SELECT body FROM platform_audit");
-    next.audit = audit.rows.map((row) => asBody<AuditEvent>(row.body));
+    next.audit = audit.rows.map((row) => structuredClone(asBody<AuditEvent>(row.body)));
     const idem = await this.client.query<{ body: unknown }>("SELECT body FROM platform_idempotency");
-    next.idempotency = idem.rows.map((row) => asBody<IdempotencyRecord>(row.body));
+    next.idempotency = idem.rows.map((row) => structuredClone(asBody<IdempotencyRecord>(row.body)));
     const normalised = normalizeSnapshot(next);
     validateS04APersistedCollections(normalised);
     validateS04BPersistedCollections(normalised);
