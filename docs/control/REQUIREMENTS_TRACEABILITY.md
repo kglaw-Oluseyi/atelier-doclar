@@ -373,7 +373,7 @@
 
 ## EOS-S05B
 
-**Prompt Control ID:** `MD-PR-S054`
+**Prompt Control ID:** `MD-PR-S069` (acceptance; implementation lineage `MD-PR-S054`–`MD-PR-S068`)
 **Slice ID:** `EOS-S05B` (not a programme-catalogue accepted slice)
 
 | Requirement | Implementation |
@@ -385,7 +385,8 @@
 | Implementation ledger | `docs/control/EOS_S05B_BUILD_LEDGER.md` |
 | Implementation record | `docs/control/EOS_S05B_IMPLEMENTATION.md` |
 | Production / Railway / real operations | NO — Event OS deploy of synthetic implementation only; Control Tower not redeployed; `productionAuthorised` remains false |
-| Status | IMPLEMENTED / NOT ACCEPTED under `MD-PR-S054`; not a catalogue slice; catalogue accepted-slice count remains 5 |
+| Status | ACCEPTED under `MD-PR-S069` at SHA `84d58dd4590fb7d2087b436d10c0b2ae992b1621`; not a catalogue slice; catalogue accepted-slice count remains 5 |
+| Acceptance record | `docs/control/EOS_S05B_ACCEPTANCE.md` |
 | Successor | EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`; `MD-PR-S036` is not consumed |
 
 ## EOS-S04A

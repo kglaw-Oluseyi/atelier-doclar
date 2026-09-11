@@ -1,8 +1,8 @@
 # Current State
 
-**Updated:** MD-PR-S060 V2 EOS-S05B authority, publication and operational completeness (2026-09-10)
-**Prompt Control ID:** MD-PR-S060 V2
-**Milestone:** `EOS-S05` ACCEPTED — catalogue accepted-slice count 5; `EOS-S05A` ACCEPTED (not catalogue); `EOS-S05B` REMEDIATED / NOT ACCEPTED; EOS-S06 not authorised
+**Updated:** MD-PR-S069 EOS-S05B independent acceptance (2026-09-11)
+**Prompt Control ID:** MD-PR-S069
+**Milestone:** `EOS-S05` ACCEPTED — catalogue accepted-slice count 5; `EOS-S05A` ACCEPTED (not catalogue); `EOS-S05B` ACCEPTED (not catalogue); EOS-S06 not authorised
 
 MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is ACCEPTED. EOS-S02 is ACCEPTED. EOS-S03 is ACCEPTED. EOS-S04 is CLOSED / ACCEPTED (`PASS WITH OBSERVATIONS`). EOS-S05 is ACCEPTED. Catalogue accepted-slice count is 5. Native coverage is 62/62. S4-61 is satisfied for technical review only. S4-62 is satisfied for controlled technical acceptance/handover only. Independent, specialist and CEO production gates remain unsigned.
 
@@ -113,9 +113,12 @@ MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is A
 **EOS-S05A LATER UNITS: EEC-11–EEC-44 ACCEPTED WITH THE SLICE; EEC-45 SATISFIED BY MD-PR-S053**
 **EOS-S05A CANONICAL CORPUS: docs/control/eos-s05a/**
 **EOS-S05B IMPLEMENTATION AUTHORISED: YES — whole slice `RPC-01`–`RPC-55` under `MD-PR-S054`**
-**EOS-S05B ACCEPTED: NO**
-**EOS-S05B STATUS: REMEDIATED / NOT ACCEPTED**
-**EOS-S05B IMPLEMENTATION PROMPT CONTROL ID: MD-PR-S054 / MD-PR-S055 / MD-PR-S056 / MD-PR-S058**
+**EOS-S05B ACCEPTED: YES**
+**EOS-S05B STATUS: ACCEPTED**
+**EOS-S05B ACCEPTED IMPLEMENTATION SHA: 84d58dd4590fb7d2087b436d10c0b2ae992b1621**
+**EOS-S05B ACCEPTANCE PROMPT CONTROL ID: MD-PR-S069**
+**EOS-S05B ACCEPTANCE RECORD: docs/control/EOS_S05B_ACCEPTANCE.md**
+**EOS-S05B IMPLEMENTATION PROMPT CONTROL ID: MD-PR-S054 / MD-PR-S055 / MD-PR-S056 / MD-PR-S058 / MD-PR-S060 V2 / MD-PR-S061 / MD-PR-S062 / MD-PR-S063 / MD-PR-S064 / MD-PR-S065 / MD-PR-S067**
 **EOS-S05B CANONICAL CORPUS: docs/control/eos-s05b/**
 **EOS-S06 IMPLEMENTATION AUTHORISED: NO**
 **EOS-S06 STATUS: NOT_STARTED / NOT_AUTHORISED**
@@ -159,7 +162,7 @@ Event OS S01–S03 remain formally accepted. EOS-S04 is CLOSED / ACCEPTED after 
 
 **EOS-S05A:** `ACCEPTED` on `2026-09-10` by `ChatGPT / AI CTO` under `MD-PR-S053` at accepted implementation SHA `50322fa5fdf7b46437dc9d62579e2e2ad918e762`. Not a catalogue slice. Catalogue accepted-slice count remains 5. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised: false`. Live Event OS deployment `4ab04e5e-0e53-48b2-8d69-fa431b3bcb5a` already carries the accepted SHA and is not redeployed. Control Tower is not redeployed. Evaluation `s05a-eval-v6` 46/0 remains current. Claude verified (`MD-PR-S052` READY). Claude did not accept. ChatGPT issued the acceptance decision. `MD-PR-S036` is not consumed. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. Production remains unauthorised. Acceptance record: `docs/control/EOS_S05A_ACCEPTANCE.md`.
 
-**EOS-S05B:** `REMEDIATED / NOT ACCEPTED` under `MD-PR-S060 V2` from baseline `2a701ed5f1f4d459eab8f30a3db9f48ab733af70` at live Event OS SHA `3968e96d5773081fca3ae35c22d40a9f2cc1f9f8` (deployment `3cb1439a-06fe-417b-b142-c99ff97232a7`). Controlling pack `docs/control/eos-s05b/MD_PR_S060_V2_PRESCRIPTIVE_EXECUTION_PACK.md`. First `MD-PR-S054` implementation `d7533f3bac1a7d429778f61044862db7fd753f8f`. Not a catalogue slice. Catalogue accepted-slice count remains 5. Canonical corpus `docs/control/eos-s05b/`. Evaluation `s05b-eval-v4` 56 cases, hash `e09d9efe32e78387d8b49798814c2a4ce685bb2295a8803cb7b1eab7c2cfb1e0`; live CEO run `dae09ede-8fdf-4ee2-822e-39a480c61a2f` `PASSED` with `persistedResultCount` 56. `productionAuthorised: false`. Control Tower is not redeployed. Claude has not been run. Cursor does not accept. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. Implementation record: `docs/control/EOS_S05B_IMPLEMENTATION.md`.
+**EOS-S05B:** `ACCEPTED` on `2026-09-11` by `ChatGPT / AI CTO` under `MD-PR-S069` at accepted implementation SHA `84d58dd4590fb7d2087b436d10c0b2ae992b1621`. Not a catalogue slice. Catalogue accepted-slice count remains 5. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised: false`. Live Event OS deployment `819ca57f-e055-4c06-a58c-81bfc5b141d7` already carries the accepted SHA and is not redeployed. Control Tower is not redeployed. Evaluation `s05b-eval-v6` 63/63 remains current, hash `987f4b6d1c4747074d750eb96a37df48e223627fd069003f75462c0769f15e04`, zero-tolerance clear. Claude verified (`MD-PR-S068` READY). Claude did not accept. ChatGPT issued the acceptance decision. `MD-PR-S036` is not consumed. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. Production remains unauthorised. Acceptance record: `docs/control/EOS_S05B_ACCEPTANCE.md`.
 
 Historical sentence “Implementation of EOS-S04A–F is not authorised as a product slice” applied before CEO S04A–S04F implementation authority. For S04A–S04F that sentence is superseded. The EOS-S04E and EOS-S04F controlled slice pack filenames still contain `DRAFT`. Current programme status for S04E is `ACCEPTED`. Current programme status for S04F is `ACCEPTED`. Historical `IN_REVIEW / NOT READY` on 2026-09-08 remains dated history.
 

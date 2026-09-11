@@ -510,3 +510,25 @@ RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S037`. Canonical corpus p
 
 `MD-PR-S060 V2` remediates authority, publication and operational completeness from baseline `2a701ed5f1f4d459eab8f30a3db9f48ab733af70` at live Event OS SHA `3968e96d5773081fca3ae35c22d40a9f2cc1f9f8` (deployment `3cb1439a-06fe-417b-b142-c99ff97232a7`). Exact dossier permission matrix, working-edition vs CURRENT publication, persist-before-redirect, independent source/rule checker, private client dossier grants, `s05b-eval-v4` 56 cases hash `e09d9efe32e78387d8b49798814c2a4ce685bb2295a8803cb7b1eab7c2cfb1e0`. Live CEO run `dae09ede-8fdf-4ee2-822e-39a480c61a2f` PASSED 56/56. Claude has not been run. EOS-S05B is not accepted. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. Authority: `docs/control/eos-s05b/MD_PR_S060_V2_PRESCRIPTIVE_EXECUTION_PACK.md`.
 
+`MD-PR-S061` remediates governing rule authority and live publication. Outcome: not ready. EOS-S05B is not accepted. Authority: `docs/control/eos-s05b/MD_PR_S061_EOS_S05B_GOVERNING_RULE_AUTHORITY_AND_LIVE_PUBLICATION.md`.
+
+`MD-PR-S062` remediates governed synthetic-authority recovery. Live gates remained incomplete. EOS-S05B is not accepted. Authority: `docs/control/eos-s05b/MD_PR_S062_EOS_S05B_GOVERNED_SYNTHETIC_AUTHORITY_RECOVERY.md`.
+
+`MD-PR-S063` implements command-scoped durable dossier execution. Live gates passed. The S063 exact-selection withdrawal of three S061 QA editions occurred before the later S064 isolation correction was deployed; that withdrawal did not durably update normalized rows. EOS-S05B is not accepted. Authority: `docs/control/eos-s05b/MD_PR_S063_EOS_S05B_COMMAND_SCOPED_DURABLE_DOSSIER_EXECUTION.md`.
+
+`MD-PR-S064` isolates generic snapshot mutations from canonical state and recovers the full gate suite. Application SHA `5968f271c4ecfc66733c3ccb0a23edd30e434207` contains that isolation fix. EOS-S05B is not accepted. Authority: `docs/control/eos-s05b/MD_PR_S064_EOS_S05B_MUTATION_ISOLATION_AND_FULL_GATE_RECOVERY.md`.
+
+`MD-PR-S065` corrects live publication completion and replay truth. Two consecutive live sequences passed. Live Event OS remained `5968f271c4ecfc66733c3ccb0a23edd30e434207`. EOS-S05B is not accepted. Authority: `docs/control/eos-s05b/MD_PR_S065_EOS_S05B_LIVE_PUBLICATION_COMPLETION_AND_REPLAY_TRUTH.md`.
+
+`MD-PR-S066` focused Claude verification was `NOT READY` because three S061 QA editions that S063 reported withdrawn remained `CURRENT APPROVED` and governing. The existing S063 exact-selection receipt caused replay to skip still-APPROVED normalized rows. Live Event OS `5968f27` already had the S064 isolation fix; it did not lack that correction.
+
+`MD-PR-S067` remediates durable exact-hash authority withdrawal and Reviewer source-approval dates from baseline `35e677943ae7147cb5fb399f045f26bc2570b40a` at live Event OS SHA `84d58dd4590fb7d2087b436d10c0b2ae992b1621` (deployment `819ca57f-e055-4c06-a58c-81bfc5b141d7`). Bounded authority transactions, receipt replay that still repairs APPROVED rows, Reviewer `Review again by`, and governed recovery of the three obsolete S061 QA editions. Keep edition `64d4a54b-c833-4826-8756-76699ec794c2` remains governing. `s05b-eval-v6` 63/63 hash `987f4b6d1c4747074d750eb96a37df48e223627fd069003f75462c0769f15e04`. Shared-platform 512/512; Event OS 102/102. Claude was not run under S067. EOS-S05B is not accepted in that remediation. Authority: `docs/control/eos-s05b/MD_PR_S067_EOS_S05B_DURABLE_AUTHORITY_WITHDRAWAL_AND_REVIEW_COMPLETION.md`.
+
+`MD-PR-S068` narrow Claude verification — `READY`.
+
+`MD-PR-S069` records independent AI CTO acceptance of EOS-S05B at SHA `84d58dd4590fb7d2087b436d10c0b2ae992b1621` after Claude `MD-PR-S068` READY. Not a catalogue slice. Catalogue accepted-slice count remains 5. Live Event OS deployment `819ca57f-e055-4c06-a58c-81bfc5b141d7` is not redeployed. Control Tower is not redeployed. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. Production remains unauthorised. Acceptance record: `docs/control/EOS_S05B_ACCEPTANCE.md`.
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-EOS-S05B-ACCEPT | DOCUMENT | EOS-S05B independent acceptance record | `docs/control/EOS_S05B_ACCEPTANCE.md` |
+

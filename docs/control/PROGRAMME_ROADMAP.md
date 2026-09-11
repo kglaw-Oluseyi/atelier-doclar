@@ -12,7 +12,7 @@ Percent complete is not used. Unknown is not healthy. Documented ≠ implemented
 | Code | Name | Route | Implementation reality |
 |------|------|-------|------------------------|
 | FOUNDATION | Shared Foundation / Control Tower | `/programme` | Control Tower implemented; Foundation closeout IN_REVIEW; production unsigned |
-| EVENT_OS | Event OS | `/programme/event-os` | S01–S03 accepted; S04 CLOSED / ACCEPTED; S04A ACCEPTED (not catalogue); S04B ACCEPTED (not catalogue); S04C ACCEPTED (not catalogue); S04D ACCEPTED (not catalogue); S04E ACCEPTED (not catalogue); S04F ACCEPTED (not catalogue); S05 ACCEPTED (catalogue count 5); S05A ACCEPTED (not catalogue); S05B IMPLEMENTED / NOT ACCEPTED (not catalogue); S06 not authorised |
+| EVENT_OS | Event OS | `/programme/event-os` | S01–S03 accepted; S04 CLOSED / ACCEPTED; S04A ACCEPTED (not catalogue); S04B ACCEPTED (not catalogue); S04C ACCEPTED (not catalogue); S04D ACCEPTED (not catalogue); S04E ACCEPTED (not catalogue); S04F ACCEPTED (not catalogue); S05 ACCEPTED (catalogue count 5); S05A ACCEPTED (not catalogue); S05B ACCEPTED (not catalogue); S06 not authorised |
 | EVENT_DAY | Event-Day Runtime | `/programme/event-day` | Specs + contracts; no app |
 | ACADEMY | Academy | `/programme/academy` | Specified/prompted; no app |
 | MARKETING | Marketing OS | `/programme/marketing` | Specified/prompted; no app |
@@ -71,7 +71,7 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 | EOS-S04F | ACCEPTED — Language, Cultural Text & Multilingual Editions; not a catalogue slice; SHA `a4795e83c929bf24591f52c2224eb4b588c23ef3`; `MD-PR-S026` / `MD-PR-S027` |
 | EOS-S05 | ACCEPTED — Venue registry and spatial layout; catalogue slice; SHA `eba137712c65c6f59b77fe2a88a8f4a277228cd9`; `MD-PR-S028`–`MD-PR-S035` |
 | EOS-S05A | ACCEPTED — Discovery, Investment & Executive Event Command; not a catalogue slice; SHA `50322fa5fdf7b46437dc9d62579e2e2ad918e762`; `MD-PR-S053` |
-| EOS-S05B | IMPLEMENTED / NOT ACCEPTED — Risk, Protection & Continuity Command; `MD-PR-S054`; not a catalogue slice |
+| EOS-S05B | ACCEPTED — Risk, Protection & Continuity Command; not a catalogue slice; SHA `84d58dd4590fb7d2087b436d10c0b2ae992b1621`; `MD-PR-S069` |
 | EOS-S06 | NOT_STARTED / NOT_AUTHORISED — seating allocation; `MD-PR-S036` is recommended only and is not implementation authority |
 | All others | NOT_STARTED, READY, or BLOCKED only by valid Event OS / Event-Day dependencies |
 
@@ -79,8 +79,8 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 
 | Band | Content |
 |------|---------|
-| Now | Event OS S01–S05 accepted (catalogue count 5); EOS-S04A–F ACCEPTED (not catalogue); EOS-S05A ACCEPTED (not catalogue); EOS-S05B IMPLEMENTED / NOT ACCEPTED (not catalogue); production unsigned; no real communication or translation provider |
-| Next | Independent Claude verification then AI CTO review of EOS-S05B. EOS-S06 remains unauthorised; recommended control ID `MD-PR-S036` is not implementation authority |
+| Now | Event OS S01–S05 accepted (catalogue count 5); EOS-S04A–F ACCEPTED (not catalogue); EOS-S05A ACCEPTED (not catalogue); EOS-S05B ACCEPTED (not catalogue); production unsigned; no real communication or translation provider |
+| Next | EOS-S06 remains unauthorised; recommended control ID `MD-PR-S036` is not implementation authority |
 | Later | Event OS S01 after a new authorised instruction; Runtime after Event OS foundations |
 | Held | All 693 product/recon prompts except CT0/CT1 wrappers; EOS-S06 |
 | External | Independent, specialist, venue, CEO gates — unsigned |

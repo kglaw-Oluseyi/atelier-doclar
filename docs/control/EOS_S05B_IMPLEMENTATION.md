@@ -1,22 +1,22 @@
 # EOS-S05B Implementation Record
 
 **Slice ID:** `EOS-S05B`
-**Prompt Control ID:** `MD-PR-S054` then `MD-PR-S055` then `MD-PR-S056` then `MD-PR-S058` then `MD-PR-S060 V2`
+**Prompt Control ID:** `MD-PR-S054` then `MD-PR-S055` then `MD-PR-S056` then `MD-PR-S058` then `MD-PR-S060 V2` then `MD-PR-S061`–`MD-PR-S067`; accepted under `MD-PR-S069`
 **Title:** Risk, Protection & Continuity Command
-**Status:** `REMEDIATED` under `MD-PR-S060 V2` — not accepted; Claude not run
+**Status:** `ACCEPTED` under `MD-PR-S069` at SHA `84d58dd4590fb7d2087b436d10c0b2ae992b1621`
 **Starting baseline:** `f12798a28f438408527d8811be57389661c86c25`
 **MD-PR-S055 baseline:** `505c4399ba4517a972914e67b738372055da612d`
 **MD-PR-S056 baseline:** `24cc06db961986d93a60324b3101b79bc1c8c06d`
 **MD-PR-S058 baseline:** `a66d39a8619cae93e9c905cba024fa8bd85662e1`
 **MD-PR-S060 V2 baseline:** `2a701ed5f1f4d459eab8f30a3db9f48ab733af70`
-**Application SHA:** `3968e96d5773081fca3ae35c22d40a9f2cc1f9f8`
+**Application SHA:** `84d58dd4590fb7d2087b436d10c0b2ae992b1621`
 **First implementation SHA:** `d7533f3bac1a7d429778f61044862db7fd753f8f`
-**Live Event OS deployment:** `3cb1439a-06fe-417b-b142-c99ff97232a7`
+**Live Event OS deployment:** `819ca57f-e055-4c06-a58c-81bfc5b141d7`
 **Catalogue slice:** no — accepted-slice count remains 5
 **Production:** unauthorised
 **EOS-S06:** `NOT_STARTED / NOT_AUTHORISED`
 
-This record is implementation evidence under `MD-PR-S054`, then architecture and assurance remediation under `MD-PR-S055`. It does not accept EOS-S05B. Independent Claude verification and AI CTO acceptance remain later gates. Do not create `EOS_S05B_ACCEPTANCE.md`.
+This record is implementation evidence under `MD-PR-S054`, then architecture and assurance remediation under `MD-PR-S055`. Historical rows that say do not create `EOS_S05B_ACCEPTANCE.md` remain dated history. Independent acceptance is `docs/control/EOS_S05B_ACCEPTANCE.md` under `MD-PR-S069`.
 
 ## MD-PR-S055 remediation findings (do not rewrite the MD-PR-S054 first-run report)
 
@@ -41,8 +41,8 @@ Focused GitHub review of the `MD-PR-S054` surface found material divergence from
 |-------|--------|
 | Ratified specification (00–13, 15) | RATIFIED — canonical at `docs/control/eos-s05b/` |
 | Cursor packs `14A`–`14D` / units `RPC-01`–`RPC-55` | IMPLEMENTED |
-| Independent Claude verification | NOT RUN |
-| Independent acceptance | NOT GRANTED |
+| Independent Claude verification | `MD-PR-S068` READY |
+| Independent acceptance | GRANTED — `MD-PR-S069` / `docs/control/EOS_S05B_ACCEPTANCE.md` |
 | EOS-S06 | `NOT_STARTED / NOT_AUTHORISED` |
 
 ## Compatibility map (RPC-01)
@@ -132,3 +132,19 @@ Authority, publication and operational-completeness remediation executed from ba
 - Evaluation: `s05b-eval-v4` / `s05b-eval-contract-v4`, 56 cases, hash `e09d9efe32e78387d8b49798814c2a4ce685bb2295a8803cb7b1eab7c2cfb1e0`. Live CEO run `dae09ede-8fdf-4ee2-822e-39a480c61a2f` PASSED 56/56 persisted 56. Prior v3 hash is not current.
 
 Claude has not been run. EOS-S05B is not accepted. EOS-S06 is not started.
+
+## MD-PR-S061–S067 execution (does not rewrite the MD-PR-S054–S060 reports)
+
+Later remediations executed after S060 V2. Historical S060 “not accepted” sentences above remain dated history.
+
+- S061 governing authority and live publication: not ready.
+- S062 synthetic-authority recovery: live gates incomplete.
+- S063 command-scoped durable dossier: live gates passed. The S063 exact-selection withdrawal of three S061 QA editions occurred before S064 isolation was deployed and did not durably update normalized rows.
+- S064 generic mutation isolation: full suite recovered. Application SHA `5968f271c4ecfc66733c3ccb0a23edd30e434207` contains that isolation fix and must not be described as lacking it.
+- S065 publication/replay evidence: two live sequences passed while Event OS remained on `5968f27`.
+- S066 focused Claude: NOT READY because the three S061 QA editions remained `CURRENT APPROVED`. The existing S063 receipt caused replay to skip still-APPROVED rows.
+- S067 durable exact-hash withdrawal and Reviewer dates: bounded authority transaction; receipt replay no longer skips still-APPROVED rows; governed recovery of editions `00587236-fa20-4180-95c0-c0649eb728eb`, `cfc0b05a-8a74-4c74-a73a-71c03a99e2ab`, `6b9330b0-9563-4180-bf3a-bf2dcfb8b1f7`. Keep `64d4a54b-c833-4826-8756-76699ec794c2` remains governing. Live SHA `84d58dd4590fb7d2087b436d10c0b2ae992b1621`, deployment `819ca57f-e055-4c06-a58c-81bfc5b141d7`. Evaluation `s05b-eval-v6` 63/63.
+
+## MD-PR-S069 independent acceptance
+
+EOS-S05B is ACCEPTED under `MD-PR-S069`. Not a catalogue slice. Catalogue accepted-slice count remains 5. Application code was not changed. Event OS and Control Tower were not redeployed. Acceptance record: `docs/control/EOS_S05B_ACCEPTANCE.md`. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. Production remains unauthorised.

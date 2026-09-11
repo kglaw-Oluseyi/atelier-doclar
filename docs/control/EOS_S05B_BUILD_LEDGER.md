@@ -1,21 +1,21 @@
 # EOS-S05B Build Ledger
 
 **Slice ID:** `EOS-S05B`
-**Prompt Control ID:** `MD-PR-S054` then `MD-PR-S055` then `MD-PR-S056` then `MD-PR-S058` then `MD-PR-S060 V2`
+**Prompt Control ID:** `MD-PR-S054` then `MD-PR-S055` then `MD-PR-S056` then `MD-PR-S058` then `MD-PR-S060 V2` then `MD-PR-S061`–`MD-PR-S067`; accepted under `MD-PR-S069`
 **Starting baseline:** `f12798a28f438408527d8811be57389661c86c25`
 **MD-PR-S055 baseline:** `505c4399ba4517a972914e67b738372055da612d`
 **MD-PR-S056 baseline:** `24cc06db961986d93a60324b3101b79bc1c8c06d`
 **MD-PR-S058 baseline:** `a66d39a8619cae93e9c905cba024fa8bd85662e1`
 **MD-PR-S060 V2 baseline:** `2a701ed5f1f4d459eab8f30a3db9f48ab733af70`
-**Application SHA:** `3968e96d5773081fca3ae35c22d40a9f2cc1f9f8`
+**Application SHA:** `84d58dd4590fb7d2087b436d10c0b2ae992b1621`
 **First implementation SHA:** `d7533f3bac1a7d429778f61044862db7fd753f8f`
-**Live Event OS deployment:** `3cb1439a-06fe-417b-b142-c99ff97232a7`
-**Status:** `REMEDIATED` under `MD-PR-S060 V2` — not accepted; Claude not run
+**Live Event OS deployment:** `819ca57f-e055-4c06-a58c-81bfc5b141d7`
+**Status:** `ACCEPTED` under `MD-PR-S069` — historical rows below remain dated `NOT ACCEPTED` history
 **Production:** unauthorised
 **Catalogue accepted-slice count:** remains 5
-**Implemented range:** `RPC-01`–`RPC-55` implemented; acceptance is not this authority
+**Implemented range:** `RPC-01`–`RPC-55` implemented; accepted under `MD-PR-S069`
 **EOS-S06:** `NOT_STARTED / NOT_AUTHORISED`
-**Evaluation:** `s05b-eval-v4` — 56 cases, contract `s05b-eval-contract-v4`, hash `e09d9efe32e78387d8b49798814c2a4ce685bb2295a8803cb7b1eab7c2cfb1e0`; prior `s05b-eval-v3` PASS is honestly `STALE`
+**Evaluation:** `s05b-eval-v6` — 63 cases, hash `987f4b6d1c4747074d750eb96a37df48e223627fd069003f75462c0769f15e04`; prior `s05b-eval-v4` PASS is honestly `STALE`
 
 Application SHA, GitHub parity, Railway deployment ID and live smoke results are recorded in the final `MD-PR-S054` consolidated report after push and Event OS deploy.
 
@@ -209,4 +209,55 @@ Passing retries do not erase the first-run failures.
 | Live focused S060 Playwright | 4/6 (authority, Budget conflict, human-detail, continuity); publication and client-access held on retained Alpha STALE/INDETERMINATE protection state |
 
 Claude not run. EOS-S05B not accepted. EOS-S06 not started.
+
+### MD-PR-S067 first-run failures (appended; MD-PR-S054–S060 rows above are not rewritten)
+
+| Command | Classification | Root cause | Correction | Rerun |
+|---------|----------------|------------|------------|-------|
+| `pnpm typecheck` | Implementation defect | `Parameters<typeof withdrawGoverningRuleOnSnap>` used without importing the function | Import the shared domain function | `tsc` pass |
+| S067 unit cross-org `assert.rejects` | Test defect | Service permission deny throws synchronously; `assert.rejects` treated a compiled function as a constructor | Keep OnSnap forged-hash denial; drop the redundant async service call | 6/6 S067 unit pass |
+| Local Playwright S067 Reviewer | Environment defect | Inherited live `EVENT_OS_ACCESS_TOKEN` failed local fixture sign-in | Rerun with the local fixture token | sign-in pass |
+| Local Playwright S067 Reviewer reload | Implementation defect | Approved non-governing source was `historyOnly` and disappeared from the catalogue | Keep DISCOVERY/COUNSEL_REVIEWED/APPROVED visible; retire SUPERSEDED/WITHDRAWN to the historic count | Reviewer date Playwright pass |
+
+Passing retries do not erase the first-run failures.
+
+## Local gates (MD-PR-S067)
+
+| Gate | Result |
+|------|--------|
+| `pnpm typecheck` | pass |
+| `pnpm --filter @maison-doclar/shared-platform test` | 512/0 |
+| `pnpm --filter @maison-doclar/event-os test` | 102/0 |
+| `pnpm programme:validate` | PASS |
+| `pnpm --filter @maison-doclar/event-os build` | pass |
+| `git diff --check` | clean |
+| Focused Playwright reviewer-date / S061 / S063 publication-client / S065 | pass after recorded first-run failures |
+
+`s05b-eval-v6` hash `987f4b6d1c4747074d750eb96a37df48e223627fd069003f75462c0769f15e04` (63 cases). `productionAuthorised` remains false.
+
+## Live gates (MD-PR-S067)
+
+| Gate | Result |
+|------|--------|
+| local = origin = GitHub `main` at Event OS deploy | `84d58dd4590fb7d2087b436d10c0b2ae992b1621` |
+| Event OS deployment | `819ca57f-e055-4c06-a58c-81bfc5b141d7` SUCCESS |
+| `/api/health/live` | alive; `productionAuthorised: false`; SHA `84d58dd4590fb7d2087b436d10c0b2ae992b1621` |
+| `/api/health/ready` | ready; POSTGRES; migrations APPLIED; `s05b-eval-v6`; 63 cases; hash `987f4b6d1c4747074d750eb96a37df48e223627fd069003f75462c0769f15e04`; `PASSED`; `persistedResultCount` 63; adapters INACTIVE |
+| Governed recovery of three obsolete S061 QA editions | WITHDRAWN / HISTORY ONLY after reload; keep `64d4a54b-c833-4826-8756-76699ec794c2` governing; one current `PUBLIC_LIABILITY` gap; second evaluate did not resurrect |
+| Control Tower | not redeployed (SKIPPED) |
+
+Claude not run under S067. EOS-S05B not accepted in that remediation. EOS-S06 not started.
+
+## MD-PR-S069 independent acceptance
+
+EOS-S05B is ACCEPTED under `MD-PR-S069`. Not a catalogue slice. Catalogue accepted-slice count remains 5. Application code was not changed. Event OS and Control Tower were not redeployed.
+
+| Field | Value |
+|-------|-------|
+| Acceptance record | `docs/control/EOS_S05B_ACCEPTANCE.md` |
+| Accepted implementation SHA | `84d58dd4590fb7d2087b436d10c0b2ae992b1621` |
+| Live deployment | `819ca57f-e055-4c06-a58c-81bfc5b141d7` already at the accepted SHA |
+| Evaluation | `s05b-eval-v6` 63/63; hash `987f4b6d1c4747074d750eb96a37df48e223627fd069003f75462c0769f15e04` |
+| Claude / EOS-S06 / production | verified READY under `MD-PR-S068` / not authorised / not authorised |
+| `productionAuthorised` | false, unchanged |
 
