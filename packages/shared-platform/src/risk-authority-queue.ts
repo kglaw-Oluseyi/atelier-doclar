@@ -39,6 +39,7 @@ export type RiskAuthorityQueueQuery = {
   limit?: number;
   authorityState?: RiskAuthorityState;
   ruleKey?: string;
+  ruleKeys?: string[];
 };
 
 export type RiskAuthorityQueuePage = {
@@ -174,6 +175,7 @@ export function projectRiskAuthorityQueue(
   const all = projectRiskAuthorityQueueItems(snap, query.organisationId, asOf, audience, canDecide).filter((item) => {
     if (query.authorityState && item.authorityState !== query.authorityState) return false;
     if (query.ruleKey && item.ruleKey !== query.ruleKey) return false;
+    if (query.ruleKeys?.length && !query.ruleKeys.includes(item.ruleKey)) return false;
     if (after && item.ruleKey <= after) return false;
     return true;
   });
@@ -185,7 +187,7 @@ export function projectRiskAuthorityQueue(
   return {
     items,
     nextCursor: all.length > limit ? encodeCursor(items[items.length - 1]!.ruleKey) : undefined,
-    totalCount: all.length + (after ? projectRiskAuthorityQueueItems(snap, query.organisationId, asOf, audience, canDecide).filter((item) => item.ruleKey <= after && (!query.authorityState || item.authorityState === query.authorityState) && (!query.ruleKey || item.ruleKey === query.ruleKey)).length : 0),
+    totalCount: all.length + (after ? projectRiskAuthorityQueueItems(snap, query.organisationId, asOf, audience, canDecide).filter((item) => item.ruleKey <= after && (!query.authorityState || item.authorityState === query.authorityState) && (!query.ruleKey || item.ruleKey === query.ruleKey) && (!query.ruleKeys?.length || query.ruleKeys.includes(item.ruleKey))).length : 0),
     hiddenHistoryCount,
   };
 }

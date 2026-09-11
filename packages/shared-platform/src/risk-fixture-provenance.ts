@@ -26,8 +26,25 @@ export const S060_REPORTED_EDITION_IDS = [
 export const S059_DISCOVERY_RULE_KEY = "CLAUDE-S05B-S059-B-RULE";
 export const S061_CURRENT_RULE_KEY = "s061-public-liability-1789066558518";
 export const S061_CURRENT_EDITION_ID = "64d4a54b-c833-4826-8756-76699ec794c2";
+export const S061_ADDITIONAL_QA_RULE_KEYS = [
+  "s061-public-liability-1789066731022",
+  "s061-public-liability-1789066767651",
+  "s061-public-liability-1789067404599",
+] as const;
+export const S061_ADDITIONAL_QA_EDITION_IDS = [
+  "00587236-fa20-4180-95c0-c0649eb728eb",
+  "cfc0b05a-8a74-4c74-a73a-71c03a99e2ab",
+  "6b9330b0-9563-4180-bf3a-bf2dcfb8b1f7",
+] as const;
+export const S061_ADDITIONAL_QA_LINEAGE =
+  "Obsolete S061 synthetic QA authority created by S061 automated maker/checker tests (s05b-s061-authority.spec.ts). Not continuing Maison Doclar governing policy.";
 export const S062_CANONICAL_FIXTURE_RULE_KEY = "s062-canonical-public-liability";
 export const S062_AUTHORITY_PROMPT_ID = "MD-PR-S062";
+export const S063_AUTHORITY_PROMPT_ID = "MD-PR-S063";
+
+export function isS061AdditionalQaRuleKey(ruleKey: string): boolean {
+  return (S061_ADDITIONAL_QA_RULE_KEYS as readonly string[]).includes(ruleKey);
+}
 
 export function assertProductionAllowsFixtureActions(productionAuthorised: boolean): void {
   if (productionAuthorised) {

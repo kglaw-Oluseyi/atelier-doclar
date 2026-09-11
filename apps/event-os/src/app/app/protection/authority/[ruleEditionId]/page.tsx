@@ -16,7 +16,12 @@ import {
   reviewRiskRuleAction,
   withdrawRiskAuthorityAction,
 } from "../../../../../server/risk-actions";
-import { S062_AUTHORITY_PROMPT_ID } from "@maison-doclar/shared-platform";
+import {
+  S061_ADDITIONAL_QA_LINEAGE,
+  S062_AUTHORITY_PROMPT_ID,
+  S063_AUTHORITY_PROMPT_ID,
+  isS061AdditionalQaRuleKey,
+} from "@maison-doclar/shared-platform";
 
 function Envelope({ fields }: { fields: Record<string, string | number> }) {
   return (
@@ -77,6 +82,7 @@ export default async function AuthorityDetailPage({
   });
   const isRiskReviewer = Boolean(permissions.ruleReview && permissions.ruleApprove && !permissions.catalogueManage);
   const item = detail.item;
+  const extraS061 = isS061AdditionalQaRuleKey(item.ruleKey);
   const draft = detail.history.find((row) => row.id === ruleEditionId && (row.status === "DISCOVERY" || row.status === "COUNSEL_REVIEWED"));
   const editionId = item.governingEditionId ?? ruleEditionId;
   const hash = detail.history.find((row) => row.id === editionId)?.contentHash ?? "";
@@ -195,18 +201,27 @@ export default async function AuthorityDetailPage({
                 expectedVersion: item.governingVersion ?? 1,
                 editionId,
                 confirmedHash: hash,
-                authorityPromptId: S062_AUTHORITY_PROMPT_ID,
+                authorityPromptId: extraS061 ? S063_AUTHORITY_PROMPT_ID : S062_AUTHORITY_PROMPT_ID,
                 createdByAutomation: "true",
               }}
             />
             <IdempotencyField />
             <label>
               Test run identity
-              <input name="testRunId" required defaultValue={`s062-${editionId.slice(0, 8)}`} />
+              <input name="testRunId" required defaultValue={`${extraS061 ? "s063" : "s062"}-${editionId.slice(0, 8)}`} />
             </label>
             <label>
               Synthetic lineage
-              <textarea name="lineage" required rows={2} defaultValue="Obsolete S060 synthetic QA authority created by S060 live maker/checker tests. Not continuing Maison Doclar governing policy." />
+              <textarea
+                name="lineage"
+                required
+                rows={2}
+                defaultValue={
+                  extraS061
+                    ? S061_ADDITIONAL_QA_LINEAGE
+                    : "Obsolete S060 synthetic QA authority created by S060 live maker/checker tests. Not continuing Maison Doclar governing policy."
+                }
+              />
             </label>
             <button type="submit" className="button secondary">
               Record fixture classification

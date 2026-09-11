@@ -11,7 +11,12 @@ import { protectionPermissions } from "../../../../server/protection-scope";
 import { operationalStateFromCode } from "../../../../server/operational-state";
 import { resolveDiscoveryOrganisation } from "../../../../server/discovery-scope";
 import { withdrawExactSelectionAction } from "../../../../server/risk-actions";
-import { S060_SYNTHETIC_RULE_KEYS, type RiskAuthorityState } from "@maison-doclar/shared-platform";
+import {
+  S060_SYNTHETIC_RULE_KEYS,
+  S061_ADDITIONAL_QA_LINEAGE,
+  S061_ADDITIONAL_QA_RULE_KEYS,
+  type RiskAuthorityState,
+} from "@maison-doclar/shared-platform";
 
 const STATES: RiskAuthorityState[] = [
   "CURRENT_APPROVED",
@@ -76,6 +81,16 @@ export default async function AuthorityQueuePage({
   });
   const isRiskReviewer = Boolean(permissions.ruleReview && permissions.ruleApprove && !permissions.catalogueManage);
   const s060Rows = page.items.filter((item) => item.isSyntheticFixture && item.governingEditionId && S060_SYNTHETIC_RULE_KEYS.includes(item.ruleKey as (typeof S060_SYNTHETIC_RULE_KEYS)[number]));
+  const s061ExtraPreview = isRiskReviewer
+    ? runtime.service.listRiskAuthorityQueue(actor, {
+        organisationId: organisation.id,
+        ruleKeys: [...S061_ADDITIONAL_QA_RULE_KEYS],
+        limit: S061_ADDITIONAL_QA_RULE_KEYS.length,
+      }).items
+    : [];
+  const s061ExtraRows = s061ExtraPreview.filter(
+    (item) => item.isSyntheticFixture && item.governingEditionId && item.governingContentHash && S061_ADDITIONAL_QA_RULE_KEYS.includes(item.ruleKey as (typeof S061_ADDITIONAL_QA_RULE_KEYS)[number]),
+  );
   const filterHref = (next: Record<string, string | undefined>) => {
     const params = new URLSearchParams();
     const merged: Record<string, string | undefined> = { state: authorityState, ruleKey, ...next };
@@ -170,6 +185,36 @@ export default async function AuthorityQueuePage({
             </label>
             <button type="submit" className="button">
               Withdraw exact previewed S060 authorities
+            </button>
+          </ProtectionMutationForm>
+        ) : null}
+        {isRiskReviewer && s061ExtraRows.length === S061_ADDITIONAL_QA_RULE_KEYS.length ? (
+          <ProtectionMutationForm action={withdrawExactSelectionAction} className="atelier-form protection-form" testId="authority-exact-s061-batch">
+            <Envelope
+              fields={{
+                organisationId: organisation.id,
+                assignmentId,
+                expectedVersion: 0,
+                selections: JSON.stringify(
+                  s061ExtraRows.map((item) => ({
+                    editionId: item.governingEditionId,
+                    expectedVersion: item.governingVersion,
+                    contentHash: item.governingContentHash,
+                  })),
+                ),
+              }}
+            />
+            <IdempotencyField />
+            <p data-testid="authority-exact-s061-preview">
+              Exact S061 synthetic QA authorities previewed: {s061ExtraRows.map((item) => `${item.ruleKey} ${item.governingEditionId}`).join("; ")}.
+              Withdrawal removes future governing authority and retains immutable history. This is not a wildcard cleanup.
+            </p>
+            <label>
+              Reason
+              <textarea name="reason" required rows={3} defaultValue={S061_ADDITIONAL_QA_LINEAGE} />
+            </label>
+            <button type="submit" className="button">
+              Withdraw exact previewed S061 QA authorities
             </button>
           </ProtectionMutationForm>
         ) : null}
