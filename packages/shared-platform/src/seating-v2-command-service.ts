@@ -581,6 +581,9 @@ export class SeatingV2CommandService {
       );
       if (existing) return { replayed: true, value: existing };
       const compiled = await this.requireCompiled(tx, envelope, pkg.id);
+      if (!compiled.request || typeof compiled.request !== "object" || !("guests" in compiled.request)) {
+        throw new PlatformError("VALIDATION_FAILED", "compiled solver request was not readable");
+      }
       const solved = solveSeatingV2Compiled(compiled.request);
       const report = validateSeatingV2(
         { contentHash: pkg.contentHash, compiledRequest: compiled.request },
@@ -1267,7 +1270,9 @@ export class SeatingV2CommandService {
       (item) => item.packageId === packageId,
     );
     if (!compiled) throw new PlatformError("NOT_FOUND", "compiled request was not found");
-    return { request: compiled.compiledRequestJson as ReturnType<typeof compileSeatingV2Request>["request"] };
+    const raw = compiled.compiledRequestJson;
+    const request = (typeof raw === "string" ? JSON.parse(raw) : raw) as ReturnType<typeof compileSeatingV2Request>["request"];
+    return { request };
   }
 
   private revalidate(

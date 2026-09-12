@@ -48,6 +48,21 @@ function prepareRow(row: Record<string, unknown>): Record<string, unknown> {
   return next;
 }
 
+function parseRow(row: Record<string, unknown>): Record<string, unknown> {
+  const record = seatingRecordFromRow(row);
+  for (const key of ["compiledRequestJson", "observations", "assertions", "counts"] as const) {
+    const value = record[key];
+    if (typeof value === "string") {
+      try {
+        record[key] = JSON.parse(value);
+      } catch {
+        // retain the stored string if it is not JSON
+      }
+    }
+  }
+  return record;
+}
+
 export class PostgresSeatingV2Transaction implements SeatingV2Transaction {
   constructor(
     private readonly client: PgQueryable,
@@ -71,7 +86,7 @@ export class PostgresSeatingV2Transaction implements SeatingV2Transaction {
             )
           : await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE ${identityColumn} = $1`, [id]);
     const row = result.rows[0];
-    return row ? (seatingRecordFromRow(row) as T) : undefined;
+    return row ? (parseRow(row) as T) : undefined;
   }
 
   async list<T>(collection: SeatingV2Collection, scope: Partial<SeatingV2Scope>): Promise<T[]> {
@@ -92,7 +107,7 @@ export class PostgresSeatingV2Transaction implements SeatingV2Transaction {
               : scope.eventId
                 ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE event_id = $1`, [scope.eventId])
                 : await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table}`);
-    return result.rows.map((row) => seatingRecordFromRow(row) as T);
+    return result.rows.map((row) => parseRow(row) as T);
   }
 
   async insert<T extends { id?: string; organisationId?: string }>(collection: SeatingV2Collection, record: T): Promise<T> {
