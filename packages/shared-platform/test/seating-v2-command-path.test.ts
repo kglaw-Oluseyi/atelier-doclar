@@ -319,4 +319,29 @@ describe("EOS-S06 V2 command path", () => {
     );
     void approved;
   });
+
+  it("stores one validation outcome per package rule when two ACTIVE KEEP_APART editions share a hash", async () => {
+    const { service, store } = fixtureService();
+    prepareSurface(service, store);
+    const guestA = attendingGuest(service, "Chi", "s072-dup-a");
+    const guestB = attendingGuest(service, "Dee", "s072-dup-b");
+    const v2 = service.seatingV2Commands();
+    const first = await v2.createRule(planner(), envelope(people.assignPlanner, "s072-dup-create-01"), keepApart(guestA.id, guestB.id));
+    const second = await v2.createRule(planner(), envelope(people.assignPlanner, "s072-dup-create-02"), keepApart(guestA.id, guestB.id));
+    await v2.activateRule(director(), envelope(people.assignDirector, "s072-dup-act-01"), { editionId: first.value.id });
+    await v2.activateRule(director(), envelope(people.assignDirector, "s072-dup-act-02"), { editionId: second.value.id });
+    const frozen = await v2.freezePackage(planner(), envelope(people.assignPlanner, "s072-dup-freeze-01"), { seed: "seed-dup" });
+    const run = await v2.launchRun(planner(), envelope(people.assignPlanner, "s072-dup-run-01"), { packageId: frozen.value.id });
+    assert.ok(run.value.status === "FEASIBLE" || run.value.status === "INFEASIBLE");
+    const outcomes = await v2.repository.transaction(async (tx) =>
+      tx.list<{ reportId: string; ruleEditionId: string; ruleContentHash: string }>("validationRuleOutcomes", {
+        organisationId: people.orgMaison,
+        eventId: people.eventAlphaOne,
+      }),
+    );
+    const editionIds = new Set(outcomes.map((item) => item.ruleEditionId));
+    assert.equal(editionIds.size, outcomes.length);
+    assert.ok(editionIds.has(first.value.id));
+    assert.ok(editionIds.has(second.value.id));
+  });
 });

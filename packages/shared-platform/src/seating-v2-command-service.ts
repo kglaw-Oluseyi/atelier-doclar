@@ -661,21 +661,25 @@ export class SeatingV2CommandService {
         createdAt: now,
       };
       await tx.insert("validationReports", reportRow);
+      const packageRuleRows = (await tx.list<{ packageId: string; ruleEditionId: string; ruleContentHash: string }>(
+        "packageRules",
+        envelope,
+      )).filter((item) => item.packageId === pkg.id);
+      const unusedPackageRules = [...packageRuleRows];
       for (const outcome of report.ruleOutcomes) {
+        const matchedIndex = unusedPackageRules.findIndex((item) => item.ruleContentHash === outcome.ruleContentHash);
+        const matched = matchedIndex >= 0 ? unusedPackageRules.splice(matchedIndex, 1)[0] : undefined;
         await tx.insert("validationRuleOutcomes", {
           id: randomUUID(),
           organisationId: envelope.organisationId,
           eventId: envelope.eventId,
           schemaVersion: SEATING_V2_SCHEMA_VERSION,
           reportId: reportRow.id,
-          ruleEditionId:
-            (await tx.list<{ id: string; contentHash: string }>("ruleEditions", envelope)).find(
-              (item) => item.contentHash === outcome.ruleContentHash,
-            )?.id ?? randomUUID(),
+          ruleEditionId: matched?.ruleEditionId ?? randomUUID(),
           ruleContentHash: outcome.ruleContentHash,
           outcome: outcome.outcome,
-          typedReasonCodes: outcome.typedReasonCodes,
-          affectedGuestTokens: outcome.affectedGuestTokens,
+          typedReasonCodes: outcome.typedReasonCodes ?? [],
+          affectedGuestTokens: outcome.affectedGuestTokens ?? [],
           createdAt: now,
         });
       }
