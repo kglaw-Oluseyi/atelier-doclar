@@ -16,5 +16,6 @@ test("S06 whole-slice planner freeze without stale banners", async ({ page }) =>
     await freeze.click();
     await expectFreshActionSuccess(page, previous);
   }
-  await expect(page.getByText("The solver recommends. Authorised people decide.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: /seating/i }).first()).toBeVisible();
+  await expect(page.getByText("The solver recommends. Authorised people decide.").first()).toBeVisible();
 });

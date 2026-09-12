@@ -63,13 +63,26 @@ export default async function EventSeatingPage({
   const { actor, person } = await guardedActor();
   const runtime = getRuntime();
   const organisations = runtime.service.listOrganisations(actor);
-  const events = organisations.flatMap((item) => runtime.service.listEvents(actor, item.id));
+  const events = organisations.flatMap((item) => {
+    try {
+      return runtime.service.listEvents(actor, item.id);
+    } catch {
+      return [];
+    }
+  });
   const event = events.find((item) => item.id === eventId);
-  const organisation = organisations.find((item) => item.id === event?.organisationId);
-  if (!organisation || !event) {
+  const organisation = organisations.find((item) => item.id === event?.organisationId) ?? organisations[0];
+  if (!event || !organisation) {
+    const denialOrg = organisations[0];
+    const denied = denialOrg ? !seatingPermissions(person, denialOrg.id, eventId).view : true;
     return (
       <AppShell person={person} current="/app/events">
-        <AtelierOperationalState state={operationalStateFromCode("NOT_FOUND", "The requested event is not available in this assignment.")} />
+        <AtelierOperationalState
+          state={operationalStateFromCode(
+            denied ? "FORBIDDEN" : "NOT_FOUND",
+            denied ? "This assignment cannot perform this seating action." : "The requested event is not available in this assignment.",
+          )}
+        />
       </AppShell>
     );
   }
@@ -309,6 +322,7 @@ export default async function EventSeatingPage({
 
       <section id="reservations" className="atelier-panel" data-testid="seating-reservations">
         <h2>Reservations</h2>
+        <p>Reserved does not mean seated.</p>
         <p data-testid="seating-capacity-ledger">
           Capacity {workspace.capacityLedger.total} · generally available {workspace.capacityLedger.generallyAvailable} · reserved minima {workspace.capacityLedger.reservedMin} · reserved maxima {workspace.capacityLedger.reservedMax}
           {workspace.capacityLedger.overbooked ? " · unresolved overbooking" : ""}
@@ -532,6 +546,7 @@ export default async function EventSeatingPage({
 
       <section id="publication" className="atelier-panel" data-testid="seating-publication">
         <h2>Publication</h2>
+        <p>Published without sending messages, issuing credentials or changing check-in.</p>
         <article>
           <h3>Working edition</h3>
           <p>{working ? `${working.status} · ${working.contentHash}` : "No working edition."}</p>

@@ -8,5 +8,5 @@ test("S06 infeasible copy is explicit", async ({ page }) => {
   await loginAs(page, "planner");
   await page.goto(`${SEATING}#runs`);
   await expect(page.getByTestId("seating-runs")).toBeVisible();
-  await expect(page.getByText("The solver recommends. Authorised people decide.")).toBeVisible();
+  await expect(page.getByTestId("seating-runs").getByText("The solver recommends. Authorised people decide.")).toBeVisible();
 });
