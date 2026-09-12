@@ -38,7 +38,8 @@ No production `PlatformClock` existed. The smallest shared contract was added: `
 
 ## Correction
 
-- Production composition (`apps/event-os/src/server/runtime.ts`) sets `clock: systemClock`.
-- Test composition (`fixtureService`, dossier command constructors) injects a fixed clock at `2026-09-05T15:00:00.000Z`.
+- Production composition (`apps/event-os/src/server/runtime.ts`) defaults to `systemClock`.
+- Shared-platform test composition (`fixtureService`, dossier command constructors) injects a fixed clock at `2026-09-05T15:00:00.000Z`.
+- Event OS fixture composition, when fixtures are allowed and `EVENT_OS_TEST_NOW` is already set for actors, injects that same instant. The service does not read the environment variable.
 - Direct `new Date()` was replaced only on discovery/dossier token issue, expiry calculation, validation, revoke and renewal paths.
 - Token duration, hash binding, organisation/event isolation, revocation and `failedExchangeCount >= 8` are unchanged.

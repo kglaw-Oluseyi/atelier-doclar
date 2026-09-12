@@ -12,6 +12,7 @@ import {
   ensureEosS05ACollections,
   ensureEosS05BCollections,
   type PgQueryable,
+  type PlatformClock,
   type PlatformStore,
 } from "@maison-doclar/shared-platform";
 import { accessAuthority, atelierAccessConfig, databaseUrl, fixturesAllowed, rsvpAccessConfig, sessionConfig, vendorAccessConfig } from "./config";
@@ -44,6 +45,14 @@ function storePath(): string {
   return join(process.cwd(), "data", "event-os-non-production.json");
 }
 
+function composeClock(): PlatformClock {
+  if (fixturesAllowed()) {
+    const fixed = process.env.EVENT_OS_TEST_NOW?.trim();
+    if (fixed) return { now: () => new Date(fixed) };
+  }
+  return systemClock;
+}
+
 function platformOptions() {
   return {
     rsvpAccess: rsvpAccessConfig(),
@@ -54,7 +63,7 @@ function platformOptions() {
     layoutExportEnabled: (layoutExportEnabled() && layoutAssetEnvBound()) || fixtureExportStoreEnabled(),
     layoutAssetStoreConfigured: layoutAssetEnvBound(),
     layoutBinaryStore: fixtureExportStoreEnabled() ? resolveLayoutBinaryStore() : undefined,
-    clock: systemClock,
+    clock: composeClock(),
   };
 }
 
