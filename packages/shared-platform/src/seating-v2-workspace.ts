@@ -26,7 +26,7 @@ export function buildSeatingV2Workspace(
   const edition = submitted ?? working;
   const eventPackages = state.inputPackages
     .filter((item) => item.eventId === eventId)
-    .sort((left, right) => left.createdAt.localeCompare(right.createdAt));
+    .sort((left, right) => String(left.createdAt).localeCompare(String(right.createdAt)));
   const latestPkg = eventPackages.at(-1);
   const editionPkg = edition ? state.inputPackages.find((item) => item.id === edition.packageId) : undefined;
   const packageDrifted = Boolean(edition && latestPkg && edition.packageId !== latestPkg.id);
