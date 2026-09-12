@@ -19,10 +19,12 @@ export function buildSeatingV2Workspace(
   const currentPointer = state.eventCurrent.find((item) => item.eventId === eventId);
   const publication = state.publications.find((item) => item.id === currentPointer?.currentPublicationId)
     ?? state.publications.find((item) => item.eventId === eventId && item.status === "CURRENT");
-  const working = state.planEditions.find((item) => item.id === currentPointer?.workingEditionId)
-    ?? state.planEditions.filter((item) => item.eventId === eventId && item.status === "WORKING").at(-1);
-  const submitted = state.planEditions.find((item) => item.id === currentPointer?.submittedEditionId)
-    ?? state.planEditions.filter((item) => item.eventId === eventId && item.status === "SUBMITTED").at(-1);
+  const working = currentPointer
+    ? state.planEditions.find((item) => item.id === currentPointer.workingEditionId)
+    : state.planEditions.filter((item) => item.eventId === eventId && item.status === "WORKING").at(-1);
+  const submitted = currentPointer
+    ? state.planEditions.find((item) => item.id === currentPointer.submittedEditionId)
+    : state.planEditions.filter((item) => item.eventId === eventId && item.status === "SUBMITTED").at(-1);
   const edition = submitted ?? working;
   const eventPackages = state.inputPackages
     .filter((item) => item.eventId === eventId)

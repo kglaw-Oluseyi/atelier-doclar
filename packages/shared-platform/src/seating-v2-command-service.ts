@@ -1447,7 +1447,7 @@ export class SeatingV2CommandService {
         createdAt: now,
       });
     }
-    await this.pointCurrent(tx, envelope, now, { workingEditionId: plan.id });
+    await this.pointCurrent(tx, envelope, now, { workingEditionId: plan.id, submittedEditionId: null });
     return plan;
   }
 
