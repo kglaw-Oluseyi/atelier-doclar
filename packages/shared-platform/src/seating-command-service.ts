@@ -823,9 +823,10 @@ export class SeatingCommandService {
   }
 
   async runS06Evaluation(actor: SeatingActor, envelope: SeatingCommandEnvelope) {
+    this.guard(actor, "seating.evaluate", envelope, envelope.actorAssignmentId);
+    const { executeS06Evaluation } = await import("./seating-evaluation-runner.js");
+    const result = await executeS06Evaluation();
     return this.mutate(actor, envelope, "seating.evaluate", "runS06Evaluation", async (tx) => {
-      const { executeS06Evaluation } = await import("./seating-evaluation-runner.js");
-      const result = await executeS06Evaluation();
       const run = {
         id: randomUUID(),
         organisationId: envelope.organisationId,

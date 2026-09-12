@@ -8,11 +8,9 @@ export async function expectActionOutcome(page: Page) {
   await expect(page.getByTestId("action-result-banner")).toBeVisible({ timeout: 20_000 });
 }
 
-export async function expectFreshActionSuccess(page: Page, previousCorrelation = "") {
-  const previousResult = new URL(page.url()).searchParams.get("result") ?? "";
-  if (previousCorrelation || previousResult) {
-    await expectFreshResultQuery(page, previousResult);
-  }
+export async function expectFreshActionSuccess(page: Page, previousCorrelation = "", previousResult = "") {
+  const before = previousResult || previousCorrelation;
+  await expectFreshResultQuery(page, before);
   const banner = page.getByTestId("action-result-banner");
   await expect(banner).toBeVisible({ timeout: 30_000 });
   if (previousCorrelation) {

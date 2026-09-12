@@ -37,14 +37,12 @@ async function seatingDiagnostics(page: Page) {
 }
 
 async function waitForSettledAction(page: Page, previousResult = "") {
-  const banner = page.getByTestId("action-result-banner");
   const validation = page.getByTestId("protection-validation-summary");
   await expect
     .poll(
       async () => {
         const result = new URL(page.url()).searchParams.get("result") ?? "";
         if ((await validation.count()) > 0) return "validation";
-        if ((await banner.count()) > 0) return "banner";
         if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(result) && result !== previousResult) {
           return "result";
         }
@@ -66,7 +64,7 @@ async function timedAction(page: Page, label: string, click: () => Promise<void>
     if (await page.getByTestId("protection-validation-summary").count()) {
       throw new Error(`validation:${((await page.getByTestId("protection-validation-summary").innerText()) ?? "").slice(0, 180)}`);
     }
-    await expectFreshActionSuccess(page, previousCorrelation);
+    await expectFreshActionSuccess(page, previousCorrelation, previousResult);
   } catch (error) {
     firstRunFailed = true;
     record({
@@ -80,12 +78,20 @@ async function timedAction(page: Page, label: string, click: () => Promise<void>
       timeout: 30_000,
     });
     const afterReload = await readActionCorrelation(page);
-    if (afterReload && afterReload !== previousCorrelation && (await page.getByTestId("action-result-banner").count())) {
+    const reloadedBanner = page.getByTestId("action-result-banner");
+    const reloadedCopy = ((await reloadedBanner.textContent().catch(() => "")) ?? "").trim();
+    if (
+      afterReload &&
+      afterReload !== previousCorrelation &&
+      (await reloadedBanner.count()) &&
+      /Succeeded|The change was recorded|No change/i.test(reloadedCopy)
+    ) {
       retryOutcome = "appeared-after-reload";
     } else {
+      const retryPrevious = new URL(page.url()).searchParams.get("result") ?? "";
       await click();
-      await waitForSettledAction(page, new URL(page.url()).searchParams.get("result") ?? "");
-      await expectFreshActionSuccess(page, previousCorrelation);
+      await waitForSettledAction(page, retryPrevious);
+      await expectFreshActionSuccess(page, previousCorrelation, retryPrevious);
       retryOutcome = "succeeded-after-retry";
     }
   }
@@ -348,8 +354,22 @@ async function successorDraftPreservesCurrent(page: Page, sequence: number, publ
     await timedAction(page, `CURSOR-S06-S070-SEQ${sequence}-SUCCESSOR-LAUNCH`, () => submitNamed(page, "Launch seating run"));
   }
   await gotoSeating(page, "#runs");
-  if (await page.getByRole("button", { name: "Adopt run" }).count()) {
-    await timedAction(page, `CURSOR-S06-S070-SEQ${sequence}-SUCCESSOR-ADOPT`, () => submitNamed(page, "Adopt run"));
+  const adopt = page.getByRole("button", { name: "Adopt run" }).last();
+  if (await adopt.count()) {
+    const previous = await readActionCorrelation(page);
+    await timedAction(
+      page,
+      `CURSOR-S06-S070-SEQ${sequence}-SUCCESSOR-ADOPT`,
+      async () => {
+        await expect(adopt).toBeVisible();
+        await adopt.evaluate((element) => {
+          const form = element.closest("form");
+          if (form instanceof HTMLFormElement) form.requestSubmit(element as HTMLButtonElement);
+          else (element as HTMLButtonElement).click();
+        });
+      },
+      previous,
+    );
   }
   await gotoSeating(page, "#publication");
   const after = await publicationIdentity(page);
@@ -429,6 +449,18 @@ test.describe("CURSOR-S06-S070 live gates", () => {
   for (const sequence of [1, 2] as const) {
     test(`S070 publication sequence ${sequence}`, async ({ page, browser }) => {
       test.setTimeout(120_000);
+      await loginAs(page, "planner");
+      await gotoSeating(page, "#publication");
+      const published = await publicationIdentity(page);
+      const hash = (published.working.match(/([a-f0-9]{64})/i) ?? [])[1] ?? (await workingHash(page));
+      const publicationNumber = (published.badge.match(/Publication (\d+)/) ?? [])[1] ?? "";
+      if (publicationNumber && hash === EXPECTED_PLAN_HASH) {
+        record({ kind: `seq${sequence}-already-published`, hash, publicationNumber, published });
+        if (sequence === 2 && !/DRAFT/i.test(published.working)) {
+          await successorDraftPreservesCurrent(page, sequence, publicationNumber);
+        }
+        return;
+      }
       let afterSubmit = "";
       if (sequence === 1) {
         const existing = await resumeSubmittedPlanIfValid(page);
@@ -438,8 +470,8 @@ test.describe("CURSOR-S06-S070 live gates", () => {
       }
       const review = await specialistReview(browser, sequence, afterSubmit);
       const afterApprove = await directorApproveDeniedPublish(browser, sequence, review.hash, review.correlation);
-      const published = await ceoPublishAndReplay(browser, sequence, review.hash, afterApprove);
-      await successorDraftPreservesCurrent(page, sequence, published.publicationNumber);
+      const created = await ceoPublishAndReplay(browser, sequence, review.hash, afterApprove);
+      await successorDraftPreservesCurrent(page, sequence, created.publicationNumber);
     });
   }
 

@@ -51,6 +51,8 @@ const TABS = [
   { href: "#publication", label: "Publication" },
 ] as const;
 
+export const maxDuration = 60;
+
 export default async function EventSeatingPage({
   params,
   searchParams,
