@@ -117,7 +117,8 @@ async function submitNamed(page: Page, name: string, testId?: string) {
 
 async function eligibleGuestIds(page: Page) {
   await gotoSeating(page, "#reservations");
-  const raw = (await page.locator('input[name="eligibleGuestIds"]').inputValue()) ?? "";
+  const raw =
+    (await page.locator('#reservations [data-testid="seating-reservation-form"] input[name="eligibleGuestIds"]').inputValue()) ?? "";
   return raw.split(",").map((item) => item.trim()).filter(Boolean);
 }
 
@@ -524,7 +525,7 @@ test.describe("CURSOR-S06V2-S072 remaining live gates", () => {
       });
     });
     await gotoSeating(page, "#reservations");
-    await expect(page.getByTestId("seating-reservation-WITHDRAWN")).toBeVisible();
+    await expect(page.getByTestId("seating-reservation-WITHDRAWN").filter({ hasText: /exact 3/i })).toBeVisible();
     expect(await reservedMinima(page)).toBeLessThan(activeMin);
     await gotoSeating(page, "#inputs");
     await timedAction(page, `${FIXTURE}-RESV-FREEZE-2`, () => submitNamed(page, "Freeze new input edition", "seating-freeze"));
