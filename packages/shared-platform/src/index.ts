@@ -1002,3 +1002,8 @@ export {
   seatingImpossibleLocks,
   seatingImpossibleCapability,
 } from "./seating-solver-fixtures.js";
+export { EOS_S06_SEATING_MIGRATION_ID, EOS_S06_SEATING_RECEIPT_ID, SEATING_SQL_TABLES } from "./seating-postgres-schema.js";
+export { emptySeatingState, SEATING_COLLECTIONS } from "./seating-schemas.js";
+export { MemorySeatingRepository, MemorySeatingStore } from "./memory-seating-store.js";
+export { PostgresSeatingRepository } from "./postgres-seating-store.js";
+export type { SeatingRepository, SeatingTransaction } from "./seating-repository.js";

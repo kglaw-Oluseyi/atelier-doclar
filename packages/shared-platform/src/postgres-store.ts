@@ -599,6 +599,7 @@ export class MemoryPlatformPg implements PgTransactor {
   }> = [];
   readonly riskRows: MemoryRiskRow[] = [];
   readonly riskIdempotency: MemoryIdempotencyRiskRow[] = [];
+  readonly seatingRows: Array<{ table: string; cols: Record<string, unknown> }> = [];
   private failNext = false;
   private failNextAudit = false;
   private snapshot: {
@@ -610,6 +611,7 @@ export class MemoryPlatformPg implements PgTransactor {
     cleanup: MemoryPlatformPg["cleanup"];
     riskRows: MemoryRiskRow[];
     riskIdempotency: MemoryIdempotencyRiskRow[];
+    seatingRows: Array<{ table: string; cols: Record<string, unknown> }>;
   } | undefined;
 
   failNextWrite(): void {
@@ -630,6 +632,7 @@ export class MemoryPlatformPg implements PgTransactor {
       cleanup: structuredClone(this.cleanup),
       riskRows: structuredClone(this.riskRows),
       riskIdempotency: structuredClone(this.riskIdempotency),
+      seatingRows: structuredClone(this.seatingRows),
     };
     try {
       const result = await fn(this);
@@ -651,6 +654,7 @@ export class MemoryPlatformPg implements PgTransactor {
     this.cleanup.splice(0, this.cleanup.length, ...this.snapshot.cleanup);
     this.riskRows.splice(0, this.riskRows.length, ...this.snapshot.riskRows);
     this.riskIdempotency.splice(0, this.riskIdempotency.length, ...this.snapshot.riskIdempotency);
+    this.seatingRows.splice(0, this.seatingRows.length, ...this.snapshot.seatingRows);
     this.snapshot = undefined;
   }
 
@@ -680,6 +684,7 @@ export class MemoryPlatformPg implements PgTransactor {
         cleanup: structuredClone(this.cleanup),
         riskRows: structuredClone(this.riskRows),
         riskIdempotency: structuredClone(this.riskIdempotency),
+        seatingRows: structuredClone(this.seatingRows),
       };
       return { rows: [], rowCount: 0 };
     }
@@ -693,6 +698,8 @@ export class MemoryPlatformPg implements PgTransactor {
     }
     if (sql.startsWith("CREATE TABLE")) return { rows: [], rowCount: 0 };
     if (sql.startsWith("CREATE INDEX") || sql.startsWith("CREATE UNIQUE INDEX")) return { rows: [], rowCount: 0 };
+    const seatingHandled = this.execSeatingSql<T>(sql, values);
+    if (seatingHandled) return seatingHandled;
     const riskHandled = this.execRiskSql<T>(sql, values);
     if (riskHandled) return riskHandled;
     if (this.failNext && sql.startsWith("INSERT")) {
@@ -851,6 +858,122 @@ export class MemoryPlatformPg implements PgTransactor {
       return { rows: [], rowCount: 1 };
     }
     throw new Error(`unsupported test SQL: ${sql}`);
+  }
+
+  private execSeatingSql<T extends object>(sql: string, values: unknown[]): PgQueryResult<T> | undefined {
+    const tableMatch = sql.match(/\b(seating_[a-z_]+)\b/);
+    if (!tableMatch) return undefined;
+    const table = tableMatch[1] ?? "";
+    if (this.failNext && sql.startsWith("INSERT INTO")) {
+      this.failNext = false;
+      throw new Error("synthetic write failure");
+    }
+    if (this.failNextAudit && sql.startsWith("INSERT INTO platform_audit")) {
+      this.failNextAudit = false;
+      throw new Error("synthetic audit failure");
+    }
+    if (sql.startsWith("INSERT INTO")) {
+      const columnsMatch = sql.match(/INSERT INTO [a-z_]+ \(([^)]+)\)/);
+      const columns = (columnsMatch?.[1] ?? "").split(",").map((item) => item.trim()).filter(Boolean);
+      const cols: Record<string, unknown> = {};
+      columns.forEach((column, index) => {
+        cols[column] = values[index];
+      });
+      if (this.seatingRows.some((row) => row.table === table && String(row.cols.id) === String(cols.id))) {
+        throw new Error("unique_violation");
+      }
+      if (cols.current === true) {
+        for (const row of this.seatingRows) {
+          if (row.table === table && row.cols.current === true && row.cols.event_id === cols.event_id && row.cols.organisation_id === cols.organisation_id) {
+            throw new Error("duplicate key value violates unique constraint");
+          }
+        }
+      }
+      if (cols.current_working === true) {
+        for (const row of this.seatingRows) {
+          if (row.table === table && row.cols.current_working === true && row.cols.event_id === cols.event_id && row.cols.organisation_id === cols.organisation_id) {
+            throw new Error("duplicate key value violates unique constraint");
+          }
+        }
+      }
+      if (cols.status === "CURRENT" && table === "seating_publications") {
+        for (const row of this.seatingRows) {
+          if (row.table === table && row.cols.status === "CURRENT" && row.cols.event_id === cols.event_id && row.cols.organisation_id === cols.organisation_id) {
+            throw new Error("duplicate key value violates unique constraint");
+          }
+        }
+      }
+      this.seatingRows.push({ table, cols });
+      return { rows: [], rowCount: 1 };
+    }
+    if (sql.startsWith("UPDATE") && !sql.includes("WHERE id")) {
+      const orgSlot = sql.match(/organisation_id = \$(\d+)/);
+      const eventSlot = sql.match(/event_id = \$(\d+)/);
+      const statusSlot = sql.match(/AND status = \$(\d+)/);
+      let count = 0;
+      for (const row of this.seatingRows) {
+        if (row.table !== table) continue;
+        if (orgSlot && String(row.cols.organisation_id) !== String(values[Number(orgSlot[1]) - 1])) continue;
+        if (eventSlot && String(row.cols.event_id) !== String(values[Number(eventSlot[1]) - 1])) continue;
+        if (sql.includes("current = TRUE") && row.cols.current !== true) continue;
+        if (sql.includes("current_working = TRUE") && row.cols.current_working !== true) continue;
+        if (statusSlot && String(row.cols.status) !== String(values[Number(statusSlot[1]) - 1])) continue;
+        if (sql.includes("SET current = FALSE")) row.cols.current = false;
+        if (sql.includes("SET current_working = FALSE")) row.cols.current_working = false;
+        if (sql.includes("SET status = $1")) row.cols.status = values[0];
+        count += 1;
+      }
+      return { rows: [], rowCount: count };
+    }
+    if (sql.startsWith("UPDATE")) {
+      const id = String(values[0]);
+      const expectedVersion = Number(values[1]);
+      const row = this.seatingRows.find((item) => item.table === table && String(item.cols.id) === id);
+      if (!row || Number(row.cols.version) !== expectedVersion) return { rows: [], rowCount: 0 };
+      const assignments = [...sql.matchAll(/([a-z_]+) = \$(\d+)/g)];
+      for (const assignment of assignments) {
+        const column = assignment[1];
+        const index = Number(assignment[2]) - 1;
+        if (!column || column === "id") continue;
+        if (column === "version" && Number(assignment[2]) === 2) continue;
+        row.cols[column] = values[index];
+      }
+      return { rows: [], rowCount: 1 };
+    }
+    if (sql.startsWith("DELETE FROM")) {
+      const id = values[0] != null ? String(values[0]) : undefined;
+      const remaining = this.seatingRows.filter((row) => {
+        if (row.table !== table) return true;
+        if (id && String(row.cols.id) !== id) return true;
+        if (values[1] && String(row.cols.organisation_id) !== String(values[1])) return true;
+        if (values[2] && String(row.cols.event_id) !== String(values[2])) return true;
+        return false;
+      });
+      const count = this.seatingRows.length - remaining.length;
+      this.seatingRows.splice(0, this.seatingRows.length, ...remaining);
+      return { rows: [], rowCount: count };
+    }
+    if (sql.startsWith("SELECT")) {
+      const rows = this.seatingRows.filter((row) => {
+        if (row.table !== table) return false;
+        if (sql.includes("WHERE id") && String(row.cols.id) !== String(values[0] ?? "")) return false;
+        if (sql.includes("organisation_id") && values[0] && !sql.includes("WHERE id") && String(row.cols.organisation_id) !== String(values[0])) {
+          return false;
+        }
+        if (sql.includes("WHERE id") && sql.includes("organisation_id") && String(row.cols.organisation_id) !== String(values[1] ?? row.cols.organisation_id)) {
+          return false;
+        }
+        if (sql.includes("event_id") && values[1] && !sql.includes("WHERE id") && String(row.cols.event_id) !== String(values[1])) return false;
+        if (sql.includes("event_id") && sql.includes("WHERE id") && values[2] && row.cols.event_id && String(row.cols.event_id) !== String(values[2])) {
+          return false;
+        }
+        if (sql.includes("action =") && String(row.cols.action) !== String(values[2] ?? values[1] ?? "")) return false;
+        if (sql.includes("idempotency_key") && String(row.cols.idempotency_key) !== String(values[3] ?? values[2] ?? "")) return false;
+        return true;
+      });
+      return { rows: rows.map((row) => ({ ...row.cols })) as T[], rowCount: rows.length };
+    }
+    return { rows: [], rowCount: 0 };
   }
 
   private execRiskSql<T extends object>(sql: string, values: unknown[]): PgQueryResult<T> | undefined {
