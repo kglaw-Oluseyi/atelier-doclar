@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import { PlatformError } from "../src/errors.js";
 import { checksumFor, PLATFORM_MIGRATIONS, runPlatformMigrations } from "../src/migrations.js";
 import { MemorySeatingV2Repository } from "../src/memory-seating-v2-store.js";
+import { PostgresSeatingV2Repository } from "../src/postgres-seating-v2-store.js";
 import { MemoryPlatformPg, PostgresPlatformStore } from "../src/postgres-store.js";
 import { SEATING_ALLOCATION_POSTGRES_SCHEMA } from "../src/seating-postgres-schema.js";
 import { EOS_S06_SEATING_V2_MIGRATION_ID, SEATING_V2_POSTGRES_SCHEMA, SEATING_V2_SQL_TABLES } from "../src/seating-v2-postgres-schema.js";
@@ -120,6 +121,19 @@ describe("EOS-S06 V2 additive persistence", () => {
       checksumFor(SEATING_V2_POSTGRES_SCHEMA),
     );
     await PostgresPlatformStore.migrate(pg);
+  });
+
+  it("lists every V2 collection through Postgres including org-only evaluation tables", async () => {
+    const pg = new MemoryPlatformPg();
+    await runPlatformMigrations(pg);
+    const repo = new PostgresSeatingV2Repository(pg);
+    await repo.transaction(async (tx) => {
+      const scope = { organisationId: people.orgMaison, eventId: people.eventAlphaOne };
+      for (const collection of SEATING_V2_COLLECTIONS) {
+        const rows = await tx.list(collection, scope);
+        assert.equal(Array.isArray(rows), true, collection);
+      }
+    });
   });
 
   it("inserts a rule edition, reloads it, and exposes no update method for editions", async () => {

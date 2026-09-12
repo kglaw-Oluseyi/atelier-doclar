@@ -31,6 +31,9 @@ const JSON_COLUMNS = new Set([
   "counts",
 ]);
 
+const ORG_ONLY_COLLECTIONS = new Set<SeatingV2Collection>(["evaluationRuns", "evaluationCaseResults"]);
+const UNSCOPED_COLLECTIONS = new Set<SeatingV2Collection>(["migrationReceipts"]);
+
 function hasTransaction(client: PgQueryable): client is PgTransactor {
   return typeof (client as PgTransactor).transaction === "function";
 }
@@ -53,30 +56,42 @@ export class PostgresSeatingV2Transaction implements SeatingV2Transaction {
 
   async load<T>(collection: SeatingV2Collection, id: string, scope: Partial<SeatingV2Scope>): Promise<T | undefined> {
     const table = SEATING_V2_TABLE_FOR_COLLECTION[collection];
-    const result =
-      scope.organisationId && scope.eventId
-        ? await this.client.query<Record<string, unknown>>(
-            `SELECT * FROM ${table} WHERE id = $1 AND organisation_id = $2 AND event_id = $3`,
-            [id, scope.organisationId, scope.eventId],
-          )
-        : await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE id = $1`, [id]);
+    const identityColumn = collection === "migrationReceipts" ? "migration_id" : "id";
+    const result = UNSCOPED_COLLECTIONS.has(collection)
+      ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE ${identityColumn} = $1`, [id])
+      : ORG_ONLY_COLLECTIONS.has(collection) && scope.organisationId
+        ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE id = $1 AND organisation_id = $2`, [
+            id,
+            scope.organisationId,
+          ])
+        : scope.organisationId && scope.eventId
+          ? await this.client.query<Record<string, unknown>>(
+              `SELECT * FROM ${table} WHERE id = $1 AND organisation_id = $2 AND event_id = $3`,
+              [id, scope.organisationId, scope.eventId],
+            )
+          : await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE ${identityColumn} = $1`, [id]);
     const row = result.rows[0];
     return row ? (seatingRecordFromRow(row) as T) : undefined;
   }
 
   async list<T>(collection: SeatingV2Collection, scope: Partial<SeatingV2Scope>): Promise<T[]> {
     const table = SEATING_V2_TABLE_FOR_COLLECTION[collection];
-    const result =
-      scope.organisationId && scope.eventId
-        ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE organisation_id = $1 AND event_id = $2`, [
-            scope.organisationId,
-            scope.eventId,
-          ])
-        : scope.organisationId
-          ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE organisation_id = $1`, [scope.organisationId])
-          : scope.eventId
-            ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE event_id = $1`, [scope.eventId])
-            : await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table}`);
+    const result = UNSCOPED_COLLECTIONS.has(collection)
+      ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table}`)
+      : ORG_ONLY_COLLECTIONS.has(collection) && scope.organisationId
+        ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE organisation_id = $1`, [scope.organisationId])
+        : ORG_ONLY_COLLECTIONS.has(collection)
+          ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table}`)
+          : scope.organisationId && scope.eventId
+            ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE organisation_id = $1 AND event_id = $2`, [
+                scope.organisationId,
+                scope.eventId,
+              ])
+            : scope.organisationId
+              ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE organisation_id = $1`, [scope.organisationId])
+              : scope.eventId
+                ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE event_id = $1`, [scope.eventId])
+                : await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table}`);
     return result.rows.map((row) => seatingRecordFromRow(row) as T);
   }
 

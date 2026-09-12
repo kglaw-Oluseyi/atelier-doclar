@@ -871,9 +871,17 @@ export class MemoryPlatformPg implements PgTransactor {
   }
 
   private execSeatingSql<T extends object>(sql: string, values: unknown[]): PgQueryResult<T> | undefined {
-    const tableMatch = sql.match(/\b(seating_[a-z_]+)\b/);
+    const tableMatch = sql.match(/\b(seating_[a-z0-9_]+)\b/);
     if (!tableMatch) return undefined;
     const table = tableMatch[1] ?? "";
+    if (
+      sql.includes("event_id") &&
+      (table === "seating_v2_evaluation_runs" ||
+        table === "seating_v2_evaluation_case_results" ||
+        table === "seating_v2_migration_receipts")
+    ) {
+      throw new Error(`column "event_id" does not exist`);
+    }
     if (this.failNext && sql.startsWith("INSERT INTO")) {
       this.failNext = false;
       throw new Error("synthetic write failure");

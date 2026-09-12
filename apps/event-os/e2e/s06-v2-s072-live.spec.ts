@@ -72,9 +72,9 @@ async function timedAction(page: Page, label: string, click: () => Promise<void>
       diagnostics: await seatingDiagnostics(page),
     });
     await page.reload();
-    await expect(page.getByTestId("seating-overview").or(page.getByText(/This assignment cannot/i))).toBeVisible({
-      timeout: 30_000,
-    });
+    await expect(
+      page.getByTestId("seating-overview").or(page.getByText("This assignment cannot perform this seating action.")),
+    ).toBeVisible({ timeout: 30_000 });
     const afterReload = await readActionCorrelation(page);
     const reloadedBanner = page.getByTestId("action-result-banner");
     const reloadedCopy = ((await reloadedBanner.textContent().catch(() => "")) ?? "").trim();
@@ -107,9 +107,9 @@ async function timedAction(page: Page, label: string, click: () => Promise<void>
 
 async function gotoSeating(page: Page, hash = "") {
   await page.goto(SEATING, { waitUntil: "domcontentloaded", timeout: 30_000 });
-  await expect(page.getByTestId("seating-overview").or(page.getByText(/This assignment cannot/i))).toBeVisible({
-    timeout: 30_000,
-  });
+  await expect(
+    page.getByTestId("seating-overview").or(page.getByText("This assignment cannot perform this seating action.")),
+  ).toBeVisible({ timeout: 30_000 });
   if (hash) {
     await page.evaluate((id) => document.getElementById(id)?.scrollIntoView(), hash.replace("#", ""));
   }
