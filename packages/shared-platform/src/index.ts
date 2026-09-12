@@ -982,3 +982,23 @@ export {
   DOSSIER_TRANSITIONS,
   assertLegalTransition,
 } from "./risk-transitions.js";
+export {
+  SEATING_SOLVER_ID,
+  SEATING_SOLVER_VERSION,
+  SEATING_PREDICATE_TYPES,
+  SEATING_OBJECTIVE_ORDER,
+  DEFAULT_SOLVER_CONFIG,
+  SolverRequestSchema,
+  type SolverRequest,
+  type SolverResult,
+  type LexicographicScore,
+} from "./seating-solver-types.js";
+export { solveSeatingV1, compareLexicographic, assertSolverRequest, defaultSolverConfig } from "./seating-solver-v1.js";
+export {
+  seatingCorpus50,
+  seatingCorpus200,
+  seatingCorpus600,
+  seatingImpossibleCapacity,
+  seatingImpossibleLocks,
+  seatingImpossibleCapability,
+} from "./seating-solver-fixtures.js";
