@@ -238,7 +238,7 @@ export function ensureMissingCatalogueRecords(store: PlatformStore): void {
       changed = true;
     }
   }
-  const s05bKeys = PERMISSION_KEYS.filter((key) => key.startsWith("risk.") || key.startsWith("seating.") || key === "event.list" || key === "event.view");
+  const s05bKeys = PERMISSION_KEYS.filter((key) => key.startsWith("risk.") || key.startsWith("seating.") || key.startsWith("platform.") || key === "event.list" || key === "event.view");
   for (const role of snap.roles) {
     const key = roleKeyForId(role.id);
     if (!key) continue;

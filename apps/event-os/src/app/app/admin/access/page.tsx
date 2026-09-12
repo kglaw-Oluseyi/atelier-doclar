@@ -63,7 +63,7 @@ export default async function AccessPage({
   const actorSnap = runtime.service.resolveActor(person.id);
   const canManage = authorize({
     actor: actorSnap,
-    permission: "assignment.manage",
+    permission: "platform.access.administer",
     scope: { organisationId: organisation.id },
   }).allow;
 

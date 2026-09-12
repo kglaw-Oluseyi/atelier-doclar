@@ -854,6 +854,31 @@ export interface RsvpGuestDirectoryRow {
   attentionRequired: boolean;
 }
 
+const ASSIGNMENT_METADATA_KEYS = new Set(["assignmentId", "actorAssignmentId", "grantedAssignmentId"]);
+
+export function projectOperationalAudit(
+  snap: PlatformSnapshot,
+  actor: ActorSnapshot,
+  organisationId: string,
+  now: string,
+): AuditEvent[] {
+  return snap.audit.flatMap((item) => {
+    if (item.organisationId !== organisationId || !item.eventId) return [];
+    const event = snap.events.find((record) => record.id === item.eventId);
+    if (!event || !canSeeEvent(actor, event, now)) return [];
+    const metadata = item.metadata
+      ? Object.fromEntries(Object.entries(item.metadata).filter(([key]) => !ASSIGNMENT_METADATA_KEYS.has(key)))
+      : undefined;
+    return [
+      {
+        ...item,
+        resourceId: item.resourceType === "assignment" ? undefined : item.resourceId,
+        ...(metadata && Object.keys(metadata).length > 0 ? { metadata } : { metadata: undefined }),
+      },
+    ];
+  });
+}
+
 function parseStrict<T>(schema: { safeParse: (value: unknown) => { success: true; data: T } | { success: false; error: { issues: { path: (string | number)[]; message: string }[] } } }, value: unknown): T {
   const parsed = schema.safeParse(value);
   if (!parsed.success) {
@@ -1533,7 +1558,7 @@ export class PlatformService {
   grantAssignment(actor: ActorContext, raw: unknown): Assignment {
     const input = parseStrict<GrantAssignmentInput>(GrantAssignmentInputSchema, raw);
     return this.mutate(actor, {
-      permission: "assignment.manage",
+      permission: "platform.access.administer",
       scope: { organisationId: input.organisationId, clientId: input.clientId, eventId: input.eventId },
       action: "assignment.granted",
       resourceType: "assignment",
@@ -1575,7 +1600,7 @@ export class PlatformService {
   revokeAssignment(actor: ActorContext, raw: unknown): Assignment {
     const input = parseStrict<RevokeAssignmentInput>(RevokeAssignmentInputSchema, raw);
     return this.mutate(actor, {
-      permission: "assignment.manage",
+      permission: "platform.access.administer",
       scope: { organisationId: input.organisationId },
       action: "assignment.revoked",
       resourceType: "assignment",
@@ -5480,7 +5505,7 @@ export class PlatformService {
 
   listAssignments(actor: ActorContext, organisationId: string): Assignment[] {
     const { snap, ctx } = this.authorizeQuery(actor, "assignment.view", { organisationId });
-    const privileged = ctx.decision.allow && ctx.decision.matchedRoleKeys.some((key) => key === "CEO" || key === "SYSTEM_ADMINISTRATOR" || key === "EVENT_DIRECTOR");
+    const privileged = ctx.decision.allow && ctx.decision.matchedRoleKeys.some((key) => key === "CEO" || key === "SYSTEM_ADMINISTRATOR");
     return snap.assignments.filter((item) => {
       if (item.organisationId !== organisationId) return false;
       return privileged || item.personId === actor.personId;
@@ -5495,7 +5520,7 @@ export class PlatformService {
     events: Array<{ id: string; name: string }>;
     assignments: Assignment[];
   } {
-    const { snap, ctx } = this.authorizeQuery(actor, "assignment.manage", { organisationId });
+    const { snap, ctx } = this.authorizeQuery(actor, "platform.access.administer", { organisationId });
     const memberIds = new Set(
       snap.memberships
         .filter((item) => item.organisationId === organisationId && item.status === "ACTIVE")
@@ -5513,8 +5538,31 @@ export class PlatformService {
   }
 
   searchAudit(actor: ActorContext, organisationId: string): AuditEvent[] {
-    const { snap } = this.authorizeQuery(actor, "audit.view", { organisationId });
-    return snap.audit.filter((item) => item.organisationId === organisationId);
+    const actorSnap = this.actorSnapshot(actor);
+    const readAll = this.decide(
+      actorSnap,
+      "platform.audit.read_all",
+      { organisationId },
+      { type: "audit", organisationId },
+      actor,
+    );
+    if (readAll.allow) {
+      const { snap } = this.authorizeQuery(actor, "platform.audit.read_all", { organisationId });
+      return snap.audit.filter((item) => item.organisationId === organisationId);
+    }
+    const operational = this.decide(
+      actorSnap,
+      "platform.audit.read_operational",
+      { organisationId },
+      { type: "audit", organisationId },
+      actor,
+    );
+    if (operational.allow) {
+      const { snap, ctx } = this.authorizeQuery(actor, "platform.audit.read_operational", { organisationId });
+      return projectOperationalAudit(snap, ctx.actor, organisationId, ctx.now);
+    }
+    this.authorizeQuery(actor, "platform.audit.read_all", { organisationId });
+    return [];
   }
 
   exportAudit(actor: ActorContext, organisationId: string): AuditEvent[] {

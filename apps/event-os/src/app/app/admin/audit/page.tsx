@@ -14,7 +14,8 @@ export default async function AuditPage() {
   const organisation = runtime.service.listOrganisations(actor)[0];
   const actorSnap = runtime.service.resolveActor(person.id);
   const canViewAudit = organisation
-    ? authorize({ actor: actorSnap, permission: "audit.view", scope: { organisationId: organisation.id } }).allow
+    ? authorize({ actor: actorSnap, permission: "platform.audit.read_all", scope: { organisationId: organisation.id } }).allow ||
+      authorize({ actor: actorSnap, permission: "platform.audit.read_operational", scope: { organisationId: organisation.id } }).allow
     : false;
   if (organisation && !canViewAudit) {
     return (

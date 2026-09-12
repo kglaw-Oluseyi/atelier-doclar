@@ -38,6 +38,9 @@ const PERMISSION_IDS: Record<PermissionKey, string> = {
   "role.manage": "11111111-1111-4111-8111-111111111017",
   "audit.view": "11111111-1111-4111-8111-111111111018",
   "audit.export": "11111111-1111-4111-8111-111111111019",
+  "platform.access.administer": "11111111-1111-4111-8111-111111111230",
+  "platform.audit.read_all": "11111111-1111-4111-8111-111111111231",
+  "platform.audit.read_operational": "11111111-1111-4111-8111-111111111232",
   "system.health.view": "11111111-1111-4111-8111-111111111020",
   "support.impersonate": "11111111-1111-4111-8111-111111111021",
   "mef.view": "11111111-1111-4111-8111-111111111022",
@@ -290,9 +293,8 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "event.update",
     "event.phase.transition",
     "assignment.view",
-    "assignment.manage",
     "role.view",
-    "audit.view",
+    "platform.audit.read_operational",
     "mef.view",
     "mef.update",
     "consent.view",
@@ -637,6 +639,8 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "role.view",
     "role.manage",
     "audit.view",
+    "platform.access.administer",
+    "platform.audit.read_all",
     "system.health.view",
     "venue.registry.view",
     "layout.view",
@@ -651,6 +655,7 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "assignment.view",
     "role.view",
     "audit.view",
+    "platform.audit.read_all",
     "mef.view",
     "consent.view",
     "guest.directory.view",
@@ -727,6 +732,7 @@ function permissionRecord(key: PermissionKey): Permission {
     sensitivity:
       BUSINESS_PERMISSIONS.includes(key) ||
       key.startsWith("audit.") ||
+      key.startsWith("platform.") ||
       (S04A_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
       (S04B_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
       (S04C_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||

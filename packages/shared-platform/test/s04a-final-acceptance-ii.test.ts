@@ -274,7 +274,7 @@ describe("EOS-S04A final acceptance II — access administration", () => {
       );
     }
     const denied = store.snapshot().audit.slice(before).filter((item) => item.outcome === "DENIED");
-    assert.ok(denied.some((item) => item.action === "assignment.manage"));
+    assert.ok(denied.some((item) => item.action === "platform.access.administer"));
     assert.ok(denied.every((item) => !item.reason?.includes(people.personUnassigned)));
     assert.ok(denied.every((item) => !JSON.stringify(item).includes("EVENT_DIRECTOR")));
   });
@@ -316,7 +316,7 @@ describe("EOS-S04A final acceptance II — access administration", () => {
     assert.ok(!JSON.stringify(denied).includes(people.personUnassigned));
   });
 
-  it("lets a canonically authorised CEO grant and keeps Event Director on assignment.manage", () => {
+  it("lets a canonically authorised CEO grant and denies Event Director access administration", () => {
     const { service } = fixtureService();
     const admin = service.getAccessAdministration(ceo(), people.orgMaison);
     assert.ok(admin.people.some((item) => item.id === people.personPlanner));
@@ -331,8 +331,10 @@ describe("EOS-S04A final acceptance II — access administration", () => {
     });
     assert.equal(granted.status, "ACTIVE");
     assert.equal(granted.personId, people.personUnassigned);
-    const directorAdmin = service.getAccessAdministration(director(), people.orgMaison);
-    assert.ok(directorAdmin.assignments.some((item) => item.id === granted.id));
+    assert.throws(
+      () => service.getAccessAdministration(director(), people.orgMaison),
+      (error: unknown) => error instanceof PlatformError && error.code === "FORBIDDEN",
+    );
   });
 
   it("does not give System Administrator business authority from assignment.manage alone", () => {
