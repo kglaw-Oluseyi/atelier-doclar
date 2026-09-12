@@ -266,8 +266,17 @@ test.describe("CURSOR-S06V2-S072 live gates", () => {
     await gotoSeating(page, "#runs");
     await timedAction(page, `${prefix}-LAUNCH`, () => submitNamed(page, "Launch seating run"));
     await gotoSeating(page, "#runs");
-    await expect(page.getByText(/Validator FEASIBLE/i)).toBeVisible({ timeout: 20_000 });
-    await timedAction(page, `${prefix}-ADOPT`, () => submitNamed(page, "Adopt run"));
+    const feasible = page.getByTestId("seating-run-FEASIBLE").filter({ has: page.getByRole("button", { name: "Adopt run" }) }).last();
+    await expect(feasible).toBeVisible({ timeout: 20_000 });
+    await expect(feasible.getByText(/Validator FEASIBLE/i)).toBeVisible();
+    await timedAction(page, `${prefix}-ADOPT`, async () => {
+      const adopt = feasible.getByRole("button", { name: "Adopt run" });
+      await adopt.evaluate((element) => {
+        const form = element.closest("form");
+        if (form instanceof HTMLFormElement) form.requestSubmit(element as HTMLButtonElement);
+        else (element as HTMLButtonElement).click();
+      });
+    });
 
     await gotoSeating(page, "#studio");
     if (await page.getByRole("button", { name: "Apply seating change" }).count()) {
