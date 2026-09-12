@@ -47,13 +47,13 @@ export type SeatingV2BuiltPackage = {
   seed: string;
 };
 
-export async function buildSeatingV2Package(input: {
+export async function readSeatingV2PackageMaterials(input: {
   tx: SeatingV2Transaction;
   scope: SeatingV2Scope;
   snapshot: PlatformSnapshot;
   pepper: string;
   seed?: string;
-}): Promise<SeatingV2BuiltPackage> {
+}): Promise<Parameters<typeof finishSeatingV2Package>[0]> {
   const cohort = snapshotGuestCohortAdapter(input.snapshot, input.scope.eventId);
   const layout = snapshotLayoutAdapter(input.snapshot, input.scope.organisationId, input.scope.eventId);
   const brief = snapshotBriefAdapter(input.snapshot, input.scope.eventId);
@@ -98,20 +98,60 @@ export async function buildSeatingV2Package(input: {
     targetType: "TABLE" | "ZONE" | "POSITION_CAPABILITY";
     targetIdOrCode: string;
   }>("reservationTargets", input.scope);
+  return {
+    scope: input.scope,
+    pepper: input.pepper,
+    semanticHash,
+    cohort,
+    layout,
+    brief,
+    protection,
+    editions,
+    reservations,
+    subjects,
+    targets,
+    members,
+    reservationTargets,
+    lockSetHash,
+    seed,
+  };
+}
+
+export function finishSeatingV2Package(input: {
+  scope: SeatingV2Scope;
+  pepper: string;
+  semanticHash: string;
+  cohort: ReturnType<typeof snapshotGuestCohortAdapter>;
+  layout: ReturnType<typeof snapshotLayoutAdapter>;
+  brief: ReturnType<typeof snapshotBriefAdapter>;
+  protection: ReturnType<typeof snapshotProtectionAdapter>;
+  editions: SeatingV2RuleEdition[];
+  reservations: SeatingV2ReservationEdition[];
+  subjects: Array<{ ruleEditionId: string; subjectType: "EVENT_GUEST" | "GOVERNED_GROUP"; subjectId: string }>;
+  targets: Array<{ ruleEditionId: string; targetType: "TABLE" | "ZONE" | "POSITION_CAPABILITY"; targetIdOrCode: string }>;
+  members: Array<{ reservationEditionId: string; eventGuestId: string }>;
+  reservationTargets: Array<{
+    reservationEditionId: string;
+    targetType: "TABLE" | "ZONE" | "POSITION_CAPABILITY";
+    targetIdOrCode: string;
+  }>;
+  lockSetHash: string;
+  seed: string;
+}): SeatingV2BuiltPackage {
   const compiled = compileSeatingV2Request({
     organisationId: input.scope.organisationId,
     eventId: input.scope.eventId,
-    semanticHash,
+    semanticHash: input.semanticHash,
     pepper: input.pepper,
     configHash: SEATING_V2_CONFIG_HASH,
-    seed,
-    guests: cohort.guests.map((guest) => ({
+    seed: input.seed,
+    guests: input.cohort.guests.map((guest) => ({
       eventGuestId: guest.eventGuestId,
       eligible: guest.eligible,
       groupTokens: guest.partyToken ? [guest.partyToken] : [],
       capabilityCodes: guest.capabilityCodes,
     })),
-    positions: layout.tables.flatMap((table) => {
+    positions: input.layout.tables.flatMap((table) => {
       const anchors = uniqueSeatAnchors(
         table.seatAnchors.length
           ? table.seatAnchors
@@ -124,7 +164,7 @@ export async function buildSeatingV2Package(input: {
         capabilityCodes: table.capabilityCodes,
       }));
     }),
-    rules: editions.map((edition) => ({
+    rules: input.editions.map((edition) => ({
       editionId: edition.id,
       contentHash: edition.contentHash,
       lifecycle: edition.lifecycle,
@@ -134,21 +174,21 @@ export async function buildSeatingV2Package(input: {
         weight: edition.weight,
         scope: edition.scope as SeatingV2RuleContent["scope"],
         specialistDomain: edition.specialistDomain as SeatingV2RuleContent["specialistDomain"],
-        subjects: subjects
+        subjects: input.subjects
           .filter((item) => item.ruleEditionId === edition.id)
           .map((item) => ({ type: item.subjectType, id: item.subjectId })),
-        targets: targets
+        targets: input.targets
           .filter((item) => item.ruleEditionId === edition.id)
           .map((item) => ({ type: item.targetType, idOrCode: item.targetIdOrCode })),
         source: { type: edition.sourceType as SeatingV2RuleContent["source"]["type"] },
       },
     })),
-    reservations: reservations.map((edition) => ({
+    reservations: input.reservations.map((edition) => ({
       editionId: edition.id,
       contentHash: edition.contentHash,
       lifecycle: edition.lifecycle,
-      eligibleMemberIds: members.filter((item) => item.reservationEditionId === edition.id).map((item) => item.eventGuestId),
-      targets: reservationTargets
+      eligibleMemberIds: input.members.filter((item) => item.reservationEditionId === edition.id).map((item) => item.eventGuestId),
+      targets: input.reservationTargets
         .filter((item) => item.reservationEditionId === edition.id)
         .map((item) => ({ type: item.targetType, idOrCode: item.targetIdOrCode })),
       min: edition.minCount ?? null,
@@ -157,18 +197,28 @@ export async function buildSeatingV2Package(input: {
     })),
   });
   return {
-    semanticHash,
+    semanticHash: input.semanticHash,
     compiled,
-    contentHash: seatingV2PackageContentHash(semanticHash, compiled.compiledRequestHash),
-    cohort,
-    layout,
-    brief,
-    protection,
-    editions,
-    reservations,
-    lockSetHash,
-    seed,
+    contentHash: seatingV2PackageContentHash(input.semanticHash, compiled.compiledRequestHash),
+    cohort: input.cohort,
+    layout: input.layout,
+    brief: input.brief,
+    protection: input.protection,
+    editions: input.editions,
+    reservations: input.reservations,
+    lockSetHash: input.lockSetHash,
+    seed: input.seed,
   };
+}
+
+export async function buildSeatingV2Package(input: {
+  tx: SeatingV2Transaction;
+  scope: SeatingV2Scope;
+  snapshot: PlatformSnapshot;
+  pepper: string;
+  seed?: string;
+}): Promise<SeatingV2BuiltPackage> {
+  return finishSeatingV2Package(await readSeatingV2PackageMaterials(input));
 }
 
 export function seatingV2GuestToken(

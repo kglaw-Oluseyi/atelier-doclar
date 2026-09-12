@@ -18,7 +18,9 @@ import {
 } from "./seating-v2-hash.js";
 import {
   buildSeatingV2Package,
+  finishSeatingV2Package,
   packageIsFresh,
+  readSeatingV2PackageMaterials,
   seatingV2GuestToken,
   SEATING_V2_CONFIG_HASH,
   type SeatingV2BuiltPackage,
@@ -571,8 +573,18 @@ export class SeatingV2CommandService {
     envelope: SeatingV2CommandEnvelope,
     input: { seed?: string } = {},
   ): Promise<SeatingV2CommandResult<SeatingV2InputPackage>> {
+    const materials = await this.repo.transaction(async (tx) => {
+      this.guard(actor, "seating.input.prepare", envelope, envelope.actorAssignmentId);
+      return readSeatingV2PackageMaterials({
+        tx,
+        scope: envelope,
+        snapshot: this.deps.snapshot(),
+        pepper: this.deps.tokenPepper(),
+        seed: input.seed,
+      });
+    });
+    const built = finishSeatingV2Package(materials);
     return this.mutate(actor, envelope, "seating.input.prepare", "seatingV2.freezePackage", async (tx) => {
-      const built = await this.build(tx, envelope, input.seed);
       const existing = (await tx.list<SeatingV2InputPackage>("inputPackages", envelope)).find(
         (item) => item.contentHash === built.contentHash,
       );
@@ -682,7 +694,18 @@ export class SeatingV2CommandService {
     envelope: SeatingV2CommandEnvelope,
     input: { packageId: string },
   ): Promise<SeatingV2CommandResult<SeatingV2Run>> {
-    return this.mutate(actor, envelope, "seating.run.execute", "seatingV2.launchRun", async (tx) => {
+    requireKey(envelope.idempotencyKey);
+    const requestHash = exactHash({ action: "seatingV2.launchRun", envelope, personId: actor.personId });
+    const prepared = await this.repo.transaction(async (tx) => {
+      this.guard(actor, "seating.run.execute", envelope, envelope.actorAssignmentId);
+      const receipt = await tx.getIdempotency(envelope, "seatingV2.launchRun", envelope.idempotencyKey);
+      if (receipt) {
+        if (receipt.requestHash !== requestHash) {
+          throw new PlatformError("IDEMPOTENCY_CONFLICT", "idempotency key was reused with a different payload");
+        }
+        const run = await tx.load<SeatingV2Run>("runs", receipt.resultIdentity, envelope);
+        return { kind: "replay" as const, value: run ?? ({ id: receipt.resultIdentity } as SeatingV2Run) };
+      }
       const pkg = await tx.load<SeatingV2InputPackage>("inputPackages", input.packageId, envelope);
       if (!pkg) throw new PlatformError("NOT_FOUND", "input package was not found");
       const existing = (await tx.list<SeatingV2Run>("runs", envelope)).find(
@@ -692,7 +715,7 @@ export class SeatingV2CommandService {
           item.solverConfigHash === pkg.solverConfigHash &&
           item.deterministicSeed === pkg.deterministicSeed,
       );
-      if (existing) return { replayed: true, value: existing };
+      if (existing) return { kind: "replay" as const, value: existing };
       const compiled = await this.requireCompiled(tx, envelope, pkg.id);
       if (
         !compiled.request ||
@@ -702,37 +725,55 @@ export class SeatingV2CommandService {
       ) {
         throw new PlatformError("VALIDATION_FAILED", "compiled solver request was not readable");
       }
-      let solved;
-      try {
-        emitSettlementStage({ stage: "SOLVER_START", commandType: "seating.run.launch", eventId: envelope.eventId });
-        const solverStarted = Date.now();
-        solved = solveSeatingV2Compiled(compiled.request);
-        emitSettlementStage({
-          stage: "SOLVER_TERMINAL",
-          commandType: "seating.run.launch",
-          eventId: envelope.eventId,
-          durationMs: Date.now() - solverStarted,
-          reasonClass: solved.solverClaim,
-        });
-      } catch {
-        throw new PlatformError("VALIDATION_FAILED", "solver failed", {
-          publicMessage: "The seating solver could not complete this package.",
-        });
-      }
-      let report;
-      try {
-        report = validateSeatingV2(
-          { contentHash: pkg.contentHash, compiledRequest: compiled.request },
-          solved.assignments,
-          solved.assignments.filter((item) => item.state === "UNSEATED").map((item) => item.guestToken),
-          nowOf(actor),
-        );
-      } catch {
-        throw new PlatformError("SEATING_VALIDATION_REJECTED", "validator failed", {
-          publicMessage: "The independent validator could not complete this package.",
-        });
-      }
-      const now = nowOf(actor);
+      return { kind: "execute" as const, pkg, compiled };
+    });
+    if (prepared.kind === "replay") {
+      return this.mutate(actor, envelope, "seating.run.execute", "seatingV2.launchRun", async () => ({
+        replayed: true,
+        value: prepared.value,
+      }));
+    }
+    let solved;
+    try {
+      emitSettlementStage({ stage: "SOLVER_START", commandType: "seating.run.launch", eventId: envelope.eventId });
+      const solverStarted = Date.now();
+      solved = solveSeatingV2Compiled(prepared.compiled.request);
+      emitSettlementStage({
+        stage: "SOLVER_TERMINAL",
+        commandType: "seating.run.launch",
+        eventId: envelope.eventId,
+        durationMs: Date.now() - solverStarted,
+        reasonClass: solved.solverClaim,
+      });
+    } catch {
+      throw new PlatformError("VALIDATION_FAILED", "solver failed", {
+        publicMessage: "The seating solver could not complete this package.",
+      });
+    }
+    let report;
+    try {
+      report = validateSeatingV2(
+        { contentHash: prepared.pkg.contentHash, compiledRequest: prepared.compiled.request },
+        solved.assignments,
+        solved.assignments.filter((item) => item.state === "UNSEATED").map((item) => item.guestToken),
+        nowOf(actor),
+      );
+    } catch {
+      throw new PlatformError("SEATING_VALIDATION_REJECTED", "validator failed", {
+        publicMessage: "The independent validator could not complete this package.",
+      });
+    }
+    const pkg = prepared.pkg;
+    const now = nowOf(actor);
+    return this.mutate(actor, envelope, "seating.run.execute", "seatingV2.launchRun", async (tx) => {
+      const existing = (await tx.list<SeatingV2Run>("runs", envelope)).find(
+        (item) =>
+          item.packageHash === pkg.contentHash &&
+          item.solverVersion === SEATING_V2_SOLVER_VERSION &&
+          item.solverConfigHash === pkg.solverConfigHash &&
+          item.deterministicSeed === pkg.deterministicSeed,
+      );
+      if (existing) return { replayed: true, value: existing };
       const run: SeatingV2Run = {
         id: randomUUID(),
         organisationId: envelope.organisationId,
