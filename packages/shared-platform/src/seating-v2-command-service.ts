@@ -581,7 +581,12 @@ export class SeatingV2CommandService {
       );
       if (existing) return { replayed: true, value: existing };
       const compiled = await this.requireCompiled(tx, envelope, pkg.id);
-      if (!compiled.request || typeof compiled.request !== "object" || !("guests" in compiled.request)) {
+      if (
+        !compiled.request ||
+        typeof compiled.request !== "object" ||
+        !Array.isArray(compiled.request.guests) ||
+        !Array.isArray(compiled.request.positions)
+      ) {
         throw new PlatformError("VALIDATION_FAILED", "compiled solver request was not readable");
       }
       let solved;
@@ -637,7 +642,7 @@ export class SeatingV2CommandService {
           guestToken: assignment.guestToken,
           state: assignment.state,
           positionToken: assignment.positionToken,
-          typedReasonCodes: assignment.typedReasonCodes,
+          typedReasonCodes: assignment.typedReasonCodes ?? [],
           createdAt: now,
         });
       }
@@ -674,7 +679,10 @@ export class SeatingV2CommandService {
           createdAt: now,
         });
       }
+      const seenStructural = new Set<string>();
       for (const outcome of report.structuralOutcomes) {
+        if (seenStructural.has(outcome.checkCode)) continue;
+        seenStructural.add(outcome.checkCode);
         await tx.insert("validationStructuralOutcomes", {
           id: randomUUID(),
           organisationId: envelope.organisationId,

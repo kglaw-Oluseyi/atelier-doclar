@@ -13,6 +13,8 @@ import {
   type SeatingV2CompiledRequest,
   type SeatingV2RuleContent,
 } from "../src/seating-v2-schemas.js";
+import { uniqueSeatAnchors } from "../src/seating-adapters.js";
+import { exactHash } from "../src/eec-hash.js";
 import { validateSeatingV2 } from "../src/seating-v2-validator.js";
 
 const ORG = "00000000-0000-4000-8000-000000000001";
@@ -310,5 +312,36 @@ describe("EOS-S06 V2 hashing, compilation and validator", () => {
     assert.equal(request.contract, "eos-s06-solver-v2");
     assert.equal(JSON.stringify(request).includes("Guest"), false);
     assert.equal(JSON.stringify(request).includes(GUEST_A), false);
+  });
+
+  it("assigns unique seat ordinals when a published layout repeats sequence 0", () => {
+    const anchors = uniqueSeatAnchors([
+      { id: "seat-b", ordinal: 0 },
+      { id: "seat-a", ordinal: 0 },
+      { id: "seat-c", ordinal: 0 },
+    ]);
+    assert.deepEqual(anchors.map((item) => item.ordinal).sort((left, right) => left - right), [1, 2, 3]);
+    const tokens = new Set(
+      anchors.map((seat) => exactHash({ table: "table-a", ordinal: seat.ordinal }).slice(0, 32)),
+    );
+    assert.equal(tokens.size, 3);
+  });
+
+  it("emits one structural outcome per check code when several guests fail the same check", () => {
+    const compiled = compile();
+    const report = validateSeatingV2(
+      { contentHash: "package-hash-collision", compiledRequest: compiled.request },
+      compiled.request.guests.map((guest) => ({
+        guestToken: guest.token,
+        state: "SEATED",
+        positionToken: compiled.request.positions[0]!.token,
+        typedReasonCodes: [],
+      })),
+      [],
+      "2026-09-12T20:00:00.000Z",
+    );
+    const codes = report.structuralOutcomes.map((item) => item.checkCode);
+    assert.equal(new Set(codes).size, codes.length);
+    assert.equal(report.structuralOutcomes.find((item) => item.checkCode === "UNIQUE_POSITION")?.outcome, "FAILED");
   });
 });

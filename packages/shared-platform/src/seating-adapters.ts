@@ -88,6 +88,21 @@ export function snapshotGuestCohortAdapter(snap: PlatformSnapshot, eventId: stri
   };
 }
 
+export function uniqueSeatAnchors(anchors: Array<{ id: string; ordinal: number }>): Array<{ id: string; ordinal: number }> {
+  const used = new Set<number>();
+  return [...anchors]
+    .sort((left, right) => left.id.localeCompare(right.id))
+    .map((seat) => {
+      let ordinal = Number(seat.ordinal);
+      if (!Number.isInteger(ordinal) || ordinal < 1 || used.has(ordinal)) {
+        ordinal = 1;
+        while (used.has(ordinal)) ordinal += 1;
+      }
+      used.add(ordinal);
+      return { id: seat.id, ordinal };
+    });
+}
+
 export function snapshotLayoutAdapter(snap: PlatformSnapshot, organisationId: string, eventId: string): PublishedSpatialLayout {
   const publication = snap.layoutPublications.find(
     (item) => item.eventId === eventId && item.organisationId === organisationId && item.status === "CURRENT",

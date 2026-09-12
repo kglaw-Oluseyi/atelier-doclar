@@ -4,6 +4,7 @@ import {
   snapshotGuestCohortAdapter,
   snapshotLayoutAdapter,
   snapshotProtectionAdapter,
+  uniqueSeatAnchors,
 } from "./seating-adapters.js";
 import { compileSeatingV2Request } from "./seating-v2-compiler.js";
 import {
@@ -111,9 +112,11 @@ export async function buildSeatingV2Package(input: {
       capabilityCodes: guest.capabilityCodes,
     })),
     positions: layout.tables.flatMap((table) => {
-      const anchors = table.seatAnchors.length
-        ? table.seatAnchors
-        : Array.from({ length: table.capacity }, (_, index) => ({ id: `${table.objectId}:${index + 1}`, ordinal: index + 1 }));
+      const anchors = uniqueSeatAnchors(
+        table.seatAnchors.length
+          ? table.seatAnchors
+          : Array.from({ length: table.capacity }, (_, index) => ({ id: `${table.objectId}:${index + 1}`, ordinal: index + 1 })),
+      );
       return anchors.map((seat) => ({
         positionToken: exactHash({ table: table.objectId, ordinal: seat.ordinal }).slice(0, 32),
         tableToken: exactHash({ table: table.objectId }).slice(0, 32),

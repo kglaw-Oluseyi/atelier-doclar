@@ -75,22 +75,22 @@ export function solveSeatingV2Compiled(request: SeatingV2CompiledRequest): {
   assignments: SeatingV2Assignment[];
   rawOutputHash: string;
 } {
-  if (!request.guests.length || !request.positions.length) {
+  if (!request.guests?.length || !request.positions?.length) {
     return { solverClaim: "INFEASIBLE", assignments: [], rawOutputHash: exactHash({ empty: true }) };
   }
   const solverRequest: SolverRequest = {
     guests: request.guests.map((guest) => ({
       token: guest.token,
       eligible: guest.eligible,
-      capabilityCodes: guest.capabilityCodes,
+      capabilityCodes: guest.capabilityCodes ?? [],
       protocolCodes: [],
       ...(guest.groupTokens[0] ? { partyToken: guest.groupTokens[0] } : {}),
     })),
     positions: request.positions.map((position) => ({
       token: position.token,
       tableToken: position.tableToken,
-      zoneCodes: position.zoneCodes,
-      capabilityCodes: position.capabilityCodes,
+      zoneCodes: position.zoneCodes ?? [],
+      capabilityCodes: position.capabilityCodes ?? [],
     })),
     constraints: request.rules.map(v1Constraint),
     reservations: request.reservations
@@ -114,7 +114,7 @@ export function solveSeatingV2Compiled(request: SeatingV2CompiledRequest): {
       guestToken: item.guestToken,
       state: item.state,
       positionToken: item.positionToken ?? null,
-      typedReasonCodes: item.reasonCodes,
+      typedReasonCodes: item.reasonCodes ?? [],
     })),
     rawOutputHash: solved.resultHash,
   };
