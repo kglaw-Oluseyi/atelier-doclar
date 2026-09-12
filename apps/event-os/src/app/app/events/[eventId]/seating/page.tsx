@@ -110,6 +110,7 @@ export default async function EventSeatingPage({
   }
   let workspace;
   let publicationSource: "V2" | "LEGACY" | "NONE" = "NONE";
+  const workspaceStarted = Date.now();
   try {
     if (seatingV2ReplacementEnabled()) {
       workspace = await runtime.service.seatingV2Commands().projectWorkspace(actor, event.id);
@@ -117,19 +118,23 @@ export default async function EventSeatingPage({
         publicationSource = "V2";
       } else {
         try {
-          const legacy = await runtime.service.seatingCommands().projectWorkspace(actor, event.id);
-          const legacyPub = legacy.currentPublication as { id?: string; publicationNumber?: number; editionHash?: string; publishedAt?: string } | undefined;
+          const legacyPub = await runtime.service.seatingCommands().projectCurrentPublication(actor, event.id);
           if (legacyPub?.id && legacyPub.publicationNumber && legacyPub.editionHash) {
             workspace = {
               ...workspace,
-              currentPublication: legacy.currentPublication,
+              currentPublication: {
+                id: legacyPub.id,
+                publicationNumber: legacyPub.publicationNumber,
+                editionHash: legacyPub.editionHash,
+                status: "CURRENT",
+              },
               publications: [
                 {
                   id: legacyPub.id,
                   status: "CURRENT",
                   publicationNumber: legacyPub.publicationNumber,
                   editionHash: legacyPub.editionHash,
-                  publishedAt: legacyPub.publishedAt ?? "",
+                  publishedAt: legacyPub.publishedAt,
                 },
                 ...workspace.publications,
               ],
@@ -152,7 +157,9 @@ export default async function EventSeatingPage({
       </AppShell>
     );
   }
+  const workspaceMs = Date.now() - workspaceStarted;
   const assignmentId = preferredSeatingAssignment(person.id, organisation.id, event.id)?.id ?? "";
+  const actionResultStarted = Date.now();
   const presented = await loadPresentedActionResult({
     requestPath: `/app/events/${event.id}/seating`,
     resultId: typeof query.result === "string" ? query.result : undefined,
@@ -160,6 +167,7 @@ export default async function EventSeatingPage({
     organisationId: organisation.id,
     eventId: event.id,
   });
+  const actionResultMs = Date.now() - actionResultStarted;
   const envelopeFields = { organisationId: organisation.id, eventId: event.id, assignmentId };
   const working = workspace.workingEdition as { id?: string; contentHash?: string; status?: string; version?: number } | undefined;
   const input = workspace.inputEdition as { id?: string; contentHash?: string } | undefined;
@@ -177,6 +185,14 @@ export default async function EventSeatingPage({
         {publicationSource === "LEGACY" ? ` · ${LEGACY_S06_PUBLICATION_LABEL}` : ""}
       </p>
       <p data-testid="seating-freshness-badge">{workspace.freshnessCopy}</p>
+      <p
+        data-testid="seating-settlement"
+        data-workspace-ms={workspaceMs}
+        data-action-result-ms={actionResultMs}
+        data-result-id={typeof query.result === "string" ? query.result : ""}
+      >
+        Render {workspaceMs}ms · action result {actionResultMs}ms
+      </p>
       <ActionResultBanner presented={presented} />
       <div className="seating-tabs">
         <AtelierSectionTabs label="Seating Command views" items={[...TABS]} />

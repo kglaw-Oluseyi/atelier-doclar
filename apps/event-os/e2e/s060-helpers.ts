@@ -37,6 +37,45 @@ export async function clickOnceNamed(page: Page, name: string) {
   });
 }
 
+export async function settleSeatingMutation(page: Page, previousResult = "", timeout = 30_000) {
+  const started = Date.now();
+  const remaining = () => Math.max(250, timeout - (Date.now() - started));
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const stages = { resultUrlMs: 0, overviewMs: 0, bannerMs: 0, stage: "post" };
+  await expect
+    .poll(
+      async () => {
+        if ((await page.getByTestId("protection-validation-summary").count()) > 0) return "validation";
+        const result = new URL(page.url()).searchParams.get("result") ?? "";
+        return uuid.test(result) && result !== previousResult ? "result" : "";
+      },
+      { timeout: remaining() },
+    )
+    .not.toEqual("");
+  stages.resultUrlMs = Date.now() - started;
+  if ((await page.getByTestId("protection-validation-summary").count()) > 0) {
+    stages.stage = "validation";
+    return stages;
+  }
+  stages.stage = "redirect";
+  await expect(page.getByTestId("seating-overview")).toBeVisible({ timeout: remaining() });
+  stages.overviewMs = Date.now() - started;
+  stages.stage = "render";
+  await expect(page.getByTestId("action-result-banner")).toBeVisible({ timeout: remaining() });
+  stages.bannerMs = Date.now() - started;
+  stages.stage = "banner";
+  return stages;
+}
+
+export async function readSeatingSettlement(page: Page) {
+  const locator = page.getByTestId("seating-settlement");
+  if ((await locator.count()) === 0) return { workspaceMs: "", actionResultMs: "" };
+  return {
+    workspaceMs: (await locator.getAttribute("data-workspace-ms")) ?? "",
+    actionResultMs: (await locator.getAttribute("data-action-result-ms")) ?? "",
+  };
+}
+
 export async function expectFreshResultQuery(page: Page, previousResult = "", timeout = 30_000) {
   const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   await expect

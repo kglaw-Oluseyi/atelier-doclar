@@ -1,7 +1,7 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page, type Request } from "@playwright/test";
 import { appendFileSync, mkdirSync } from "node:fs";
 import { loginAs, openStaffContext } from "./login";
-import { clickOnceNamed, expectFreshActionSuccess, readActionCorrelation } from "./s060-helpers";
+import { clickOnceNamed, readActionCorrelation, readSeatingSettlement, settleSeatingMutation } from "./s060-helpers";
 
 const SEATING = "/app/events/00000000-0000-4000-8000-000000000021/seating";
 const EVIDENCE = "/tmp/s072-live-evidence.jsonl";
@@ -37,74 +37,59 @@ async function seatingDiagnostics(page: Page) {
 }
 
 async function waitForSettledAction(page: Page, previousResult = "") {
-  const validation = page.getByTestId("protection-validation-summary");
-  await expect
-    .poll(
-      async () => {
-        const result = new URL(page.url()).searchParams.get("result") ?? "";
-        if ((await validation.count()) > 0) return "validation";
-        if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(result) && result !== previousResult) {
-          return "result";
-        }
-        return "";
-      },
-      { timeout: 30_000 },
-    )
-    .not.toEqual("");
+  return settleSeatingMutation(page, previousResult);
 }
 
 async function timedAction(page: Page, label: string, click: () => Promise<void>, previousCorrelation = "") {
   const started = Date.now();
-  let firstRunFailed = false;
-  let retryOutcome = "not-required";
   const previousResult = new URL(page.url()).searchParams.get("result") ?? "";
+  let postMs = 0;
+  const onRequest = (request: Request) => {
+    if (request.method() === "POST" && postMs === 0) postMs = Date.now() - started;
+  };
+  page.on("request", onRequest);
   try {
     await click();
-    await waitForSettledAction(page, previousResult);
+    const stages = await settleSeatingMutation(page, previousResult);
     if (await page.getByTestId("protection-validation-summary").count()) {
       throw new Error(`validation:${((await page.getByTestId("protection-validation-summary").innerText()) ?? "").slice(0, 180)}`);
     }
-    await expectFreshActionSuccess(page, previousCorrelation, previousResult);
-  } catch (error) {
-    firstRunFailed = true;
-    record({
-      kind: "first-run-failure",
-      label,
-      message: error instanceof Error ? error.message.slice(0, 300) : "error",
-      diagnostics: await seatingDiagnostics(page),
-    });
-    await page.reload();
-    await expect(
-      page.getByTestId("seating-overview").or(page.getByText("This assignment cannot perform this seating action.")),
-    ).toBeVisible({ timeout: 30_000 });
-    const afterReload = await readActionCorrelation(page);
-    const reloadedBanner = page.getByTestId("action-result-banner");
-    const reloadedCopy = ((await reloadedBanner.textContent().catch(() => "")) ?? "").trim();
-    if (
-      afterReload &&
-      afterReload !== previousCorrelation &&
-      (await reloadedBanner.count()) &&
-      /Succeeded|The change was recorded|No change/i.test(reloadedCopy)
-    ) {
-      retryOutcome = "appeared-after-reload";
-    } else {
-      const retryPrevious = new URL(page.url()).searchParams.get("result") ?? "";
-      await click();
-      await waitForSettledAction(page, retryPrevious);
-      await expectFreshActionSuccess(page, previousCorrelation, retryPrevious);
-      retryOutcome = "succeeded-after-retry";
+    const banner = page.getByTestId("action-result-banner");
+    await expect(banner).toContainText(/Succeeded|The change was recorded|No change/i);
+    const correlation = await readActionCorrelation(page);
+    const dataChanged = ((await page.getByTestId("action-result-data-changed").textContent().catch(() => "")) ?? "").trim();
+    const ms = Date.now() - started;
+    if (previousCorrelation && correlation) {
+      expect(correlation).not.toEqual(previousCorrelation);
     }
+    record({
+      kind: "action",
+      label,
+      ms,
+      correlation,
+      dataChanged,
+      firstRunFailed: false,
+      retryOutcome: "not-required",
+      stages: { postMs, ...stages },
+      settlement: await readSeatingSettlement(page),
+    });
+    return { correlation, dataChanged, ms, firstRunFailed: false, retryOutcome: "not-required" };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "error";
+    record({
+      kind: "settlement-failure",
+      label,
+      message: message.slice(0, 300),
+      diagnostics: await seatingDiagnostics(page),
+      settlement: await readSeatingSettlement(page),
+      postMs,
+      elapsedMs: Date.now() - started,
+    });
+    if (message.startsWith("validation:")) throw error;
+    throw new Error(`product-performance: seating action ${label} did not settle within 30 seconds. ${message.slice(0, 180)}`);
+  } finally {
+    page.off("request", onRequest);
   }
-  const correlation = await readActionCorrelation(page);
-  const banner = page.getByTestId("action-result-banner");
-  const dataChanged = ((await page.getByTestId("action-result-data-changed").textContent().catch(() => "")) ?? "").trim();
-  const ms = Date.now() - started;
-  if (previousCorrelation && correlation) {
-    expect(correlation).not.toEqual(previousCorrelation);
-  }
-  await expect(banner).toBeVisible();
-  record({ kind: "action", label, ms, correlation, dataChanged, firstRunFailed, retryOutcome });
-  return { correlation, dataChanged, ms, firstRunFailed, retryOutcome };
 }
 
 async function gotoSeating(page: Page, hash = "") {
@@ -197,6 +182,31 @@ async function workingHash(page: Page) {
   return (text.match(/Working edition hash:\s*([a-f0-9]{64})/i) ?? text.match(/([a-f0-9]{64})/i) ?? [])[1] ?? "";
 }
 
+async function reservedMinima(page: Page) {
+  const text = ((await page.getByTestId("seating-capacity-ledger").textContent()) ?? "").replace(/\s+/g, " ");
+  return Number((text.match(/reserved minima (\d+)/i) ?? [])[1] ?? -1);
+}
+
+async function withdrawConflictingHardRules(page: Page, label: string) {
+  for (let index = 0; index < 16; index += 1) {
+    await gotoSeating(page, "#rules");
+    const row = page
+      .locator("#rules li")
+      .filter({ hasText: /keep apart|require table/i })
+      .filter({ hasText: /\bACTIVE\b/ })
+      .filter({ has: page.getByRole("button", { name: "Withdraw" }) })
+      .first();
+    if ((await row.count()) === 0) return;
+    await timedAction(page, `${label}-ISOLATE-${index + 1}`, async () => {
+      await row.getByRole("button", { name: "Withdraw" }).evaluate((element) => {
+        const form = element.closest("form");
+        if (form instanceof HTMLFormElement) form.requestSubmit(element as HTMLButtonElement);
+        else (element as HTMLButtonElement).click();
+      });
+    });
+  }
+}
+
 async function freezeAndLaunch(page: Page, prefix: string) {
   await gotoSeating(page, "#inputs");
   await timedAction(page, `${prefix}-FREEZE`, () => submitNamed(page, "Freeze new input edition", "seating-freeze"));
@@ -277,6 +287,7 @@ test.describe("CURSOR-S06V2-S072 remaining live gates", () => {
   test("S072 live assign-unseated succeeds and a hard-rule violation does not write", async ({ page, browser }) => {
     test.setTimeout(240_000);
     await loginAs(page, "planner");
+    await withdrawConflictingHardRules(page, `${FIXTURE}-ASSIGN`);
     const eligible = await eligibleGuestIds(page);
     expect(eligible.length).toBeGreaterThanOrEqual(3);
     await gotoSeating(page, "#rules");
@@ -341,6 +352,7 @@ test.describe("CURSOR-S06V2-S072 remaining live gates", () => {
   test("S072 live withdraw, recall and successor preserve last-known-good and bind specialist review", async ({ page, browser }) => {
     test.setTimeout(360_000);
     await loginAs(page, "planner");
+    await withdrawConflictingHardRules(page, `${FIXTURE}-SUCCESSOR`);
     await gotoSeating(page, "#publication");
     const beforeWithdraw = await publicationIdentity(page);
     const hasPublication = /Publication \d+/.test(beforeWithdraw.badge);
@@ -465,6 +477,9 @@ test.describe("CURSOR-S06V2-S072 remaining live gates", () => {
     test.setTimeout(240_000);
     await loginAs(page, "planner");
     await gotoSeating(page, "#reservations");
+    const beforeMin = await reservedMinima(page);
+    const form = page.getByTestId("seating-reservation-form");
+    await form.locator('input[name="exactCount"]').fill("3");
     await timedAction(page, `${FIXTURE}-RESV-CREATE`, () => submitNamed(page, "Save reservation", "seating-reservation-form"));
     await gotoSeating(page, "#reservations");
     await expect(page.getByTestId("seating-reservation-DRAFT")).toBeVisible();
@@ -473,11 +488,24 @@ test.describe("CURSOR-S06V2-S072 remaining live gates", () => {
     try {
       await gotoSeating(director.page, "#reservations");
       await expect(director.page.getByText(/Drafted by the planner/i).first()).toBeVisible();
-      await timedAction(director.page, `${FIXTURE}-RESV-ACTIVATE`, () => submitNamed(director.page, "Activate reservation"));
+      await timedAction(director.page, `${FIXTURE}-RESV-ACTIVATE`, async () => {
+        const activate = director.page
+          .getByTestId("seating-reservation-DRAFT")
+          .filter({ hasText: /exact 3/i })
+          .getByRole("button", { name: "Activate reservation" });
+        await activate.evaluate((element) => {
+          const form = element.closest("form");
+          if (form instanceof HTMLFormElement) form.requestSubmit(element as HTMLButtonElement);
+          else (element as HTMLButtonElement).click();
+        });
+      });
     } finally {
       await director.context.close();
     }
     await loginAs(page, "planner");
+    await gotoSeating(page, "#reservations");
+    const activeMin = await reservedMinima(page);
+    expect(activeMin).toBeGreaterThan(beforeMin);
     await gotoSeating(page, "#inputs");
     await timedAction(page, `${FIXTURE}-RESV-FREEZE-1`, () => submitNamed(page, "Freeze new input edition", "seating-freeze"));
     await gotoSeating(page, "#inputs");
@@ -485,7 +513,10 @@ test.describe("CURSOR-S06V2-S072 remaining live gates", () => {
     expect(activeHash).toMatch(/^[a-f0-9]{64}$/);
     await gotoSeating(page, "#reservations");
     await timedAction(page, `${FIXTURE}-RESV-WITHDRAW`, async () => {
-      const withdraw = page.getByTestId("seating-reservation-ACTIVE").getByRole("button", { name: "Withdraw reservation" }).last();
+      const withdraw = page
+        .getByTestId("seating-reservation-ACTIVE")
+        .filter({ hasText: /exact 3/i })
+        .getByRole("button", { name: "Withdraw reservation" });
       await withdraw.evaluate((element) => {
         const form = element.closest("form");
         if (form instanceof HTMLFormElement) form.requestSubmit(element as HTMLButtonElement);
@@ -494,12 +525,13 @@ test.describe("CURSOR-S06V2-S072 remaining live gates", () => {
     });
     await gotoSeating(page, "#reservations");
     await expect(page.getByTestId("seating-reservation-WITHDRAWN")).toBeVisible();
+    expect(await reservedMinima(page)).toBeLessThan(activeMin);
     await gotoSeating(page, "#inputs");
     await timedAction(page, `${FIXTURE}-RESV-FREEZE-2`, () => submitNamed(page, "Freeze new input edition", "seating-freeze"));
     await gotoSeating(page, "#inputs");
     const withdrawnHash = ((await page.getByTestId("seating-inputs").textContent()) ?? "").match(/Hash\s+([a-f0-9]{64})/i)?.[1] ?? "";
     expect(withdrawnHash).toMatch(/^[a-f0-9]{64}$/);
     expect(withdrawnHash).not.toEqual(activeHash);
-    record({ kind: "reservation-lifecycle", activeHash, withdrawnHash });
+    record({ kind: "reservation-lifecycle", activeHash, withdrawnHash, beforeMin, activeMin });
   });
 });

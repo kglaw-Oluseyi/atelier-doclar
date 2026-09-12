@@ -6,7 +6,7 @@ import { authorize, canSeeEvent, type ActorSnapshot } from "./policy.js";
 import { roleKeyForId } from "./catalog.js";
 import { seatingDisclosureForRole } from "./seating-workspace.js";
 import { buildSeatingV2Workspace } from "./seating-v2-workspace.js";
-import { emptySeatingV2State, SEATING_V2_COLLECTIONS, type SeatingV2State } from "./seating-v2-state.js";
+import { emptySeatingV2State, SEATING_V2_WORKSPACE_COLLECTIONS, type SeatingV2State } from "./seating-v2-state.js";
 import type { SeatingWorkspaceView } from "./seating-workspace.js";
 import { compileSeatingV2Request } from "./seating-v2-compiler.js";
 import {
@@ -1254,7 +1254,7 @@ export class SeatingV2CommandService {
     const state = await this.repo.transaction(async (tx) => {
       const next = emptySeatingV2State();
       const scope = { organisationId: event.organisationId, eventId };
-      for (const collection of SEATING_V2_COLLECTIONS) {
+      for (const collection of SEATING_V2_WORKSPACE_COLLECTIONS) {
         (next[collection] as unknown[]) = await tx.list(collection, scope);
       }
       return next as SeatingV2State;

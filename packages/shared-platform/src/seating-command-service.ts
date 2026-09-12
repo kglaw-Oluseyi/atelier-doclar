@@ -822,6 +822,35 @@ export class SeatingCommandService {
     return buildSeatingWorkspace(this.deps.snapshot(), state, eventId, seatingDisclosureForRole(role));
   }
 
+  async projectCurrentPublication(
+    actor: SeatingActor,
+    eventId: string,
+  ): Promise<{ id: string; publicationNumber: number; editionHash: string; publishedAt: string } | undefined> {
+    const people = this.deps.resolveActor(actor.personId);
+    const event = this.deps.snapshot().events.find((item) => item.id === eventId);
+    if (!event) throw new PlatformError("NOT_FOUND", "event was not found");
+    if (!canSeeEvent(people, event, nowOf(actor))) throw new PlatformError("NOT_FOUND", "event was not found");
+    const assignment =
+      people.assignments.find((item) => item.status === "ACTIVE" && item.organisationId === event.organisationId && item.eventId === eventId) ??
+      people.assignments.find((item) => item.status === "ACTIVE" && item.organisationId === event.organisationId && !item.eventId);
+    if (!assignment) throw new PlatformError("FORBIDDEN", "This assignment cannot perform this seating action.");
+    this.guard(actor, "seating.view", { organisationId: event.organisationId, eventId }, assignment.id);
+    return this.repo.transaction(async (tx) => {
+      const publications = await tx.list<SeatingPublicationRecord>("publications", {
+        organisationId: event.organisationId,
+        eventId,
+      });
+      const current = publications.find((item) => item.status === "CURRENT");
+      if (!current) return undefined;
+      return {
+        id: current.id,
+        publicationNumber: current.publicationNumber,
+        editionHash: current.editionHash,
+        publishedAt: current.publishedAt,
+      };
+    });
+  }
+
   async runS06Evaluation(actor: SeatingActor, envelope: SeatingCommandEnvelope) {
     this.guard(actor, "seating.evaluate", envelope, envelope.actorAssignmentId);
     const { executeS06Evaluation } = await import("./seating-evaluation-runner.js");

@@ -13,6 +13,11 @@ import type { PlatformSnapshot } from "./store.js";
 
 export const LEGACY_S06_PUBLICATION_LABEL = "LEGACY S06 PUBLICATION — not V2 validated";
 
+function sameIdSet(ids: string[], expected: Set<string>): boolean {
+  if (ids.length !== expected.size) return false;
+  return ids.every((id) => expected.has(id));
+}
+
 export function buildSeatingV2Workspace(
   snap: PlatformSnapshot,
   state: SeatingV2State,
@@ -35,7 +40,18 @@ export function buildSeatingV2Workspace(
   const eventPackages = state.inputPackages
     .filter((item) => item.eventId === eventId)
     .sort((left, right) => String(left.createdAt).localeCompare(String(right.createdAt)));
-  const latestPkg = eventPackages.at(-1);
+  const rules = state.ruleEditions.filter((item) => item.eventId === eventId);
+  const activeRuleIds = new Set(rules.filter((item) => item.lifecycle === "ACTIVE").map((item) => item.id));
+  const activeReservations = state.reservationEditions.filter((item) => item.eventId === eventId && item.lifecycle === "ACTIVE");
+  const activeReservationIds = new Set(activeReservations.map((item) => item.id));
+  const currentInputPackages = eventPackages.filter((item) => {
+    const packagedRules = state.packageRules.filter((row) => row.packageId === item.id).map((row) => row.ruleEditionId);
+    const packagedReservations = state.packageReservations
+      .filter((row) => row.packageId === item.id)
+      .map((row) => row.reservationEditionId);
+    return sameIdSet(packagedRules, activeRuleIds) && sameIdSet(packagedReservations, activeReservationIds);
+  });
+  const latestPkg = currentInputPackages.at(-1) ?? eventPackages.at(-1);
   const editionPkg = edition ? state.inputPackages.find((item) => item.id === edition.packageId) : undefined;
   const packageDrifted = Boolean(edition && latestPkg && edition.packageId !== latestPkg.id);
   const pkg = latestPkg ?? editionPkg;
@@ -47,7 +63,6 @@ export function buildSeatingV2Workspace(
   } catch {
     layout = undefined;
   }
-  const rules = state.ruleEditions.filter((item) => item.eventId === eventId);
   const runs = state.runs.filter((item) => item.eventId === eventId);
   const evalRun = state.evaluationRuns.at(-1);
   const inputFreshness = !layout ? "MISSING" : !pkg ? "MISSING" : packageDrifted ? "STALE" : "CURRENT";
@@ -69,8 +84,20 @@ export function buildSeatingV2Workspace(
     capacity: table.capacity,
     seated: assignments.filter((item) => item.layoutTableId === table.objectId && item.state === "SEATED").length,
   }));
+  const reservedMin = activeReservations.reduce((sum, item) => sum + (item.exactCount ?? item.minCount ?? 0), 0);
+  const reservedMax = activeReservations.reduce((sum, item) => sum + (item.exactCount ?? item.maxCount ?? item.minCount ?? 0), 0);
+  const total = tables.reduce((sum, item) => sum + item.capacity, 0);
+  const overbooked = reservedMin > total && total > 0;
+  const latestCurrentReport = [...state.validationReports]
+    .filter((row) => row.eventId === eventId && row.validatorVersion === SEATING_V2_VALIDATOR_VERSION)
+    .at(-1);
+  const hardBlockers = latestCurrentReport
+    ? state.validationRuleOutcomes.filter((row) => row.reportId === latestCurrentReport.id && row.outcome === "VIOLATED").length +
+      state.validationStructuralOutcomes.filter((row) => row.reportId === latestCurrentReport.id && row.outcome === "FAILED").length
+    : rules.filter((item) => item.lifecycle === "ACTIVE" && item.hardness === "HARD").length;
   const attention: SeatingWorkspaceView["attention"] = [];
   if (!pkg) attention.push({ kind: "blocker", message: "Freeze a V2 input package before solving.", href: "#inputs" });
+  if (overbooked) attention.push({ kind: "blocker", message: "Reserved minima exceed published capacity.", href: "#reservations" });
   if (packageDrifted) {
     attention.push({ kind: "stale", message: "Upstream event information changed. Review and run again.", href: "#inputs" });
   }
@@ -245,11 +272,11 @@ export function buildSeatingV2Workspace(
       tableToken: item.layoutTableId,
     })),
     capacityLedger: {
-      total: tables.reduce((sum, item) => sum + item.capacity, 0),
-      reservedMin: 0,
-      reservedMax: 0,
-      generallyAvailable: tables.reduce((sum, item) => sum + item.capacity, 0) - assignments.filter((item) => item.state === "SEATED").length,
-      overbooked: false,
+      total,
+      reservedMin,
+      reservedMax,
+      generallyAvailable: Math.max(0, total - reservedMin),
+      overbooked,
     },
     attention,
     nextAction,
@@ -267,12 +294,7 @@ export function buildSeatingV2Workspace(
       eligibleGuests: guests.filter((item) => item.eligible).length,
       seated: assignments.filter((item) => item.state === "SEATED").length,
       unseated: assignments.filter((item) => item.state === "UNSEATED").length,
-      hardBlockers: Math.max(
-        runs.filter((item) => item.status === "INFEASIBLE").length,
-        state.validationReports.filter((row) => row.eventId === eventId && row.verdict === "INFEASIBLE").length,
-        state.validationRuleOutcomes.filter((row) => row.eventId === eventId && row.outcome === "VIOLATED").length,
-        state.validationStructuralOutcomes.filter((row) => row.eventId === eventId && row.outcome === "FAILED").length,
-      ),
+      hardBlockers,
     },
     blockers: [],
   };

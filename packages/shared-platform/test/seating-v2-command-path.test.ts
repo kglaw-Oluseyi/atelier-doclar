@@ -374,4 +374,38 @@ describe("EOS-S06 V2 command path", () => {
     assert.equal(workspace.inputEdition?.contentHash, second.value.contentHash);
     if (adopted) assert.equal(workspace.inputFreshness, "STALE");
   });
+
+  it("withdrawn reservation leaves the next freeze and capacity ledger", async () => {
+    const { service, store } = fixtureService();
+    prepareSurface(service, store);
+    const guestA = attendingGuest(service, "Gil", "s072-resv-a");
+    const guestB = attendingGuest(service, "Han", "s072-resv-b");
+    const v2 = service.seatingV2Commands();
+    const baseline = await v2.freezePackage(planner(), envelope(people.assignPlanner, "s072-resv-freeze-00"), { seed: "seed-resv" });
+    const draft = await v2.createReservation(planner(), envelope(people.assignPlanner, "s072-resv-create-01"), {
+      exact: 2,
+      eligibleMemberIds: [guestA.id, guestB.id],
+      targets: [],
+    });
+    await v2.activateReservation(director(), envelope(people.assignDirector, "s072-resv-act-01"), { editionId: draft.value.id });
+    const activeView = await v2.projectWorkspace(planner(), people.eventAlphaOne);
+    assert.equal(activeView.capacityLedger.reservedMin, 2);
+    const withReservation = await v2.freezePackage(planner(), envelope(people.assignPlanner, "s072-resv-freeze-01"), { seed: "seed-resv" });
+    assert.notEqual(withReservation.value.contentHash, baseline.value.contentHash);
+    const frozenActive = await v2.projectWorkspace(planner(), people.eventAlphaOne);
+    assert.equal(frozenActive.inputEdition?.contentHash, withReservation.value.contentHash);
+    await v2.withdrawReservation(planner(), envelope(people.assignPlanner, "s072-resv-wd-01"), {
+      editionId: draft.value.id,
+      reason: "Withdrawn from governing set",
+    });
+    const withdrawnView = await v2.projectWorkspace(planner(), people.eventAlphaOne);
+    assert.equal(withdrawnView.capacityLedger.reservedMin, 0);
+    const replayed = await v2.freezePackage(planner(), envelope(people.assignPlanner, "s072-resv-freeze-02"), { seed: "seed-resv" });
+    assert.equal(replayed.application, "REPLAYED");
+    assert.equal(replayed.value.id, baseline.value.id);
+    const after = await v2.projectWorkspace(planner(), people.eventAlphaOne);
+    assert.equal(after.inputEdition?.id, baseline.value.id);
+    assert.equal(after.inputEdition?.contentHash, baseline.value.contentHash);
+    assert.notEqual(after.inputEdition?.contentHash, withReservation.value.contentHash);
+  });
 });

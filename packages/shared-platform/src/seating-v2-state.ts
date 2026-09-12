@@ -600,6 +600,34 @@ export const SEATING_V2_COLLECTIONS: SeatingV2Collection[] = [
   "migrationReceipts",
 ];
 
+/** Collections required to project the seating command workspace. Heavy blobs stay off this path. */
+export const SEATING_V2_WORKSPACE_COLLECTIONS: SeatingV2Collection[] = [
+  "ruleEditions",
+  "ruleSubjects",
+  "ruleTargets",
+  "reservationEditions",
+  "reservationMembers",
+  "reservationTargets",
+  "inputPackages",
+  "packagePositions",
+  "packageRules",
+  "packageReservations",
+  "runs",
+  "runAssignments",
+  "validationReports",
+  "validationRuleOutcomes",
+  "validationStructuralOutcomes",
+  "planEditions",
+  "planAssignments",
+  "manualDecisions",
+  "specialistReviews",
+  "operationalApprovals",
+  "eventCurrent",
+  "publications",
+  "exportJobs",
+  "evaluationRuns",
+];
+
 export const IMMUTABLE_SEATING_V2_COLLECTIONS = [
   "ruleEditions",
   "reservationEditions",

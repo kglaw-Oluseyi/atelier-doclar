@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { appendFileSync, mkdirSync } from "node:fs";
 import { loginAs, openStaffContext, staffNavIdentity } from "./login";
-import { clickOnceNamed, expectFreshActionSuccess, readActionCorrelation } from "./s060-helpers";
+import { clickOnceNamed, readActionCorrelation, readSeatingSettlement, settleSeatingMutation } from "./s060-helpers";
 
 const SEATING = "/app/events/00000000-0000-4000-8000-000000000021/seating";
 const ACCESS = "/app/admin/access";
@@ -35,74 +35,51 @@ async function seatingDiagnostics(page: Page) {
 }
 
 async function waitForSettledAction(page: Page, previousResult = "") {
-  const validation = page.getByTestId("protection-validation-summary");
-  await expect
-    .poll(
-      async () => {
-        const result = new URL(page.url()).searchParams.get("result") ?? "";
-        if ((await validation.count()) > 0) return "validation";
-        if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(result) && result !== previousResult) {
-          return "result";
-        }
-        return "";
-      },
-      { timeout: 30_000 },
-    )
-    .not.toEqual("");
+  return settleSeatingMutation(page, previousResult);
 }
 
 async function timedAction(page: Page, label: string, click: () => Promise<void>, previousCorrelation = "") {
   const started = Date.now();
-  let firstRunFailed = false;
-  let retryOutcome = "not-required";
   const previousResult = new URL(page.url()).searchParams.get("result") ?? "";
   try {
     await click();
-    await waitForSettledAction(page, previousResult);
+    const stages = await settleSeatingMutation(page, previousResult);
     if (await page.getByTestId("protection-validation-summary").count()) {
       throw new Error(`validation:${((await page.getByTestId("protection-validation-summary").innerText()) ?? "").slice(0, 180)}`);
     }
-    await expectFreshActionSuccess(page, previousCorrelation, previousResult);
-  } catch (error) {
-    firstRunFailed = true;
-    record({
-      kind: "first-run-failure",
-      label,
-      message: error instanceof Error ? error.message.slice(0, 300) : "error",
-      diagnostics: await seatingDiagnostics(page),
-    });
-    await page.reload();
-    await expect(
-      page.getByTestId("seating-overview").or(page.getByText("This assignment cannot perform this seating action.")),
-    ).toBeVisible({ timeout: 30_000 });
-    const afterReload = await readActionCorrelation(page);
-    const reloadedBanner = page.getByTestId("action-result-banner");
-    const reloadedCopy = ((await reloadedBanner.textContent().catch(() => "")) ?? "").trim();
-    if (
-      afterReload &&
-      afterReload !== previousCorrelation &&
-      (await reloadedBanner.count()) &&
-      /Succeeded|The change was recorded|No change/i.test(reloadedCopy)
-    ) {
-      retryOutcome = "appeared-after-reload";
-    } else {
-      const retryPrevious = new URL(page.url()).searchParams.get("result") ?? "";
-      await click();
-      await waitForSettledAction(page, retryPrevious);
-      await expectFreshActionSuccess(page, previousCorrelation, retryPrevious);
-      retryOutcome = "succeeded-after-retry";
+    const banner = page.getByTestId("action-result-banner");
+    await expect(banner).toContainText(/Succeeded|The change was recorded|No change/i);
+    const correlation = await readActionCorrelation(page);
+    const dataChanged = ((await page.getByTestId("action-result-data-changed").textContent().catch(() => "")) ?? "").trim();
+    const ms = Date.now() - started;
+    if (previousCorrelation && correlation) {
+      expect(correlation).not.toEqual(previousCorrelation);
     }
+    record({
+      kind: "action",
+      label,
+      ms,
+      correlation,
+      dataChanged,
+      firstRunFailed: false,
+      retryOutcome: "not-required",
+      stages,
+      settlement: await readSeatingSettlement(page),
+    });
+    return { correlation, dataChanged, ms, firstRunFailed: false, retryOutcome: "not-required" };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "error";
+    record({
+      kind: "settlement-failure",
+      label,
+      message: message.slice(0, 300),
+      diagnostics: await seatingDiagnostics(page),
+      settlement: await readSeatingSettlement(page),
+      elapsedMs: Date.now() - started,
+    });
+    if (message.startsWith("validation:")) throw error;
+    throw new Error(`product-performance: seating action ${label} did not settle within 30 seconds. ${message.slice(0, 180)}`);
   }
-  const correlation = await readActionCorrelation(page);
-  const banner = page.getByTestId("action-result-banner");
-  const dataChanged = ((await page.getByTestId("action-result-data-changed").textContent().catch(() => "")) ?? "").trim();
-  const ms = Date.now() - started;
-  if (previousCorrelation && correlation) {
-    expect(correlation).not.toEqual(previousCorrelation);
-  }
-  await expect(banner).toBeVisible();
-  record({ kind: "action", label, ms, correlation, dataChanged, firstRunFailed, retryOutcome });
-  return { correlation, dataChanged, ms, firstRunFailed, retryOutcome };
 }
 
 async function gotoSeating(page: Page, hash = "") {
