@@ -288,7 +288,7 @@ export default async function EventSeatingPage({
         {(["Governing", "Draft", "Historical"] as const).map((group) => {
           const items = workspace.constraints.filter((item) =>
             group === "Governing" ? item.status === "ACTIVE" : group === "Draft" ? item.status === "DRAFT" : item.status !== "ACTIVE" && item.status !== "DRAFT",
-          );
+          ).slice(group === "Historical" ? -12 : undefined);
           return (
             <div key={group}>
               <h3>{group}</h3>
@@ -508,9 +508,9 @@ export default async function EventSeatingPage({
           </ProtectionMutationForm>
         ) : null}
         <ul>
-          {workspace.runs.map((run) => (
+          {workspace.runs.slice(-12).map((run) => (
             <li key={run.id} data-testid={`seating-run-${run.status}`}>
-              Validator {run.validatorVerdict ?? "not yet independently validated"} · seated {run.seated ?? 0} · unseated {run.unseated ?? 0}
+              Validator {run.validatorVerdict ?? "not independently validated on the current validator"} · seated {run.seated ?? 0} · unseated {run.unseated ?? 0}
               {run.stale ? " · Upstream event information changed. Review and run again." : ""}
               {run.validatorVerdict === "INFEASIBLE" || run.status === "INFEASIBLE" ? " · No safe seating plan satisfies every hard rule." : ""}
               {run.violatedSummary ? ` · Violated: ${run.violatedSummary}` : ""}

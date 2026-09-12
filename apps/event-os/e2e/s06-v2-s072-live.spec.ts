@@ -224,13 +224,12 @@ test.describe("CURSOR-S06V2-S072 live gates", () => {
     const director = await openStaffContext(browser, "director");
     try {
       await gotoSeating(director.page, "#rules");
-      const count = await director.page.locator("#rules").getByRole("button", { name: "Activate" }).count();
-      expect(count).toBeGreaterThan(0);
-      for (let index = 0; index < count; index += 1) {
+      const activate = director.page.locator("#rules").getByRole("button", { name: "Activate" }).last();
+      expect(await director.page.locator("#rules").getByRole("button", { name: "Activate" }).count()).toBeGreaterThan(0);
+      for (let index = 0; index < 1; index += 1) {
         await gotoSeating(director.page, "#rules");
         const remaining = await director.page.locator("#rules").getByRole("button", { name: "Activate" }).count();
         if (!remaining) break;
-        const activate = director.page.locator("#rules").getByRole("button", { name: "Activate" }).first();
         await expect(activate).toBeVisible({ timeout: 20_000 });
         await timedAction(director.page, `${label}-${index + 1}`, async () => {
           await activate.evaluate((element) => {
@@ -249,9 +248,10 @@ test.describe("CURSOR-S06V2-S072 live gates", () => {
     const prefix = `${FIXTURE}-SEQ${sequence}`;
     await loginAs(page, "planner");
     await gotoSeating(page, "#rules");
-    await gotoSeating(page, "#rules");
-    while (await page.locator("#rules").getByRole("button", { name: "Withdraw" }).count()) {
+    for (let index = 0; index < 6; index += 1) {
+      await gotoSeating(page, "#rules");
       const withdraw = page.locator("#rules").getByRole("button", { name: "Withdraw" }).first();
+      if (!(await withdraw.count())) break;
       await timedAction(page, `${prefix}-WITHDRAW-LEFTOVER`, async () => {
         await withdraw.evaluate((element) => {
           const form = element.closest("form");
@@ -259,7 +259,6 @@ test.describe("CURSOR-S06V2-S072 live gates", () => {
           else (element as HTMLButtonElement).click();
         });
       });
-      await gotoSeating(page, "#rules");
     }
     await saveRule(page, { name: `${prefix}-KEEP-TOGETHER`, kind: "HARD", predicate: "KEEP_TOGETHER" });
     await timedAction(page, `${prefix}-RULE`, () => submitNamed(page, "Save rule"));

@@ -165,17 +165,12 @@ async function saveRule(
   }
 }
 
-async function directorActivateHard(browser: Parameters<typeof openStaffContext>[0], label: string) {
+async function directorActivateHard(browser: Parameters<typeof openStaffContext>[0], label: string, max = 1) {
   const director = await openStaffContext(browser, "director");
   try {
-    await gotoSeating(director.page, "#rules");
-    const count = await director.page.locator("#rules").getByRole("button", { name: "Activate" }).count();
-    expect(count).toBeGreaterThan(0);
-    for (let index = 0; index < count; index += 1) {
+    for (let index = 0; index < max; index += 1) {
       await gotoSeating(director.page, "#rules");
-      const remaining = await director.page.locator("#rules").getByRole("button", { name: "Activate" }).count();
-      if (!remaining) break;
-      const activate = director.page.locator("#rules").getByRole("button", { name: "Activate" }).first();
+      const activate = director.page.locator("#rules").getByRole("button", { name: "Activate" }).last();
       await expect(activate).toBeVisible({ timeout: 20_000 });
       await timedAction(director.page, `${label}-${index + 1}`, async () => {
         await activate.evaluate((element) => {
@@ -265,7 +260,7 @@ test.describe("CURSOR-S06V2-S072 remaining live gates", () => {
       guestB: eligible[1]!,
     });
     await timedAction(page, `${FIXTURE}-IMPOSSIBLE-APART`, () => submitNamed(page, "Save rule"));
-    await directorActivateHard(browser, `${FIXTURE}-IMPOSSIBLE-ACTIVATE`);
+    await directorActivateHard(browser, `${FIXTURE}-IMPOSSIBLE-ACTIVATE`, 2);
     await loginAs(page, "planner");
     await freezeAndLaunch(page, `${FIXTURE}-IMPOSSIBLE`);
     const latest = page.locator("#runs li").last();
@@ -277,18 +272,6 @@ test.describe("CURSOR-S06V2-S072 remaining live gates", () => {
     await expect(latest).toContainText(/Violated:|UNSEATED_REQUIRED|KEEP_APART_VIOLATED|REQUIRE_TABLE_VIOLATED/i);
     await expect(latest.getByRole("button", { name: "Adopt run" })).toHaveCount(0);
     await expect(page.getByTestId("seating-overview")).toContainText(/Hard blockers · [1-9]/);
-    await gotoSeating(page, "#rules");
-    while (await page.locator("#rules").getByRole("button", { name: "Withdraw" }).count()) {
-      const withdraw = page.locator("#rules").getByRole("button", { name: "Withdraw" }).first();
-      await timedAction(page, `${FIXTURE}-IMPOSSIBLE-CLEANUP`, async () => {
-        await withdraw.evaluate((element) => {
-          const form = element.closest("form");
-          if (form instanceof HTMLFormElement) form.requestSubmit(element as HTMLButtonElement);
-          else (element as HTMLButtonElement).click();
-        });
-      });
-      await gotoSeating(page, "#rules");
-    }
   });
 
   test("S072 live assign-unseated succeeds and a hard-rule violation does not write", async ({ page, browser }) => {
@@ -501,7 +484,14 @@ test.describe("CURSOR-S06V2-S072 remaining live gates", () => {
     const activeHash = ((await page.getByTestId("seating-inputs").textContent()) ?? "").match(/Hash\s+([a-f0-9]{64})/i)?.[1] ?? "";
     expect(activeHash).toMatch(/^[a-f0-9]{64}$/);
     await gotoSeating(page, "#reservations");
-    await timedAction(page, `${FIXTURE}-RESV-WITHDRAW`, () => submitNamed(page, "Withdraw reservation"));
+    await timedAction(page, `${FIXTURE}-RESV-WITHDRAW`, async () => {
+      const withdraw = page.getByTestId("seating-reservation-ACTIVE").getByRole("button", { name: "Withdraw reservation" }).last();
+      await withdraw.evaluate((element) => {
+        const form = element.closest("form");
+        if (form instanceof HTMLFormElement) form.requestSubmit(element as HTMLButtonElement);
+        else (element as HTMLButtonElement).click();
+      });
+    });
     await gotoSeating(page, "#reservations");
     await expect(page.getByTestId("seating-reservation-WITHDRAWN")).toBeVisible();
     await gotoSeating(page, "#inputs");

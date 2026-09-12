@@ -40,6 +40,7 @@ export type SeatingWorkspaceView = SeatingWorkspaceProjection & {
     unseated?: number;
     stale: boolean;
     validatorVerdict?: string;
+    validatorVersion?: string;
     violatedSummary?: string;
   }>;
   reviews: Array<{ id: string; domain: string; decision: string; reviewerLabel: string; reason: string; createdAt: string }>;

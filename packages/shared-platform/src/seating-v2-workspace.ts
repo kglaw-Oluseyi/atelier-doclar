@@ -6,6 +6,7 @@ import {
   seatingV2EvalReadiness,
 } from "./seating-evaluation-v2-schemas.js";
 import { snapshotGuestCohortAdapter, snapshotLayoutAdapter } from "./seating-adapters.js";
+import { SEATING_V2_VALIDATOR_VERSION } from "./seating-v2-schemas.js";
 import type { SeatingDisclosure, SeatingWorkspaceView } from "./seating-workspace.js";
 import type { SeatingV2State } from "./seating-v2-state.js";
 import type { PlatformSnapshot } from "./store.js";
@@ -188,7 +189,8 @@ export function buildSeatingV2Workspace(
         seated: state.runAssignments.filter((row) => row.runId === item.id && row.state === "SEATED").length,
         unseated: state.runAssignments.filter((row) => row.runId === item.id && row.state === "UNSEATED").length,
         stale: Boolean(pkg && item.packageId !== pkg.id),
-        validatorVerdict: report?.verdict,
+        validatorVerdict: report?.validatorVersion === SEATING_V2_VALIDATOR_VERSION ? report.verdict : undefined,
+        validatorVersion: report?.validatorVersion,
         violatedSummary: violatedSummary || undefined,
       };
     }),
