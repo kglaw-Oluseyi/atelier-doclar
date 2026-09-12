@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { PlatformError } from "@maison-doclar/shared-platform";
 import { ActionResultBanner } from "../../../../../components/action-result-banner";
 import { AtelierPageHeader } from "../../../../../components/atelier-page-header";
@@ -64,8 +65,13 @@ export default async function EventVenuePage({
       <AtelierPageHeader
         eyebrow={`Event venue · ${scoped.event.name}`}
         title="Venue adoption and spatial setup"
-        lede="Adopt a reusable venue into this event, record event-only overrides, and open blank layout setup. Seating allocation is not available."
+        lede="Adopt a reusable venue into this event, record event-only overrides, and open blank layout setup. Open Seating Command after a current layout is published."
       />
+      <p className="actions">
+        <Link className="button secondary" href={`/app/events/${eventId}/seating`}>
+          Seating Command
+        </Link>
+      </p>
       <AtelierSectionTabs
         label="Event venue sections"
         items={[

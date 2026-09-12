@@ -2339,3 +2339,31 @@ body.atelier {
 .atelier-state h2 {
   scroll-margin-top: 4.75rem;
 }
+
+.seating-tabs {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.seating-metric-cards,
+.seating-studio-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  min-width: 0;
+}
+
+#overview,
+#inputs,
+#rules,
+#reservations,
+#runs,
+#studio,
+#review,
+#publication {
+  scroll-margin-top: 4.75rem;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}

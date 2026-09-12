@@ -5,6 +5,7 @@ import {
   LOCAL_STORE_PRODUCTION_STATUS,
   PlatformService,
   PostgresPlatformStore,
+  applyS06SeatingLayoutIfMissing,
   applySyntheticSeedIfNeeded,
   applySyntheticSnapshot,
   ensureEosS05ACollections,
@@ -50,10 +51,19 @@ function platformOptions() {
   };
 }
 
+function seedSeatingLayout(store: PlatformStore, service: PlatformService): void {
+  try {
+    applyS06SeatingLayoutIfMissing(store, service);
+  } catch {
+    // Missing layout remains an honest seating blocker; seed must not prevent boot.
+  }
+}
+
 function fileRuntime(): Runtime {
   const store = new FileBackedPlatformStore(storePath());
   const options = platformOptions();
   const service = applySyntheticSnapshot(store, options);
+  seedSeatingLayout(store, service);
   return {
     service,
     store,
@@ -100,6 +110,7 @@ async function postgresRuntime(): Promise<Runtime> {
     ensureEosS05ACollections(store);
     ensureEosS05BCollections(store);
   }
+  if (fixturesAllowed()) seedSeatingLayout(store, seeded.service);
   await store.flush();
   return {
     service: seeded.service,

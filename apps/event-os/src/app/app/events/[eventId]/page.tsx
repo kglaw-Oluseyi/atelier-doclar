@@ -70,6 +70,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
         <Link className="button secondary" href={`/app/events/${event.id}/venue`}>
           Venue and layout
         </Link>
+        <Link className="button secondary" href={`/app/events/${event.id}/seating`}>
+          Seating
+        </Link>
         <Link className="button secondary" href={`/app/events/${event.id}/rsvp`}>
           RSVP
         </Link>

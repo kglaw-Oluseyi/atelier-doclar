@@ -95,7 +95,7 @@ export default async function LayoutDetailPage({
         eyebrow={`Layout setup · ${scoped.event.name}`}
         title={workspace.layout.name}
         titleClamp
-        lede="Authoritative millimetre geometry with a typed studio projection, validation, snapshots and immutable publication. Refresh after a conflict before retrying. Seating allocation is not available."
+        lede="Authoritative millimetre geometry with a typed studio projection, validation, snapshots and immutable publication. Refresh after a conflict before retrying. Seating Command uses the current publication only."
       />
       <ActionResultBanner
         presented={presented}
