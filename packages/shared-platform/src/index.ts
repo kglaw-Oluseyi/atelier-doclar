@@ -1033,6 +1033,16 @@ export { PostgresSeatingV2Repository } from "./postgres-seating-v2-store.js";
 export type { SeatingRepository, SeatingTransaction } from "./seating-repository.js";
 export { SeatingCommandService } from "./seating-command-service.js";
 export { SeatingV2CommandService } from "./seating-v2-command-service.js";
+export {
+  bindSettlementResult,
+  clearSettlementTraces,
+  emitSettlementStage,
+  listSettlementTraces,
+  runWithSettlementTrace,
+  settlementCommandIdFromIdempotency,
+  withSettlementTransaction,
+} from "./seating-settlement-trace.js";
+export type { SeatingSettlementStage, SeatingSettlementTrace } from "./seating-settlement-trace.js";
 export { seatingV2ReplacementEnabled } from "./seating-v2-flag.js";
 export { LEGACY_S06_PUBLICATION_LABEL } from "./seating-v2-workspace.js";
 export type { SeatingV2RuleContent } from "./seating-v2-schemas.js";

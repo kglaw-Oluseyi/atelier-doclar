@@ -1,4 +1,5 @@
 import "server-only";
+import { emitSettlementStage } from "@maison-doclar/shared-platform";
 import { cookies } from "next/headers";
 import { cookieSecure, sessionConfig } from "./config";
 import {
@@ -51,6 +52,15 @@ export async function writeActionResult(result: ActionResult): Promise<void> {
   rememberActionResult(result);
   const signed = signActionResult(result, sessionConfig().sessionSecret);
   (await cookies()).set(actionResultSetCookie(signed));
+  const recalled = recallActionResult(result.correlationId);
+  emitSettlementStage({
+    stage: "ACTION_RESULT_WRITTEN",
+    resultId: result.correlationId,
+    commandType: result.actionType,
+    eventId: result.eventId,
+    outcome: result.application,
+    reasonClass: recalled?.correlationId === result.correlationId ? "RECALL_HIT" : "RECALL_MISS",
+  });
 }
 
 export async function consumeActionFlash(): Promise<void> {

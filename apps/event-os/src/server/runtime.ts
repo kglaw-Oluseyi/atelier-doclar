@@ -32,7 +32,12 @@ interface Runtime {
 const globalStore = globalThis as typeof globalThis & {
   __eventOsRuntime?: Runtime;
   __eventOsRuntimeBoot?: Promise<Runtime>;
+  __eventOsPoolSnapshot?: { acquireMs: number; total: number; idle: number; waiting: number };
 };
+
+export function readPoolSnapshot(): { acquireMs: number; total: number; idle: number; waiting: number } {
+  return globalStore.__eventOsPoolSnapshot ?? { acquireMs: 0, total: 0, idle: 0, waiting: 0 };
+}
 
 function storePath(): string {
   return join(process.cwd(), "data", "event-os-non-production.json");
@@ -87,7 +92,15 @@ async function postgresRuntime(): Promise<Runtime> {
   const client = {
     ...adapt(pool),
     async transaction<T>(fn: (queryable: PgQueryable) => Promise<T>): Promise<T> {
+      const acquireStarted = Date.now();
       const connected = await pool.connect();
+      const acquireMs = Date.now() - acquireStarted;
+      globalStore.__eventOsPoolSnapshot = {
+        acquireMs,
+        total: pool.totalCount,
+        idle: pool.idleCount,
+        waiting: pool.waitingCount,
+      };
       try {
         await connected.query("BEGIN");
         const result = await fn(adapt(connected));

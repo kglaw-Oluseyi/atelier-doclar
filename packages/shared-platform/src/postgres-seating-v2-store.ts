@@ -1,4 +1,5 @@
 import { PlatformError } from "./errors.js";
+import { withSettlementTransaction } from "./seating-settlement-trace.js";
 import type { AuditEvent } from "./schemas.js";
 import type { PgQueryable, PgTransactor } from "./postgres-schema.js";
 import { seatingRecordFromRow, seatingRowFromRecord } from "./postgres-seating-store.js";
@@ -301,9 +302,12 @@ export class PostgresSeatingV2Repository implements SeatingV2Repository {
 
   async transaction<T>(fn: (tx: SeatingV2Transaction) => Promise<T>): Promise<T> {
     if (!hasTransaction(this.client)) {
-      return fn(new PostgresSeatingV2Transaction(this.client));
+      return withSettlementTransaction("seating-v2-memory-fallback", () => fn(new PostgresSeatingV2Transaction(this.client)));
     }
-    return this.client.transaction((inner) => fn(new PostgresSeatingV2Transaction(inner)));
+    const transactor = this.client;
+    return withSettlementTransaction("seating-v2-postgres", () =>
+      transactor.transaction((inner) => fn(new PostgresSeatingV2Transaction(inner))),
+    );
   }
 
   async projectEvent(_actor: SeatingV2ActorContext, eventId: string): Promise<SeatingV2EventProjection> {

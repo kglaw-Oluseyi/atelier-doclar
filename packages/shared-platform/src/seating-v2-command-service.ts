@@ -30,6 +30,7 @@ import {
   SEATING_V2_VALIDATOR_VERSION,
   type SeatingV2RuleContent,
 } from "./seating-v2-schemas.js";
+import { emitSettlementStage } from "./seating-settlement-trace.js";
 import { solveSeatingV2Compiled } from "./seating-v2-solver-adapter.js";
 import type {
   SeatingV2CompiledRequestRecord,
@@ -703,7 +704,16 @@ export class SeatingV2CommandService {
       }
       let solved;
       try {
+        emitSettlementStage({ stage: "SOLVER_START", commandType: "seating.run.launch", eventId: envelope.eventId });
+        const solverStarted = Date.now();
         solved = solveSeatingV2Compiled(compiled.request);
+        emitSettlementStage({
+          stage: "SOLVER_TERMINAL",
+          commandType: "seating.run.launch",
+          eventId: envelope.eventId,
+          durationMs: Date.now() - solverStarted,
+          reasonClass: solved.solverClaim,
+        });
       } catch {
         throw new PlatformError("VALIDATION_FAILED", "solver failed", {
           publicMessage: "The seating solver could not complete this package.",
@@ -744,6 +754,14 @@ export class SeatingV2CommandService {
       };
       try {
       await tx.insert("runs", run);
+      emitSettlementStage({
+        stage: "RUN_QUEUED",
+        runId: run.id,
+        commandType: "seating.run.launch",
+        eventId: envelope.eventId,
+        reasonClass: run.status,
+        outcome: "APPLIED",
+      });
       for (const assignment of solved.assignments) {
         await tx.insert("runAssignments", {
           id: randomUUID(),

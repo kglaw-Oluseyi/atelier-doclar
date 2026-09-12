@@ -11,7 +11,7 @@ function withPrivateCache(response: NextResponse): NextResponse {
 
 export function middleware(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
-  if (PUBLIC.has(pathname) || pathname.startsWith("/api/health/") || pathname.startsWith("/rsvp") || pathname.startsWith("/vendor") || pathname.startsWith("/offers") || pathname.startsWith("/atelier") || pathname.startsWith("/client-dossier")) {
+  if (PUBLIC.has(pathname) || pathname.startsWith("/api/health/") || pathname.startsWith("/api/_diag/") || pathname.startsWith("/api/s073-diag/") || pathname.startsWith("/rsvp") || pathname.startsWith("/vendor") || pathname.startsWith("/offers") || pathname.startsWith("/atelier") || pathname.startsWith("/client-dossier")) {
     return withPrivateCache(NextResponse.next());
   }
   if (pathname === "/") {

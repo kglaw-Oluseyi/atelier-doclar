@@ -1,4 +1,5 @@
 import { PlatformError } from "./errors.js";
+import { withSettlementTransaction } from "./seating-settlement-trace.js";
 import type { AuditEvent } from "./schemas.js";
 import {
   assertSeatingV2Scope,
@@ -329,23 +330,25 @@ export class MemorySeatingV2Repository implements SeatingV2Repository {
   }
 
   async transaction<T>(fn: (tx: SeatingV2Transaction) => Promise<T>): Promise<T> {
-    let release!: () => void;
-    const previous = this.chain;
-    this.chain = new Promise<void>((resolve) => {
-      release = resolve;
+    return withSettlementTransaction("seating-v2-memory", async () => {
+      let release!: () => void;
+      const previous = this.chain;
+      this.chain = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      await previous;
+      const working = new MemorySeatingV2Store();
+      working.replaceState(this.store.snapshot());
+      working.replaceAudit(this.store.audit);
+      try {
+        const result = await fn(new MemorySeatingV2Transaction(working));
+        this.store.replaceState(working.snapshot());
+        this.store.replaceAudit(working.audit);
+        return result;
+      } finally {
+        release();
+      }
     });
-    await previous;
-    const working = new MemorySeatingV2Store();
-    working.replaceState(this.store.snapshot());
-    working.replaceAudit(this.store.audit);
-    try {
-      const result = await fn(new MemorySeatingV2Transaction(working));
-      this.store.replaceState(working.snapshot());
-      this.store.replaceAudit(working.audit);
-      return result;
-    } finally {
-      release();
-    }
   }
 
   async projectEvent(_actor: SeatingV2ActorContext, eventId: string): Promise<SeatingV2EventProjection> {

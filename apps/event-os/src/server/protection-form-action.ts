@@ -2,9 +2,13 @@
 
 import { redirect } from "next/navigation";
 import {
+  bindSettlementResult,
+  emitSettlementStage,
   platformErrorFromUnknown,
+  runWithSettlementTrace,
   safeAttemptedValues,
   formDataToRecord,
+  settlementCommandIdFromIdempotency,
   validationFormState,
   type ProtectionFormState,
   type ProtectionFieldErrors,
@@ -42,61 +46,86 @@ export async function runProtectionFormAction(input: {
   ) => { id?: string } | void | Promise<{ id?: string } | void>;
 }): Promise<ProtectionFormState> {
   const attempted = attemptedFromForm(input.formData);
-  await ensureRuntime();
-  const { actor } = await requireActor();
-  const correlationId = actor.correlationId;
-  const parsed = input.parse?.(input.formData);
-  if (parsed && !parsed.success) {
-    return validationFormState({
-      fieldErrors: parsed.fieldErrors,
-      attemptedValues: attempted.values,
-      sensitiveCleared: attempted.sensitiveCleared,
-      correlationId,
+  const requestId = crypto.randomUUID();
+  const commandId = settlementCommandIdFromIdempotency(String(input.formData.get("idempotencyKey") ?? ""), requestId);
+  const eventId = String(input.formData.get("eventId") ?? "") || undefined;
+  return runWithSettlementTrace({ commandId, requestId, commandType: input.actionType, eventId }, async () => {
+    emitSettlementStage({ stage: "HTTP_RECEIVED", commandType: input.actionType, eventId });
+    await ensureRuntime();
+    const { actor } = await requireActor();
+    const correlationId = actor.correlationId;
+    bindSettlementResult(correlationId);
+    emitSettlementStage({
+      stage: "ACTION_ENTER",
+      resultId: correlationId,
+      commandType: input.actionType,
+      eventId,
     });
-  }
-  try {
-    const outcome = await runDurableProtectionMutation(async () => {
-      const result = await input.execute(actor, input.formData);
-      const effect = getRuntime().service.consumeLastMutationEffect();
-      return {
-        result,
-        application: effect?.application,
-        didDataChange: effect?.didDataChange,
-      };
-    }, withDurable);
-
-    await writeTruthfulActionResult({
-      status: "SUCCESS",
-      code: "SUCCESS",
-      application: outcome.application,
-      didDataChange: outcome.didDataChange,
-      persist: async () =>
-        writeActionResult(
-          buildActionResult({
-            sessionHash: sessionHashFromToken((await readStaffSessionCookie()) ?? ""),
-            actorPersonId: actor.personId,
-            scopePath: input.scopePath,
-            actionType: input.actionType,
-            correlationId,
-            status: "SUCCESS",
-            code: "SUCCESS",
-            message: (outcome.application === "REPLAYED" ? "No change. This command was already applied." : "Protection command applied.").slice(0, 400),
-            application: outcome.application,
-            didDataChange: outcome.didDataChange,
-            eventId: String(input.formData.get("eventId") ?? "") || undefined,
-            organisationId: String(input.formData.get("organisationId") ?? "") || undefined,
-          }),
-        ),
-    });
-    redirect(
-      resultHref(
-        input.scopePath,
+    const parsed = input.parse?.(input.formData);
+    if (parsed && !parsed.success) {
+      return validationFormState({
+        fieldErrors: parsed.fieldErrors,
+        attemptedValues: attempted.values,
+        sensitiveCleared: attempted.sensitiveCleared,
         correlationId,
-        outcome.result && "id" in (outcome.result ?? {}) ? { subjectId: String((outcome.result as { id?: string }).id ?? "") } : undefined,
-      ),
-    );
-  } catch (error) {
-    if (isNextRedirect(error)) throw error;
+      });
+    }
+    try {
+      const outcome = await runDurableProtectionMutation(async () => {
+        const result = await input.execute(actor, input.formData);
+        const effect = getRuntime().service.consumeLastMutationEffect();
+        return {
+          result,
+          application: effect?.application,
+          didDataChange: effect?.didDataChange,
+        };
+      }, withDurable);
+
+      await writeTruthfulActionResult({
+        status: "SUCCESS",
+        code: "SUCCESS",
+        application: outcome.application,
+        didDataChange: outcome.didDataChange,
+        persist: async () =>
+          writeActionResult(
+            buildActionResult({
+              sessionHash: sessionHashFromToken((await readStaffSessionCookie()) ?? ""),
+              actorPersonId: actor.personId,
+              scopePath: input.scopePath,
+              actionType: input.actionType,
+              correlationId,
+              status: "SUCCESS",
+              code: "SUCCESS",
+              message: (outcome.application === "REPLAYED" ? "No change. This command was already applied." : "Protection command applied.").slice(0, 400),
+              application: outcome.application,
+              didDataChange: outcome.didDataChange,
+              eventId: String(input.formData.get("eventId") ?? "") || undefined,
+              organisationId: String(input.formData.get("organisationId") ?? "") || undefined,
+            }),
+          ),
+      });
+      emitSettlementStage({
+        stage: "REDIRECT_EMITTED",
+        resultId: correlationId,
+        outcome: outcome.application,
+        reasonClass: "SUCCESS",
+      });
+      redirect(
+        resultHref(
+          input.scopePath,
+          correlationId,
+          outcome.result && "id" in (outcome.result ?? {}) ? { subjectId: String((outcome.result as { id?: string }).id ?? "") } : undefined,
+        ),
+      );
+    } catch (error) {
+      if (isNextRedirect(error)) {
+        emitSettlementStage({
+          stage: "HTTP_RESPONSE",
+          resultId: correlationId,
+          reasonClass: "NEXT_REDIRECT",
+        });
+        throw error;
+      }
     const normalised = platformErrorFromUnknown(error);
     if (normalised.code === "VALIDATION_FAILED") {
       const field = normalised.field === "nextReviewAt" ? "nextReviewOn" : normalised.field ?? "form";
@@ -146,6 +175,13 @@ export async function runProtectionFormAction(input: {
           }),
         ),
     });
+    emitSettlementStage({
+      stage: "REDIRECT_EMITTED",
+      resultId: correlationId,
+      outcome: "NOT_APPLIED",
+      reasonClass: classified.code,
+    });
     redirect(resultHref(input.scopePath, correlationId));
-  }
+    }
+  });
 }

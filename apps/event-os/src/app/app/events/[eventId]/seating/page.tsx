@@ -32,7 +32,7 @@ import {
 } from "../../../../../server/seating-actions";
 import { switchSeatingVerifyAsAction } from "../../../../../server/seating-verify-as-action";
 import { eventOsVerifyAsAvailable } from "../../../../../server/seating-verify-as";
-import { LEGACY_S06_PUBLICATION_LABEL, PlatformError, seatingV2ReplacementEnabled } from "@maison-doclar/shared-platform";
+import { emitSettlementStage, LEGACY_S06_PUBLICATION_LABEL, PlatformError, seatingV2ReplacementEnabled } from "@maison-doclar/shared-platform";
 import { activateSeatingRuleAction, withdrawSeatingRuleAction } from "../../../../../server/seating-actions";
 
 function Envelope({ fields }: { fields: Record<string, string | number> }) {
@@ -168,6 +168,15 @@ export default async function EventSeatingPage({
     eventId: event.id,
   });
   const actionResultMs = Date.now() - actionResultStarted;
+  const resultId = typeof query.result === "string" ? query.result : undefined;
+  emitSettlementStage({
+    stage: presented.correlationId && resultId && presented.correlationId === resultId ? "RENDER_RESULT_FOUND" : "RENDER_RESULT_MISSING",
+    commandId: resultId,
+    resultId,
+    eventId: event.id,
+    durationMs: actionResultMs,
+    reasonClass: presented.correlationId ? "PRESENTED" : "ABSENT",
+  });
   const envelopeFields = { organisationId: organisation.id, eventId: event.id, assignmentId };
   const working = workspace.workingEdition as { id?: string; contentHash?: string; status?: string; version?: number } | undefined;
   const input = workspace.inputEdition as { id?: string; contentHash?: string } | undefined;
