@@ -224,15 +224,22 @@ test.describe("CURSOR-S06V2-S072 live gates", () => {
     const director = await openStaffContext(browser, "director");
     try {
       await gotoSeating(director.page, "#rules");
-      const activate = director.page.locator("#rules").getByRole("button", { name: "Activate" }).first();
-      await expect(activate).toBeVisible({ timeout: 20_000 });
-      await timedAction(director.page, label, async () => {
-        await activate.evaluate((element) => {
-          const form = element.closest("form");
-          if (form instanceof HTMLFormElement) form.requestSubmit(element as HTMLButtonElement);
-          else (element as HTMLButtonElement).click();
+      const count = await director.page.locator("#rules").getByRole("button", { name: "Activate" }).count();
+      expect(count).toBeGreaterThan(0);
+      for (let index = 0; index < count; index += 1) {
+        await gotoSeating(director.page, "#rules");
+        const remaining = await director.page.locator("#rules").getByRole("button", { name: "Activate" }).count();
+        if (!remaining) break;
+        const activate = director.page.locator("#rules").getByRole("button", { name: "Activate" }).first();
+        await expect(activate).toBeVisible({ timeout: 20_000 });
+        await timedAction(director.page, `${label}-${index + 1}`, async () => {
+          await activate.evaluate((element) => {
+            const form = element.closest("form");
+            if (form instanceof HTMLFormElement) form.requestSubmit(element as HTMLButtonElement);
+            else (element as HTMLButtonElement).click();
+          });
         });
-      });
+      }
     } finally {
       await director.context.close();
     }

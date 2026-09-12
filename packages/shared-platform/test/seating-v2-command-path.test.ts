@@ -344,4 +344,29 @@ describe("EOS-S06 V2 command path", () => {
     assert.ok(editionIds.has(first.value.id));
     assert.ok(editionIds.has(second.value.id));
   });
+
+  it("exposes the latest frozen package for launch after a working edition exists", async () => {
+    const { service, store } = fixtureService();
+    prepareSurface(service, store);
+    const guestA = attendingGuest(service, "Eve", "s072-latest-a");
+    const guestB = attendingGuest(service, "Fay", "s072-latest-b");
+    const v2 = service.seatingV2Commands();
+    const draft = await v2.createRule(planner(), envelope(people.assignPlanner, "s072-latest-create-01"), keepApart(guestA.id, guestB.id));
+    await v2.activateRule(director(), envelope(people.assignDirector, "s072-latest-act-01"), { editionId: draft.value.id });
+    const first = await v2.freezePackage(planner(), envelope(people.assignPlanner, "s072-latest-freeze-01"), { seed: "seed-latest-1" });
+    const run = await v2.launchRun(planner(), envelope(people.assignPlanner, "s072-latest-run-01"), { packageId: first.value.id });
+    let adopted = false;
+    if (run.value.status === "FEASIBLE") {
+      await v2.adoptRun(planner(), envelope(people.assignPlanner, "s072-latest-adopt-01"), { runId: run.value.id });
+      adopted = true;
+    }
+    const next = await v2.createRule(planner(), envelope(people.assignPlanner, "s072-latest-create-02"), keepApart(guestA.id, guestB.id, "PROTOCOL"));
+    await v2.activateRule(director(), envelope(people.assignDirector, "s072-latest-act-02"), { editionId: next.value.id });
+    const second = await v2.freezePackage(planner(), envelope(people.assignPlanner, "s072-latest-freeze-02"), { seed: "seed-latest-2" });
+    assert.notEqual(second.value.id, first.value.id);
+    const workspace = await v2.projectWorkspace(planner(), people.eventAlphaOne);
+    assert.equal(workspace.inputEdition?.id, second.value.id);
+    assert.equal(workspace.inputEdition?.contentHash, second.value.contentHash);
+    if (adopted) assert.equal(workspace.inputFreshness, "STALE");
+  });
 });

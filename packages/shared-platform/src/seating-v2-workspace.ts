@@ -24,7 +24,13 @@ export function buildSeatingV2Workspace(
   const submitted = state.planEditions.find((item) => item.id === currentPointer?.submittedEditionId)
     ?? state.planEditions.filter((item) => item.eventId === eventId && item.status === "SUBMITTED").at(-1);
   const edition = submitted ?? working;
-  const pkg = edition ? state.inputPackages.find((item) => item.id === edition.packageId) : state.inputPackages.filter((item) => item.eventId === eventId).at(-1);
+  const eventPackages = state.inputPackages
+    .filter((item) => item.eventId === eventId)
+    .sort((left, right) => left.createdAt.localeCompare(right.createdAt));
+  const latestPkg = eventPackages.at(-1);
+  const editionPkg = edition ? state.inputPackages.find((item) => item.id === edition.packageId) : undefined;
+  const packageDrifted = Boolean(edition && latestPkg && edition.packageId !== latestPkg.id);
+  const pkg = latestPkg ?? editionPkg;
   const assignments = edition ? state.planAssignments.filter((item) => item.planEditionId === edition.id) : [];
   const cohort = snapshotGuestCohortAdapter(snap, eventId);
   let layout: ReturnType<typeof snapshotLayoutAdapter> | undefined;
@@ -36,7 +42,7 @@ export function buildSeatingV2Workspace(
   const rules = state.ruleEditions.filter((item) => item.eventId === eventId);
   const runs = state.runs.filter((item) => item.eventId === eventId);
   const evalRun = state.evaluationRuns.at(-1);
-  const inputFreshness = !layout ? "MISSING" : !pkg ? "MISSING" : "CURRENT";
+  const inputFreshness = !layout ? "MISSING" : !pkg ? "MISSING" : packageDrifted ? "STALE" : "CURRENT";
   const guests = cohort.guests.map((guest) => {
     const person = snap.operationalGuests.find((item) => item.id === guest.eventGuestId);
     const seated = assignments.find((item) => item.eventGuestId === guest.eventGuestId);
@@ -57,10 +63,21 @@ export function buildSeatingV2Workspace(
   }));
   const attention: SeatingWorkspaceView["attention"] = [];
   if (!pkg) attention.push({ kind: "blocker", message: "Freeze a V2 input package before solving.", href: "#inputs" });
+  if (packageDrifted) {
+    attention.push({ kind: "stale", message: "Upstream event information changed. Review and run again.", href: "#inputs" });
+  }
   if (evalRun && seatingV2EvalReadiness(evalRun) !== "RELEASE_READY") {
     attention.push({ kind: "warning", message: "s06-eval-v2 is not release-ready.", href: "#overview" });
   }
-  const nextAction = !pkg ? "Freeze inputs" : !edition ? "Launch and adopt a validator-FEASIBLE run" : edition.status === "WORKING" ? "Submit the working edition" : edition.status === "SUBMITTED" ? "Record required reviews and approve" : "Publish a distinct CEO decision";
+  const nextAction = !pkg
+    ? "Freeze inputs"
+    : packageDrifted || !edition
+      ? "Launch and adopt a validator-FEASIBLE run"
+      : edition.status === "WORKING"
+        ? "Submit the working edition"
+        : edition.status === "SUBMITTED"
+          ? "Record required reviews and approve"
+          : "Publish a distinct CEO decision";
   return {
     eventId,
     organisationId,
@@ -105,7 +122,7 @@ export function buildSeatingV2Workspace(
         resultHash: item.assignmentsHash ?? undefined,
         seated: state.runAssignments.filter((row) => row.runId === item.id && row.state === "SEATED").length,
         unseated: state.runAssignments.filter((row) => row.runId === item.id && row.state === "UNSEATED").length,
-        stale: false,
+        stale: Boolean(pkg && item.packageId !== pkg.id),
         validatorVerdict: report?.verdict,
       };
     }),
