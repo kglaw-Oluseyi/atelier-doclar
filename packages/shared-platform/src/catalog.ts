@@ -700,6 +700,8 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
   RISK_GOVERNANCE_REVIEWER: [
     "organisation.view",
     "assignment.view",
+    "event.list",
+    "event.view",
     "risk.catalogue.view",
     "risk.rule.review",
     "risk.rule.approve",

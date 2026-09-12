@@ -47,6 +47,7 @@ export const FIXTURE_IDS = {
   assignAuditor: "00000000-0000-4000-8000-000000000065",
   assignOther: "00000000-0000-4000-8000-000000000066",
   assignRiskReviewer: "00000000-0000-4000-8000-000000000067",
+  assignRiskReviewerAlphaOne: "00000000-0000-4000-8000-000000000068",
 } as const;
 
 const AT = "2026-09-05T14:00:00.000Z";
@@ -280,6 +281,10 @@ export function fixtureAssignments(): Assignment[] {
     assignment(FIXTURE_IDS.assignAdmin, FIXTURE_IDS.orgMaison, FIXTURE_IDS.personAdmin, "SYSTEM_ADMINISTRATOR", {}),
     assignment(FIXTURE_IDS.assignAuditor, FIXTURE_IDS.orgMaison, FIXTURE_IDS.personAuditor, "READ_ONLY_AUDITOR", {}),
     assignment(FIXTURE_IDS.assignRiskReviewer, FIXTURE_IDS.orgMaison, FIXTURE_IDS.personRiskReviewer, "RISK_GOVERNANCE_REVIEWER", {}),
+    assignment(FIXTURE_IDS.assignRiskReviewerAlphaOne, FIXTURE_IDS.orgMaison, FIXTURE_IDS.personRiskReviewer, "RISK_GOVERNANCE_REVIEWER", {
+      eventId: FIXTURE_IDS.eventAlphaOne,
+      clientId: FIXTURE_IDS.clientAlpha,
+    }),
     assignment(FIXTURE_IDS.assignOther, FIXTURE_IDS.orgOther, FIXTURE_IDS.personOtherOrg, "CEO", {}),
   ];
 }

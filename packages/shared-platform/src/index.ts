@@ -1009,7 +1009,7 @@ export { PostgresSeatingRepository } from "./postgres-seating-store.js";
 export type { SeatingRepository, SeatingTransaction } from "./seating-repository.js";
 export { SeatingCommandService } from "./seating-command-service.js";
 export { snapshotGuestCohortAdapter, snapshotLayoutAdapter, seatingToken } from "./seating-adapters.js";
-export { buildSeatingWorkspace, seatingDisclosureForRole } from "./seating-workspace.js";
+export { buildSeatingWorkspace, implicatedSeatingReviewDomains, seatingDisclosureForRole } from "./seating-workspace.js";
 export { executeS06Evaluation } from "./seating-evaluation-runner.js";
 export {
   S06_CASE_IDS,

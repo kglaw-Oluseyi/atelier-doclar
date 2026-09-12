@@ -1,6 +1,13 @@
 import { authorize, type Person } from "@maison-doclar/shared-platform";
 import { getRuntime } from "./runtime";
 
+export function preferredSeatingAssignment(personId: string, organisationId: string, eventId: string) {
+  const assignments = getRuntime()
+    .service.resolveActor(personId)
+    .assignments.filter((item) => item.status === "ACTIVE" && item.organisationId === organisationId);
+  return assignments.find((item) => item.eventId === eventId) ?? assignments.find((item) => !item.eventId);
+}
+
 export function seatingPermissions(person: Person, organisationId: string, eventId: string) {
   const actorSnap = getRuntime().service.resolveActor(person.id);
   const scope = { organisationId, eventId };

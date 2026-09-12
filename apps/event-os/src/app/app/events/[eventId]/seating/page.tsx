@@ -8,7 +8,7 @@ import { ProtectionMutationForm } from "../../../../../components/protection-mut
 import { loadPresentedActionResult } from "../../../../../server/action-flash";
 import { guardedActor } from "../../../../../server/guard";
 import { getRuntime } from "../../../../../server/runtime";
-import { seatingPermissions } from "../../../../../server/seating-scope";
+import { preferredSeatingAssignment, seatingPermissions } from "../../../../../server/seating-scope";
 import { operationalStateFromCode } from "../../../../../server/operational-state";
 import {
   adoptSeatingRunAction,
@@ -70,8 +70,15 @@ export default async function EventSeatingPage({
       return [];
     }
   });
-  const event = events.find((item) => item.id === eventId);
+  let event = events.find((item) => item.id === eventId);
   const organisation = organisations.find((item) => item.id === event?.organisationId) ?? organisations[0];
+  if (!event && organisation) {
+    try {
+      event = runtime.service.getEvent(actor, organisation.id, eventId);
+    } catch {
+      event = undefined;
+    }
+  }
   if (!event || !organisation) {
     const denialOrg = organisations[0];
     const denied = denialOrg ? !seatingPermissions(person, denialOrg.id, eventId).view : true;
@@ -105,8 +112,7 @@ export default async function EventSeatingPage({
       </AppShell>
     );
   }
-  const assignmentId =
-    runtime.service.resolveActor(person.id).assignments.find((item) => item.eventId === event.id || !item.eventId)?.id ?? "";
+  const assignmentId = preferredSeatingAssignment(person.id, organisation.id, event.id)?.id ?? "";
   const presented = await loadPresentedActionResult({
     requestPath: `/app/events/${event.id}/seating`,
     resultId: typeof query.result === "string" ? query.result : undefined,
@@ -496,7 +502,17 @@ export default async function EventSeatingPage({
 
       <section id="review" className="atelier-panel" data-testid="seating-review">
         <h2>Review</h2>
-        <p>Working edition hash: {working?.contentHash ?? "None"}</p>
+        <p data-testid="seating-review-event">{event.name} · {working ? `${working.status} working edition` : "No working edition"}</p>
+        <p data-testid="seating-review-requirement">{workspace.reviewRequirementCopy}</p>
+        <ul data-testid="seating-review-evidence">
+          {workspace.constraints.filter((item) => item.reviewDomain && workspace.implicatedReviewDomains.includes(item.reviewDomain as "PROTOCOL" | "ACCESSIBILITY" | "SECURITY")).map((item) => (
+            <li key={item.id}>{item.reviewDomain} · {item.preview} · {item.status}</li>
+          ))}
+        </ul>
+        <details>
+          <summary>Plan hash provenance</summary>
+          <p data-testid="seating-plan-hash">Working edition hash: {working?.contentHash ?? "None"}</p>
+        </details>
         <h3>Manual decisions</h3>
         <ul>{workspace.decisions.map((item) => <li key={item.id}>{item.command} · {item.reasonCode}</li>)}</ul>
         <h3>Specialist reviews</h3>
@@ -508,23 +524,23 @@ export default async function EventSeatingPage({
             <button type="submit" className="button">Submit seating plan</button>
           </ProtectionMutationForm>
         ) : null}
-        {(permissions.reviewProtocol || permissions.reviewAccessibility || permissions.reviewSecurity) && working ? (
-          <ProtectionMutationForm action={decideSeatingReviewAction} className="atelier-form">
-            <Envelope fields={{ ...envelopeFields, editionId: working.id ?? "", editionHash: working.contentHash ?? "" }} />
+        {(permissions.reviewProtocol || permissions.reviewAccessibility || permissions.reviewSecurity) && working?.status === "SUBMITTED" && workspace.implicatedReviewDomains.length ? (
+          <ProtectionMutationForm action={decideSeatingReviewAction} className="atelier-form" testId="seating-review-form">
+            <Envelope fields={{ ...envelopeFields, editionId: working.id ?? "", editionHash: working.contentHash ?? "", expectedVersion: working.version ?? 0 }} />
             <IdempotencyField />
             <label>
               Domain
               <select name="domain" required>
-                {permissions.reviewProtocol ? <option value="PROTOCOL">Protocol</option> : null}
-                {permissions.reviewAccessibility ? <option value="ACCESSIBILITY">Accessibility</option> : null}
-                {permissions.reviewSecurity ? <option value="SECURITY">Security</option> : null}
+                {workspace.implicatedReviewDomains.includes("PROTOCOL") && permissions.reviewProtocol ? <option value="PROTOCOL">Protocol</option> : null}
+                {workspace.implicatedReviewDomains.includes("ACCESSIBILITY") && permissions.reviewAccessibility ? <option value="ACCESSIBILITY">Accessibility</option> : null}
+                {workspace.implicatedReviewDomains.includes("SECURITY") && permissions.reviewSecurity ? <option value="SECURITY">Security</option> : null}
               </select>
             </label>
             <label>
               Decision
               <select name="decision" required>
                 <option value="APPROVED">Approve review</option>
-                <option value="REJECTED">Return</option>
+                <option value="REJECTED">Request correction</option>
               </select>
             </label>
             <label>
@@ -536,7 +552,7 @@ export default async function EventSeatingPage({
         ) : null}
         {permissions.approve && working?.status === "SUBMITTED" ? (
           <ProtectionMutationForm action={decideSeatingApprovalAction} className="actions" testId="seating-approve">
-            <Envelope fields={{ ...envelopeFields, editionId: working.id ?? "", editionHash: working.contentHash ?? "" }} />
+            <Envelope fields={{ ...envelopeFields, editionId: working.id ?? "", editionHash: working.contentHash ?? "", expectedVersion: working.version ?? 0 }} />
             <IdempotencyField />
             <input type="hidden" name="decision" value="APPROVED" />
             <button type="submit" className="button">Approve seating plan</button>

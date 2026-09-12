@@ -13,7 +13,9 @@ export type SeatingWorkspaceView = SeatingWorkspaceProjection & {
   freshnessCopy?: string;
   guests: Array<{ id: string; label: string; eligible: boolean; eligibilityCode: string; seated: boolean; tableLabel?: string }>;
   tables: Array<{ id: string; label: string; capacity: number; seated: number }>;
-  constraints: Array<{ id: string; kind: string; predicateType: string; status: string; preview: string }>;
+  constraints: Array<{ id: string; kind: string; predicateType: string; status: string; preview: string; reviewDomain?: string }>;
+  implicatedReviewDomains: Array<"PROTOCOL" | "ACCESSIBILITY" | "SECURITY">;
+  reviewRequirementCopy: string;
   reservations: Array<{ id: string; setCode: string; releaseState: string; min?: number; max?: number; exact?: number }>;
   runs: Array<{ id: string; status: string; seed: string; resultHash?: string; seated?: number; unseated?: number; stale: boolean }>;
   reviews: Array<{ id: string; domain: string; decision: string; reviewerLabel: string; reason: string; createdAt: string }>;
@@ -28,6 +30,18 @@ export type SeatingWorkspaceView = SeatingWorkspaceProjection & {
   nextAction: string;
   evaluation?: { caseCount: number; status?: string; corpusEdition?: string };
 };
+
+export function implicatedSeatingReviewDomains(
+  state: Pick<SeatingState, "constraints">,
+  eventId: string,
+): Array<"PROTOCOL" | "ACCESSIBILITY" | "SECURITY"> {
+  const named = new Set<"PROTOCOL" | "ACCESSIBILITY" | "SECURITY">();
+  for (const item of state.constraints) {
+    if (item.eventId !== eventId || item.status === "REJECTED" || !item.reviewDomain) continue;
+    named.add(item.reviewDomain);
+  }
+  return (["PROTOCOL", "ACCESSIBILITY", "SECURITY"] as const).filter((domain) => named.has(domain));
+}
 
 function personLabel(snap: PlatformSnapshot, personId: string, disclosure: SeatingDisclosure): string {
   if (disclosure === "AUDITOR") return "Permission-safe reviewer";
@@ -97,11 +111,15 @@ export function buildSeatingWorkspace(
   if (!layout) attention.push({ kind: "blocker", message: "No current layout is published. Freeze cannot start.", href: "#inputs" });
   if (overbooked) attention.push({ kind: "blocker", message: "Reserved minima exceed published capacity.", href: "#reservations" });
   if (inputFreshness === "STALE") attention.push({ kind: "stale", message: "Upstream event information changed. Review and run again.", href: "#inputs" });
+  const implicatedReviewDomains = implicatedSeatingReviewDomains(state, eventId);
   const outstandingReviews = working
-    ? ["PROTOCOL", "ACCESSIBILITY", "SECURITY"].filter(
+    ? implicatedReviewDomains.filter(
         (domain) => !state.reviews.some((item) => item.editionId === working.id && item.domain === domain && item.decision === "APPROVED"),
       )
     : [];
+  const reviewRequirementCopy = implicatedReviewDomains.length
+    ? `This plan requires specialist review for ${implicatedReviewDomains.join(", ")} because coded constraints name those domains.`
+    : "This plan has no specialist review domain. Event Director approval may proceed.";
   if (working?.status === "SUBMITTED" && outstandingReviews.length) {
     attention.push({ kind: "review", message: `Outstanding specialist reviews: ${outstandingReviews.join(", ")}.`, href: "#review" });
   }
@@ -120,9 +138,11 @@ export function buildSeatingWorkspace(
             ? "Adopt a feasible run into a working draft."
             : working.status === "DRAFT"
               ? "Edit in Studio or submit the working edition."
-              : working.status === "SUBMITTED"
-                ? "Complete specialist review and Event Director approval."
-                : working.status === "APPROVED"
+            : working.status === "SUBMITTED"
+              ? outstandingReviews.length
+                ? `Complete ${outstandingReviews.join(", ")} specialist review, then Event Director approval.`
+                : "Complete Event Director approval."
+              : working.status === "APPROVED"
                   ? "Publish the approved edition. This does not send messages or change check-in."
                   : "Inspect the current publication.";
   return {
@@ -156,6 +176,7 @@ export function buildSeatingWorkspace(
         predicateType: item.predicateType,
         status: item.status,
         preview: `${item.kind === "HARD" ? "Must" : item.kind === "WEIGHTED" ? "Prefer" : "Note"} ${item.predicateType.replaceAll("_", " ").toLowerCase()}`,
+        reviewDomain: item.reviewDomain,
       })),
     reservations: state.reservationBlocks
       .filter((item) => item.eventId === eventId)
@@ -222,6 +243,8 @@ export function buildSeatingWorkspace(
       generallyAvailable: Math.max(0, total - reservedMin),
       overbooked,
     },
+    implicatedReviewDomains,
+    reviewRequirementCopy,
     attention,
     nextAction,
     evaluation: state.evaluationRuns.at(-1)

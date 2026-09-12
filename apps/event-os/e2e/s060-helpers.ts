@@ -9,10 +9,14 @@ export async function expectActionOutcome(page: Page) {
 }
 
 export async function expectFreshActionSuccess(page: Page, previousCorrelation = "") {
+  const previousResult = new URL(page.url()).searchParams.get("result") ?? "";
+  if (previousCorrelation || previousResult) {
+    await expectFreshResultQuery(page, previousResult);
+  }
   const banner = page.getByTestId("action-result-banner");
   await expect(banner).toBeVisible({ timeout: 30_000 });
   if (previousCorrelation) {
-    await expect(banner).not.toContainText(previousCorrelation, { timeout: 30_000 });
+    await expect(banner).not.toContainText(previousCorrelation);
   }
   await expect(banner).toContainText(/Succeeded|The change was recorded|No change/i);
 }

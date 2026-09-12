@@ -9,8 +9,18 @@ export default async function EventsPage() {
   const { actor, person } = await guardedActor();
   const runtime = getRuntime();
   const organisation = runtime.service.listOrganisations(actor)[0];
-  const events = organisation ? runtime.service.listEvents(actor, organisation.id) : [];
-  const clients = organisation ? runtime.service.listClients(actor, organisation.id) : [];
+  let events: Awaited<ReturnType<typeof runtime.service.listEvents>> = [];
+  let clients: Awaited<ReturnType<typeof runtime.service.listClients>> = [];
+  try {
+    events = organisation ? runtime.service.listEvents(actor, organisation.id) : [];
+  } catch {
+    events = [];
+  }
+  try {
+    clients = organisation ? runtime.service.listClients(actor, organisation.id) : [];
+  } catch {
+    clients = [];
+  }
   const canCreate = organisation ? eventPermissions(person, organisation.id).create : false;
 
   return (

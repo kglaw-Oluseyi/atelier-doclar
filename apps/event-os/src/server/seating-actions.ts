@@ -39,12 +39,13 @@ async function sessionEnvelope(formData: FormData) {
   const resolved = runtime.service.resolveActor(actor.personId);
   const organisationId = field(formData, "organisationId");
   const eventId = field(formData, "eventId");
-  const assignment = resolved.assignments.find(
-    (item) =>
-      item.status === "ACTIVE" &&
-      item.organisationId === organisationId &&
-      (!item.eventId || item.eventId === eventId),
-  );
+  const assignment =
+    resolved.assignments.find(
+      (item) => item.status === "ACTIVE" && item.organisationId === organisationId && item.eventId === eventId,
+    ) ??
+    resolved.assignments.find(
+      (item) => item.status === "ACTIVE" && item.organisationId === organisationId && !item.eventId,
+    );
   if (!assignment) {
     throw new Error("This assignment cannot perform this seating action.");
   }

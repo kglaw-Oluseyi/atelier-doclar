@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { exactHash } from "./eec-hash.js";
 import { appliedMutationEffect, notAppliedMutationEffect, replayedMutationEffect, type DurableMutationEffect } from "./durable-mutation-effect.js";
 import { PlatformError } from "./errors.js";
-import { authorize, type ActorSnapshot } from "./policy.js";
+import { authorize, canSeeEvent, type ActorSnapshot } from "./policy.js";
 import {
   snapshotBriefAdapter,
   snapshotGuestCohortAdapter,
@@ -26,7 +26,7 @@ import type {
 import { defaultSolverConfig, solveSeatingV1 } from "./seating-solver-v1.js";
 import type { PlatformSnapshot } from "./store.js";
 import type { PermissionKey } from "./schemas.js";
-import { buildSeatingWorkspace, seatingDisclosureForRole, type SeatingWorkspaceView } from "./seating-workspace.js";
+import { buildSeatingWorkspace, implicatedSeatingReviewDomains, seatingDisclosureForRole, type SeatingWorkspaceView } from "./seating-workspace.js";
 import { roleKeyForId } from "./catalog.js";
 
 export type SeatingActor = {
@@ -656,8 +656,18 @@ export class SeatingCommandService {
           : "seating.plan.review.security";
     return this.mutate(actor, envelope, permission, "decideSeatingReview", async (tx) => {
       const edition = await tx.load<SeatingPlanEdition>("planEditions", input.editionId, envelope);
-      if (!edition || edition.contentHash !== input.editionHash) throw new PlatformError("VALIDATION_FAILED", "exact plan hash required");
+      if (!edition || edition.eventId !== envelope.eventId || edition.organisationId !== envelope.organisationId) {
+        throw new PlatformError("FORBIDDEN", "This assignment cannot perform this seating action.");
+      }
+      if (edition.contentHash !== input.editionHash || (envelope.expectedVersion !== undefined && edition.version !== envelope.expectedVersion)) {
+        throw new PlatformError("VERSION_CONFLICT", "stale plan");
+      }
       if (edition.materialAuthorPersonId === actor.personId) throw new PlatformError("FORBIDDEN", "This assignment cannot perform this seating action.");
+      const constraints = await tx.list<SeatingConstraintRecord>("constraints", envelope);
+      const implicated = implicatedSeatingReviewDomains({ constraints }, envelope.eventId);
+      if (!implicated.includes(input.domain)) {
+        throw new PlatformError("FORBIDDEN", "This assignment cannot perform this seating action.");
+      }
       const review: SeatingReviewRecord = {
         id: randomUUID(),
         organisationId: envelope.organisationId,
@@ -683,8 +693,19 @@ export class SeatingCommandService {
     return this.mutate(actor, envelope, "seating.plan.approve", "decideSeatingApproval", async (tx) => {
       const edition = await tx.load<SeatingPlanEdition>("planEditions", input.editionId, envelope);
       if (!edition || edition.status !== "SUBMITTED") throw new PlatformError("TRANSITION_INVALID", "only SUBMITTED can be approved");
-      if (edition.contentHash !== input.editionHash) throw new PlatformError("VALIDATION_FAILED", "exact plan hash required");
+      if (edition.eventId !== envelope.eventId || edition.organisationId !== envelope.organisationId) {
+        throw new PlatformError("FORBIDDEN", "This assignment cannot perform this seating action.");
+      }
+      if (edition.contentHash !== input.editionHash || (envelope.expectedVersion !== undefined && edition.version !== envelope.expectedVersion)) {
+        throw new PlatformError("VERSION_CONFLICT", "stale plan");
+      }
       if (edition.materialAuthorPersonId === actor.personId) throw new PlatformError("FORBIDDEN", "This assignment cannot perform this seating action.");
+      const constraints = await tx.list<SeatingConstraintRecord>("constraints", envelope);
+      const implicated = implicatedSeatingReviewDomains({ constraints }, envelope.eventId);
+      const reviews = (await tx.list<SeatingReviewRecord>("reviews", envelope)).filter((item) => item.editionId === edition.id);
+      if (implicated.some((domain) => !reviews.some((item) => item.domain === domain && item.decision === "APPROVED" && item.editionHash === input.editionHash))) {
+        throw new PlatformError("TRANSITION_INVALID", "specialist review required");
+      }
       const approval: SeatingApprovalRecord = {
         id: randomUUID(),
         organisationId: envelope.organisationId,
@@ -789,9 +810,10 @@ export class SeatingCommandService {
     const people = this.deps.resolveActor(actor.personId);
     const event = this.deps.snapshot().events.find((item) => item.id === eventId);
     if (!event) throw new PlatformError("NOT_FOUND", "event was not found");
-    const assignment = people.assignments.find(
-      (item) => item.status === "ACTIVE" && item.organisationId === event.organisationId && (!item.eventId || item.eventId === eventId),
-    );
+    if (!canSeeEvent(people, event, nowOf(actor))) throw new PlatformError("NOT_FOUND", "event was not found");
+    const assignment =
+      people.assignments.find((item) => item.status === "ACTIVE" && item.organisationId === event.organisationId && item.eventId === eventId) ??
+      people.assignments.find((item) => item.status === "ACTIVE" && item.organisationId === event.organisationId && !item.eventId);
     if (!assignment) throw new PlatformError("FORBIDDEN", "This assignment cannot perform this seating action.");
     this.guard(actor, "seating.view", { organisationId: event.organisationId, eventId }, assignment.id);
     const projection = await this.repo.projectEventSeating(actor, eventId);
