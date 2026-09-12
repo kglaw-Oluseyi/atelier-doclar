@@ -739,6 +739,7 @@ export {
   type PlatformServiceOptions,
   type RsvpGuestDirectoryRow,
 } from "./service.js";
+export { systemClock, type PlatformClock } from "./platform-clock.js";
 export { loadNonProductionFixtures } from "./bootstrap.js";
 export {
   DEFAULT_NON_PRODUCTION_RSVP_ACCESS,

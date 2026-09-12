@@ -798,6 +798,7 @@ import { MemoryRiskDossierRepository } from "./memory-risk-dossier-store.js";
 import { MemoryRiskProtectionRepository, MemoryRiskProtectionStore } from "./memory-risk-store.js";
 import { overlayRiskState } from "./risk-store.js";
 import { PostgresPlatformStore } from "./postgres-store.js";
+import { systemClock, type PlatformClock } from "./platform-clock.js";
 
 export interface ActorContext {
   personId: string;
@@ -817,6 +818,7 @@ export interface PlatformServiceOptions {
   layoutBinaryStore?: LayoutBinaryStore;
   layoutExportEnabled?: boolean;
   layoutAssetStoreConfigured?: boolean;
+  clock?: PlatformClock;
 }
 
 export interface IssuedRsvpInvitation {
@@ -904,6 +906,18 @@ export class PlatformService {
     private readonly options: PlatformServiceOptions = {},
   ) {}
 
+  private platformClock(): PlatformClock {
+    return this.options.clock ?? systemClock;
+  }
+
+  private clockNow(): string {
+    return this.platformClock().now().toISOString();
+  }
+
+  private tokenNow(actor?: ActorContext): string {
+    return actor?.now ?? this.clockNow();
+  }
+
   seatingCommands(): SeatingCommandService {
     if (!this.seatingCommandService) {
       const postgres = this.store instanceof PostgresPlatformStore ? this.store : undefined;
@@ -942,6 +956,7 @@ export class PlatformService {
       const repo = postgres ? postgres.dossierRepository() : new MemoryRiskDossierRepository(this.store);
       this.dossierCommandService = new RiskDossierCommandService(repo, {
         tokenPepper: () => this.atelierAccessConfig().linkPepper,
+        clock: this.platformClock(),
         remember: postgres ? (overlay) => postgres.adoptRiskOverlay(overlay) : undefined,
         onEffect: (effect) => {
           this.lastMutationEffect = effect;
@@ -6858,7 +6873,7 @@ export class PlatformService {
   issueDiscoveryClientAccess(actor: ActorContext, raw: unknown) {
     const input = raw as { organisationId: string; engagementId: string; expiresAt?: string; reason?: string; idempotencyKey?: string };
     const token = randomUUID();
-    const expiresAt = input.expiresAt ?? new Date(Date.parse(actor.now ?? new Date().toISOString()) + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const expiresAt = input.expiresAt ?? new Date(Date.parse(this.tokenNow(actor)) + 7 * 24 * 60 * 60 * 1000).toISOString();
     const record = this.mutate(actor, {
       permission: "brief.author",
       scope: { organisationId: input.organisationId },
@@ -6899,7 +6914,7 @@ export class PlatformService {
 
   recordClientBriefDecisionByToken(token: string, raw: unknown) {
     const snap = this.store.snapshot();
-    const now = new Date().toISOString();
+    const now = this.clockNow();
     const access = resolveDiscoveryClientAccess(snap, token, now);
     const input = raw as {
       assertionId: string;
@@ -6925,7 +6940,7 @@ export class PlatformService {
 
   getClientDiscoveryProjection(token: string) {
     const snap = this.store.snapshot();
-    const now = new Date().toISOString();
+    const now = this.clockNow();
     const access = resolveDiscoveryClientAccess(snap, token, now);
     const engagement = snap.discoveryEngagements.find((item) => item.id === access.engagementId);
     if (!engagement) throw new PlatformError("NOT_FOUND", "discovery engagement was not found");
@@ -7010,7 +7025,7 @@ export class PlatformService {
     },
   ) {
     const snap = structuredClone(this.store.snapshot());
-    const now = new Date().toISOString();
+    const now = this.clockNow();
     const access = resolveDiscoveryClientAccess(snap, token, now);
     if (!access.permittedActions.includes("INTERVIEW") && !access.permittedActions.includes("CONFIRM")) {
       throw new PlatformError("FORBIDDEN", "this client access cannot record consent");
@@ -7066,7 +7081,7 @@ export class PlatformService {
 
   extractClientDiscoveryAssertionsByToken(token: string, artefactId?: string) {
     const snap = structuredClone(this.store.snapshot());
-    const now = new Date().toISOString();
+    const now = this.clockNow();
     const access = resolveDiscoveryClientAccess(snap, token, now);
     const latestAi = latestConsentFor(snap, access.engagementId, "AI_ANALYSIS", undefined, "CLIENT_TOKEN");
     if (latestAi?.decision !== "GRANTED") {
@@ -7095,7 +7110,7 @@ export class PlatformService {
 
   issueClientReviewEdition(actor: ActorContext, raw: unknown) {
     const input = raw as { organisationId: string; engagementId: string; expiresAt?: string; reason?: string; idempotencyKey?: string };
-    const expiresAt = input.expiresAt ?? new Date(Date.parse(actor.now ?? new Date().toISOString()) + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const expiresAt = input.expiresAt ?? new Date(Date.parse(this.tokenNow(actor)) + 7 * 24 * 60 * 60 * 1000).toISOString();
     return this.mutate(actor, {
       permission: "brief.author",
       scope: { organisationId: input.organisationId },
@@ -7112,7 +7127,7 @@ export class PlatformService {
     raw: { kind: "CONFIRM_ITEM" | "CORRECT" | "DISPUTE" | "DEFER" | "PREFER_NOT" | "CLARIFY" | "SUBMIT_REVIEW" | "CONFIRM_EDITION"; itemKey?: string; narrative?: string; expectedHash: string },
   ) {
     const snap = structuredClone(this.store.snapshot());
-    const now = new Date().toISOString();
+    const now = this.clockNow();
     const access = resolveDiscoveryClientAccess(snap, token, now);
     if (!access.permittedActions.includes("REVIEW") && !access.permittedActions.includes("CONFIRM")) {
       throw new PlatformError("FORBIDDEN", "this client access cannot confirm a review edition");
@@ -7144,7 +7159,7 @@ export class PlatformService {
     },
   ) {
     const snap = structuredClone(this.store.snapshot());
-    const now = new Date().toISOString();
+    const now = this.clockNow();
     const access = resolveDiscoveryClientAccess(snap, token, now);
     if (!access.permittedActions.includes("INVESTMENT") && !access.permittedActions.includes("CONFIRM")) {
       throw new PlatformError("FORBIDDEN", "this client access cannot record investment preferences");
@@ -7970,7 +7985,7 @@ export class PlatformService {
     return this.dossierCommands().renewClientAccess(actor, input);
   }
 
-  getClientDossierByToken(token: string, now = new Date().toISOString()) {
+  getClientDossierByToken(token: string, now?: string) {
     return this.dossierCommands().resolveClientSession(token, now);
   }
 
@@ -8026,7 +8041,7 @@ export class PlatformService {
     },
   ) {
     const snap = structuredClone(this.store.snapshot());
-    const now = new Date().toISOString();
+    const now = this.clockNow();
     const access = resolveDiscoveryClientAccess(snap, token, now);
     if (!access.permittedActions.includes("INTERVIEW") && !access.permittedActions.includes("CONFIRM")) {
       throw new PlatformError("FORBIDDEN", "this client access cannot continue the interview");

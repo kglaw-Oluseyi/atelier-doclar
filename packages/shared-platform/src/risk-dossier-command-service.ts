@@ -20,6 +20,7 @@ import {
   requireApplicabilityForAssemble,
 } from "./risk-dossier-decisions.js";
 import { generateDossierAccessToken, hashDossierAccessToken } from "./risk-dossier-access.js";
+import { systemClock, type PlatformClock } from "./platform-clock.js";
 import type { RiskDossierRepository, RiskDossierTransaction, RiskDossierWorkspace } from "./risk-dossier-repository.js";
 import { redactDossier, type RiskProjectionAudience } from "./risk-disclosure.js";
 import type {
@@ -156,10 +157,19 @@ export class RiskDossierCommandService {
     private readonly repo: RiskDossierRepository,
     private readonly options: {
       tokenPepper: () => string;
+      clock?: PlatformClock;
       remember?: (overlay: DossierOverlay) => void;
       onEffect?: (effect: DurableMutationEffect) => void;
     },
   ) {}
+
+  private clockNow(): string {
+    return (this.options.clock ?? systemClock).now().toISOString();
+  }
+
+  private tokenNow(actor?: DossierActor): string {
+    return actor?.now ?? this.clockNow();
+  }
 
   private finish<T extends { id?: string }>(result: T, application: "APPLIED" | "REPLAYED", overlay?: DossierOverlay): T {
     this.options.remember?.(overlay ?? {});
@@ -394,7 +404,7 @@ export class RiskDossierCommandService {
       audiencePersonId?: string;
     };
     extractRiskEnvelope(input);
-    const now = nowOf(actor);
+    const now = this.tokenNow(actor);
     const token = generateDossierAccessToken();
     const tokenHash = hashDossierAccessToken(token, this.options.tokenPepper());
     const expiresAt = new Date(Date.parse(now) + 7 * 24 * 3600_000).toISOString();
@@ -439,7 +449,7 @@ export class RiskDossierCommandService {
       grantId: string;
     };
     extractRiskEnvelope(input);
-    const now = nowOf(actor);
+    const now = this.tokenNow(actor);
     const payloadHash = stableHash({ action: "risk.dossier.client_access.revoke", ...input });
     return this.repo.transaction(async (tx) => {
       const replayed = await replayOrConsume(tx, input, "risk.dossier.client_access.revoke", input.idempotencyKey, payloadHash, (id) =>
@@ -480,12 +490,13 @@ export class RiskDossierCommandService {
     return this.issueClientAccess(actor, { ...input, idempotencyKey: `${input.idempotencyKey}-renewed` });
   }
 
-  async resolveClientSession(token: string, now = new Date().toISOString()) {
+  async resolveClientSession(token: string, now?: string) {
+    const resolvedNow = now ?? this.clockNow();
     const tokenHash = hashDossierAccessToken(token, this.options.tokenPepper());
     return this.repo.transaction(async (tx) => {
       const grant = await tx.findGrantByTokenHash(tokenHash);
       if (!grant) throw new PlatformError("NOT_FOUND", "dossier access is not available");
-      const usable = assertGrantUsable(grant, now);
+      const usable = assertGrantUsable(grant, resolvedNow);
       const published = await tx.loadPublicationEdition({ organisationId: usable.organisationId, eventId: usable.eventId });
       return {
         grant: { id: usable.id, eventId: usable.eventId, organisationId: usable.organisationId, status: usable.status, expiresAt: usable.expiresAt },
@@ -544,7 +555,7 @@ export class RiskDossierCommandService {
   async recordClientMessageByToken(token: string, raw: unknown): Promise<RiskDossierPublication> {
     const tokenHash = hashDossierAccessToken(token, this.options.tokenPepper());
     const input = raw as { kind: "ACKNOWLEDGE" | "QUESTION"; body: string; idempotencyKey?: string };
-    const now = new Date().toISOString();
+    const now = this.clockNow();
     return this.repo.transaction(async (tx) => {
       const grant = await tx.findGrantByTokenHash(tokenHash);
       if (!grant) throw new PlatformError("NOT_FOUND", "dossier access is not available");

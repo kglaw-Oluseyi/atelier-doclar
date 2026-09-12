@@ -17,7 +17,7 @@ import {
   recordFactEditionOnSnap,
   reviewRuleEditionOnSnap,
 } from "../src/risk-policy-operations.js";
-import { actor, fixtureService, people } from "./helpers.js";
+import { actor, fixtureService, people, testClock } from "./helpers.js";
 
 function envelope(extra?: Record<string, unknown>) {
   return {
@@ -97,6 +97,7 @@ async function seededPostgres() {
   const repo = new PostgresRiskDossierRepository(pg);
   const commands = new RiskDossierCommandService(repo, {
     tokenPepper: () => "s063-test-pepper-value-32-chars-xx",
+    clock: testClock(),
   });
   return { pg, postgres, repo, commands, service };
 }
@@ -234,6 +235,7 @@ describe("MD-PR-S063 command-scoped dossier repository", () => {
     pg.failNextAuditWrite();
     const commands = new RiskDossierCommandService(new PostgresRiskDossierRepository(pg), {
       tokenPepper: () => "s063-test-pepper-value-32-chars-xx",
+      clock: testClock(),
     });
     const before = pg.riskRows.filter((row) => row.table === "risk_dossier_editions").length;
     await assert.rejects(() => commands.assemble(actor(people.personPlanner), envelope()));

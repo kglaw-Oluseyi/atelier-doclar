@@ -5,6 +5,7 @@ import {
   LOCAL_STORE_PRODUCTION_STATUS,
   PlatformService,
   PostgresPlatformStore,
+  systemClock,
   applyS06SeatingLayoutIfMissing,
   applySyntheticSeedIfNeeded,
   applySyntheticSnapshot,
@@ -53,6 +54,7 @@ function platformOptions() {
     layoutExportEnabled: (layoutExportEnabled() && layoutAssetEnvBound()) || fixtureExportStoreEnabled(),
     layoutAssetStoreConfigured: layoutAssetEnvBound(),
     layoutBinaryStore: fixtureExportStoreEnabled() ? resolveLayoutBinaryStore() : undefined,
+    clock: systemClock,
   };
 }
 
