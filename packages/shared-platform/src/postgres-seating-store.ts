@@ -12,11 +12,14 @@ import {
 } from "./seating-repository.js";
 import {
   emptySeatingState,
+  SEATING_COLLECTIONS,
   SEATING_TABLE_FOR_COLLECTION,
   type SeatingCollection,
   type SeatingIdempotencyReceipt,
   type SeatingState,
 } from "./seating-schemas.js";
+
+const ORG_ONLY_COLLECTIONS = new Set<SeatingCollection>(["solverConfigs", "evaluationRuns", "evaluationCaseResults", "migrationReceipts"]);
 
 function hasTransaction(client: PgQueryable): client is PgTransactor {
   return typeof (client as PgTransactor).transaction === "function";
@@ -66,14 +69,21 @@ export class PostgresSeatingTransaction implements SeatingTransaction {
 
   async list<T>(collection: SeatingCollection, scope: Partial<SeatingScope>): Promise<T[]> {
     const table = SEATING_TABLE_FOR_COLLECTION[collection];
-    const result = scope.eventId
-      ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE organisation_id = $1 AND event_id = $2`, [
-          scope.organisationId,
-          scope.eventId,
-        ])
-      : scope.organisationId
+    const result =
+      ORG_ONLY_COLLECTIONS.has(collection) && scope.organisationId
         ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE organisation_id = $1`, [scope.organisationId])
-        : await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table}`);
+        : ORG_ONLY_COLLECTIONS.has(collection)
+          ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table}`)
+          : scope.eventId && scope.organisationId
+            ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE organisation_id = $1 AND event_id = $2`, [
+                scope.organisationId,
+                scope.eventId,
+              ])
+            : scope.eventId
+              ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE event_id = $1`, [scope.eventId])
+              : scope.organisationId
+                ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE organisation_id = $1`, [scope.organisationId])
+                : await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table}`);
     return result.rows.map((row) => seatingRecordFromRow(row) as T);
   }
 
@@ -216,21 +226,31 @@ export class PostgresSeatingRepository implements SeatingRepository {
 
   async projectEventSeating(actor: ActorContextLike, eventId: string): Promise<SeatingWorkspaceProjection> {
     return this.transaction(async (tx) => {
-      const publications = await tx.list<SeatingPublicationProjection>("publications", { eventId });
-      const current = publications.find((item) => item.status === "CURRENT");
-      const editions = await tx.list<Record<string, unknown>>("planEditions", { eventId });
-      const working = editions.find((item) => item.currentWorking === true);
-      const inputs = await tx.list<Record<string, unknown>>("inputEditions", { eventId });
-      const input = inputs.find((item) => item.current === true);
+      const state = emptySeatingState();
+      for (const collection of SEATING_COLLECTIONS) {
+        (state[collection] as unknown[]) = await tx.list(collection, { eventId });
+      }
+      const current = state.publications.find((item) => item.eventId === eventId && item.status === "CURRENT");
+      const working = state.planEditions.find((item) => item.eventId === eventId && item.currentWorking);
+      const input = state.inputEditions.find((item) => item.eventId === eventId && item.current);
+      const assignments = working ? state.planAssignments.filter((item) => item.editionId === working.id) : [];
       void actor;
       return {
         eventId,
-        organisationId: String(current?.organisationId ?? working?.organisationId ?? input?.organisationId ?? ""),
+        organisationId: current?.organisationId ?? working?.organisationId ?? input?.organisationId ?? "",
         currentPublication: current,
         workingEdition: working,
         inputEdition: input,
-        blockers: [],
-        counts: { eligibleGuests: 0, seated: 0, unseated: 0, hardBlockers: 0 },
+        blockers: state.findings
+          .filter((item) => item.eventId === eventId && item.severity === "BLOCKER" && item.state === "OPEN")
+          .map((item) => ({ code: item.code, message: item.code })),
+        counts: {
+          eligibleGuests: state.guestTokens.filter((item) => item.eventId === eventId && item.eligible).length,
+          seated: assignments.filter((item) => item.state === "SEATED").length,
+          unseated: assignments.filter((item) => item.state === "UNSEATED").length,
+          hardBlockers: state.findings.filter((item) => item.eventId === eventId && item.severity === "BLOCKER").length,
+        },
+        state,
       };
     });
   }

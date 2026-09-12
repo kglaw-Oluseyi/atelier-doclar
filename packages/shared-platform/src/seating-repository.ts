@@ -33,6 +33,7 @@ export type SeatingWorkspaceProjection = {
     unseated: number;
     hardBlockers: number;
   };
+  state?: import("./seating-schemas.js").SeatingState;
 };
 
 export type SeatingRunProjection = Record<string, unknown> & { id: string; eventId: string };

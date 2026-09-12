@@ -1009,4 +1009,14 @@ export { PostgresSeatingRepository } from "./postgres-seating-store.js";
 export type { SeatingRepository, SeatingTransaction } from "./seating-repository.js";
 export { SeatingCommandService } from "./seating-command-service.js";
 export { snapshotGuestCohortAdapter, snapshotLayoutAdapter, seatingToken } from "./seating-adapters.js";
+export { buildSeatingWorkspace, seatingDisclosureForRole } from "./seating-workspace.js";
+export { executeS06Evaluation } from "./seating-evaluation-runner.js";
+export {
+  S06_CASE_IDS,
+  S06_EVALUATION_CORPUS_EDITION,
+  S06_EVALUATION_CONTRACT_VERSION,
+  s06CorpusHash,
+} from "./seating-evaluation-schemas.js";
+export { seatingVerifyAsAllowed, S06_VERIFY_AS_ALLOWLIST, S06_VERIFY_AS_ROLES, resolveVerifyAsRole } from "./seating-verify-as.js";
+export { applyS06SeatingLayoutIfMissing } from "./seating-fixtures.js";
 export { S06_SENSITIVE_PERMISSIONS } from "./constants.js";

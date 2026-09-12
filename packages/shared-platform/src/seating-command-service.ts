@@ -26,6 +26,8 @@ import type {
 import { defaultSolverConfig, solveSeatingV1 } from "./seating-solver-v1.js";
 import type { PlatformSnapshot } from "./store.js";
 import type { PermissionKey } from "./schemas.js";
+import { buildSeatingWorkspace, seatingDisclosureForRole, type SeatingWorkspaceView } from "./seating-workspace.js";
+import { roleKeyForId } from "./catalog.js";
 
 export type SeatingActor = {
   personId: string;
@@ -369,13 +371,42 @@ export class SeatingCommandService {
         })),
         constraints: constraints
           .filter((item) => item.status === "APPROVED" || item.kind === "WEIGHTED" || item.kind === "INFORMATION")
-          .map((item) => ({
-            id: item.id,
-            kind: item.kind,
-            predicateType: item.predicateType as "KEEP_TOGETHER",
-            payload: item.payload as { predicateType: "KEEP_TOGETHER"; guestTokens: [string, string] },
-            weight: item.weight,
-          })),
+          .map((item) => {
+            const payload = item.payload as {
+              predicateType?: string;
+              guestIds?: string[];
+              guestTokens?: string[];
+              tableRefs?: string[];
+              zoneCodes?: string[];
+              capabilityCodes?: string[];
+              positionToken?: string;
+            };
+            const guestTokens =
+              payload.guestTokens ??
+              (payload.guestIds ?? []).map((guestId) => seatingToken(this.deps.tokenPepper(), envelope.eventId, guestId));
+            const predicate = item.predicateType;
+            const solverPayload =
+              predicate === "LOCK_ASSIGNMENT"
+                ? { predicateType: "LOCK_ASSIGNMENT" as const, guestToken: guestTokens[0] ?? "", positionToken: payload.positionToken ?? "" }
+                : predicate === "REQUIRE_TABLE" || predicate === "FORBID_TABLE" || predicate === "PREFER_TABLE"
+                  ? { predicateType: predicate, guestTokens, tableTokens: payload.tableRefs ?? [] }
+                  : predicate === "REQUIRE_ZONE" || predicate === "FORBID_ZONE" || predicate === "PREFER_ZONE"
+                    ? { predicateType: predicate, guestTokens, zoneCodes: payload.zoneCodes ?? [] }
+                    : predicate === "REQUIRE_POSITION_CAPABILITY"
+                      ? { predicateType: predicate, guestTokens, capabilityCodes: payload.capabilityCodes ?? [] }
+                      : predicate === "RESERVE_CAPACITY"
+                        ? { predicateType: "RESERVE_CAPACITY" as const, reservationId: item.id }
+                        : predicate === "MINIMIZE_CHANGE"
+                          ? { predicateType: "MINIMIZE_CHANGE" as const, previous: [] }
+                          : { predicateType: predicate, guestTokens };
+            return {
+              id: item.id,
+              kind: item.kind,
+              predicateType: predicate,
+              payload: solverPayload,
+              weight: item.weight,
+            };
+          }),
         reservations: reservations.map((item) => ({
           id: item.id,
           eligibleGuestTokens: item.eligibleGuestIds.map((guestId) => seatingToken(this.deps.tokenPepper(), envelope.eventId, guestId)),
@@ -719,6 +750,12 @@ export class SeatingCommandService {
         version: 0,
       };
       await tx.insert("publications", publication);
+      if (current) {
+        await tx.updateVersioned("publications", current.id, current.version, {
+          version: current.version + 1,
+          status: "SUPERSEDED",
+        });
+      }
       return { id: publication.id, value: publication };
     });
   }
@@ -748,8 +785,57 @@ export class SeatingCommandService {
     });
   }
 
-  async projectWorkspace(actor: SeatingActor, eventId: string) {
-    return this.repo.projectEventSeating(actor, eventId);
+  async projectWorkspace(actor: SeatingActor, eventId: string): Promise<SeatingWorkspaceView> {
+    const people = this.deps.resolveActor(actor.personId);
+    const event = this.deps.snapshot().events.find((item) => item.id === eventId);
+    if (!event) throw new PlatformError("NOT_FOUND", "event was not found");
+    const assignment = people.assignments.find(
+      (item) => item.status === "ACTIVE" && item.organisationId === event.organisationId && (!item.eventId || item.eventId === eventId),
+    );
+    if (!assignment) throw new PlatformError("FORBIDDEN", "This assignment cannot perform this seating action.");
+    this.guard(actor, "seating.view", { organisationId: event.organisationId, eventId }, assignment.id);
+    const projection = await this.repo.projectEventSeating(actor, eventId);
+    const role = roleKeyForId(assignment.roleId);
+    const state = projection.state ?? (await this.repo.transaction((tx) => Promise.resolve(tx.snapshot())));
+    return buildSeatingWorkspace(this.deps.snapshot(), state, eventId, seatingDisclosureForRole(role));
+  }
+
+  async runS06Evaluation(actor: SeatingActor, envelope: SeatingCommandEnvelope) {
+    return this.mutate(actor, envelope, "seating.evaluate", "runS06Evaluation", async (tx) => {
+      const { executeS06Evaluation } = await import("./seating-evaluation-runner.js");
+      const result = await executeS06Evaluation();
+      const run = {
+        id: randomUUID(),
+        organisationId: envelope.organisationId,
+        corpusEdition: result.corpusEdition,
+        corpusHash: result.corpusHash,
+        contractVersion: result.contractVersion,
+        solverVersion: result.solverVersion,
+        configHash: result.configHash,
+        projectionVersion: result.projectionVersion,
+        status: result.failedCount === 0 ? "PASSED" : "FAILED",
+        caseCount: result.caseCount,
+        passedCount: result.passedCount,
+        failedCount: result.failedCount,
+        createdBy: actor.personId,
+        createdAt: nowOf(actor),
+        updatedAt: nowOf(actor),
+      } as const;
+      await tx.insert("evaluationRuns", run);
+      for (const item of result.cases) {
+        await tx.insert("evaluationCaseResults", {
+          id: randomUUID(),
+          organisationId: envelope.organisationId,
+          runId: run.id,
+          caseId: item.caseId,
+          observations: item.observations,
+          assertions: item.assertions,
+          status: item.status,
+          createdAt: nowOf(actor),
+        });
+      }
+      return { id: run.id, value: run };
+    });
   }
 
   private async ensureDefaultConfig(tx: SeatingTransaction, organisationId: string, actor: SeatingActor): Promise<SeatingSolverConfigRecord> {

@@ -199,6 +199,7 @@ export class MemorySeatingRepository implements SeatingRepository {
         unseated: assignments.filter((item) => item.state === "UNSEATED").length,
         hardBlockers: state.findings.filter((item) => item.eventId === eventId && item.severity === "BLOCKER").length,
       },
+      state,
     };
   }
 
