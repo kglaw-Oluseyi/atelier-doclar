@@ -790,7 +790,9 @@ import {
 } from "./risk-projections.js";
 import { RiskDossierCommandService } from "./risk-dossier-command-service.js";
 import { SeatingCommandService } from "./seating-command-service.js";
+import { SeatingV2CommandService } from "./seating-v2-command-service.js";
 import { MemorySeatingRepository } from "./memory-seating-store.js";
+import { MemorySeatingV2Repository } from "./memory-seating-v2-store.js";
 import { RiskAuthorityCommandService, type AuthorityOverlay } from "./risk-authority-command-service.js";
 import { MemoryRiskDossierRepository } from "./memory-risk-dossier-store.js";
 import { MemoryRiskProtectionRepository, MemoryRiskProtectionStore } from "./memory-risk-store.js";
@@ -894,6 +896,8 @@ export class PlatformService {
   private dossierCommandService: RiskDossierCommandService | undefined;
   private authorityCommandService: RiskAuthorityCommandService | undefined;
   private seatingCommandService: SeatingCommandService | undefined;
+  private seatingV2CommandService: SeatingV2CommandService | undefined;
+  private seatingV2MemoryRepository: MemorySeatingV2Repository | undefined;
 
   constructor(
     private readonly store: PlatformStore,
@@ -914,6 +918,22 @@ export class PlatformService {
       });
     }
     return this.seatingCommandService;
+  }
+
+  seatingV2Commands(): SeatingV2CommandService {
+    if (!this.seatingV2CommandService) {
+      const postgres = this.store instanceof PostgresPlatformStore ? this.store : undefined;
+      const repo = postgres ? postgres.seatingV2Repository() : (this.seatingV2MemoryRepository ??= new MemorySeatingV2Repository());
+      this.seatingV2CommandService = new SeatingV2CommandService(repo, {
+        resolveActor: (personId) => this.resolveActor(personId),
+        snapshot: () => this.store.snapshot(),
+        tokenPepper: () => this.options.staffSession?.sessionSecret ?? "s06-non-production-pepper",
+        onEffect: (effect) => {
+          this.lastMutationEffect = effect;
+        },
+      });
+    }
+    return this.seatingV2CommandService;
   }
 
   private dossierCommands(): RiskDossierCommandService {

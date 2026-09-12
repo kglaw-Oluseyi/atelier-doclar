@@ -7,6 +7,8 @@ export const PLATFORM_ERROR_CODES = [
   "VALIDATION_FAILED",
   "VERSION_CONFLICT",
   "TRANSITION_INVALID",
+  "ADOPTION_MISMATCH",
+  "SEATING_VALIDATION_REJECTED",
   "IDEMPOTENCY_CONFLICT",
   "DEPENDENCY_UNAVAILABLE",
   "CAPABILITY_NOT_ENABLED",
@@ -56,6 +58,10 @@ export function publicMessageFor(code: PlatformErrorCode): string {
       return "This record changed while you were editing. Reload before saving.";
     case "TRANSITION_INVALID":
       return "That phase change is not permitted.";
+    case "ADOPTION_MISMATCH":
+      return "The seating run could not be adopted because validation no longer matches.";
+    case "SEATING_VALIDATION_REJECTED":
+      return "This seating change was rejected by the independent validator.";
     case "IDEMPOTENCY_CONFLICT":
       return "This request was already processed with different information.";
     case "DEPENDENCY_UNAVAILABLE":

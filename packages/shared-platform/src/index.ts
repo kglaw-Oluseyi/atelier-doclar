@@ -1028,8 +1028,10 @@ export { compileSeatingV2Request, assertSeatingV2CompiledRequest } from "./seati
 export { validateSeatingV2 } from "./seating-v2-validator.js";
 export { MemorySeatingRepository, MemorySeatingStore } from "./memory-seating-store.js";
 export { PostgresSeatingRepository } from "./postgres-seating-store.js";
+export { PostgresSeatingV2Repository } from "./postgres-seating-v2-store.js";
 export type { SeatingRepository, SeatingTransaction } from "./seating-repository.js";
 export { SeatingCommandService } from "./seating-command-service.js";
+export { SeatingV2CommandService } from "./seating-v2-command-service.js";
 export { snapshotGuestCohortAdapter, snapshotLayoutAdapter, seatingToken } from "./seating-adapters.js";
 export { buildSeatingWorkspace, implicatedSeatingReviewDomains, seatingDisclosureForRole } from "./seating-workspace.js";
 export { executeS06Evaluation } from "./seating-evaluation-runner.js";

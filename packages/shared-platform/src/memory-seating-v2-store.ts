@@ -7,6 +7,8 @@ import {
   type SeatingV2ActorContext,
   type SeatingV2CurrentPatch,
   type SeatingV2EventProjection,
+  type SeatingV2LifecycleCollection,
+  type SeatingV2LifecyclePatch,
   type SeatingV2Lock,
   type SeatingV2Repository,
   type SeatingV2Scope,
@@ -126,6 +128,45 @@ export class MemorySeatingV2Transaction implements SeatingV2Transaction {
     };
     rows[index] = structuredClone(merged);
     return structuredClone(merged);
+  }
+
+  async updateLifecycle<T>(
+    collection: SeatingV2LifecycleCollection,
+    id: string,
+    scope: SeatingV2Scope,
+    patch: SeatingV2LifecyclePatch,
+  ): Promise<T> {
+    const rows = this.store.collection(collection) as Identified[];
+    const index = rows.findIndex((item) => rowIdentity(item) === id && assertSeatingV2Scope(item, scope));
+    if (index < 0) throw new PlatformError("NOT_FOUND", `seating v2 ${collection} row was not found`);
+    const current = rows[index] as Record<string, unknown>;
+    const allowed: SeatingV2LifecyclePatch = {
+      ...(patch.lifecycle !== undefined ? { lifecycle: patch.lifecycle } : {}),
+      ...(patch.status !== undefined ? { status: patch.status } : {}),
+      ...(patch.activatedByPersonId !== undefined ? { activatedByPersonId: patch.activatedByPersonId } : {}),
+      ...(patch.activatedAt !== undefined ? { activatedAt: patch.activatedAt } : {}),
+      ...(patch.withdrawnByPersonId !== undefined ? { withdrawnByPersonId: patch.withdrawnByPersonId } : {}),
+      ...(patch.withdrawnAt !== undefined ? { withdrawnAt: patch.withdrawnAt } : {}),
+      ...(patch.withdrawalReason !== undefined ? { withdrawalReason: patch.withdrawalReason } : {}),
+      ...(patch.releasedByPersonId !== undefined ? { releasedByPersonId: patch.releasedByPersonId } : {}),
+      ...(patch.releasedAt !== undefined ? { releasedAt: patch.releasedAt } : {}),
+      ...(patch.releaseDecision !== undefined ? { releaseDecision: patch.releaseDecision } : {}),
+      ...(patch.submittedByPersonId !== undefined ? { submittedByPersonId: patch.submittedByPersonId } : {}),
+      ...(patch.submittedAt !== undefined ? { submittedAt: patch.submittedAt } : {}),
+      ...(patch.version !== undefined ? { version: patch.version } : {}),
+    };
+    if (collection === "planEditions" && allowed.version !== undefined) {
+      const currentVersion = Number(current.version ?? 0);
+      if (allowed.version !== currentVersion + 1) {
+        throw new PlatformError("VALIDATION_FAILED", "row versions increment exactly once per successful mutation");
+      }
+    }
+    const merged: Record<string, unknown> = { ...current, ...allowed };
+    if (current.contentHash !== undefined && merged.contentHash !== current.contentHash) {
+      throw new PlatformError("VALIDATION_FAILED", "lifecycle update cannot change content hash");
+    }
+    rows[index] = structuredClone(merged) as Identified;
+    return structuredClone(merged) as T;
   }
 
   async appendAudit(record: AuditEvent): Promise<void> {

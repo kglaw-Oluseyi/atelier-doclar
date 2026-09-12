@@ -39,6 +39,24 @@ export type SeatingV2CurrentPatch = {
   currentPublicationId?: string | null;
 };
 
+export type SeatingV2LifecycleCollection = "ruleEditions" | "reservationEditions" | "planEditions";
+
+export type SeatingV2LifecyclePatch = {
+  lifecycle?: "DRAFT" | "ACTIVE" | "WITHDRAWN" | "SUPERSEDED" | "RELEASED";
+  status?: "WORKING" | "SUBMITTED" | "APPROVED" | "RECALLED" | "SUPERSEDED" | "WITHDRAWN";
+  activatedByPersonId?: string | null;
+  activatedAt?: string | null;
+  withdrawnByPersonId?: string | null;
+  withdrawnAt?: string | null;
+  withdrawalReason?: string | null;
+  releasedByPersonId?: string | null;
+  releasedAt?: string | null;
+  releaseDecision?: string | null;
+  submittedByPersonId?: string | null;
+  submittedAt?: string | null;
+  version?: number;
+};
+
 export type SeatingV2Lock = "FOR_UPDATE";
 
 export interface SeatingV2Transaction {
@@ -46,6 +64,13 @@ export interface SeatingV2Transaction {
   list<T>(collection: SeatingV2Collection, scope: Partial<SeatingV2Scope>): Promise<T[]>;
   insert<T extends { id?: string; organisationId?: string }>(collection: SeatingV2Collection, record: T): Promise<T>;
   updateCurrent(scope: SeatingV2Scope, expectedVersion: number, patch: SeatingV2CurrentPatch): Promise<SeatingV2EventCurrent>;
+  /** Lifecycle/status only. Meaning-bearing content hashes never change. */
+  updateLifecycle<T>(
+    collection: SeatingV2LifecycleCollection,
+    id: string,
+    scope: SeatingV2Scope,
+    patch: SeatingV2LifecyclePatch,
+  ): Promise<T>;
   appendAudit(record: AuditEvent): Promise<void>;
   getIdempotency(scope: SeatingV2Scope, action: string, key: string): Promise<SeatingV2IdempotencyReceipt | undefined>;
   insertIdempotency(receipt: SeatingV2IdempotencyReceipt): Promise<SeatingV2IdempotencyReceipt>;

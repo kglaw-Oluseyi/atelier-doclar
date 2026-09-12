@@ -26,7 +26,6 @@ function cas(layout: { id: string; version: number; currentRevisionNumber: numbe
 export function applyS06SeatingLayoutIfMissing(store: PlatformStore, service: PlatformService): void {
   const snap = store.snapshot();
   if (snap.layoutPublications.some((item) => item.eventId === FIXTURE_IDS.eventAlphaOne && item.status === "CURRENT")) return;
-  if (!snap.venues.some((item) => item.organisationId === FIXTURE_IDS.orgMaison)) return;
   const venue =
     snap.venues.find((item) => item.organisationId === FIXTURE_IDS.orgMaison && item.status === "ACTIVE") ??
     service.createVenue(director(), {

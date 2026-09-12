@@ -15,6 +15,7 @@ import { validateS05BPersistedCollections } from "./risk-persistence.js";
 import { PostgresRiskProtectionRepository, PostgresRiskProtectionStore, PostgresRiskTransaction } from "./postgres-risk-store.js";
 import { PostgresRiskDossierRepository } from "./postgres-risk-dossier-store.js";
 import { PostgresSeatingRepository } from "./postgres-seating-store.js";
+import { PostgresSeatingV2Repository } from "./postgres-seating-v2-store.js";
 import type { DossierOverlay } from "./risk-dossier-command-service.js";
 import type { AuthorityOverlay } from "./risk-authority-command-service.js";
 import { writeRiskSnapshotDelta } from "./risk-repository.js";
@@ -331,6 +332,10 @@ export class PostgresPlatformStore implements PlatformStore {
 
   seatingRepository(): PostgresSeatingRepository {
     return new PostgresSeatingRepository(this.client);
+  }
+
+  seatingV2Repository(): PostgresSeatingV2Repository {
+    return new PostgresSeatingV2Repository(this.client);
   }
 
   protectionRepository(): PostgresRiskProtectionRepository {
