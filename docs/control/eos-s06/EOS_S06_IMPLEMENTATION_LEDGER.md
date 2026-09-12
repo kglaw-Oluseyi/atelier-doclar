@@ -1,11 +1,10 @@
 # EOS-S06 Implementation Ledger
 
-**Prompt Control ID:** MD-PR-S070 V2 + MD-PR-S071  
-**Status:** IMPLEMENTED — NOT ACCEPTED — READY FOR INDEPENDENT HOLDOUT AND CLAUDE  
-**Baseline SHA:** `75a894dedb6713ba2f3f4dce29e8372fa4160384`  
-**S071 remediation baseline:** `b3f7b2857282954cc3ba0aa65f4de78eeb7cab8e`  
-**Application / deployed SHA:** `70d9976730ccdbe0f5812f2bf6f68bd1cd055d8e`  
-**Authority:** ratified V2 overlay D1–D12 + technical annex + MD-PR-S070 V2 pack + MD-PR-S071 event-scoped specialist review. Historical Slice 6 specification is non-conflicting detail only.
+**Prompt Control ID:** MD-PR-S072  
+**Status:** IMPLEMENTED — NOT ACCEPTED — NOT READY FOR CLAUDE  
+**Required baseline:** `844f107fc70e1eaa8995e0c7c49c0c42d52b9dd1`  
+**Application SHA proven live:** `0d43a9e40ce63d4acb0c584f2f1ad308c400c412`  
+**Authority:** MD-PR-S072 is the sole execution authority. S070/S071 artefacts remain readable as incompatible history.
 
 This ledger does not accept EOS-S06. It does not authorise Claude, EOS-S07, real data or production operations.
 
@@ -13,26 +12,22 @@ This ledger does not accept EOS-S06. It does not authorise Claude, EOS-S07, real
 
 | Item | Value |
 |---|---|
-| Application / deployed Event OS SHA | `70d9976730ccdbe0f5812f2bf6f68bd1cd055d8e` |
+| Application / deployed Event OS SHA | `0d43a9e40ce63d4acb0c584f2f1ad308c400c412` |
 | Railway project / env / service | `atelier-doclar` / `production` / `event-os` |
-| Live health SHA | `70d9976730ccdbe0f5812f2bf6f68bd1cd055d8e` |
-| Persistence | POSTGRES, migrations APPLIED |
+| Live health SHA | `0d43a9e40ce63d4acb0c584f2f1ad308c400c412` |
+| Persistence | POSTGRES, migrations APPLIED including additive `008_seating_truth_v2` |
 | `productionAuthorised` | `false` |
 | External providers | INACTIVE |
-| Solver | `SeatingSolverV1` / `s06-solver-v1` |
-| Evaluation | `s06-eval-v1` / `s06-eval-contract-v1` / 59 cases / corpus hash `f861c8cd808a9da2b539bab80c40241bafbd7416b41b690e1f9bafbdde94d735` |
-| Config hash | `52f2fbec7d6fe4a8757d44fdd5b13b2bc5b2176aa9882f95df68c57858604430` |
-| Migration | `007_seating_allocation` additive after `006_risk_authority_governance_receipts` |
+| Solver | In-process V2 compiler over retained TypeScript solver; validator `seating-v2-validator` does not import the V1 solver |
+| Evaluation | `s06-eval-v2` / `s06-eval-contract-v2` / 30 cases locally RELEASE_READY; live persist unfinished |
+| Legacy evaluation | `s06-eval-v1` STALE/INCOMPATIBLE — `legacy isolated or incomplete production-path assurance` |
+| Last-known-good publication | Preserved and labelled `LEGACY S06 PUBLICATION — not V2 validated` |
 | Control Tower | untouched |
 
 ## Sealed holdout
 
-Not accessed, created or inferred. Candidate implementation is frozen for independent evaluation.
-
-## MD-PR-S071 authority correction
-
-Same reviewer person (`reviewer@maison-doclar.test`) keeps the organisation Risk Governance Reviewer assignment for Protection catalogue work and now also holds canonical event-scoped assignment `00000000-0000-4000-8000-000000000068` for Alpha One only. No second identity, role or grant table was added. The submitted plan hash `8fd24f97e77f1f144f60acb0ab2fd433dbd4891778f7dff54b242503e800d8c9` named no review domain; specialist review was not manufactured. Event Director exact-hash approval, Director publish denial, CEO publish/replay and successor DRAFT preserving last-known-good were completed. Live CEO `s06-eval-v1` persisted 59/59, zero failed.
+Not accessed, created or inferred.
 
 ## Successor
 
-EOS-S07 is not started. `EOS_S06_ACCEPTANCE.md` was not created. Independent holdout and Claude may now run against deployed SHA `70d9976730ccdbe0f5812f2bf6f68bd1cd055d8e`. Do not redeploy a later docs-only stamp.
+EOS-S07 is not started. `EOS_S06_ACCEPTANCE.md` was not created. Claude must not run until the unfinished live publication/replay sequences and live `s06-eval-v2` persist pass.

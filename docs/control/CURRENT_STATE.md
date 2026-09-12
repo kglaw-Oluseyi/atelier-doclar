@@ -1,8 +1,8 @@
 # Current State
 
-**Updated:** MD-PR-S069 EOS-S05B independent acceptance (2026-09-11)
-**Prompt Control ID:** MD-PR-S069
-**Milestone:** `EOS-S05` ACCEPTED — catalogue accepted-slice count 5; `EOS-S05A` ACCEPTED (not catalogue); `EOS-S05B` ACCEPTED (not catalogue); EOS-S06 not authorised
+**Updated:** MD-PR-S072 EOS-S06 V2 controlled seating truth replacement (2026-09-12)
+**Prompt Control ID:** MD-PR-S072
+**Milestone:** `EOS-S05` ACCEPTED — catalogue accepted-slice count 5; `EOS-S05A` ACCEPTED (not catalogue); `EOS-S05B` ACCEPTED (not catalogue); EOS-S06 implemented under MD-PR-S072 and not accepted
 
 MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is ACCEPTED. EOS-S02 is ACCEPTED. EOS-S03 is ACCEPTED. EOS-S04 is CLOSED / ACCEPTED (`PASS WITH OBSERVATIONS`). EOS-S05 is ACCEPTED. Catalogue accepted-slice count is 5. Native coverage is 62/62. S4-61 is satisfied for technical review only. S4-62 is satisfied for controlled technical acceptance/handover only. Independent, specialist and CEO production gates remain unsigned.
 
@@ -120,9 +120,11 @@ MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is A
 **EOS-S05B ACCEPTANCE RECORD: docs/control/EOS_S05B_ACCEPTANCE.md**
 **EOS-S05B IMPLEMENTATION PROMPT CONTROL ID: MD-PR-S054 / MD-PR-S055 / MD-PR-S056 / MD-PR-S058 / MD-PR-S060 V2 / MD-PR-S061 / MD-PR-S062 / MD-PR-S063 / MD-PR-S064 / MD-PR-S065 / MD-PR-S067**
 **EOS-S05B CANONICAL CORPUS: docs/control/eos-s05b/**
-**EOS-S06 IMPLEMENTATION AUTHORISED: NO**
-**EOS-S06 STATUS: NOT_STARTED / NOT_AUTHORISED**
-**RECOMMENDED NEXT PROMPT CONTROL ID: MD-PR-S036**
+**EOS-S06 IMPLEMENTATION AUTHORISED: YES — MD-PR-S072 V2 replacement only; not accepted**
+**EOS-S06 STATUS: IMPLEMENTED — NOT ACCEPTED — NOT READY FOR CLAUDE**
+**EOS-S06 CONTROLLING AUTHORITY:** `docs/control/eos-s06/MD_PR_S072_EOS_S06_V2_CONTROLLED_SEATING_TRUTH_REPLACEMENT.md`
+**EOS-S06 APPLICATION SHA:** `0d43a9e40ce63d4acb0c584f2f1ad308c400c412`
+**RECOMMENDED NEXT PROMPT CONTROL ID: hold — finish live publication/replay and live `s06-eval-v2` persist before Claude**
 **MD-PR-S036 IMPLEMENTATION AUTHORITY: NO**
 **CROSS-SLICE UX CONTROL ID: MD-PR-UX001**
 **MD-PR-UX001 IMPLEMENTATION AUTHORITY: EXECUTED — awaiting focused human UX reverification**

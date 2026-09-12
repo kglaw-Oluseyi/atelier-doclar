@@ -33,3 +33,32 @@
 | Live S070/S071 gates on `70d99767` | 5 passed / 0 failed |
 
 S05A/S05B remain PASSED. Providers remain INACTIVE. `productionAuthorised` remains false. Control Tower was not deployed.
+
+## MD-PR-S072 first-run failures
+
+| Gate | Class | Evidence | Correction | Retry |
+|---|---|---|---|---|
+| Shared-platform unit (baseline) | Pre-existing | 5 failures: S05A discovery-token / confirmation / sign-off / investment / no-repeat interview `AUTH_REQUIRED`; S063 dossier grant `FORBIDDEN` | Cited against baseline `844f107`; not dismissed as new | Unchanged at S072 local gates (568 pass / 5 fail) |
+| Live seating workspace | Product | Director seating page returned a false FORBIDDEN because `projectWorkspace` listed org-only evaluation/migration tables with `event_id` | Scope org-only and unscoped V2 collections correctly; do not edit 008 | PASS — seating page loads; Director Access Administration remains denied |
+| Live HARD create settlement | Test/runtime | First HARD create waited 30s for a result UUID, then succeeded after reload | Recorded; action timeout not inflated | Appeared-after-reload |
+| Live Activate | Test targeting | Director `Activate` matched two HARD drafts (strict mode) | Activate each Draft HARD button in turn | Locator corrected |
+| Live run launch | Product | `seating run launch` returned unexpected server failure after freeze on SHA `b5132bf` and again on `0d43a9e` | Parse compiled JSONB on read; stop treating launch exceptions as generic 5xx | UNFINISHED — two consecutive publication/replay sequences and live `s06-eval-v2` persist have not passed |
+
+## Local gates at S072 handoff
+
+| Gate | Result |
+|---|---|
+| `pnpm typecheck` | PASS |
+| `@maison-doclar/shared-platform` unit | 568 pass / 5 fail (same baseline S05A/S063 set) |
+| `@maison-doclar/event-os` unit | 102 pass / 0 fail |
+| `pnpm programme:validate` | PASS (`verdict=NO_CYCLES`) |
+| `@maison-doclar/event-os` build | PASS |
+| Focused V2 suites (hash/compiler/validator, command path, eval v2, persistence, access hotfix) | PASS |
+| `git diff --check` | PASS |
+| Live readiness on `0d43a9e` | PASS — POSTGRES / APPLIED / `productionAuthorised:false` / providers INACTIVE / S05A+S05B PASSED |
+| Live Director admin denial / Auditor no mutate / Admin no seating | PASS |
+| Live Planner SOFT self-activate / HARD self-activate denied | PASS |
+| Live publication/replay sequences (2) | UNFINISHED |
+| Live CEO `s06-eval-v2` persist | UNFINISHED |
+
+S05A/S05B remain PASSED. Providers remain INACTIVE. `productionAuthorised` remains false. Control Tower was not deployed. EOS-S06 is not accepted. Claude is not run. EOS-S07 is not started.

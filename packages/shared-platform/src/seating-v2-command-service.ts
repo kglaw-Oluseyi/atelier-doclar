@@ -584,13 +584,27 @@ export class SeatingV2CommandService {
       if (!compiled.request || typeof compiled.request !== "object" || !("guests" in compiled.request)) {
         throw new PlatformError("VALIDATION_FAILED", "compiled solver request was not readable");
       }
-      const solved = solveSeatingV2Compiled(compiled.request);
-      const report = validateSeatingV2(
-        { contentHash: pkg.contentHash, compiledRequest: compiled.request },
-        solved.assignments,
-        solved.assignments.filter((item) => item.state === "UNSEATED").map((item) => item.guestToken),
-        nowOf(actor),
-      );
+      let solved;
+      try {
+        solved = solveSeatingV2Compiled(compiled.request);
+      } catch {
+        throw new PlatformError("VALIDATION_FAILED", "solver failed", {
+          publicMessage: "The seating solver could not complete this package.",
+        });
+      }
+      let report;
+      try {
+        report = validateSeatingV2(
+          { contentHash: pkg.contentHash, compiledRequest: compiled.request },
+          solved.assignments,
+          solved.assignments.filter((item) => item.state === "UNSEATED").map((item) => item.guestToken),
+          nowOf(actor),
+        );
+      } catch {
+        throw new PlatformError("SEATING_VALIDATION_REJECTED", "validator failed", {
+          publicMessage: "The independent validator could not complete this package.",
+        });
+      }
       const now = nowOf(actor);
       const run: SeatingV2Run = {
         id: randomUUID(),
@@ -611,6 +625,7 @@ export class SeatingV2CommandService {
         generatedAt: now,
         createdAt: now,
       };
+      try {
       await tx.insert("runs", run);
       for (const assignment of solved.assignments) {
         await tx.insert("runAssignments", {
@@ -670,6 +685,12 @@ export class SeatingV2CommandService {
           outcome: outcome.outcome,
           typedDetail: outcome.typedDetail,
           createdAt: now,
+        });
+      }
+      } catch (error) {
+        if (error instanceof PlatformError) throw error;
+        throw new PlatformError("INTERNAL_ERROR", error instanceof Error ? error.message : "run persist failed", {
+          publicMessage: "The seating run could not be stored.",
         });
       }
       return run;

@@ -532,3 +532,17 @@ RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S037`. Canonical corpus p
 |----|------|---------|----------|
 | EV-EOS-S05B-ACCEPT | DOCUMENT | EOS-S05B independent acceptance record | `docs/control/EOS_S05B_ACCEPTANCE.md` |
 
+## EOS-S06 MD-PR-S072
+
+**Prompt Control ID:** `MD-PR-S072`  
+**Milestone:** `EOS-S06` — not accepted
+
+`MD-PR-S072` replaces the defective S06 seating decision spine with V2 contracts. Baseline `844f107fc70e1eaa8995e0c7c49c0c42d52b9dd1`. Live Event OS SHA `0d43a9e40ce63d4acb0c584f2f1ad308c400c412`. Local `s06-eval-v2` 30/30 RELEASE_READY. Live publication/replay and live eval persist unfinished. Claude was not run. EOS-S07 was not started. `EOS_S06_ACCEPTANCE.md` was not created.
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-EOS-S06-S072-AUTH | DOCUMENT | Sole MD-PR-S072 execution authority | `docs/control/eos-s06/MD_PR_S072_EOS_S06_V2_CONTROLLED_SEATING_TRUTH_REPLACEMENT.md` |
+| EV-EOS-S06-S072-IMPL | DOCUMENT | S06 implementation ledger without acceptance | `docs/control/eos-s06/EOS_S06_IMPLEMENTATION_LEDGER.md` |
+| EV-EOS-S06-S072-BUILD | DOCUMENT | First-run failures and local/live gates | `docs/control/eos-s06/EOS_S06_BUILD_LEDGER.md` |
+| EV-EOS-S06-S072-EVAL | TEST | Local s06-eval-v2 corpus | `packages/shared-platform/test/seating-evaluation-v2.test.ts` |
+
