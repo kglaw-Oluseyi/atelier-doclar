@@ -216,7 +216,7 @@ test.describe("CURSOR-S06V2-S072 live gates", () => {
     await timedAction(page, `${FIXTURE}-HARD-CREATE`, () => submitNamed(page, "Save rule"));
     await gotoSeating(page, "#rules");
     await expect(page.getByRole("heading", { name: "Draft" })).toBeVisible();
-    await expect(page.getByText(/keep apart · HARD · DRAFT/i)).toBeVisible();
+    await expect(page.getByText(/keep apart · HARD · DRAFT/i).first()).toBeVisible();
     await expect(page.getByTestId("seating-rules").getByRole("button", { name: "Activate" })).toHaveCount(0);
   });
 
