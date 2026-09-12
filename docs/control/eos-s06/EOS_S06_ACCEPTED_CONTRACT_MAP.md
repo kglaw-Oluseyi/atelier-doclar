@@ -3,6 +3,7 @@
 **Prompt Control ID:** MD-PR-S070 V2  
 **Baseline SHA:** `75a894dedb6713ba2f3f4dce29e8372fa4160384`  
 **Authority placement SHA:** `a4f04c880bfaddfc20bb72c21dccf663f154b7cf`  
+**Application / deployed SHA:** `bc06b9624a0a22ed7e65324dd07ded65a54832cd`  
 **Purpose:** Concrete file/type/function anchors for S06 adapters. Names adapt to accepted code; meaning is preserved. This is not acceptance.
 
 Programme proof at ratification: `EOS-S05B` ACCEPTED (`docs/control/EOS_S05B_ACCEPTANCE.md`); catalogue accepted-slice count `5`; `EOS-S06` was `NOT_STARTED / NOT_AUTHORISED` until the V2 overlay was ratified.
