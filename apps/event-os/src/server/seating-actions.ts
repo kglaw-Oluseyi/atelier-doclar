@@ -1,6 +1,12 @@
 "use server";
 
-import { executeS06Evaluation, parseFormSchema, type ProtectionFormState } from "@maison-doclar/shared-platform";
+import {
+  executeS06Evaluation,
+  parseFormSchema,
+  seatingV2ReplacementEnabled,
+  type ProtectionFormState,
+  type SeatingV2RuleContent,
+} from "@maison-doclar/shared-platform";
 import { runProtectionFormAction } from "./protection-form-action";
 import { getRuntime } from "./runtime";
 import { requireActor } from "./with-session";
@@ -62,6 +68,16 @@ async function sessionEnvelope(formData: FormData) {
   };
 }
 
+function v2() {
+  return seatingV2ReplacementEnabled();
+}
+
+function hardness(kind: string): SeatingV2RuleContent["hardness"] {
+  if (kind === "WEIGHTED") return "SOFT";
+  if (kind === "INFORMATION") return "INFORMATIONAL";
+  return "HARD";
+}
+
 function parseEnvelope(formData: FormData) {
   return parseFormSchema(EnvelopeSchema, {
     organisationId: field(formData, "organisationId"),
@@ -82,6 +98,7 @@ export async function freezeSeatingInputsAction(prev: ProtectionFormState, formD
     parse: parseEnvelope,
     execute: async () => {
       const { actor, envelope } = await sessionEnvelope(formData);
+      if (v2()) return asId(await getRuntime().service.seatingV2Commands().freezePackage(actor, envelope, { seed: field(formData, "seed") || undefined }));
       return asId(await getRuntime().service.seatingCommands().freezeSeatingInputs(actor, envelope));
     },
   });
@@ -99,6 +116,18 @@ export async function createSeatingConstraintAction(prev: ProtectionFormState, f
       const kind = field(formData, "kind") as "HARD" | "WEIGHTED" | "INFORMATION";
       const predicateType = field(formData, "predicateType");
       const guestIds = [field(formData, "guestIdA"), field(formData, "guestIdB")].filter(Boolean);
+      if (v2()) {
+        return asId(await getRuntime().service.seatingV2Commands().createRule(actor, envelope, {
+          kind: predicateType as SeatingV2RuleContent["kind"],
+          hardness: hardness(kind),
+          weight: kind === "WEIGHTED" ? Number(field(formData, "weight") || "1") : null,
+          scope: "TABLE",
+          specialistDomain: (field(formData, "reviewDomain") || "NONE") as SeatingV2RuleContent["specialistDomain"],
+          subjects: guestIds.map((id) => ({ type: "EVENT_GUEST" as const, id })),
+          targets: field(formData, "tableId") ? [{ type: "TABLE" as const, idOrCode: field(formData, "tableId") }] : [],
+          source: { type: "MANUAL" },
+        }));
+      }
       return asId(await getRuntime().service.seatingCommands().createSeatingConstraint(actor, envelope, {
         kind,
         predicateType,
@@ -129,6 +158,15 @@ export async function createReservationBlockAction(prev: ProtectionFormState, fo
     parse: parseEnvelope,
     execute: async () => {
       const { actor, envelope } = await sessionEnvelope(formData);
+      if (v2()) {
+        return asId(await getRuntime().service.seatingV2Commands().createReservation(actor, envelope, {
+          eligibleMemberIds: field(formData, "eligibleGuestIds").split(",").map((item) => item.trim()).filter(Boolean),
+          targets: field(formData, "tableId") ? [{ type: "TABLE", idOrCode: field(formData, "tableId") }] : [],
+          exact: field(formData, "exactCount") ? Number(field(formData, "exactCount")) : null,
+          min: field(formData, "minCount") ? Number(field(formData, "minCount")) : null,
+          max: field(formData, "maxCount") ? Number(field(formData, "maxCount")) : null,
+        }));
+      }
       return asId(await getRuntime().service.seatingCommands().createReservationBlock(actor, envelope, {
         eligibleSetCode: field(formData, "eligibleSetCode"),
         eligibleGuestIds: field(formData, "eligibleGuestIds")
@@ -155,6 +193,12 @@ export async function releaseReservationBlockAction(prev: ProtectionFormState, f
     parse: parseEnvelope,
     execute: async () => {
       const { actor, envelope } = await sessionEnvelope(formData);
+      if (v2()) {
+        return asId(await getRuntime().service.seatingV2Commands().releaseReservation(actor, envelope, {
+          editionId: field(formData, "blockId"),
+          decision: "RELEASED",
+        }));
+      }
       return asId(await getRuntime().service.seatingCommands().releaseReservationBlock(actor, envelope, {
         blockId: field(formData, "blockId"),
         expectedVersion: Number(field(formData, "expectedVersion") || "0"),
@@ -172,6 +216,11 @@ export async function launchSeatingRunAction(prev: ProtectionFormState, formData
     parse: parseEnvelope,
     execute: async () => {
       const { actor, envelope } = await sessionEnvelope(formData);
+      if (v2()) {
+        return asId(await getRuntime().service.seatingV2Commands().launchRun(actor, envelope, {
+          packageId: field(formData, "inputEditionId"),
+        }));
+      }
       return asId(await getRuntime().service.seatingCommands().launchSeatingRun(actor, envelope, {
         inputEditionId: field(formData, "inputEditionId"),
         seed: field(formData, "seed") || undefined,
@@ -206,6 +255,7 @@ export async function adoptSeatingRunAction(prev: ProtectionFormState, formData:
     parse: parseEnvelope,
     execute: async () => {
       const { actor, envelope } = await sessionEnvelope(formData);
+      if (v2()) return asId(await getRuntime().service.seatingV2Commands().adoptRun(actor, envelope, { runId: field(formData, "runId") }));
       return asId(await getRuntime().service.seatingCommands().adoptSeatingRun(actor, envelope, { runId: field(formData, "runId") }));
     },
   });
@@ -220,6 +270,28 @@ export async function applySeatingChangeAction(prev: ProtectionFormState, formDa
     parse: parseEnvelope,
     execute: async () => {
       const { actor, envelope } = await sessionEnvelope(formData);
+      if (v2()) {
+        const command = field(formData, "command");
+        const planEditionId = field(formData, "editionId");
+        if (command === "ASSIGN_UNSEATED") {
+          return asId(await getRuntime().service.seatingV2Commands().assignUnseated(actor, envelope, {
+            planEditionId,
+            eventGuestId: field(formData, "guestId"),
+            positionToken: field(formData, "targetPositionId"),
+          }));
+        }
+        return asId(await getRuntime().service.seatingV2Commands().applyManual(actor, envelope, {
+          planEditionId,
+          command:
+            command === "SWAP"
+              ? { type: "SWAP", leftGuestId: field(formData, "guestId"), rightGuestId: field(formData, "otherGuestId") }
+              : command === "UNSEAT"
+                ? { type: "UNSEAT", eventGuestId: field(formData, "guestId"), reasonCode: field(formData, "reasonCode") || "MANUAL_UNSEAT" }
+                : command === "LOCK" || command === "UNLOCK"
+                  ? { type: command, eventGuestId: field(formData, "guestId") }
+                  : { type: "MOVE", eventGuestId: field(formData, "guestId"), positionToken: field(formData, "targetPositionId") },
+        }));
+      }
       return asId(await getRuntime().service.seatingCommands().applySeatingChange(actor, envelope, {
         editionId: field(formData, "editionId"),
         command: field(formData, "command") as "MOVE" | "UNSEAT" | "LOCK" | "UNLOCK" | "SWAP",
@@ -242,6 +314,7 @@ export async function submitSeatingPlanAction(prev: ProtectionFormState, formDat
     parse: parseEnvelope,
     execute: async () => {
       const { actor, envelope } = await sessionEnvelope(formData);
+      if (v2()) return asId(await getRuntime().service.seatingV2Commands().submitPlan(actor, envelope, { editionId: field(formData, "editionId") }));
       return asId(await getRuntime().service.seatingCommands().submitSeatingPlan(actor, envelope, { editionId: field(formData, "editionId") }));
     },
   });
@@ -256,6 +329,15 @@ export async function decideSeatingReviewAction(prev: ProtectionFormState, formD
     parse: parseEnvelope,
     execute: async () => {
       const { actor, envelope } = await sessionEnvelope(formData);
+      if (v2()) {
+        return asId(await getRuntime().service.seatingV2Commands().recordSpecialistReview(actor, envelope, {
+          editionId: field(formData, "editionId"),
+          editionHash: field(formData, "editionHash"),
+          domain: field(formData, "domain") as "PROTOCOL" | "ACCESSIBILITY" | "SECURITY",
+          decision: field(formData, "decision") as "APPROVED" | "REJECTED",
+          reason: field(formData, "reason") || "Reviewed",
+        }));
+      }
       return asId(await getRuntime().service.seatingCommands().decideSeatingReview(actor, envelope, {
         editionId: field(formData, "editionId"),
         editionHash: field(formData, "editionHash"),
@@ -276,6 +358,14 @@ export async function decideSeatingApprovalAction(prev: ProtectionFormState, for
     parse: parseEnvelope,
     execute: async () => {
       const { actor, envelope } = await sessionEnvelope(formData);
+      if (v2()) {
+        return asId(await getRuntime().service.seatingV2Commands().approvePlan(actor, envelope, {
+          editionId: field(formData, "editionId"),
+          editionHash: field(formData, "editionHash"),
+          decision: field(formData, "decision") as "APPROVED" | "REJECTED",
+          reason: field(formData, "reason") || "Operational approval",
+        }));
+      }
       return asId(await getRuntime().service.seatingCommands().decideSeatingApproval(actor, envelope, {
         editionId: field(formData, "editionId"),
         editionHash: field(formData, "editionHash"),
@@ -294,6 +384,12 @@ export async function publishSeatingPlanAction(prev: ProtectionFormState, formDa
     parse: parseEnvelope,
     execute: async () => {
       const { actor, envelope } = await sessionEnvelope(formData);
+      if (v2()) {
+        return asId(await getRuntime().service.seatingV2Commands().publishPlan(actor, envelope, {
+          editionId: field(formData, "editionId"),
+          editionHash: field(formData, "editionHash"),
+        }));
+      }
       return asId(await getRuntime().service.seatingCommands().publishSeatingPlan(actor, envelope, {
         editionId: field(formData, "editionId"),
         editionHash: field(formData, "editionHash"),
@@ -311,12 +407,67 @@ export async function requestSeatingExportAction(prev: ProtectionFormState, form
     parse: parseEnvelope,
     execute: async () => {
       const { actor, envelope } = await sessionEnvelope(formData);
+      if (v2()) {
+        const projection = field(formData, "projectionClass");
+        return asId(await getRuntime().service.seatingV2Commands().requestExport(actor, envelope, {
+          sourceType: field(formData, "publicationId") ? "PUBLICATION" : "EDITION",
+          sourceId: field(formData, "publicationId") || field(formData, "editionId"),
+          format: field(formData, "format") as "PDF" | "PNG" | "JSON",
+          projectionClass:
+            projection === "AUDITOR" ? "PERMISSION_SAFE" : projection === "CEO" ? "FULL" : "OPERATIONAL",
+        }));
+      }
       return asId(await getRuntime().service.seatingCommands().requestSeatingExport(actor, envelope, {
         publicationId: field(formData, "publicationId") || undefined,
         editionId: field(formData, "editionId") || undefined,
         format: field(formData, "format") as "PDF" | "PNG" | "JSON",
         projectionClass: field(formData, "projectionClass") as "PLANNER" | "DIRECTOR" | "CEO" | "AUDITOR" | "DOWNSTREAM",
       }));
+    },
+  });
+}
+
+export async function activateSeatingRuleAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: scopePath(formData),
+    actionType: "seating.rule.activate",
+    parse: parseEnvelope,
+    execute: async () => {
+      const { actor, envelope } = await sessionEnvelope(formData);
+      return asId(await getRuntime().service.seatingV2Commands().activateRule(actor, envelope, { editionId: field(formData, "editionId") }));
+    },
+  });
+}
+
+export async function withdrawSeatingRuleAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: scopePath(formData),
+    actionType: "seating.constraint.manage",
+    parse: parseEnvelope,
+    execute: async () => {
+      const { actor, envelope } = await sessionEnvelope(formData);
+      return asId(await getRuntime().service.seatingV2Commands().withdrawRule(actor, envelope, {
+        editionId: field(formData, "editionId"),
+        reason: field(formData, "reason") || "Withdrawn",
+      }));
+    },
+  });
+}
+
+export async function recallSeatingPlanAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: scopePath(formData),
+    actionType: "seating.plan.submit",
+    parse: parseEnvelope,
+    execute: async () => {
+      const { actor, envelope } = await sessionEnvelope(formData);
+      return asId(await getRuntime().service.seatingV2Commands().recallPlan(actor, envelope, { editionId: field(formData, "editionId") }));
     },
   });
 }
@@ -331,7 +482,7 @@ export async function runS06EvaluationAction(prev: ProtectionFormState, formData
     execute: async () => {
       const { actor, envelope } = await sessionEnvelope(formData);
       void executeS06Evaluation;
-      return asId(await getRuntime().service.seatingCommands().runS06Evaluation(actor, envelope));
+      return asId(await getRuntime().service.seatingV2Commands().runS06EvaluationV2(actor, envelope));
     },
   });
 }

@@ -2,7 +2,12 @@ import { randomUUID } from "node:crypto";
 import { exactHash } from "./eec-hash.js";
 import { appliedMutationEffect, replayedMutationEffect, type DurableMutationEffect } from "./durable-mutation-effect.js";
 import { PlatformError } from "./errors.js";
-import { authorize, type ActorSnapshot } from "./policy.js";
+import { authorize, canSeeEvent, type ActorSnapshot } from "./policy.js";
+import { roleKeyForId } from "./catalog.js";
+import { seatingDisclosureForRole } from "./seating-workspace.js";
+import { buildSeatingV2Workspace } from "./seating-v2-workspace.js";
+import { emptySeatingV2State, SEATING_V2_COLLECTIONS, type SeatingV2State } from "./seating-v2-state.js";
+import type { SeatingWorkspaceView } from "./seating-workspace.js";
 import { compileSeatingV2Request } from "./seating-v2-compiler.js";
 import {
   seatingV2AssignmentsHash,
@@ -1081,6 +1086,28 @@ export class SeatingV2CommandService {
     });
   }
 
+  async projectWorkspace(actor: SeatingV2Actor, eventId: string): Promise<SeatingWorkspaceView> {
+    const people = this.deps.resolveActor(actor.personId);
+    const event = this.deps.snapshot().events.find((item) => item.id === eventId);
+    if (!event) throw new PlatformError("NOT_FOUND", "event was not found");
+    if (!canSeeEvent(people, event, nowOf(actor))) throw new PlatformError("NOT_FOUND", "event was not found");
+    const assignment =
+      people.assignments.find((item) => item.status === "ACTIVE" && item.organisationId === event.organisationId && item.eventId === eventId) ??
+      people.assignments.find((item) => item.status === "ACTIVE" && item.organisationId === event.organisationId && !item.eventId);
+    if (!assignment) throw new PlatformError("FORBIDDEN", "This assignment cannot perform this seating action.");
+    this.guard(actor, "seating.view", { organisationId: event.organisationId, eventId }, assignment.id);
+    const state = await this.repo.transaction(async (tx) => {
+      const next = emptySeatingV2State();
+      const scope = { organisationId: event.organisationId, eventId };
+      for (const collection of SEATING_V2_COLLECTIONS) {
+        (next[collection] as unknown[]) = await tx.list(collection, scope);
+      }
+      return next as SeatingV2State;
+    });
+    const role = roleKeyForId(assignment.roleId);
+    return buildSeatingV2Workspace(this.deps.snapshot(), state, eventId, seatingDisclosureForRole(role));
+  }
+
   async retrieveExport(
     actor: SeatingV2Actor,
     envelope: SeatingV2CommandEnvelope,
@@ -1131,6 +1158,47 @@ export class SeatingV2CommandService {
           layoutContentHash: publication?.layoutContentHash,
         },
       };
+    });
+  }
+
+  async runS06EvaluationV2(actor: SeatingV2Actor, envelope: SeatingV2CommandEnvelope) {
+    this.guard(actor, "seating.evaluate", envelope, envelope.actorAssignmentId);
+    const { executeS06EvaluationV2 } = await import("./seating-evaluation-v2-runner.js");
+    const result = await executeS06EvaluationV2();
+    return this.mutate(actor, envelope, "seating.evaluate", "seatingV2.runEvaluation", async (tx) => {
+      const run = {
+        id: randomUUID(),
+        organisationId: envelope.organisationId,
+        schemaVersion: SEATING_V2_SCHEMA_VERSION,
+        corpusEdition: result.corpusEdition,
+        corpusHash: result.corpusHash,
+        contractVersion: result.contractVersion,
+        solverVersion: result.solverVersion,
+        configHash: result.configHash,
+        validatorVersion: result.validatorVersion,
+        projectionVersion: result.projectionVersion,
+        status: result.failedCount === 0 ? "PASSED" : "FAILED",
+        caseCount: result.caseCount,
+        passedCount: result.passedCount,
+        failedCount: result.failedCount,
+        createdBy: actor.personId,
+        createdAt: nowOf(actor),
+      } as const;
+      await tx.insert("evaluationRuns", run);
+      for (const item of result.cases) {
+        await tx.insert("evaluationCaseResults", {
+          id: randomUUID(),
+          organisationId: envelope.organisationId,
+          schemaVersion: SEATING_V2_SCHEMA_VERSION,
+          runId: run.id,
+          caseId: item.caseId,
+          observations: item.observations,
+          assertions: item.assertions,
+          status: item.status,
+          createdAt: nowOf(actor),
+        });
+      }
+      return run;
     });
   }
 

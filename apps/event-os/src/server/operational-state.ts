@@ -51,6 +51,8 @@ const KIND_BY_CODE: Record<PlatformErrorCode, OperationalStateKind> = {
   VALIDATION_FAILED: "validation",
   VERSION_CONFLICT: "conflict",
   TRANSITION_INVALID: "invalid_transition",
+  ADOPTION_MISMATCH: "conflict",
+  SEATING_VALIDATION_REJECTED: "validation",
   IDEMPOTENCY_CONFLICT: "duplicate",
   DEPENDENCY_UNAVAILABLE: "postgres_unavailable",
   CAPABILITY_NOT_ENABLED: "readiness_unavailable",

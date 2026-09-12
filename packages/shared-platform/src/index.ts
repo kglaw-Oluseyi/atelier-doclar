@@ -1032,9 +1032,21 @@ export { PostgresSeatingV2Repository } from "./postgres-seating-v2-store.js";
 export type { SeatingRepository, SeatingTransaction } from "./seating-repository.js";
 export { SeatingCommandService } from "./seating-command-service.js";
 export { SeatingV2CommandService } from "./seating-v2-command-service.js";
+export { seatingV2ReplacementEnabled } from "./seating-v2-flag.js";
+export { LEGACY_S06_PUBLICATION_LABEL } from "./seating-v2-workspace.js";
+export type { SeatingV2RuleContent } from "./seating-v2-schemas.js";
 export { snapshotGuestCohortAdapter, snapshotLayoutAdapter, seatingToken } from "./seating-adapters.js";
 export { buildSeatingWorkspace, implicatedSeatingReviewDomains, seatingDisclosureForRole } from "./seating-workspace.js";
 export { executeS06Evaluation } from "./seating-evaluation-runner.js";
+export { executeS06EvaluationV2 } from "./seating-evaluation-v2-runner.js";
+export {
+  S06_V2_CASE_IDS,
+  S06_V2_EVALUATION_CORPUS_EDITION,
+  S06_V2_EVALUATION_CONTRACT_VERSION,
+  S06_V1_STALE_REASON,
+  s06V2CorpusHash,
+  seatingV2EvalReadiness,
+} from "./seating-evaluation-v2-schemas.js";
 export {
   S06_CASE_IDS,
   S06_EVALUATION_CORPUS_EDITION,

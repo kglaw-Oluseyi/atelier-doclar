@@ -17,7 +17,7 @@ export type SeatingWorkspaceView = SeatingWorkspaceProjection & {
   implicatedReviewDomains: Array<"PROTOCOL" | "ACCESSIBILITY" | "SECURITY">;
   reviewRequirementCopy: string;
   reservations: Array<{ id: string; setCode: string; releaseState: string; min?: number; max?: number; exact?: number }>;
-  runs: Array<{ id: string; status: string; seed: string; resultHash?: string; seated?: number; unseated?: number; stale: boolean }>;
+  runs: Array<{ id: string; status: string; seed: string; resultHash?: string; seated?: number; unseated?: number; stale: boolean; validatorVerdict?: string }>;
   reviews: Array<{ id: string; domain: string; decision: string; reviewerLabel: string; reason: string; createdAt: string }>;
   approvals: Array<{ id: string; decision: string; createdAt: string }>;
   publications: Array<{ id: string; status: string; publicationNumber: number; editionHash: string; publishedAt: string }>;

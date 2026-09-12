@@ -17,6 +17,7 @@ export function seatingPermissions(person: Person, organisationId: string, event
     view: allow("seating.view"),
     prepare: allow("seating.input.prepare"),
     constraintManage: allow("seating.constraint.manage"),
+    ruleActivate: allow("seating.rule.activate"),
     reservationManage: allow("seating.reservation.manage"),
     run: allow("seating.run.execute"),
     edit: allow("seating.plan.edit"),
