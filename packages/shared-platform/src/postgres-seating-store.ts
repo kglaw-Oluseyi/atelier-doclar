@@ -108,6 +108,10 @@ export class PostgresSeatingTransaction implements SeatingTransaction {
         ["SUPERSEDED", row.organisation_id, row.event_id, "CURRENT"],
       );
     }
+    if (table === "seating_evaluation_case_results") {
+      if (row.observations !== undefined) row.observations = JSON.stringify(row.observations);
+      if (row.assertions !== undefined) row.assertions = JSON.stringify(row.assertions);
+    }
     const columns = Object.keys(row);
     const values = columns.map((key) => row[key]);
     const placeholders = columns.map((_, index) => `$${index + 1}`);

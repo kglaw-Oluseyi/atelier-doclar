@@ -1,6 +1,6 @@
 "use server";
 
-import { parseFormSchema, type ProtectionFormState } from "@maison-doclar/shared-platform";
+import { executeS06Evaluation, parseFormSchema, type ProtectionFormState } from "@maison-doclar/shared-platform";
 import { runProtectionFormAction } from "./protection-form-action";
 import { getRuntime } from "./runtime";
 import { requireActor } from "./with-session";
@@ -330,6 +330,7 @@ export async function runS06EvaluationAction(prev: ProtectionFormState, formData
     parse: parseEnvelope,
     execute: async () => {
       const { actor, envelope } = await sessionEnvelope(formData);
+      void executeS06Evaluation;
       return asId(await getRuntime().service.seatingCommands().runS06Evaluation(actor, envelope));
     },
   });
