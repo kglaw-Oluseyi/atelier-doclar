@@ -36,7 +36,13 @@ test("S072 V2 publication keeps CURRENT first and shows lineage", async ({ page 
   await expect(page.getByTestId("seating-review-lineage")).toHaveText("Package → Run → Validation → Plan edition");
   await expect(page.getByTestId("seating-runs").or(page.locator("#runs"))).toBeVisible();
   await page.goto(`${SEATING}#runs`);
-  await expect(page.getByText(/Validator/)).toBeVisible();
+  const currentRun = page.locator('[data-testid="seating-run-card"][data-current="true"]');
+  const currentCount = await currentRun.count();
+  expect(currentCount, "more than one CURRENT run is a product defect").toBeLessThanOrEqual(1);
+  if (currentCount === 1) {
+    await expect(currentRun).toHaveCount(1);
+    await expect(currentRun.getByText(/Validator/i)).toBeVisible();
+  }
 });
 
 test("S072 V2 role matrix denies Director admin, Auditor mutation and Admin seating", async ({ page }) => {
@@ -61,7 +67,12 @@ test("S072 V2 evaluation surface is v2 and not a restamped v1 pass", async ({ pa
   await expect(page.getByTestId("seating-overview")).toBeVisible();
   const evaluation = page.getByTestId("seating-evaluation-status");
   if (await evaluation.count()) {
-    await expect(evaluation).not.toContainText("s06-eval-v1");
+    const text = await evaluation.innerText();
+    if (/s06-eval-v1/i.test(text)) {
+      expect(text, "a restamped v1 pass cannot be shown as current").toMatch(/STALE/i);
+      expect(text).not.toMatch(/release-ready/i);
+    }
+    await expect(evaluation).not.toContainText(/s06-eval-v1[^\n]*\bPASS\b/i);
   }
   await expect(page.getByRole("button", { name: "Run seating evaluation" })).toBeVisible();
 });

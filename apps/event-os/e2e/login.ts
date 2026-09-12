@@ -25,7 +25,10 @@ export function staffNavIdentity(page: Page) {
 export async function login(page: Page, email = STAFF_IDENTITIES.ceo.email): Promise<void> {
   await page.goto("/sign-in");
   await page.getByLabel("Staff email").fill(email);
-  await page.getByLabel("Access token").fill(process.env.EVENT_OS_ACCESS_TOKEN ?? "event-os-access-token-not-for-production");
+  const localToken = "event-os-access-token-not-for-production";
+  const accessToken =
+    process.env.PLAYWRIGHT_LIVE === "1" ? (process.env.EVENT_OS_ACCESS_TOKEN ?? localToken) : localToken;
+  await page.getByLabel("Access token").fill(accessToken);
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL(/\/app(?:\/|$)/, { timeout: 20_000 });
   await page

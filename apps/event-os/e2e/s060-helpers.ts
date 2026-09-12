@@ -37,6 +37,100 @@ export async function clickOnceNamed(page: Page, name: string) {
   });
 }
 
+export async function expectLocalFileStore(page: Page) {
+  const response = await page.request.get("/api/health/ready");
+  const readyUrl = new URL(response.url());
+  const body = (await response.json()) as { persistence?: string };
+  if (readyUrl.hostname !== "127.0.0.1" && readyUrl.hostname !== "localhost") {
+    throw new Error(`local Playwright must use 127.0.0.1, not ${readyUrl.host}`);
+  }
+  if (body.persistence !== "MEMORY_NON_PRODUCTION") {
+    throw new Error(
+      `local Playwright must use a fresh synthetic file-store event; persistence=${body.persistence ?? "unknown"}`,
+    );
+  }
+}
+
+export async function expectFreshSyntheticEvent(page: Page) {
+  await expectLocalFileStore(page);
+  const pageHost = new URL(page.url()).hostname;
+  if (pageHost !== "127.0.0.1" && pageHost !== "localhost") {
+    throw new Error(`local Playwright page must stay on 127.0.0.1, not ${pageHost}`);
+  }
+  const text = await page.locator("main").innerText();
+  if (/P09Live|IdemTest-339344|Concurrency-A11y|Retain-Test-S04A1/i.test(text)) {
+    throw new Error("local Playwright is using accumulated Alpha One state, not a fresh synthetic event");
+  }
+}
+
+export async function submitScopedSeatingMutation(
+  page: Page,
+  form: Locator,
+  buttonName: string,
+  previousResult = "",
+) {
+  const commandId = await form.locator('input[name="idempotencyKey"]').inputValue();
+  const seen: Request[] = [];
+  const onRequest = (request: Request) => {
+    if (isMutationActionPost(request)) seen.push(request);
+  };
+  const button = form.getByRole("button", { name: buttonName });
+  await expect(button).toHaveCount(1);
+  await expect(button).toBeVisible({ timeout: 30_000 });
+  await expect(button).toBeEnabled();
+  page.on("request", onRequest);
+  const pending = page.waitForRequest(isMutationActionPost, { timeout: 15_000 }).catch(() => null);
+  await button.click({ noWaitAfter: true });
+  const request = await pending;
+  page.off("request", onRequest);
+  if (!request) {
+    throw new Error(
+      `No POST: ${buttonName} did not emit a Next-action POST (seen=${seen.length}; commandId=${commandId}; url=${page.url()})`,
+    );
+  }
+  if (seen.length !== 1) {
+    throw new Error(`${buttonName} emitted ${seen.length} Next-action POSTs; expected exactly 1`);
+  }
+  const response =
+    (await request.response()) ?? (await page.waitForResponse((item) => item.request() === request, { timeout: 30_000 }));
+  const status = response.status();
+  const location = response.headers()["location"] ?? "";
+  const validationCount = await page.getByTestId("protection-validation-summary").count();
+  if (validationCount > 0) {
+    const summary = (await page.getByTestId("protection-validation-summary").innerText()).slice(0, 240);
+    throw new Error(
+      `POST with expected in-page validation: status=${status} location=${location || "none"} commandId=${commandId} ${summary}`,
+    );
+  }
+  if (!response.ok() && status !== 303 && status !== 302) {
+    throw new Error(`${buttonName} POST returned ${status} location=${location || "none"} commandId=${commandId}`);
+  }
+  try {
+    await expectFreshActionSuccess(page, "", previousResult);
+  } catch (error) {
+    const traces = await readSettlementTraces(page, commandId);
+    const banner = ((await page.getByTestId("action-result-banner").innerText().catch(() => "")) ?? "").slice(0, 240);
+    throw new Error(
+      `${buttonName} POST ${status} location=${location || "none"} commandId=${commandId} url=${page.url()} banner=${banner} stages=${traces.traces.map((item) => item.stage).join(">") || "none"} (${error instanceof Error ? error.message : "no fresh result"})`,
+    );
+  }
+  return { commandId, status, location, resultId: new URL(page.url()).searchParams.get("result") ?? "" };
+}
+
+export async function readSettlementTraces(page: Page, commandId: string) {
+  const token = process.env.EVENT_OS_DIAGNOSTIC_TOKEN ?? "s073-local-diagnostic-token-not-for-production";
+  const response = await page.request.get(`/api/s073-diag/settlement?commandId=${encodeURIComponent(commandId)}`, {
+    headers: { "x-event-os-diagnostic-token": token },
+  });
+  if (!response.ok()) {
+    return { status: response.status(), traces: [] as Array<{ stage: string; resultId?: string; outcome?: string }> };
+  }
+  return (await response.json()) as {
+    status?: number;
+    traces: Array<{ stage: string; resultId?: string; outcome?: string; commandType?: string }>;
+  };
+}
+
 export async function settleSeatingMutation(page: Page, previousResult = "", timeout = 30_000) {
   const started = Date.now();
   const remaining = () => Math.max(250, timeout - (Date.now() - started));
