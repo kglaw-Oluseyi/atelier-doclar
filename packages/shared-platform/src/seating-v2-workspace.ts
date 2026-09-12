@@ -13,6 +13,29 @@ import type { PlatformSnapshot } from "./store.js";
 
 export const LEGACY_S06_PUBLICATION_LABEL = "LEGACY S06 PUBLICATION — not V2 validated";
 
+export function currentSeatingV2RunId(
+  state: Pick<SeatingV2State, "eventCurrent" | "publications" | "planEditions" | "runs">,
+  eventId: string,
+): string | undefined {
+  const currentPointer = state.eventCurrent.find((item) => item.eventId === eventId);
+  const publication = currentPointer?.currentPublicationId
+    ? state.publications.find((item) => item.id === currentPointer.currentPublicationId)
+    : state.publications.find((item) => item.eventId === eventId && item.status === "CURRENT");
+  const publishedEdition = publication
+    ? state.planEditions.find((item) => item.id === publication.planEditionId)
+    : undefined;
+  const submitted = currentPointer?.submittedEditionId
+    ? state.planEditions.find((item) => item.id === currentPointer.submittedEditionId)
+    : undefined;
+  const working = currentPointer?.workingEditionId
+    ? state.planEditions.find((item) => item.id === currentPointer.workingEditionId)
+    : undefined;
+  const governing = publishedEdition ?? submitted ?? working;
+  const runId = governing?.sourceRunId ?? undefined;
+  if (!runId) return undefined;
+  return state.runs.some((run) => run.eventId === eventId && run.id === runId) ? runId : undefined;
+}
+
 function sameIdSet(ids: string[], expected: Set<string>): boolean {
   if (ids.length !== expected.size) return false;
   return ids.every((id) => expected.has(id));
@@ -64,6 +87,7 @@ export function buildSeatingV2Workspace(
     layout = undefined;
   }
   const runs = state.runs.filter((item) => item.eventId === eventId);
+  const currentRunId = currentSeatingV2RunId(state, eventId);
   const evalRun = state.evaluationRuns.at(-1);
   const inputFreshness = !layout ? "MISSING" : !pkg ? "MISSING" : packageDrifted ? "STALE" : "CURRENT";
   const guests = cohort.guests.map((guest) => {
@@ -133,6 +157,7 @@ export function buildSeatingV2Workspace(
         : undefined,
     workingEdition: edition ? { id: edition.id, contentHash: edition.contentHash, status: edition.status, version: edition.version } : undefined,
     inputEdition: pkg ? { id: pkg.id, contentHash: pkg.contentHash } : undefined,
+    currentRunId,
     guests,
     tables,
     constraints: rules.map((item) => {
@@ -216,6 +241,7 @@ export function buildSeatingV2Workspace(
         seated: state.runAssignments.filter((row) => row.runId === item.id && row.state === "SEATED").length,
         unseated: state.runAssignments.filter((row) => row.runId === item.id && row.state === "UNSEATED").length,
         stale: Boolean(pkg && item.packageId !== pkg.id),
+        current: item.id === currentRunId,
         validatorVerdict: report?.validatorVersion === SEATING_V2_VALIDATOR_VERSION ? report.verdict : undefined,
         validatorVersion: report?.validatorVersion,
         violatedSummary: violatedSummary || undefined,

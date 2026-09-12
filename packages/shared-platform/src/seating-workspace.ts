@@ -31,6 +31,7 @@ export type SeatingWorkspaceView = SeatingWorkspaceProjection & {
     target?: string;
     authority?: string;
   }>;
+  currentRunId?: string;
   runs: Array<{
     id: string;
     status: string;
@@ -39,6 +40,7 @@ export type SeatingWorkspaceView = SeatingWorkspaceProjection & {
     seated?: number;
     unseated?: number;
     stale: boolean;
+    current?: boolean;
     validatorVerdict?: string;
     validatorVersion?: string;
     violatedSummary?: string;
@@ -177,6 +179,7 @@ export function buildSeatingWorkspace(
     currentPublication: publication,
     workingEdition: working,
     inputEdition: input,
+    currentRunId: working?.sourceRunId && state.runs.some((item) => item.id === working.sourceRunId) ? working.sourceRunId : undefined,
     blockers,
     counts: {
       eligibleGuests: guests.filter((item) => item.eligible).length,
@@ -223,6 +226,7 @@ export function buildSeatingWorkspace(
         seated: state.runAssignments.filter((assignment) => assignment.runId === item.id && assignment.state === "SEATED").length,
         unseated: state.runAssignments.filter((assignment) => assignment.runId === item.id && assignment.state === "UNSEATED").length,
         stale: Boolean(input && item.inputHash !== input.contentHash),
+        current: Boolean(working?.sourceRunId && item.id === working.sourceRunId),
       })),
     reviews: state.reviews
       .filter((item) => item.eventId === eventId)

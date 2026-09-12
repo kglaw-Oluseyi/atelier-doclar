@@ -1045,7 +1045,7 @@ export {
 } from "./seating-settlement-trace.js";
 export type { SeatingSettlementStage, SeatingSettlementTrace } from "./seating-settlement-trace.js";
 export { seatingV2ReplacementEnabled } from "./seating-v2-flag.js";
-export { LEGACY_S06_PUBLICATION_LABEL } from "./seating-v2-workspace.js";
+export { LEGACY_S06_PUBLICATION_LABEL, currentSeatingV2RunId } from "./seating-v2-workspace.js";
 export type { SeatingV2RuleContent } from "./seating-v2-schemas.js";
 export { snapshotGuestCohortAdapter, snapshotLayoutAdapter, seatingToken } from "./seating-adapters.js";
 export { buildSeatingWorkspace, implicatedSeatingReviewDomains, seatingDisclosureForRole } from "./seating-workspace.js";

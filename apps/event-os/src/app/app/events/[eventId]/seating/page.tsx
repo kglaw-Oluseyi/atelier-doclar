@@ -35,6 +35,13 @@ import { eventOsVerifyAsAvailable } from "../../../../../server/seating-verify-a
 import { emitSettlementStage, LEGACY_S06_PUBLICATION_LABEL, PlatformError, seatingV2ReplacementEnabled } from "@maison-doclar/shared-platform";
 import { activateSeatingRuleAction, withdrawSeatingRuleAction } from "../../../../../server/seating-actions";
 
+function visibleSeatingRuns<T extends { id: string }>(runs: T[], currentRunId: string | undefined, limit = 12): T[] {
+  if (runs.length <= limit) return runs;
+  const current = currentRunId ? runs.find((run) => run.id === currentRunId) : undefined;
+  if (!current) return runs.slice(-limit);
+  return [...runs.filter((run) => run.id !== currentRunId).slice(-(limit - 1)), current];
+}
+
 function Envelope({ fields }: { fields: Record<string, string | number> }) {
   return (
     <>
@@ -533,26 +540,33 @@ export default async function EventSeatingPage({
           </ProtectionMutationForm>
         ) : null}
         <ul>
-          {workspace.runs.slice(-12).map((run) => (
+          {visibleSeatingRuns(workspace.runs, workspace.currentRunId).map((run) => (
             <li key={run.id} data-testid={`seating-run-${run.status}`}>
-              Validator {run.validatorVerdict ?? "not independently validated on the current validator"} · seated {run.seated ?? 0} · unseated {run.unseated ?? 0}
-              {run.stale ? " · Upstream event information changed. Review and run again." : ""}
-              {run.validatorVerdict === "INFEASIBLE" || run.status === "INFEASIBLE" ? " · No safe seating plan satisfies every hard rule." : ""}
-              {run.violatedSummary ? ` · Violated: ${run.violatedSummary}` : ""}
-              {permissions.edit && (seatingV2ReplacementEnabled() ? run.validatorVerdict === "FEASIBLE" : run.status === "FEASIBLE" || run.status === "INFEASIBLE") ? (
-                <ProtectionMutationForm action={adoptSeatingRunAction} className="actions">
-                  <Envelope fields={{ ...envelopeFields, runId: run.id }} />
-                  <IdempotencyField />
-                  <button type="submit" className="button secondary">Adopt run</button>
-                </ProtectionMutationForm>
-              ) : null}
-              {permissions.run && (run.status === "QUEUED" || run.status === "RUNNING") ? (
-                <ProtectionMutationForm action={cancelSeatingRunAction} className="actions">
-                  <Envelope fields={{ ...envelopeFields, runId: run.id, expectedVersion: 0 }} />
-                  <IdempotencyField />
-                  <button type="submit" className="button secondary">Cancel run</button>
-                </ProtectionMutationForm>
-              ) : null}
+              <article
+                data-testid="seating-run-card"
+                data-run-id={run.id}
+                data-current={run.id === workspace.currentRunId ? "true" : "false"}
+                data-stale={run.stale ? "true" : "false"}
+              >
+                Validator {run.validatorVerdict ?? "not independently validated on the current validator"} · seated {run.seated ?? 0} · unseated {run.unseated ?? 0}
+                {run.stale ? " · Upstream event information changed. Review and run again." : ""}
+                {run.validatorVerdict === "INFEASIBLE" || run.status === "INFEASIBLE" ? " · No safe seating plan satisfies every hard rule." : ""}
+                {run.violatedSummary ? ` · Violated: ${run.violatedSummary}` : ""}
+                {permissions.edit && (seatingV2ReplacementEnabled() ? run.validatorVerdict === "FEASIBLE" : run.status === "FEASIBLE" || run.status === "INFEASIBLE") ? (
+                  <ProtectionMutationForm action={adoptSeatingRunAction} className="actions">
+                    <Envelope fields={{ ...envelopeFields, runId: run.id }} />
+                    <IdempotencyField />
+                    <button type="submit" className="button secondary">Adopt run</button>
+                  </ProtectionMutationForm>
+                ) : null}
+                {permissions.run && (run.status === "QUEUED" || run.status === "RUNNING") ? (
+                  <ProtectionMutationForm action={cancelSeatingRunAction} className="actions">
+                    <Envelope fields={{ ...envelopeFields, runId: run.id, expectedVersion: 0 }} />
+                    <IdempotencyField />
+                    <button type="submit" className="button secondary">Cancel run</button>
+                  </ProtectionMutationForm>
+                ) : null}
+              </article>
             </li>
           ))}
         </ul>
