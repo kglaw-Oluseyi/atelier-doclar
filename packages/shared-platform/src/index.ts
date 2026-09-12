@@ -1004,6 +1004,23 @@ export {
 } from "./seating-solver-fixtures.js";
 export { EOS_S06_SEATING_MIGRATION_ID, EOS_S06_SEATING_RECEIPT_ID, SEATING_SQL_TABLES } from "./seating-postgres-schema.js";
 export { emptySeatingState, SEATING_COLLECTIONS } from "./seating-schemas.js";
+export {
+  SEATING_V2_SOLVER_CONTRACT,
+  SEATING_V2_SOLVER_VERSION,
+  SEATING_V2_VALIDATOR_VERSION,
+  EOS_S06_SEATING_V2_MIGRATION_ID,
+  SeatingV2CompiledRequestSchema,
+  SeatingV2ValidationReportSchema,
+} from "./seating-v2-schemas.js";
+export {
+  seatingV2RuleContentHash,
+  seatingV2SemanticHash,
+  seatingV2SolverToken,
+  seatingV2PackageContentHash,
+  seatingV2PlanContentHash,
+} from "./seating-v2-hash.js";
+export { compileSeatingV2Request, assertSeatingV2CompiledRequest } from "./seating-v2-compiler.js";
+export { validateSeatingV2 } from "./seating-v2-validator.js";
 export { MemorySeatingRepository, MemorySeatingStore } from "./memory-seating-store.js";
 export { PostgresSeatingRepository } from "./postgres-seating-store.js";
 export type { SeatingRepository, SeatingTransaction } from "./seating-repository.js";

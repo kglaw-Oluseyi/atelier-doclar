@@ -237,6 +237,7 @@ const PERMISSION_IDS: Record<PermissionKey, string> = {
   "seating.view": "11111111-1111-4111-8111-111111111213",
   "seating.input.prepare": "11111111-1111-4111-8111-111111111214",
   "seating.constraint.manage": "11111111-1111-4111-8111-111111111215",
+  "seating.rule.activate": "11111111-1111-4111-8111-111111111233",
   "seating.constraint.review.protocol": "11111111-1111-4111-8111-111111111216",
   "seating.constraint.review.accessibility": "11111111-1111-4111-8111-111111111217",
   "seating.constraint.review.security": "11111111-1111-4111-8111-111111111218",
@@ -463,6 +464,7 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "risk.export",
     "risk.audit.view",
     "seating.view",
+    "seating.rule.activate",
     "seating.plan.approve",
   ],
   CLIENT_LEAD: [

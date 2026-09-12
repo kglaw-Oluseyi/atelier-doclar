@@ -439,6 +439,7 @@ export const PERMISSION_KEYS = [
   "seating.view",
   "seating.input.prepare",
   "seating.constraint.manage",
+  "seating.rule.activate",
   "seating.constraint.review.protocol",
   "seating.constraint.review.accessibility",
   "seating.constraint.review.security",
@@ -699,6 +700,7 @@ export const S05B_SENSITIVE_PERMISSIONS = [
 ] as const;
 
 export const S06_SENSITIVE_PERMISSIONS = [
+  "seating.rule.activate",
   "seating.plan.approve",
   "seating.plan.publish",
   "seating.evaluate",
