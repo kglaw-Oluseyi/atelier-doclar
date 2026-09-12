@@ -789,6 +789,8 @@ import {
   transitionDossierOnSnap,
 } from "./risk-projections.js";
 import { RiskDossierCommandService } from "./risk-dossier-command-service.js";
+import { SeatingCommandService } from "./seating-command-service.js";
+import { MemorySeatingRepository } from "./memory-seating-store.js";
 import { RiskAuthorityCommandService, type AuthorityOverlay } from "./risk-authority-command-service.js";
 import { MemoryRiskDossierRepository } from "./memory-risk-dossier-store.js";
 import { MemoryRiskProtectionRepository, MemoryRiskProtectionStore } from "./memory-risk-store.js";
@@ -866,11 +868,28 @@ export class PlatformService {
   private lastMutationEffect: DurableMutationEffect | undefined;
   private dossierCommandService: RiskDossierCommandService | undefined;
   private authorityCommandService: RiskAuthorityCommandService | undefined;
+  private seatingCommandService: SeatingCommandService | undefined;
 
   constructor(
     private readonly store: PlatformStore,
     private readonly options: PlatformServiceOptions = {},
   ) {}
+
+  seatingCommands(): SeatingCommandService {
+    if (!this.seatingCommandService) {
+      const postgres = this.store instanceof PostgresPlatformStore ? this.store : undefined;
+      const repo = postgres ? postgres.seatingRepository() : new MemorySeatingRepository();
+      this.seatingCommandService = new SeatingCommandService(repo, {
+        resolveActor: (personId) => this.resolveActor(personId),
+        snapshot: () => this.store.snapshot(),
+        tokenPepper: () => this.options.staffSession?.sessionSecret ?? "s06-non-production-pepper",
+        onEffect: (effect) => {
+          this.lastMutationEffect = effect;
+        },
+      });
+    }
+    return this.seatingCommandService;
+  }
 
   private dossierCommands(): RiskDossierCommandService {
     if (!this.dossierCommandService) {

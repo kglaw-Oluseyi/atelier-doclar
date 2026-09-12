@@ -14,6 +14,7 @@ import { validateS05APersistedCollections } from "./eec-persistence.js";
 import { validateS05BPersistedCollections } from "./risk-persistence.js";
 import { PostgresRiskProtectionRepository, PostgresRiskProtectionStore, PostgresRiskTransaction } from "./postgres-risk-store.js";
 import { PostgresRiskDossierRepository } from "./postgres-risk-dossier-store.js";
+import { PostgresSeatingRepository } from "./postgres-seating-store.js";
 import type { DossierOverlay } from "./risk-dossier-command-service.js";
 import type { AuthorityOverlay } from "./risk-authority-command-service.js";
 import { writeRiskSnapshotDelta } from "./risk-repository.js";
@@ -326,6 +327,10 @@ export class PostgresPlatformStore implements PlatformStore {
 
   dossierRepository(): PostgresRiskDossierRepository {
     return new PostgresRiskDossierRepository(this.client);
+  }
+
+  seatingRepository(): PostgresSeatingRepository {
+    return new PostgresSeatingRepository(this.client);
   }
 
   protectionRepository(): PostgresRiskProtectionRepository {

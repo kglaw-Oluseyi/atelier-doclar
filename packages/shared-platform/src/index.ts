@@ -1007,3 +1007,6 @@ export { emptySeatingState, SEATING_COLLECTIONS } from "./seating-schemas.js";
 export { MemorySeatingRepository, MemorySeatingStore } from "./memory-seating-store.js";
 export { PostgresSeatingRepository } from "./postgres-seating-store.js";
 export type { SeatingRepository, SeatingTransaction } from "./seating-repository.js";
+export { SeatingCommandService } from "./seating-command-service.js";
+export { snapshotGuestCohortAdapter, snapshotLayoutAdapter, seatingToken } from "./seating-adapters.js";
+export { S06_SENSITIVE_PERMISSIONS } from "./constants.js";

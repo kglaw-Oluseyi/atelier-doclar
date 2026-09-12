@@ -433,6 +433,23 @@ export const PERMISSION_KEYS = [
   "risk.dossier.client_access.manage",
   "risk.export",
   "risk.audit.view",
+  "seating.view",
+  "seating.input.prepare",
+  "seating.constraint.manage",
+  "seating.constraint.review.protocol",
+  "seating.constraint.review.accessibility",
+  "seating.constraint.review.security",
+  "seating.reservation.manage",
+  "seating.run.execute",
+  "seating.plan.edit",
+  "seating.plan.submit",
+  "seating.plan.review.protocol",
+  "seating.plan.review.accessibility",
+  "seating.plan.review.security",
+  "seating.plan.approve",
+  "seating.plan.publish",
+  "seating.export",
+  "seating.evaluate",
 ] as const;
 
 export const SYSTEM_ROLE_KEYS = [
@@ -676,6 +693,15 @@ export const S05B_SENSITIVE_PERMISSIONS = [
   "risk.dossier.export",
   "risk.dossier.client_access.manage",
   "risk.export",
+] as const;
+
+export const S06_SENSITIVE_PERMISSIONS = [
+  "seating.plan.approve",
+  "seating.plan.publish",
+  "seating.evaluate",
+  "seating.plan.review.protocol",
+  "seating.plan.review.accessibility",
+  "seating.plan.review.security",
 ] as const;
 
 export const ASSERTION_KINDS = [
@@ -1403,6 +1429,8 @@ export const CEO_RESERVED_ACTIONS: readonly string[] = [
   "approval.reputation",
   "approval.commercial",
   "approval.protected_production",
+  "seating.plan.publish",
+  "seating.evaluate",
 ];
 
 export const RSVP_ATTENDANCE_INTENTS = ["NOT_SUPPLIED", "ATTENDING", "NOT_ATTENDING", "UNCERTAIN"] as const;

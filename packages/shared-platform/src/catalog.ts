@@ -10,6 +10,7 @@ import {
   S05_SENSITIVE_PERMISSIONS,
   S05A_SENSITIVE_PERMISSIONS,
   S05B_SENSITIVE_PERMISSIONS,
+  S06_SENSITIVE_PERMISSIONS,
   SCHEMA_VERSION,
   SYSTEM_ROLE_KEYS,
 } from "./constants.js";
@@ -230,6 +231,23 @@ const PERMISSION_IDS: Record<PermissionKey, string> = {
   "risk.dossier.client_access.manage": "11111111-1111-4111-8111-111111111212",
   "risk.export": "11111111-1111-4111-8111-111111111207",
   "risk.audit.view": "11111111-1111-4111-8111-111111111208",
+  "seating.view": "11111111-1111-4111-8111-111111111213",
+  "seating.input.prepare": "11111111-1111-4111-8111-111111111214",
+  "seating.constraint.manage": "11111111-1111-4111-8111-111111111215",
+  "seating.constraint.review.protocol": "11111111-1111-4111-8111-111111111216",
+  "seating.constraint.review.accessibility": "11111111-1111-4111-8111-111111111217",
+  "seating.constraint.review.security": "11111111-1111-4111-8111-111111111218",
+  "seating.reservation.manage": "11111111-1111-4111-8111-111111111219",
+  "seating.run.execute": "11111111-1111-4111-8111-111111111220",
+  "seating.plan.edit": "11111111-1111-4111-8111-111111111221",
+  "seating.plan.submit": "11111111-1111-4111-8111-111111111222",
+  "seating.plan.review.protocol": "11111111-1111-4111-8111-111111111223",
+  "seating.plan.review.accessibility": "11111111-1111-4111-8111-111111111224",
+  "seating.plan.review.security": "11111111-1111-4111-8111-111111111225",
+  "seating.plan.approve": "11111111-1111-4111-8111-111111111226",
+  "seating.plan.publish": "11111111-1111-4111-8111-111111111227",
+  "seating.export": "11111111-1111-4111-8111-111111111228",
+  "seating.evaluate": "11111111-1111-4111-8111-111111111229",
 };
 
 const ROLE_IDS: Record<(typeof SYSTEM_ROLE_KEYS)[number], string> = {
@@ -442,6 +460,8 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "risk.dossier.export",
     "risk.export",
     "risk.audit.view",
+    "seating.view",
+    "seating.plan.approve",
   ],
   CLIENT_LEAD: [
     "organisation.view",
@@ -601,6 +621,14 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "risk.dossier.view",
     "risk.dossier.assemble",
     "risk.dossier.submit",
+    "seating.view",
+    "seating.input.prepare",
+    "seating.constraint.manage",
+    "seating.reservation.manage",
+    "seating.run.execute",
+    "seating.plan.edit",
+    "seating.plan.submit",
+    "seating.export",
   ],
   SYSTEM_ADMINISTRATOR: [
     "organisation.view",
@@ -667,6 +695,7 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "risk.incident.view",
     "risk.dossier.view",
     "risk.audit.view",
+    "seating.view",
   ],
   RISK_GOVERNANCE_REVIEWER: [
     "organisation.view",
@@ -675,6 +704,13 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "risk.rule.review",
     "risk.rule.approve",
     "risk.audit.view",
+    "seating.view",
+    "seating.constraint.review.protocol",
+    "seating.constraint.review.accessibility",
+    "seating.constraint.review.security",
+    "seating.plan.review.protocol",
+    "seating.plan.review.accessibility",
+    "seating.plan.review.security",
   ],
 };
 
@@ -697,7 +733,8 @@ function permissionRecord(key: PermissionKey): Permission {
       (S04F_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
       (S05_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
       (S05A_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
-      (S05B_SENSITIVE_PERMISSIONS as readonly string[]).includes(key)
+      (S05B_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
+      (S06_SENSITIVE_PERMISSIONS as readonly string[]).includes(key)
         ? "SENSITIVE"
         : "NORMAL",
     schemaVersion: SCHEMA_VERSION,
