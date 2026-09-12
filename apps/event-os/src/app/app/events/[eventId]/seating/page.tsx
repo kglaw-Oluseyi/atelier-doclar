@@ -26,7 +26,8 @@ import {
   runS06EvaluationAction,
   submitSeatingPlanAction,
 } from "../../../../../server/seating-actions";
-import { eventOsVerifyAsAvailable, switchSeatingVerifyAsAction } from "../../../../../server/seating-verify-as-action";
+import { switchSeatingVerifyAsAction } from "../../../../../server/seating-verify-as-action";
+import { eventOsVerifyAsAvailable } from "../../../../../server/seating-verify-as";
 import { PlatformError } from "@maison-doclar/shared-platform";
 
 function Envelope({ fields }: { fields: Record<string, string | number> }) {

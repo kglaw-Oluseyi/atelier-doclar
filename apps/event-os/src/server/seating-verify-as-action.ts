@@ -1,24 +1,12 @@
 "use server";
 
-import { seatingVerifyAsAllowed, resolveVerifyAsRole, S06_VERIFY_AS_ALLOWLIST } from "@maison-doclar/shared-platform";
-import { fixturesAllowed, productionAuthorised, sessionConfig } from "./config";
+import { resolveVerifyAsRole, S06_VERIFY_AS_ALLOWLIST, type ProtectionFormState } from "@maison-doclar/shared-platform";
+import { sessionConfig } from "./config";
 import { getRuntime } from "./runtime";
 import { writeStaffSessionCookie } from "./staff-session-cookie";
 import { requireActor } from "./with-session";
 import { runProtectionFormAction } from "./protection-form-action";
-import type { ProtectionFormState } from "@maison-doclar/shared-platform";
-
-export function eventOsVerifyAsFlag(): boolean {
-  return process.env.EVENT_OS_VERIFY_AS === "1";
-}
-
-export function eventOsVerifyAsAvailable(): boolean {
-  return seatingVerifyAsAllowed({
-    productionAuthorised: productionAuthorised(),
-    fixturesAllowed: fixturesAllowed(),
-    flag: eventOsVerifyAsFlag(),
-  });
-}
+import { eventOsVerifyAsAvailable } from "./seating-verify-as";
 
 export async function switchSeatingVerifyAsAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
   const eventId = String(formData.get("eventId") ?? "");
