@@ -15,9 +15,6 @@ const config: NextConfig = {
       bodySizeLimit: "21mb",
     },
   },
-  async rewrites() {
-    return [{ source: "/api/_diag/:path*", destination: "/api/s073-diag/:path*" }];
-  },
 };
 
 export default config;

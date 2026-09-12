@@ -2,14 +2,17 @@ import { expect, test, type Page, type Request, type Response } from "@playwrigh
 import { appendFileSync, mkdirSync } from "node:fs";
 import { loginAs, openStaffContext } from "./login";
 import { clickOnceNamed, readActionCorrelation, settleSeatingMutation } from "./s060-helpers";
+import { provisionS073Event, type ProvisionedS073Event } from "./s073-provision";
 
-const SEATING = "/app/events/00000000-0000-4000-8000-000000000021/seating";
 const EVIDENCE = "/tmp/s073-diagnostic-evidence.jsonl";
 const live = process.env.PLAYWRIGHT_LIVE === "1";
 const enabled = live || process.env.PLAYWRIGHT_S073_DIAG === "1";
 
 test.skip(!enabled, "MD-PR-S073 diagnostic reproduction only");
 test.use({ screenshot: "off", video: "off", trace: "off" });
+test.describe.configure({ mode: "serial" });
+
+let fixture: ProvisionedS073Event | undefined;
 
 function record(entry: Record<string, unknown>) {
   mkdirSync("/tmp", { recursive: true });
@@ -31,12 +34,28 @@ async function probe(request: { get: (url: string, options?: { headers?: Record<
   return { status: response.status(), ok: response.ok(), rttMs: Date.now() - started, body: response.ok() ? await response.json() : null };
 }
 
+test("S073 diagnostic: provision a fresh synthetic event", async ({ page, browser }) => {
+  test.setTimeout(300_000);
+  fixture = await provisionS073Event(page, browser);
+  record({
+    kind: "s073-fixture",
+    eventId: fixture.eventId,
+    eventName: fixture.eventName,
+    seatingPath: fixture.seatingPath,
+    layoutPath: fixture.layoutPath,
+    guestNames: fixture.guestNames,
+  });
+  expect(fixture.eventId).not.toEqual("00000000-0000-4000-8000-000000000021");
+});
+
 test("S073 diagnostic: healthy first mutation, expensive launch, concurrent unrelated mutation", async ({ page, browser, request }) => {
   test.setTimeout(180_000);
+  if (!fixture) throw new Error("S073 fixture was not provisioned");
+  const SEATING = fixture.seatingPath;
   const loopDenied = await request.get("/api/_diag/event-loop");
   expect(loopDenied.status()).toBe(404);
   const firstLoop = await probe(request, "/api/_diag/event-loop");
-  record({ kind: "event-loop-baseline", firstLoop });
+  record({ kind: "event-loop-baseline", firstLoop, eventId: fixture.eventId });
 
   await loginAs(page, "planner");
   await page.goto(SEATING, { waitUntil: "domcontentloaded" });
@@ -61,7 +80,19 @@ test("S073 diagnostic: healthy first mutation, expensive launch, concurrent unre
     if (item.method() === "POST") posts.push(item);
   });
   await clickOnceNamed(page, "Freeze new input edition");
-  const freezeStages = await settleSeatingMutation(page, previousResult);
+  let freezeStages: Awaited<ReturnType<typeof settleSeatingMutation>>;
+  try {
+    freezeStages = await settleSeatingMutation(page, previousResult);
+  } catch (error) {
+    record({
+      kind: "freeze-settle-failure",
+      url: page.url(),
+      freezePost,
+      body: ((await page.locator("body").innerText().catch(() => "")) ?? "").slice(0, 1200),
+      message: error instanceof Error ? error.message.slice(0, 300) : "error",
+    });
+    throw error;
+  }
   page.off("response", onResponse);
   const freezeResult = new URL(page.url()).searchParams.get("result") ?? "";
   expect(freezeResult).toMatch(/^[0-9a-f-]{36}$/i);
@@ -163,6 +194,8 @@ test("S073 diagnostic: healthy first mutation, expensive launch, concurrent unre
     otherTraces,
     dbDuring,
     loopSamples: loopSamples.slice(0, 80),
+    eventId: fixture.eventId,
+    eventName: fixture.eventName,
   });
   expect(launchPostCount).toBeGreaterThanOrEqual(1);
 });

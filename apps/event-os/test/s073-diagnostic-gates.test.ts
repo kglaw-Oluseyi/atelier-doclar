@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { diagnosticGate } from "../src/server/event-os-diagnostic";
+import { diagnosticGate, diagnosticUnavailableResponse } from "../src/server/event-os-diagnostic";
 
 describe("S073 diagnostic gates", () => {
   it("is unavailable when the temporary token is unset", () => {
@@ -34,5 +34,10 @@ describe("S073 diagnostic gates", () => {
       if (fixtures === undefined) delete process.env.EVENT_OS_ALLOW_FIXTURES;
       else process.env.EVENT_OS_ALLOW_FIXTURES = fixtures;
     }
+  });
+
+  it("returns 404 for the retired diagnostic surface", () => {
+    const response = diagnosticUnavailableResponse();
+    assert.equal(response.status, 404);
   });
 });
