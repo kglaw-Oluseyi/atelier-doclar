@@ -46,7 +46,7 @@ describe("S073 settlement trace", () => {
     assert.ok((trace.durationMs ?? 0) >= 0);
   });
 
-  it("proves launch holds the seating transaction across solver start and terminal", async () => {
+  it("does not hold a seating transaction while the solver runs", async () => {
     clearSettlementTraces();
     const { service, store } = fixtureService();
     applyS06SeatingLayoutIfMissing(store, service);
@@ -96,18 +96,21 @@ describe("S073 settlement trace", () => {
     const traces = listSettlementTraces({ commandId: COMMAND });
     const stages = traces.map((item) => item.stage);
     assert.ok(launched.value.id);
-    assert.deepEqual(
-      stages.filter((stage) =>
-        ["TX_BEGIN", "SOLVER_START", "SOLVER_TERMINAL", "RUN_QUEUED", "TX_COMMIT"].includes(stage),
-      ),
-      ["TX_BEGIN", "SOLVER_START", "SOLVER_TERMINAL", "RUN_QUEUED", "TX_COMMIT"],
-    );
-    const begin = traces.find((item) => item.stage === "TX_BEGIN")!;
+    assert.ok(stages.includes("TX_BEGIN"));
+    assert.ok(stages.includes("SOLVER_START"));
+    assert.ok(stages.includes("SOLVER_TERMINAL"));
+    assert.ok(stages.includes("TX_COMMIT"));
+    const intervals = [] as Array<{ begin: number; commit: number }>;
+    for (const item of traces) {
+      if (item.stage === "TX_BEGIN") intervals.push({ begin: item.wallMs, commit: Number.POSITIVE_INFINITY });
+      if (item.stage === "TX_COMMIT" && intervals.length) intervals[intervals.length - 1]!.commit = item.wallMs;
+    }
     const solverStart = traces.find((item) => item.stage === "SOLVER_START")!;
     const solverEnd = traces.find((item) => item.stage === "SOLVER_TERMINAL")!;
-    const commit = traces.find((item) => item.stage === "TX_COMMIT")!;
-    assert.ok(begin.wallMs <= solverStart.wallMs);
-    assert.ok(solverStart.wallMs <= solverEnd.wallMs);
-    assert.ok(solverEnd.wallMs <= commit.wallMs);
+    assert.equal(
+      intervals.some((item) => solverStart.wallMs >= item.begin && solverEnd.wallMs <= item.commit),
+      false,
+      "solver ran inside an open seating transaction",
+    );
   });
 });
