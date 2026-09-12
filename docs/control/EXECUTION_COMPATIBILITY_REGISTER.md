@@ -366,3 +366,15 @@ Milestone 4 is authorised on the Milestone 1–3 contracts. Historic S5-01–S5-
 | Control Tower | Compatibility-only. Not a deploy target for this documentation-only record. |
 | EOS-S06 / `MD-PR-S036` | RETAINED. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. |
 | `productionAuthorised` | RETAINED false. Not changed. |
+
+## Addendum — 2026-09-12 EOS-S06 V2 controlled seating truth replacement (`MD-PR-S072`)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| EOS-S06 / `MD-PR-S036` `NOT_STARTED / NOT_AUTHORISED` | SUPERSEDED for implementation authority only. MD-PR-S072 authorises replacement of the defective seating decision spine. Historic unauthorised rows remain dated history. EOS-S06 is not accepted. |
+| MD-PR-S070 V2 + MD-PR-S071 as sole S06 implementation authority | SUPERSEDED for the seating decision spine. MD-PR-S072 is the sole execution authority. S070/S071 artefacts remain readable as incompatible history. |
+| `s06-eval-v1` PASSED | STALE/INCOMPATIBLE. Do not restamp. Successor evaluation is `s06-eval-v2`. |
+| Catalogue accepted-slice count | RETAINED at 5. EOS-S06 is not a catalogue-accepted slice. |
+| Control Tower | Compatibility-only. Not a deploy target unless executable code changed under amended authority. |
+| `productionAuthorised` | RETAINED false. Not changed. |
+| EOS-S07 | RETAINED not started. |

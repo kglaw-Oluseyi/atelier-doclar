@@ -360,3 +360,13 @@ This addendum does not rewrite the B0 row set or earlier addenda. Catalogue acce
 | MD-PR-S069 independent acceptance | `docs/control/eos-s05b/MD_PR_S069_EOS_S05B_INDEPENDENT_ACCEPTANCE.md` | CONTROLLING ACCEPTANCE AUTHORITY | Documentation only. Does not redeploy Event OS. |
 | EOS-S05B implementation record | `docs/control/EOS_S05B_IMPLEMENTATION.md` | IMPLEMENTATION EVIDENCE | Historical implementation; acceptance is the S069 record. |
 | EOS-S05B build ledger | `docs/control/EOS_S05B_BUILD_LEDGER.md` | IMPLEMENTATION LEDGER | S069 acceptance stamp. First-run failures retained. |
+
+## Addendum — 2026-09-12 EOS-S06 V2 controlled seating truth replacement (`MD-PR-S072`)
+
+This addendum does not rewrite the B0 row set or earlier addenda. Catalogue accepted-slice count remains 5. EOS-S06 is not accepted. Production remains unauthorised. Claude is not run. EOS-S07 is not started. Control Tower is not a deploy target for this run.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| MD-PR-S072 execution authority | `docs/control/eos-s06/MD_PR_S072_EOS_S06_V2_CONTROLLED_SEATING_TRUTH_REPLACEMENT.md` | CONTROLLING IMPLEMENTATION AUTHORITY for the EOS-S06 seating decision spine replacement | SHA-256 `de154b2349f2056275d66dcc11d3ab88f3b283b16d0acd37311ea8ca628f3182`. Ratified from baseline `844f107fc70e1eaa8995e0c7c49c0c42d52b9dd1`. Does not accept EOS-S06. |
+| MD-PR-S070 V2 executable pack | `docs/control/eos-s06/MD_PR_S070_V2_EOS_S06_SEATING_ALLOCATION_EXECUTABLE_IMPLEMENTATION_PACK.md` | HISTORICAL IMPLEMENTATION AUTHORITY — superseded for the seating decision spine by MD-PR-S072 | Retained as dated history. Legacy S06 rows remain readable as incompatible history. |
+| EOS-S06 V2 overlay and technical annex | `docs/control/eos-s06/` | HISTORICAL RATIFIED V2 DETAIL — non-conflicting only where MD-PR-S072 is silent | Overlay D1–D12 and annex remain supporting. MD-PR-S072 is the sole execution authority. |
