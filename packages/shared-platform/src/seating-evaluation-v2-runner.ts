@@ -4,6 +4,7 @@ import { loadNonProductionFixtures } from "./bootstrap.js";
 import { FIXTURE_IDS as people } from "./fixtures.js";
 import { MemoryPlatformStore } from "./memory-store.js";
 import { authorize } from "./policy.js";
+import { snapshotLayoutAdapter } from "./seating-adapters.js";
 import { applyS06SeatingLayoutIfMissing } from "./seating-fixtures.js";
 import { assertSeatingV2CompiledRequest, compileSeatingV2Request } from "./seating-v2-compiler.js";
 import { seatingV2PackageContentHash, seatingV2SemanticHash } from "./seating-v2-hash.js";
@@ -20,7 +21,12 @@ import {
   type S06V2Observation,
 } from "./seating-evaluation-v2-schemas.js";
 import { SEATING_V2_CONFIG_HASH } from "./seating-v2-package.js";
-import { SEATING_V2_SOLVER_VERSION, SEATING_V2_VALIDATOR_VERSION, type SeatingV2RuleContent } from "./seating-v2-schemas.js";
+import {
+  SEATING_V2_SOLVER_VERSION,
+  SEATING_V2_VALIDATOR_VERSION,
+  type SeatingV2CompiledRequest,
+  type SeatingV2RuleContent,
+} from "./seating-v2-schemas.js";
 import { validateSeatingV2 } from "./seating-v2-validator.js";
 import type { PlatformService } from "./service.js";
 import { assertionHolds } from "./seating-evaluation-schemas.js";
@@ -60,7 +66,7 @@ function observe(name: string, value: unknown): S06V2Observation {
   return { kind: "persisted", name, value };
 }
 
-function fixture(): { service: PlatformService } {
+function fixture(): { service: PlatformService; store: MemoryPlatformStore } {
   const store = new MemoryPlatformStore();
   const service = loadNonProductionFixtures(store);
   applyS06SeatingLayoutIfMissing(store, service);
@@ -72,7 +78,27 @@ function fixture(): { service: PlatformService } {
     reason: "s06-eval-v2 RSVP",
     idempotencyKey: "s06v2-eval-prepare-rsvp",
   });
-  return { service };
+  return { service, store };
+}
+
+function publishedTableId(store: MemoryPlatformStore): string {
+  return snapshotLayoutAdapter(store.snapshot(), people.orgMaison, people.eventAlphaOne).tables[0]!.objectId;
+}
+
+function requireTable(guestA: string, guestB: string, tableId: string): SeatingV2RuleContent {
+  return {
+    kind: "REQUIRE_TABLE",
+    hardness: "HARD",
+    weight: null,
+    scope: "TABLE",
+    specialistDomain: "NONE",
+    subjects: [
+      { type: "EVENT_GUEST", id: guestA },
+      { type: "EVENT_GUEST", id: guestB },
+    ],
+    targets: [{ type: "TABLE", idOrCode: tableId }],
+    source: { type: "MANUAL" },
+  };
 }
 
 function attending(service: PlatformService, name: string, key: string) {
@@ -262,55 +288,58 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
 
   if (id === "S06V2-PATH-05") {
     const { service } = fixture();
-    const path = await keepApartPath(service, "05");
-    if (!path.adopted) throw new Error("adopt required");
-    const adoptedEdition = path.adopted;
-    const assignments = await path.v2.repository.transaction(async (tx) =>
+    const v2 = service.seatingV2Commands();
+    const guestA = attending(service, "A05", "s06v2-05-a");
+    const guestB = attending(service, "B05", "s06v2-05-b");
+    const guestC = attending(service, "C05", "s06v2-05-c");
+    const draft = await v2.createRule(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-05-create"), keepApart(guestA.id, guestB.id));
+    await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v2-05-act"), { editionId: draft.value.id });
+    const frozen = await v2.freezePackage(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-05-freeze"), { seed: "seed-05" });
+    const run = await v2.launchRun(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-05-run"), { packageId: frozen.value.id });
+    if (run.value.status !== "FEASIBLE") throw new Error("adopt required");
+    const adopted = await v2.adoptRun(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-05-adopt"), { runId: run.value.id });
+    const assignments = await v2.repository.transaction(async (tx) =>
       (await tx.list<{ planEditionId: string; eventGuestId: string; logicalPositionId?: string | null; layoutTableId?: string | null }>(
         "planAssignments",
         { organisationId: people.orgMaison, eventId: people.eventAlphaOne },
-      )).filter((item) => item.planEditionId === adoptedEdition.value.id),
+      )).filter((item) => item.planEditionId === adopted.value.id),
     );
-    const seatedB = assignments.find((item) => item.eventGuestId === path.guestB.id);
-    const unseated = await path.v2.applyManual(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-05-unseat"), {
-      planEditionId: adoptedEdition.value.id,
-      command: { type: "UNSEAT", eventGuestId: path.guestA.id, reasonCode: "MANUAL_UNSEAT" },
-    });
-    const positions = await path.v2.repository.transaction(async (tx) =>
+    const seatedB = assignments.find((item) => item.eventGuestId === guestB.id);
+    const positions = await v2.repository.transaction(async (tx) =>
       tx.list<{ packageId: string; positionToken: string; layoutTableId: string }>("packagePositions", {
         organisationId: people.orgMaison,
         eventId: people.eventAlphaOne,
       }),
     );
-    const used = new Set(
-      (
-        await path.v2.repository.transaction(async (tx) =>
-          (await tx.list<{ planEditionId: string; logicalPositionId?: string | null }>("planAssignments", {
-            organisationId: people.orgMaison,
-            eventId: people.eventAlphaOne,
-          })).filter((item) => item.planEditionId === unseated.value.id),
-        )
-      ).map((item) => item.logicalPositionId),
-    );
+    const used = new Set(assignments.map((item) => item.logicalPositionId));
     const sameTable = positions.find(
-      (item) => item.packageId === adoptedEdition.value.packageId && item.layoutTableId === seatedB?.layoutTableId && !used.has(item.positionToken),
-    );
-    const otherTable = positions.find(
-      (item) => item.packageId === adoptedEdition.value.packageId && item.layoutTableId !== seatedB?.layoutTableId && !used.has(item.positionToken),
+      (item) => item.packageId === adopted.value.packageId && item.layoutTableId === seatedB?.layoutTableId && !used.has(item.positionToken),
     );
     let rejected = false;
     try {
-      await path.v2.applyManual(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-05-bad"), {
-        planEditionId: unseated.value.id,
-        command: { type: "ASSIGN_UNSEATED", eventGuestId: path.guestA.id, positionToken: sameTable?.positionToken ?? "" },
+      await v2.applyManual(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-05-bad"), {
+        planEditionId: adopted.value.id,
+        command: { type: "MOVE", eventGuestId: guestA.id, positionToken: sameTable?.positionToken ?? "" },
       });
     } catch (error) {
       rejected = error instanceof PlatformError && error.code === "SEATING_VALIDATION_REJECTED";
     }
-    const assigned = await path.v2.assignUnseated(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-05-good"), {
-      planEditionId: unseated.value.id,
-      eventGuestId: path.guestA.id,
-      positionToken: otherTable?.positionToken ?? "",
+    const excepted = await v2.applyManual(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-05-unseat-c"), {
+      planEditionId: adopted.value.id,
+      command: { type: "UNSEAT", eventGuestId: guestC.id, reasonCode: "GOVERNED_UNSEATED" },
+    });
+    const afterExcept = await v2.repository.transaction(async (tx) =>
+      (await tx.list<{ planEditionId: string; logicalPositionId?: string | null }>("planAssignments", {
+        organisationId: people.orgMaison,
+        eventId: people.eventAlphaOne,
+      })).filter((item) => item.planEditionId === excepted.value.id),
+    );
+    const usedAfter = new Set(afterExcept.map((item) => item.logicalPositionId));
+    const freeSeat = positions.find((item) => item.packageId === adopted.value.packageId && !usedAfter.has(item.positionToken));
+    const assigned = await v2.assignUnseated(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-05-good"), {
+      planEditionId: excepted.value.id,
+      eventGuestId: guestC.id,
+      positionToken: freeSeat?.positionToken ?? "",
     });
     push("violatingAssignDenied", rejected, true);
     push("assignUnseatedApplied", assigned.application, "APPLIED");
@@ -645,6 +674,199 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
     const tokenA = exactHash({ org: people.orgMaison, event: people.eventAlphaOne, guest: people.personPlanner });
     const tokenB = exactHash({ org: people.orgMaison, event: people.eventAlphaTwo, guest: people.personPlanner });
     push("crossEventTokensDiffer", tokenA !== tokenB, true);
+    return { observations, assertions };
+  }
+
+  if (id === "S06V2-PATH-11") {
+    const { service } = fixture();
+    const path = await keepApartPath(service, "11");
+    if (!path.adopted) throw new Error("adopt required");
+    const submitted = await path.v2.submitPlan(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-11-submit"), {
+      editionId: path.adopted.value.id,
+    });
+    let stale = false;
+    try {
+      await path.v2.recallPlan(
+        actor(people.personPlanner),
+        { ...envelope(people.assignPlanner, "s06v2-11-stale"), expectedContentHash: "0".repeat(64) },
+        { editionId: submitted.value.id },
+      );
+    } catch (error) {
+      stale = error instanceof PlatformError && error.code === "VERSION_CONFLICT";
+    }
+    const recalled = await path.v2.recallPlan(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-11-recall"), {
+      editionId: submitted.value.id,
+    });
+    const replay = await path.v2.recallPlan(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-11-recall"), {
+      editionId: submitted.value.id,
+    });
+    const assignments = await path.v2.repository.transaction(async (tx) =>
+      (await tx.list<{ planEditionId: string; eventGuestId: string; logicalPositionId?: string | null; layoutTableId?: string | null }>(
+        "planAssignments",
+        { organisationId: people.orgMaison, eventId: people.eventAlphaOne },
+      )).filter((item) => item.planEditionId === recalled.value.id),
+    );
+    const seatedA = assignments.find((item) => item.eventGuestId === path.guestA.id);
+    const used = new Set(assignments.map((item) => item.logicalPositionId));
+    const positions = await path.v2.repository.transaction(async (tx) =>
+      (await tx.list<{ packageId: string; positionToken: string; layoutTableId: string }>("packagePositions", {
+        organisationId: people.orgMaison,
+        eventId: people.eventAlphaOne,
+      })).filter((item) => item.packageId === recalled.value.packageId),
+    );
+    const freeSameTable = positions.find(
+      (item) => item.layoutTableId === seatedA?.layoutTableId && !used.has(item.positionToken),
+    );
+    const moved = await path.v2.applyManual(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-11-move"), {
+      planEditionId: recalled.value.id,
+      command: { type: "MOVE", eventGuestId: path.guestA.id, positionToken: freeSameTable?.positionToken ?? "" },
+    });
+    const recalledEdition = await path.v2.repository.transaction(async (tx) =>
+      tx.load<{ status: string; contentHash: string }>("planEditions", submitted.value.id, {
+        organisationId: people.orgMaison,
+        eventId: people.eventAlphaOne,
+      }),
+    );
+    push("recallNewEditionId", recalled.value.id !== submitted.value.id, true);
+    push("recallHashPreserved", recalled.value.contentHash === submitted.value.contentHash, true);
+    push("recalledImmutable", recalledEdition?.status === "RECALLED", true);
+    push("recallReplay", replay.application === "REPLAYED" && replay.didDataChange === false, true);
+    push("staleRecallDenied", stale, true);
+    push("materialEditChangesHash", Boolean(moved && moved.value.contentHash !== recalled.value.contentHash), true);
+    return { observations, assertions };
+  }
+
+  if (id === "S06V2-PATH-12" || id === "S06V2-M21") {
+    const { service, store } = fixture();
+    const v2 = service.seatingV2Commands();
+    const guestA = attending(service, "ImpA", "s06v2-12-a");
+    const guestB = attending(service, "ImpB", "s06v2-12-b");
+    const tableId = publishedTableId(store);
+    const requireDraft = await v2.createRule(
+      actor(people.personPlanner),
+      envelope(people.assignPlanner, "s06v2-12-require"),
+      requireTable(guestA.id, guestB.id, tableId),
+    );
+    const apartDraft = await v2.createRule(
+      actor(people.personPlanner),
+      envelope(people.assignPlanner, "s06v2-12-apart"),
+      keepApart(guestA.id, guestB.id),
+    );
+    await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v2-12-act-r"), { editionId: requireDraft.value.id });
+    await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v2-12-act-a"), { editionId: apartDraft.value.id });
+    const frozen = await v2.freezePackage(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-12-freeze"), { seed: "seed-12" });
+    const run = await v2.launchRun(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-12-run"), { packageId: frozen.value.id });
+    let adoptOffered = false;
+    try {
+      await v2.adoptRun(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-12-adopt"), { runId: run.value.id });
+      adoptOffered = true;
+    } catch (error) {
+      adoptOffered = !(error instanceof PlatformError);
+    }
+    const compiled = await v2.repository.transaction(async (tx) =>
+      (await tx.list<{ packageId: string; compiledRequestJson: SeatingV2CompiledRequest }>("compiledRequests", {
+        organisationId: people.orgMaison,
+        eventId: people.eventAlphaOne,
+      })).find((item) => item.packageId === frozen.value.id),
+    );
+    const honest = validateSeatingV2(
+      { contentHash: frozen.value.contentHash, compiledRequest: compiled!.compiledRequestJson },
+      compiled!.compiledRequestJson.guests.map((guest) => ({
+        guestToken: guest.token,
+        state: "UNSEATED" as const,
+        positionToken: null,
+        typedReasonCodes: [],
+      })),
+      compiled!.compiledRequestJson.guests.map((guest) => guest.token),
+      NOW,
+    );
+    const omittedRules = validateSeatingV2(
+      { contentHash: frozen.value.contentHash, compiledRequest: { ...compiled!.compiledRequestJson, rules: [] } },
+      compiled!.compiledRequestJson.guests.map((guest, index) => ({
+        guestToken: guest.token,
+        state: "SEATED" as const,
+        positionToken: compiled!.compiledRequestJson.positions[index]!.token,
+        typedReasonCodes: [],
+      })),
+      [],
+      NOW,
+    );
+    push("impossibleInfeasible", run.value.status, "INFEASIBLE");
+    push("adoptDenied", adoptOffered, false);
+    push("unseatedRequiredFailed", honest.structuralOutcomes.some((item) => item.checkCode === "UNSEATED_REQUIRED_GUEST" && item.outcome === "FAILED"), true);
+    push("unseatedRuleNotSatisfied", honest.ruleOutcomes.every((item) => item.outcome !== "SATISFIED"), true);
+    push("omittedRuleChangesVerdict", omittedRules.verdict, "FEASIBLE");
+    return { observations, assertions };
+  }
+
+  if (id === "S06V2-PATH-13" || id === "S06V2-M22") {
+    const { service, store } = fixture();
+    const v2 = service.seatingV2Commands();
+    const guestA = attending(service, "ResA", "s06v2-13-a");
+    const guestB = attending(service, "ResB", "s06v2-13-b");
+    const tableId = publishedTableId(store);
+    const draft = await v2.createReservation(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-13-create"), {
+      eligibleMemberIds: [guestA.id, guestB.id],
+      targets: [{ type: "TABLE", idOrCode: tableId }],
+      exact: 2,
+    });
+    let selfDenied = false;
+    try {
+      await v2.activateReservation(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-13-self"), { editionId: draft.value.id });
+    } catch (error) {
+      selfDenied = error instanceof PlatformError && error.code === "FORBIDDEN";
+    }
+    const activated = await v2.activateReservation(actor(people.personDirector), envelope(people.assignDirector, "s06v2-13-act"), {
+      editionId: draft.value.id,
+    });
+    const replay = await v2.activateReservation(actor(people.personDirector), envelope(people.assignDirector, "s06v2-13-act"), {
+      editionId: draft.value.id,
+    });
+    let stale = false;
+    try {
+      await v2.activateReservation(
+        actor(people.personDirector),
+        { ...envelope(people.assignDirector, "s06v2-13-stale"), expectedContentHash: "0".repeat(64) },
+        { editionId: draft.value.id },
+      );
+    } catch (error) {
+      stale = error instanceof PlatformError && (error.code === "VERSION_CONFLICT" || error.code === "TRANSITION_INVALID");
+    }
+    let crossEvent = false;
+    try {
+      await v2.activateReservation(
+        actor(people.personDirector),
+        { ...envelope(people.assignDirector, "s06v2-13-cross"), eventId: people.eventAlphaTwo },
+        { editionId: draft.value.id },
+      );
+    } catch (error) {
+      crossEvent = error instanceof PlatformError && (error.code === "NOT_FOUND" || error.code === "FORBIDDEN" || error.code === "TRANSITION_INVALID");
+    }
+    const frozenActive = await v2.freezePackage(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-13-freeze-1"), { seed: "seed-13" });
+    const packageReservations = await v2.repository.transaction(async (tx) =>
+      (await tx.list<{ packageId: string; reservationEditionId: string }>("packageReservations", {
+        organisationId: people.orgMaison,
+        eventId: people.eventAlphaOne,
+      })).filter((item) => item.packageId === frozenActive.value.id),
+    );
+    await v2.withdrawReservation(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-13-withdraw"), {
+      editionId: activated.value.id,
+      reason: "withdraw governing reservation",
+    });
+    const frozenAfter = await v2.freezePackage(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-13-freeze-2"), { seed: "seed-13" });
+    const afterReservations = await v2.repository.transaction(async (tx) =>
+      (await tx.list<{ packageId: string; reservationEditionId: string }>("packageReservations", {
+        organisationId: people.orgMaison,
+        eventId: people.eventAlphaOne,
+      })).filter((item) => item.packageId === frozenAfter.value.id),
+    );
+    push("reservationActivated", activated.value.lifecycle, "ACTIVE");
+    push("selfActivateDenied", selfDenied, true);
+    push("reservationReplay", replay.application === "REPLAYED" && replay.didDataChange === false, true);
+    push("staleReservationDenied", stale, true);
+    push("crossEventDenied", crossEvent, true);
+    push("activeReservationFrozen", packageReservations.some((item) => item.reservationEditionId === draft.value.id), true);
+    push("withdrawnAbsentFromNextPackage", afterReservations.length === 0 && frozenAfter.value.contentHash !== frozenActive.value.contentHash, true);
     return { observations, assertions };
   }
 

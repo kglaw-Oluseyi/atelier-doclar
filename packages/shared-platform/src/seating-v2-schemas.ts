@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const SEATING_V2_SOLVER_CONTRACT = "eos-s06-solver-v2" as const;
 export const SEATING_V2_SOLVER_VERSION = "s06-solver-v2" as const;
-export const SEATING_V2_VALIDATOR_VERSION = "s06-validator-v2" as const;
+export const SEATING_V2_VALIDATOR_VERSION = "s06-validator-v3" as const;
 export const SEATING_V2_SCHEMA_VERSION = 1 as const;
 export const EOS_S06_SEATING_V2_MIGRATION_ID = "008_seating_truth_v2" as const;
 export const EOS_S06_SEATING_V2_RECEIPT_ID = "EOS-S06-SEATING-V2" as const;

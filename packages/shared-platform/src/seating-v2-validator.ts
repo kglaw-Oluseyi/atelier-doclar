@@ -34,10 +34,26 @@ function zonesOf(
   return position ? (positions.get(position)?.zoneCodes ?? []) : [];
 }
 
+const RELATIONAL_REQUIREMENT_KINDS = new Set([
+  "KEEP_APART",
+  "KEEP_TOGETHER",
+  "REQUIRE_TABLE",
+  "REQUIRE_ZONE",
+  "REQUIRE_POSITION_CAPABILITY",
+  "LOCK_ASSIGNMENT",
+]);
+
+export const GOVERNED_UNSEATED_REASON = "GOVERNED_UNSEATED";
+
+function hasGovernedUnseatedException(assignment: SeatingV2Assignment | undefined): boolean {
+  return Boolean(assignment?.typedReasonCodes?.includes(GOVERNED_UNSEATED_REASON));
+}
+
 function evaluateRule(
   rule: SeatingV2CompiledRule,
   seated: Map<string, string>,
   positions: Map<string, SeatingV2CompiledRequest["positions"][number]>,
+  requiredTokens: Set<string>,
 ): SeatingV2RuleOutcome {
   if (rule.hardness === "INFORMATIONAL") {
     return {
@@ -45,6 +61,15 @@ function evaluateRule(
       outcome: "NOT_EVALUATED",
       typedReasonCodes: ["INFORMATIONAL"],
       affectedGuestTokens: [],
+    };
+  }
+  const unseatedRequiredSubjects = rule.subjectTokens.filter((token) => requiredTokens.has(token) && !seated.has(token));
+  if (rule.hardness === "HARD" && RELATIONAL_REQUIREMENT_KINDS.has(rule.kind) && unseatedRequiredSubjects.length) {
+    return {
+      ruleContentHash: rule.contentHash,
+      outcome: "VIOLATED",
+      typedReasonCodes: ["UNSEATED_REQUIRED_SUBJECT", `${rule.kind}_VIOLATED`],
+      affectedGuestTokens: [...unseatedRequiredSubjects].sort((left, right) => left.localeCompare(right)),
     };
   }
   const seatedSubjects = rule.subjectTokens.filter((token) => seated.has(token));
@@ -191,10 +216,33 @@ export function validateSeatingV2(
     }
   }
 
+  const assignmentByGuest = new Map(assignments.map((item) => [item.guestToken, item]));
+  const requiredTokens = new Set<string>();
   for (const guest of request.guests ?? []) {
-    if (guest.eligible && !seenGuests.has(guest.token)) {
+    if (!guest.eligible) continue;
+    if (!seenGuests.has(guest.token)) {
       addStructural(structuralOutcomes, "EXPLICIT_UNSEATED", false, "eligible guest missing assignment");
+      requiredTokens.add(guest.token);
+      continue;
     }
+    if (seated.has(guest.token)) {
+      requiredTokens.add(guest.token);
+      continue;
+    }
+    if (hasGovernedUnseatedException(assignmentByGuest.get(guest.token))) continue;
+    requiredTokens.add(guest.token);
+    addStructural(
+      structuralOutcomes,
+      "UNSEATED_REQUIRED_GUEST",
+      false,
+      "eligible attending guest remains unseated without a governed exception",
+    );
+  }
+  const requiredToSeat = (request.guests ?? []).filter(
+    (guest) => guest.eligible && !hasGovernedUnseatedException(assignmentByGuest.get(guest.token)),
+  ).length;
+  if (requiredToSeat > (request.positions ?? []).length) {
+    addStructural(structuralOutcomes, "CAPACITY_INSUFFICIENT", false, "eligible attending guests exceed published seats");
   }
 
   const occupancy = new Map<string, number>();
@@ -246,8 +294,14 @@ export function validateSeatingV2(
   if (!structuralOutcomes.some((item) => item.checkCode === "KNOWN_GUEST" || item.checkCode === "KNOWN_POSITION")) {
     addStructural(structuralOutcomes, "KNOWN_TOKEN", true, "all assigned tokens are in the package");
   }
+  if (!structuralOutcomes.some((item) => item.checkCode === "UNSEATED_REQUIRED_GUEST")) {
+    addStructural(structuralOutcomes, "UNSEATED_REQUIRED_GUEST", true, "every eligible attending guest is seated or has a governed exception");
+  }
+  if (!structuralOutcomes.some((item) => item.checkCode === "CAPACITY_INSUFFICIENT")) {
+    addStructural(structuralOutcomes, "CAPACITY_INSUFFICIENT", true, "published seats can hold every required guest");
+  }
 
-  const ruleOutcomes = (request.rules ?? []).map((rule) => evaluateRule(rule, seated, positions));
+  const ruleOutcomes = (request.rules ?? []).map((rule) => evaluateRule(rule, seated, positions, requiredTokens));
   const hardViolation = ruleOutcomes.some((item) => item.outcome === "VIOLATED" && request.rules.find((rule) => rule.contentHash === item.ruleContentHash)?.hardness === "HARD");
   const structuralFailure = structuralOutcomes.some((item) => item.outcome === "FAILED");
   const assignmentsHash = seatingV2AssignmentsHash(assignments);

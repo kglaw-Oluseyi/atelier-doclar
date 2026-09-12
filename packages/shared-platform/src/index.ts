@@ -1023,6 +1023,7 @@ export {
   seatingV2SolverToken,
   seatingV2PackageContentHash,
   seatingV2PlanContentHash,
+  seatingV2ManualDecisionLogHash,
 } from "./seating-v2-hash.js";
 export { compileSeatingV2Request, assertSeatingV2CompiledRequest } from "./seating-v2-compiler.js";
 export { validateSeatingV2 } from "./seating-v2-validator.js";
@@ -1044,6 +1045,7 @@ export {
   S06_V2_EVALUATION_CORPUS_EDITION,
   S06_V2_EVALUATION_CONTRACT_VERSION,
   S06_V1_STALE_REASON,
+  S06_V2_PRIOR_CORPUS_STALE_REASON,
   s06V2CorpusHash,
   seatingV2EvalReadiness,
 } from "./seating-evaluation-v2-schemas.js";

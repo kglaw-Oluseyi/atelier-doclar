@@ -184,6 +184,60 @@ export async function createReservationBlockAction(prev: ProtectionFormState, fo
   });
 }
 
+export async function activateReservationBlockAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: scopePath(formData),
+    actionType: "seating.reservation.activate",
+    parse: parseEnvelope,
+    execute: async () => {
+      const { actor, envelope } = await sessionEnvelope(formData);
+      return asId(await getRuntime().service.seatingV2Commands().activateReservation(actor, envelope, {
+        editionId: field(formData, "blockId"),
+      }));
+    },
+  });
+}
+
+export async function withdrawReservationBlockAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: scopePath(formData),
+    actionType: "seating.reservation.withdraw",
+    parse: parseEnvelope,
+    execute: async () => {
+      const { actor, envelope } = await sessionEnvelope(formData);
+      return asId(await getRuntime().service.seatingV2Commands().withdrawReservation(actor, envelope, {
+        editionId: field(formData, "blockId"),
+        reason: field(formData, "reason") || "Withdrawn from governing set",
+      }));
+    },
+  });
+}
+
+export async function supersedeReservationBlockAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: scopePath(formData),
+    actionType: "seating.reservation.supersede",
+    parse: parseEnvelope,
+    execute: async () => {
+      const { actor, envelope } = await sessionEnvelope(formData);
+      return asId(await getRuntime().service.seatingV2Commands().supersedeReservation(actor, envelope, {
+        editionId: field(formData, "blockId"),
+        eligibleMemberIds: field(formData, "eligibleGuestIds").split(",").map((item) => item.trim()).filter(Boolean),
+        targets: field(formData, "tableId") ? [{ type: "TABLE", idOrCode: field(formData, "tableId") }] : [],
+        exact: field(formData, "exactCount") ? Number(field(formData, "exactCount")) : null,
+        min: field(formData, "minCount") ? Number(field(formData, "minCount")) : null,
+        max: field(formData, "maxCount") ? Number(field(formData, "maxCount")) : null,
+      }));
+    },
+  });
+}
+
 export async function releaseReservationBlockAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
   return runProtectionFormAction({
     prev,

@@ -1,5 +1,10 @@
 import { operationalDisplayName } from "./guest-matching.js";
-import { S06_V1_STALE_REASON, seatingV2EvalReadiness } from "./seating-evaluation-v2-schemas.js";
+import {
+  S06_V1_STALE_REASON,
+  S06_V2_EVALUATION_CORPUS_EDITION,
+  S06_V2_PRIOR_CORPUS_STALE_REASON,
+  seatingV2EvalReadiness,
+} from "./seating-evaluation-v2-schemas.js";
 import { snapshotGuestCohortAdapter, snapshotLayoutAdapter } from "./seating-adapters.js";
 import type { SeatingDisclosure, SeatingWorkspaceView } from "./seating-workspace.js";
 import type { SeatingV2State } from "./seating-v2-state.js";
@@ -57,9 +62,9 @@ export function buildSeatingV2Workspace(
       tableLabel: seated?.layoutTableId ?? undefined,
     };
   });
-  const tables = (layout?.tables ?? []).map((table) => ({
+  const tables = (layout?.tables ?? []).map((table, index) => ({
     id: table.objectId,
-    label: disclosure === "AUDITOR" ? "Published table" : table.objectId.slice(0, 8),
+    label: disclosure === "AUDITOR" ? "Published table" : `Table ${index + 1}`,
     capacity: table.capacity,
     seated: assignments.filter((item) => item.layoutTableId === table.objectId && item.state === "SEATED").length,
   }));
@@ -69,7 +74,14 @@ export function buildSeatingV2Workspace(
     attention.push({ kind: "stale", message: "Upstream event information changed. Review and run again.", href: "#inputs" });
   }
   if (evalRun && seatingV2EvalReadiness(evalRun) !== "RELEASE_READY") {
-    attention.push({ kind: "warning", message: "s06-eval-v2 is not release-ready.", href: "#overview" });
+    attention.push({
+      kind: "warning",
+      message:
+        evalRun.corpusEdition !== S06_V2_EVALUATION_CORPUS_EDITION
+          ? `Prior evaluation ${evalRun.corpusEdition} is STALE. ${S06_V2_PRIOR_CORPUS_STALE_REASON}.`
+          : `${S06_V2_EVALUATION_CORPUS_EDITION} is not release-ready.`,
+      href: "#overview",
+    });
   }
   const nextAction = !pkg
     ? "Freeze inputs"
@@ -95,28 +107,79 @@ export function buildSeatingV2Workspace(
     inputEdition: pkg ? { id: pkg.id, contentHash: pkg.contentHash } : undefined,
     guests,
     tables,
-    constraints: rules.map((item) => ({
-      id: item.id,
-      kind: item.hardness,
-      predicateType: item.kind,
-      status: item.lifecycle,
-      preview: `${item.kind.replaceAll("_", " ").toLowerCase()} · ${item.hardness} · ${item.lifecycle}`,
-      reviewDomain: item.specialistDomain === "NONE" ? undefined : item.specialistDomain,
-    })),
+    constraints: rules.map((item) => {
+      const subjectLabels = state.ruleSubjects
+        .filter((subject) => subject.ruleEditionId === item.id)
+        .map((subject) => guests.find((guest) => guest.id === subject.subjectId)?.label ?? "Guest");
+      const targetLabels = state.ruleTargets
+        .filter((target) => target.ruleEditionId === item.id)
+        .map((target) => tables.find((table) => table.id === target.targetIdOrCode)?.label ?? target.targetIdOrCode);
+      const subjectCopy = subjectLabels.length ? subjectLabels.join(" and ") : "named subjects";
+      const targetCopy = targetLabels.length ? ` at ${targetLabels.join(", ")}` : "";
+      return {
+        id: item.id,
+        kind: item.hardness,
+        predicateType: item.kind,
+        status: item.lifecycle,
+        preview: `${item.kind.replaceAll("_", " ").toLowerCase()}: ${subjectCopy}${targetCopy} · ${item.hardness} · ${item.lifecycle}`,
+        reviewDomain: item.specialistDomain === "NONE" ? undefined : item.specialistDomain,
+      };
+    }),
     implicatedReviewDomains: [...new Set(rules.filter((item) => item.lifecycle === "ACTIVE" && item.specialistDomain !== "NONE").map((item) => item.specialistDomain))] as SeatingWorkspaceView["implicatedReviewDomains"],
     reviewRequirementCopy: "Specialist review binds the exact submitted plan hash and implicated rule hashes.",
-    reservations: state.reservationEditions.filter((item) => item.eventId === eventId).map((item) => ({
-      id: item.id,
-      setCode: item.contentHash.slice(0, 8),
-      releaseState: item.lifecycle,
-      min: item.minCount ?? undefined,
-      max: item.maxCount ?? undefined,
-      exact: item.exactCount ?? undefined,
-    })),
+    reservations: state.reservationEditions.filter((item) => item.eventId === eventId).map((item) => {
+      const members = state.reservationMembers
+        .filter((member) => member.reservationEditionId === item.id)
+        .map((member) => guests.find((guest) => guest.id === member.eventGuestId)?.label ?? "Guest");
+      const targets = state.reservationTargets
+        .filter((target) => target.reservationEditionId === item.id)
+        .map((target) =>
+          target.targetType === "TABLE"
+            ? tables.find((table) => table.id === target.targetIdOrCode)?.label ?? "published table"
+            : `${target.targetType.toLowerCase()} ${target.targetIdOrCode}`,
+        );
+      const count =
+        item.exactCount != null
+          ? `exact ${item.exactCount}`
+          : [item.minCount != null ? `min ${item.minCount}` : null, item.maxCount != null ? `max ${item.maxCount}` : null]
+              .filter(Boolean)
+              .join(" · ") || "capacity reserved";
+      const authority = item.activatedByPersonId
+        ? "Activated by an authorised checker"
+        : item.createdByPersonId
+          ? "Drafted by the planner"
+          : "No activation recorded";
+      const subjects = members.length ? members.join(", ") : "Eligible attending guests";
+      const target = targets.length ? targets.join(", ") : "Any published table";
+      return {
+        id: item.id,
+        setCode: `${item.lifecycle} reservation`,
+        releaseState: item.lifecycle,
+        min: item.minCount ?? undefined,
+        max: item.maxCount ?? undefined,
+        exact: item.exactCount ?? undefined,
+        preview: `${subjects} · ${target} · ${count} · ${item.lifecycle} · ${authority}`,
+        reservationId: item.reservationId,
+        contentHash: item.contentHash,
+        editionNo: item.editionNo,
+        subjects,
+        target,
+        authority,
+      };
+    }),
     runs: runs.map((item) => {
       const report = item.assignmentsHash
         ? state.validationReports.find((row) => row.assignmentsHash === item.assignmentsHash && row.packageHash === item.packageHash)
         : undefined;
+      const ruleOutcomes = report
+        ? state.validationRuleOutcomes.filter((row) => row.reportId === report.id && row.outcome === "VIOLATED")
+        : [];
+      const structuralFailures = report
+        ? state.validationStructuralOutcomes.filter((row) => row.reportId === report.id && row.outcome === "FAILED")
+        : [];
+      const violatedSummary = [...ruleOutcomes.map((row) => row.typedReasonCodes.join(" ")), ...structuralFailures.map((row) => row.checkCode)]
+        .filter(Boolean)
+        .join(" · ");
       return {
         id: item.id,
         status: item.status,
@@ -126,6 +189,7 @@ export function buildSeatingV2Workspace(
         unseated: state.runAssignments.filter((row) => row.runId === item.id && row.state === "UNSEATED").length,
         stale: Boolean(pkg && item.packageId !== pkg.id),
         validatorVerdict: report?.verdict,
+        violatedSummary: violatedSummary || undefined,
       };
     }),
     reviews: state.specialistReviews.filter((item) => item.eventId === eventId).map((item) => ({
@@ -187,14 +251,26 @@ export function buildSeatingV2Workspace(
     },
     attention,
     nextAction,
-    evaluation: evalRun
-      ? { caseCount: evalRun.caseCount, status: evalRun.status, corpusEdition: evalRun.corpusEdition }
-      : { caseCount: 0, status: "STALE", corpusEdition: `s06-eval-v1 (${S06_V1_STALE_REASON})` },
+    evaluation:
+      evalRun && evalRun.corpusEdition === S06_V2_EVALUATION_CORPUS_EDITION
+        ? { caseCount: evalRun.caseCount, status: evalRun.status, corpusEdition: evalRun.corpusEdition }
+        : evalRun
+          ? {
+              caseCount: evalRun.caseCount,
+              status: "STALE",
+              corpusEdition: `${evalRun.corpusEdition} (${S06_V2_PRIOR_CORPUS_STALE_REASON})`,
+            }
+          : { caseCount: 0, status: "STALE", corpusEdition: `s06-eval-v1 (${S06_V1_STALE_REASON})` },
     counts: {
       eligibleGuests: guests.filter((item) => item.eligible).length,
       seated: assignments.filter((item) => item.state === "SEATED").length,
       unseated: assignments.filter((item) => item.state === "UNSEATED").length,
-      hardBlockers: runs.filter((item) => item.status === "INFEASIBLE").length,
+      hardBlockers: Math.max(
+        runs.filter((item) => item.status === "INFEASIBLE").length,
+        state.validationReports.filter((row) => row.eventId === eventId && row.verdict === "INFEASIBLE").length,
+        state.validationRuleOutcomes.filter((row) => row.eventId === eventId && row.outcome === "VIOLATED").length,
+        state.validationStructuralOutcomes.filter((row) => row.eventId === eventId && row.outcome === "FAILED").length,
+      ),
     },
     blockers: [],
   };

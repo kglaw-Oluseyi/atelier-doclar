@@ -16,8 +16,32 @@ export type SeatingWorkspaceView = SeatingWorkspaceProjection & {
   constraints: Array<{ id: string; kind: string; predicateType: string; status: string; preview: string; reviewDomain?: string }>;
   implicatedReviewDomains: Array<"PROTOCOL" | "ACCESSIBILITY" | "SECURITY">;
   reviewRequirementCopy: string;
-  reservations: Array<{ id: string; setCode: string; releaseState: string; min?: number; max?: number; exact?: number }>;
-  runs: Array<{ id: string; status: string; seed: string; resultHash?: string; seated?: number; unseated?: number; stale: boolean; validatorVerdict?: string }>;
+  reservations: Array<{
+    id: string;
+    setCode: string;
+    releaseState: string;
+    min?: number;
+    max?: number;
+    exact?: number;
+    preview?: string;
+    reservationId?: string;
+    contentHash?: string;
+    editionNo?: number;
+    subjects?: string;
+    target?: string;
+    authority?: string;
+  }>;
+  runs: Array<{
+    id: string;
+    status: string;
+    seed: string;
+    resultHash?: string;
+    seated?: number;
+    unseated?: number;
+    stale: boolean;
+    validatorVerdict?: string;
+    violatedSummary?: string;
+  }>;
   reviews: Array<{ id: string; domain: string; decision: string; reviewerLabel: string; reason: string; createdAt: string }>;
   approvals: Array<{ id: string; decision: string; createdAt: string }>;
   publications: Array<{ id: string; status: string; publicationNumber: number; editionHash: string; publishedAt: string }>;

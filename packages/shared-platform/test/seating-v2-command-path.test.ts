@@ -170,6 +170,7 @@ describe("EOS-S06 V2 command path", () => {
     prepareSurface(service, store);
     const guestA = attendingGuest(service, "Chioma", "s072-neg-a");
     const guestB = attendingGuest(service, "Dami", "s072-neg-b");
+    const guestC = attendingGuest(service, "ChiomaC", "s072-neg-c");
     const v2 = service.seatingV2Commands();
 
     const draft = await v2.createRule(planner(), envelope(people.assignPlanner, "s072-neg-create-01"), keepApart(guestA.id, guestB.id));
@@ -220,49 +221,53 @@ describe("EOS-S06 V2 command path", () => {
     const seatedB = assignments.find((item) => item.eventGuestId === guestB.id);
     assert.ok(seatedA?.logicalPositionId);
     assert.ok(seatedB?.layoutTableId);
-    const unseated = await v2.applyManual(planner(), envelope(people.assignPlanner, "s072-neg-unseat-01"), {
-      planEditionId: adopted.value.id,
-      command: { type: "UNSEAT", eventGuestId: guestA.id, reasonCode: "MANUAL_UNSEAT" },
-    });
+    await assert.rejects(
+      () =>
+        v2.applyManual(planner(), envelope(people.assignPlanner, "s072-neg-unseat-required"), {
+          planEditionId: adopted.value.id,
+          command: { type: "UNSEAT", eventGuestId: guestA.id, reasonCode: "MANUAL_UNSEAT" },
+        }),
+      (error: unknown) => error instanceof PlatformError && error.code === "SEATING_VALIDATION_REJECTED",
+    );
     const positions = await v2.repository.transaction(async (tx) =>
       tx.list<{ packageId: string; positionToken: string; layoutTableId: string }>("packagePositions", {
         organisationId: people.orgMaison,
         eventId: people.eventAlphaOne,
       }),
     );
-    const current = await v2.repository.transaction(async (tx) =>
-      (await tx.list<{ planEditionId: string; logicalPositionId?: string | null; eventGuestId: string }>("planAssignments", {
-        organisationId: people.orgMaison,
-        eventId: people.eventAlphaOne,
-      })).filter((item) => item.planEditionId === unseated.value.id),
-    );
-    const used = new Set(current.map((item) => item.logicalPositionId).filter(Boolean));
+    const used = new Set(assignments.map((item) => item.logicalPositionId).filter(Boolean));
     const sameTableFree = positions.find(
       (item) =>
         item.packageId === adopted.value.packageId &&
         item.layoutTableId === seatedB.layoutTableId &&
         !used.has(item.positionToken),
     );
-    const otherTableFree = positions.find(
-      (item) =>
-        item.packageId === adopted.value.packageId &&
-        item.layoutTableId !== seatedB.layoutTableId &&
-        !used.has(item.positionToken),
-    );
     assert.ok(sameTableFree);
-    assert.ok(otherTableFree);
     await assert.rejects(
       () =>
         v2.applyManual(planner(), envelope(people.assignPlanner, "s072-neg-bad-assign-01"), {
-          planEditionId: unseated.value.id,
-          command: { type: "ASSIGN_UNSEATED", eventGuestId: guestA.id, positionToken: sameTableFree.positionToken },
+          planEditionId: adopted.value.id,
+          command: { type: "MOVE", eventGuestId: guestA.id, positionToken: sameTableFree.positionToken },
         }),
       (error: unknown) => error instanceof PlatformError && error.code === "SEATING_VALIDATION_REJECTED",
     );
+    const excepted = await v2.applyManual(planner(), envelope(people.assignPlanner, "s072-neg-unseat-c"), {
+      planEditionId: adopted.value.id,
+      command: { type: "UNSEAT", eventGuestId: guestC.id, reasonCode: "GOVERNED_UNSEATED" },
+    });
+    const after = await v2.repository.transaction(async (tx) =>
+      (await tx.list<{ planEditionId: string; logicalPositionId?: string | null }>("planAssignments", {
+        organisationId: people.orgMaison,
+        eventId: people.eventAlphaOne,
+      })).filter((item) => item.planEditionId === excepted.value.id),
+    );
+    const usedAfter = new Set(after.map((item) => item.logicalPositionId));
+    const freeSeat = positions.find((item) => item.packageId === adopted.value.packageId && !usedAfter.has(item.positionToken));
+    assert.ok(freeSeat);
     const assigned = await v2.assignUnseated(planner(), envelope(people.assignPlanner, "s072-neg-assign-01"), {
-      planEditionId: unseated.value.id,
-      eventGuestId: guestA.id,
-      positionToken: otherTableFree.positionToken,
+      planEditionId: excepted.value.id,
+      eventGuestId: guestC.id,
+      positionToken: freeSeat.positionToken,
     });
     assert.equal(assigned.application, "APPLIED");
   });

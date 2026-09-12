@@ -216,7 +216,7 @@ test.describe("CURSOR-S06V2-S072 live gates", () => {
     await timedAction(page, `${FIXTURE}-HARD-CREATE`, () => submitNamed(page, "Save rule"));
     await gotoSeating(page, "#rules");
     await expect(page.getByRole("heading", { name: "Draft" })).toBeVisible();
-    await expect(page.getByText(/keep apart · HARD · DRAFT/i).first()).toBeVisible();
+    await expect(page.getByText(/keep apart: .* · HARD · DRAFT/i).first()).toBeVisible();
     await expect(page.getByTestId("seating-rules").getByRole("button", { name: "Activate" })).toHaveCount(0);
   });
 
@@ -249,7 +249,19 @@ test.describe("CURSOR-S06V2-S072 live gates", () => {
     const prefix = `${FIXTURE}-SEQ${sequence}`;
     await loginAs(page, "planner");
     await gotoSeating(page, "#rules");
-    await saveRule(page, { name: `${prefix}-KEEP-APART`, kind: "HARD", predicate: "KEEP_APART" });
+    await gotoSeating(page, "#rules");
+    while (await page.locator("#rules").getByRole("button", { name: "Withdraw" }).count()) {
+      const withdraw = page.locator("#rules").getByRole("button", { name: "Withdraw" }).first();
+      await timedAction(page, `${prefix}-WITHDRAW-LEFTOVER`, async () => {
+        await withdraw.evaluate((element) => {
+          const form = element.closest("form");
+          if (form instanceof HTMLFormElement) form.requestSubmit(element as HTMLButtonElement);
+          else (element as HTMLButtonElement).click();
+        });
+      });
+      await gotoSeating(page, "#rules");
+    }
+    await saveRule(page, { name: `${prefix}-KEEP-TOGETHER`, kind: "HARD", predicate: "KEEP_TOGETHER" });
     await timedAction(page, `${prefix}-RULE`, () => submitNamed(page, "Save rule"));
     await directorActivateHard(browser, `${prefix}-HARD-ACTIVATE`);
 
@@ -382,20 +394,24 @@ test.describe("CURSOR-S06V2-S072 live gates", () => {
     expect(after.working).toMatch(/WORKING|SUBMITTED|APPROVED/i);
   });
 
-  test("S072 CEO s06-eval-v2 persists as release-ready and does not restamp v1", async ({ page }) => {
+  test("S072 CEO s06-eval-v3 persists as release-ready and proves the prior corpus STALE", async ({ page }) => {
     test.setTimeout(360_000);
     await loginAs(page, "ceo");
     await gotoSeating(page);
+    const before = ((await page.getByTestId("seating-evaluation-status").textContent().catch(() => "")) ?? "").trim();
+    if (before.includes("s06-eval-v2") && !before.includes("s06-eval-v3")) {
+      expect(before).toMatch(/STALE/i);
+    }
     await timedAction(page, `${FIXTURE}-EVAL`, () => submitNamed(page, "Run seating evaluation", "seating-evaluate"));
     await gotoSeating(page);
     const status = page.getByTestId("seating-evaluation-status");
     await expect(status).toBeVisible();
-    await expect(status).toContainText("s06-eval-v2");
+    await expect(status).toContainText("s06-eval-v3");
     await expect(status).not.toContainText("s06-eval-v1");
     await expect(status).toContainText(/PASSED|RELEASE_READY/i);
-    await expect(status).toContainText("30 cases");
+    await expect(status).toContainText("35 cases");
     await page.reload();
-    await expect(page.getByTestId("seating-evaluation-status")).toContainText("s06-eval-v2");
-    await expect(page.getByTestId("seating-evaluation-status")).toContainText("30 cases");
+    await expect(page.getByTestId("seating-evaluation-status")).toContainText("s06-eval-v3");
+    await expect(page.getByTestId("seating-evaluation-status")).toContainText("35 cases");
   });
 });

@@ -11,6 +11,7 @@ import { getRuntime } from "../../../../../server/runtime";
 import { preferredSeatingAssignment, seatingPermissions } from "../../../../../server/seating-scope";
 import { operationalStateFromCode } from "../../../../../server/operational-state";
 import {
+  activateReservationBlockAction,
   adoptSeatingRunAction,
   applySeatingChangeAction,
   cancelSeatingRunAction,
@@ -26,6 +27,8 @@ import {
   recallSeatingPlanAction,
   runS06EvaluationAction,
   submitSeatingPlanAction,
+  supersedeReservationBlockAction,
+  withdrawReservationBlockAction,
 } from "../../../../../server/seating-actions";
 import { switchSeatingVerifyAsAction } from "../../../../../server/seating-verify-as-action";
 import { eventOsVerifyAsAvailable } from "../../../../../server/seating-verify-as";
@@ -404,14 +407,44 @@ export default async function EventSeatingPage({
         </p>
         <ul>
           {workspace.reservations.map((item) => (
-            <li key={item.id}>
-              {item.setCode} · {item.releaseState}. Reserved does not mean seated.
-              {permissions.reservationManage && item.releaseState === "ACTIVE" ? (
-                <ProtectionMutationForm action={releaseReservationBlockAction} className="actions">
-                  <Envelope fields={{ ...envelopeFields, blockId: item.id, expectedVersion: 0 }} />
+            <li key={item.id} data-testid={`seating-reservation-${item.releaseState}`}>
+              {item.preview ?? `${item.setCode} · ${item.releaseState}`}. Reserved does not mean seated.
+              {item.editionNo != null ? ` Edition ${item.editionNo}.` : ""}
+              {permissions.ruleActivate && item.releaseState === "DRAFT" ? (
+                <ProtectionMutationForm action={activateReservationBlockAction} className="actions">
+                  <Envelope fields={{ ...envelopeFields, blockId: item.id, expectedContentHash: item.contentHash ?? "" }} />
                   <IdempotencyField />
-                  <button type="submit" className="button secondary">Release reservation</button>
+                  <button type="submit" className="button secondary">Activate reservation</button>
                 </ProtectionMutationForm>
+              ) : null}
+              {permissions.reservationManage && (item.releaseState === "DRAFT" || item.releaseState === "ACTIVE") ? (
+                <ProtectionMutationForm action={withdrawReservationBlockAction} className="actions">
+                  <Envelope fields={{ ...envelopeFields, blockId: item.id, expectedContentHash: item.contentHash ?? "", reason: "Withdrawn from governing set" }} />
+                  <IdempotencyField />
+                  <button type="submit" className="button secondary">Withdraw reservation</button>
+                </ProtectionMutationForm>
+              ) : null}
+              {permissions.reservationManage && item.releaseState === "ACTIVE" ? (
+                <>
+                  <ProtectionMutationForm action={supersedeReservationBlockAction} className="actions" testId={`seating-reservation-successor-${item.id}`}>
+                    <Envelope
+                      fields={{
+                        ...envelopeFields,
+                        blockId: item.id,
+                        expectedContentHash: item.contentHash ?? "",
+                        eligibleGuestIds: workspace.guests.filter((guest) => guest.eligible).map((guest) => guest.id).join(","),
+                        exactCount: item.exact ?? 2,
+                      }}
+                    />
+                    <IdempotencyField />
+                    <button type="submit" className="button secondary">Create successor reservation</button>
+                  </ProtectionMutationForm>
+                  <ProtectionMutationForm action={releaseReservationBlockAction} className="actions">
+                    <Envelope fields={{ ...envelopeFields, blockId: item.id, expectedContentHash: item.contentHash ?? "" }} />
+                    <IdempotencyField />
+                    <button type="submit" className="button secondary">Release reservation</button>
+                  </ProtectionMutationForm>
+                </>
               ) : null}
             </li>
           ))}
@@ -480,6 +513,7 @@ export default async function EventSeatingPage({
               Validator {run.validatorVerdict ?? "not yet independently validated"} · seated {run.seated ?? 0} · unseated {run.unseated ?? 0}
               {run.stale ? " · Upstream event information changed. Review and run again." : ""}
               {run.validatorVerdict === "INFEASIBLE" || run.status === "INFEASIBLE" ? " · No safe seating plan satisfies every hard rule." : ""}
+              {run.violatedSummary ? ` · Violated: ${run.violatedSummary}` : ""}
               {permissions.edit && (seatingV2ReplacementEnabled() ? run.validatorVerdict === "FEASIBLE" : run.status === "FEASIBLE" || run.status === "INFEASIBLE") ? (
                 <ProtectionMutationForm action={adoptSeatingRunAction} className="actions">
                   <Envelope fields={{ ...envelopeFields, runId: run.id }} />
@@ -569,7 +603,13 @@ export default async function EventSeatingPage({
                 </select>
               </label>
             </fieldset>
-            <input type="hidden" name="reasonCode" value="MANUAL" />
+            <label>
+              Unseat reason
+              <select name="reasonCode" defaultValue="MANUAL_UNSEAT">
+                <option value="MANUAL_UNSEAT">Manual unseat</option>
+                <option value="GOVERNED_UNSEATED">Governed exception</option>
+              </select>
+            </label>
             <button type="submit" className="button">
               Apply seating change
             </button>
@@ -606,7 +646,7 @@ export default async function EventSeatingPage({
         ) : null}
         {permissions.submit && working?.status === "SUBMITTED" ? (
           <ProtectionMutationForm action={recallSeatingPlanAction} className="actions" testId="seating-recall">
-            <Envelope fields={{ ...envelopeFields, editionId: working.id ?? "" }} />
+            <Envelope fields={{ ...envelopeFields, editionId: working.id ?? "", expectedVersion: working.version ?? 0, expectedContentHash: working.contentHash ?? "" }} />
             <IdempotencyField />
             <button type="submit" className="button secondary">Recall submitted plan</button>
           </ProtectionMutationForm>

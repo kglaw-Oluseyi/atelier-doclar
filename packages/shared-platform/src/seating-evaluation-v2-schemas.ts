@@ -3,9 +3,10 @@ import { exactHash } from "./eec-hash.js";
 import { SEATING_V2_SOLVER_VERSION, SEATING_V2_VALIDATOR_VERSION } from "./seating-v2-schemas.js";
 
 export const S06_V2_EVALUATION_CONTRACT_VERSION = "s06-eval-contract-v2";
-export const S06_V2_EVALUATION_CORPUS_EDITION = "s06-eval-v2";
+export const S06_V2_EVALUATION_CORPUS_EDITION = "s06-eval-v3";
 export const S06_V2_EVALUATION_PROJECTION_VERSION = "seating-projection-v2";
 export const S06_V1_STALE_REASON = "legacy isolated or incomplete production-path assurance";
+export const S06_V2_PRIOR_CORPUS_STALE_REASON = "prior s06-eval-v2 corpus is STALE after validator and case contract change";
 
 export const S06_V2_CASE_IDS = [
   "S06V2-PATH-01",
@@ -38,6 +39,11 @@ export const S06_V2_CASE_IDS = [
   "S06V2-M18",
   "S06V2-M19",
   "S06V2-M20",
+  "S06V2-PATH-11",
+  "S06V2-PATH-12",
+  "S06V2-PATH-13",
+  "S06V2-M21",
+  "S06V2-M22",
 ] as const;
 
 export type S06V2CaseId = (typeof S06_V2_CASE_IDS)[number];

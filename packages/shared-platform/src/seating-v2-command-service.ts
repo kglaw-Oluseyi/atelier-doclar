@@ -11,6 +11,7 @@ import type { SeatingWorkspaceView } from "./seating-workspace.js";
 import { compileSeatingV2Request } from "./seating-v2-compiler.js";
 import {
   seatingV2AssignmentsHash,
+  seatingV2ManualDecisionLogHash,
   seatingV2PlanContentHash,
   seatingV2ReservationContentHash,
   seatingV2RuleContentHash,
@@ -60,6 +61,8 @@ export type SeatingV2Actor = {
 export type SeatingV2CommandEnvelope = SeatingV2Scope & {
   actorAssignmentId: string;
   idempotencyKey: string;
+  expectedVersion?: number;
+  expectedContentHash?: string;
 };
 
 export type SeatingV2CommandResult<T> = {
@@ -421,16 +424,125 @@ export class SeatingV2CommandService {
     envelope: SeatingV2CommandEnvelope,
     input: { editionId: string },
   ): Promise<SeatingV2CommandResult<SeatingV2ReservationEdition>> {
-    return this.mutate(actor, envelope, "seating.reservation.manage", "seatingV2.activateReservation", async (tx) => {
+    return this.mutate(actor, envelope, "seating.view", "seatingV2.activateReservation", async (tx) => {
       const draft = await tx.load<SeatingV2ReservationEdition>("reservationEditions", input.editionId, envelope);
-      if (!draft || draft.lifecycle !== "DRAFT") {
-        throw new PlatformError("NOT_FOUND", "draft reservation edition was not found");
+      if (!draft) {
+        throw new PlatformError("NOT_FOUND", "reservation edition was not found");
+      }
+      if (envelope.expectedContentHash && envelope.expectedContentHash !== draft.contentHash) {
+        throw new PlatformError("VERSION_CONFLICT", "reservation content hash does not match the bound edition");
+      }
+      if (draft.lifecycle !== "DRAFT") {
+        throw new PlatformError("TRANSITION_INVALID", "only a DRAFT reservation may be activated");
+      }
+      this.guard(actor, "seating.rule.activate", envelope, envelope.actorAssignmentId);
+      if (draft.createdByPersonId === actor.personId) {
+        throw new PlatformError("FORBIDDEN", "reservation activation requires a different authorised person");
       }
       return tx.updateLifecycle<SeatingV2ReservationEdition>("reservationEditions", draft.id, envelope, {
         lifecycle: "ACTIVE",
         activatedByPersonId: actor.personId,
         activatedAt: nowOf(actor),
       });
+    });
+  }
+
+  async withdrawReservation(
+    actor: SeatingV2Actor,
+    envelope: SeatingV2CommandEnvelope,
+    input: { editionId: string; reason: string },
+  ): Promise<SeatingV2CommandResult<SeatingV2ReservationEdition>> {
+    return this.mutate(actor, envelope, "seating.reservation.manage", "seatingV2.withdrawReservation", async (tx) => {
+      const edition = await tx.load<SeatingV2ReservationEdition>("reservationEditions", input.editionId, envelope);
+      if (!edition) {
+        throw new PlatformError("NOT_FOUND", "reservation edition was not found");
+      }
+      if (envelope.expectedContentHash && envelope.expectedContentHash !== edition.contentHash) {
+        throw new PlatformError("VERSION_CONFLICT", "reservation content hash does not match the bound edition");
+      }
+      if (edition.lifecycle !== "DRAFT" && edition.lifecycle !== "ACTIVE") {
+        throw new PlatformError("TRANSITION_INVALID", "only DRAFT or ACTIVE reservations may be withdrawn");
+      }
+      return tx.updateLifecycle<SeatingV2ReservationEdition>("reservationEditions", edition.id, envelope, {
+        lifecycle: "WITHDRAWN",
+        withdrawnByPersonId: actor.personId,
+        withdrawnAt: nowOf(actor),
+        withdrawalReason: input.reason,
+      });
+    });
+  }
+
+  async supersedeReservation(
+    actor: SeatingV2Actor,
+    envelope: SeatingV2CommandEnvelope,
+    input: {
+      editionId: string;
+      min?: number | null;
+      max?: number | null;
+      exact?: number | null;
+      eligibleMemberIds: string[];
+      targets: Array<{ type: "TABLE" | "ZONE" | "POSITION_CAPABILITY"; idOrCode: string }>;
+    },
+  ): Promise<SeatingV2CommandResult<SeatingV2ReservationEdition>> {
+    return this.mutate(actor, envelope, "seating.reservation.manage", "seatingV2.supersedeReservation", async (tx) => {
+      const current = await tx.load<SeatingV2ReservationEdition>("reservationEditions", input.editionId, envelope);
+      if (!current || current.lifecycle !== "ACTIVE") {
+        throw new PlatformError("TRANSITION_INVALID", "only an ACTIVE reservation may be superseded");
+      }
+      if (envelope.expectedContentHash && envelope.expectedContentHash !== current.contentHash) {
+        throw new PlatformError("VERSION_CONFLICT", "reservation content hash does not match the bound edition");
+      }
+      const now = nowOf(actor);
+      await tx.updateLifecycle("reservationEditions", current.id, envelope, { lifecycle: "SUPERSEDED" });
+      const successor: SeatingV2ReservationEdition = {
+        ...current,
+        id: randomUUID(),
+        editionNo: current.editionNo + 1,
+        contentHash: seatingV2ReservationContentHash({
+          min: input.min ?? null,
+          max: input.max ?? null,
+          exact: input.exact ?? null,
+          eligibleMemberIds: input.eligibleMemberIds,
+          targets: input.targets,
+        }),
+        minCount: input.min ?? null,
+        maxCount: input.max ?? null,
+        exactCount: input.exact ?? null,
+        lifecycle: "DRAFT",
+        supersedesEditionId: current.id,
+        createdByPersonId: actor.personId,
+        createdAt: now,
+        activatedByPersonId: null,
+        activatedAt: null,
+        withdrawnByPersonId: null,
+        withdrawnAt: null,
+        withdrawalReason: null,
+      };
+      await tx.insert("reservationEditions", successor);
+      for (const memberId of input.eligibleMemberIds) {
+        await tx.insert("reservationMembers", {
+          id: randomUUID(),
+          organisationId: envelope.organisationId,
+          eventId: envelope.eventId,
+          schemaVersion: SEATING_V2_SCHEMA_VERSION,
+          reservationEditionId: successor.id,
+          eventGuestId: memberId,
+          createdAt: now,
+        });
+      }
+      for (const target of input.targets) {
+        await tx.insert("reservationTargets", {
+          id: randomUUID(),
+          organisationId: envelope.organisationId,
+          eventId: envelope.eventId,
+          schemaVersion: SEATING_V2_SCHEMA_VERSION,
+          reservationEditionId: successor.id,
+          targetType: target.type,
+          targetIdOrCode: target.idOrCode,
+          createdAt: now,
+        });
+      }
+      return successor;
     });
   }
 
@@ -817,6 +929,7 @@ export class SeatingV2CommandService {
         contribution: "MANUAL_EDIT",
         successorOf: proposed.edition,
         locks: proposed.locks,
+        decisions: [input.command],
       });
       await tx.insert("manualDecisions", {
         id: randomUUID(),
@@ -869,6 +982,12 @@ export class SeatingV2CommandService {
       const edition = await tx.load<SeatingV2PlanEdition>("planEditions", input.editionId, envelope);
       if (!edition || edition.status !== "SUBMITTED") {
         throw new PlatformError("TRANSITION_INVALID", "only a SUBMITTED edition may be recalled");
+      }
+      if (envelope.expectedVersion !== undefined && edition.version !== envelope.expectedVersion) {
+        throw new PlatformError("VERSION_CONFLICT", "stale recall: edition version does not match");
+      }
+      if (envelope.expectedContentHash && envelope.expectedContentHash !== edition.contentHash) {
+        throw new PlatformError("VERSION_CONFLICT", "stale recall: edition hash does not match");
       }
       const submitter = edition.submittedByPersonId === actor.personId;
       if (!submitter) this.guard(actor, "seating.plan.approve", envelope, envelope.actorAssignmentId);
@@ -1384,9 +1503,21 @@ export class SeatingV2CommandService {
       contribution: "CREATE" | "ADOPT" | "MANUAL_EDIT";
       successorOf?: SeatingV2PlanEdition;
       locks?: Map<string, "LOCKED" | "UNLOCKED">;
+      decisions?: Array<{
+        type: string;
+        eventGuestId?: string;
+        positionToken?: string | null;
+        leftGuestId?: string;
+        rightGuestId?: string;
+        reasonCode?: string;
+      }>;
     },
   ): Promise<SeatingV2PlanEdition> {
     const now = nowOf(actor);
+    const manualDecisionLogHash =
+      input.contribution === "CREATE" && input.successorOf
+        ? input.successorOf.manualDecisionLogHash
+        : seatingV2ManualDecisionLogHash(input.decisions ?? []);
     const plan: SeatingV2PlanEdition = {
       id: randomUUID(),
       organisationId: envelope.organisationId,
@@ -1398,13 +1529,13 @@ export class SeatingV2CommandService {
       sourceRunId: input.runId ?? null,
       validationReportHash: input.report.reportHash,
       assignmentsHash: input.report.assignmentsHash,
-      manualDecisionLogHash: exactHash(input.successorOf ? [input.successorOf.contentHash, input.report.assignmentsHash] : []),
+      manualDecisionLogHash,
       contentHash: seatingV2PlanContentHash({
         packageContentHash: input.pkg.contentHash,
         assignmentsHash: input.report.assignmentsHash,
         validatorVersion: SEATING_V2_VALIDATOR_VERSION,
         validationReportHash: input.report.reportHash,
-        manualDecisionLogHash: exactHash(input.successorOf ? [input.successorOf.contentHash, input.report.assignmentsHash] : []),
+        manualDecisionLogHash,
       }),
       status: "WORKING",
       successorOfEditionId: input.successorOf?.id ?? null,

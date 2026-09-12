@@ -127,6 +127,28 @@ export function seatingV2AssignmentsHash(
   );
 }
 
+export function seatingV2ManualDecisionLogHash(
+  decisions: readonly {
+    type: string;
+    eventGuestId?: string;
+    positionToken?: string | null;
+    leftGuestId?: string;
+    rightGuestId?: string;
+    reasonCode?: string;
+  }[],
+): string {
+  return exactHash(
+    decisions.map((item) => ({
+      type: item.type,
+      eventGuestId: item.eventGuestId ?? null,
+      positionToken: item.positionToken ?? null,
+      leftGuestId: item.leftGuestId ?? null,
+      rightGuestId: item.rightGuestId ?? null,
+      reasonCode: item.reasonCode === "GOVERNED_UNSEATED" ? "GOVERNED_UNSEATED" : null,
+    })),
+  );
+}
+
 export function seatingV2PlanContentHash(input: {
   packageContentHash: string;
   assignmentsHash: string;

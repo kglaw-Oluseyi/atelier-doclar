@@ -3,7 +3,9 @@ import { describe, it } from "node:test";
 import { assertSeatingV2CompiledRequest, compileSeatingV2Request } from "../src/seating-v2-compiler.js";
 import {
   seatingV2AssignmentsHash,
+  seatingV2ManualDecisionLogHash,
   seatingV2PackageContentHash,
+  seatingV2PlanContentHash,
   seatingV2RuleContentHash,
   seatingV2SemanticHash,
   seatingV2SolverToken,
@@ -220,6 +222,67 @@ describe("EOS-S06 V2 hashing, compilation and validator", () => {
     assert.notEqual(first, second);
     assert.notEqual(first, otherEvent);
     assert.match(first, /^[0-9a-f]{64}$/);
+  });
+
+  it("does not treat an unseated required guest as SATISFIED for KEEP_APART or REQUIRE_TABLE", () => {
+    const compiled = compile();
+    const tokenA = compiled.request.guests[0]!.token;
+    const tokenB = compiled.request.guests[1]!.token;
+    const unseated = validateSeatingV2(
+      { contentHash: "package-hash-0001", compiledRequest: compiled.request },
+      [
+        { guestToken: tokenA, state: "UNSEATED", positionToken: null, typedReasonCodes: ["SOLVER_UNSEATED"] },
+        { guestToken: tokenB, state: "UNSEATED", positionToken: null, typedReasonCodes: ["SOLVER_UNSEATED"] },
+      ],
+      [tokenA, tokenB],
+    );
+    assert.equal(unseated.verdict, "INFEASIBLE");
+    assert.equal(unseated.ruleOutcomes[0]?.outcome, "VIOLATED");
+    assert.ok(unseated.structuralOutcomes.some((item) => item.checkCode === "UNSEATED_REQUIRED_GUEST" && item.outcome === "FAILED"));
+    const requireTable: SeatingV2RuleContent = {
+      ...keepApart(),
+      kind: "REQUIRE_TABLE",
+      targets: [{ type: "TABLE", idOrCode: "table-1" }],
+    };
+    const required = compile([requireTable]);
+    const requireUnseated = validateSeatingV2(
+      { contentHash: "package-hash-0002", compiledRequest: required.request },
+      required.request.guests.map((guest) => ({
+        guestToken: guest.token,
+        state: "UNSEATED" as const,
+        positionToken: null,
+        typedReasonCodes: ["SOLVER_UNSEATED"],
+      })),
+      required.request.guests.map((guest) => guest.token),
+    );
+    assert.equal(requireUnseated.verdict, "INFEASIBLE");
+    assert.equal(requireUnseated.ruleOutcomes[0]?.outcome, "VIOLATED");
+  });
+
+  it("excludes recall lineage from the shared plan content hash", () => {
+    const adopted = seatingV2PlanContentHash({
+      packageContentHash: "pkg",
+      assignmentsHash: "assign",
+      validatorVersion: "s06-validator-v3",
+      validationReportHash: "report",
+      manualDecisionLogHash: seatingV2ManualDecisionLogHash([]),
+    });
+    const recalledSuccessor = seatingV2PlanContentHash({
+      packageContentHash: "pkg",
+      assignmentsHash: "assign",
+      validatorVersion: "s06-validator-v3",
+      validationReportHash: "report",
+      manualDecisionLogHash: seatingV2ManualDecisionLogHash([]),
+    });
+    const edited = seatingV2PlanContentHash({
+      packageContentHash: "pkg",
+      assignmentsHash: "assign-2",
+      validatorVersion: "s06-validator-v3",
+      validationReportHash: "report-2",
+      manualDecisionLogHash: seatingV2ManualDecisionLogHash([{ type: "MOVE", eventGuestId: GUEST_A, positionToken: "pos-2" }]),
+    });
+    assert.equal(adopted, recalledSuccessor);
+    assert.notEqual(adopted, edited);
   });
 
   it("M06 / M07 independent validator rejects a hard-violating KEEP_APART assignment", () => {
