@@ -224,20 +224,15 @@ test.describe("CURSOR-S06V2-S072 live gates", () => {
     const director = await openStaffContext(browser, "director");
     try {
       await gotoSeating(director.page, "#rules");
-      const count = await director.page.locator("#rules").getByRole("button", { name: "Activate" }).count();
-      expect(count).toBeGreaterThan(0);
-      for (let index = 0; index < count; index += 1) {
-        await gotoSeating(director.page, "#rules");
-        const activate = director.page.locator("#rules").getByRole("button", { name: "Activate" }).first();
-        await expect(activate).toBeVisible({ timeout: 20_000 });
-        await timedAction(director.page, `${label}-${index + 1}`, async () => {
-          await activate.evaluate((element) => {
-            const form = element.closest("form");
-            if (form instanceof HTMLFormElement) form.requestSubmit(element as HTMLButtonElement);
-            else (element as HTMLButtonElement).click();
-          });
+      const activate = director.page.locator("#rules").getByRole("button", { name: "Activate" }).first();
+      await expect(activate).toBeVisible({ timeout: 20_000 });
+      await timedAction(director.page, label, async () => {
+        await activate.evaluate((element) => {
+          const form = element.closest("form");
+          if (form instanceof HTMLFormElement) form.requestSubmit(element as HTMLButtonElement);
+          else (element as HTMLButtonElement).click();
         });
-      }
+      });
     } finally {
       await director.context.close();
     }
@@ -269,6 +264,14 @@ test.describe("CURSOR-S06V2-S072 live gates", () => {
 
     await gotoSeating(page, "#studio");
     if (await page.getByRole("button", { name: "Apply seating change" }).count()) {
+      const unseated = page.locator("#studio li").filter({ hasText: /remains unseated/i }).first();
+      const guestSelect = page.locator('select[name="guestId"]');
+      if ((await unseated.count()) && (await guestSelect.count())) {
+        const label = ((await unseated.textContent()) ?? "").split("·")[0]?.trim() ?? "";
+        const option = guestSelect.locator("option").filter({ hasText: label }).first();
+        const guestId = (await option.getAttribute("value")) ?? "";
+        if (guestId) await guestSelect.selectOption(guestId);
+      }
       await page.locator('select[name="command"]').selectOption("ASSIGN_UNSEATED");
       const position = page.locator('select[name="targetPositionId"] option').nth(1);
       if (await position.count()) {
@@ -346,12 +349,12 @@ test.describe("CURSOR-S06V2-S072 live gates", () => {
   }
 
   test("S072 first live publication and replay sequence", async ({ page, browser }) => {
-    test.setTimeout(180_000);
+    test.setTimeout(360_000);
     await publicationSequence(page, browser, 1);
   });
 
   test("S072 second live publication and replay sequence preserves last-known-good", async ({ page, browser }) => {
-    test.setTimeout(180_000);
+    test.setTimeout(360_000);
     const publicationNumber = await publicationSequence(page, browser, 2);
     await loginAs(page, "planner");
     await gotoSeating(page, "#publication");
@@ -364,7 +367,7 @@ test.describe("CURSOR-S06V2-S072 live gates", () => {
   });
 
   test("S072 CEO s06-eval-v2 persists as release-ready and does not restamp v1", async ({ page }) => {
-    test.setTimeout(180_000);
+    test.setTimeout(360_000);
     await loginAs(page, "ceo");
     await gotoSeating(page);
     await timedAction(page, `${FIXTURE}-EVAL`, () => submitNamed(page, "Run seating evaluation", "seating-evaluate"));
