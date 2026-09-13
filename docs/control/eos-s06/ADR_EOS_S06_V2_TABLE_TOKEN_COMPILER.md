@@ -1,7 +1,7 @@
 # ADR — EOS-S06 V2 canonical table-token compiler
 
-**Status:** Accepted for MD-PR-S075 implementation; does not accept EOS-S06  
-**Parent:** `ADR_EOS_S06_V2_COMMAND_EXECUTION_ISOLATION.md`  
+**Status:** Accepted for MD-PR-S075 implementation; does not accept EOS-S06
+**Parent:** `ADR_EOS_S06_V2_COMMAND_EXECUTION_ISOLATION.md`
 **Authority:** MD-PR-S075
 
 ## Decision
