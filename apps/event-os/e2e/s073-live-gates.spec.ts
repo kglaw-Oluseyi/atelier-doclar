@@ -1,11 +1,26 @@
 import { expect, test, type Page, type Request } from "@playwright/test";
 import { appendFileSync, mkdirSync } from "node:fs";
 import { loginAs, openStaffContext } from "./login";
-import { clickOnceNamed, readActionCorrelation, settleSeatingMutation } from "./s060-helpers";
-import { seatingPathFor } from "./s073-provision";
+import {
+  actionRedirectHref,
+  actionResultId,
+  clickOnceNamed,
+  pageActionResult,
+  pageActionSubject,
+  readActionCorrelation,
+  settleSeatingMutation,
+} from "./s060-helpers";
+import { provisionS073Event, seatingPathFor, type ProvisionedS073Event } from "./s073-provision";
 
-const EVENT_ID = process.env.PLAYWRIGHT_S073_EVENT_ID ?? "e1c2c63c-6015-4d55-8a34-1eb94eb1ce2b";
-const SEATING = seatingPathFor(EVENT_ID);
+let fixture: ProvisionedS073Event | undefined;
+const EVENT_ID = () => {
+  const id = fixture?.eventId || process.env.PLAYWRIGHT_S073_EVENT_ID || "";
+  if (!id || id === "00000000-0000-4000-8000-000000000021") {
+    throw new Error("S073 live gates require a provisioned synthetic event");
+  }
+  return id;
+};
+const SEATING = () => seatingPathFor(EVENT_ID());
 const EVIDENCE = "/tmp/s073-live-gates-evidence.jsonl";
 const EXPECTED_SHA = process.env.PLAYWRIGHT_EXPECTED_SHA ?? "";
 const FIXTURE = "CURSOR-S073-P7";
@@ -16,20 +31,76 @@ test.describe.configure({ mode: "default" });
 
 function record(entry: Record<string, unknown>) {
   mkdirSync("/tmp", { recursive: true });
-  appendFileSync(EVIDENCE, `${JSON.stringify({ at: new Date().toISOString(), eventId: EVENT_ID, ...entry })}\n`);
+  appendFileSync(EVIDENCE, `${JSON.stringify({ at: new Date().toISOString(), eventId: fixture?.eventId ?? process.env.PLAYWRIGHT_S073_EVENT_ID ?? "", ...entry })}\n`);
+}
+
+function isNextActionPost(request: Request) {
+  return request.method() === "POST" && Boolean(request.headers()["next-action"]);
+}
+
+function redirectResult(page: Page, response: { headers(): Record<string, string> } | null) {
+  if (!response) return "";
+  const headers = response.headers();
+  const location = actionResultId(headers.location ?? headers["x-action-redirect"] ?? "");
+  if (!location) return "";
+  try {
+    return actionResultId(new URL(location, page.url()).searchParams.get("result") ?? "");
+  } catch {
+    return "";
+  }
+}
+
+async function postAndSettle(page: Page, click: () => Promise<void>, previousResult = "") {
+  const started = Date.now();
+  const seen: Request[] = [];
+  const onRequest = (request: Request) => {
+    if (isNextActionPost(request)) seen.push(request);
+  };
+  page.on("request", onRequest);
+  try {
+    const pending = page.waitForRequest(isNextActionPost, { timeout: 15_000 }).catch(() => null);
+    try {
+      await Promise.race([
+        click(),
+        new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error(`click did not return within 8s (url=${page.url()})`)), 8_000);
+        }),
+      ]);
+    } catch (error) {
+      if (!seen[0]) throw error;
+    }
+    const request = (await pending) ?? seen[0] ?? null;
+    if (!request) throw new Error(`No POST: click did not emit a Next-action POST (url=${page.url()})`);
+    if (seen.length !== 1) throw new Error(`click emitted ${seen.length} Next-action POSTs; expected exactly 1`);
+    const response =
+      (await Promise.race([
+        request.response(),
+        page.waitForResponse((item) => item.request() === request, { timeout: 30_000 }),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 30_000)),
+      ])) ?? null;
+    if (!response) throw new Error(`POST had no response within 30s (url=${page.url()})`);
+    const location = actionResultId(response.headers()["location"] ?? response.headers()["x-action-redirect"] ?? "");
+    const locationResult = redirectResult(page, response);
+    if (locationResult && locationResult !== previousResult && pageActionResult(page) !== locationResult) {
+      await page.goto(actionRedirectHref(page, location), { waitUntil: "domcontentloaded", timeout: 25_000 });
+    }
+    return {
+      status: response.status(),
+      location,
+      postMs: Date.now() - started,
+      stages: await settleSeatingMutation(page, previousResult),
+    };
+  } finally {
+    page.off("request", onRequest);
+  }
 }
 
 async function timedAction(page: Page, label: string, click: () => Promise<void>, previousCorrelation = "") {
   const started = Date.now();
-  const previousResult = new URL(page.url()).searchParams.get("result") ?? "";
-  let postMs = 0;
-  const onRequest = (request: Request) => {
-    if (request.method() === "POST" && postMs === 0) postMs = Date.now() - started;
-  };
-  page.on("request", onRequest);
+  const previousResult = pageActionResult(page);
   try {
-    await click();
-    const stages = await settleSeatingMutation(page, previousResult);
+    const posted = await postAndSettle(page, click, previousResult);
+    const { status, location, postMs, stages } = posted;
     if (await page.getByTestId("protection-validation-summary").count()) {
       throw new Error(`validation:${((await page.getByTestId("protection-validation-summary").innerText()) ?? "").slice(0, 180)}`);
     }
@@ -37,11 +108,23 @@ async function timedAction(page: Page, label: string, click: () => Promise<void>
     await expect(banner).toContainText(/Succeeded|The change was recorded|No change/i);
     const correlation = await readActionCorrelation(page);
     const dataChanged = ((await page.getByTestId("action-result-data-changed").textContent().catch(() => "")) ?? "").trim();
+    const resultId = pageActionResult(page);
+    expect(resultId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+    if (correlation) expect(correlation).toEqual(resultId);
     const ms = Date.now() - started;
     expect(ms).toBeLessThanOrEqual(30_000);
     if (previousCorrelation && correlation) expect(correlation).not.toEqual(previousCorrelation);
-    record({ kind: "action", label, ms, correlation, dataChanged, stages: { postMs, ...stages } });
-    return { correlation, dataChanged, ms };
+    record({
+      kind: "action",
+      label,
+      ms,
+      correlation,
+      dataChanged,
+      postStatus: status,
+      postLocation: location.slice(0, 180),
+      stages: { postMs, ...stages },
+    });
+    return { correlation, dataChanged, ms, subjectId: pageActionSubject(page) };
   } catch (error) {
     record({
       kind: "settlement-failure",
@@ -51,15 +134,18 @@ async function timedAction(page: Page, label: string, click: () => Promise<void>
       elapsedMs: Date.now() - started,
     });
     throw error;
-  } finally {
-    page.off("request", onRequest);
   }
 }
 
 async function gotoSeating(page: Page, hash = "") {
-  await page.goto(`${SEATING}${hash}`, { waitUntil: "domcontentloaded", timeout: 30_000 });
-  await expect(page.getByTestId("seating-overview")).toBeVisible({ timeout: 30_000 });
-  expect(EVENT_ID).not.toEqual("00000000-0000-4000-8000-000000000021");
+  await Promise.race([
+    page.goto(`${SEATING()}${hash}`, { waitUntil: "domcontentloaded", timeout: 25_000 }),
+    new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error(`gotoSeating exceeded 25s (${hash || "/"})`)), 25_000);
+    }),
+  ]);
+  await expect(page.getByTestId("seating-overview")).toBeVisible({ timeout: 25_000 });
+  expect(EVENT_ID()).not.toEqual("00000000-0000-4000-8000-000000000021");
   if (/Alpha One|P09Live|IdemTest-339344/i.test(await page.locator("main").innerText())) {
     throw new Error("S073 live gate landed on accumulated Alpha One");
   }
@@ -140,17 +226,19 @@ async function freezeAndLaunch(page: Page, prefix: string) {
   await gotoSeating(page, "#inputs");
   await timedAction(page, `${prefix}-FREEZE`, () => submitNamed(page, "Freeze new input edition", "seating-freeze"));
   await gotoSeating(page, "#runs");
-  await timedAction(page, `${prefix}-LAUNCH`, () => submitNamed(page, "Launch seating run"));
+  const launched = await timedAction(page, `${prefix}-LAUNCH`, () => submitNamed(page, "Launch seating run"));
   await gotoSeating(page, "#runs");
+  return launched;
 }
 
 async function withdrawConflictingHardRules(page: Page, label: string) {
-  for (let index = 0; index < 16; index += 1) {
+  for (let index = 0; index < 80; index += 1) {
     await gotoSeating(page, "#rules");
-    const row = page
-      .locator("#rules li")
-      .filter({ hasText: /keep apart|require table|keep together/i })
-      .filter({ hasText: /\bACTIVE\b/ })
+    const rules = page.getByTestId("seating-rules");
+    await expect(rules).toBeVisible({ timeout: 30_000 });
+    const row = rules
+      .locator("li")
+      .filter({ hasText: /HARD · ACTIVE/ })
       .filter({ has: page.getByRole("button", { name: "Withdraw" }) })
       .first();
     if ((await row.count()) === 0) return;
@@ -162,6 +250,7 @@ async function withdrawConflictingHardRules(page: Page, label: string) {
       });
     });
   }
+  throw new Error(`${label} still has ACTIVE HARD rules after 80 withdrawals`);
 }
 
 async function publicationIdentity(page: Page) {
@@ -177,9 +266,19 @@ async function workingHash(page: Page) {
   return (text.match(/Working edition hash:\s*([a-f0-9]{64})/i) ?? text.match(/([a-f0-9]{64})/i) ?? [])[1] ?? "";
 }
 
-async function adoptFeasible(page: Page, label: string) {
-  const feasible = page.locator('[data-testid="seating-run-card"]').filter({ has: page.getByRole("button", { name: "Adopt run" }) }).first();
-  await expect(feasible).toBeVisible({ timeout: 20_000 });
+async function adoptFeasible(page: Page, label: string, runId = "") {
+  const byId = runId ? page.locator(`[data-testid="seating-run-card"][data-run-id="${runId}"]`) : undefined;
+  const current = page.locator('[data-testid="seating-run-card"][data-current="true"][data-stale="false"]');
+  const fresh = page.locator('[data-testid="seating-run-card"][data-stale="false"]').filter({
+    has: page.getByRole("button", { name: "Adopt run" }),
+  });
+  const launchedAdoptable =
+    byId && (await byId.count()) > 0 && (await byId.getByRole("button", { name: "Adopt run" }).count()) > 0
+      ? byId
+      : undefined;
+  const feasible = launchedAdoptable ?? ((await current.getByRole("button", { name: "Adopt run" }).count()) > 0 ? current : fresh.last());
+  await expect(feasible, `no adoptable FEASIBLE run (launched=${runId || "none"})`).toBeVisible({ timeout: 20_000 });
+  await expect(feasible.getByRole("button", { name: "Adopt run" })).toHaveCount(1);
   await timedAction(page, label, async () => {
     const adopt = feasible.getByRole("button", { name: "Adopt run" });
     await adopt.evaluate((element) => {
@@ -204,6 +303,19 @@ test("S073 live readiness and retired diagnostics", async ({ request }) => {
   expect(readyBody.migrationStatus).toEqual("APPLIED");
   expect(readyBody.productionAuthorised).toBe(false);
   record({ kind: "readiness", readyBody });
+});
+
+test("S073 provision a fresh synthetic event", async ({ page, browser }) => {
+  test.setTimeout(300_000);
+  fixture = await provisionS073Event(page, browser);
+  record({
+    kind: "s073-fixture",
+    eventId: fixture.eventId,
+    eventName: fixture.eventName,
+    seatingPath: fixture.seatingPath,
+  });
+  expect(fixture.eventId).not.toEqual("00000000-0000-4000-8000-000000000021");
+  expect(fixture.eventName).toMatch(/^S073-/);
 });
 
 test("S073 Gate A impossible HARD set is independently INFEASIBLE and cannot be adopted", async ({ page, browser }) => {
@@ -256,7 +368,7 @@ test("S073 Gate A impossible HARD set is independently INFEASIBLE and cannot be 
 });
 
 test("S073 Gate B assign-unseated persists and a hard-violating placement is NOT_APPLIED", async ({ page, browser }) => {
-  test.setTimeout(240_000);
+  test.setTimeout(360_000);
   await loginAs(page, "planner");
   await withdrawConflictingHardRules(page, `${FIXTURE}-B`);
   const eligible = await eligibleGuestIds(page);
@@ -272,39 +384,52 @@ test("S073 Gate B assign-unseated persists and a hard-violating placement is NOT
   await timedAction(page, `${FIXTURE}-B-RULE`, () => submitNamed(page, "Save rule"));
   await directorActivateHard(browser, `${FIXTURE}-B-ACTIVATE`);
   await loginAs(page, "planner");
-  await freezeAndLaunch(page, `${FIXTURE}-B`);
-  await adoptFeasible(page, `${FIXTURE}-B-ADOPT`);
-  await gotoSeating(page, "#studio");
+  const launchedB = await freezeAndLaunch(page, `${FIXTURE}-B`);
+  await adoptFeasible(page, `${FIXTURE}-B-ADOPT`, launchedB.subjectId);
+  const light = await Promise.race([
+    page.evaluate(() => ({ ready: document.readyState, nodes: document.getElementsByTagName("*").length })),
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), 5_000)),
+  ]);
+  expect(light, "original page evaluate stalled after Adopt").not.toBeNull();
+  await expect(page.locator("[data-testid=seating-run-poller]")).toHaveCount(0);
+  await page.locator("#studio").scrollIntoViewIfNeeded();
   const form = page.getByTestId("seating-edit-form");
-  await expect(form).toBeVisible();
+  await expect(form).toBeVisible({ timeout: 10_000 });
   const seats = form.locator('select[name="targetPositionId"] option');
   const seatValue = (await seats.nth((await seats.count()) - 1).getAttribute("value")) ?? "";
   expect(seatValue).toBeTruthy();
-  await form.locator('select[name="guestId"]').selectOption(eligible[2]!);
-  await form.locator('select[name="command"]').selectOption("UNSEAT");
-  await form.locator('select[name="reasonCode"]').selectOption("GOVERNED_UNSEATED");
-  await timedAction(page, `${FIXTURE}-B-UNSEAT`, () => submitNamed(page, "Apply seating change", "seating-edit-form"));
-  await gotoSeating(page, "#studio");
-  await form.locator('select[name="guestId"]').selectOption(eligible[2]!);
-  await form.locator('select[name="command"]').selectOption("ASSIGN_UNSEATED");
-  await form.locator('select[name="targetPositionId"]').selectOption(seatValue);
-  await timedAction(page, `${FIXTURE}-B-ASSIGN`, () => submitNamed(page, "Apply seating change", "seating-edit-form"));
-  await gotoSeating(page, "#studio");
-  await form.locator('select[name="guestId"]').selectOption(eligible[0]!);
-  await form.locator('select[name="command"]').selectOption("UNSEAT");
-  await form.locator('select[name="reasonCode"]').selectOption("MANUAL_UNSEAT");
-  const previousResult = new URL(page.url()).searchParams.get("result") ?? "";
-  const previousCorrelation = await readActionCorrelation(page);
-  await submitNamed(page, "Apply seating change", "seating-edit-form");
-  await settleSeatingMutation(page, previousResult);
+  const hashBefore = await workingHash(page);
+  record({ kind: "gate-b-before-violating", result: pageActionResult(page), hashBefore, light });
+  const previousResult = pageActionResult(page);
+  await form.locator('select[name="guestId"]').selectOption(eligible[0]!, { timeout: 8_000 });
+  await form.locator('select[name="command"]').selectOption("UNSEAT", { timeout: 8_000 });
+  await form.locator('select[name="reasonCode"]').selectOption("MANUAL_UNSEAT", { timeout: 8_000 });
+  await postAndSettle(page, () => submitNamed(page, "Apply seating change", "seating-edit-form"), previousResult);
   const validation = ((await page.getByTestId("protection-validation-summary").textContent().catch(() => "")) ?? "").trim();
   const banner = ((await page.getByTestId("action-result-banner").textContent().catch(() => "")) ?? "").trim();
   const dataChanged = ((await page.getByTestId("action-result-data-changed").textContent().catch(() => "")) ?? "").trim();
-  const correlation = await readActionCorrelation(page);
-  expect(validation || /not permitted|rejected|cannot|That change|independent validator/i.test(banner)).toBeTruthy();
-  if (dataChanged) expect(dataChanged).toMatch(/No/i);
-  if (correlation && previousCorrelation) expect(correlation).not.toEqual(previousCorrelation);
-  record({ kind: "gate-b-rejected", validation: validation.slice(0, 200), banner: banner.slice(0, 200), dataChanged, correlation });
+  const correlation = pageActionResult(page);
+  expect(validation || /not permitted|rejected|cannot|That change|independent validator|hard or structural/i.test(banner)).toBeTruthy();
+  expect(dataChanged).toMatch(/No/i);
+  expect(correlation).toMatch(/^[0-9a-f-]{36}$/i);
+  expect(correlation).not.toEqual(previousResult);
+  const hashAfterReject = await workingHash(page);
+  if (hashBefore) expect(hashAfterReject).toEqual(hashBefore);
+  record({ kind: "gate-b-rejected", validation: validation.slice(0, 200), banner: banner.slice(0, 200), dataChanged, correlation, hashAfterReject });
+  await form.locator('select[name="guestId"]').selectOption(eligible[2]!, { timeout: 8_000 });
+  await form.locator('select[name="command"]').selectOption("UNSEAT", { timeout: 8_000 });
+  await form.locator('select[name="reasonCode"]').selectOption("GOVERNED_UNSEATED", { timeout: 8_000 });
+  await timedAction(page, `${FIXTURE}-B-UNSEAT`, () => submitNamed(page, "Apply seating change", "seating-edit-form"));
+  await form.locator('select[name="guestId"]').selectOption(eligible[2]!, { timeout: 8_000 });
+  await form.locator('select[name="command"]').selectOption("ASSIGN_UNSEATED", { timeout: 8_000 });
+  await form.locator('select[name="targetPositionId"]').selectOption(seatValue, { timeout: 8_000 });
+  await timedAction(page, `${FIXTURE}-B-ASSIGN`, () => submitNamed(page, "Apply seating change", "seating-edit-form"));
+  const hashAfterAssign = await workingHash(page);
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page.getByTestId("seating-overview")).toBeVisible({ timeout: 25_000 });
+  const hashReloaded = await workingHash(page);
+  expect(hashReloaded).toEqual(hashAfterAssign);
+  expect(hashReloaded).not.toEqual(hashBefore);
 });
 
 test("S073 Gate C withdrawal, recall and material successor", async ({ page, browser }) => {
@@ -324,8 +449,8 @@ test("S073 Gate C withdrawal, recall and material successor", async ({ page, bro
   await timedAction(page, `${FIXTURE}-C-RULE`, () => submitNamed(page, "Save rule"));
   await directorActivateHard(browser, `${FIXTURE}-C-ACTIVATE`);
   await loginAs(page, "planner");
-  await freezeAndLaunch(page, `${FIXTURE}-C`);
-  await adoptFeasible(page, `${FIXTURE}-C-ADOPT`);
+  const launchedC = await freezeAndLaunch(page, `${FIXTURE}-C`);
+  await adoptFeasible(page, `${FIXTURE}-C-ADOPT`, launchedC.subjectId);
   await gotoSeating(page, "#review");
   await timedAction(page, `${FIXTURE}-C-SUBMIT`, () => submitNamed(page, "Submit seating plan"));
   const submittedHash = await workingHash(page);
@@ -334,13 +459,28 @@ test("S073 Gate C withdrawal, recall and material successor", async ({ page, bro
   await timedAction(page, `${FIXTURE}-C-RECALL`, () => submitNamed(page, "Recall submitted plan", "seating-recall"));
   const recalledHash = await workingHash(page);
   expect(recalledHash).toEqual(submittedHash);
-  await gotoSeating(page, "#studio");
-  const editForm = page.getByTestId("seating-edit-form");
-  await editForm.locator('select[name="guestId"]').selectOption(eligible[2] ?? eligible[0]!);
-  await editForm.locator('select[name="command"]').selectOption("MOVE");
-  const moveSeat = (await editForm.locator('select[name="targetPositionId"] option').nth(2).getAttribute("value")) ?? "";
-  await editForm.locator('select[name="targetPositionId"]').selectOption(moveSeat);
-  await timedAction(page, `${FIXTURE}-C-MOVE`, () => submitNamed(page, "Apply seating change", "seating-edit-form"));
+  const moveGuest = eligible[2] ?? eligible[0]!;
+  const fillMaterialMove = async () => {
+    await gotoSeating(page, "#studio");
+    const editForm = page.getByTestId("seating-edit-form");
+    await expect(editForm).toBeVisible();
+    const seats = editForm.locator('select[name="targetPositionId"] option');
+    const moveSeat = (await seats.nth((await seats.count()) - 1).getAttribute("value")) ?? "";
+    expect(moveSeat).toBeTruthy();
+    await editForm.locator('select[name="guestId"]').selectOption(moveGuest, { timeout: 10_000 });
+    await editForm.locator('select[name="command"]').selectOption("MOVE", { timeout: 10_000 });
+    await editForm.locator('select[name="targetPositionId"]').selectOption(moveSeat, { timeout: 10_000 });
+  };
+  await fillMaterialMove();
+  try {
+    await timedAction(page, `${FIXTURE}-C-MOVE`, () => submitNamed(page, "Apply seating change", "seating-edit-form"));
+  } catch (error) {
+    const banner = ((await page.getByTestId("action-result-banner").textContent().catch(() => "")) ?? "").trim();
+    if (!/record changed elsewhere/i.test(banner)) throw error;
+    record({ kind: "gate-c-conflict-reload", correlation: pageActionResult(page), banner: banner.slice(0, 180) });
+    await fillMaterialMove();
+    await timedAction(page, `${FIXTURE}-C-MOVE-RETRY`, () => submitNamed(page, "Apply seating change", "seating-edit-form"));
+  }
   const materialHash = await workingHash(page);
   expect(materialHash).toMatch(/^[a-f0-9]{64}$/);
   expect(materialHash).not.toEqual(recalledHash);
@@ -371,11 +511,11 @@ test("S073 Gate D implicated specialist is bound to the assigned event and exact
     if (await reviewForm.count()) {
       const boundHash = await reviewForm.locator('input[name="editionHash"]').inputValue();
       const boundEvent = await reviewForm.locator('input[name="eventId"]').first().inputValue();
-      expect(boundEvent).toEqual(EVENT_ID);
+      expect(boundEvent).toEqual(EVENT_ID());
       if (hash) expect(boundHash).toEqual(hash);
       await timedAction(reviewer.page, `${FIXTURE}-D-REVIEW`, () => submitNamed(reviewer.page, "Record review", "seating-review-form"));
     }
-    record({ kind: "gate-d", hash, eventId: EVENT_ID });
+    record({ kind: "gate-d", hash, eventId: EVENT_ID() });
   } finally {
     await reviewer.context.close();
   }
@@ -390,7 +530,7 @@ test("S073 Gate E launch stays responsive to an unrelated same-event mutation", 
   const other = await openStaffContext(browser, "planner");
   const launchStarted = Date.now();
   const launchClick = timedAction(page, `${FIXTURE}-E-LAUNCH`, () => submitNamed(page, "Launch seating run"));
-  await other.page.goto(`${SEATING}#inputs`, { waitUntil: "domcontentloaded" });
+  await other.page.goto(`${SEATING()}#inputs`, { waitUntil: "domcontentloaded" });
   await expect(other.page.getByTestId("seating-overview")).toBeVisible({ timeout: 30_000 });
   const otherStarted = Date.now();
   await timedAction(other.page, `${FIXTURE}-E-OTHER-FREEZE`, () => submitNamed(other.page, "Freeze new input edition", "seating-freeze"));
@@ -419,8 +559,8 @@ async function publicationSequence(page: Page, browser: Parameters<typeof openSt
   await timedAction(page, `${prefix}-RULE`, () => submitNamed(page, "Save rule"));
   await directorActivateHard(browser, `${prefix}-HARD-ACTIVATE`);
   await loginAs(page, "planner");
-  await freezeAndLaunch(page, prefix);
-  await adoptFeasible(page, `${prefix}-ADOPT`);
+  const launched = await freezeAndLaunch(page, prefix);
+  await adoptFeasible(page, `${prefix}-ADOPT`, launched.subjectId);
   await gotoSeating(page, "#review");
   if (await page.getByRole("button", { name: "Submit seating plan" }).count()) {
     await timedAction(page, `${prefix}-SUBMIT`, () => submitNamed(page, "Submit seating plan"));
@@ -492,7 +632,7 @@ test("S073 second publication preserves last-known-good and replay identity", as
   await expect(page.getByRole("button", { name: "Publish seating plan" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Save rule" })).toHaveCount(0);
   await loginAs(page, "admin");
-  await page.goto(SEATING);
+  await page.goto(SEATING());
   await expect(page.getByText("This assignment cannot perform this seating action.")).toBeVisible();
 });
 

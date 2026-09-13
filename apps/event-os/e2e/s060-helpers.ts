@@ -131,17 +131,35 @@ export async function readSettlementTraces(page: Page, commandId: string) {
   };
 }
 
+export function actionResultId(value: string) {
+  return value.replace(/;(?:push|replace)$/i, "");
+}
+
+export function actionRedirectHref(page: Page, location: string) {
+  const cleaned = actionResultId(location);
+  return new URL(cleaned, page.url()).toString();
+}
+
+export function pageActionResult(page: Page) {
+  return actionResultId(new URL(page.url()).searchParams.get("result") ?? "");
+}
+
+export function pageActionSubject(page: Page) {
+  return actionResultId(new URL(page.url()).searchParams.get("subjectId") ?? "");
+}
+
 export async function settleSeatingMutation(page: Page, previousResult = "", timeout = 30_000) {
   const started = Date.now();
   const remaining = () => Math.max(250, timeout - (Date.now() - started));
   const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const previous = actionResultId(previousResult);
   const stages = { resultUrlMs: 0, overviewMs: 0, bannerMs: 0, stage: "post" };
   await expect
     .poll(
       async () => {
         if ((await page.getByTestId("protection-validation-summary").count()) > 0) return "validation";
-        const result = new URL(page.url()).searchParams.get("result") ?? "";
-        return uuid.test(result) && result !== previousResult ? "result" : "";
+        const result = pageActionResult(page);
+        return uuid.test(result) && result !== previous ? "result" : "";
       },
       { timeout: remaining() },
     )
@@ -152,6 +170,10 @@ export async function settleSeatingMutation(page: Page, previousResult = "", tim
     return stages;
   }
   stages.stage = "redirect";
+  const result = pageActionResult(page);
+  if (uuid.test(result) && (await page.getByTestId("seating-overview").count()) === 0) {
+    await page.goto(actionRedirectHref(page, page.url()), { waitUntil: "domcontentloaded", timeout: 25_000 });
+  }
   await expect(page.getByTestId("seating-overview")).toBeVisible({ timeout: remaining() });
   stages.overviewMs = Date.now() - started;
   stages.stage = "render";
@@ -172,13 +194,14 @@ export async function readSeatingSettlement(page: Page) {
 
 export async function expectFreshResultQuery(page: Page, previousResult = "", timeout = 30_000) {
   const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const previous = actionResultId(previousResult);
   await expect
     .poll(() => {
-      const value = new URL(page.url()).searchParams.get("result") ?? "";
-      return uuid.test(value) && value !== previousResult ? value : "";
+      const value = pageActionResult(page);
+      return uuid.test(value) && value !== previous ? value : "";
     }, { timeout })
     .toMatch(uuid);
-  return new URL(page.url()).searchParams.get("result") ?? "";
+  return pageActionResult(page);
 }
 
 const GRANT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

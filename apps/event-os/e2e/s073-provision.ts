@@ -179,10 +179,19 @@ export async function provisionS073Event(page: Page, browser: Browser): Promise<
   }
   await expect(page.getByRole("button", { name: "Add Table" })).toBeVisible({ timeout: 20_000 });
   await page.getByRole("button", { name: "Add Table" }).click();
-  await expect(page.getByTestId("studio-persist")).toHaveAttribute("data-state", /saved|pending/, { timeout: 30_000 });
+  await expect(page.getByTestId("studio-navigator")).toContainText(/Table · table/i, { timeout: 20_000 });
   await expect.poll(async () => (await page.getByTestId("studio-persist").getAttribute("data-state")) ?? "", {
     timeout: 30_000,
   }).toMatch(/saved/);
+  await page.getByRole("button", { name: /Table · table/i }).click();
+  const seatCount = page.getByLabel("Physical seat count");
+  await expect(seatCount).toBeVisible({ timeout: 10_000 });
+  await seatCount.fill("8");
+  await page.getByRole("button", { name: "Generate seats" }).click();
+  await expect.poll(async () => (await page.getByTestId("studio-persist").getAttribute("data-state")) ?? "", {
+    timeout: 30_000,
+  }).toMatch(/saved/);
+  await expect(page.getByTestId("studio-navigator")).toContainText(/Seat/i, { timeout: 20_000 });
 
   await page.goto(layoutPath, { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("button", { name: "Run validation" })).toBeVisible({ timeout: 30_000 });
