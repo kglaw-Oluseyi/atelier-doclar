@@ -67,6 +67,7 @@ export function seatingV2ReservationContentHash(input: {
 export function seatingV2SemanticHash(input: {
   cohortHash: string;
   rsvpSnapshotHash: string;
+  seatingLayoutBindingId?: string | null;
   layoutPublicationId: string;
   layoutContentHash: string;
   eventBriefContentHash: string | null;
@@ -81,6 +82,7 @@ export function seatingV2SemanticHash(input: {
   return exactHash({
     cohortHash: input.cohortHash,
     rsvpSnapshotHash: input.rsvpSnapshotHash,
+    ...(input.seatingLayoutBindingId ? { seatingLayoutBindingId: input.seatingLayoutBindingId } : {}),
     layoutPublicationId: input.layoutPublicationId,
     layoutContentHash: input.layoutContentHash,
     eventBriefContentHash: input.eventBriefContentHash,

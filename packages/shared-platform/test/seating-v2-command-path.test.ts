@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { PlatformError } from "../src/errors.js";
-import { applyS06SeatingLayoutIfMissing } from "../src/seating-fixtures.js";
+import { applyS06SeatingLayoutIfMissing, ensureS06SeatingLayoutBinding } from "../src/seating-fixtures.js";
 import type { SeatingV2RuleContent } from "../src/seating-v2-schemas.js";
 import { actor, fixtureService, people } from "./helpers.js";
 
@@ -42,8 +42,9 @@ function keepApart(guestA: string, guestB: string, domain: SeatingV2RuleContent[
   };
 }
 
-function prepareSurface(service: ReturnType<typeof fixtureService>["service"], store: ReturnType<typeof fixtureService>["store"]) {
+async function prepareSurface(service: ReturnType<typeof fixtureService>["service"], store: ReturnType<typeof fixtureService>["store"]) {
   applyS06SeatingLayoutIfMissing(store, service);
+  await ensureS06SeatingLayoutBinding(store, service);
   service.prepareEventRsvp(director(), {
     organisationId: people.orgMaison,
     eventId: people.eventAlphaOne,
@@ -79,7 +80,7 @@ function attendingGuest(service: ReturnType<typeof fixtureService>["service"], g
 describe("EOS-S06 V2 command path", () => {
   it("HARD KEEP_APART: create → independent activate → freeze → solve → validate → adopt → submit → approve → CEO publish", async () => {
     const { service, store } = fixtureService();
-    prepareSurface(service, store);
+    await prepareSurface(service, store);
     const guestA = attendingGuest(service, "Ada", "s072-ka-a");
     const guestB = attendingGuest(service, "Bisi", "s072-ka-b");
     const v2 = service.seatingV2Commands();
@@ -167,7 +168,7 @@ describe("EOS-S06 V2 command path", () => {
 
   it("rejects HARD self-activation, DRAFT governance, stale replay after rule change, and violating assign", async () => {
     const { service, store } = fixtureService();
-    prepareSurface(service, store);
+    await prepareSurface(service, store);
     const guestA = attendingGuest(service, "Chioma", "s072-neg-a");
     const guestB = attendingGuest(service, "Dami", "s072-neg-b");
     const guestC = attendingGuest(service, "ChiomaC", "s072-neg-c");
@@ -274,7 +275,7 @@ describe("EOS-S06 V2 command path", () => {
 
   it("blocks CEO maker/checker bypass and serves permission-safe export to Auditor", async () => {
     const { service, store } = fixtureService();
-    prepareSurface(service, store);
+    await prepareSurface(service, store);
     const guestA = attendingGuest(service, "Efe", "s072-sep-a");
     const guestB = attendingGuest(service, "Fola", "s072-sep-b");
     const v2 = service.seatingV2Commands();
@@ -327,7 +328,7 @@ describe("EOS-S06 V2 command path", () => {
 
   it("stores one validation outcome per package rule when two ACTIVE KEEP_APART editions share a hash", async () => {
     const { service, store } = fixtureService();
-    prepareSurface(service, store);
+    await prepareSurface(service, store);
     const guestA = attendingGuest(service, "Chi", "s072-dup-a");
     const guestB = attendingGuest(service, "Dee", "s072-dup-b");
     const v2 = service.seatingV2Commands();
@@ -352,7 +353,7 @@ describe("EOS-S06 V2 command path", () => {
 
   it("exposes the latest frozen package for launch after a working edition exists", async () => {
     const { service, store } = fixtureService();
-    prepareSurface(service, store);
+    await prepareSurface(service, store);
     const guestA = attendingGuest(service, "Eve", "s072-latest-a");
     const guestB = attendingGuest(service, "Fay", "s072-latest-b");
     const v2 = service.seatingV2Commands();
@@ -377,7 +378,7 @@ describe("EOS-S06 V2 command path", () => {
 
   it("withdrawn reservation leaves the next freeze and capacity ledger", async () => {
     const { service, store } = fixtureService();
-    prepareSurface(service, store);
+    await prepareSurface(service, store);
     const guestA = attendingGuest(service, "Gil", "s072-resv-a");
     const guestB = attendingGuest(service, "Han", "s072-resv-b");
     const v2 = service.seatingV2Commands();

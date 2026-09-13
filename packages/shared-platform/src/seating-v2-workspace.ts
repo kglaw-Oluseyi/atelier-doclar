@@ -5,7 +5,8 @@ import {
   S06_V2_PRIOR_CORPUS_STALE_REASON,
   seatingV2EvalReadiness,
 } from "./seating-evaluation-v2-schemas.js";
-import { snapshotGuestCohortAdapter, snapshotLayoutAdapter } from "./seating-adapters.js";
+import { snapshotGuestCohortAdapter } from "./seating-adapters.js";
+import { projectPublishedLayout, resolveSeatingLayoutAuthority } from "./seating-v2-layout-binding.js";
 import { seatingV2RuleSemanticSentence } from "./seating-v2-authoring.js";
 import { SEATING_V2_VALIDATOR_VERSION } from "./seating-v2-schemas.js";
 import type { SeatingDisclosure, SeatingWorkspaceView } from "./seating-workspace.js";
@@ -81,12 +82,60 @@ export function buildSeatingV2Workspace(
   const pkg = latestPkg ?? editionPkg;
   const assignments = edition ? state.planAssignments.filter((item) => item.planEditionId === edition.id) : [];
   const cohort = snapshotGuestCohortAdapter(snap, eventId);
-  let layout: ReturnType<typeof snapshotLayoutAdapter> | undefined;
-  try {
-    layout = snapshotLayoutAdapter(snap, organisationId, eventId);
-  } catch {
-    layout = undefined;
-  }
+  const authority = resolveSeatingLayoutAuthority(snap, state.layoutBindings, organisationId, eventId);
+  const layout = authority.state === "BOUND" ? authority.layout : undefined;
+  const boundPublication =
+    authority.state === "BOUND"
+      ? snap.layoutPublications.find((item) => item.id === authority.binding.layoutPublicationId)
+      : undefined;
+  const boundLayoutRecord =
+    authority.state === "BOUND" ? snap.layouts.find((item) => item.id === authority.binding.layoutId) : undefined;
+  const draftBinding = state.layoutBindings.find(
+    (item) => item.organisationId === organisationId && item.eventId === eventId && item.state === "DRAFT",
+  );
+  const draftPublication = draftBinding
+    ? snap.layoutPublications.find((item) => item.id === draftBinding.layoutPublicationId)
+    : undefined;
+  const draftLayoutRecord = draftBinding ? snap.layouts.find((item) => item.id === draftBinding.layoutId) : undefined;
+  const seatingLayoutBindingCandidates = snap.layoutPublications
+    .filter((item) => item.organisationId === organisationId && item.eventId === eventId && item.status === "CURRENT")
+    .map((publication) => {
+      const projected = projectPublishedLayout(snap, publication.id);
+      const layoutRecord = snap.layouts.find((item) => item.id === publication.layoutId);
+      const physicalCapacity = (projected?.tables ?? []).reduce((sum, table) => sum + (table.physicalPositionCount ?? 0), 0);
+      const declaredCapacity = (projected?.tables ?? []).reduce((sum, table) => sum + (table.declaredCapacity ?? 0), 0);
+      return {
+        layoutLabel: layoutRecord?.name ?? "Published layout",
+        publicationNumber: publication.publicationNumber,
+        tableCount: projected?.tables.length ?? 0,
+        physicalCapacity,
+        declaredCapacity,
+        layoutId: publication.layoutId,
+        publicationId: publication.id,
+        contentHash: publication.contentHash,
+      };
+    })
+    .sort((left, right) => `${left.layoutLabel}:${left.publicationNumber}`.localeCompare(`${right.layoutLabel}:${right.publicationNumber}`));
+  const seatingLayoutBinding = {
+    status: authority.state === "BOUND" ? ("BOUND" as const) : authority.state === "ABSENT" ? ("ABSENT" as const) : authority.state === "AMBIGUOUS" ? ("AMBIGUOUS" as const) : authority.state === "STALE" ? ("STALE" as const) : ("MISMATCH" as const),
+    layoutLabel: boundLayoutRecord?.name,
+    publicationNumber: boundPublication?.publicationNumber,
+    tableCount: layout?.tables.length,
+    physicalCapacity: layout?.tables.reduce((sum, table) => sum + (table.physicalPositionCount ?? 0), 0),
+    declaredCapacity: layout?.tables.reduce((sum, table) => sum + (table.declaredCapacity ?? 0), 0),
+    contentHashPrefix:
+      disclosure === "AUDITOR"
+        ? undefined
+        : (boundPublication?.contentHash ?? draftBinding?.layoutContentHash)?.slice(0, 12),
+    freezeDisabled: authority.state !== "BOUND" || Boolean(layout?.tables.some((table) => table.mismatch)),
+    draftId: disclosure === "AUDITOR" ? undefined : draftBinding?.id,
+    draftLayoutLabel: disclosure === "AUDITOR" ? undefined : draftLayoutRecord?.name,
+    draftPublicationNumber: disclosure === "AUDITOR" ? undefined : draftPublication?.publicationNumber,
+    draftContentHashPrefix: disclosure === "AUDITOR" ? undefined : draftBinding?.layoutContentHash.slice(0, 12),
+    draftVersion: disclosure === "AUDITOR" ? undefined : draftBinding?.version,
+    activeId: disclosure === "AUDITOR" || authority.state !== "BOUND" ? undefined : authority.binding.id,
+    activeVersion: disclosure === "AUDITOR" || authority.state !== "BOUND" ? undefined : authority.binding.version,
+  };
   const runs = state.runs.filter((item) => item.eventId === eventId);
   const currentRunId = currentSeatingV2RunId(state, eventId);
   const evalRun = state.evaluationRuns.at(-1);
@@ -135,12 +184,37 @@ export function buildSeatingV2Workspace(
       state.validationStructuralOutcomes.filter((row) => row.reportId === latestCurrentReport.id && row.outcome === "FAILED").length
     : rules.filter((item) => item.lifecycle === "ACTIVE" && item.hardness === "HARD").length;
   const attention: SeatingWorkspaceView["attention"] = [];
+  if (authority.state === "ABSENT") {
+    attention.push({
+      kind: "blocker",
+      message: "Activate a seating layout binding before freezing seating inputs.",
+      href: "#inputs",
+    });
+  } else if (authority.state === "AMBIGUOUS") {
+    attention.push({
+      kind: "blocker",
+      message: "More than one seating layout binding is active for this event. Resolve the binding before freezing seating inputs.",
+      href: "#inputs",
+    });
+  } else if (authority.state === "STALE") {
+    attention.push({
+      kind: "stale",
+      message: "The seating layout binding is stale. Propose and activate a successor binding for the current publication.",
+      href: "#inputs",
+    });
+  } else if (authority.state === "MISMATCH") {
+    attention.push({
+      kind: "blocker",
+      message: "The seating layout binding does not match a current publication. Resolve the layout record before freezing seating inputs.",
+      href: "#inputs",
+    });
+  }
   if (!pkg) attention.push({ kind: "blocker", message: "Freeze a V2 input package before solving.", href: "#inputs" });
   if (overbooked) attention.push({ kind: "blocker", message: "Reserved minima exceed published capacity.", href: "#reservations" });
   if (tables.some((item) => item.mismatch)) {
     attention.push({
       kind: "blocker",
-      message: "Physical seat count and declared capacity disagree. Correct the layout before freezing a seating package.",
+      message: "Physical seat count and declared capacity disagree. Correct and republish the layout before freezing seating inputs.",
       href: "#inputs",
     });
   }
@@ -157,7 +231,9 @@ export function buildSeatingV2Workspace(
       href: "#overview",
     });
   }
-  const nextAction = !pkg
+  const nextAction = authority.state !== "BOUND"
+    ? "Activate a seating layout binding"
+    : !pkg
     ? "Freeze inputs"
     : packageDrifted || !edition
       ? "Launch and adopt a validator-FEASIBLE run"
@@ -339,6 +415,8 @@ export function buildSeatingV2Workspace(
     },
     attention,
     nextAction,
+    seatingLayoutBinding,
+    seatingLayoutBindingCandidates: disclosure === "AUDITOR" ? [] : seatingLayoutBindingCandidates,
     evaluation:
       evalRun && evalRun.corpusEdition === S06_V2_EVALUATION_CORPUS_EDITION
         ? { caseCount: evalRun.caseCount, status: evalRun.status, corpusEdition: evalRun.corpusEdition }

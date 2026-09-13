@@ -65,6 +65,33 @@ export type SeatingWorkspaceView = SeatingWorkspaceProjection & {
   attention: Array<{ kind: "blocker" | "stale" | "review" | "warning"; message: string; href: string }>;
   nextAction: string;
   evaluation?: { caseCount: number; status?: string; corpusEdition?: string };
+  seatingLayoutBinding?: {
+    status: "BOUND" | "ABSENT" | "AMBIGUOUS" | "STALE" | "MISMATCH";
+    layoutLabel?: string;
+    publicationNumber?: number;
+    tableCount?: number;
+    physicalCapacity?: number;
+    declaredCapacity?: number;
+    contentHashPrefix?: string;
+    freezeDisabled?: boolean;
+    draftId?: string;
+    draftLayoutLabel?: string;
+    draftPublicationNumber?: number;
+    draftContentHashPrefix?: string;
+    draftVersion?: number;
+    activeId?: string;
+    activeVersion?: number;
+  };
+  seatingLayoutBindingCandidates?: Array<{
+    layoutLabel: string;
+    publicationNumber: number;
+    tableCount: number;
+    physicalCapacity: number;
+    declaredCapacity: number;
+    layoutId: string;
+    publicationId: string;
+    contentHash: string;
+  }>;
 };
 
 export function implicatedSeatingReviewDomains(

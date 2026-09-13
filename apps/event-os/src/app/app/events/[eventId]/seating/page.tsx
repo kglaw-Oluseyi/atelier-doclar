@@ -20,14 +20,17 @@ import {
   createSeatingConstraintAction,
   decideSeatingApprovalAction,
   decideSeatingReviewAction,
+  activateSeatingLayoutBindingAction,
   freezeSeatingInputsAction,
   launchSeatingRunAction,
+  proposeSeatingLayoutBindingAction,
   publishSeatingPlanAction,
   releaseReservationBlockAction,
   requestSeatingExportAction,
   recallSeatingPlanAction,
   runS06EvaluationAction,
   submitSeatingPlanAction,
+  withdrawSeatingLayoutBindingAction,
   supersedeReservationBlockAction,
   withdrawReservationBlockAction,
 } from "../../../../../server/seating-actions";
@@ -295,6 +298,67 @@ export default async function EventSeatingPage({
               : "No current layout is published."}
           </p>
         </article>
+        <article data-testid="seating-layout-binding">
+          <h3>Seating layout binding</h3>
+          <p
+            data-testid="seating-layout-binding-status"
+            data-binding-status={workspace.seatingLayoutBinding?.status ?? "ABSENT"}
+            data-publication-number={workspace.seatingLayoutBinding?.publicationNumber ?? ""}
+            data-content-hash-prefix={workspace.seatingLayoutBinding?.contentHashPrefix ?? ""}
+            data-freeze-disabled={workspace.seatingLayoutBinding?.freezeDisabled ? "true" : "false"}
+          >
+            {workspace.seatingLayoutBinding?.status === "BOUND"
+              ? `${workspace.seatingLayoutBinding.layoutLabel ?? "Bound layout"} · CURRENT publication ${workspace.seatingLayoutBinding.publicationNumber} · hash ${workspace.seatingLayoutBinding.contentHashPrefix} · ${workspace.seatingLayoutBinding.tableCount ?? 0} tables · ${workspace.seatingLayoutBinding.physicalCapacity ?? 0} physical / ${workspace.seatingLayoutBinding.declaredCapacity ?? 0} declared`
+              : workspace.seatingLayoutBinding?.status === "AMBIGUOUS"
+                ? "More than one seating layout binding is active for this event."
+                : workspace.seatingLayoutBinding?.status === "STALE"
+                  ? "The seating layout binding is stale."
+                  : workspace.seatingLayoutBinding?.status === "MISMATCH"
+                    ? "The seating layout binding could not be verified."
+                    : "No active seating layout binding."}
+          </p>
+          {permissions.prepare && (workspace.seatingLayoutBindingCandidates?.length ?? 0) > 0 ? (
+            <ProtectionMutationForm action={proposeSeatingLayoutBindingAction} className="atelier-form" testId="seating-layout-binding-propose">
+              <Envelope fields={envelopeFields} />
+              <IdempotencyField />
+              <label>
+                Current layout publication
+                <select name="layoutPublicationId" required>
+                  {workspace.seatingLayoutBindingCandidates?.map((candidate) => (
+                    <option key={candidate.publicationId} value={candidate.publicationId}>
+                      {candidate.layoutLabel} · CURRENT publication {candidate.publicationNumber} · hash {candidate.contentHash.slice(0, 12)} · {candidate.tableCount} tables
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button type="submit" className="button">Propose seating layout binding</button>
+            </ProtectionMutationForm>
+          ) : null}
+          {permissions.ruleActivate && workspace.seatingLayoutBinding?.draftId ? (
+            <ProtectionMutationForm action={activateSeatingLayoutBindingAction} className="actions" testId="seating-layout-binding-activate">
+              <Envelope fields={{ ...envelopeFields, bindingId: workspace.seatingLayoutBinding.draftId, expectedVersion: workspace.seatingLayoutBinding.draftVersion ?? 1 }} />
+              <IdempotencyField />
+              <p data-testid="seating-layout-binding-activate-identity">
+                {workspace.seatingLayoutBinding.draftLayoutLabel ?? "Proposed layout"} · CURRENT publication {workspace.seatingLayoutBinding.draftPublicationNumber} · hash {workspace.seatingLayoutBinding.draftContentHashPrefix}
+              </p>
+              <button type="submit" className="button">Activate seating layout binding</button>
+            </ProtectionMutationForm>
+          ) : null}
+          {permissions.prepare && workspace.seatingLayoutBinding?.draftId ? (
+            <ProtectionMutationForm action={withdrawSeatingLayoutBindingAction} className="actions" testId="seating-layout-binding-withdraw-draft">
+              <Envelope fields={{ ...envelopeFields, bindingId: workspace.seatingLayoutBinding.draftId, expectedVersion: workspace.seatingLayoutBinding.draftVersion ?? 1 }} />
+              <IdempotencyField />
+              <button type="submit" className="button">Withdraw draft binding</button>
+            </ProtectionMutationForm>
+          ) : null}
+          {permissions.ruleActivate && workspace.seatingLayoutBinding?.status === "BOUND" && workspace.seatingLayoutBinding.activeId ? (
+            <ProtectionMutationForm action={withdrawSeatingLayoutBindingAction} className="actions" testId="seating-layout-binding-withdraw">
+              <Envelope fields={{ ...envelopeFields, bindingId: workspace.seatingLayoutBinding.activeId, expectedVersion: workspace.seatingLayoutBinding.activeVersion ?? 1 }} />
+              <IdempotencyField />
+              <button type="submit" className="button">Withdraw active binding</button>
+            </ProtectionMutationForm>
+          ) : null}
+        </article>
         <article>
           <h3>Event Brief</h3>
           <p>Optional published brief facts only.</p>
@@ -307,7 +371,13 @@ export default async function EventSeatingPage({
           <ProtectionMutationForm action={freezeSeatingInputsAction} className="actions" testId="seating-freeze">
             <Envelope fields={envelopeFields} />
             <IdempotencyField />
-            <button type="submit" className="button" disabled={workspace.tables.some((table) => table.mismatch)}>
+            <button
+              type="submit"
+              className="button"
+              disabled={
+                workspace.seatingLayoutBinding?.status !== "BOUND" || workspace.tables.some((table) => table.mismatch)
+              }
+            >
               Freeze new input edition
             </button>
           </ProtectionMutationForm>

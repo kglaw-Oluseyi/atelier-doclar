@@ -8,7 +8,7 @@ import {
   settlementCommandIdFromIdempotency,
   type SeatingSettlementTrace,
 } from "../src/seating-settlement-trace.js";
-import { applyS06SeatingLayoutIfMissing } from "../src/seating-fixtures.js";
+import { applyS06SeatingLayoutIfMissing, ensureS06SeatingLayoutBinding } from "../src/seating-fixtures.js";
 import { actor, fixtureService, people } from "./helpers.js";
 
 const COMMAND = "00000000-0000-4000-8000-000000000073";
@@ -50,6 +50,7 @@ describe("S073 settlement trace", () => {
     clearSettlementTraces();
     const { service, store } = fixtureService();
     applyS06SeatingLayoutIfMissing(store, service);
+    await ensureS06SeatingLayoutBinding(store, service);
     service.prepareEventRsvp(director(), {
       organisationId: people.orgMaison,
       eventId: people.eventAlphaOne,

@@ -1,6 +1,7 @@
 import { FIXTURE_IDS } from "./fixtures.js";
 import type { PlatformService } from "./service.js";
 import type { PlatformStore } from "./store.js";
+import type { SeatingV2LayoutBinding } from "./seating-v2-state.js";
 
 const NOW = "2026-09-12T07:00:00.000Z";
 
@@ -85,4 +86,125 @@ export function applyS06SeatingLayoutIfMissing(store: PlatformStore, service: Pl
   });
   const ready = service.getLayoutSetupWorkspace(director(), FIXTURE_IDS.orgMaison, FIXTURE_IDS.eventAlphaOne, layout.id).layout;
   service.publishLayout(director(), { ...cas(ready), reason: "Publish seating fixture layout" });
+}
+
+const FIXTURE_BINDING_ID = "00000000-0000-4000-8000-00000000b075";
+
+function syntheticHallPublication(store: PlatformStore) {
+  const hall = store.snapshot().layouts.find(
+    (item) => item.eventId === FIXTURE_IDS.eventAlphaOne && item.name === "Synthetic seating hall",
+  );
+  if (!hall) return undefined;
+  const publication = store
+    .snapshot()
+    .layoutPublications.find((item) => item.layoutId === hall.id && item.status === "CURRENT");
+  if (!publication) return undefined;
+  return { hall, publication };
+}
+
+/** Memory-only fixture seed of the Synthetic seating hall binding. Does not select first/latest. */
+export function seedS06SeatingLayoutBindingIfMissing(store: PlatformStore, service: PlatformService): void {
+  const nominated = syntheticHallPublication(store);
+  if (!nominated) return;
+  const repo = service.seatingV2Commands().repository as { backingStore?: { collection(name: "layoutBindings"): SeatingV2LayoutBinding[] } };
+  const rows = repo.backingStore?.collection("layoutBindings");
+  if (!rows) return;
+  if (
+    rows.some(
+      (item) =>
+        item.state === "ACTIVE" &&
+        item.layoutId === nominated.hall.id &&
+        item.layoutPublicationId === nominated.publication.id &&
+        item.layoutContentHash === nominated.publication.contentHash,
+    )
+  ) {
+    return;
+  }
+  rows.push({
+    id: FIXTURE_BINDING_ID,
+    organisationId: FIXTURE_IDS.orgMaison,
+    eventId: FIXTURE_IDS.eventAlphaOne,
+    layoutId: nominated.hall.id,
+    layoutPublicationId: nominated.publication.id,
+    layoutContentHash: nominated.publication.contentHash,
+    state: "ACTIVE",
+    version: 1,
+    proposedByPersonId: FIXTURE_IDS.personPlanner,
+    proposedAt: NOW,
+    activatedByPersonId: FIXTURE_IDS.personDirector,
+    activatedAt: NOW,
+    reason: "Seed the nominated Synthetic seating hall publication for fixture seating.",
+    schemaVersion: 1,
+    createdAt: NOW,
+    updatedAt: NOW,
+  });
+}
+
+export async function ensureSeatingLayoutBindingForLayout(
+  service: PlatformService,
+  input: {
+    organisationId: string;
+    eventId: string;
+    layoutId: string;
+    plannerAssignmentId: string;
+    directorAssignmentId: string;
+    idempotencyPrefix: string;
+  },
+): Promise<SeatingV2LayoutBinding> {
+  const workspace = service.getLayoutSetupWorkspace(planner(), input.organisationId, input.eventId, input.layoutId);
+  const publication = workspace.assurance.publications.find(
+    (item) => item.layoutId === input.layoutId && item.status === "CURRENT",
+  );
+  if (!publication) {
+    throw new Error("A current publication for the nominated layout is required before a seating layout binding can be activated.");
+  }
+  const v2 = service.seatingV2Commands();
+  const existing = (
+    await v2.repository.transaction(async (tx) =>
+      tx.list<SeatingV2LayoutBinding>("layoutBindings", {
+        organisationId: input.organisationId,
+        eventId: input.eventId,
+      }),
+    )
+  ).find(
+    (item) =>
+      item.state === "ACTIVE" &&
+      item.layoutId === input.layoutId &&
+      item.layoutPublicationId === publication.id &&
+      item.layoutContentHash === publication.contentHash,
+  );
+  if (existing) return existing;
+  const envelope = (assignmentId: string, key: string) => ({
+    organisationId: input.organisationId,
+    eventId: input.eventId,
+    actorAssignmentId: assignmentId,
+    idempotencyKey: key.length >= 12 ? key : `${input.idempotencyPrefix}-${key}`,
+  });
+  const proposed = await v2.proposeLayoutBinding(planner(), envelope(input.plannerAssignmentId, `${input.idempotencyPrefix}-propose`), {
+    layoutId: input.layoutId,
+    layoutPublicationId: publication.id,
+    layoutContentHash: publication.contentHash,
+    reason: "Activate the nominated current layout publication for Seating Command.",
+  });
+  const activated = await v2.activateLayoutBinding(
+    director(),
+    envelope(input.directorAssignmentId, `${input.idempotencyPrefix}-activate`),
+    { bindingId: proposed.value.id, expectedVersion: proposed.value.version },
+  );
+  return activated.value;
+}
+
+export async function ensureS06SeatingLayoutBinding(store: PlatformStore, service: PlatformService): Promise<SeatingV2LayoutBinding | undefined> {
+  const hall = store.snapshot().layouts.find(
+    (item) => item.eventId === FIXTURE_IDS.eventAlphaOne && item.name === "Synthetic seating hall",
+  );
+  if (!hall) return undefined;
+  return ensureSeatingLayoutBindingForLayout(service, {
+    organisationId: FIXTURE_IDS.orgMaison,
+    eventId: FIXTURE_IDS.eventAlphaOne,
+    layoutId: hall.id,
+    plannerAssignmentId: FIXTURE_IDS.assignPlanner,
+    directorAssignmentId: FIXTURE_IDS.assignDirector,
+    idempotencyPrefix: "s06-seating-binding",
+  });
 }

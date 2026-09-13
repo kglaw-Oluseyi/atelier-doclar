@@ -54,6 +54,10 @@ const KIND_BY_CODE: Record<PlatformErrorCode, OperationalStateKind> = {
   ADOPTION_MISMATCH: "conflict",
   SEATING_VALIDATION_REJECTED: "validation",
   SEAT_CAPACITY_MISMATCH: "validation",
+  NO_ACTIVE_SEATING_LAYOUT_BINDING: "validation",
+  MULTIPLE_ACTIVE_SEATING_LAYOUT_BINDINGS: "validation",
+  SEATING_LAYOUT_BINDING_STALE: "validation",
+  SEATING_LAYOUT_PUBLICATION_MISMATCH: "validation",
   IDEMPOTENCY_CONFLICT: "duplicate",
   DEPENDENCY_UNAVAILABLE: "postgres_unavailable",
   CAPABILITY_NOT_ENABLED: "readiness_unavailable",
@@ -259,6 +263,71 @@ export function operationalStateFromCode(
       return view("not_found", code, "This record is not available", "The requested guest, party or event is outside this assignment, or it does not exist.", "no", "Return to the directory. Do not retry against another event identifier.", false, "warn", "assertive", message);
     case "VALIDATION_FAILED":
       return view("validation", code, "The submitted information is not valid", "The server rejected the values. Canonical data was not changed.", "no", "Correct the highlighted fields and submit once. Retry is safe after correction.", true, "danger", "assertive", message);
+    case "SEAT_CAPACITY_MISMATCH":
+      return view(
+        "validation",
+        code,
+        "The published layout capacity needs correction",
+        "Physical seat count and declared capacity disagree. Correct and republish the layout before freezing seating inputs.",
+        "no",
+        "Correct and republish the layout, then freeze seating inputs once.",
+        true,
+        "danger",
+        "assertive",
+        message,
+      );
+    case "NO_ACTIVE_SEATING_LAYOUT_BINDING":
+      return view(
+        "validation",
+        code,
+        "A seating layout binding is required",
+        "Activate a seating layout binding before freezing seating inputs.",
+        "no",
+        "Propose a binding to one current layout publication, then have an independent checker activate it.",
+        true,
+        "danger",
+        "assertive",
+        message,
+      );
+    case "MULTIPLE_ACTIVE_SEATING_LAYOUT_BINDINGS":
+      return view(
+        "validation",
+        code,
+        "Seating layout bindings need resolution",
+        "More than one seating layout binding is active for this event. Resolve the binding before freezing seating inputs.",
+        "no",
+        "Withdraw the extra active binding, then activate exactly one.",
+        false,
+        "danger",
+        "assertive",
+        message,
+      );
+    case "SEATING_LAYOUT_BINDING_STALE":
+      return view(
+        "validation",
+        code,
+        "The seating layout binding is stale",
+        "The seating layout binding is stale. Propose and activate a successor binding for the current publication.",
+        "no",
+        "Propose and activate a successor binding for the current publication before freezing again.",
+        true,
+        "warn",
+        "assertive",
+        message,
+      );
+    case "SEATING_LAYOUT_PUBLICATION_MISMATCH":
+      return view(
+        "validation",
+        code,
+        "The seating layout binding could not be verified",
+        "The seating layout binding does not match a current publication. Resolve the layout record before freezing seating inputs.",
+        "no",
+        "Propose and activate a binding to an exact current layout publication.",
+        false,
+        "danger",
+        "assertive",
+        message,
+      );
     case "VERSION_CONFLICT":
       return {
         ...view(

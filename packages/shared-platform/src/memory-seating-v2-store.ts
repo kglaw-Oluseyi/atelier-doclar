@@ -22,6 +22,7 @@ import {
   type SeatingV2Collection,
   type SeatingV2EventCurrent,
   type SeatingV2IdempotencyReceipt,
+  type SeatingV2LayoutBinding,
   type SeatingV2PlanAssignment,
   type SeatingV2RunAssignment,
   type SeatingV2State,
@@ -170,6 +171,67 @@ export class MemorySeatingV2Transaction implements SeatingV2Transaction {
     return structuredClone(merged) as T;
   }
 
+  async updateLayoutBinding(
+    id: string,
+    scope: SeatingV2Scope,
+    expectedVersion: number,
+    patch: Partial<
+      Pick<
+        SeatingV2LayoutBinding,
+        "state" | "activatedByPersonId" | "activatedAt" | "withdrawnByPersonId" | "withdrawnAt" | "updatedAt"
+      >
+    >,
+  ): Promise<SeatingV2LayoutBinding> {
+    const rows = this.store.collection("layoutBindings");
+    const index = rows.findIndex((item) => item.id === id && assertSeatingV2Scope(item, scope));
+    if (index < 0) throw new PlatformError("NOT_FOUND", "seating layout binding was not found");
+    const current = rows[index]!;
+    if (current.version !== expectedVersion) {
+      throw new PlatformError("VERSION_CONFLICT", "stale seating layout binding was not rescued", {
+        publicMessage: "The record changed elsewhere. Reload this item before retrying.",
+      });
+    }
+    if (patch.state === "ACTIVE") {
+      for (const item of rows) {
+        if (
+          item.id !== id &&
+          item.organisationId === scope.organisationId &&
+          item.eventId === scope.eventId &&
+          item.state === "ACTIVE"
+        ) {
+          item.state = "SUPERSEDED";
+          item.version += 1;
+          item.updatedAt = patch.updatedAt ?? current.updatedAt;
+        }
+      }
+    }
+    const merged: SeatingV2LayoutBinding = {
+      ...current,
+      ...patch,
+      id: current.id,
+      organisationId: current.organisationId,
+      eventId: current.eventId,
+      version: expectedVersion + 1,
+    };
+    if (merged.state === "ACTIVE") {
+      const actives = rows.filter(
+        (item) =>
+          item.organisationId === scope.organisationId &&
+          item.eventId === scope.eventId &&
+          item.state === "ACTIVE" &&
+          item.id !== id,
+      );
+      if (actives.length > 0) {
+        throw new PlatformError("MULTIPLE_ACTIVE_SEATING_LAYOUT_BINDINGS", "multiple active seating layout bindings", {
+          publicMessage:
+            "More than one seating layout binding is active for this event. Resolve the binding before freezing seating inputs.",
+        });
+      }
+    }
+    rows[index] = structuredClone(merged);
+    return structuredClone(merged);
+  }
+
   async appendAudit(record: AuditEvent): Promise<void> {
     this.store.audit.push(structuredClone(record));
   }
@@ -272,6 +334,21 @@ export class MemorySeatingV2Transaction implements SeatingV2Transaction {
   }
 
   private assertInsertInvariants(collection: SeatingV2Collection, next: Identified, rows: Identified[]): void {
+    if (collection === "layoutBindings" && next.state === "ACTIVE") {
+      if (
+        rows.some(
+          (item) =>
+            item.organisationId === next.organisationId &&
+            item.eventId === next.eventId &&
+            item.state === "ACTIVE",
+        )
+      ) {
+        throw new PlatformError("MULTIPLE_ACTIVE_SEATING_LAYOUT_BINDINGS", "multiple active seating layout bindings", {
+          publicMessage:
+            "More than one seating layout binding is active for this event. Resolve the binding before freezing seating inputs.",
+        });
+      }
+    }
     if (collection === "eventCurrent") {
       if (
         rows.some(

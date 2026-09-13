@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { PlatformError } from "../src/errors.js";
-import { applyS06SeatingLayoutIfMissing } from "../src/seating-fixtures.js";
+import { applyS06SeatingLayoutIfMissing, ensureS06SeatingLayoutBinding } from "../src/seating-fixtures.js";
 import { snapshotLayoutAdapter } from "../src/seating-adapters.js";
 import { defaultSolverConfig, solveSeatingV1 } from "../src/seating-solver-v1.js";
 import type { SolverRequest } from "../src/seating-solver-types.js";
@@ -56,8 +56,9 @@ function keepApart(guestA: string, guestB: string): SeatingV2RuleContent {
   };
 }
 
-function prepareSurface(service: ReturnType<typeof fixtureService>["service"], store: ReturnType<typeof fixtureService>["store"]) {
+async function prepareSurface(service: ReturnType<typeof fixtureService>["service"], store: ReturnType<typeof fixtureService>["store"]) {
   applyS06SeatingLayoutIfMissing(store, service);
+  await ensureS06SeatingLayoutBinding(store, service);
   service.prepareEventRsvp(director(), {
     organisationId: people.orgMaison,
     eventId: people.eventAlphaOne,
@@ -287,7 +288,7 @@ describe("S075 solver-claim honesty", () => {
 
   it("seats the four-guest witness and every FEASIBLE claim independently validates", async () => {
     const { service, store } = fixtureService();
-    prepareSurface(service, store);
+    await prepareSurface(service, store);
     const layout = snapshotLayoutAdapter(store.snapshot(), people.orgMaison, people.eventAlphaOne);
     const t1 = layout.tables[0]!.objectId;
     const g1 = attendingGuest(service, "G1", "s075-claim-g1");

@@ -42,6 +42,19 @@ describe("EOS-S04A operational state matrix", () => {
     assert.equal(duplicate.retrySafe, false);
     const transition = operationalStateFromCode("TRANSITION_INVALID");
     assert.equal(transition.kind, "invalid_transition");
+    const capacity = operationalStateFromCode("SEAT_CAPACITY_MISMATCH");
+    assert.equal(capacity.title, "The published layout capacity needs correction");
+    assert.match(capacity.whatHappened, /Physical seat count and declared capacity disagree/);
+    const absent = operationalStateFromCode("NO_ACTIVE_SEATING_LAYOUT_BINDING");
+    assert.equal(absent.title, "A seating layout binding is required");
+    assert.equal(absent.kind, "validation");
+    assert.equal(absent.dataChanged, "no");
+    const ambiguous = operationalStateFromCode("MULTIPLE_ACTIVE_SEATING_LAYOUT_BINDINGS");
+    assert.equal(ambiguous.title, "Seating layout bindings need resolution");
+    const stale = operationalStateFromCode("SEATING_LAYOUT_BINDING_STALE");
+    assert.equal(stale.title, "The seating layout binding is stale");
+    const mismatch = operationalStateFromCode("SEATING_LAYOUT_PUBLICATION_MISMATCH");
+    assert.equal(mismatch.title, "The seating layout binding could not be verified");
   });
 
   it("explains session expiry, revoked assignment and permission change", () => {

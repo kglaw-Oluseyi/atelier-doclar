@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { exactHash } from "./eec-hash.js";
-import { appliedMutationEffect, replayedMutationEffect, type DurableMutationEffect } from "./durable-mutation-effect.js";
+import { appliedMutationEffect, notAppliedMutationEffect, replayedMutationEffect, type DurableMutationEffect } from "./durable-mutation-effect.js";
 import { PlatformError } from "./errors.js";
 import { authorize, canSeeEvent, type ActorSnapshot } from "./policy.js";
 import { roleKeyForId } from "./catalog.js";
@@ -8,7 +8,7 @@ import { seatingDisclosureForRole } from "./seating-workspace.js";
 import { buildSeatingV2Workspace } from "./seating-v2-workspace.js";
 import { emptySeatingV2State, SEATING_V2_WORKSPACE_COLLECTIONS, type SeatingV2State } from "./seating-v2-state.js";
 import type { SeatingWorkspaceView } from "./seating-workspace.js";
-import { snapshotLayoutAdapter } from "./seating-adapters.js";
+import { requireSeatingLayoutAuthority } from "./seating-v2-layout-binding.js";
 import { assertSeatingV2RuleAuthoring } from "./seating-v2-authoring.js";
 import { assertSeatingV2CompiledRequest, compileSeatingV2Request } from "./seating-v2-compiler.js";
 import {
@@ -46,6 +46,7 @@ import type {
   SeatingV2CompiledRequestRecord,
   SeatingV2ExportJob,
   SeatingV2InputPackage,
+  SeatingV2LayoutBinding,
   SeatingV2ManualPreview,
   SeatingV2OperationalApproval,
   SeatingV2PlanAssignment,
@@ -241,9 +242,7 @@ export class SeatingV2CommandService {
     content: SeatingV2RuleContent,
   ): Promise<SeatingV2CommandResult<SeatingV2RuleEdition>> {
     return this.mutate(actor, envelope, "seating.constraint.manage", "seatingV2.createRule", async (tx) => {
-      const publishedTableIds = new Set(
-        snapshotLayoutAdapter(this.deps.snapshot(), envelope.organisationId, envelope.eventId).tables.map((table) => table.objectId),
-      );
+      const publishedTableIds = await this.boundPublishedTableIds(tx, envelope);
       assertSeatingV2RuleAuthoring(content, publishedTableIds);
       const now = nowOf(actor);
       const rule: SeatingV2Rule = {
@@ -375,9 +374,7 @@ export class SeatingV2CommandService {
     },
   ): Promise<SeatingV2CommandResult<SeatingV2ReservationEdition>> {
     return this.mutate(actor, envelope, "seating.reservation.manage", "seatingV2.createReservation", async (tx) => {
-      const publishedTableIds = new Set(
-        snapshotLayoutAdapter(this.deps.snapshot(), envelope.organisationId, envelope.eventId).tables.map((table) => table.objectId),
-      );
+      const publishedTableIds = await this.boundPublishedTableIds(tx, envelope);
       for (const target of input.targets.filter((item) => item.type === "TABLE")) {
         if (!publishedTableIds.has(target.idOrCode)) {
           throw new PlatformError("VALIDATION_FAILED", "reservation table is not in the current published layout", {
@@ -591,22 +588,133 @@ export class SeatingV2CommandService {
     });
   }
 
+  async proposeLayoutBinding(
+    actor: SeatingV2Actor,
+    envelope: SeatingV2CommandEnvelope,
+    input: { layoutId: string; layoutPublicationId: string; layoutContentHash: string; reason: string },
+  ): Promise<SeatingV2CommandResult<SeatingV2LayoutBinding>> {
+    return this.mutate(actor, envelope, "seating.input.prepare", "seatingV2.proposeLayoutBinding", async (tx) => {
+      this.assertBindablePublication(envelope, input);
+      const now = nowOf(actor);
+      const binding: SeatingV2LayoutBinding = {
+        id: randomUUID(),
+        organisationId: envelope.organisationId,
+        eventId: envelope.eventId,
+        layoutId: input.layoutId,
+        layoutPublicationId: input.layoutPublicationId,
+        layoutContentHash: input.layoutContentHash,
+        state: "DRAFT",
+        version: 1,
+        proposedByPersonId: actor.personId,
+        proposedAt: now,
+        reason: input.reason,
+        schemaVersion: 1,
+        createdAt: now,
+        updatedAt: now,
+      };
+      await tx.insert("layoutBindings", binding);
+      return binding;
+    });
+  }
+
+  async activateLayoutBinding(
+    actor: SeatingV2Actor,
+    envelope: SeatingV2CommandEnvelope,
+    input: { bindingId: string; expectedVersion: number },
+  ): Promise<SeatingV2CommandResult<SeatingV2LayoutBinding>> {
+    return this.mutate(actor, envelope, "seating.rule.activate", "seatingV2.activateLayoutBinding", async (tx) => {
+      await tx.lockEventCurrent(envelope, "FOR_UPDATE");
+      const binding = await tx.load<SeatingV2LayoutBinding>("layoutBindings", input.bindingId, envelope);
+      if (!binding) throw new PlatformError("NOT_FOUND", "seating layout binding was not found");
+      if (binding.proposedByPersonId === actor.personId) {
+        throw new PlatformError("FORBIDDEN", "maker and checker must be different people", {
+          publicMessage: "An independent checker must activate the seating layout binding.",
+        });
+      }
+      if (binding.state === "ACTIVE" && binding.version === input.expectedVersion) {
+        return { replayed: true, value: binding };
+      }
+      if (binding.state === "WITHDRAWN" || binding.state === "SUPERSEDED") {
+        throw new PlatformError("TRANSITION_INVALID", "only a DRAFT seating layout binding may be activated");
+      }
+      if (binding.version !== input.expectedVersion) {
+        throw new PlatformError("VERSION_CONFLICT", "stale seating layout binding was not rescued", {
+          publicMessage: "The record changed elsewhere. Reload this item before retrying.",
+        });
+      }
+      this.assertBindablePublication(envelope, binding);
+      const now = nowOf(actor);
+      return tx.updateLayoutBinding(binding.id, envelope, binding.version, {
+        state: "ACTIVE",
+        activatedByPersonId: actor.personId,
+        activatedAt: now,
+        updatedAt: now,
+      });
+    });
+  }
+
+  async withdrawLayoutBinding(
+    actor: SeatingV2Actor,
+    envelope: SeatingV2CommandEnvelope,
+    input: { bindingId: string; expectedVersion: number },
+  ): Promise<SeatingV2CommandResult<SeatingV2LayoutBinding>> {
+    const preview = await this.repo.transaction((tx) => tx.load<SeatingV2LayoutBinding>("layoutBindings", input.bindingId, envelope));
+    const permission = preview?.state === "ACTIVE" ? "seating.rule.activate" : "seating.input.prepare";
+    return this.mutate(actor, envelope, permission, "seatingV2.withdrawLayoutBinding", async (tx) => {
+      const binding = await tx.load<SeatingV2LayoutBinding>("layoutBindings", input.bindingId, envelope);
+      if (!binding) throw new PlatformError("NOT_FOUND", "seating layout binding was not found");
+      if (binding.state === "WITHDRAWN" && binding.version === input.expectedVersion) {
+        return { replayed: true, value: binding };
+      }
+      if (binding.state === "SUPERSEDED") {
+        throw new PlatformError("TRANSITION_INVALID", "a superseded seating layout binding cannot be withdrawn");
+      }
+      if (binding.version !== input.expectedVersion) {
+        throw new PlatformError("VERSION_CONFLICT", "stale seating layout binding was not rescued", {
+          publicMessage: "The record changed elsewhere. Reload this item before retrying.",
+        });
+      }
+      const now = nowOf(actor);
+      return tx.updateLayoutBinding(binding.id, envelope, binding.version, {
+        state: "WITHDRAWN",
+        withdrawnByPersonId: actor.personId,
+        withdrawnAt: now,
+        updatedAt: now,
+      });
+    });
+  }
+
   async freezePackage(
     actor: SeatingV2Actor,
     envelope: SeatingV2CommandEnvelope,
     input: { seed?: string } = {},
   ): Promise<SeatingV2CommandResult<SeatingV2InputPackage>> {
-    const materials = await this.repo.transaction(async (tx) => {
-      this.guard(actor, "seating.input.prepare", envelope, envelope.actorAssignmentId);
-      return readSeatingV2PackageMaterials({
-        tx,
-        scope: envelope,
-        snapshot: this.deps.snapshot(),
-        pepper: this.deps.tokenPepper(),
-        seed: input.seed,
+    let built;
+    try {
+      const materials = await this.repo.transaction(async (tx) => {
+        this.guard(actor, "seating.input.prepare", envelope, envelope.actorAssignmentId);
+        return readSeatingV2PackageMaterials({
+          tx,
+          scope: envelope,
+          snapshot: this.deps.snapshot(),
+          pepper: this.deps.tokenPepper(),
+          seed: input.seed,
+        });
       });
-    });
-    const built = finishSeatingV2Package(materials);
+      built = finishSeatingV2Package(materials);
+    } catch (error) {
+      if (
+        error instanceof PlatformError &&
+        (error.code === "NO_ACTIVE_SEATING_LAYOUT_BINDING" ||
+          error.code === "MULTIPLE_ACTIVE_SEATING_LAYOUT_BINDINGS" ||
+          error.code === "SEATING_LAYOUT_BINDING_STALE" ||
+          error.code === "SEATING_LAYOUT_PUBLICATION_MISMATCH" ||
+          error.code === "SEAT_CAPACITY_MISMATCH")
+      ) {
+        this.deps.onEffect?.(notAppliedMutationEffect(true));
+      }
+      throw error;
+    }
     return this.mutate(actor, envelope, "seating.input.prepare", "seatingV2.freezePackage", async (tx) => {
       const existing = (await tx.list<SeatingV2InputPackage>("inputPackages", envelope)).find(
         (item) => item.contentHash === built.contentHash,
@@ -623,6 +731,8 @@ export class SeatingV2CommandService {
         contentHash: built.contentHash,
         cohortHash: built.cohort.cohortHash,
         rsvpSnapshotHash: built.cohort.rsvpTruthHash,
+        seatingLayoutBindingId: built.binding.id,
+        layoutId: built.binding.layoutId,
         layoutPublicationId: built.layout.publicationId,
         layoutContentHash: built.layout.contentHash,
         eventBriefEditionId: built.brief.editionId ?? null,
@@ -1487,6 +1597,48 @@ export class SeatingV2CommandService {
         targetType: target.type,
         targetIdOrCode: target.idOrCode,
         createdAt: now,
+      });
+    }
+  }
+
+  private async boundPublishedTableIds(tx: SeatingV2Transaction, envelope: SeatingV2Scope): Promise<Set<string>> {
+    const bindings = await tx.list<SeatingV2LayoutBinding>("layoutBindings", envelope);
+    const authority = requireSeatingLayoutAuthority(
+      this.deps.snapshot(),
+      bindings,
+      envelope.organisationId,
+      envelope.eventId,
+    );
+    return new Set(authority.layout.tables.map((table) => table.objectId));
+  }
+
+  private assertBindablePublication(
+    envelope: SeatingV2Scope,
+    input: { layoutId: string; layoutPublicationId: string; layoutContentHash: string },
+  ): void {
+    const publication = this.deps.snapshot().layoutPublications.find(
+      (item) =>
+        item.id === input.layoutPublicationId &&
+        item.layoutId === input.layoutId &&
+        item.eventId === envelope.eventId &&
+        item.organisationId === envelope.organisationId,
+    );
+    if (!publication) {
+      throw new PlatformError("SEATING_LAYOUT_PUBLICATION_MISMATCH", "selected layout publication was not found", {
+        publicMessage:
+          "The seating layout binding does not match a current publication. Resolve the layout record before freezing seating inputs.",
+      });
+    }
+    if (publication.contentHash !== input.layoutContentHash) {
+      throw new PlatformError("SEATING_LAYOUT_PUBLICATION_MISMATCH", "selected layout publication hash does not match", {
+        publicMessage:
+          "The seating layout binding does not match a current publication. Resolve the layout record before freezing seating inputs.",
+      });
+    }
+    if (publication.status !== "CURRENT") {
+      throw new PlatformError("SEATING_LAYOUT_BINDING_STALE", "selected layout publication is not current", {
+        publicMessage:
+          "The seating layout binding is stale. Propose and activate a successor binding for the current publication.",
       });
     }
   }

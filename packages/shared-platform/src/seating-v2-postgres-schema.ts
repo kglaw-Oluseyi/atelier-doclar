@@ -1,6 +1,7 @@
 import {
   EOS_S06_SEATING_V2_MIGRATION_ID as SEATING_V2_MIGRATION_ID,
   EOS_S06_SEATING_V2_REPLAY_IDENTITY_MIGRATION_ID as SEATING_V2_REPLAY_IDENTITY_MIGRATION_ID,
+  EOS_S06_SEATING_V2_LAYOUT_BINDING_MIGRATION_ID as SEATING_V2_LAYOUT_BINDING_MIGRATION_ID,
   EOS_S06_SEATING_V2_RECEIPT_ID as SEATING_V2_RECEIPT_ID,
   SEATING_V2_ASSIGNMENT_STATES,
   SEATING_V2_HARDNESS,
@@ -21,6 +22,7 @@ import {
 
 export const EOS_S06_SEATING_V2_MIGRATION_ID = SEATING_V2_MIGRATION_ID;
 export const EOS_S06_SEATING_V2_REPLAY_IDENTITY_MIGRATION_ID = SEATING_V2_REPLAY_IDENTITY_MIGRATION_ID;
+export const EOS_S06_SEATING_V2_LAYOUT_BINDING_MIGRATION_ID = SEATING_V2_LAYOUT_BINDING_MIGRATION_ID;
 export const EOS_S06_SEATING_V2_RECEIPT_ID = SEATING_V2_RECEIPT_ID;
 
 export const SEATING_V2_SQL_TABLES = [
@@ -61,7 +63,8 @@ export const SEATING_V2_SQL_TABLES = [
   "seating_v2_migration_receipts",
 ] as const;
 
-export type SeatingV2SqlTable = (typeof SEATING_V2_SQL_TABLES)[number];
+export const SEATING_V2_LAYOUT_BINDING_SQL_TABLE = "seating_v2_layout_bindings" as const;
+export type SeatingV2SqlTable = (typeof SEATING_V2_SQL_TABLES)[number] | typeof SEATING_V2_LAYOUT_BINDING_SQL_TABLE;
 
 function sqlIn(values: readonly string[]): string {
   return values.map((value) => `'${value}'`).join(",");
@@ -723,4 +726,36 @@ CREATE UNIQUE INDEX IF NOT EXISTS seating_v2_runs_replay_identity
     deterministic_seed
   )
   WHERE status IN ('FEASIBLE', 'INFEASIBLE', 'QUEUED', 'RUNNING');
+`;
+
+export const SEATING_V2_LAYOUT_BINDING_POSTGRES_SCHEMA = `
+CREATE TABLE IF NOT EXISTS seating_v2_layout_bindings (
+  id TEXT PRIMARY KEY,
+  organisation_id TEXT NOT NULL,
+  event_id TEXT NOT NULL,
+  layout_id TEXT NOT NULL,
+  layout_publication_id TEXT NOT NULL,
+  layout_content_hash TEXT NOT NULL,
+  state TEXT NOT NULL CHECK (state IN ('DRAFT', 'ACTIVE', 'SUPERSEDED', 'WITHDRAWN')),
+  version INTEGER NOT NULL CHECK (version >= 1),
+  proposed_by_person_id TEXT NOT NULL,
+  proposed_at TIMESTAMPTZ NOT NULL,
+  activated_by_person_id TEXT,
+  activated_at TIMESTAMPTZ,
+  withdrawn_by_person_id TEXT,
+  withdrawn_at TIMESTAMPTZ,
+  reason TEXT NOT NULL,
+  schema_version INTEGER NOT NULL DEFAULT 1,
+  created_at TIMESTAMPTZ NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL
+);
+CREATE INDEX IF NOT EXISTS seating_v2_layout_bindings_event_idx
+  ON seating_v2_layout_bindings (organisation_id, event_id, state);
+CREATE UNIQUE INDEX IF NOT EXISTS seating_v2_layout_bindings_one_active
+  ON seating_v2_layout_bindings (organisation_id, event_id)
+  WHERE state = 'ACTIVE';
+ALTER TABLE seating_v2_input_packages
+  ADD COLUMN IF NOT EXISTS seating_layout_binding_id TEXT;
+ALTER TABLE seating_v2_input_packages
+  ADD COLUMN IF NOT EXISTS layout_id TEXT;
 `;

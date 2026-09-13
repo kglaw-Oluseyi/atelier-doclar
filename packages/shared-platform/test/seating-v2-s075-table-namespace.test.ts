@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { exactHash } from "../src/eec-hash.js";
 import { PlatformError } from "../src/errors.js";
-import { applyS06SeatingLayoutIfMissing } from "../src/seating-fixtures.js";
+import { applyS06SeatingLayoutIfMissing, ensureS06SeatingLayoutBinding } from "../src/seating-fixtures.js";
 import { snapshotLayoutAdapter } from "../src/seating-adapters.js";
 import { assertSeatingV2CompiledRequest } from "../src/seating-v2-compiler.js";
 import { solveSeatingV2Compiled } from "../src/seating-v2-solver-adapter.js";
@@ -76,8 +76,9 @@ function keepApart(guestA: string, guestB: string, domain: SeatingV2RuleContent[
   };
 }
 
-function prepareSurface(service: ReturnType<typeof fixtureService>["service"], store: ReturnType<typeof fixtureService>["store"]) {
+async function prepareSurface(service: ReturnType<typeof fixtureService>["service"], store: ReturnType<typeof fixtureService>["store"]) {
   applyS06SeatingLayoutIfMissing(store, service);
+  await ensureS06SeatingLayoutBinding(store, service);
   service.prepareEventRsvp(director(), {
     organisationId: people.orgMaison,
     eventId: people.eventAlphaOne,
@@ -173,7 +174,7 @@ function explicitWitness(
 
 async function s074WitnessFixture(prefix: string) {
   const { service, store } = fixtureService();
-  prepareSurface(service, store);
+  await prepareSurface(service, store);
   const layout = snapshotLayoutAdapter(store.snapshot(), people.orgMaison, people.eventAlphaOne);
   assert.equal(layout.tables.length, 2);
   assert.ok(layout.tables.every((table) => UUID_RE.test(table.objectId)));
@@ -240,7 +241,7 @@ describe("S075 corrected compiler contract", () => {
 
   it("REQUIRE_TABLE missing published table fails before run creation", async () => {
     const { service, store } = fixtureService();
-    prepareSurface(service, store);
+    await prepareSurface(service, store);
     const guest = attendingGuest(service, "Miss", "s075-missing-g");
     const v2 = service.seatingV2Commands();
     await assert.rejects(
@@ -251,7 +252,7 @@ describe("S075 corrected compiler contract", () => {
 
   it("FORBID_TABLE excludes the compiled table token", async () => {
     const { service, store } = fixtureService();
-    prepareSurface(service, store);
+    await prepareSurface(service, store);
     const layout = snapshotLayoutAdapter(store.snapshot(), people.orgMaison, people.eventAlphaOne);
     const t1 = layout.tables[0]!.objectId;
     const guest = attendingGuest(service, "Forb", "s075-forbid-g");
@@ -271,7 +272,7 @@ describe("S075 corrected compiler contract", () => {
 
   it("table-targeted reservation compiles the canonical token and is enforced", async () => {
     const { service, store } = fixtureService();
-    prepareSurface(service, store);
+    await prepareSurface(service, store);
     const layout = snapshotLayoutAdapter(store.snapshot(), people.orgMaison, people.eventAlphaOne);
     const t1 = layout.tables[0]!.objectId;
     const guest = attendingGuest(service, "Resv", "s075-resv-g");
@@ -290,7 +291,7 @@ describe("S075 corrected compiler contract", () => {
 
   it("reservation target missing from the published layout fails before run", async () => {
     const { service, store } = fixtureService();
-    prepareSurface(service, store);
+    await prepareSurface(service, store);
     const guest = attendingGuest(service, "Rmiss", "s075-resv-miss-g");
     const v2 = service.seatingV2Commands();
     await assert.rejects(

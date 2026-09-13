@@ -3,6 +3,7 @@
 import {
   executeS06Evaluation,
   parseFormSchema,
+  PlatformError,
   seatingV2ReplacementEnabled,
   type ProtectionFormState,
   type SeatingV2RuleContent,
@@ -522,6 +523,80 @@ export async function recallSeatingPlanAction(prev: ProtectionFormState, formDat
     execute: async () => {
       const { actor, envelope } = await sessionEnvelope(formData);
       return asId(await getRuntime().service.seatingV2Commands().recallPlan(actor, envelope, { editionId: field(formData, "editionId") }));
+    },
+  });
+}
+
+export async function proposeSeatingLayoutBindingAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: scopePath(formData),
+    actionType: "seating.layout_binding.propose",
+    parse: parseEnvelope,
+    execute: async () => {
+      const { actor, envelope } = await sessionEnvelope(formData);
+      const publicationId = field(formData, "layoutPublicationId");
+      const snap = getRuntime().store.snapshot();
+      const publication = snap.layoutPublications.find(
+        (item) =>
+          item.id === publicationId &&
+          item.organisationId === envelope.organisationId &&
+          item.eventId === envelope.eventId &&
+          item.status === "CURRENT",
+      );
+      if (!publication) {
+        throw new PlatformError("SEATING_LAYOUT_PUBLICATION_MISMATCH", "selected layout publication was not found", {
+          publicMessage:
+            "The seating layout binding does not match a current publication. Resolve the layout record before freezing seating inputs.",
+        });
+      }
+      return asId(
+        await getRuntime().service.seatingV2Commands().proposeLayoutBinding(actor, envelope, {
+          layoutId: publication.layoutId,
+          layoutPublicationId: publication.id,
+          layoutContentHash: publication.contentHash,
+          reason: field(formData, "reason") || "Propose the nominated current layout publication for Seating Command.",
+        }),
+      );
+    },
+  });
+}
+
+export async function activateSeatingLayoutBindingAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: scopePath(formData),
+    actionType: "seating.layout_binding.activate",
+    parse: parseEnvelope,
+    execute: async () => {
+      const { actor, envelope } = await sessionEnvelope(formData);
+      return asId(
+        await getRuntime().service.seatingV2Commands().activateLayoutBinding(actor, envelope, {
+          bindingId: field(formData, "bindingId"),
+          expectedVersion: Number(field(formData, "expectedVersion") || 0),
+        }),
+      );
+    },
+  });
+}
+
+export async function withdrawSeatingLayoutBindingAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
+  return runProtectionFormAction({
+    prev,
+    formData,
+    scopePath: scopePath(formData),
+    actionType: "seating.layout_binding.withdraw",
+    parse: parseEnvelope,
+    execute: async () => {
+      const { actor, envelope } = await sessionEnvelope(formData);
+      return asId(
+        await getRuntime().service.seatingV2Commands().withdrawLayoutBinding(actor, envelope, {
+          bindingId: field(formData, "bindingId"),
+          expectedVersion: Number(field(formData, "expectedVersion") || 0),
+        }),
+      );
     },
   });
 }

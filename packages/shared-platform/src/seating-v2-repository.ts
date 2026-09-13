@@ -6,6 +6,7 @@ import {
   type SeatingV2Collection,
   type SeatingV2EventCurrent,
   type SeatingV2IdempotencyReceipt,
+  type SeatingV2LayoutBinding,
   type SeatingV2PlanAssignment,
   type SeatingV2RunAssignment,
   type SeatingV2State,
@@ -71,6 +72,12 @@ export interface SeatingV2Transaction {
     scope: SeatingV2Scope,
     patch: SeatingV2LifecyclePatch,
   ): Promise<T>;
+  updateLayoutBinding(
+    id: string,
+    scope: SeatingV2Scope,
+    expectedVersion: number,
+    patch: Partial<Pick<SeatingV2LayoutBinding, "state" | "activatedByPersonId" | "activatedAt" | "withdrawnByPersonId" | "withdrawnAt" | "updatedAt">>,
+  ): Promise<SeatingV2LayoutBinding>;
   appendAudit(record: AuditEvent): Promise<void>;
   getIdempotency(scope: SeatingV2Scope, action: string, key: string): Promise<SeatingV2IdempotencyReceipt | undefined>;
   insertIdempotency(receipt: SeatingV2IdempotencyReceipt): Promise<SeatingV2IdempotencyReceipt>;

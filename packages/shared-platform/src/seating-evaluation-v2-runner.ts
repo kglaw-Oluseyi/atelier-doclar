@@ -6,7 +6,7 @@ import { MemoryPlatformStore } from "./memory-store.js";
 import { MemorySeatingV2Repository } from "./memory-seating-v2-store.js";
 import { authorize } from "./policy.js";
 import { snapshotLayoutAdapter } from "./seating-adapters.js";
-import { applyS06SeatingLayoutIfMissing } from "./seating-fixtures.js";
+import { applyS06SeatingLayoutIfMissing, ensureS06SeatingLayoutBinding, ensureSeatingLayoutBindingForLayout } from "./seating-fixtures.js";
 import { defaultSolverConfig, solveSeatingV1 } from "./seating-solver-v1.js";
 import { assertSeatingV2CompiledRequest, compileSeatingV2Request } from "./seating-v2-compiler.js";
 import { seatingV2PackageContentHash, seatingV2SemanticHash, seatingV2TableToken } from "./seating-v2-hash.js";
@@ -70,10 +70,11 @@ function observe(name: string, value: unknown): S06V2Observation {
   return { kind: "persisted", name, value };
 }
 
-function fixture(): { service: PlatformService; store: MemoryPlatformStore } {
+async function fixture(): Promise<{ service: PlatformService; store: MemoryPlatformStore }> {
   const store = new MemoryPlatformStore();
   const service = loadNonProductionFixtures(store);
   applyS06SeatingLayoutIfMissing(store, service);
+  await ensureS06SeatingLayoutBinding(store, service);
   service.prepareEventRsvp(actor(people.personDirector), {
     organisationId: people.orgMaison,
     eventId: people.eventAlphaOne,
@@ -274,6 +275,7 @@ function publishMismatchedCapacityLayout(service: PlatformService, store: Memory
     reason: "Approve mismatched layout",
   });
   service.publishLayout(actor(people.personDirector), { ...cas(asDirector()), reason: "Publish mismatched layout" });
+  return layout.id;
 }
 
 function attending(service: PlatformService, name: string, key: string) {
@@ -327,7 +329,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   };
 
   if (id === "S06V2-PATH-01" || id === "S06V2-PATH-07") {
-    const { service } = fixture();
+    const { service } = await fixture();
     const path = await keepApartPath(service, id.slice(-2));
     push("runStatus", path.run.value.status, "FEASIBLE");
     push("packageBound", Boolean(path.frozen.value.contentHash && path.run.value.packageHash === path.frozen.value.contentHash), true);
@@ -376,7 +378,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V2-PATH-02" || id === "S06V2-M06" || id === "S06V2-M07") {
-    const { service } = fixture();
+    const { service } = await fixture();
     const path = await keepApartPath(service, "02");
     const compiled = await path.v2.repository.transaction(async (tx) =>
       (await tx.list<{ packageId: string; compiledRequestJson: { guests: Array<{ token: string }>; positions: Array<{ token: string }> } }>(
@@ -404,7 +406,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V2-PATH-03" || id === "S06V2-M03") {
-    const { service } = fixture();
+    const { service } = await fixture();
     const path = await keepApartPath(service, "03");
     await path.v2.withdrawRule(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-03-withdraw"), {
       editionId: path.activated.value.id,
@@ -428,7 +430,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V2-PATH-04" || id === "S06V2-M10" || id === "S06V2-M11") {
-    const { service } = fixture();
+    const { service } = await fixture();
     const path = await keepApartPath(service, "04");
     if (!path.adopted) throw new Error("adopt required");
     const submitted = await path.v2.submitPlan(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-04-submit"), {
@@ -462,7 +464,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V2-PATH-05") {
-    const { service } = fixture();
+    const { service } = await fixture();
     const v2 = service.seatingV2Commands();
     const guestA = attending(service, "A05", "s06v2-05-a");
     const guestB = attending(service, "B05", "s06v2-05-b");
@@ -522,7 +524,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V2-PATH-06" || id === "S06V2-M17") {
-    const { service } = fixture();
+    const { service } = await fixture();
     const v2 = service.seatingV2Commands();
     const guestA = attending(service, "RevA", "s06v2-06-a");
     const guestB = attending(service, "RevB", "s06v2-06-b");
@@ -571,7 +573,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V2-PATH-08" || id === "S06V2-M16") {
-    const { service } = fixture();
+    const { service } = await fixture();
     const path = await keepApartPath(service, "08");
     if (!path.adopted) throw new Error("adopt required");
     const submitted = await path.v2.submitPlan(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-08-submit"), {
@@ -598,7 +600,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V2-PATH-09") {
-    const { service } = fixture();
+    const { service } = await fixture();
     const director = service.resolveActor(people.personDirector);
     const access = authorize({
       actor: director,
@@ -618,7 +620,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V2-PATH-10" || id === "S06V2-M13" || id === "S06V2-M14") {
-    const { service } = fixture();
+    const { service } = await fixture();
     const v2 = service.seatingV2Commands();
     const guestA = attending(service, "CeoA", "s06v2-10-a");
     const guestB = attending(service, "CeoB", "s06v2-10-b");
@@ -770,7 +772,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V2-M08" || id === "S06V2-M09") {
-    const { service } = fixture();
+    const { service } = await fixture();
     const path = await keepApartPath(service, "09");
     let adoptRejected = false;
     try {
@@ -786,7 +788,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V2-M12") {
-    const { service } = fixture();
+    const { service } = await fixture();
     const v2 = service.seatingV2Commands();
     const guestA = attending(service, "SelfA", "s06v2-m12-a");
     const guestB = attending(service, "SelfB", "s06v2-m12-b");
@@ -802,7 +804,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V2-M15") {
-    const { service } = fixture();
+    const { service } = await fixture();
     const path = await keepApartPath(service, "15");
     if (!path.adopted) throw new Error("adopt required");
     const submitted = await path.v2.submitPlan(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-15-submit"), {
@@ -829,7 +831,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V2-M18") {
-    const { service } = fixture();
+    const { service } = await fixture();
     const path = await keepApartPath(service, "18");
     const receipts = await path.v2.repository.transaction(async (tx) =>
       tx.list<{ action: string; resultIdentity: string }>("idempotencyReceipts", {
@@ -853,7 +855,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V2-PATH-11") {
-    const { service } = fixture();
+    const { service } = await fixture();
     const path = await keepApartPath(service, "11");
     if (!path.adopted) throw new Error("adopt required");
     const submitted = await path.v2.submitPlan(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-11-submit"), {
@@ -912,7 +914,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V2-PATH-12" || id === "S06V2-M21") {
-    const { service, store } = fixture();
+    const { service, store } = await fixture();
     const v2 = service.seatingV2Commands();
     const guestA = attending(service, "ImpA", "s06v2-12-a");
     const guestB = attending(service, "ImpB", "s06v2-12-b");
@@ -975,7 +977,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V2-PATH-13" || id === "S06V2-M22") {
-    const { service, store } = fixture();
+    const { service, store } = await fixture();
     const v2 = service.seatingV2Commands();
     const guestA = attending(service, "ResA", "s06v2-13-a");
     const guestB = attending(service, "ResB", "s06v2-13-b");
@@ -1046,7 +1048,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V4-PATH-01") {
-    const { service, store } = fixture();
+    const { service, store } = await fixture();
     const v2 = service.seatingV2Commands();
     const guest = attending(service, "V4P01", "s06v4-p01-a");
     const tableId = publishedTableId(store);
@@ -1075,7 +1077,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V4-PATH-02") {
-    const { service, store } = fixture();
+    const { service, store } = await fixture();
     const v2 = service.seatingV2Commands();
     const guestA = attending(service, "V4P02A", "s06v4-p02-a");
     const guestB = attending(service, "V4P02B", "s06v4-p02-b");
@@ -1112,7 +1114,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V4-PATH-03") {
-    const { service, store } = fixture();
+    const { service, store } = await fixture();
     const v2 = service.seatingV2Commands();
     const tables = publishedTables(store);
     const forbiddenId = tables[0]!.objectId;
@@ -1141,7 +1143,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V4-PATH-04") {
-    const { service, store } = fixture();
+    const { service, store } = await fixture();
     const v2 = service.seatingV2Commands();
     const tables = publishedTables(store);
     const reservedTableId = tables[1]?.objectId ?? tables[0]!.objectId;
@@ -1179,7 +1181,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V4-PATH-05") {
-    const { service, store } = fixture();
+    const { service, store } = await fixture();
     const v2 = service.seatingV2Commands();
     const tableId = publishedTableId(store);
     const g1 = attending(service, "V4G1", "s06v4-p05-g1");
@@ -1233,7 +1235,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V4-PATH-06") {
-    const { service, store } = fixture();
+    const { service, store } = await fixture();
     const tables = publishedTables(store);
     const synthetic = tables.every(
       (table) =>
@@ -1254,7 +1256,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V4-M01") {
-    const { service } = fixture();
+    const { service } = await fixture();
     const v2 = service.seatingV2Commands();
     const guest = attending(service, "V4M01", "s06v4-m01-a");
     let rejected = false;
@@ -1276,7 +1278,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V4-M02") {
-    const { service } = fixture();
+    const { service } = await fixture();
     const path = await keepApartPath(service, "v4m02");
     const compiled = await compiledForPackage(path.v2, path.frozen.value.id);
     const injected = structuredClone(compiled!.compiledRequestJson);
@@ -1309,7 +1311,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V4-M03") {
-    const { service } = fixture();
+    const { service } = await fixture();
     const path = await keepApartPath(service, "v4m03");
     const compiled = await compiledForPackage(path.v2, path.frozen.value.id);
     const request = compiled!.compiledRequestJson;
@@ -1380,7 +1382,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V4-M05") {
-    const { service } = fixture();
+    const { service } = await fixture();
     const path = await keepApartPath(service, "v4m05");
     mutateStoredRun(path.v2, path.run.value.id, (run) => {
       run.validatorVersion = SEATING_V2_LEGACY_VALIDATOR_VERSION;
@@ -1395,7 +1397,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V4-M06") {
-    const { service } = fixture();
+    const { service } = await fixture();
     const path = await keepApartPath(service, "v4m06");
     mutateStoredRun(path.v2, path.run.value.id, (run) => {
       run.compilerVersion = SEATING_V2_LEGACY_COMPILER_VERSION;
@@ -1419,7 +1421,15 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
 
   if (id === "S06V4-M07") {
     const { service, store } = bareFixture();
-    publishMismatchedCapacityLayout(service, store, "s06v4-m07");
+    const mismatchedLayoutId = publishMismatchedCapacityLayout(service, store, "s06v4-m07");
+    await ensureSeatingLayoutBindingForLayout(service, {
+      organisationId: people.orgMaison,
+      eventId: people.eventAlphaOne,
+      layoutId: mismatchedLayoutId,
+      plannerAssignmentId: people.assignPlanner,
+      directorAssignmentId: people.assignDirector,
+      idempotencyPrefix: "s06v4-m07-bind",
+    });
     const published = snapshotLayoutAdapter(store.snapshot(), people.orgMaison, people.eventAlphaOne);
     attending(service, "V4M07", "s06v4-m07-a");
     const v2 = service.seatingV2Commands();
@@ -1441,7 +1451,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   }
 
   if (id === "S06V4-M08") {
-    const { service, store } = fixture();
+    const { service, store } = await fixture();
     const v2 = service.seatingV2Commands();
     const guest = attending(service, "V4M08", "s06v4-m08-a");
     const tableId = publishedTableId(store);

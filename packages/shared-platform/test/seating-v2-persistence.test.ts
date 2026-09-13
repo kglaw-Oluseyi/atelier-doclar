@@ -3,14 +3,16 @@ import { describe, it } from "node:test";
 import { PlatformError } from "../src/errors.js";
 import { checksumFor, PLATFORM_MIGRATIONS, runPlatformMigrations } from "../src/migrations.js";
 import { MemorySeatingV2Repository } from "../src/memory-seating-v2-store.js";
-import { PostgresSeatingV2Repository } from "../src/postgres-seating-v2-store.js";
+import { PostgresSeatingV2Repository, PostgresSeatingV2Transaction } from "../src/postgres-seating-v2-store.js";
 import { MemoryPlatformPg, PostgresPlatformStore } from "../src/postgres-store.js";
 import { SEATING_ALLOCATION_POSTGRES_SCHEMA } from "../src/seating-postgres-schema.js";
 import {
   EOS_S06_SEATING_V2_MIGRATION_ID,
   EOS_S06_SEATING_V2_REPLAY_IDENTITY_MIGRATION_ID,
+  EOS_S06_SEATING_V2_LAYOUT_BINDING_MIGRATION_ID,
   SEATING_V2_POSTGRES_SCHEMA,
   SEATING_V2_REPLAY_IDENTITY_POSTGRES_SCHEMA,
+  SEATING_V2_LAYOUT_BINDING_POSTGRES_SCHEMA,
   SEATING_V2_SQL_TABLES,
 } from "../src/seating-v2-postgres-schema.js";
 import type { SeatingV2Transaction } from "../src/seating-v2-repository.js";
@@ -97,27 +99,38 @@ describe("EOS-S06 V2 additive persistence", () => {
     const index007 = ids.indexOf("007_seating_allocation");
     const index008 = ids.indexOf(EOS_S06_SEATING_V2_MIGRATION_ID);
     const index009 = ids.indexOf(EOS_S06_SEATING_V2_REPLAY_IDENTITY_MIGRATION_ID);
+    const index010 = ids.indexOf(EOS_S06_SEATING_V2_LAYOUT_BINDING_MIGRATION_ID);
     assert.equal(EOS_S06_SEATING_V2_MIGRATION_ID, "008_seating_truth_v2");
     assert.equal(EOS_S06_SEATING_V2_REPLAY_IDENTITY_MIGRATION_ID, "009_seating_v2_run_reuse_identity");
+    assert.equal(EOS_S06_SEATING_V2_LAYOUT_BINDING_MIGRATION_ID, "010_seating_v2_layout_binding");
     assert.ok(index007 >= 0);
     assert.equal(index008, index007 + 1);
     assert.equal(index009, index008 + 1);
+    assert.equal(index010, index009 + 1);
     const seven = PLATFORM_MIGRATIONS[index007];
     const eight = PLATFORM_MIGRATIONS[index008];
     const nine = PLATFORM_MIGRATIONS[index009];
+    const ten = PLATFORM_MIGRATIONS[index010];
     assert.ok(seven);
     assert.ok(eight);
     assert.ok(nine);
+    assert.ok(ten);
     assert.equal(seven.id, "007_seating_allocation");
     assert.equal(seven.sql, SEATING_ALLOCATION_POSTGRES_SCHEMA);
     assert.equal(checksumFor(seven.sql), checksumFor(SEATING_ALLOCATION_POSTGRES_SCHEMA));
     assert.equal(eight.sql, SEATING_V2_POSTGRES_SCHEMA);
     assert.equal(nine.sql, SEATING_V2_REPLAY_IDENTITY_POSTGRES_SCHEMA);
+    assert.equal(ten.sql, SEATING_V2_LAYOUT_BINDING_POSTGRES_SCHEMA);
     assert.ok(nine.sql.includes("legacy-unknown-compiler"));
     assert.ok(nine.sql.includes("legacy-unknown-validator"));
     assert.equal(nine.sql.includes("s06-compiler-v2"), false);
+    assert.ok(ten.sql.includes("seating_v2_layout_bindings_one_active"));
+    assert.ok(ten.sql.includes("seating_layout_binding_id"));
+    assert.ok(ten.sql.includes("ADD COLUMN IF NOT EXISTS layout_id TEXT"));
+    assert.match(ten.sql, /CREATE UNIQUE INDEX IF NOT EXISTS seating_v2_layout_bindings_one_active[\s\S]*WHERE state = 'ACTIVE'/);
     assert.equal(checksumFor(eight.sql), checksumFor(SEATING_V2_POSTGRES_SCHEMA));
     assert.equal(checksumFor(nine.sql), checksumFor(SEATING_V2_REPLAY_IDENTITY_POSTGRES_SCHEMA));
+    assert.equal(checksumFor(ten.sql), checksumFor(SEATING_V2_LAYOUT_BINDING_POSTGRES_SCHEMA));
     assert.equal(SEATING_V2_SQL_TABLES.length, 35);
     for (const table of SEATING_V2_SQL_TABLES) {
       assert.ok(SEATING_V2_POSTGRES_SCHEMA.includes(`CREATE TABLE IF NOT EXISTS ${table}`), table);
@@ -130,6 +143,7 @@ describe("EOS-S06 V2 additive persistence", () => {
     assert.ok(first.applied.includes("007_seating_allocation"));
     assert.ok(first.applied.includes(EOS_S06_SEATING_V2_MIGRATION_ID));
     assert.ok(first.applied.includes(EOS_S06_SEATING_V2_REPLAY_IDENTITY_MIGRATION_ID));
+    assert.ok(first.applied.includes(EOS_S06_SEATING_V2_LAYOUT_BINDING_MIGRATION_ID));
     assert.equal(
       pg.migrations.find((item) => item.id === "007_seating_allocation")?.checksum,
       checksumFor(SEATING_ALLOCATION_POSTGRES_SCHEMA),
@@ -141,6 +155,10 @@ describe("EOS-S06 V2 additive persistence", () => {
     assert.equal(
       pg.migrations.find((item) => item.id === EOS_S06_SEATING_V2_REPLAY_IDENTITY_MIGRATION_ID)?.checksum,
       checksumFor(SEATING_V2_REPLAY_IDENTITY_POSTGRES_SCHEMA),
+    );
+    assert.equal(
+      pg.migrations.find((item) => item.id === EOS_S06_SEATING_V2_LAYOUT_BINDING_MIGRATION_ID)?.checksum,
+      checksumFor(SEATING_V2_LAYOUT_BINDING_POSTGRES_SCHEMA),
     );
     await PostgresPlatformStore.migrate(pg);
   });
@@ -167,6 +185,7 @@ describe("EOS-S06 V2 additive persistence", () => {
       assert.equal(methods.includes("updateRuleEdition"), false);
       assert.equal(typeof tx.insert, "function");
       assert.equal(typeof tx.updateCurrent, "function");
+      assert.equal(typeof tx.updateLayoutBinding, "function");
       await tx.insert("ruleEditions", ruleEdition());
     });
     await repo.transaction(async (tx) => {
@@ -335,5 +354,33 @@ describe("EOS-S06 V2 additive persistence", () => {
       assert.equal(removed, 1);
     });
     assert.equal(repo.backingStore.collection("ruleEditions").length, 0);
+  });
+
+  it("maps a postgres unique violation on layout bindings to MULTIPLE_ACTIVE", async () => {
+    const tx = new PostgresSeatingV2Transaction({
+      query: async () => {
+        throw Object.assign(new Error("duplicate key"), { code: "23505" });
+      },
+    } as never);
+    await assert.rejects(
+      () =>
+        tx.insert("layoutBindings", {
+          id: "00000000-0000-4000-8000-000000000831",
+          organisationId: people.orgMaison,
+          eventId: people.eventAlphaOne,
+          layoutId: "00000000-0000-4000-8000-000000000832",
+          layoutPublicationId: "00000000-0000-4000-8000-000000000833",
+          layoutContentHash: HASH,
+          state: "ACTIVE",
+          version: 1,
+          proposedByPersonId: people.personPlanner,
+          proposedAt: NOW,
+          reason: "postgres unique",
+          schemaVersion: 1,
+          createdAt: NOW,
+          updatedAt: NOW,
+        }),
+      (error: unknown) => error instanceof PlatformError && error.code === "MULTIPLE_ACTIVE_SEATING_LAYOUT_BINDINGS",
+    );
   });
 });

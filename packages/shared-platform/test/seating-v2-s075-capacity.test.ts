@@ -7,6 +7,7 @@ import { seatingV2TableCapacityTruth } from "../src/seating-v2-capacity.js";
 import { emptySeatingV2State } from "../src/seating-v2-state.js";
 import { buildSeatingV2Workspace } from "../src/seating-v2-workspace.js";
 import { SeatingV2TableTokenSchema } from "../src/seating-v2-schemas.js";
+import { ensureSeatingLayoutBindingForLayout } from "../src/seating-fixtures.js";
 import { actor, fixtureService, people } from "./helpers.js";
 
 const NOW = "2026-09-13T13:00:00.000Z";
@@ -52,7 +53,7 @@ type CapacitySpec = {
   physicalSeatCount: number;
 };
 
-function publishCapacityLayout(
+async function publishCapacityLayout(
   service: ReturnType<typeof fixtureService>["service"],
   store: ReturnType<typeof fixtureService>["store"],
   tables: readonly CapacitySpec[],
@@ -125,8 +126,22 @@ function publishCapacityLayout(
     reason: "Approve capacity layout",
   });
   service.publishLayout(director(), { ...cas(currentLayout(service, layout.id, director)), reason: "Publish capacity layout" });
+  await ensureSeatingLayoutBindingForLayout(service, {
+    organisationId: people.orgMaison,
+    eventId: people.eventAlphaOne,
+    layoutId: layout.id,
+    plannerAssignmentId: people.assignPlanner,
+    directorAssignmentId: people.assignDirector,
+    idempotencyPrefix: `${prefix}-bind`,
+  });
+  const publication = store.snapshot().layoutPublications.find(
+    (item) => item.layoutId === layout.id && item.status === "CURRENT",
+  );
+  assert.ok(publication);
   return {
     layoutId: layout.id,
+    publicationId: publication.id,
+    contentHash: publication.contentHash,
     published: snapshotLayoutAdapter(store.snapshot(), people.orgMaison, people.eventAlphaOne),
   };
 }
@@ -179,7 +194,7 @@ async function compiledPositions(
 describe("S075 seating capacity truth", () => {
   it("treats matching physical seats as authoritative and uses the canonical table token", async () => {
     const { service, store } = fixtureService();
-    const { published } = publishCapacityLayout(
+    const { published } = await publishCapacityLayout(
       service,
       store,
       [{ label: "Physical Four", declaredCapacity: 4, physicalSeatCount: 4 }],
@@ -206,7 +221,7 @@ describe("S075 seating capacity truth", () => {
 
   it("synthesises declared seats only when a table has zero physical seats", async () => {
     const { service, store } = fixtureService();
-    const { published } = publishCapacityLayout(
+    const { published } = await publishCapacityLayout(
       service,
       store,
       [{ label: "Declared Six", declaredCapacity: 6, physicalSeatCount: 0 }],
@@ -231,7 +246,7 @@ describe("S075 seating capacity truth", () => {
 
   it("blocks freeze with SEAT_CAPACITY_MISMATCH and does not create a package", async () => {
     const { service, store } = fixtureService();
-    publishCapacityLayout(
+    await publishCapacityLayout(
       service,
       store,
       [{ label: "Mismatched", declaredCapacity: 8, physicalSeatCount: 4 }],
@@ -249,14 +264,18 @@ describe("S075 seating capacity truth", () => {
     );
     const packages = await v2.repository.transaction(async (tx) => tx.list("inputPackages", envelope(people.assignPlanner, "mis-list")));
     assert.equal(packages.length, 0);
-    const view = buildSeatingV2Workspace(store.snapshot(), emptySeatingV2State(), people.eventAlphaOne, "PLANNER");
+    const state = emptySeatingV2State();
+    state.layoutBindings = await v2.repository.transaction(async (tx) =>
+      tx.list("layoutBindings", envelope(people.assignPlanner, "mis-bind-list")),
+    );
+    const view = buildSeatingV2Workspace(store.snapshot(), state, people.eventAlphaOne, "PLANNER");
     assert.ok(view.tables.some((item) => item.mismatch));
     assert.ok(view.attention.some((item) => item.kind === "blocker" && /physical seat count/i.test(item.message)));
   });
 
   it("keeps a zero-capacity table empty beside a usable declared table", async () => {
     const { service, store } = fixtureService();
-    const { published } = publishCapacityLayout(
+    const { published } = await publishCapacityLayout(
       service,
       store,
       [
@@ -281,7 +300,7 @@ describe("S075 seating capacity truth", () => {
 
   it("compiles mixed physical and declared-synthetic tables through the same namespace", async () => {
     const { service, store } = fixtureService();
-    const { published } = publishCapacityLayout(
+    const { published } = await publishCapacityLayout(
       service,
       store,
       [
@@ -299,14 +318,18 @@ describe("S075 seating capacity truth", () => {
     assert.equal(positions.length, 7);
     assert.equal(positions.filter((item) => item.tableToken === physical.tableToken).length, 4);
     assert.equal(positions.filter((item) => item.tableToken === synthetic.tableToken).length, 3);
-    const auditor = buildSeatingV2Workspace(store.snapshot(), emptySeatingV2State(), people.eventAlphaOne, "AUDITOR");
+    const auditorState = emptySeatingV2State();
+    auditorState.layoutBindings = await service.seatingV2Commands().repository.transaction(async (tx) =>
+      tx.list("layoutBindings", envelope(people.assignPlanner, "mix-bind-list")),
+    );
+    const auditor = buildSeatingV2Workspace(store.snapshot(), auditorState, people.eventAlphaOne, "AUDITOR");
     assert.ok(auditor.tables.every((item) => !UUID_RE.test(item.id)));
     assert.ok(auditor.tables.some((item) => /physical|declared/i.test(item.label)));
   });
 
   it("reloads published physical counts and stale-marks a package after a successor table change", async () => {
     const { service, store } = fixtureService();
-    const first = publishCapacityLayout(
+    const first = await publishCapacityLayout(
       service,
       store,
       [{ label: "Reload", declaredCapacity: 4, physicalSeatCount: 4 }],
@@ -342,9 +365,23 @@ describe("S075 seating capacity truth", () => {
       ...cas(currentLayout(service, first.layoutId, director)),
       reason: "Publish successor",
     });
-    const freshness = await v2.currentFreshness(envelope(people.assignPlanner, "rel-fresh"), frozen.value.id);
-    assert.equal(freshness.fresh, false);
-    const next = await v2.freezePackage(planner(), envelope(people.assignPlanner, "rel-freeze-2"));
+    await assert.rejects(
+      () => v2.currentFreshness(envelope(people.assignPlanner, "rel-fresh"), frozen.value.id),
+      (error: unknown) => error instanceof PlatformError && error.code === "SEATING_LAYOUT_BINDING_STALE",
+    );
+    await assert.rejects(
+      () => v2.freezePackage(planner(), envelope(people.assignPlanner, "rel-freeze-2")),
+      (error: unknown) => error instanceof PlatformError && error.code === "SEATING_LAYOUT_BINDING_STALE",
+    );
+    await ensureSeatingLayoutBindingForLayout(service, {
+      organisationId: people.orgMaison,
+      eventId: people.eventAlphaOne,
+      layoutId: first.layoutId,
+      plannerAssignmentId: people.assignPlanner,
+      directorAssignmentId: people.assignDirector,
+      idempotencyPrefix: "rel-bind-successor",
+    });
+    const next = await v2.freezePackage(planner(), envelope(people.assignPlanner, "rel-freeze-3"));
     assert.notEqual(next.value.id, frozen.value.id);
     const reloaded = snapshotLayoutAdapter(store.snapshot(), people.orgMaison, people.eventAlphaOne);
     assert.equal(reloaded.tables.length, 2);

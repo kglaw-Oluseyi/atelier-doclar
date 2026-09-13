@@ -1014,6 +1014,7 @@ export {
   SEATING_V2_VALIDATOR_VERSION,
   EOS_S06_SEATING_V2_MIGRATION_ID,
   EOS_S06_SEATING_V2_REPLAY_IDENTITY_MIGRATION_ID,
+  EOS_S06_SEATING_V2_LAYOUT_BINDING_MIGRATION_ID,
   EOS_S06_SEATING_V2_RECEIPT_ID,
   SEATING_V2_LEGACY_COMPILER_VERSION,
   SEATING_V2_LEGACY_VALIDATOR_VERSION,
@@ -1024,6 +1025,7 @@ export {
   SEATING_V2_SQL_TABLES,
   SEATING_V2_POSTGRES_SCHEMA,
   SEATING_V2_REPLAY_IDENTITY_POSTGRES_SCHEMA,
+  SEATING_V2_LAYOUT_BINDING_POSTGRES_SCHEMA,
 } from "./seating-v2-postgres-schema.js";
 export {
   seatingV2RequestedRunReuseIdentity,
@@ -1093,5 +1095,16 @@ export {
   s06CorpusHash,
 } from "./seating-evaluation-schemas.js";
 export { seatingVerifyAsAllowed, S06_VERIFY_AS_ALLOWLIST, S06_VERIFY_AS_ROLES, resolveVerifyAsRole } from "./seating-verify-as.js";
-export { applyS06SeatingLayoutIfMissing } from "./seating-fixtures.js";
+export {
+  applyS06SeatingLayoutIfMissing,
+  seedS06SeatingLayoutBindingIfMissing,
+  ensureS06SeatingLayoutBinding,
+  ensureSeatingLayoutBindingForLayout,
+} from "./seating-fixtures.js";
+export {
+  resolveSeatingLayoutAuthority,
+  requireSeatingLayoutAuthority,
+  projectPublishedLayout,
+  historicBindingFromPackage,
+} from "./seating-v2-layout-binding.js";
 export { S06_SENSITIVE_PERMISSIONS } from "./constants.js";

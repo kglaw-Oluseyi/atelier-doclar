@@ -143,6 +143,27 @@ export type SeatingV2ReservationAnnotation = {
   createdAt: string;
 };
 
+export type SeatingV2LayoutBinding = {
+  id: string;
+  organisationId: string;
+  eventId: string;
+  layoutId: string;
+  layoutPublicationId: string;
+  layoutContentHash: string;
+  state: "DRAFT" | "ACTIVE" | "SUPERSEDED" | "WITHDRAWN";
+  version: number;
+  proposedByPersonId: string;
+  proposedAt: string;
+  activatedByPersonId?: string | null;
+  activatedAt?: string | null;
+  withdrawnByPersonId?: string | null;
+  withdrawnAt?: string | null;
+  reason: string;
+  schemaVersion: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type SeatingV2InputPackage = {
   id: string;
   organisationId: string;
@@ -153,6 +174,8 @@ export type SeatingV2InputPackage = {
   contentHash: string;
   cohortHash: string;
   rsvpSnapshotHash: string;
+  seatingLayoutBindingId?: string | null;
+  layoutId?: string | null;
   layoutPublicationId: string;
   layoutContentHash: string;
   eventBriefEditionId?: string | null;
@@ -537,6 +560,7 @@ export type SeatingV2State = {
   reservationMembers: SeatingV2ReservationMember[];
   reservationTargets: SeatingV2ReservationTarget[];
   reservationAnnotations: SeatingV2ReservationAnnotation[];
+  layoutBindings: SeatingV2LayoutBinding[];
   inputPackages: SeatingV2InputPackage[];
   packageGuests: SeatingV2PackageGuest[];
   packagePositions: SeatingV2PackagePosition[];
@@ -577,6 +601,7 @@ export const SEATING_V2_COLLECTIONS: SeatingV2Collection[] = [
   "reservationMembers",
   "reservationTargets",
   "reservationAnnotations",
+  "layoutBindings",
   "inputPackages",
   "packageGuests",
   "packagePositions",
@@ -612,6 +637,7 @@ export const SEATING_V2_WORKSPACE_COLLECTIONS: SeatingV2Collection[] = [
   "reservationEditions",
   "reservationMembers",
   "reservationTargets",
+  "layoutBindings",
   "inputPackages",
   "packagePositions",
   "packageRules",
@@ -653,6 +679,7 @@ export const SEATING_V2_TABLE_FOR_COLLECTION: Record<SeatingV2Collection, Seatin
   reservationMembers: "seating_v2_reservation_members",
   reservationTargets: "seating_v2_reservation_targets",
   reservationAnnotations: "seating_v2_reservation_annotations",
+  layoutBindings: "seating_v2_layout_bindings",
   inputPackages: "seating_v2_input_packages",
   packageGuests: "seating_v2_package_guests",
   packagePositions: "seating_v2_package_positions",
@@ -692,6 +719,7 @@ export function emptySeatingV2State(): SeatingV2State {
     reservationMembers: [],
     reservationTargets: [],
     reservationAnnotations: [],
+    layoutBindings: [],
     inputPackages: [],
     packageGuests: [],
     packagePositions: [],

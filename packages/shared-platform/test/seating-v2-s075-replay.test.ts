@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { loadNonProductionFixtures } from "../src/bootstrap.js";
 import { PlatformError } from "../src/errors.js";
-import { applyS06SeatingLayoutIfMissing } from "../src/seating-fixtures.js";
+import { applyS06SeatingLayoutIfMissing, ensureS06SeatingLayoutBinding } from "../src/seating-fixtures.js";
 import { snapshotLayoutAdapter } from "../src/seating-adapters.js";
 import { MemorySeatingV2Repository } from "../src/memory-seating-v2-store.js";
 import { MemoryPlatformPg, PostgresPlatformStore } from "../src/postgres-store.js";
@@ -61,9 +61,10 @@ function keepApart(guestA: string, guestB: string): SeatingV2RuleContent {
   };
 }
 
-function preparePair(prefix: string, serviceStore?: { service: PlatformService; store: PlatformStore }) {
+async function preparePair(prefix: string, serviceStore?: { service: PlatformService; store: PlatformStore }) {
   const { service, store } = serviceStore ?? fixtureService();
   applyS06SeatingLayoutIfMissing(store, service);
+  await ensureS06SeatingLayoutBinding(store, service);
   service.prepareEventRsvp(director(), {
     organisationId: people.orgMaison,
     eventId: people.eventAlphaOne,
@@ -108,7 +109,7 @@ async function activateKeepApart(
 
 describe("S075 run reuse identity", () => {
   it("replays an identical tuple onto the same durable run without a second computation", async () => {
-    const { service, guests } = preparePair("ident");
+    const { service, guests } = await preparePair("ident");
     const v2 = service.seatingV2Commands();
     await activateKeepApart(v2, guests[0]!.id, guests[1]!.id, "ident");
     const frozen = await v2.freezePackage(planner(), envelope(people.assignPlanner, "ident-freeze"), { seed: "s075-ident" });
@@ -129,7 +130,7 @@ describe("S075 run reuse identity", () => {
   });
 
   it("creates a new run when validator, compiler or compiled-request identity changes", async () => {
-    const { service, guests } = preparePair("changed");
+    const { service, guests } = await preparePair("changed");
     const v2 = service.seatingV2Commands();
     await activateKeepApart(v2, guests[0]!.id, guests[1]!.id, "changed");
     const frozen = await v2.freezePackage(planner(), envelope(people.assignPlanner, "changed-freeze"), {
@@ -160,7 +161,7 @@ describe("S075 run reuse identity", () => {
   });
 
   it("does not reuse TIMED_OUT as success and returns an in-progress run without duplicating it", async () => {
-    const { service, guests } = preparePair("states");
+    const { service, guests } = await preparePair("states");
     const v2 = service.seatingV2Commands();
     await activateKeepApart(v2, guests[0]!.id, guests[1]!.id, "states");
     const frozen = await v2.freezePackage(planner(), envelope(people.assignPlanner, "states-freeze"), { seed: "s075-states" });
@@ -215,7 +216,7 @@ describe("S075 run reuse identity", () => {
   });
 
   it("changes package identity after reservation withdrawal and may reuse an exact reverted seed", async () => {
-    const { service, store, guests } = preparePair("revert");
+    const { service, store, guests } = await preparePair("revert");
     const v2 = service.seatingV2Commands();
     await activateKeepApart(v2, guests[0]!.id, guests[1]!.id, "revert");
     const tableId = snapshotLayoutAdapter(store.snapshot(), people.orgMaison, people.eventAlphaOne).tables[0]!.objectId;
@@ -268,7 +269,7 @@ describe("S075 run reuse identity", () => {
   });
 
   it("keeps a historic compiler run immutable and refuses adopt under the corrected compiler", async () => {
-    const { service, guests } = preparePair("historic");
+    const { service, guests } = await preparePair("historic");
     const v2 = service.seatingV2Commands();
     await activateKeepApart(v2, guests[0]!.id, guests[1]!.id, "historic");
     const frozen = await v2.freezePackage(planner(), envelope(people.assignPlanner, "historic-freeze"), {
@@ -297,7 +298,7 @@ describe("S075 run reuse identity", () => {
     const pg = new MemoryPlatformPg();
     const store = await PostgresPlatformStore.open(pg);
     const service = loadNonProductionFixtures(store, { clock: testClock(NOW) });
-    const { guests } = preparePair("pg", { service, store });
+    const { guests } = await preparePair("pg", { service, store });
     const v2 = service.seatingV2Commands();
     await activateKeepApart(v2, guests[0]!.id, guests[1]!.id, "pg");
     const frozen = await v2.freezePackage(planner(), envelope(people.assignPlanner, "pg-freeze"), { seed: "s075-pg" });

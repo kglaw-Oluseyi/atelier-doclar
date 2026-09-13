@@ -6,6 +6,7 @@ import { seatingV2AssignmentsHash, seatingV2TableToken } from "../src/seating-v2
 import { SEATING_V2_VALIDATOR_VERSION, type SeatingV2Assignment, type SeatingV2CompiledRequest, type SeatingV2RuleContent } from "../src/seating-v2-schemas.js";
 import { solveSeatingV2Compiled } from "../src/seating-v2-solver-adapter.js";
 import { validateSeatingV2 } from "../src/seating-v2-validator.js";
+import { ensureSeatingLayoutBindingForLayout } from "../src/seating-fixtures.js";
 import { actor, fixtureService, people } from "./helpers.js";
 import {
   S075_DIFFERENTIAL_SAMPLE_COUNT,
@@ -144,6 +145,14 @@ async function buildInstance(spec: InstanceSpec) {
     reason: "Approve oracle layout",
   });
   service.publishLayout(director(), { ...cas(currentLayout(service, layout.id, true)), reason: "Publish oracle layout" });
+  await ensureSeatingLayoutBindingForLayout(service, {
+    organisationId: people.orgMaison,
+    eventId: people.eventAlphaOne,
+    layoutId: layout.id,
+    plannerAssignmentId: people.assignPlanner,
+    directorAssignmentId: people.assignDirector,
+    idempotencyPrefix: `${spec.id}-bind`,
+  });
   const published = snapshotLayoutAdapter(store.snapshot(), people.orgMaison, people.eventAlphaOne);
   service.prepareEventRsvp(director(), {
     organisationId: people.orgMaison,
@@ -467,6 +476,14 @@ describe("S075 differential oracle", () => {
           reason: "approve mismatch",
         });
         service.publishLayout(director(), { ...cas(currentLayout(service, layout.id, true)), reason: "publish mismatch" });
+        await ensureSeatingLayoutBindingForLayout(service, {
+          organisationId: people.orgMaison,
+          eventId: people.eventAlphaOne,
+          layoutId: layout.id,
+          plannerAssignmentId: people.assignPlanner,
+          directorAssignmentId: people.assignDirector,
+          idempotencyPrefix: "s075-diff-mis-bind",
+        });
         const published = snapshotLayoutAdapter(store.snapshot(), people.orgMaison, people.eventAlphaOne);
         assert.equal(published.tables[0]!.physicalPositionCount, 2);
         assert.equal(published.tables[0]!.declaredCapacity, 4);

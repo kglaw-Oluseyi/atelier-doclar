@@ -1,11 +1,13 @@
 import { expect, test } from "@playwright/test";
 import { loginAs } from "./login";
 import { expectFreshActionSuccess } from "./s060-helpers";
+import { ensureAlphaOneSeatingLayoutBinding } from "./s075-layout-binding";
 
 const SEATING = "/app/events/00000000-0000-4000-8000-000000000021/seating";
 
-test("S06 solver feasible launch", async ({ page }) => {
+test("S06 solver feasible launch", async ({ page, browser }) => {
   test.setTimeout(90_000);
+  await ensureAlphaOneSeatingLayoutBinding(browser);
   await loginAs(page, "planner");
   await page.goto(`${SEATING}#inputs`);
   const freeze = page.getByRole("button", { name: "Freeze new input edition" });

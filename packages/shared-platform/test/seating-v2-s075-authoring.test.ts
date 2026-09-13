@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { PlatformError } from "../src/errors.js";
-import { applyS06SeatingLayoutIfMissing } from "../src/seating-fixtures.js";
+import { applyS06SeatingLayoutIfMissing, ensureS06SeatingLayoutBinding } from "../src/seating-fixtures.js";
 import { snapshotLayoutAdapter } from "../src/seating-adapters.js";
 import { assertSeatingV2RuleAuthoring, seatingV2RuleSemanticSentence } from "../src/seating-v2-authoring.js";
 import { compileSeatingV2Request } from "../src/seating-v2-compiler.js";
@@ -116,6 +116,7 @@ describe("S075 rule authoring cardinality", () => {
   it("createRule rejects pairwise+table and accepts REQUIRE_TABLE on a published table", async () => {
     const { service, store } = fixtureService();
     applyS06SeatingLayoutIfMissing(store, service);
+    await ensureS06SeatingLayoutBinding(store, service);
     service.prepareEventRsvp(director(), {
       organisationId: people.orgMaison,
       eventId: people.eventAlphaOne,

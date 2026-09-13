@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { loginAs, staffNavIdentity } from "./login";
 import { clickOnceNamed, expectFreshActionSuccess, expectFreshSyntheticEvent, expectLocalFileStore, readActionCorrelation, submitScopedSeatingMutation } from "./s060-helpers";
+import { ensureAlphaOneSeatingLayoutBinding } from "./s075-layout-binding";
 
 const ALPHA_ONE = "/app/events/00000000-0000-4000-8000-000000000021";
 const ALPHA_TWO = "/app/events/00000000-0000-4000-8000-000000000022";
@@ -27,9 +28,10 @@ test("S06 reviewer discovers only Alpha One and stays read-only without an impli
   await expect(page.getByRole("button", { name: "Run seating evaluation" })).toHaveCount(0);
 });
 
-test("S06 reviewer records only the implicated protocol review on the exact hash", async ({ page }) => {
+test("S06 reviewer records only the implicated protocol review on the exact hash", async ({ page, browser }) => {
   test.setTimeout(90_000);
   await expectLocalFileStore(page);
+  await ensureAlphaOneSeatingLayoutBinding(browser);
   await loginAs(page, "planner");
   await page.goto(`${SEATING}#inputs`);
   await expect(page.getByTestId("seating-inputs")).toBeVisible();

@@ -10,6 +10,10 @@ export const PLATFORM_ERROR_CODES = [
   "ADOPTION_MISMATCH",
   "SEATING_VALIDATION_REJECTED",
   "SEAT_CAPACITY_MISMATCH",
+  "NO_ACTIVE_SEATING_LAYOUT_BINDING",
+  "MULTIPLE_ACTIVE_SEATING_LAYOUT_BINDINGS",
+  "SEATING_LAYOUT_BINDING_STALE",
+  "SEATING_LAYOUT_PUBLICATION_MISMATCH",
   "IDEMPOTENCY_CONFLICT",
   "DEPENDENCY_UNAVAILABLE",
   "CAPABILITY_NOT_ENABLED",
@@ -64,7 +68,15 @@ export function publicMessageFor(code: PlatformErrorCode): string {
     case "SEATING_VALIDATION_REJECTED":
       return "This seating change was rejected by the independent validator.";
     case "SEAT_CAPACITY_MISMATCH":
-      return "Physical seat count and declared capacity disagree. Correct the layout before freezing a seating package.";
+      return "Physical seat count and declared capacity disagree. Correct and republish the layout before freezing seating inputs.";
+    case "NO_ACTIVE_SEATING_LAYOUT_BINDING":
+      return "Activate a seating layout binding before freezing seating inputs.";
+    case "MULTIPLE_ACTIVE_SEATING_LAYOUT_BINDINGS":
+      return "More than one seating layout binding is active for this event. Resolve the binding before freezing seating inputs.";
+    case "SEATING_LAYOUT_BINDING_STALE":
+      return "The seating layout binding is stale. Propose and activate a successor binding for the current publication.";
+    case "SEATING_LAYOUT_PUBLICATION_MISMATCH":
+      return "The seating layout binding does not match a current publication. Resolve the layout record before freezing seating inputs.";
     case "IDEMPOTENCY_CONFLICT":
       return "This request was already processed with different information.";
     case "DEPENDENCY_UNAVAILABLE":

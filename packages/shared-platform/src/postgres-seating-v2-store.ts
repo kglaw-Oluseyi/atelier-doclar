@@ -21,9 +21,14 @@ import {
   emptySeatingV2State,
   type SeatingV2EventCurrent,
   type SeatingV2IdempotencyReceipt,
+  type SeatingV2LayoutBinding,
   type SeatingV2PlanAssignment,
   type SeatingV2RunAssignment,
 } from "./seating-v2-state.js";
+
+function isUniqueViolation(error: unknown): boolean {
+  return Boolean(error && typeof error === "object" && "code" in error && (error as { code?: string }).code === "23505");
+}
 
 const JSON_COLUMNS = new Set([
   "compiled_request_json",
@@ -123,7 +128,17 @@ export class PostgresSeatingV2Transaction implements SeatingV2Transaction {
     const columns = Object.keys(row);
     const values = columns.map((key) => row[key]);
     const placeholders = columns.map((_, index) => `$${index + 1}`);
-    await this.client.query(`INSERT INTO ${table} (${columns.join(", ")}) VALUES (${placeholders.join(", ")})`, values);
+    try {
+      await this.client.query(`INSERT INTO ${table} (${columns.join(", ")}) VALUES (${placeholders.join(", ")})`, values);
+    } catch (error) {
+      if (isUniqueViolation(error) && collection === "layoutBindings") {
+        throw new PlatformError("MULTIPLE_ACTIVE_SEATING_LAYOUT_BINDINGS", "multiple active seating layout bindings", {
+          publicMessage:
+            "More than one seating layout binding is active for this event. Resolve the binding before freezing seating inputs.",
+        });
+      }
+      throw error;
+    }
     return record;
   }
 
@@ -191,6 +206,66 @@ export class PostgresSeatingV2Transaction implements SeatingV2Transaction {
     );
     if (!result.rows[0]) throw new PlatformError("NOT_FOUND", `seating v2 ${collection} row was not found`);
     return seatingRecordFromRow(result.rows[0]) as T;
+  }
+
+  async updateLayoutBinding(
+    id: string,
+    scope: SeatingV2Scope,
+    expectedVersion: number,
+    patch: Partial<
+      Pick<
+        SeatingV2LayoutBinding,
+        "state" | "activatedByPersonId" | "activatedAt" | "withdrawnByPersonId" | "withdrawnAt" | "updatedAt"
+      >
+    >,
+  ): Promise<SeatingV2LayoutBinding> {
+    const existing = await this.load<SeatingV2LayoutBinding>("layoutBindings", id, scope);
+    if (!existing) throw new PlatformError("NOT_FOUND", "seating layout binding was not found");
+    if (existing.version !== expectedVersion) {
+      throw new PlatformError("VERSION_CONFLICT", "stale seating layout binding was not rescued", {
+        publicMessage: "The record changed elsewhere. Reload this item before retrying.",
+      });
+    }
+    const updatedAt = patch.updatedAt ?? existing.updatedAt;
+    if (patch.state === "ACTIVE") {
+      await this.client.query(
+        `UPDATE seating_v2_layout_bindings
+            SET state = $1, version = version + 1, updated_at = $2
+          WHERE organisation_id = $3 AND event_id = $4 AND state = $5 AND id <> $6`,
+        ["SUPERSEDED", updatedAt, scope.organisationId, scope.eventId, "ACTIVE", id],
+      );
+    }
+    const merged: SeatingV2LayoutBinding = {
+      ...existing,
+      ...patch,
+      id: existing.id,
+      organisationId: existing.organisationId,
+      eventId: existing.eventId,
+      version: expectedVersion + 1,
+    };
+    const row = seatingRowFromRecord(merged as unknown as Record<string, unknown>);
+    const assignments = Object.keys(row)
+      .filter((key) => key !== "id")
+      .map((key, index) => `${key} = $${index + 4}`);
+    const values = Object.keys(row)
+      .filter((key) => key !== "id")
+      .map((key) => row[key]);
+    try {
+      const result = await this.client.query<Record<string, unknown>>(
+        `UPDATE seating_v2_layout_bindings SET ${assignments.join(", ")} WHERE id = $1 AND organisation_id = $2 AND event_id = $3 RETURNING *`,
+        [id, scope.organisationId, scope.eventId, ...values],
+      );
+      if (!result.rows[0]) throw new PlatformError("NOT_FOUND", "seating layout binding was not found");
+      return seatingRecordFromRow(result.rows[0]) as SeatingV2LayoutBinding;
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw new PlatformError("MULTIPLE_ACTIVE_SEATING_LAYOUT_BINDINGS", "multiple active seating layout bindings", {
+          publicMessage:
+            "More than one seating layout binding is active for this event. Resolve the binding before freezing seating inputs.",
+        });
+      }
+      throw error;
+    }
   }
 
   async appendAudit(record: AuditEvent): Promise<void> {
