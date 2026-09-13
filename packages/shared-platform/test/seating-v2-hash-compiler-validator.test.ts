@@ -350,7 +350,7 @@ describe("EOS-S06 V2 hashing, compilation and validator", () => {
     const left = seatingV2RuleContentHash(keepApart());
     const right = seatingV2RuleContentHash(keepApart());
     assert.equal(left, right);
-    assert.equal(SEATING_V2_SOLVER_VERSION, "s06-solver-v2");
+    assert.equal(SEATING_V2_SOLVER_VERSION, "s06-solver-v3");
   });
 
   it("changes assignment hash when a seated pair is corrupted", () => {

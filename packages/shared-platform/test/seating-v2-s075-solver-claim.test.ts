@@ -3,7 +3,6 @@ import { describe, it } from "node:test";
 import { PlatformError } from "../src/errors.js";
 import { applyS06SeatingLayoutIfMissing } from "../src/seating-fixtures.js";
 import { snapshotLayoutAdapter } from "../src/seating-adapters.js";
-import { seatingCorpus600 } from "../src/seating-solver-fixtures.js";
 import { defaultSolverConfig, solveSeatingV1 } from "../src/seating-solver-v1.js";
 import type { SolverRequest } from "../src/seating-solver-types.js";
 import { solveSeatingV2Compiled } from "../src/seating-v2-solver-adapter.js";
@@ -139,6 +138,96 @@ function v1RecoverableApart(): SolverRequest {
 }
 
 describe("S075 solver-claim honesty", () => {
+  it("does not import the Section 9 test oracle", async () => {
+    const source = await import("node:fs/promises").then((fs) =>
+      fs.readFile(new URL("../src/seating-solver-v1.ts", import.meta.url), "utf8"),
+    );
+    assert.equal(source.includes("seating-v2-s075-oracle"), false);
+    assert.equal(source.includes("seating-v2-validator"), false);
+  });
+
+  it("proves capacity shortfall INFEASIBLE and does not invent GOVERNED_UNSEATED", () => {
+    const result = solveSeatingV1({
+      guests: [
+        { token: "guest-a", eligible: true, capabilityCodes: [], protocolCodes: [] },
+        { token: "guest-b", eligible: true, capabilityCodes: [], protocolCodes: [] },
+      ],
+      positions: [{ token: "pos-1", tableToken: "table-one-token-bbbb", zoneCodes: [], capabilityCodes: [] }],
+      constraints: [],
+      reservations: [],
+      config: defaultSolverConfig({ seed: "s075-capacity-infeasible", timeLimitMs: 1_000, alternativeCount: 0 }),
+    });
+    assert.equal(result.status, "INFEASIBLE");
+    assert.ok(result.score.hardViolations > 0);
+    assert.equal(JSON.stringify(result.assignments).includes("GOVERNED_UNSEATED"), false);
+  });
+
+  it("proves FORBID_TABLE on the only table INFEASIBLE", () => {
+    const result = solveSeatingV1({
+      guests: [{ token: "guest-a", eligible: true, capabilityCodes: [], protocolCodes: [] }],
+      positions: [{ token: "pos-1", tableToken: "table-one-token-bbbb", zoneCodes: [], capabilityCodes: [] }],
+      constraints: [
+        {
+          id: "forbid-only",
+          kind: "HARD",
+          predicateType: "FORBID_TABLE",
+          payload: { predicateType: "FORBID_TABLE", guestTokens: ["guest-a"], tableTokens: ["table-one-token-bbbb"] },
+        },
+      ],
+      reservations: [],
+      config: defaultSolverConfig({ seed: "s075-forbid-infeasible", timeLimitMs: 1_000, alternativeCount: 0 }),
+    });
+    assert.equal(result.status, "INFEASIBLE");
+  });
+
+  it("proves KEEP_APART on one table INFEASIBLE", () => {
+    const result = solveSeatingV1({
+      guests: [
+        { token: "guest-a", eligible: true, capabilityCodes: [], protocolCodes: [] },
+        { token: "guest-b", eligible: true, capabilityCodes: [], protocolCodes: [] },
+      ],
+      positions: [
+        { token: "pos-1", tableToken: "table-one-token-bbbb", zoneCodes: [], capabilityCodes: [] },
+        { token: "pos-2", tableToken: "table-one-token-bbbb", zoneCodes: [], capabilityCodes: [] },
+      ],
+      constraints: [
+        {
+          id: "apart-ab",
+          kind: "HARD",
+          predicateType: "KEEP_APART",
+          payload: { predicateType: "KEEP_APART", guestTokens: ["guest-a", "guest-b"] },
+        },
+      ],
+      reservations: [],
+      config: defaultSolverConfig({ seed: "s075-apart-infeasible", timeLimitMs: 1_000, alternativeCount: 0 }),
+    });
+    assert.equal(result.status, "INFEASIBLE");
+  });
+
+  it("proves KEEP_TOGETHER across two singleton tables INFEASIBLE", () => {
+    const result = solveSeatingV1({
+      guests: [
+        { token: "guest-a", eligible: true, capabilityCodes: [], protocolCodes: [] },
+        { token: "guest-b", eligible: true, capabilityCodes: [], protocolCodes: [] },
+      ],
+      positions: [
+        { token: "pos-1", tableToken: "table-one-token-bbbb", zoneCodes: [], capabilityCodes: [] },
+        { token: "pos-2", tableToken: "table-two-token-aaaa", zoneCodes: [], capabilityCodes: [] },
+      ],
+      constraints: [
+        {
+          id: "together-ab",
+          kind: "HARD",
+          predicateType: "KEEP_TOGETHER",
+          payload: { predicateType: "KEEP_TOGETHER", guestTokens: ["guest-a", "guest-b"] },
+        },
+      ],
+      reservations: [],
+      config: defaultSolverConfig({ seed: "s075-together-infeasible", timeLimitMs: 1_000, alternativeCount: 0 }),
+    });
+    assert.equal(result.status, "INFEASIBLE");
+  });
+
   it("does not claim FEASIBLE when a required subject remains unseated", () => {
     const result = solveSeatingV1(v1RequireUnmatched());
     assert.notEqual(result.status, "FEASIBLE");
@@ -155,15 +244,31 @@ describe("S075 solver-claim honesty", () => {
     assert.notEqual(tableOf("guest-a"), tableOf("guest-b"));
   });
 
-  it("reports TIMED_OUT rather than INFEASIBLE when the time budget ends first", () => {
+  it("reports TIMED_OUT rather than guessed INFEASIBLE when proof is incomplete", () => {
+    const guests = Array.from({ length: 9 }, (_, index) => ({
+      token: `guest-${String(index).padStart(2, "0")}`,
+      eligible: true,
+      capabilityCodes: [],
+      protocolCodes: [],
+    }));
     const result = solveSeatingV1({
-      ...seatingCorpus600(),
-      config: defaultSolverConfig({ seed: "s06-corpus-600", timeLimitMs: 50, alternativeCount: 2 }),
+      guests,
+      positions: Array.from({ length: 9 }, (_, index) => ({
+        token: `pos-${index}`,
+        tableToken: "only-table-token-aaaa",
+        zoneCodes: [],
+        capabilityCodes: [],
+      })),
+      constraints: guests.slice(0, -1).map((guest, index) => ({
+        id: `apart-${index}`,
+        kind: "HARD" as const,
+        predicateType: "KEEP_APART" as const,
+        payload: { predicateType: "KEEP_APART" as const, guestTokens: [guest.token, guests[index + 1]!.token] },
+      })),
+      reservations: [],
+      config: defaultSolverConfig({ seed: "s075-incomplete-proof", timeLimitMs: 50, alternativeCount: 0 }),
     });
-    assert.notEqual(result.status, "INFEASIBLE");
-    if (result.status !== "FEASIBLE") {
-      assert.equal(result.status, "TIMED_OUT");
-    }
+    assert.equal(result.status, "TIMED_OUT");
   });
 
   it("does not treat an empty compiled request as global INFEASIBLE", () => {

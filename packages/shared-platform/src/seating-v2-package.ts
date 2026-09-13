@@ -17,6 +17,7 @@ import {
 import type { SeatingV2Scope, SeatingV2Transaction } from "./seating-v2-repository.js";
 import {
   SEATING_V2_COMPILER_VERSION,
+  SEATING_V2_PREVIOUS_SOLVER_VERSION,
   SEATING_V2_SOLVER_VERSION,
   type SeatingV2RuleContent,
 } from "./seating-v2-schemas.js";
@@ -28,6 +29,13 @@ import type {
 import type { PlatformSnapshot } from "./store.js";
 
 export const SEATING_V2_DEFAULT_SEED = "s06-v2-default-seed";
+
+export const SEATING_V2_PREVIOUS_CONFIG_HASH = exactHash({
+  compilerVersion: SEATING_V2_COMPILER_VERSION,
+  solverVersion: SEATING_V2_PREVIOUS_SOLVER_VERSION,
+  timeLimitMs: 10_000,
+  memoryLimitMb: 256,
+});
 
 export const SEATING_V2_CONFIG_HASH = exactHash({
   compilerVersion: SEATING_V2_COMPILER_VERSION,

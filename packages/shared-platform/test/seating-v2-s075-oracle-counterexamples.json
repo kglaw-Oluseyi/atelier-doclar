@@ -1,0 +1,82 @@
+{
+  "programme": "MD-PR-S075 Section 9",
+  "status": "PASSED",
+  "seedFamily": "s075-oracle-v1",
+  "sampleCount": 12,
+  "correctedBy": "MD-PR-S075 addendum solver-claim honesty",
+  "smallestRegression": {
+    "specId": "capacity-infeasible",
+    "seed": "s075-oracle-v1:capacity-infeasible",
+    "honestResult": {
+      "solverClaim": "INFEASIBLE",
+      "validatorVerdict": "INFEASIBLE",
+      "oracleKind": "NONE"
+    }
+  },
+  "regressionOrder": [
+    "capacity-infeasible",
+    "forbid-infeasible",
+    "apart-infeasible",
+    "together-infeasible"
+  ],
+  "agreedInstances": [
+    "together-feasible",
+    "apart-feasible",
+    "require-feasible",
+    "forbid-feasible",
+    "reserve-feasible",
+    "unicode-feasible",
+    "open-feasible",
+    "require-one",
+    "capacity-infeasible",
+    "forbid-infeasible",
+    "apart-infeasible",
+    "together-infeasible"
+  ],
+  "discoveredDisagreements": [
+    {
+      "specId": "capacity-infeasible",
+      "seed": "s075-oracle-v1:capacity-infeasible",
+      "layout": "1 table, 1 physical seat matching declared 1",
+      "guests": 2,
+      "rules": [],
+      "solverClaimBefore": "FEASIBLE",
+      "solverClaimAfter": "INFEASIBLE",
+      "validatorVerdict": "INFEASIBLE",
+      "oracleKind": "NONE"
+    },
+    {
+      "specId": "forbid-infeasible",
+      "seed": "s075-oracle-v1:forbid-infeasible",
+      "layout": "1 table, 1 physical seat matching declared 1",
+      "guests": 1,
+      "rules": ["HARD FORBID_TABLE on the only table"],
+      "solverClaimBefore": "FEASIBLE",
+      "solverClaimAfter": "INFEASIBLE",
+      "validatorVerdict": "INFEASIBLE",
+      "oracleKind": "NONE"
+    },
+    {
+      "specId": "apart-infeasible",
+      "seed": "s075-oracle-v1:apart-infeasible",
+      "layout": "1 table, 2 physical seats matching declared 2",
+      "guests": 2,
+      "rules": ["HARD KEEP_APART"],
+      "solverClaimBefore": "FEASIBLE",
+      "solverClaimAfter": "INFEASIBLE",
+      "validatorVerdict": "INFEASIBLE",
+      "oracleKind": "NONE"
+    },
+    {
+      "specId": "together-infeasible",
+      "seed": "s075-oracle-v1:together-infeasible",
+      "layout": "2 tables, 1 physical seat each matching declared 1",
+      "guests": 2,
+      "rules": ["HARD KEEP_TOGETHER"],
+      "solverClaimBefore": "FEASIBLE",
+      "solverClaimAfter": "INFEASIBLE",
+      "validatorVerdict": "INFEASIBLE",
+      "oracleKind": "NONE"
+    }
+  ]
+}

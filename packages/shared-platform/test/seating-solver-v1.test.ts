@@ -103,7 +103,8 @@ describe("SeatingSolverV1", () => {
     const unseated = result.assignments.filter((item) => item.state === "UNSEATED");
     assert.equal(unseated.length, 6);
     assert.ok(unseated.every((item) => item.reasonCodes.length > 0));
-    assert.equal(result.score.hardViolations, 0);
+    assert.ok(result.score.hardViolations > 0);
+    assert.equal(result.status, "INFEASIBLE");
   });
 
   it("never relaxes contradictory locks or impossible capability", () => {
@@ -127,10 +128,10 @@ describe("SeatingSolverV1", () => {
     assert.ok(compareLexicographic(preferred.score, worse) < 0);
   });
 
-  it("solves the 200-guest reservation and lock corpus with zero hard violations", () => {
+  it("does not claim FEASIBLE on the 200-guest corpus when wheelchair demand exceeds supply", () => {
     const result = solveSeatingV1(seatingCorpus200());
-    assert.equal(result.status, "FEASIBLE");
-    assert.equal(result.score.hardViolations, 0);
+    assert.equal(result.status, "INFEASIBLE");
+    assert.ok(result.score.hardViolations > 0);
     const locked = result.assignments.find((item) => item.guestToken === "g0011");
     assert.equal(locked?.positionToken, "t0002:01");
     const wheelchair = result.assignments.find((item) => item.guestToken === "g0037");
@@ -147,8 +148,8 @@ describe("SeatingSolverV1", () => {
       const result = solveSeatingV1(request);
       times.push(result.metrics.elapsedMs);
       hashes.add(result.resultHash);
-      assert.equal(result.status, "FEASIBLE");
-      assert.equal(result.score.hardViolations, 0);
+      assert.equal(result.status, "INFEASIBLE");
+      assert.ok(result.score.hardViolations > 0);
       assert.ok(result.metrics.heapUsedBytes > 0);
     }
     times.sort((left, right) => left - right);

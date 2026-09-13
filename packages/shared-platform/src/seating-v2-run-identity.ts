@@ -1,5 +1,5 @@
 import { seatingV2PackageContentHash } from "./seating-v2-hash.js";
-import { SEATING_V2_CONFIG_HASH } from "./seating-v2-package.js";
+import { SEATING_V2_CONFIG_HASH, SEATING_V2_PREVIOUS_CONFIG_HASH } from "./seating-v2-package.js";
 import {
   SEATING_V2_COMPILER_VERSION,
   SEATING_V2_LEGACY_COMPILER_VERSION,
@@ -23,7 +23,7 @@ const REUSABLE_SUCCESS = new Set(["FEASIBLE", "INFEASIBLE"]);
 const IN_PROGRESS = new Set(["QUEUED", "RUNNING"]);
 
 export function seatingV2CompilerVersionFromConfigHash(solverConfigHash: string): string {
-  return solverConfigHash === SEATING_V2_CONFIG_HASH
+  return solverConfigHash === SEATING_V2_CONFIG_HASH || solverConfigHash === SEATING_V2_PREVIOUS_CONFIG_HASH
     ? SEATING_V2_COMPILER_VERSION
     : SEATING_V2_LEGACY_COMPILER_VERSION;
 }

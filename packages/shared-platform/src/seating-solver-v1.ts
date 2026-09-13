@@ -107,6 +107,10 @@ function reservationPriority(guest: string, reservations: SolverReservation[]): 
     .reduce((max, block) => Math.max(max, block.priority), 0);
 }
 
+function capabilityNeed(guest: SolverGuestToken): number {
+  return guest.capabilityCodes.length;
+}
+
 function lockedGuest(guest: string, constraints: SolverConstraint[]): boolean {
   return constraints.some(
     (constraint) =>
@@ -235,6 +239,25 @@ function hardFindings(
           code: "HARD_GROUP",
           ruleRef: constraint.id,
           affectedTokens: needed,
+          message: "No safe seating plan satisfies every hard rule.",
+        });
+      }
+    }
+    if (payload.predicateType === "KEEP_APART") {
+      const requiredSameTable = constraints.find((candidate) => {
+        if (candidate.id === constraint.id || candidate.kind !== "HARD") return false;
+        if (candidate.payload.predicateType !== "REQUIRE_TABLE") return false;
+        const required = candidate.payload.guestTokens;
+        if (required.length !== payload.guestTokens.length) return false;
+        if (!payload.guestTokens.every((token) => required.includes(token))) return false;
+        return new Set(candidate.payload.tableTokens).size === 1;
+      });
+      if (requiredSameTable) {
+        findings.push({
+          severity: "BLOCKER",
+          code: "CONTRADICTION",
+          ruleRef: constraint.id,
+          affectedTokens: payload.guestTokens,
           message: "No safe seating plan satisfies every hard rule.",
         });
       }
@@ -564,6 +587,13 @@ function scoreOf(
       }
     }
   }
+  if (complete) {
+    for (const guest of guests) {
+      if (!guest.eligible || state.seated.has(guest.token)) continue;
+      hardViolations += 1;
+      hardDetail.push(`unseated-required:${guest.token}`);
+    }
+  }
   const seatedEligible = guests.filter((guest) => guest.eligible && state.seated.has(guest.token)).length;
   const tieBreak = [...state.seated.entries()]
     .sort(([left], [right]) => left.localeCompare(right))
@@ -772,16 +802,155 @@ function constructiveSeed(
     if (lockDelta) return lockDelta;
     const hardDelta = guestHardCount(right.token, constraints) - guestHardCount(left.token, constraints);
     if (hardDelta) return hardDelta;
+    const capabilityDelta = capabilityNeed(right) - capabilityNeed(left);
+    if (capabilityDelta) return capabilityDelta;
     const reserveDelta = reservationPriority(right.token, reservations) - reservationPriority(left.token, reservations);
     if (reserveDelta) return reserveDelta;
     return left.token.localeCompare(right.token);
   });
   for (const guest of order) {
     if (!guest.eligible || state.seated.has(guest.token)) continue;
-    const options = remainingDomain(domains.get(guest.token) ?? new Set(), state.occupied);
-    seatIfFeasible(state, guest, options, guests, positions, constraints, reservations);
+    const reservedCaps = new Set(
+      guests
+        .filter((item) => item.eligible && !state.seated.has(item.token) && item.token !== guest.token)
+        .flatMap((item) => item.capabilityCodes),
+    );
+    const byPosition = positionByToken(positions);
+    const options = remainingDomain(domains.get(guest.token) ?? new Set(), state.occupied).filter((token) => {
+      if (guest.capabilityCodes.length) return true;
+      const caps = byPosition.get(token)?.capabilityCodes ?? [];
+      return !caps.some((code) => reservedCaps.has(code));
+    });
+    const fallback = remainingDomain(domains.get(guest.token) ?? new Set(), state.occupied);
+    if (!seatIfFeasible(state, guest, options, guests, positions, constraints, reservations)) {
+      seatIfFeasible(state, guest, fallback, guests, positions, constraints, reservations);
+    }
+  }
+  return repairUnseatedRequired(state, guests, domains, positions, constraints, reservations);
+}
+
+function repairUnseatedRequired(
+  state: SearchState,
+  guests: SolverGuestToken[],
+  domains: Map<string, Domain>,
+  positions: SolverPositionToken[],
+  constraints: SolverConstraint[],
+  reservations: SolverReservation[],
+): SearchState {
+  const guestByToken = new Map(guests.map((guest) => [guest.token, guest]));
+  for (const guest of guests) {
+    if (!guest.eligible || state.seated.has(guest.token)) continue;
+    const free = remainingDomain(domains.get(guest.token) ?? new Set(), state.occupied);
+    if (seatIfFeasible(state, guest, free, guests, positions, constraints, reservations)) continue;
+    const domain = [...(domains.get(guest.token) ?? new Set())].sort((left, right) => left.localeCompare(right));
+    for (const position of domain) {
+      const occupantToken = [...state.seated.entries()].find(([, seated]) => seated === position)?.[0];
+      if (!occupantToken) continue;
+      const occupant = guestByToken.get(occupantToken);
+      if (!occupant || occupant.capabilityCodes.length > 0 || lockedGuest(occupant.token, constraints)) continue;
+      const next = cloneState(state);
+      next.seated.delete(occupantToken);
+      next.occupied.delete(position);
+      next.seated.set(guest.token, position);
+      next.occupied.add(position);
+      const occupantOptions = remainingDomain(domains.get(occupantToken) ?? new Set(), next.occupied);
+      let reseated = false;
+      for (const option of occupantOptions) {
+        const relocated = cloneState(next);
+        relocated.seated.set(occupantToken, option);
+        relocated.occupied.add(option);
+        if (scoreOf(relocated, guests, positions, constraints, reservations, false).score.hardViolations > 0) continue;
+        state.seated = relocated.seated;
+        state.occupied = relocated.occupied;
+        reseated = true;
+        break;
+      }
+      if (reseated) break;
+    }
   }
   return state;
+}
+
+const EXHAUSTIVE_MAX_ELIGIBLE = 5;
+const EXHAUSTIVE_MAX_POSITIONS = 16;
+
+function eligibleRequired(guests: SolverGuestToken[]): SolverGuestToken[] {
+  return guests.filter((guest) => guest.eligible);
+}
+
+function capabilityPigeonhole(guests: SolverGuestToken[], positions: SolverPositionToken[]): boolean {
+  const demand = new Map<string, number>();
+  for (const guest of eligibleRequired(guests)) {
+    for (const code of guest.capabilityCodes) demand.set(code, (demand.get(code) ?? 0) + 1);
+  }
+  const supply = new Map<string, number>();
+  for (const position of positions) {
+    for (const code of position.capabilityCodes) supply.set(code, (supply.get(code) ?? 0) + 1);
+  }
+  return [...demand.entries()].some(([code, needed]) => needed > (supply.get(code) ?? 0));
+}
+
+function certifiedInfeasible(
+  guests: SolverGuestToken[],
+  positions: SolverPositionToken[],
+  domains: Map<string, Domain>,
+  findings: SolverFinding[],
+): boolean {
+  const required = eligibleRequired(guests);
+  if (required.length > positions.length) return true;
+  if (required.some((guest) => (domains.get(guest.token)?.size ?? 0) === 0)) return true;
+  if (capabilityPigeonhole(guests, positions)) return true;
+  return findings.some((finding) => finding.code === "CONTRADICTION" || finding.code === "OVER_RESERVATION");
+}
+
+function exhaustiveSearch(
+  guests: SolverGuestToken[],
+  positions: SolverPositionToken[],
+  constraints: SolverConstraint[],
+  reservations: SolverReservation[],
+  domains: Map<string, Domain>,
+  deadline: number,
+): { kind: "WITNESS"; state: SearchState } | { kind: "NONE"; examined: number } | { kind: "INCOMPLETE"; examined: number } {
+  const required = eligibleRequired(guests);
+  if (required.length > positions.length) return { kind: "NONE", examined: 0 };
+  let examined = 0;
+  let timedOut = false;
+  const used = new Set<string>();
+  const seated = new Map<string, string>();
+
+  const finish = (): SearchState | undefined => {
+    examined += 1;
+    const state: SearchState = { seated: new Map(seated), occupied: new Set(used) };
+    const scored = scoreOf(state, guests, positions, constraints, reservations, true);
+    return scored.score.hardViolations === 0 ? state : undefined;
+  };
+
+  const assign = (index: number): SearchState | undefined => {
+    if (timedOut) return undefined;
+    if (Date.now() > deadline) {
+      timedOut = true;
+      return undefined;
+    }
+    if (index === required.length) return finish();
+    const guest = required[index]!;
+    const options = [...(domains.get(guest.token) ?? new Set())].sort((left, right) => left.localeCompare(right));
+    for (const position of options) {
+      if (used.has(position)) continue;
+      used.add(position);
+      seated.set(guest.token, position);
+      const witness = assign(index + 1);
+      if (witness) return witness;
+      seated.delete(guest.token);
+      used.delete(position);
+      if (timedOut) return undefined;
+    }
+    return undefined;
+  };
+
+  const witness = assign(0);
+  if (witness) return { kind: "WITNESS", state: witness };
+  if (timedOut) return { kind: "INCOMPLETE", examined };
+  return { kind: "NONE", examined };
 }
 
 function generateAlternatives(
@@ -864,6 +1033,8 @@ export function solveSeatingV1(input: unknown): SolverResult {
     if (lockDelta) return lockDelta;
     const hardDelta = guestHardCount(right.token, request.constraints) - guestHardCount(left.token, request.constraints);
     if (hardDelta) return hardDelta;
+    const capabilityDelta = capabilityNeed(right) - capabilityNeed(left);
+    if (capabilityDelta) return capabilityDelta;
     const reserveDelta =
       reservationPriority(right.token, request.reservations) - reservationPriority(left.token, request.reservations);
     if (reserveDelta) return reserveDelta;
@@ -876,6 +1047,10 @@ export function solveSeatingV1(input: unknown): SolverResult {
   const domains = buildDomains(guests, positions, request.constraints);
   const findings = hardFindings(guests, positions, request.constraints, request.reservations, domains);
   const components = connectedComponents(guests, request.constraints, request.reservations);
+  const required = eligibleRequired(guests);
+  const withinExhaustiveBounds =
+    required.length <= EXHAUSTIVE_MAX_ELIGIBLE && positions.length <= EXHAUSTIVE_MAX_POSITIONS;
+  const certified = certifiedInfeasible(guests, positions, domains, findings);
   const seed = constructiveSeed(guests, domains, positions, request.constraints, request.reservations);
   const seedScore = scoreOf(seed, guests, positions, request.constraints, request.reservations, true).score;
   let merged = cloneState(seed);
@@ -883,7 +1058,7 @@ export function solveSeatingV1(input: unknown): SolverResult {
   let timedOut = false;
   let searchIncomplete = false;
   const guestByToken = new Map(guests.map((guest) => [guest.token, guest]));
-  if (seedScore.hardViolations > 0) {
+  if (seedScore.hardViolations > 0 && !certified && !withinExhaustiveBounds) {
     for (const component of [...components].sort((left, right) => (left[0] ?? "").localeCompare(right[0] ?? ""))) {
       if (Date.now() > deadline) {
         timedOut = true;
@@ -924,7 +1099,35 @@ export function solveSeatingV1(input: unknown): SolverResult {
       }
     }
   }
-  const searched = { state: merged, timedOut: timedOut || searchIncomplete, nodes: searchNodes };
+  let claimedState = merged;
+  let proofTimedOut = timedOut || searchIncomplete;
+  let status: SolverResult["status"] = "TIMED_OUT";
+  if (withinExhaustiveBounds) {
+    const exhaustive = exhaustiveSearch(guests, positions, request.constraints, request.reservations, domains, deadline);
+    if (exhaustive.kind === "WITNESS") {
+      claimedState = exhaustive.state;
+      status = "FEASIBLE";
+      proofTimedOut = false;
+    } else if (exhaustive.kind === "NONE") {
+      status = "INFEASIBLE";
+      proofTimedOut = false;
+    } else {
+      status = "TIMED_OUT";
+      proofTimedOut = true;
+    }
+  } else {
+    const scoredSeed = scoreOf(merged, guests, positions, request.constraints, request.reservations, true);
+    if (scoredSeed.score.hardViolations === 0) {
+      claimedState = merged;
+      status = "FEASIBLE";
+    } else if (certified) {
+      status = "INFEASIBLE";
+    } else {
+      status = "TIMED_OUT";
+      proofTimedOut = true;
+    }
+  }
+  const searched = { state: claimedState, timedOut: proofTimedOut, nodes: searchNodes };
   const scored = scoreOf(searched.state, guests, positions, request.constraints, request.reservations);
   const reasons = new Map(
     guests.map((guest) => [guest.token, reasonFor(guest, request.constraints, searched.state.seated.has(guest.token))]),
@@ -936,11 +1139,6 @@ export function solveSeatingV1(input: unknown): SolverResult {
     }
   }
   const assignments = assignmentList(searched.state, guests, reasons);
-  const contradiction = findings.some((finding) => finding.code === "CONTRADICTION" || finding.code === "OVER_RESERVATION");
-  let status: SolverResult["status"] = "FEASIBLE";
-  if (scored.score.hardViolations === 0 && !contradiction) status = "FEASIBLE";
-  else if (searched.timedOut) status = "TIMED_OUT";
-  else status = "INFEASIBLE";
   const alternatives =
     status === "FEASIBLE"
       ? generateAlternatives(request, searched.state, domains, deadline)

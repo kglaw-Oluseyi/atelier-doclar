@@ -1,7 +1,8 @@
 import { z } from "zod";
 
 export const SEATING_V2_SOLVER_CONTRACT = "eos-s06-solver-v2" as const;
-export const SEATING_V2_SOLVER_VERSION = "s06-solver-v2" as const;
+export const SEATING_V2_PREVIOUS_SOLVER_VERSION = "s06-solver-v2" as const;
+export const SEATING_V2_SOLVER_VERSION = "s06-solver-v3" as const;
 export const SEATING_V2_COMPILER_VERSION = "s06-compiler-v2" as const;
 export const SEATING_V2_VALIDATOR_VERSION = "s06-validator-v3" as const;
 export const SeatingV2TableTokenSchema = z.string().regex(/^[0-9a-f]{32}$/);
@@ -187,7 +188,7 @@ export const SeatingV2CompiledReservationSchema = z
 export const SeatingV2CompiledRequestSchema = z
   .object({
     contract: z.literal(SEATING_V2_SOLVER_CONTRACT),
-    version: z.literal(SEATING_V2_SOLVER_VERSION),
+    version: z.enum([SEATING_V2_PREVIOUS_SOLVER_VERSION, SEATING_V2_SOLVER_VERSION]),
     configHash: Hash,
     seed: z.string().min(1).max(128),
     guests: z.array(SeatingV2CompiledGuestSchema).max(2000),
@@ -250,7 +251,7 @@ export const SeatingV2PackageIdentitySchema = z
     eventBriefContentHash: Hash.nullable(),
     protectionSnapshotHash: Hash.nullable(),
     lockSetHash: Hash,
-    solverVersion: z.literal(SEATING_V2_SOLVER_VERSION),
+    solverVersion: z.enum([SEATING_V2_PREVIOUS_SOLVER_VERSION, SEATING_V2_SOLVER_VERSION]),
     solverConfigHash: Hash,
     deterministicSeed: z.string().min(1).max(128),
   })

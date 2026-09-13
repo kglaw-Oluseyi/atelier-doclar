@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { exactHash } from "./eec-hash.js";
-import { SEATING_V2_SOLVER_VERSION, SEATING_V2_VALIDATOR_VERSION } from "./seating-v2-schemas.js";
+import { SEATING_V2_PREVIOUS_SOLVER_VERSION, SEATING_V2_VALIDATOR_VERSION } from "./seating-v2-schemas.js";
 
 export const S06_V2_EVALUATION_CONTRACT_VERSION = "s06-eval-contract-v2";
 export const S06_V2_EVALUATION_CORPUS_EDITION = "s06-eval-v3";
@@ -95,7 +95,7 @@ export function s06V2CorpusHash(): string {
   return exactHash({
     edition: S06_V2_EVALUATION_CORPUS_EDITION,
     contract: S06_V2_EVALUATION_CONTRACT_VERSION,
-    solver: SEATING_V2_SOLVER_VERSION,
+    solver: SEATING_V2_PREVIOUS_SOLVER_VERSION,
     validator: SEATING_V2_VALIDATOR_VERSION,
     projection: S06_V2_EVALUATION_PROJECTION_VERSION,
     cases: S06_V2_CASE_IDS,

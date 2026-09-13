@@ -5,7 +5,7 @@
 **Required S072 baseline:** `844f107fc70e1eaa8995e0c7c49c0c42d52b9dd1`
 **Deployed application SHA:** `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3`
 **Final repository/docs SHA:** `3f5c09b37d683ad7192660a33f596b7e72d75583` (documentation/test only; not redeployed)
-**Authority:** MD-PR-S075 is the sole current execution authority for table identity, compiler and feasibility truth. MD-PR-S073 remains the dated settlement/isolation freeze. MD-PR-S072 remains the V2 seating-truth parent. S070/S071 artefacts remain readable as incompatible history.
+**Authority:** MD-PR-S075 remains the ratified parent for table identity, compiler and feasibility truth. The solver-claim honesty addendum was ratified on 2026-09-13 and is the narrow current execution authority for solver-claim correction only. MD-PR-S073 remains the dated settlement/isolation freeze. MD-PR-S072 remains the V2 seating-truth parent. S070/S071 artefacts remain readable as incompatible history.
 
 This ledger does not accept EOS-S06. It does not authorise real data or production operations. It does not create `EOS_S06_ACCEPTANCE.md`.
 
@@ -15,9 +15,12 @@ Historical S072 handoff status **NOT READY FOR CLAUDE** remains dated history. M
 
 | Item | Value |
 |---|---|
-| Authority SHA-256 | `faae89b7bf10ecbe1884c4b375b35ca65b9f516fb3bd2ec89863c3c99d5081c0` |
+| Authority SHA-256 | `faae89b7bf10ecbe1884c4b375b35ca65b9f516fb3bd2ec89863c3c99d5081c0` — parent file untouched |
+| Solver-claim honesty addendum | `docs/control/eos-s06/MD_PR_S075_ADDENDUM_SOLVER_CLAIM_HONESTY.md` — SHA-256 `160d23dea037b8b271c50e7edc7458ab67a8763f8be402d63b9cf8c248357fbb` — RATIFIED and executed 2026-09-13 |
 | Deployed application SHA | `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3` — not redeployed |
 | Sections 1–8 | PASS |
+| Section 9 | PASS after addendum — 12/12 agreement; mutations detected from observations; smallest seed `s075-oracle-v1:capacity-infeasible` now solver/validator/oracle `INFEASIBLE`/`INFEASIBLE`/`NONE`. Solver runtime `s06-solver-v3`. Validator and oracle unchanged. `s06-eval-v3` hash unchanged `e433882ed1a55c4896aaf9fdf524257b870a4e2a450d8ab614bc6763b110035c` |
+| Section 10 | NOT STARTED — now the next authorised parent step |
 | Section 2 finding | `docs/control/eos-s06/MD_PR_S075_FORENSIC_TABLE_NAMESPACE_FINDING.md` — remains valid |
 | Section 7 replay identity | `docs/control/eos-s06/ADR_EOS_S06_V2_RUN_REUSE_IDENTITY.md` — additive `009`; historic compiler ineligible for reuse/adopt |
 | Section 8 capacity truth | Physical seats authoritative; declared synthesis only at zero physical; freeze `SEAT_CAPACITY_MISMATCH`; Studio reads persisted count |
@@ -36,7 +39,7 @@ Historical S072 handoff status **NOT READY FOR CLAUDE** remains dated history. M
 | Persistence | POSTGRES, migrations APPLIED |
 | `productionAuthorised` | `false` |
 | External providers | INACTIVE |
-| Solver | In-process V2 compiled request; solver + validator outside every seating transaction; no queue/worker |
+| Solver | In-process V2 compiled request; runtime `s06-solver-v3`; contract shape remains `eos-s06-solver-v2`; validator `s06-validator-v3`; solver + validator outside every seating transaction; no queue/worker |
 | Evaluation | `s06-eval-v3` / `s06-eval-contract-v2` / 35 cases / hash `e433882ed1a55c4896aaf9fdf524257b870a4e2a450d8ab614bc6763b110035c` / live PASSED |
 | Legacy evaluation | `s06-eval-v1` and `s06-eval-v2` STALE/INCOMPATIBLE — not restamped |
 | Last-known-good publication | Publication 4 `a6ac23f65f23a10f0dc1deab9464e50791c055e825de3d541fd24a0a34dfbc4d` |

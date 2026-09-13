@@ -1,0 +1,59 @@
+{
+  "specId": "together-infeasible",
+  "seed": "s075-oracle-v1:together-infeasible",
+  "packageContentHash": "6291aa5d8f45523ec91e05c81d0b9d97cf8ca4ec0b0a6ba750015fb6ebb4544b",
+  "solverClaim": "FEASIBLE",
+  "validatorVerdict": "INFEASIBLE",
+  "oracleKind": "NONE",
+  "examined": 2,
+  "guests": [
+    {
+      "token": "7ff3b2101edbe87d97eeedfd01e4e7f3db414a3470ede7b40a45f5111475970b",
+      "eligible": true
+    },
+    {
+      "token": "c63057dd362d4291807fafc65aafba8383f0578e46d6ac39d1b1c57b7356d74c",
+      "eligible": true
+    }
+  ],
+  "positions": [
+    {
+      "token": "18edf02375b310f4b340c3a6ac4e63d2",
+      "tableToken": "8398d7c2ff2e9e011fbb8421dcd6c173"
+    },
+    {
+      "token": "20deba5bfcd6df7fcd64e0c5a3f86196",
+      "tableToken": "c2ecb0486ef525e31e137b0001274df2"
+    }
+  ],
+  "rules": [
+    {
+      "kind": "KEEP_TOGETHER",
+      "hardness": "HARD",
+      "tableTokens": [],
+      "subjectTokens": [
+        "7ff3b2101edbe87d97eeedfd01e4e7f3db414a3470ede7b40a45f5111475970b",
+        "c63057dd362d4291807fafc65aafba8383f0578e46d6ac39d1b1c57b7356d74c"
+      ]
+    }
+  ],
+  "reservations": [],
+  "solverAssignments": [
+    {
+      "guestToken": "7ff3b2101edbe87d97eeedfd01e4e7f3db414a3470ede7b40a45f5111475970b",
+      "state": "SEATED",
+      "positionToken": "18edf02375b310f4b340c3a6ac4e63d2",
+      "typedReasonCodes": [
+        "HARD_GROUP"
+      ]
+    },
+    {
+      "guestToken": "c63057dd362d4291807fafc65aafba8383f0578e46d6ac39d1b1c57b7356d74c",
+      "state": "UNSEATED",
+      "positionToken": null,
+      "typedReasonCodes": [
+        "HARD_GROUP"
+      ]
+    }
+  ]
+}
