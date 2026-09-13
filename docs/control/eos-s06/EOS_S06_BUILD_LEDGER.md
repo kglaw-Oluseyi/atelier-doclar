@@ -2,7 +2,8 @@
 
 **Prompt Control ID:** MD-PR-S070 V2 + MD-PR-S071  
 **Not acceptance.** Passing retries do not erase first-run failures.  
-**Application / deployed SHA:** `70d9976730ccdbe0f5812f2bf6f68bd1cd055d8e`
+**Application / deployed SHA:** `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3`
+**Final repository/docs SHA:** Packet 8 stamp after `0e5f2c4` (not redeployed)
 
 ## First-run failures
 
@@ -58,7 +59,39 @@ S05A/S05B remain PASSED. Providers remain INACTIVE. `productionAuthorised` remai
 | Live readiness on `0d43a9e` | PASS — POSTGRES / APPLIED / `productionAuthorised:false` / providers INACTIVE / S05A+S05B PASSED |
 | Live Director admin denial / Auditor no mutate / Admin no seating | PASS |
 | Live Planner SOFT self-activate / HARD self-activate denied | PASS |
-| Live publication/replay sequences (2) | UNFINISHED |
-| Live CEO `s06-eval-v2` persist | UNFINISHED |
+| Live publication/replay sequences (2) | UNFINISHED at S072 handoff — later passed on S073 SHA `1ce6e0f` |
+| Live CEO `s06-eval-v2` persist | UNFINISHED at S072 handoff — successor live persist is `s06-eval-v3` on `1ce6e0f` |
 
 S05A/S05B remain PASSED. Providers remain INACTIVE. `productionAuthorised` remains false. Control Tower was not deployed. EOS-S06 is not accepted. Claude is not run. EOS-S07 is not started.
+
+## MD-PR-S073 first-run failures
+
+| Gate | Class | Evidence | Correction | Retry |
+|---|---|---|---|---|
+| Packet 2 launch TX | Product | Solver/validator ran between `TX_BEGIN` and `TX_COMMIT` on `b1da257` | Split compute outside seating transactions (`9dafb84`) | Packet 7 first corrected measurement + Packet 7 Gate E resample |
+| Packet 6 local clock | Test | Fixture token/clock isolation | `EVENT_OS_TEST_NOW` / one injected clock | Local gates PASS |
+| Packet 7 post-Adopt | Product | Studio form did not emit POST after Adopt (consume remount) | Consume action result once (`caff006`) | Live Gate B PASS on `1ce6e0f` |
+| Packet 7 Gate B spec | Test targeting | `textContent().catch` swallowed the rejection banner | Read the banner (`2f97603`, `0e5f2c4`) | Focused spec PASS |
+| Packet 7 Gate E wrapper | Measurement | `otherMs=3429` / `launchMs=5790` included other-tab navigation | Stage-scoped resample; wrapper retained | POST max launch 2931 / other 1680 |
+| Packet 8 `next build` | Tooling | Concurrent Playwright `.next` broke page collection | Clean rebuild | PASS |
+| Packet 8 local Playwright | Tooling | Four S072/studio tests timed out after Next `ECONNRESET` | Isolated rerun | 4/4 PASS |
+
+## Local and live gates at S073 Packet 8
+
+| Gate | Result |
+|---|---|
+| Typecheck (shared-platform + Event OS) | PASS |
+| `@maison-doclar/shared-platform` unit | 590 pass / 0 fail |
+| `@maison-doclar/event-os` unit | 106 pass / 0 fail |
+| `pnpm programme:validate` | PASS (`verdict=NO_CYCLES`) |
+| `@maison-doclar/event-os` build | PASS |
+| `git diff --check` | PASS |
+| Focused S073 / changed-risk S072 / S049 action-result Playwright | PASS |
+| Live readiness on `1ce6e0f` | PASS — POSTGRES / APPLIED / `productionAuthorised:false` / providers INACTIVE / S05A+S05B PASSED |
+| Live diagnostics | 404; diagnostic token absent |
+| Live publication/replay (2) on `1ce6e0f` | PASS — Publication 3 `292fb1ea…` and Publication 4 `a6ac23f6…` |
+| Live CEO `s06-eval-v3` | PASS — 35 cases, hash `e433882ed1a55c4896aaf9fdf524257b870a4e2a450d8ab614bc6763b110035c` |
+
+S073 did not introduce a queue/worker. Launch still completes solver (11–17ms), independent validation (~0–1ms) and terminal persistence before 303. Live POST maxima: launch 2931ms, unrelated mutation 1680ms. No transaction exceeded 2s.
+
+S05A/S05B remain PASSED. Providers remain INACTIVE. `productionAuthorised` remains false. Control Tower was not deployed. EOS-S06 is not accepted. Claude is not run under S073. EOS-S07 is not started.

@@ -378,3 +378,16 @@ Milestone 4 is authorised on the Milestone 1–3 contracts. Historic S5-01–S5-
 | Control Tower | Compatibility-only. Not a deploy target unless executable code changed under amended authority. |
 | `productionAuthorised` | RETAINED false. Not changed. |
 | EOS-S07 | RETAINED not started. |
+
+## Addendum — 2026-09-13 EOS-S06 live settlement and process isolation (`MD-PR-S073`)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| S072 handoff NOT READY FOR CLAUDE | PRESERVED as dated history. Live publication/replay and live eval persist were unfinished on `0d43a9e`. |
+| MD-PR-S072 as sole S06 execution authority | SUPERSEDED only for live settlement/isolation. MD-PR-S073 is the sole authority for that remaining failure. MD-PR-S072 remains the V2 seating-truth parent. |
+| `s06-eval-v2` as current corpus | STALE after validator/case contract change. Current corpus is `s06-eval-v3` (35 cases). Do not restamp v1/v2. |
+| Queue/worker required for `<3s` launch acknowledgement | REJECTED. Synchronous launch on `1ce6e0f` met the live bound (POST max 2931ms; solver 11–17ms). |
+| Catalogue accepted-slice count | RETAINED at 5. EOS-S06 is not a catalogue-accepted slice. |
+| `productionAuthorised` | RETAINED false. Not changed. |
+| Control Tower | Compatibility-only. Not deployed. |
+| EOS-S07 | RETAINED not started. |

@@ -537,12 +537,27 @@ RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S037`. Canonical corpus p
 **Prompt Control ID:** `MD-PR-S072`  
 **Milestone:** `EOS-S06` — not accepted
 
-`MD-PR-S072` replaces the defective S06 seating decision spine with V2 contracts. Baseline `844f107fc70e1eaa8995e0c7c49c0c42d52b9dd1`. Live Event OS SHA `0d43a9e40ce63d4acb0c584f2f1ad308c400c412`. Local `s06-eval-v2` 30/30 RELEASE_READY. Live publication/replay and live eval persist unfinished. Claude was not run. EOS-S07 was not started. `EOS_S06_ACCEPTANCE.md` was not created.
+`MD-PR-S072` replaces the defective S06 seating decision spine with V2 contracts. Baseline `844f107fc70e1eaa8995e0c7c49c0c42d52b9dd1`. Historical live SHA at S072 handoff `0d43a9e40ce63d4acb0c584f2f1ad308c400c412`. At that handoff live publication/replay and live eval persist were unfinished. That NOT READY report is preserved. Claude was not run. EOS-S07 was not started. `EOS_S06_ACCEPTANCE.md` was not created.
 
 | ID | Kind | Summary | Location |
 |----|------|---------|----------|
-| EV-EOS-S06-S072-AUTH | DOCUMENT | Sole MD-PR-S072 execution authority | `docs/control/eos-s06/MD_PR_S072_EOS_S06_V2_CONTROLLED_SEATING_TRUTH_REPLACEMENT.md` |
+| EV-EOS-S06-S072-AUTH | DOCUMENT | Sole MD-PR-S072 execution authority for the V2 seating truth replacement | `docs/control/eos-s06/MD_PR_S072_EOS_S06_V2_CONTROLLED_SEATING_TRUTH_REPLACEMENT.md` |
 | EV-EOS-S06-S072-IMPL | DOCUMENT | S06 implementation ledger without acceptance | `docs/control/eos-s06/EOS_S06_IMPLEMENTATION_LEDGER.md` |
 | EV-EOS-S06-S072-BUILD | DOCUMENT | First-run failures and local/live gates | `docs/control/eos-s06/EOS_S06_BUILD_LEDGER.md` |
-| EV-EOS-S06-S072-EVAL | TEST | Local s06-eval-v2 corpus | `packages/shared-platform/test/seating-evaluation-v2.test.ts` |
+| EV-EOS-S06-S072-EVAL | TEST | S06 V2 evaluation corpus (now `s06-eval-v3`) | `packages/shared-platform/test/seating-evaluation-v2.test.ts` |
+
+## EOS-S06 MD-PR-S073
+
+**Prompt Control ID:** `MD-PR-S073`
+**Milestone:** `EOS-S06` — not accepted — READY FOR INDEPENDENT HOLDOUT AND CLAUDE
+
+`MD-PR-S073` diagnoses and corrects the remaining V2 live command-settlement and process-isolation failure. Deployed application SHA `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3`. Repository/docs SHA is the later Packet 8 stamp and is not redeployed. Live publication 3/4 replay passed. Live `s06-eval-v3` 35/35 PASSED, hash `e433882ed1a55c4896aaf9fdf524257b870a4e2a450d8ab614bc6763b110035c`. Gate E first-run `3429ms` / `5790ms` retained; scoped POST maxima 2931 / 1680. No queue/worker introduced. Claude was not run. EOS-S07 was not started. `EOS_S06_ACCEPTANCE.md` was not created.
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-EOS-S06-S073-AUTH | DOCUMENT | Sole MD-PR-S073 execution authority | `docs/control/eos-s06/MD_PR_S073_EOS_S06_V2_LIVE_COMMAND_SETTLEMENT_AND_PROCESS_ISOLATION.md` |
+| EV-EOS-S06-S073-FINDING | DOCUMENT | Packet 2 Branch B diagnostic | `docs/control/eos-s06/MD_PR_S073_DIAGNOSTIC_FINDING.md` |
+| EV-EOS-S06-S073-ADR | DOCUMENT | Transaction/compute split; no worker | `docs/control/eos-s06/ADR_EOS_S06_V2_COMMAND_EXECUTION_ISOLATION.md` |
+| EV-EOS-S06-S073-TIMING | DOCUMENT | Gate E five-sample classification | `docs/control/eos-s06/MD_PR_S073_PACKET_7_GATE_E_TIMING.md` |
+| EV-EOS-S06-S073-P8 | DOCUMENT | Packet 8 freeze and 8.3 report | `docs/control/eos-s06/MD_PR_S073_PACKET_8_FINAL_REPORT.md` |
 

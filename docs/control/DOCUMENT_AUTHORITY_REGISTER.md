@@ -370,5 +370,15 @@ This addendum does not rewrite the B0 row set or earlier addenda. Catalogue acce
 | MD-PR-S072 execution authority | `docs/control/eos-s06/MD_PR_S072_EOS_S06_V2_CONTROLLED_SEATING_TRUTH_REPLACEMENT.md` | CONTROLLING IMPLEMENTATION AUTHORITY for the EOS-S06 seating decision spine replacement | SHA-256 `de154b2349f2056275d66dcc11d3ab88f3b283b16d0acd37311ea8ca628f3182`. Ratified from baseline `844f107fc70e1eaa8995e0c7c49c0c42d52b9dd1`. Does not accept EOS-S06. |
 | MD-PR-S070 V2 executable pack | `docs/control/eos-s06/MD_PR_S070_V2_EOS_S06_SEATING_ALLOCATION_EXECUTABLE_IMPLEMENTATION_PACK.md` | HISTORICAL IMPLEMENTATION AUTHORITY — superseded for the seating decision spine by MD-PR-S072 | Retained as dated history. Legacy S06 rows remain readable as incompatible history. |
 | EOS-S06 V2 overlay and technical annex | `docs/control/eos-s06/` | HISTORICAL RATIFIED V2 DETAIL — non-conflicting only where MD-PR-S072 is silent | Overlay D1–D12 and annex remain supporting. MD-PR-S072 is the sole execution authority. |
-| EOS-S06 implementation ledger | `docs/control/eos-s06/EOS_S06_IMPLEMENTATION_LEDGER.md` | IMPLEMENTATION EVIDENCE | Not acceptance. Live SHA `0d43a9e40ce63d4acb0c584f2f1ad308c400c412`. NOT READY FOR CLAUDE until live publication/replay and live `s06-eval-v2` persist. |
-| EOS-S06 build ledger | `docs/control/eos-s06/EOS_S06_BUILD_LEDGER.md` | IMPLEMENTATION LEDGER | S072 first-run failures retained. |
+| EOS-S06 implementation ledger | `docs/control/eos-s06/EOS_S06_IMPLEMENTATION_LEDGER.md` | IMPLEMENTATION EVIDENCE | Not acceptance. Historical S072 handoff was NOT READY on `0d43a9e`. Current deployed SHA `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3`. READY FOR INDEPENDENT HOLDOUT AND CLAUDE. |
+| EOS-S06 build ledger | `docs/control/eos-s06/EOS_S06_BUILD_LEDGER.md` | IMPLEMENTATION LEDGER | S072 and S073 first-run failures retained. |
+
+## Addendum — 2026-09-13 EOS-S06 live settlement and process isolation (`MD-PR-S073`)
+
+This addendum does not rewrite the B0 row set or earlier addenda. Catalogue accepted-slice count remains 5. EOS-S06 is not accepted. Production remains unauthorised. Claude is not run by Cursor. EOS-S07 is not started. Control Tower is not a deploy target. Event OS is not redeployed for the Packet 8 documentation stamp.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| MD-PR-S073 execution authority | `docs/control/eos-s06/MD_PR_S073_EOS_S06_V2_LIVE_COMMAND_SETTLEMENT_AND_PROCESS_ISOLATION.md` | CONTROLLING IMPLEMENTATION AUTHORITY for live command settlement and process isolation | SHA-256 `9e527f289b71c5d794f472bf271839799a042916985b1eda288028b8709537ff`. Does not accept EOS-S06. |
+| MD-PR-S073 Packet 8 final report | `docs/control/eos-s06/MD_PR_S073_PACKET_8_FINAL_REPORT.md` | PACKET 8 FREEZE | Distinguishes deployed SHA `1ce6e0f` from the later docs SHA. |
+| MD-PR-S073 Gate E timing | `docs/control/eos-s06/MD_PR_S073_PACKET_7_GATE_E_TIMING.md` | IMPLEMENTATION EVIDENCE | Preserves `3429ms` / `5790ms` and the five-sample classification. |

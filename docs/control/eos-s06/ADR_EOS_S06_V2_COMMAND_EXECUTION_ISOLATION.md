@@ -125,3 +125,9 @@ Focused tests must fail on the pre-fix tree for:
 2. freeze compilation is not inside an open seating transaction;
 3. launch still writes one run and replays the same command;
 4. redirect remains after commit (existing wrapper test).
+
+---
+
+## Packet 8 confirmation
+
+On live SHA `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3`, five correlated Gate E samples showed launch POST → 303 at 2342–2931ms and solver time 11–17ms. Launch still completes solver, independent validation and terminal persistence before the 303. **No queue, worker, or sibling process was introduced**, because measured Branch B was corrected and the ratified live `<3s` acknowledgement target passed on the synchronous path. See `MD_PR_S073_PACKET_7_GATE_E_TIMING.md`.
