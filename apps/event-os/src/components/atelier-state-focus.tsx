@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { consumeActionResultAction } from "../server/action-result-actions";
+import { shouldScheduleActionResultConsume } from "./action-result-consume-once";
 import {
   actionResultFocusStorageKey,
   actionResultScrollBehavior,
@@ -73,7 +74,7 @@ export function AtelierStateFocus({
       if (!node || cancelled) return false;
       if (identity) FOCUSED_IN_DOCUMENT.add(identity);
       if (markNew && storageKey) window.sessionStorage.setItem(storageKey, "1");
-      if (markNew && consumeAfterFocus && correlationId) {
+      if (markNew && consumeAfterFocus && correlationId && shouldScheduleActionResultConsume(correlationId)) {
         void consumeActionResultAction(correlationId);
       }
       return true;

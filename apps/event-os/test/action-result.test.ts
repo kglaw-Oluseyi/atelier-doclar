@@ -3,9 +3,11 @@ import { describe, it } from "node:test";
 import {
   buildActionResult,
   forgetActionResult,
+  isActionResultConsumed,
   presentActionResult,
   recallActionResult,
   rememberActionResult,
+  resolveStoredActionResult,
   resultHref,
   resultQueryIsSafe,
   storedResultMatchesCorrelation,
@@ -13,6 +15,10 @@ import {
   signActionResult,
   verifyActionResult,
 } from "../src/server/action-result.ts";
+import {
+  resetActionResultConsumeScheduleForTests,
+  shouldScheduleActionResultConsume,
+} from "../src/components/action-result-consume-once.ts";
 
 const SECRET = "event-os-session-secret-not-for-production-32";
 const SESSION_A = "session-token-actor-a";
@@ -328,6 +334,33 @@ describe("EOS-S04D action-result lifecycle", () => {
     assert.equal(recallActionResult("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"), undefined);
     forgetActionResult(current.correlationId);
     assert.equal(recallActionResult(current.correlationId), undefined);
+    assert.equal(isActionResultConsumed(current.correlationId), true);
+    assert.equal(
+      resolveStoredActionResult({
+        queryStored: current,
+        requestPath: SCOPE,
+        resultId: current.correlationId,
+      }),
+      undefined,
+    );
+    assert.equal(
+      presentActionResult({
+        stored: current,
+        sessionHash: sessionHashFromToken(SESSION_A),
+        actorPersonId: ACTOR_A,
+        requestPath: SCOPE,
+        resultId: current.correlationId,
+      }).shouldConsume,
+      false,
+    );
+  });
+
+  it("12. a remount cannot schedule a second consume for the same correlation", () => {
+    resetActionResultConsumeScheduleForTests();
+    const correlationId = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+    assert.equal(shouldScheduleActionResultConsume(correlationId), true);
+    assert.equal(shouldScheduleActionResultConsume(correlationId), false);
+    assert.equal(shouldScheduleActionResultConsume(undefined), false);
   });
 });
 

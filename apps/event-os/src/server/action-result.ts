@@ -420,6 +420,7 @@ export function resolveStoredActionResult(input: {
       ? input.cookie
       : undefined;
   if (input.resultId) {
+    if (isActionResultConsumed(input.resultId)) return undefined;
     if (input.queryStored?.correlationId === input.resultId) return input.queryStored;
     if (exactCookie?.correlationId === input.resultId) return exactCookie;
     return undefined;
@@ -474,7 +475,7 @@ export function presentActionResult(input: {
       : undefined;
   return {
     view: viewFromResult(stored),
-    shouldConsume: true,
+    shouldConsume: !isActionResultConsumed(stored.correlationId),
     mutationLocked: conflict && !retryLock,
     actionType: stored.actionType,
     correlationId: stored.correlationId,

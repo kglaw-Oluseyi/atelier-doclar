@@ -211,7 +211,7 @@ export default async function EventSeatingPage({
       </p>
       <ActionResultBanner presented={presented} />
       <div className="seating-tabs">
-        <AtelierSectionTabs label="Seating Command views" items={[...TABS]} />
+        <AtelierSectionTabs label="Seating Command views" items={TABS} />
       </div>
 
       <section id="overview" className="atelier-panel" data-testid="seating-overview">

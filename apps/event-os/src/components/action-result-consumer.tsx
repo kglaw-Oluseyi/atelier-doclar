@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { consumeActionResultAction } from "../server/action-result-actions";
+import { shouldScheduleActionResultConsume } from "./action-result-consume-once";
 
 export function ActionResultConsumer({
   enabled,
@@ -10,10 +11,8 @@ export function ActionResultConsumer({
   enabled: boolean;
   correlationId?: string;
 }) {
-  const consumed = useRef<string | undefined>(undefined);
   useEffect(() => {
-    if (!enabled || !correlationId || consumed.current === correlationId) return;
-    consumed.current = correlationId;
+    if (!enabled || !correlationId || !shouldScheduleActionResultConsume(correlationId)) return;
     void consumeActionResultAction(correlationId);
   }, [enabled, correlationId]);
   return null;

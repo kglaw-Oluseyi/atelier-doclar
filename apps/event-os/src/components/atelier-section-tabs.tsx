@@ -12,11 +12,12 @@ export function AtelierSectionTabs({
   sticky?: boolean;
 }) {
   const [current, setCurrent] = useState(items[0]?.href);
+  const hrefs = items.map((item) => item.href).join("\0");
 
   useEffect(() => {
     const hash = typeof window !== "undefined" ? window.location.hash : "";
-    if (hash && items.some((item) => item.href === hash)) setCurrent(hash);
-  }, [items]);
+    if (hash && hrefs.split("\0").includes(hash)) setCurrent(hash);
+  }, [hrefs]);
 
   return (
     <nav className={sticky ? "at-tabs dossier-tabs-sticky" : "at-tabs"} aria-label={label}>
