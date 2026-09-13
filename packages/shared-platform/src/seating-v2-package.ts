@@ -6,13 +6,13 @@ import {
   snapshotProtectionAdapter,
   uniqueSeatAnchors,
 } from "./seating-adapters.js";
+import { assertSeatingV2CapacityTruth, seatingV2TableCapacityTruth } from "./seating-v2-capacity.js";
 import { compileSeatingV2Request } from "./seating-v2-compiler.js";
 import {
   seatingV2LockSetHash,
   seatingV2PackageContentHash,
   seatingV2SemanticHash,
   seatingV2SolverToken,
-  seatingV2TableToken,
 } from "./seating-v2-hash.js";
 import type { SeatingV2Scope, SeatingV2Transaction } from "./seating-v2-repository.js";
 import {
@@ -154,19 +154,33 @@ export function finishSeatingV2Package(input: {
       groupTokens: guest.partyToken ? [guest.partyToken] : [],
       capabilityCodes: guest.capabilityCodes,
     })),
-    positions: input.layout.tables.flatMap((table) => {
-      const anchors = uniqueSeatAnchors(
-        table.seatAnchors.length
-          ? table.seatAnchors
-          : Array.from({ length: table.capacity }, (_, index) => ({ id: `${table.objectId}:${index + 1}`, ordinal: index + 1 })),
+    positions: (() => {
+      const truths = input.layout.tables.map((table) =>
+        seatingV2TableCapacityTruth({
+          tableObjectId: table.objectId,
+          declaredCapacity: table.declaredCapacity ?? table.capacity,
+          physicalPositionCount: table.physicalPositionCount ?? table.seatAnchors.length,
+        }),
       );
-      return anchors.map((seat) => ({
-        positionToken: exactHash({ table: table.objectId, ordinal: seat.ordinal }).slice(0, 32),
-        tableToken: seatingV2TableToken(table.objectId),
-        zoneCodes: table.zoneCodes,
-        capabilityCodes: table.capabilityCodes,
-      }));
-    }),
+      assertSeatingV2CapacityTruth(truths);
+      return input.layout.tables.flatMap((table, index) => {
+        const truth = truths[index]!;
+        const anchors = uniqueSeatAnchors(
+          truth.positionSource === "PHYSICAL"
+            ? table.seatAnchors
+            : Array.from({ length: truth.declaredCapacity }, (_, ordinal) => ({
+                id: `${table.objectId}:${ordinal + 1}`,
+                ordinal: ordinal + 1,
+              })),
+        );
+        return anchors.map((seat) => ({
+          positionToken: exactHash({ table: table.objectId, ordinal: seat.ordinal }).slice(0, 32),
+          tableToken: truth.tableToken,
+          zoneCodes: table.zoneCodes,
+          capabilityCodes: table.capabilityCodes,
+        }));
+      });
+    })(),
     rules: input.editions.map((edition) => ({
       editionId: edition.id,
       contentHash: edition.contentHash,

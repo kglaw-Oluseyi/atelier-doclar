@@ -2,6 +2,7 @@ import { createHmac } from "node:crypto";
 import { exactHash } from "./eec-hash.js";
 import { PlatformError } from "./errors.js";
 import type { LayoutDownstreamProjection } from "./layout-assurance-projections.js";
+import { seatingV2TableCapacityTruth, type SeatingPositionSource } from "./seating-v2-capacity.js";
 import type { PlatformSnapshot } from "./store.js";
 import type { OperationalGuest } from "./guest-schemas.js";
 
@@ -24,7 +25,12 @@ export type PublishedSpatialLayout = {
   contentHash: string;
   tables: Array<{
     objectId: string;
+    tableToken: string;
     capacity: number;
+    declaredCapacity: number;
+    physicalPositionCount: number;
+    positionSource: SeatingPositionSource;
+    mismatch: boolean;
     zoneCodes: string[];
     capabilityCodes: string[];
     seatAnchors: Array<{ id: string; ordinal: number }>;
@@ -124,10 +130,20 @@ export function snapshotLayoutAdapter(snap: PlatformSnapshot, organisationId: st
           ordinal: Number((seat.subtype as { sequence?: number } | undefined)?.sequence ?? 0),
         }))
         .sort((left, right) => left.ordinal - right.ordinal);
-      const capacity = Number((table.subtype as { declaredCapacity?: number } | undefined)?.declaredCapacity ?? (anchors.length || 8));
+      const declaredCapacity = Number((table.subtype as { declaredCapacity?: number } | undefined)?.declaredCapacity ?? 0);
+      const truth = seatingV2TableCapacityTruth({
+        tableObjectId: table.id,
+        declaredCapacity,
+        physicalPositionCount: anchors.length,
+      });
       return {
         objectId: table.id,
-        capacity: capacity > 0 ? capacity : 8,
+        tableToken: truth.tableToken,
+        capacity: truth.effectiveCapacity,
+        declaredCapacity: truth.declaredCapacity,
+        physicalPositionCount: truth.physicalPositionCount,
+        positionSource: truth.positionSource,
+        mismatch: truth.mismatch,
         zoneCodes: table.groupId ? [table.groupId] : ["ZONE_GENERAL"],
         capabilityCodes: [],
         seatAnchors: anchors,

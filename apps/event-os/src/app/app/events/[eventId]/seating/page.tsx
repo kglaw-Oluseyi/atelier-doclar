@@ -289,7 +289,11 @@ export default async function EventSeatingPage({
         </article>
         <article>
           <h3>Layout publication</h3>
-          <p>{workspace.tables.length ? `${workspace.tables.length} published tables` : "No current layout is published."}</p>
+          <p>
+            {workspace.tables.length
+              ? `${workspace.tables.length} published tables${workspace.tables.some((table) => table.mismatch) ? " · physical and declared capacity disagree" : ""}`
+              : "No current layout is published."}
+          </p>
         </article>
         <article>
           <h3>Event Brief</h3>
@@ -303,7 +307,7 @@ export default async function EventSeatingPage({
           <ProtectionMutationForm action={freezeSeatingInputsAction} className="actions" testId="seating-freeze">
             <Envelope fields={envelopeFields} />
             <IdempotencyField />
-            <button type="submit" className="button">
+            <button type="submit" className="button" disabled={workspace.tables.some((table) => table.mismatch)}>
               Freeze new input edition
             </button>
           </ProtectionMutationForm>
@@ -547,7 +551,10 @@ export default async function EventSeatingPage({
             <h3>Tables</h3>
             <ul>
               {workspace.tables.map((table) => (
-                <li key={table.id}>{table.label} · {table.seated}/{table.capacity}</li>
+                <li key={table.id} data-testid="seating-table-capacity">
+                  {table.label} · {table.seated}/{table.capacity}
+                  {table.mismatch ? " · capacity mismatch" : ""}
+                </li>
               ))}
             </ul>
           </div>

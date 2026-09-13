@@ -42,6 +42,20 @@ function snapMm(value: number) {
   return Math.round(value / 100) * 100;
 }
 
+function physicalSeatsForTable(objects: readonly SpatialObject[], tableId: string) {
+  return objects.filter(
+    (item) => item.objectType === "SEAT" && !item.tombstoned && (item.subtype as { tableId?: string }).tableId === tableId,
+  );
+}
+
+function persistedSeatCountInput(table: SpatialObject | undefined, objects: readonly SpatialObject[]) {
+  if (!table || table.objectType !== "TABLE") return "";
+  const physical = physicalSeatsForTable(objects, table.id).length;
+  if (physical > 0) return String(physical);
+  const declared = (table.subtype as { declaredCapacity?: number } | undefined)?.declaredCapacity;
+  return typeof declared === "number" ? String(declared) : "";
+}
+
 function persistLabel(state: Persistence) {
   if (state === "pending") return "Pending — not saved";
   if (state === "saving") return "Saving";
@@ -84,7 +98,7 @@ export function LayoutStudioWorkspace({
   const [pendingRotation, setPendingRotation] = useState("");
   const [pendingLayer, setPendingLayer] = useState("");
   const [pendingSubtype, setPendingSubtype] = useState("");
-  const [seatCount, setSeatCount] = useState("6");
+  const [seatCount, setSeatCount] = useState("");
   const [confirmSeats, setConfirmSeats] = useState(false);
   const [guides, setGuides] = useState<{ x?: number; y?: number }>({});
   const [online, setOnline] = useState(true);
@@ -190,6 +204,7 @@ export function LayoutStudioWorkspace({
       setPendingRotation(String(object.rotationMillidegree));
       setPendingLayer(String(object.layer));
       setPendingSubtype(JSON.stringify(object.subtype, null, 2));
+      setSeatCount(persistedSeatCountInput(object, workspace.objects));
       setDirty(false);
     }
   }
@@ -232,6 +247,11 @@ export function LayoutStudioWorkspace({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [selected, selectedIds, readOnly]);
+
+  const persistedSeatCount = persistedSeatCountInput(selected, workspace.objects);
+  useEffect(() => {
+    if (selected?.objectType === "TABLE") setSeatCount(persistedSeatCount);
+  }, [selected?.id, persistedSeatCount]);
 
   const pendingCommand = typeof window !== "undefined" ? sessionStorage.getItem(pendingKey(workspace.layout.id)) : null;
 
@@ -470,6 +490,27 @@ export function LayoutStudioWorkspace({
             </select>
           </label>
           {objects.length === 0 ? <p className="empty">No objects match. Add one from the library or clear the search.</p> : null}
+          {selected?.objectType === "TABLE" ? (
+            <ul className="atelier-folio" data-testid="studio-usable-seats">
+              {physicalSeatsForTable(workspace.objects, selected.id).map((seat) => (
+                <li key={seat.id}>
+                  <button type="button" className="button secondary" onClick={(event) => select(seat.id, event.shiftKey)}>
+                    {seat.label} · physical seat
+                  </button>
+                </li>
+              ))}
+              {physicalSeatsForTable(workspace.objects, selected.id).length === 0
+                ? Array.from(
+                    { length: Number((selected.subtype as { declaredCapacity?: number } | undefined)?.declaredCapacity ?? 0) },
+                    (_, index) => (
+                      <li key={`${selected.id}-declared-${index + 1}`}>
+                        {selected.label} declared seat {index + 1} · declared synthesised seat
+                      </li>
+                    ),
+                  )
+                : null}
+            </ul>
+          ) : null}
           <ul className="atelier-folio" data-testid="studio-navigator">
             {objects.map((object) => (
               <li key={object.id}>
@@ -533,10 +574,21 @@ export function LayoutStudioWorkspace({
                 <>
                   <label>
                     Physical seat count
-                    <input value={seatCount} onChange={(event) => setSeatCount(event.target.value)} inputMode="numeric" disabled={readOnly} />
+                    <input
+                      value={seatCount}
+                      onChange={(event) => setSeatCount(event.target.value)}
+                      inputMode="numeric"
+                      disabled={readOnly}
+                      data-testid="studio-seat-count"
+                    />
                   </label>
                   <label className="studio-check">
-                    <input type="checkbox" checked={confirmSeats} onChange={(event) => setConfirmSeats(event.target.checked)} disabled={readOnly} />
+                    <input
+                      type="checkbox"
+                      checked={confirmSeats}
+                      onChange={(event) => setConfirmSeats(event.target.checked)}
+                      disabled={readOnly}
+                    />
                     Confirm destructive seat regeneration
                   </label>
                 </>

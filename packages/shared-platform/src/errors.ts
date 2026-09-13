@@ -9,6 +9,7 @@ export const PLATFORM_ERROR_CODES = [
   "TRANSITION_INVALID",
   "ADOPTION_MISMATCH",
   "SEATING_VALIDATION_REJECTED",
+  "SEAT_CAPACITY_MISMATCH",
   "IDEMPOTENCY_CONFLICT",
   "DEPENDENCY_UNAVAILABLE",
   "CAPABILITY_NOT_ENABLED",
@@ -62,6 +63,8 @@ export function publicMessageFor(code: PlatformErrorCode): string {
       return "The seating run could not be adopted because validation no longer matches.";
     case "SEATING_VALIDATION_REJECTED":
       return "This seating change was rejected by the independent validator.";
+    case "SEAT_CAPACITY_MISMATCH":
+      return "Physical seat count and declared capacity disagree. Correct the layout before freezing a seating package.";
     case "IDEMPOTENCY_CONFLICT":
       return "This request was already processed with different information.";
     case "DEPENDENCY_UNAVAILABLE":

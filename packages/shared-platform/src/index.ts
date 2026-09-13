@@ -1064,6 +1064,8 @@ export { seatingV2ReplacementEnabled } from "./seating-v2-flag.js";
 export { LEGACY_S06_PUBLICATION_LABEL, currentSeatingV2RunId } from "./seating-v2-workspace.js";
 export type { SeatingV2RuleContent } from "./seating-v2-schemas.js";
 export { snapshotGuestCohortAdapter, snapshotLayoutAdapter, seatingToken } from "./seating-adapters.js";
+export { seatingV2TableCapacityTruth, assertSeatingV2CapacityTruth } from "./seating-v2-capacity.js";
+export type { SeatingPositionSource, SeatingTableCapacityTruth } from "./seating-v2-capacity.js";
 export { buildSeatingWorkspace, implicatedSeatingReviewDomains, seatingDisclosureForRole } from "./seating-workspace.js";
 export { executeS06Evaluation } from "./seating-evaluation-runner.js";
 export { executeS06EvaluationV2 } from "./seating-evaluation-v2-runner.js";

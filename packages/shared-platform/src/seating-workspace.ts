@@ -12,7 +12,16 @@ export type SeatingWorkspaceView = SeatingWorkspaceProjection & {
   inputFreshness: "MISSING" | "CURRENT" | "STALE";
   freshnessCopy?: string;
   guests: Array<{ id: string; label: string; eligible: boolean; eligibilityCode: string; seated: boolean; tableLabel?: string }>;
-  tables: Array<{ id: string; label: string; capacity: number; seated: number }>;
+  tables: Array<{
+    id: string;
+    label: string;
+    capacity: number;
+    seated: number;
+    positionSource?: "PHYSICAL" | "DECLARED_SYNTHETIC";
+    declaredCapacity?: number;
+    physicalPositionCount?: number;
+    mismatch?: boolean;
+  }>;
   constraints: Array<{ id: string; kind: string; predicateType: string; status: string; preview: string; reviewDomain?: string }>;
   implicatedReviewDomains: Array<"PROTOCOL" | "ACCESSIBILITY" | "SECURITY">;
   reviewRequirementCopy: string;
@@ -122,6 +131,10 @@ export function buildSeatingWorkspace(
     label: `Table ${table.objectId.slice(0, 8)}`,
     capacity: table.capacity,
     seated: assignments.filter((item) => item.tableId === table.objectId && item.state === "SEATED").length,
+    positionSource: table.positionSource,
+    declaredCapacity: table.declaredCapacity,
+    physicalPositionCount: table.physicalPositionCount,
+    mismatch: table.mismatch,
   }));
   const reservedMin = state.reservationBlocks
     .filter((item) => item.eventId === eventId && item.releaseState === "ACTIVE")
@@ -137,6 +150,13 @@ export function buildSeatingWorkspace(
   const attention: SeatingWorkspaceView["attention"] = [];
   if (!layout) attention.push({ kind: "blocker", message: "No current layout is published. Freeze cannot start.", href: "#inputs" });
   if (overbooked) attention.push({ kind: "blocker", message: "Reserved minima exceed published capacity.", href: "#reservations" });
+  if (tables.some((item) => item.mismatch)) {
+    attention.push({
+      kind: "blocker",
+      message: "Physical seat count and declared capacity disagree. Correct the layout before freezing a seating package.",
+      href: "#inputs",
+    });
+  }
   if (inputFreshness === "STALE") attention.push({ kind: "stale", message: "Upstream event information changed. Review and run again.", href: "#inputs" });
   const implicatedReviewDomains = implicatedSeatingReviewDomains(state, eventId);
   const outstandingReviews = working

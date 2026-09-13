@@ -17,9 +17,10 @@ Historical S072 handoff status **NOT READY FOR CLAUDE** remains dated history. M
 |---|---|
 | Authority SHA-256 | `faae89b7bf10ecbe1884c4b375b35ca65b9f516fb3bd2ec89863c3c99d5081c0` |
 | Deployed application SHA | `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3` — not redeployed |
-| Sections 1–7 | PASS |
+| Sections 1–8 | PASS |
 | Section 2 finding | `docs/control/eos-s06/MD_PR_S075_FORENSIC_TABLE_NAMESPACE_FINDING.md` — remains valid |
 | Section 7 replay identity | `docs/control/eos-s06/ADR_EOS_S06_V2_RUN_REUSE_IDENTITY.md` — additive `009`; historic compiler ineligible for reuse/adopt |
+| Section 8 capacity truth | Physical seats authoritative; declared synthesis only at zero physical; freeze `SEAT_CAPACITY_MISMATCH`; Studio reads persisted count |
 | Temporary diagnostic tunnel | Closed. Port `55432` none. No `ssh -L`. Homebrew `postgresql@16` left running as a pre-existing machine service. No reconnect unless a later mandated gate genuinely requires read-only verification. |
 | Subsequent proof | Repository tests and governed live UI journeys only. Direct database access is not a substitute for required product workflows. |
 | Current verdict | NOT READY FOR CLAUDE |

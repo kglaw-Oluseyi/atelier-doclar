@@ -103,12 +103,26 @@ export function buildSeatingV2Workspace(
       tableLabel: seated?.layoutTableId ?? undefined,
     };
   });
-  const tables = (layout?.tables ?? []).map((table, index) => ({
-    id: table.objectId,
-    label: disclosure === "AUDITOR" ? "Published table" : `Table ${index + 1}`,
-    capacity: table.capacity,
-    seated: assignments.filter((item) => item.layoutTableId === table.objectId && item.state === "SEATED").length,
-  }));
+  const tables = (layout?.tables ?? []).map((table, index) => {
+    const sourceWording = table.positionSource === "PHYSICAL" ? "physical seats" : "declared synthesised seats";
+    return {
+      id: disclosure === "AUDITOR" ? `published-table-${index + 1}` : table.objectId,
+      label:
+        disclosure === "AUDITOR"
+          ? `Published table · ${table.capacity} ${sourceWording}`
+          : `Table ${index + 1} · ${table.capacity} ${sourceWording}`,
+      capacity: table.capacity,
+      seated: assignments.filter(
+        (item) =>
+          item.state === "SEATED" &&
+          (item.layoutTableId === table.objectId || item.layoutTableId === table.tableToken),
+      ).length,
+      positionSource: table.positionSource,
+      declaredCapacity: table.declaredCapacity,
+      physicalPositionCount: table.physicalPositionCount,
+      mismatch: table.mismatch,
+    };
+  });
   const reservedMin = activeReservations.reduce((sum, item) => sum + (item.exactCount ?? item.minCount ?? 0), 0);
   const reservedMax = activeReservations.reduce((sum, item) => sum + (item.exactCount ?? item.maxCount ?? item.minCount ?? 0), 0);
   const total = tables.reduce((sum, item) => sum + item.capacity, 0);
@@ -123,6 +137,13 @@ export function buildSeatingV2Workspace(
   const attention: SeatingWorkspaceView["attention"] = [];
   if (!pkg) attention.push({ kind: "blocker", message: "Freeze a V2 input package before solving.", href: "#inputs" });
   if (overbooked) attention.push({ kind: "blocker", message: "Reserved minima exceed published capacity.", href: "#reservations" });
+  if (tables.some((item) => item.mismatch)) {
+    attention.push({
+      kind: "blocker",
+      message: "Physical seat count and declared capacity disagree. Correct the layout before freezing a seating package.",
+      href: "#inputs",
+    });
+  }
   if (packageDrifted) {
     attention.push({ kind: "stale", message: "Upstream event information changed. Review and run again.", href: "#inputs" });
   }
