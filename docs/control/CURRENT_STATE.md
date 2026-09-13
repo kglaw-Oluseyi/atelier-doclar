@@ -1,8 +1,8 @@
 # Current State
 
-**Updated:** MD-PR-S073 EOS-S06 V2 live command settlement and process isolation Packet 8 (2026-09-13)
-**Prompt Control ID:** MD-PR-S073 (parent MD-PR-S072)
-**Milestone:** `EOS-S05` ACCEPTED — catalogue accepted-slice count 5; `EOS-S05A` ACCEPTED (not catalogue); `EOS-S05B` ACCEPTED (not catalogue); EOS-S06 implemented / not accepted / READY FOR INDEPENDENT HOLDOUT AND CLAUDE
+**Updated:** MD-PR-S075 EOS-S06 V2 table identity, compiler and feasibility truth (2026-09-13)
+**Prompt Control ID:** MD-PR-S075 (parent MD-PR-S073 / MD-PR-S072)
+**Milestone:** `EOS-S05` ACCEPTED — catalogue accepted-slice count 5; `EOS-S05A` ACCEPTED (not catalogue); `EOS-S05B` ACCEPTED (not catalogue); EOS-S06 implemented / not accepted / NOT READY FOR CLAUDE
 
 MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is ACCEPTED. EOS-S02 is ACCEPTED. EOS-S03 is ACCEPTED. EOS-S04 is CLOSED / ACCEPTED (`PASS WITH OBSERVATIONS`). EOS-S05 is ACCEPTED. Catalogue accepted-slice count is 5. Native coverage is 62/62. S4-61 is satisfied for technical review only. S4-62 is satisfied for controlled technical acceptance/handover only. Independent, specialist and CEO production gates remain unsigned.
 
@@ -120,12 +120,12 @@ MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is A
 **EOS-S05B ACCEPTANCE RECORD: docs/control/EOS_S05B_ACCEPTANCE.md**
 **EOS-S05B IMPLEMENTATION PROMPT CONTROL ID: MD-PR-S054 / MD-PR-S055 / MD-PR-S056 / MD-PR-S058 / MD-PR-S060 V2 / MD-PR-S061 / MD-PR-S062 / MD-PR-S063 / MD-PR-S064 / MD-PR-S065 / MD-PR-S067**
 **EOS-S05B CANONICAL CORPUS: docs/control/eos-s05b/**
-**EOS-S06 IMPLEMENTATION AUTHORISED: YES — MD-PR-S072 V2 replacement and MD-PR-S073 settlement/isolation; not accepted**
-**EOS-S06 STATUS: IMPLEMENTED — NOT ACCEPTED — READY FOR INDEPENDENT HOLDOUT AND CLAUDE**
-**EOS-S06 CONTROLLING AUTHORITY:** `docs/control/eos-s06/MD_PR_S073_EOS_S06_V2_LIVE_COMMAND_SETTLEMENT_AND_PROCESS_ISOLATION.md` (parent `MD_PR_S072_EOS_S06_V2_CONTROLLED_SEATING_TRUTH_REPLACEMENT.md`)
+**EOS-S06 IMPLEMENTATION AUTHORISED: YES — MD-PR-S075 table identity/compiler/feasibility; MD-PR-S073 settlement/isolation remains dated freeze; not accepted**
+**EOS-S06 STATUS: IMPLEMENTED — NOT ACCEPTED — NOT READY FOR CLAUDE**
+**EOS-S06 CONTROLLING AUTHORITY:** `docs/control/eos-s06/MD_PR_S075_EOS_S06_V2_TABLE_IDENTITY_COMPILER_AND_FEASIBILITY_TRUTH.md` (parents `MD_PR_S073` / `MD_PR_S072`)
 **EOS-S06 APPLICATION SHA:** `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3`
-**EOS-S06 REPOSITORY/DOCS SHA:** `3f5c09b37d683ad7192660a33f596b7e72d75583` — not redeployed
-**RECOMMENDED NEXT PROMPT CONTROL ID: independent holdout and Claude — Cursor must not run Claude, accept EOS-S06, or start EOS-S07**
+**EOS-S06 REPOSITORY/DOCS SHA:** later than the deployed application SHA — not redeployed
+**RECOMMENDED NEXT PROMPT CONTROL ID: continue MD-PR-S075 — Cursor must not run Claude, accept EOS-S06, deploy Control Tower, or start EOS-S07**
 **MD-PR-S036 IMPLEMENTATION AUTHORITY: NO**
 **CROSS-SLICE UX CONTROL ID: MD-PR-UX001**
 **MD-PR-UX001 IMPLEMENTATION AUTHORITY: EXECUTED — awaiting focused human UX reverification**
@@ -167,7 +167,9 @@ Event OS S01–S03 remain formally accepted. EOS-S04 is CLOSED / ACCEPTED after 
 
 **EOS-S05B:** `ACCEPTED` on `2026-09-11` by `ChatGPT / AI CTO` under `MD-PR-S069` at accepted implementation SHA `84d58dd4590fb7d2087b436d10c0b2ae992b1621`. Not a catalogue slice. Catalogue accepted-slice count remains 5. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised: false`. Live Event OS deployment `819ca57f-e055-4c06-a58c-81bfc5b141d7` already carries the accepted SHA and is not redeployed. Control Tower is not redeployed. Evaluation `s05b-eval-v6` 63/63 remains current, hash `987f4b6d1c4747074d750eb96a37df48e223627fd069003f75462c0769f15e04`, zero-tolerance clear. Claude verified (`MD-PR-S068` READY). Claude did not accept. ChatGPT issued the acceptance decision. `MD-PR-S036` is not consumed. EOS-S06 remains `NOT_STARTED / NOT_AUTHORISED`. Production remains unauthorised. Acceptance record: `docs/control/EOS_S05B_ACCEPTANCE.md`.
 
-**EOS-S06 MD-PR-S073:** Packet 8 freeze on 2026-09-13. Deployed application SHA `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3` is not redeployed for this documentation/test stamp. Production build passed. Production-mode Playwright was not executed because `DATABASE_URL` was unavailable locally. Isolated development-runtime Playwright passed focused S073, S072 and S049. Live production verification passed on the deployed application SHA. Aborted leftover Playwright jobs remain first-run tooling failures and were not rerun. Live `s06-eval-v3` 35/35 PASSED, hash `e433882ed1a55c4896aaf9fdf524257b870a4e2a450d8ab614bc6763b110035c`. S05A/S05B remain PASSED. Providers remain INACTIVE. Gate E wrapper `3429ms`/`5790ms` retained; scoped launch POST max `2931ms`, unrelated mutation max `1680ms`. Launch still completes solver, independent validation and terminal persistence before 303. S073 did not convert launch into an asynchronous queue: measured Branch B was corrected and the synchronous path stayed inside the ratified live bound (solver 11–17ms). `EOS_S06_ACCEPTANCE.md` was not created. Claude was not run. EOS-S07 is not started. Production remains unauthorised. Control records: `docs/control/eos-s06/MD_PR_S073_PACKET_8_FINAL_REPORT.md`, `docs/control/eos-s06/MD_PR_S073_PACKET_7_GATE_E_TIMING.md`.
+**EOS-S06 MD-PR-S073:** Packet 8 freeze on 2026-09-13 remains dated settlement/isolation history. Deployed application SHA `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3` is not redeployed. Live `s06-eval-v3` 35/35 PASSED, hash `e433882ed1a55c4896aaf9fdf524257b870a4e2a450d8ab614bc6763b110035c`. S05A/S05B remain PASSED. Providers remain INACTIVE. `EOS_S06_ACCEPTANCE.md` was not created. Claude was not run. EOS-S07 is not started. Production remains unauthorised. Control records: `docs/control/eos-s06/MD_PR_S073_PACKET_8_FINAL_REPORT.md`, `docs/control/eos-s06/MD_PR_S073_PACKET_7_GATE_E_TIMING.md`.
+
+**EOS-S06 MD-PR-S075:** In progress on 2026-09-13. Sole current execution authority is `docs/control/eos-s06/MD_PR_S075_EOS_S06_V2_TABLE_IDENTITY_COMPILER_AND_FEASIBILITY_TRUTH.md`, SHA-256 `faae89b7bf10ecbe1884c4b375b35ca65b9f516fb3bd2ec89863c3c99d5081c0`. Sections 1–4 passed. Section 2 forensic finding remains valid from the committed package evidence (`docs/control/eos-s06/MD_PR_S075_FORENSIC_TABLE_NAMESPACE_FINDING.md`); the temporary read-only Railway SSH tunnel on `127.0.0.1:55432` was closed after capture. 2026-09-13 reconfirm: port `55432` has no listener; no `ssh -L` remains; local Homebrew `postgresql@16` is a pre-existing machine service and was not killed. Section 2 is not repeated. Later gates use repository tests and governed live UI journeys only. Direct database access is not a substitute for required product workflows. Event OS is not redeployed. Control Tower is not deployed. Claude is not run. Verdict remains **NOT READY FOR CLAUDE**.
 
 Historical sentence “Implementation of EOS-S04A–F is not authorised as a product slice” applied before CEO S04A–S04F implementation authority. For S04A–S04F that sentence is superseded. The EOS-S04E and EOS-S04F controlled slice pack filenames still contain `DRAFT`. Current programme status for S04E is `ACCEPTED`. Current programme status for S04F is `ACCEPTED`. Historical `IN_REVIEW / NOT READY` on 2026-09-08 remains dated history.
 

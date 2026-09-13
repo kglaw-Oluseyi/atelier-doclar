@@ -1,15 +1,27 @@
 # EOS-S06 Implementation Ledger
 
-**Prompt Control ID:** MD-PR-S073 (parent MD-PR-S072)
-**Status:** IMPLEMENTED — NOT ACCEPTED — READY FOR INDEPENDENT HOLDOUT AND CLAUDE
+**Prompt Control ID:** MD-PR-S075 (parents MD-PR-S073 / MD-PR-S072)
+**Status:** IMPLEMENTED — NOT ACCEPTED — NOT READY FOR CLAUDE
 **Required S072 baseline:** `844f107fc70e1eaa8995e0c7c49c0c42d52b9dd1`
 **Deployed application SHA:** `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3`
 **Final repository/docs SHA:** `3f5c09b37d683ad7192660a33f596b7e72d75583` (documentation/test only; not redeployed)
-**Authority:** MD-PR-S073 is the sole execution authority for live command settlement and process isolation. MD-PR-S072 remains the V2 seating-truth parent. S070/S071 artefacts remain readable as incompatible history.
+**Authority:** MD-PR-S075 is the sole current execution authority for table identity, compiler and feasibility truth. MD-PR-S073 remains the dated settlement/isolation freeze. MD-PR-S072 remains the V2 seating-truth parent. S070/S071 artefacts remain readable as incompatible history.
 
 This ledger does not accept EOS-S06. It does not authorise real data or production operations. It does not create `EOS_S06_ACCEPTANCE.md`.
 
-Historical S072 handoff status **NOT READY FOR CLAUDE** (live publication/replay and live `s06-eval-v2` persist unfinished on `0d43a9e`) remains dated history. It is superseded for current readiness by MD-PR-S073 Packet 8 on `1ce6e0f`.
+Historical S072 handoff status **NOT READY FOR CLAUDE** remains dated history. MD-PR-S073 Packet 8 **READY FOR INDEPENDENT HOLDOUT AND CLAUDE** remains dated settlement history. Current readiness is **NOT READY FOR CLAUDE** until MD-PR-S075 Sections 1–14 complete.
+
+## MD-PR-S075 progress
+
+| Item | Value |
+|---|---|
+| Authority SHA-256 | `faae89b7bf10ecbe1884c4b375b35ca65b9f516fb3bd2ec89863c3c99d5081c0` |
+| Deployed application SHA | `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3` — not redeployed |
+| Sections 1–4 | PASS |
+| Section 2 finding | `docs/control/eos-s06/MD_PR_S075_FORENSIC_TABLE_NAMESPACE_FINDING.md` — remains valid |
+| Temporary diagnostic tunnel | Closed. Port `55432` none. No `ssh -L`. Homebrew `postgresql@16` left running as a pre-existing machine service. No reconnect unless a later mandated gate genuinely requires read-only verification. |
+| Subsequent proof | Repository tests and governed live UI journeys only. Direct database access is not a substitute for required product workflows. |
+| Current verdict | NOT READY FOR CLAUDE |
 
 ## Freeze
 
@@ -32,7 +44,7 @@ Historical S072 handoff status **NOT READY FOR CLAUDE** (live publication/replay
 
 ## Sealed holdout
 
-Not accessed, created or inferred. Packet 8 authorises independent holdout and Claude to begin; Cursor has not run Claude.
+Not accessed, created or inferred. Packet 8 previously authorised independent holdout and Claude; MD-PR-S075 now blocks that start. Cursor has not run Claude.
 
 ## Successor
 

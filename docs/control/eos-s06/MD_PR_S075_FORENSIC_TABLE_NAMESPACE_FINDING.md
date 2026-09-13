@@ -4,6 +4,8 @@
 **Authority SHA-256:** `faae89b7bf10ecbe1884c4b375b35ca65b9f516fb3bd2ec89863c3c99d5081c0`
 **Deployed application SHA:** `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3`
 **Read method:** SELECT / `BEGIN READ ONLY` against the live Event OS Postgres. No mutation, freeze, launch or audit write.
+**Temporary diagnostic tunnel:** A local SSH forward to Railway Postgres on `127.0.0.1:55432` was used only for this Section 2 read. The required package evidence was captured before the tunnel ended. The tunnel was temporary, read-only diagnostic infrastructure. Section 2’s finding remains valid. Section 2 is not repeated. No redeployment, rollback or reconnect is authorised solely because the tunnel ended.
+**Tunnel closure (2026-09-13):** Port `55432` has no listener. No `ssh -L` or Railway SSH process remains. Local Homebrew `postgresql@16` is a pre-existing machine service and was not treated as the S075 tunnel. Subsequent S075 proof uses repository tests and governed live UI journeys only. Direct database access is not a substitute for required product workflows.
 **Canonical token function:** `exactHash` from `packages/shared-platform/src/eec-hash.ts`, invoked as `exactHash({ table: tableObjectId }).slice(0, 32)` — the exact position expression in `seating-v2-package.ts`. The hash algorithm was not retyped.
 
 ## Baseline confirmation (Section 1.2)

@@ -561,3 +561,16 @@ RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S037`. Canonical corpus p
 | EV-EOS-S06-S073-TIMING | DOCUMENT | Gate E five-sample classification | `docs/control/eos-s06/MD_PR_S073_PACKET_7_GATE_E_TIMING.md` |
 | EV-EOS-S06-S073-P8 | DOCUMENT | Packet 8 freeze and 8.3 report | `docs/control/eos-s06/MD_PR_S073_PACKET_8_FINAL_REPORT.md` |
 
+## EOS-S06 MD-PR-S075
+
+**Prompt Control ID:** `MD-PR-S075`
+**Milestone:** `EOS-S06` — not accepted — NOT READY FOR CLAUDE
+
+`MD-PR-S075` proves and corrects the V2 table-identity, compiler and feasibility-truth defects. Deployed application SHA remains `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3` and is not redeployed for documentation/test commits. Section 2 forensic package evidence was captured before the temporary read-only Railway SSH tunnel on `127.0.0.1:55432` ended. Tunnel closure reconfirmed 2026-09-13: port `55432` none; no `ssh -L`; Homebrew `postgresql@16` left as a pre-existing machine service. Section 2 is not repeated. Subsequent proof uses repository tests and governed live UI journeys. Direct database access is not a substitute for required product workflows. Claude was not run. EOS-S07 was not started. `EOS_S06_ACCEPTANCE.md` was not created.
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-EOS-S06-S075-AUTH | DOCUMENT | Sole MD-PR-S075 execution authority | `docs/control/eos-s06/MD_PR_S075_EOS_S06_V2_TABLE_IDENTITY_COMPILER_AND_FEASIBILITY_TRUTH.md` |
+| EV-EOS-S06-S075-FINDING | DOCUMENT | Durable `bad17b83dc9f` table-namespace mismatch and tunnel closure | `docs/control/eos-s06/MD_PR_S075_FORENSIC_TABLE_NAMESPACE_FINDING.md` |
+| EV-EOS-S06-S075-ADR | DOCUMENT | Canonical table-token compiler | `docs/control/eos-s06/ADR_EOS_S06_V2_TABLE_TOKEN_COMPILER.md` |
+

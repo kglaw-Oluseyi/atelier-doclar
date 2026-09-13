@@ -243,9 +243,8 @@ describe("S075 corrected compiler contract", () => {
     prepareSurface(service, store);
     const guest = attendingGuest(service, "Miss", "s075-missing-g");
     const v2 = service.seatingV2Commands();
-    await activate(v2, requireTable([guest.id], MISSING_TABLE), "s075-missing");
     await assert.rejects(
-      () => v2.freezePackage(planner(), envelope(people.assignPlanner, "s075-missing-freeze"), { seed: "s075-missing" }),
+      () => activate(v2, requireTable([guest.id], MISSING_TABLE), "s075-missing"),
       (error: unknown) => error instanceof PlatformError && error.code === "VALIDATION_FAILED",
     );
   });
@@ -294,14 +293,13 @@ describe("S075 corrected compiler contract", () => {
     prepareSurface(service, store);
     const guest = attendingGuest(service, "Rmiss", "s075-resv-miss-g");
     const v2 = service.seatingV2Commands();
-    const draft = await v2.createReservation(planner(), envelope(people.assignPlanner, "s075-resv-miss-create"), {
-      exact: 1,
-      eligibleMemberIds: [guest.id],
-      targets: [{ type: "TABLE", idOrCode: MISSING_TABLE }],
-    });
-    await v2.activateReservation(director(), envelope(people.assignDirector, "s075-resv-miss-act"), { editionId: draft.value.id });
     await assert.rejects(
-      () => v2.freezePackage(planner(), envelope(people.assignPlanner, "s075-resv-miss-freeze"), { seed: "s075-resv-miss" }),
+      () =>
+        v2.createReservation(planner(), envelope(people.assignPlanner, "s075-resv-miss-create"), {
+          exact: 1,
+          eligibleMemberIds: [guest.id],
+          targets: [{ type: "TABLE", idOrCode: MISSING_TABLE }],
+        }),
       (error: unknown) => error instanceof PlatformError && error.code === "VALIDATION_FAILED",
     );
   });

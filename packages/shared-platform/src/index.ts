@@ -1030,6 +1030,7 @@ export {
   seatingV2ManualDecisionLogHash,
 } from "./seating-v2-hash.js";
 export { compileSeatingV2Request, assertSeatingV2CompiledRequest } from "./seating-v2-compiler.js";
+export { assertSeatingV2RuleAuthoring, seatingV2RuleSemanticSentence } from "./seating-v2-authoring.js";
 export { validateSeatingV2 } from "./seating-v2-validator.js";
 export { MemorySeatingRepository, MemorySeatingStore } from "./memory-seating-store.js";
 export { PostgresSeatingRepository } from "./postgres-seating-store.js";

@@ -183,7 +183,9 @@ function compileRule(
       publicMessage: "A governing seating rule could not be compiled.",
     });
   }
-  const tableTargets = rule.content.targets.filter((item) => item.type === "TABLE");
+  const tableTargets = TABLE_TARGET_KINDS.has(rule.content.kind)
+    ? rule.content.targets.filter((item) => item.type === "TABLE")
+    : [];
   if (TABLE_TARGET_KINDS.has(rule.content.kind) && tableTargets.length !== 1) {
     throw new PlatformError("VALIDATION_FAILED", "table-targeted rule requires exactly one usable table", {
       publicMessage: "A governing seating rule targets a table that is not usable in the current published layout.",

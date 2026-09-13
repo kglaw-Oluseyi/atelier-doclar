@@ -30,19 +30,25 @@ function applyControlValue(control: Element | null, value: string): void {
     }
     if (control.type === "file" || control.type === "password") return;
     control.value = value;
+    control.dispatchEvent(new Event("input", { bubbles: true }));
+    control.dispatchEvent(new Event("change", { bubbles: true }));
     return;
   }
   if (control instanceof HTMLSelectElement) {
     if (control.multiple) {
       const selected = new Set(value.split(",").filter(Boolean));
       for (const option of Array.from(control.options)) option.selected = selected.has(option.value);
-      return;
+    } else {
+      control.value = value;
     }
-    control.value = value;
+    control.dispatchEvent(new Event("input", { bubbles: true }));
+    control.dispatchEvent(new Event("change", { bubbles: true }));
     return;
   }
   if (control instanceof HTMLTextAreaElement) {
     control.value = value;
+    control.dispatchEvent(new Event("input", { bubbles: true }));
+    control.dispatchEvent(new Event("change", { bubbles: true }));
   }
 }
 

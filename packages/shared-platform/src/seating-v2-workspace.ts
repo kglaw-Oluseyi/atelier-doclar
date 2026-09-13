@@ -6,6 +6,7 @@ import {
   seatingV2EvalReadiness,
 } from "./seating-evaluation-v2-schemas.js";
 import { snapshotGuestCohortAdapter, snapshotLayoutAdapter } from "./seating-adapters.js";
+import { seatingV2RuleSemanticSentence } from "./seating-v2-authoring.js";
 import { SEATING_V2_VALIDATOR_VERSION } from "./seating-v2-schemas.js";
 import type { SeatingDisclosure, SeatingWorkspaceView } from "./seating-workspace.js";
 import type { SeatingV2State } from "./seating-v2-state.js";
@@ -169,12 +170,23 @@ export function buildSeatingV2Workspace(
         .map((target) => tables.find((table) => table.id === target.targetIdOrCode)?.label ?? target.targetIdOrCode);
       const subjectCopy = subjectLabels.length ? subjectLabels.join(" and ") : "named subjects";
       const targetCopy = targetLabels.length ? ` at ${targetLabels.join(", ")}` : "";
+      const sentence = seatingV2RuleSemanticSentence({
+        kind: item.kind,
+        subjectLabels,
+        tableLabels: targetLabels,
+      });
+      const authority = item.activatedByPersonId
+        ? "Activated by an authorised checker"
+        : item.createdByPersonId
+          ? "Drafted by the planner"
+          : "No author recorded";
+      const decidedAt = item.activatedAt ?? item.createdAt;
       return {
         id: item.id,
         kind: item.hardness,
         predicateType: item.kind,
         status: item.lifecycle,
-        preview: `${item.kind.replaceAll("_", " ").toLowerCase()}: ${subjectCopy}${targetCopy} · ${item.hardness} · ${item.lifecycle}`,
+        preview: `${item.kind.replaceAll("_", " ")} · ${item.scope} · ${subjectCopy}${targetCopy} · ${item.hardness} · ${item.lifecycle} · ${authority} · ${decidedAt} · ${sentence} · ${item.contentHash.slice(0, 12)}`,
         reviewDomain: item.specialistDomain === "NONE" ? undefined : item.specialistDomain,
       };
     }),

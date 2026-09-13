@@ -5,6 +5,7 @@ import { AppShell } from "../../../../../components/shell";
 import { ActionResultBanner } from "../../../../../components/action-result-banner";
 import { IdempotencyField } from "../../../../../components/atelier-pending-submit";
 import { ProtectionMutationForm } from "../../../../../components/protection-mutation-form";
+import { SeatingRuleAuthoringFields } from "../../../../../components/seating-rule-authoring-fields";
 import { loadPresentedActionResult } from "../../../../../server/action-flash";
 import { guardedActor } from "../../../../../server/guard";
 import { getRuntime } from "../../../../../server/runtime";
@@ -371,40 +372,7 @@ export default async function EventSeatingPage({
                   <option value="INFORMATION">Information only</option>
                 </select>
               </label>
-              <label>
-                Predicate
-                <select name="predicateType" required>
-                  <option value="KEEP_TOGETHER">Keep together</option>
-                  <option value="KEEP_APART">Keep apart</option>
-                  <option value="REQUIRE_TABLE">Require table</option>
-                  <option value="PREFER_TOGETHER">Prefer together</option>
-                </select>
-              </label>
-              <label>
-                First guest
-                <select name="guestIdA" required>
-                  {workspace.guests.map((guest) => (
-                    <option key={guest.id} value={guest.id}>{guest.label}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Second guest
-                <select name="guestIdB" required>
-                  {workspace.guests.map((guest) => (
-                    <option key={`b-${guest.id}`} value={guest.id}>{guest.label}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Table
-                <select name="tableId">
-                  <option value="">Any</option>
-                  {workspace.tables.map((table) => (
-                    <option key={table.id} value={table.id}>{table.label}</option>
-                  ))}
-                </select>
-              </label>
+              <SeatingRuleAuthoringFields guests={workspace.guests} tables={workspace.tables} />
               <label>
                 Weight
                 <input name="weight" type="number" min={1} defaultValue={1} />

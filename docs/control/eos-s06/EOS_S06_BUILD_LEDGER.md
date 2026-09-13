@@ -106,3 +106,10 @@ Live production verification: passed on deployed application SHA
 S073 did not introduce a queue/worker. Launch still completes solver (11–17ms), independent validation (~0–1ms) and terminal persistence before 303. Live POST maxima: launch 2931ms, unrelated mutation 1680ms. No transaction exceeded 2s.
 
 S05A/S05B remain PASSED. Providers remain INACTIVE. `productionAuthorised` remains false. Control Tower was not deployed. EOS-S06 is not accepted. Claude is not run under S073. EOS-S07 is not started.
+
+## MD-PR-S075 first-run failures
+
+| Gate | Class | Evidence | Correction | Retry |
+|---|---|---|---|---|
+| Section 2 diagnostic tunnel | Infrastructure | Temporary read-only Railway SSH forward `127.0.0.1:55432` ended after package evidence was captured | Record closure; do not reconnect; do not rerun Section 2 | Finding remains valid. 2026-09-13: port `55432` none; no `ssh -L`; Homebrew `postgresql@16` left as a pre-existing machine service |
+| Playwright `s075-rule-form` | Test targeting | `getByLabel("Table")` also matched the reservation Table selector; `getByText("Additional guest", { exact: true })` and `getByRole("combobox", { name: "Guest" })` were ambiguous | Name-attribute locators for `guestIdA`/`guestIdB`/`tableId` | PASS after locator correction |

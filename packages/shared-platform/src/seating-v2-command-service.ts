@@ -8,6 +8,8 @@ import { seatingDisclosureForRole } from "./seating-workspace.js";
 import { buildSeatingV2Workspace } from "./seating-v2-workspace.js";
 import { emptySeatingV2State, SEATING_V2_WORKSPACE_COLLECTIONS, type SeatingV2State } from "./seating-v2-state.js";
 import type { SeatingWorkspaceView } from "./seating-workspace.js";
+import { snapshotLayoutAdapter } from "./seating-adapters.js";
+import { assertSeatingV2RuleAuthoring } from "./seating-v2-authoring.js";
 import { compileSeatingV2Request } from "./seating-v2-compiler.js";
 import {
   seatingV2AssignmentsHash,
@@ -233,6 +235,10 @@ export class SeatingV2CommandService {
     content: SeatingV2RuleContent,
   ): Promise<SeatingV2CommandResult<SeatingV2RuleEdition>> {
     return this.mutate(actor, envelope, "seating.constraint.manage", "seatingV2.createRule", async (tx) => {
+      const publishedTableIds = new Set(
+        snapshotLayoutAdapter(this.deps.snapshot(), envelope.organisationId, envelope.eventId).tables.map((table) => table.objectId),
+      );
+      assertSeatingV2RuleAuthoring(content, publishedTableIds);
       const now = nowOf(actor);
       const rule: SeatingV2Rule = {
         id: randomUUID(),
@@ -363,6 +369,17 @@ export class SeatingV2CommandService {
     },
   ): Promise<SeatingV2CommandResult<SeatingV2ReservationEdition>> {
     return this.mutate(actor, envelope, "seating.reservation.manage", "seatingV2.createReservation", async (tx) => {
+      const publishedTableIds = new Set(
+        snapshotLayoutAdapter(this.deps.snapshot(), envelope.organisationId, envelope.eventId).tables.map((table) => table.objectId),
+      );
+      for (const target of input.targets.filter((item) => item.type === "TABLE")) {
+        if (!publishedTableIds.has(target.idOrCode)) {
+          throw new PlatformError("VALIDATION_FAILED", "reservation table is not in the current published layout", {
+            field: "tableId",
+            publicMessage: "That table is not in the current published layout.",
+          });
+        }
+      }
       const now = nowOf(actor);
       const reservation: SeatingV2Reservation = {
         id: randomUUID(),
