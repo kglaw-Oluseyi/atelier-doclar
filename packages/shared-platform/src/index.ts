@@ -1024,6 +1024,11 @@ export {
   SEATING_V2_POSTGRES_SCHEMA,
   SEATING_V2_REPLAY_IDENTITY_POSTGRES_SCHEMA,
 } from "./seating-v2-postgres-schema.js";
+export {
+  seatingV2RequestedRunReuseIdentity,
+  seatingV2RunReuseIdentitiesEqual,
+  findSeatingV2ReusableRun,
+} from "./seating-v2-run-identity.js";
 export { emptySeatingV2State, SEATING_V2_COLLECTIONS, SEATING_V2_PURGE_CONFIRMATION } from "./seating-v2-state.js";
 export type { SeatingV2Repository, SeatingV2Transaction } from "./seating-v2-repository.js";
 export { MemorySeatingV2Repository, MemorySeatingV2Store } from "./memory-seating-v2-store.js";

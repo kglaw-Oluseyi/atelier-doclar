@@ -573,4 +573,5 @@ RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S037`. Canonical corpus p
 | EV-EOS-S06-S075-AUTH | DOCUMENT | Sole MD-PR-S075 execution authority | `docs/control/eos-s06/MD_PR_S075_EOS_S06_V2_TABLE_IDENTITY_COMPILER_AND_FEASIBILITY_TRUTH.md` |
 | EV-EOS-S06-S075-FINDING | DOCUMENT | Durable `bad17b83dc9f` table-namespace mismatch and tunnel closure | `docs/control/eos-s06/MD_PR_S075_FORENSIC_TABLE_NAMESPACE_FINDING.md` |
 | EV-EOS-S06-S075-ADR | DOCUMENT | Canonical table-token compiler | `docs/control/eos-s06/ADR_EOS_S06_V2_TABLE_TOKEN_COMPILER.md` |
+| EV-EOS-S06-S075-REPLAY-ADR | DOCUMENT | Full run-reuse identity and additive migration 009 | `docs/control/eos-s06/ADR_EOS_S06_V2_RUN_REUSE_IDENTITY.md` |
 

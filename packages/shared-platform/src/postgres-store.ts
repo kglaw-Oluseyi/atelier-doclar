@@ -708,6 +708,7 @@ export class MemoryPlatformPg implements PgTransactor {
     }
     if (sql.startsWith("CREATE TABLE")) return { rows: [], rowCount: 0 };
     if (sql.startsWith("CREATE INDEX") || sql.startsWith("CREATE UNIQUE INDEX")) return { rows: [], rowCount: 0 };
+    if (sql.startsWith("ALTER TABLE") || sql.startsWith("DROP INDEX")) return { rows: [], rowCount: 0 };
     const seatingHandled = this.execSeatingSql<T>(sql, values);
     if (seatingHandled) return seatingHandled;
     const riskHandled = this.execRiskSql<T>(sql, values);
@@ -891,14 +892,55 @@ export class MemoryPlatformPg implements PgTransactor {
       throw new Error("synthetic audit failure");
     }
     if (sql.startsWith("INSERT INTO")) {
-      const columnsMatch = sql.match(/INSERT INTO [a-z_]+ \(([^)]+)\)/);
+      const columnsMatch = sql.match(/INSERT INTO [a-z0-9_]+ \(([^)]+)\)/);
       const columns = (columnsMatch?.[1] ?? "").split(",").map((item) => item.trim()).filter(Boolean);
       const cols: Record<string, unknown> = {};
       columns.forEach((column, index) => {
         cols[column] = values[index];
       });
-      if (this.seatingRows.some((row) => row.table === table && String(row.cols.id) === String(cols.id))) {
+      if (
+        cols.id != null &&
+        this.seatingRows.some((row) => row.table === table && row.cols.id != null && String(row.cols.id) === String(cols.id))
+      ) {
         throw new Error("unique_violation");
+      }
+      if (
+        table === "seating_v2_idempotency_receipts" &&
+        this.seatingRows.some(
+          (row) =>
+            row.table === table &&
+            String(row.cols.organisation_id) === String(cols.organisation_id) &&
+            String(row.cols.event_id) === String(cols.event_id) &&
+            String(row.cols.action) === String(cols.action) &&
+            String(row.cols.idempotency_key) === String(cols.idempotency_key),
+        )
+      ) {
+        throw new Error("unique_violation");
+      }
+      if (table === "seating_v2_runs" && ["FEASIBLE", "INFEASIBLE", "QUEUED", "RUNNING"].includes(String(cols.status))) {
+        const replayKey = (item: Record<string, unknown>) =>
+          [
+            item.organisation_id,
+            item.event_id,
+            item.package_hash,
+            item.semantic_hash,
+            item.compiled_request_hash,
+            item.compiler_version,
+            item.solver_version,
+            item.solver_config_hash,
+            item.validator_version,
+            item.deterministic_seed,
+          ].join("|");
+        if (
+          this.seatingRows.some(
+            (row) =>
+              row.table === table &&
+              ["FEASIBLE", "INFEASIBLE", "QUEUED", "RUNNING"].includes(String(row.cols.status)) &&
+              replayKey(row.cols) === replayKey(cols),
+          )
+        ) {
+          throw new Error("unique_violation");
+        }
       }
       if (cols.current === true) {
         for (const row of this.seatingRows) {
@@ -942,6 +984,20 @@ export class MemoryPlatformPg implements PgTransactor {
         count += 1;
       }
       return { rows: [], rowCount: count };
+    }
+    if (sql.startsWith("UPDATE") && sql.includes("WHERE id = $1 AND organisation_id = $2 AND event_id = $3")) {
+      const row = this.seatingRows.find((item) => item.table === table && String(item.cols.id) === String(values[0]));
+      if (!row) return { rows: [], rowCount: 0 };
+      if (String(row.cols.organisation_id) !== String(values[1])) return { rows: [], rowCount: 0 };
+      if (row.cols.event_id && String(row.cols.event_id) !== String(values[2])) return { rows: [], rowCount: 0 };
+      const assignments = [...sql.matchAll(/([a-z_]+) = \$(\d+)/g)];
+      for (const assignment of assignments) {
+        const column = assignment[1];
+        const index = Number(assignment[2]) - 1;
+        if (!column || column === "id" || column === "organisation_id" || column === "event_id") continue;
+        row.cols[column] = values[index];
+      }
+      return { rows: [{ ...row.cols }] as T[], rowCount: 1 };
     }
     if (sql.startsWith("UPDATE")) {
       const id = String(values[0]);

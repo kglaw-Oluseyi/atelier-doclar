@@ -317,6 +317,29 @@ export class MemorySeatingV2Transaction implements SeatingV2Transaction {
     ) {
       throw new PlatformError("VALIDATION_FAILED", "occupied seating v2 plan position");
     }
+    if (collection === "runs" && ["FEASIBLE", "INFEASIBLE", "QUEUED", "RUNNING"].includes(String(next.status))) {
+      const replayKey = (item: Identified) =>
+        [
+          item.organisationId,
+          item.eventId,
+          (item as { packageHash?: string }).packageHash,
+          (item as { semanticHash?: string }).semanticHash,
+          (item as { compiledRequestHash?: string }).compiledRequestHash,
+          (item as { compilerVersion?: string }).compilerVersion,
+          (item as { solverVersion?: string }).solverVersion,
+          (item as { solverConfigHash?: string }).solverConfigHash,
+          (item as { validatorVersion?: string }).validatorVersion,
+          (item as { deterministicSeed?: string }).deterministicSeed,
+        ].join("|");
+      if (
+        rows.some(
+          (item) =>
+            ["FEASIBLE", "INFEASIBLE", "QUEUED", "RUNNING"].includes(String(item.status)) && replayKey(item) === replayKey(next),
+        )
+      ) {
+        throw new PlatformError("VALIDATION_FAILED", "duplicate seating v2 reusable run identity");
+      }
+    }
   }
 }
 

@@ -10,7 +10,7 @@ import { emptySeatingV2State, SEATING_V2_WORKSPACE_COLLECTIONS, type SeatingV2St
 import type { SeatingWorkspaceView } from "./seating-workspace.js";
 import { snapshotLayoutAdapter } from "./seating-adapters.js";
 import { assertSeatingV2RuleAuthoring } from "./seating-v2-authoring.js";
-import { compileSeatingV2Request } from "./seating-v2-compiler.js";
+import { assertSeatingV2CompiledRequest, compileSeatingV2Request } from "./seating-v2-compiler.js";
 import {
   seatingV2AssignmentsHash,
   seatingV2ManualDecisionLogHash,
@@ -28,6 +28,12 @@ import {
   type SeatingV2BuiltPackage,
 } from "./seating-v2-package.js";
 import type { SeatingV2Repository, SeatingV2Scope, SeatingV2Transaction } from "./seating-v2-repository.js";
+import {
+  findSeatingV2ReusableRun,
+  seatingV2PackageIdentityIsBound,
+  seatingV2RequestedRunReuseIdentity,
+  seatingV2RunUsesCurrentCompiler,
+} from "./seating-v2-run-identity.js";
 import {
   SEATING_V2_SCHEMA_VERSION,
   SEATING_V2_SOLVER_VERSION,
@@ -725,24 +731,20 @@ export class SeatingV2CommandService {
       }
       const pkg = await tx.load<SeatingV2InputPackage>("inputPackages", input.packageId, envelope);
       if (!pkg) throw new PlatformError("NOT_FOUND", "input package was not found");
-      const existing = (await tx.list<SeatingV2Run>("runs", envelope)).find(
-        (item) =>
-          item.packageHash === pkg.contentHash &&
-          item.solverVersion === SEATING_V2_SOLVER_VERSION &&
-          item.solverConfigHash === pkg.solverConfigHash &&
-          item.deterministicSeed === pkg.deterministicSeed,
-      );
-      if (existing) return { kind: "replay" as const, value: existing };
       const compiled = await this.requireCompiled(tx, envelope, pkg.id);
       if (
         !compiled.request ||
         typeof compiled.request !== "object" ||
         !Array.isArray(compiled.request.guests) ||
-        !Array.isArray(compiled.request.positions)
+        !Array.isArray(compiled.request.positions) ||
+        !seatingV2PackageIdentityIsBound(pkg, compiled.compiledRequestHash)
       ) {
         throw new PlatformError("VALIDATION_FAILED", "compiled solver request was not readable");
       }
-      return { kind: "execute" as const, pkg, compiled };
+      const identity = seatingV2RequestedRunReuseIdentity(pkg, compiled.compiledRequestHash);
+      const existing = findSeatingV2ReusableRun(await tx.list<SeatingV2Run>("runs", envelope), identity);
+      if (existing) return { kind: "replay" as const, value: existing.run };
+      return { kind: "execute" as const, pkg, compiled, identity };
     });
     if (prepared.kind === "replay") {
       return this.mutate(actor, envelope, "seating.run.execute", "seatingV2.launchRun", async () => ({
@@ -783,24 +785,22 @@ export class SeatingV2CommandService {
     const pkg = prepared.pkg;
     const now = nowOf(actor);
     return this.mutate(actor, envelope, "seating.run.execute", "seatingV2.launchRun", async (tx) => {
-      const existing = (await tx.list<SeatingV2Run>("runs", envelope)).find(
-        (item) =>
-          item.packageHash === pkg.contentHash &&
-          item.solverVersion === SEATING_V2_SOLVER_VERSION &&
-          item.solverConfigHash === pkg.solverConfigHash &&
-          item.deterministicSeed === pkg.deterministicSeed,
-      );
-      if (existing) return { replayed: true, value: existing };
+      const existing = findSeatingV2ReusableRun(await tx.list<SeatingV2Run>("runs", envelope), prepared.identity);
+      if (existing) return { replayed: true, value: existing.run };
       const run: SeatingV2Run = {
         id: randomUUID(),
         organisationId: envelope.organisationId,
         eventId: envelope.eventId,
         schemaVersion: SEATING_V2_SCHEMA_VERSION,
         packageId: pkg.id,
-        packageHash: pkg.contentHash,
-        solverVersion: SEATING_V2_SOLVER_VERSION,
-        solverConfigHash: pkg.solverConfigHash,
-        deterministicSeed: pkg.deterministicSeed,
+        packageHash: prepared.identity.packageContentHash,
+        semanticHash: prepared.identity.semanticHash,
+        compiledRequestHash: prepared.identity.compiledRequestHash,
+        compilerVersion: prepared.identity.compilerVersion,
+        solverVersion: prepared.identity.solverVersion,
+        solverConfigHash: prepared.identity.solverConfigurationHash,
+        validatorVersion: prepared.identity.validatorVersion,
+        deterministicSeed: prepared.identity.seed,
         status: solved.solverClaim === "TIMED_OUT" ? "TIMED_OUT" : report.verdict,
         solverClaim: solved.solverClaim,
         rawOutputHash: solved.rawOutputHash,
@@ -910,7 +910,19 @@ export class SeatingV2CommandService {
       }
       const pkg = await tx.load<SeatingV2InputPackage>("inputPackages", run.packageId, envelope);
       if (!pkg) throw new PlatformError("ADOPTION_MISMATCH", "package missing");
+      if (!seatingV2RunUsesCurrentCompiler(run, pkg)) {
+        throw new PlatformError("ADOPTION_MISMATCH", "historic compiler result cannot be adopted", {
+          publicMessage: "This seating run belongs to an earlier compiler and cannot be adopted.",
+        });
+      }
       const compiled = await this.requireCompiled(tx, envelope, run.packageId);
+      try {
+        assertSeatingV2CompiledRequest(compiled.request);
+      } catch {
+        throw new PlatformError("ADOPTION_MISMATCH", "compiled request is not current-compiler compatible", {
+          publicMessage: "This seating run belongs to an earlier compiler and cannot be adopted.",
+        });
+      }
       const assignments = (await tx.list<SeatingV2PlanAssignment & { runId?: string; guestToken?: string }>(
         "runAssignments",
         envelope,
@@ -1493,14 +1505,17 @@ export class SeatingV2CommandService {
     tx: SeatingV2Transaction,
     envelope: SeatingV2Scope,
     packageId: string,
-  ): Promise<{ request: ReturnType<typeof compileSeatingV2Request>["request"] }> {
+  ): Promise<{
+    request: ReturnType<typeof compileSeatingV2Request>["request"];
+    compiledRequestHash: string;
+  }> {
     const compiled = (await tx.list<SeatingV2CompiledRequestRecord>("compiledRequests", envelope)).find(
       (item) => item.packageId === packageId,
     );
     if (!compiled) throw new PlatformError("NOT_FOUND", "compiled request was not found");
     const raw = compiled.compiledRequestJson;
     const request = (typeof raw === "string" ? JSON.parse(raw) : raw) as ReturnType<typeof compileSeatingV2Request>["request"];
-    return { request };
+    return { request, compiledRequestHash: compiled.compiledRequestHash };
   }
 
   private revalidate(
