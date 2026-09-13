@@ -500,4 +500,44 @@ describe("EOS-S05 Milestone 3 assurance", () => {
       objects: workspace.objects,
     }));
   });
+
+  it("treats a current-hash validation as governing even when an earlier revision has a later timestamp", () => {
+    const { service } = seeded();
+    const layout = blankLayout(service, "clock inversion");
+    const withTable = service.applyLayoutCommand(planner(), {
+      ...cas(layout),
+      reason: "Add table before successor",
+      command: {
+        kind: "CREATE_OBJECT",
+        objectType: "TABLE",
+        label: "Clock table",
+        geometry: { kind: "RECTANGLE", xMm: 1200, yMm: 1200, widthMm: 1800, heightMm: 1800 },
+        subtype: { shape: "RECTANGLE", declaredCapacity: 8 },
+      },
+    });
+    service.runLayoutValidation(
+      { ...planner(), now: "2026-09-20T00:00:00.000Z" },
+      { ...cas(withTable), reason: "Later-timestamp first run" },
+    );
+    const successor = service.applyLayoutCommand(planner(), {
+      ...cas(withTable),
+      reason: "Successor revision",
+      command: {
+        kind: "CREATE_OBJECT",
+        objectType: "ZONE",
+        label: "Successor zone",
+        geometry: { kind: "RECTANGLE", xMm: 6000, yMm: 1200, widthMm: 2000, heightMm: 2000 },
+        subtype: { category: "DINING" },
+      },
+    });
+    const beforeSuccessor = service.getLayoutSetupWorkspace(planner(), FIXTURE_IDS.orgMaison, FIXTURE_IDS.eventAlphaOne, layout.id);
+    assert.notEqual(beforeSuccessor.assurance.latestRun?.contentHash, beforeSuccessor.layout.contentHash);
+    service.runLayoutValidation(
+      { ...planner(), now: "2026-09-01T00:00:00.000Z" },
+      { ...cas(successor), reason: "Earlier-timestamp successor run" },
+    );
+    const afterSuccessor = service.getLayoutSetupWorkspace(planner(), FIXTURE_IDS.orgMaison, FIXTURE_IDS.eventAlphaOne, layout.id);
+    assert.equal(afterSuccessor.assurance.latestRun?.contentHash, afterSuccessor.layout.contentHash);
+    assert.equal(afterSuccessor.layout.contentHash, successor.contentHash);
+  });
 });

@@ -33,7 +33,7 @@ import {
   redactRestrictedText,
   restrictedOriginalLabels,
   runPublicationBlocked,
-  selectLatestValidationRun,
+  selectCurrentOrLatestValidationRun,
   validationCounts,
   type LayoutFindingView,
   type ProjectedLayoutExportJob,
@@ -196,7 +196,7 @@ export function buildLayoutAssuranceWorkspace(
   const objects = currentLayoutObjects(snap, layout);
   const revealSensitive = Boolean(options.revealSensitive);
   const now = options.now ?? layout.updatedAt;
-  const latestRun = selectLatestValidationRun(snap.layoutValidationRuns, layout.id);
+  const latestRun = selectCurrentOrLatestValidationRun(snap.layoutValidationRuns, layout.id, layout.contentHash);
   const findings = latestRun ? snap.layoutValidationFindings.filter((item) => item.runId === latestRun.id) : [];
   const counts = validationCounts(findings);
   const labels = revealSensitive ? [] : layoutRestrictedLabels(snap, layout.id);

@@ -1,6 +1,6 @@
 import { expect, type Browser, type Page } from "@playwright/test";
 import { loginAs, openStaffContext, selectOptionContaining } from "./login";
-import { expectFreshActionSuccess } from "./s060-helpers";
+import { expectFreshActionSuccess, submitScopedSeatingMutation } from "./s060-helpers";
 
 export const ALPHA_ONE_SEATING = "/app/events/00000000-0000-4000-8000-000000000021/seating";
 export const ALPHA_ONE_LAYOUTS = "/app/events/00000000-0000-4000-8000-000000000021/layouts";
@@ -78,4 +78,34 @@ export async function loginPlannerOnSeating(page: Page) {
   await loginAs(page, "planner");
   await page.goto(`${ALPHA_ONE_SEATING}#inputs`, { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("seating-layout-binding")).toBeVisible({ timeout: 20_000 });
+}
+
+export async function seatingInputHash(page: Page) {
+  const node = page.getByTestId("seating-input-hash");
+  await expect(node).toHaveCount(1);
+  return {
+    hash: (await node.getAttribute("data-hash")) ?? "",
+    layoutHash: (await node.getAttribute("data-layout-hash")) ?? "",
+    text: ((await node.innerText()) ?? "").replace(/\s+/g, " ").trim(),
+  };
+}
+
+export async function freezeAlphaOneSeatingInputs(page: Page, previousResult = "") {
+  return submitScopedSeatingMutation(page, page.getByTestId("seating-freeze"), "Freeze new input edition", previousResult);
+}
+
+export async function waitStudioSaved(page: Page) {
+  await expect
+    .poll(async () => (await page.getByTestId("studio-persist").getAttribute("data-state")) ?? "", { timeout: 30_000 })
+    .toMatch(/saved/);
+}
+
+export async function generatePhysicalSeatsOnTable(page: Page, tableLabel: string, seatCount: number) {
+  await page.getByRole("button", { name: `${tableLabel} · table`, exact: true }).click();
+  const input = page.getByTestId("studio-seat-count");
+  await expect(input).toBeVisible({ timeout: 10_000 });
+  await input.fill(String(seatCount));
+  await page.getByRole("button", { name: "Generate seats" }).click();
+  await waitStudioSaved(page);
+  await expect(page.getByTestId("studio-navigator")).toContainText(/Seat/i, { timeout: 20_000 });
 }

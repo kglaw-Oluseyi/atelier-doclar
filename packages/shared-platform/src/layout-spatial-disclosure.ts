@@ -225,6 +225,18 @@ export function selectLatestValidationRun<T extends { layoutId: string; createdA
   return latest;
 }
 
+/** Prefer a run bound to the current revision hash. Wall-clock recency is not authority. */
+export function selectCurrentOrLatestValidationRun<
+  T extends { layoutId: string; createdAt: string; contentHash?: string },
+>(runs: readonly T[], layoutId: string, contentHash?: string): T | undefined {
+  if (contentHash) {
+    const matching = runs.filter((item) => item.layoutId === layoutId && item.contentHash === contentHash);
+    const current = selectLatestValidationRun(matching, layoutId);
+    if (current) return current;
+  }
+  return selectLatestValidationRun(runs, layoutId);
+}
+
 export function runPublicationBlocked(run: LayoutValidationRun | undefined, layoutContentHash: string, findings: readonly LayoutValidationFinding[]): boolean {
   if (!run || run.contentHash !== layoutContentHash) return false;
   if (typeof run.unresolvedBlockingCount === "number") return run.unresolvedBlockingCount > 0;

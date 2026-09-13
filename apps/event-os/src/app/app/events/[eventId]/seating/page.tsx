@@ -3,6 +3,7 @@ import { AtelierOperationalState } from "../../../../../components/atelier-opera
 import { AtelierSectionTabs } from "../../../../../components/atelier-section-tabs";
 import { AppShell } from "../../../../../components/shell";
 import { ActionResultBanner } from "../../../../../components/action-result-banner";
+import { HistoryDisclosure } from "../../../../../components/canonical-evidence";
 import { IdempotencyField } from "../../../../../components/atelier-pending-submit";
 import { ProtectionMutationForm } from "../../../../../components/protection-mutation-form";
 import { SeatingRuleAuthoringFields } from "../../../../../components/seating-rule-authoring-fields";
@@ -190,7 +191,7 @@ export default async function EventSeatingPage({
   });
   const envelopeFields = { organisationId: organisation.id, eventId: event.id, assignmentId };
   const working = workspace.workingEdition as { id?: string; contentHash?: string; status?: string; version?: number } | undefined;
-  const input = workspace.inputEdition as { id?: string; contentHash?: string } | undefined;
+  const input = workspace.inputEdition as { id?: string; contentHash?: string; layoutContentHash?: string } | undefined;
   const publication = workspace.currentPublication as { id?: string; publicationNumber?: number; editionHash?: string } | undefined;
   const verifyAs = eventOsVerifyAsAvailable();
   return (
@@ -358,6 +359,19 @@ export default async function EventSeatingPage({
               <button type="submit" className="button">Withdraw active binding</button>
             </ProtectionMutationForm>
           ) : null}
+          <HistoryDisclosure
+            summary="Earlier seating layout bindings"
+            count={workspace.seatingLayoutBindingHistory?.length ?? 0}
+            testId="seating-layout-binding-history"
+          >
+            {(workspace.seatingLayoutBindingHistory ?? []).map((item, index) => (
+              <p key={`${item.state}-${item.contentHashPrefix ?? index}`}>
+                {item.state}
+                {item.publicationNumber != null ? ` · publication ${item.publicationNumber}` : ""}
+                {item.contentHashPrefix ? ` · hash ${item.contentHashPrefix}` : ""}
+              </p>
+            ))}
+          </HistoryDisclosure>
         </article>
         <article>
           <h3>Event Brief</h3>
@@ -385,9 +399,32 @@ export default async function EventSeatingPage({
         {input ? (
           <details>
             <summary>Input provenance</summary>
-            <p>Hash {input.contentHash}</p>
+            <p
+              data-testid="seating-input-hash"
+              data-hash={input.contentHash ?? ""}
+              data-layout-hash={input.layoutContentHash ?? ""}
+            >
+              Hash {input.contentHash}
+            </p>
           </details>
-        ) : null}
+        ) : (
+          <p data-testid="seating-input-hash" data-hash="" data-layout-hash="">
+            No frozen input edition.
+          </p>
+        )}
+        <HistoryDisclosure
+          summary="Earlier frozen input packages"
+          count={(workspace.inputPackageHistory ?? []).filter((item) => !item.current).length}
+          testId="seating-package-history"
+        >
+          {(workspace.inputPackageHistory ?? [])
+            .filter((item) => !item.current)
+            .map((item) => (
+              <p key={item.contentHash || item.layoutContentHash}>
+                Hash {item.contentHash} · layout {item.layoutContentHash}
+              </p>
+            ))}
+        </HistoryDisclosure>
       </section>
 
       <section id="rules" className="atelier-panel" data-testid="seating-rules">

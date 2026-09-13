@@ -548,6 +548,8 @@ export {
   projectSpatialObjects,
   overrideApplicabilityKey,
   effectiveOverrideState,
+  selectLatestValidationRun,
+  selectCurrentOrLatestValidationRun,
   type ProjectedSpatialObject,
   type OverrideDecisionRecord,
   type LayoutFindingView,

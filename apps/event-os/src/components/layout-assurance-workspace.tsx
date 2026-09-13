@@ -80,7 +80,13 @@ export function LayoutAssuranceWorkspace({
   const historicalPublications = assurance.publications.filter((item) => item.status !== "CURRENT");
   return (
     <section className="venue-atelier layout-assurance" data-testid="layout-assurance">
-      <section className="atelier-panel" data-testid="validation-centre">
+        <section
+          className="atelier-panel"
+          data-testid="validation-centre"
+          data-layout-hash={layout.contentHash}
+          data-run-hash={assurance.latestRun?.contentHash ?? ""}
+          data-validation-stale={assurance.latestRun && assurance.latestRun.contentHash !== layout.contentHash ? "true" : "false"}
+        >
         <h2>Validation centre</h2>
         <p>
           Engine {assurance.latestRun?.engineId ?? "not run"} {assurance.latestRun?.engineVersion ?? ""}. Findings bind to revision{" "}
@@ -571,7 +577,12 @@ export function LayoutAssuranceWorkspace({
           <form action={submitLayoutApprovalAction} className="form programme-form">
             <CasFields workspace={workspace} eventId={eventId} />
             <input type="hidden" name="reason" value="Submit layout hash for approval" />
-            <p className="lede" data-testid="submit-prerequisite">
+            <p
+              className="lede"
+              data-testid="submit-prerequisite"
+              data-ready={submitReadiness.ready ? "true" : "false"}
+              data-reason={submitReadiness.reason}
+            >
               {submitReadiness.reason}
             </p>
             <PendingSubmit locked={mutationLocked} blocked={!submitReadiness.ready} blockedLabel="Submit unavailable">

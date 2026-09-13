@@ -92,6 +92,16 @@ export type SeatingWorkspaceView = SeatingWorkspaceProjection & {
     publicationId: string;
     contentHash: string;
   }>;
+  seatingLayoutBindingHistory?: Array<{
+    state: string;
+    publicationNumber?: number;
+    contentHashPrefix?: string;
+  }>;
+  inputPackageHistory?: Array<{
+    contentHash: string;
+    layoutContentHash: string;
+    current: boolean;
+  }>;
 };
 
 export function implicatedSeatingReviewDomains(

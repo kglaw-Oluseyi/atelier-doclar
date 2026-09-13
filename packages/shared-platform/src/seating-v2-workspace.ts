@@ -136,6 +136,26 @@ export function buildSeatingV2Workspace(
     activeId: disclosure === "AUDITOR" || authority.state !== "BOUND" ? undefined : authority.binding.id,
     activeVersion: disclosure === "AUDITOR" || authority.state !== "BOUND" ? undefined : authority.binding.version,
   };
+  const seatingLayoutBindingHistory = state.layoutBindings
+    .filter(
+      (item) =>
+        item.organisationId === organisationId &&
+        item.eventId === eventId &&
+        (item.state === "SUPERSEDED" || item.state === "WITHDRAWN"),
+    )
+    .map((item) => {
+      const publication = snap.layoutPublications.find((row) => row.id === item.layoutPublicationId);
+      return {
+        state: item.state,
+        publicationNumber: publication?.publicationNumber,
+        contentHashPrefix: disclosure === "AUDITOR" ? undefined : item.layoutContentHash.slice(0, 12),
+      };
+    });
+  const inputPackageHistory = eventPackages.map((item) => ({
+    contentHash: disclosure === "AUDITOR" ? "" : item.contentHash,
+    layoutContentHash: disclosure === "AUDITOR" ? "" : item.layoutContentHash,
+    current: item.id === pkg?.id,
+  }));
   const runs = state.runs.filter((item) => item.eventId === eventId);
   const currentRunId = currentSeatingV2RunId(state, eventId);
   const evalRun = state.evaluationRuns.at(-1);
@@ -254,7 +274,11 @@ export function buildSeatingV2Workspace(
         ? { id: legacyPublication.id, publicationNumber: legacyPublication.publicationNumber, editionHash: legacyPublication.editionHash, status: "CURRENT" }
         : undefined,
     workingEdition: edition ? { id: edition.id, contentHash: edition.contentHash, status: edition.status, version: edition.version } : undefined,
-    inputEdition: pkg ? { id: pkg.id, contentHash: pkg.contentHash } : undefined,
+    inputEdition: pkg
+      ? { id: pkg.id, contentHash: pkg.contentHash, layoutContentHash: pkg.layoutContentHash }
+      : undefined,
+    seatingLayoutBindingHistory,
+    inputPackageHistory,
     currentRunId,
     guests,
     tables,

@@ -244,6 +244,12 @@ describe("EOS-S06 seating layout binding", () => {
     assert.equal(next.value.layoutPublicationId, successor.id);
     assert.equal(next.value.seatingLayoutBindingId, successorBinding.id);
     assert.notEqual(next.value.id, first.value.id);
+    const rebound = await v2.projectWorkspace(planner(), people.eventAlphaOne);
+    assert.ok(rebound.seatingLayoutBindingHistory?.some((item) => item.state === "SUPERSEDED"));
+    assert.ok(
+      rebound.inputPackageHistory?.some((item) => !item.current && item.contentHash === first.value.contentHash),
+    );
+    assert.ok(rebound.inputPackageHistory?.some((item) => item.current && item.contentHash === next.value.contentHash));
   });
 
   it("rejects two active bindings and unknown or withdrawn authority", async () => {
