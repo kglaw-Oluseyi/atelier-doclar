@@ -2,7 +2,10 @@ import { z } from "zod";
 
 export const SEATING_V2_SOLVER_CONTRACT = "eos-s06-solver-v2" as const;
 export const SEATING_V2_SOLVER_VERSION = "s06-solver-v2" as const;
+export const SEATING_V2_COMPILER_VERSION = "s06-compiler-v2" as const;
 export const SEATING_V2_VALIDATOR_VERSION = "s06-validator-v3" as const;
+export const SeatingV2TableTokenSchema = z.string().regex(/^[0-9a-f]{32}$/);
+export type SeatingV2TableToken = z.infer<typeof SeatingV2TableTokenSchema>;
 export const SEATING_V2_SCHEMA_VERSION = 1 as const;
 export const EOS_S06_SEATING_V2_MIGRATION_ID = "008_seating_truth_v2" as const;
 export const EOS_S06_SEATING_V2_RECEIPT_ID = "EOS-S06-SEATING-V2" as const;

@@ -17,6 +17,7 @@ import {
 } from "../src/seating-v2-schemas.js";
 import { uniqueSeatAnchors } from "../src/seating-adapters.js";
 import { exactHash } from "../src/eec-hash.js";
+import { seatingV2TableToken } from "../src/seating-v2-hash.js";
 import { validateSeatingV2 } from "../src/seating-v2-validator.js";
 
 const ORG = "00000000-0000-4000-8000-000000000001";
@@ -82,9 +83,9 @@ function compile(rules = [keepApart()], extras?: { dropRule?: boolean; omitGuest
           { eventGuestId: GUEST_B, eligible: true },
         ],
     positions: [
-      { positionToken: "pos-1", tableToken: "table-1" },
-      { positionToken: "pos-2", tableToken: "table-1" },
-      { positionToken: "pos-3", tableToken: "table-2" },
+      { positionToken: "pos-1", tableToken: seatingV2TableToken("table-1") },
+      { positionToken: "pos-2", tableToken: seatingV2TableToken("table-1") },
+      { positionToken: "pos-3", tableToken: seatingV2TableToken("table-2") },
     ],
     rules: extras?.dropRule
       ? []
@@ -326,8 +327,8 @@ describe("EOS-S06 V2 hashing, compilation and validator", () => {
         { eventGuestId: GUEST_B, eligible: true },
       ],
       positions: [
-        { positionToken: "pos-1", tableToken: "table-1" },
-        { positionToken: "pos-2", tableToken: "table-1" },
+        { positionToken: "pos-1", tableToken: seatingV2TableToken("table-1") },
+        { positionToken: "pos-2", tableToken: seatingV2TableToken("table-1") },
       ],
       rules: [{ editionId: RULE_ID, contentHash: ruleHash, lifecycle: "ACTIVE", content: soft }],
       reservations: [],

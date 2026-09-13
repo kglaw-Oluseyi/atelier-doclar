@@ -4,6 +4,7 @@ import { exactHash } from "../src/eec-hash.js";
 import { PlatformError } from "../src/errors.js";
 import { applyS06SeatingLayoutIfMissing } from "../src/seating-fixtures.js";
 import { snapshotLayoutAdapter } from "../src/seating-adapters.js";
+import { assertSeatingV2CompiledRequest } from "../src/seating-v2-compiler.js";
 import { solveSeatingV2Compiled } from "../src/seating-v2-solver-adapter.js";
 import { validateSeatingV2 } from "../src/seating-v2-validator.js";
 import type { SeatingV2CompiledRequest, SeatingV2RuleContent } from "../src/seating-v2-schemas.js";
@@ -197,57 +198,24 @@ async function s074WitnessFixture(prefix: string) {
   return { v2, frozen, request, tokens, t1, t2, guests: { g1, g2, g3, g4 } };
 }
 
-describe("S075 pre-fix diagnostic — durable compiler defect", () => {
-  it("REQUIRE_TABLE compiles a raw layout UUID that does not match position tokens", async () => {
-    const { request, t1 } = await s074WitnessFixture("s075-diag");
+describe("S075 legacy raw-target shape is rejected", () => {
+  it("rejects a compiled request that still carries a raw layout UUID in tableTokens", async () => {
+    const { request, t1 } = await s074WitnessFixture("s075-legacy");
     const compiled = request.rules.find((rule) => rule.kind === "REQUIRE_TABLE");
     assert.ok(compiled);
-    assert.deepEqual(compiled.tableTokens, [t1]);
-    assert.equal(t1.length, 36);
-    assert.ok(UUID_RE.test(t1));
-    const positionTokens = new Set(request.positions.map((item) => item.tableToken));
-    assert.equal(positionTokens.has(t1), false);
-    assert.equal(positionTokens.has(positionTableToken(t1)), true);
-    assert.ok([...positionTokens].every((token) => token.length === 32));
-  });
-
-  it("explicit witness is rejected only for REQUIRE_TABLE while uniqueness/capacity otherwise pass", async () => {
-    const { request, tokens, t1, t2, frozen } = await s074WitnessFixture("s075-witness");
-    const assignments = explicitWitness(request, tokens, positionTableToken(t1), positionTableToken(t2));
-    const report = validateSeatingV2({ contentHash: frozen.value.contentHash, compiledRequest: request }, assignments, []);
-    assert.equal(report.verdict, "INFEASIBLE");
-    const requireOutcome = report.ruleOutcomes.find((item) => item.typedReasonCodes.includes("REQUIRE_TABLE_VIOLATED"));
-    assert.ok(requireOutcome);
-    assert.equal(requireOutcome.outcome, "VIOLATED");
-    assert.ok(
-      report.structuralOutcomes
-        .filter((item) => /UNIQUE|CAPACITY/i.test(item.checkCode))
-        .every((item) => item.outcome !== "FAILED"),
+    assert.deepEqual(compiled.tableTokens, [positionTableToken(t1)]);
+    const legacy = structuredClone(request);
+    const legacyRule = legacy.rules.find((rule) => rule.kind === "REQUIRE_TABLE");
+    assert.ok(legacyRule);
+    legacyRule.tableTokens = [t1];
+    assert.throws(
+      () => assertSeatingV2CompiledRequest(legacy),
+      (error: unknown) => error instanceof PlatformError && error.code === "VALIDATION_FAILED",
     );
-  });
-
-  it("solver seats two / unseats two and the independent validator refuses FEASIBLE", async () => {
-    const { v2, frozen, request } = await s074WitnessFixture("s075-solver");
-    const solved = solveSeatingV2Compiled(request);
-    const seated = solved.assignments.filter((item) => item.state === "SEATED");
-    const unseated = solved.assignments.filter((item) => item.state === "UNSEATED");
-    assert.equal(seated.length, 2);
-    assert.equal(unseated.length, 2);
-    const report = validateSeatingV2(
-      { contentHash: frozen.value.contentHash, compiledRequest: request },
-      solved.assignments,
-      unseated.map((item) => item.guestToken),
-    );
-    assert.equal(report.verdict, "INFEASIBLE");
-    const launched = await v2.launchRun(planner(), envelope(people.assignPlanner, "s075-solver-launch"), {
-      packageId: frozen.value.id,
-    });
-    assert.equal(launched.value.status, "INFEASIBLE");
-    assert.equal(launched.value.solverClaim, "FEASIBLE");
   });
 });
 
-describe("S075 post-fix contract — must fail before implementation", () => {
+describe("S075 corrected compiler contract", () => {
   it("compiled REQUIRE_TABLE targets resolve to position tokens and the witness is FEASIBLE", async () => {
     const { request, tokens, t1, t2, frozen } = await s074WitnessFixture("s075-fix-witness");
     const compiled = request.rules.find((rule) => rule.kind === "REQUIRE_TABLE");

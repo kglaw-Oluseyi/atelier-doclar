@@ -12,9 +12,11 @@ import {
   seatingV2PackageContentHash,
   seatingV2SemanticHash,
   seatingV2SolverToken,
+  seatingV2TableToken,
 } from "./seating-v2-hash.js";
 import type { SeatingV2Scope, SeatingV2Transaction } from "./seating-v2-repository.js";
 import {
+  SEATING_V2_COMPILER_VERSION,
   SEATING_V2_SOLVER_VERSION,
   type SeatingV2RuleContent,
 } from "./seating-v2-schemas.js";
@@ -28,6 +30,7 @@ import type { PlatformSnapshot } from "./store.js";
 export const SEATING_V2_DEFAULT_SEED = "s06-v2-default-seed";
 
 export const SEATING_V2_CONFIG_HASH = exactHash({
+  compilerVersion: SEATING_V2_COMPILER_VERSION,
   solverVersion: SEATING_V2_SOLVER_VERSION,
   timeLimitMs: 10_000,
   memoryLimitMb: 256,
@@ -159,7 +162,7 @@ export function finishSeatingV2Package(input: {
       );
       return anchors.map((seat) => ({
         positionToken: exactHash({ table: table.objectId, ordinal: seat.ordinal }).slice(0, 32),
-        tableToken: exactHash({ table: table.objectId }).slice(0, 32),
+        tableToken: seatingV2TableToken(table.objectId),
         zoneCodes: table.zoneCodes,
         capabilityCodes: table.capabilityCodes,
       }));

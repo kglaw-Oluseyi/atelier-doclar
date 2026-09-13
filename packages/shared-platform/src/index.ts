@@ -1008,6 +1008,8 @@ export { emptySeatingState, SEATING_COLLECTIONS } from "./seating-schemas.js";
 export {
   SEATING_V2_SOLVER_CONTRACT,
   SEATING_V2_SOLVER_VERSION,
+  SEATING_V2_COMPILER_VERSION,
+  SeatingV2TableTokenSchema,
   SEATING_V2_VALIDATOR_VERSION,
   EOS_S06_SEATING_V2_MIGRATION_ID,
   EOS_S06_SEATING_V2_RECEIPT_ID,
@@ -1022,6 +1024,7 @@ export {
   seatingV2RuleContentHash,
   seatingV2SemanticHash,
   seatingV2SolverToken,
+  seatingV2TableToken,
   seatingV2PackageContentHash,
   seatingV2PlanContentHash,
   seatingV2ManualDecisionLogHash,

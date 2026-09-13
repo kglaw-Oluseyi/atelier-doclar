@@ -3,11 +3,17 @@ import { canonicalJson, exactHash } from "./eec-hash.js";
 import {
   SEATING_V2_SOLVER_VERSION,
   SeatingV2CompiledRequestSchema,
+  SeatingV2TableTokenSchema,
   type SeatingV2CompiledRequest,
   type SeatingV2RuleContent,
   type SeatingV2Subject,
   type SeatingV2Target,
+  type SeatingV2TableToken,
 } from "./seating-v2-schemas.js";
+
+export function seatingV2TableToken(tableObjectId: string): SeatingV2TableToken {
+  return SeatingV2TableTokenSchema.parse(exactHash({ table: tableObjectId }).slice(0, 32));
+}
 
 export function sortByTypeAndId<T extends { type: string; id?: string; idOrCode?: string }>(items: readonly T[]): T[] {
   return [...items].sort((left, right) => {
