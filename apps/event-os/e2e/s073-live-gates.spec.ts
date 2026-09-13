@@ -405,17 +405,22 @@ test("S073 Gate B assign-unseated persists and a hard-violating placement is NOT
   await form.locator('select[name="command"]').selectOption("UNSEAT", { timeout: 8_000 });
   await form.locator('select[name="reasonCode"]').selectOption("MANUAL_UNSEAT", { timeout: 8_000 });
   await postAndSettle(page, () => submitNamed(page, "Apply seating change", "seating-edit-form"), previousResult);
-  const validation = ((await page.getByTestId("protection-validation-summary").textContent().catch(() => "")) ?? "").trim();
-  const banner = ((await page.getByTestId("action-result-banner").textContent().catch(() => "")) ?? "").trim();
-  const dataChanged = ((await page.getByTestId("action-result-data-changed").textContent().catch(() => "")) ?? "").trim();
+  const banner = page.getByTestId("action-result-banner");
+  await expect(banner).toContainText(/rejected by the independent validator|hard or structural|not applied|That change/i);
+  await expect(page.getByTestId("action-result-data-changed")).toContainText(/No/i);
   const correlation = pageActionResult(page);
-  expect(validation || /not permitted|rejected|cannot|That change|independent validator|hard or structural/i.test(banner)).toBeTruthy();
-  expect(dataChanged).toMatch(/No/i);
   expect(correlation).toMatch(/^[0-9a-f-]{36}$/i);
   expect(correlation).not.toEqual(previousResult);
   const hashAfterReject = await workingHash(page);
   if (hashBefore) expect(hashAfterReject).toEqual(hashBefore);
-  record({ kind: "gate-b-rejected", validation: validation.slice(0, 200), banner: banner.slice(0, 200), dataChanged, correlation, hashAfterReject });
+  const dataChanged = ((await page.getByTestId("action-result-data-changed").textContent()) ?? "").trim();
+  record({
+    kind: "gate-b-rejected",
+    banner: ((await banner.textContent()) ?? "").slice(0, 200),
+    dataChanged,
+    correlation,
+    hashAfterReject,
+  });
   await form.locator('select[name="guestId"]').selectOption(eligible[2]!, { timeout: 8_000 });
   await form.locator('select[name="command"]').selectOption("UNSEAT", { timeout: 8_000 });
   await form.locator('select[name="reasonCode"]').selectOption("GOVERNED_UNSEATED", { timeout: 8_000 });
