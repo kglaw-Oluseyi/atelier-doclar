@@ -111,7 +111,7 @@ test("S073 post-Adopt Studio remains responsive and hard UNSEAT POSTs once", asy
         else (element as HTMLButtonElement).click();
       });
     });
-    await gotoSeating(page, "#rules");
+    await page.locator("#rules").scrollIntoViewIfNeeded();
   }
 
   await gotoSeating(page, "#reservations");
@@ -205,15 +205,13 @@ test("S073 post-Adopt Studio remains responsive and hard UNSEAT POSTs once", asy
   await studio.locator('select[name="reasonCode"]').selectOption("MANUAL_UNSEAT", { timeout: 8_000 });
   await postAndSettle(page, () => submitNamed(page, "Apply seating change", "seating-edit-form"), previousResult);
 
-  const banner = ((await page.getByTestId("action-result-banner").textContent().catch(() => "")) ?? "").trim();
-  const validation = ((await page.getByTestId("protection-validation-summary").textContent().catch(() => "")) ?? "").trim();
-  const dataChanged = ((await page.getByTestId("action-result-data-changed").textContent().catch(() => "")) ?? "").trim();
+  const banner = page.getByTestId("action-result-banner");
+  await expect(banner).toContainText(/rejected by the independent validator|hard or structural|not applied|That change/i);
+  await expect(page.getByTestId("action-result-data-changed")).toContainText(/No/i);
   const correlation = pageActionResult(page);
-  expect(validation || /not permitted|rejected|cannot|That change|independent validator|hard or structural/i.test(banner)).toBeTruthy();
-  expect(dataChanged).toMatch(/No/i);
   expect(correlation).toMatch(/^[0-9a-f-]{36}$/i);
   expect(correlation).not.toEqual(previousResult);
-  await expect(page.getByTestId("action-result-banner")).toContainText(correlation);
+  await expect(banner).toContainText(correlation);
 
   const hashAfter = ((await page.getByTestId("seating-plan-hash").textContent().catch(() => "")) ?? "").match(/[a-f0-9]{64}/i)?.[0] ?? "";
   await page.reload({ waitUntil: "domcontentloaded" });
