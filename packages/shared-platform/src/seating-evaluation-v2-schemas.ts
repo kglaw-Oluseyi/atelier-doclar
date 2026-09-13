@@ -1,14 +1,20 @@
 import { z } from "zod";
 import { exactHash } from "./eec-hash.js";
-import { SEATING_V2_PREVIOUS_SOLVER_VERSION, SEATING_V2_VALIDATOR_VERSION } from "./seating-v2-schemas.js";
+import { SEATING_V2_PREVIOUS_SOLVER_VERSION, SEATING_V2_SOLVER_VERSION, SEATING_V2_VALIDATOR_VERSION } from "./seating-v2-schemas.js";
 
-export const S06_V2_EVALUATION_CONTRACT_VERSION = "s06-eval-contract-v2";
-export const S06_V2_EVALUATION_CORPUS_EDITION = "s06-eval-v3";
+export const S06_V3_EVALUATION_CONTRACT_VERSION = "s06-eval-contract-v2";
+export const S06_V3_EVALUATION_CORPUS_EDITION = "s06-eval-v3";
+export const S06_V3_CORPUS_HASH = "e433882ed1a55c4896aaf9fdf524257b870a4e2a450d8ab614bc6763b110035c";
+
+export const S06_V2_EVALUATION_CONTRACT_VERSION = "s06-eval-contract-v4";
+export const S06_V2_EVALUATION_CORPUS_EDITION = "s06-eval-v4";
+export const S06_V2_CORPUS_HASH = "0e1a6b403fdc85268e3eb9d154a496ac94c0017714445a677ac285f20df51369";
 export const S06_V2_EVALUATION_PROJECTION_VERSION = "seating-projection-v2";
 export const S06_V1_STALE_REASON = "legacy isolated or incomplete production-path assurance";
-export const S06_V2_PRIOR_CORPUS_STALE_REASON = "prior s06-eval-v2 corpus is STALE after validator and case contract change";
+export const S06_V2_PRIOR_CORPUS_STALE_REASON =
+  "prior s06-eval-v3 corpus is STALE after table-identity, solver-claim honesty and capacity-truth change";
 
-export const S06_V2_CASE_IDS = [
+export const S06_V3_CASE_IDS = [
   "S06V2-PATH-01",
   "S06V2-PATH-02",
   "S06V2-PATH-03",
@@ -46,6 +52,27 @@ export const S06_V2_CASE_IDS = [
   "S06V2-M22",
 ] as const;
 
+export const S06_V4_CASE_IDS = [
+  "S06V4-PATH-01",
+  "S06V4-PATH-02",
+  "S06V4-PATH-03",
+  "S06V4-PATH-04",
+  "S06V4-PATH-05",
+  "S06V4-PATH-06",
+  "S06V4-M01",
+  "S06V4-M02",
+  "S06V4-M03",
+  "S06V4-M04",
+  "S06V4-M05",
+  "S06V4-M06",
+  "S06V4-M07",
+  "S06V4-M08",
+] as const;
+
+export const S06_V2_CASE_IDS = [...S06_V3_CASE_IDS, ...S06_V4_CASE_IDS] as const;
+
+export type S06V3CaseId = (typeof S06_V3_CASE_IDS)[number];
+export type S06V4CaseId = (typeof S06_V4_CASE_IDS)[number];
 export type S06V2CaseId = (typeof S06_V2_CASE_IDS)[number];
 
 export const S06V2ObservationSchema = z
@@ -91,11 +118,22 @@ export type S06V2EvaluationResult = {
   cases: S06V2CaseOutcome[];
 };
 
+export function s06V3CorpusHash(): string {
+  return exactHash({
+    edition: S06_V3_EVALUATION_CORPUS_EDITION,
+    contract: S06_V3_EVALUATION_CONTRACT_VERSION,
+    solver: SEATING_V2_PREVIOUS_SOLVER_VERSION,
+    validator: SEATING_V2_VALIDATOR_VERSION,
+    projection: S06_V2_EVALUATION_PROJECTION_VERSION,
+    cases: S06_V3_CASE_IDS,
+  });
+}
+
 export function s06V2CorpusHash(): string {
   return exactHash({
     edition: S06_V2_EVALUATION_CORPUS_EDITION,
     contract: S06_V2_EVALUATION_CONTRACT_VERSION,
-    solver: SEATING_V2_PREVIOUS_SOLVER_VERSION,
+    solver: SEATING_V2_SOLVER_VERSION,
     validator: SEATING_V2_VALIDATOR_VERSION,
     projection: S06_V2_EVALUATION_PROJECTION_VERSION,
     cases: S06_V2_CASE_IDS,

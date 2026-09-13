@@ -20,13 +20,31 @@ Historical S072 handoff status **NOT READY FOR CLAUDE** remains dated history. M
 | Deployed application SHA | `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3` — not redeployed |
 | Sections 1–8 | PASS |
 | Section 9 | PASS after addendum — 12/12 agreement; mutations detected from observations; smallest seed `s075-oracle-v1:capacity-infeasible` now solver/validator/oracle `INFEASIBLE`/`INFEASIBLE`/`NONE`. Solver runtime `s06-solver-v3`. Validator and oracle unchanged. `s06-eval-v3` hash unchanged `e433882ed1a55c4896aaf9fdf524257b870a4e2a450d8ab614bc6763b110035c` |
-| Section 10 | NOT STARTED — now the next authorised parent step |
+| Section 10 | PASS — current edition `s06-eval-v4` / contract `s06-eval-contract-v4` / 49 cases / corpus hash `0e1a6b403fdc85268e3eb9d154a496ac94c0017714445a677ac285f20df51369` / config hash `5e05590ee74b527002c9cabad6d45384094c4f4f5d56ec2730e60a72840ac815`. Frozen `s06-eval-v3` remains `e433882ed1a55c4896aaf9fdf524257b870a4e2a450d8ab614bc6763b110035c` and is honestly STALE. Live persist on `1ce6e0f` was not restamped. Live corpus not run. |
+| Section 11 | PASS after recorded first-run typecheck and V1 `S06-SOL-04` corrections. Focused S075 units 47/47. Typecheck retry PASS. Programme validate `NO_CYCLES`. `git diff --check` clean. Shared-platform retry 636/636. Event OS units 106/106 first run. Event OS `next build` PASS alone. Isolated development-runtime Playwright groups each passed on their own execution. Production-mode and live Playwright were not executed. Not pushed. Not deployed. Section 12 not started. |
 | Section 2 finding | `docs/control/eos-s06/MD_PR_S075_FORENSIC_TABLE_NAMESPACE_FINDING.md` — remains valid |
 | Section 7 replay identity | `docs/control/eos-s06/ADR_EOS_S06_V2_RUN_REUSE_IDENTITY.md` — additive `009`; historic compiler ineligible for reuse/adopt |
 | Section 8 capacity truth | Physical seats authoritative; declared synthesis only at zero physical; freeze `SEAT_CAPACITY_MISMATCH`; Studio reads persisted count |
 | Temporary diagnostic tunnel | Closed. Port `55432` none. No `ssh -L`. Homebrew `postgresql@16` left running as a pre-existing machine service. No reconnect unless a later mandated gate genuinely requires read-only verification. |
 | Subsequent proof | Repository tests and governed live UI journeys only. Direct database access is not a substitute for required product workflows. |
 | Current verdict | NOT READY FOR CLAUDE |
+
+## Section 10 evaluation identity
+
+| Item | Value |
+|---|---|
+| Current edition | `s06-eval-v4` |
+| Current contract | `s06-eval-contract-v4` |
+| Honest case count | 49 |
+| Ordered register | `S06V2-PATH-01` … `S06V2-PATH-10`, `S06V2-M01` … `S06V2-M20`, `S06V2-PATH-11` … `S06V2-PATH-13`, `S06V2-M21`, `S06V2-M22`, then `S06V4-PATH-01` … `S06V4-PATH-06`, `S06V4-M01` … `S06V4-M08` |
+| Preserved v3 cases | 35 unchanged; not restamped |
+| New v4 cases | 14 production-chain cases (`REQUIRE_TABLE` one- and two-subject, `FORBID_TABLE`, reservation, four-guest witness, declared-synthetic, missing table, raw UUID, false `FEASIBLE`, incomplete-not-`INFEASIBLE`, validator/compiler reuse split, capacity mismatch, raw-target mutation) |
+| Corpus hash | `0e1a6b403fdc85268e3eb9d154a496ac94c0017714445a677ac285f20df51369` |
+| Configuration hash | `5e05590ee74b527002c9cabad6d45384094c4f4f5d56ec2730e60a72840ac815` |
+| Frozen v3 edition / contract / count / hash | `s06-eval-v3` / `s06-eval-contract-v2` / 35 / `e433882ed1a55c4896aaf9fdf524257b870a4e2a450d8ab614bc6763b110035c` |
+| Readiness | Persisted v3 `PASSED` is `STALE` / `BLOCKED`. Only current v4 with 49 cases and zero failures is `RELEASE_READY`. |
+| Production import ban | Corpus/runner/compiler/solver/package/command-service/index do not import the Section 9 oracle or test-only mutation adapters. |
+| Live corpus | Not run. Not pushed. Not deployed. |
 
 ## Freeze
 
@@ -40,11 +58,11 @@ Historical S072 handoff status **NOT READY FOR CLAUDE** remains dated history. M
 | `productionAuthorised` | `false` |
 | External providers | INACTIVE |
 | Solver | In-process V2 compiled request; runtime `s06-solver-v3`; contract shape remains `eos-s06-solver-v2`; validator `s06-validator-v3`; solver + validator outside every seating transaction; no queue/worker |
-| Evaluation | `s06-eval-v3` / `s06-eval-contract-v2` / 35 cases / hash `e433882ed1a55c4896aaf9fdf524257b870a4e2a450d8ab614bc6763b110035c` / live PASSED |
-| Legacy evaluation | `s06-eval-v1` and `s06-eval-v2` STALE/INCOMPATIBLE — not restamped |
+| Evaluation | Current repository corpus `s06-eval-v4` / `s06-eval-contract-v4` / 49 cases / hash `0e1a6b403fdc85268e3eb9d154a496ac94c0017714445a677ac285f20df51369` / config `5e05590ee74b527002c9cabad6d45384094c4f4f5d56ec2730e60a72840ac815`. Local focused eval/mutation/schema/readiness PASS. Live persist on `1ce6e0f` remains historic `s06-eval-v3` PASSED and is now honestly STALE. Not redeployed. |
+| Legacy evaluation | `s06-eval-v1`, `s06-eval-v2` and `s06-eval-v3` STALE/INCOMPATIBLE — not restamped. Frozen v3 hash remains `e433882ed1a55c4896aaf9fdf524257b870a4e2a450d8ab614bc6763b110035c` |
 | Last-known-good publication | Publication 4 `a6ac23f65f23a10f0dc1deab9464e50791c055e825de3d541fd24a0a34dfbc4d` |
 | Temporary diagnostics | Routes 404; `EVENT_OS_DIAGNOSTIC_TOKEN` absent |
-| Local execution modes | Production build passed. Production-mode Playwright not executed (`DATABASE_URL` unavailable locally). Isolated development-runtime Playwright: focused S073, S072 and S049 passed. Live production verification passed on deployed application SHA `1ce6e0f`. |
+| Local execution modes | Section 11 Event OS production build passed alone. Production-mode Playwright not executed. Isolated development-runtime Playwright: each prescribed S075 and changed-risk S072/S073 group passed on its own execution. Live Playwright not run. Live production verification on deployed SHA `1ce6e0f` remains dated Packet 8 history. |
 | Control Tower | untouched |
 
 ## Sealed holdout

@@ -402,9 +402,10 @@ describe("S075 differential oracle", () => {
       ]),
       "TRUSTED_SOLVER_CLAIM",
     );
+    const historicValidatorVersion: string = "s06-validator-v2";
     assert.equal(
       detectS075DifferentialMutation([
-        observe("validatorVersionDrift", "s06-validator-v2" !== SEATING_V2_VALIDATOR_VERSION),
+        observe("validatorVersionDrift", historicValidatorVersion !== SEATING_V2_VALIDATOR_VERSION),
       ]),
       "VALIDATOR_VERSION_REUSE",
     );

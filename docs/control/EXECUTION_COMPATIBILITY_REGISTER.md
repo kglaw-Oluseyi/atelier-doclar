@@ -391,3 +391,12 @@ Milestone 4 is authorised on the Milestone 1–3 contracts. Historic S5-01–S5-
 | `productionAuthorised` | RETAINED false. Not changed. |
 | Control Tower | Compatibility-only. Not deployed. |
 | EOS-S07 | RETAINED not started. |
+
+## Addendum — 2026-09-13 EOS-S06 evaluation v4 (`MD-PR-S075` Section 10)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| `s06-eval-v3` as current corpus | STALE after table-identity, solver-claim honesty and capacity-truth change. Do not restamp. Frozen hash remains `e433882ed1a55c4896aaf9fdf524257b870a4e2a450d8ab614bc6763b110035c`. |
+| Current corpus | `s06-eval-v4` / `s06-eval-contract-v4` / 49 cases / hash `0e1a6b403fdc85268e3eb9d154a496ac94c0017714445a677ac285f20df51369`. |
+| Live `s06-eval-v3` PASSED on `1ce6e0f` | Immutable history. Honestly STALE against current v4. Not restamped. Not redeployed. Live v4 persist waits for Section 12. |
+| Readiness | Fail-closed: persisted v3 `PASSED` is `BLOCKED`. Only current compatible v4 with 49 cases and zero failures is `RELEASE_READY`. |

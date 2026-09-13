@@ -238,7 +238,8 @@ async function runCase(id: (typeof S06_CASE_IDS)[number]): Promise<{ observation
 
   if (id === "S06-SOL-04") {
     const result = solveSeatingV1(seatingCorpus600());
-    push("sixHundredHard", result.score.hardViolations, 0);
+    push("sixHundredStatus", result.status, "INFEASIBLE");
+    push("sixHundredHardPresent", result.score.hardViolations > 0, true);
     push("sixHundredWithinBound", result.metrics.elapsedMs <= 20_000, true);
     return { observations, assertions };
   }

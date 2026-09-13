@@ -53,6 +53,7 @@ const KIND_BY_CODE: Record<PlatformErrorCode, OperationalStateKind> = {
   TRANSITION_INVALID: "invalid_transition",
   ADOPTION_MISMATCH: "conflict",
   SEATING_VALIDATION_REJECTED: "validation",
+  SEAT_CAPACITY_MISMATCH: "validation",
   IDEMPOTENCY_CONFLICT: "duplicate",
   DEPENDENCY_UNAVAILABLE: "postgres_unavailable",
   CAPABILITY_NOT_ENABLED: "readiness_unavailable",

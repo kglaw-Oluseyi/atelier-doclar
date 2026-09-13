@@ -1072,11 +1072,18 @@ export { executeS06Evaluation } from "./seating-evaluation-runner.js";
 export { executeS06EvaluationV2 } from "./seating-evaluation-v2-runner.js";
 export {
   S06_V2_CASE_IDS,
+  S06_V2_CORPUS_HASH,
   S06_V2_EVALUATION_CORPUS_EDITION,
   S06_V2_EVALUATION_CONTRACT_VERSION,
+  S06_V3_CASE_IDS,
+  S06_V3_CORPUS_HASH,
+  S06_V3_EVALUATION_CORPUS_EDITION,
+  S06_V3_EVALUATION_CONTRACT_VERSION,
+  S06_V4_CASE_IDS,
   S06_V1_STALE_REASON,
   S06_V2_PRIOR_CORPUS_STALE_REASON,
   s06V2CorpusHash,
+  s06V3CorpusHash,
   seatingV2EvalReadiness,
 } from "./seating-evaluation-v2-schemas.js";
 export {

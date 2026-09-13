@@ -42,13 +42,21 @@ function snapMm(value: number) {
   return Math.round(value / 100) * 100;
 }
 
-function physicalSeatsForTable(objects: readonly SpatialObject[], tableId: string) {
+type StudioCapacityObject = {
+  id: string;
+  objectType: string;
+  label?: string;
+  tombstoned?: boolean;
+  subtype?: unknown;
+};
+
+function physicalSeatsForTable(objects: readonly StudioCapacityObject[], tableId: string) {
   return objects.filter(
-    (item) => item.objectType === "SEAT" && !item.tombstoned && (item.subtype as { tableId?: string }).tableId === tableId,
+    (item) => item.objectType === "SEAT" && !item.tombstoned && (item.subtype as { tableId?: string } | undefined)?.tableId === tableId,
   );
 }
 
-function persistedSeatCountInput(table: SpatialObject | undefined, objects: readonly SpatialObject[]) {
+function persistedSeatCountInput(table: StudioCapacityObject | undefined, objects: readonly StudioCapacityObject[]) {
   if (!table || table.objectType !== "TABLE") return "";
   const physical = physicalSeatsForTable(objects, table.id).length;
   if (physical > 0) return String(physical);

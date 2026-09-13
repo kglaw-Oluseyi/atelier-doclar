@@ -1,4 +1,3 @@
-import { exactHash } from "./eec-hash.js";
 import { PlatformError } from "./errors.js";
 import { defaultSolverConfig, solveSeatingV1 } from "./seating-solver-v1.js";
 import type { SolverConstraint, SolverRequest } from "./seating-solver-types.js";

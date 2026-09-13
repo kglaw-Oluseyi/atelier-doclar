@@ -3,11 +3,13 @@ import { exactHash } from "./eec-hash.js";
 import { loadNonProductionFixtures } from "./bootstrap.js";
 import { FIXTURE_IDS as people } from "./fixtures.js";
 import { MemoryPlatformStore } from "./memory-store.js";
+import { MemorySeatingV2Repository } from "./memory-seating-v2-store.js";
 import { authorize } from "./policy.js";
 import { snapshotLayoutAdapter } from "./seating-adapters.js";
 import { applyS06SeatingLayoutIfMissing } from "./seating-fixtures.js";
+import { defaultSolverConfig, solveSeatingV1 } from "./seating-solver-v1.js";
 import { assertSeatingV2CompiledRequest, compileSeatingV2Request } from "./seating-v2-compiler.js";
-import { seatingV2PackageContentHash, seatingV2SemanticHash } from "./seating-v2-hash.js";
+import { seatingV2PackageContentHash, seatingV2SemanticHash, seatingV2TableToken } from "./seating-v2-hash.js";
 import {
   S06_V2_CASE_IDS,
   S06_V2_EVALUATION_CONTRACT_VERSION,
@@ -22,6 +24,8 @@ import {
 } from "./seating-evaluation-v2-schemas.js";
 import { SEATING_V2_CONFIG_HASH } from "./seating-v2-package.js";
 import {
+  SEATING_V2_LEGACY_COMPILER_VERSION,
+  SEATING_V2_LEGACY_VALIDATOR_VERSION,
   SEATING_V2_SOLVER_VERSION,
   SEATING_V2_VALIDATOR_VERSION,
   type SeatingV2CompiledRequest,
@@ -99,6 +103,177 @@ function requireTable(guestA: string, guestB: string, tableId: string): SeatingV
     targets: [{ type: "TABLE", idOrCode: tableId }],
     source: { type: "MANUAL" },
   };
+}
+
+function requireTableSubjects(guestIds: readonly string[], tableId: string): SeatingV2RuleContent {
+  return {
+    kind: "REQUIRE_TABLE",
+    hardness: "HARD",
+    weight: null,
+    scope: "TABLE",
+    specialistDomain: "NONE",
+    subjects: guestIds.map((id) => ({ type: "EVENT_GUEST" as const, id })),
+    targets: [{ type: "TABLE", idOrCode: tableId }],
+    source: { type: "MANUAL" },
+  };
+}
+
+function forbidTable(guestId: string, tableId: string): SeatingV2RuleContent {
+  return {
+    kind: "FORBID_TABLE",
+    hardness: "HARD",
+    weight: null,
+    scope: "TABLE",
+    specialistDomain: "NONE",
+    subjects: [{ type: "EVENT_GUEST", id: guestId }],
+    targets: [{ type: "TABLE", idOrCode: tableId }],
+    source: { type: "MANUAL" },
+  };
+}
+
+function publishedTables(store: MemoryPlatformStore) {
+  return snapshotLayoutAdapter(store.snapshot(), people.orgMaison, people.eventAlphaOne).tables;
+}
+
+function samePublishedTable(layoutTableId: string | null | undefined, tableObjectId: string) {
+  return layoutTableId === tableObjectId || layoutTableId === seatingV2TableToken(tableObjectId);
+}
+
+function bareFixture(): { service: PlatformService; store: MemoryPlatformStore } {
+  const store = new MemoryPlatformStore();
+  const service = loadNonProductionFixtures(store);
+  service.prepareEventRsvp(actor(people.personDirector), {
+    organisationId: people.orgMaison,
+    eventId: people.eventAlphaOne,
+    hostDisplayName: "Maison Doclar",
+    eventDisplayName: "Alpha One",
+    reason: "s06-eval-v4 bare RSVP",
+    idempotencyKey: "s06v4-eval-bare-rsvp",
+  });
+  return { service, store };
+}
+
+async function planAssignment(
+  v2: ReturnType<PlatformService["seatingV2Commands"]>,
+  planEditionId: string,
+  guestId: string,
+) {
+  const assignments = await v2.repository.transaction(async (tx) =>
+    (
+      await tx.list<{ planEditionId: string; eventGuestId: string; layoutTableId?: string | null; state: string }>(
+        "planAssignments",
+        { organisationId: people.orgMaison, eventId: people.eventAlphaOne },
+      )
+    ).filter((item) => item.planEditionId === planEditionId),
+  );
+  return assignments.find((item) => item.eventGuestId === guestId);
+}
+
+async function compiledForPackage(
+  v2: ReturnType<PlatformService["seatingV2Commands"]>,
+  packageId: string,
+) {
+  return v2.repository.transaction(async (tx) =>
+    (
+      await tx.list<{ packageId: string; compiledRequestJson: SeatingV2CompiledRequest }>("compiledRequests", {
+        organisationId: people.orgMaison,
+        eventId: people.eventAlphaOne,
+      })
+    ).find((item) => item.packageId === packageId),
+  );
+}
+
+function mutateStoredRun(
+  v2: ReturnType<PlatformService["seatingV2Commands"]>,
+  runId: string,
+  patch: (run: { compilerVersion?: string; validatorVersion?: string }) => void,
+) {
+  if (!(v2.repository instanceof MemorySeatingV2Repository)) {
+    throw new Error("memory repository required");
+  }
+  const run = v2.repository.backingStore.collection("runs").find((item) => item.id === runId);
+  if (!run) throw new Error("run missing");
+  patch(run);
+}
+
+function cas(layout: { id: string; version: number; currentRevisionNumber: number }) {
+  return {
+    organisationId: people.orgMaison,
+    eventId: people.eventAlphaOne,
+    layoutId: layout.id,
+    expectedVersion: layout.version,
+    expectedRevisionNumber: layout.currentRevisionNumber,
+  };
+}
+
+function publishMismatchedCapacityLayout(service: PlatformService, store: MemoryPlatformStore, prefix: string) {
+  const snap = store.snapshot();
+  const venue =
+    snap.venues.find((item) => item.organisationId === people.orgMaison && item.status === "ACTIVE") ??
+    service.createVenue(actor(people.personDirector), {
+      organisationId: people.orgMaison,
+      displayName: "S06 v4 mismatch pavilion",
+      reason: "Seed mismatched capacity layout venue",
+      idempotencyKey: `${prefix}-venue`,
+    });
+  const adopted = service.adoptVenue(actor(people.personDirector), {
+    organisationId: people.orgMaison,
+    eventId: people.eventAlphaOne,
+    venueId: venue.id,
+    reason: "Adopt mismatched capacity layout venue",
+    idempotencyKey: `${prefix}-adopt`,
+  });
+  let layout = service.createBlankLayout(actor(people.personPlanner), {
+    organisationId: people.orgMaison,
+    eventId: people.eventAlphaOne,
+    eventVenueId: adopted.id,
+    name: `${prefix} hall`,
+    widthMm: 24000,
+    heightMm: 18000,
+    reason: "Create mismatched capacity layout",
+    idempotencyKey: `${prefix}-layout`,
+  });
+  layout = service.applyLayoutCommand(actor(people.personPlanner), {
+    ...cas(layout),
+    reason: "Add mismatched table",
+    command: {
+      kind: "CREATE_OBJECT",
+      objectType: "TABLE",
+      label: "Mismatched",
+      geometry: { kind: "RECTANGLE", xMm: 1200, yMm: 1200, widthMm: 1800, heightMm: 1800 },
+      subtype: { shape: "RECTANGLE", declaredCapacity: 8 },
+    },
+  });
+  const created = service
+    .getLayoutSetupWorkspace(actor(people.personPlanner), people.orgMaison, people.eventAlphaOne, layout.id)
+    .objects.find((item) => item.objectType === "TABLE" && item.label === "Mismatched");
+  if (!created) throw new Error("mismatched table missing");
+  layout = service.applyLayoutCommand(actor(people.personPlanner), {
+    ...cas(layout),
+    reason: "Generate four physical seats",
+    command: {
+      kind: "GENERATE_SEATS",
+      tableId: created.id,
+      seatCount: 4,
+      confirmDestructive: false,
+    },
+  });
+  const current = () =>
+    service.getLayoutSetupWorkspace(actor(people.personPlanner), people.orgMaison, people.eventAlphaOne, layout.id).layout;
+  const asDirector = () =>
+    service.getLayoutSetupWorkspace(actor(people.personDirector), people.orgMaison, people.eventAlphaOne, layout.id).layout;
+  service.runLayoutValidation(actor(people.personPlanner), { ...cas(current()), reason: "Validate mismatched layout" });
+  const submitted = service.submitLayoutApproval(actor(people.personPlanner), {
+    ...cas(current()),
+    reason: "Submit mismatched layout",
+  });
+  service.decideLayoutApproval(actor(people.personDirector), {
+    ...cas(asDirector()),
+    approvalId: submitted.id,
+    decision: "APPROVED",
+    reason: "Approve mismatched layout",
+  });
+  service.publishLayout(actor(people.personDirector), { ...cas(asDirector()), reason: "Publish mismatched layout" });
 }
 
 function attending(service: PlatformService, name: string, key: string) {
@@ -870,10 +1045,462 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
     return { observations, assertions };
   }
 
+  if (id === "S06V4-PATH-01") {
+    const { service, store } = fixture();
+    const v2 = service.seatingV2Commands();
+    const guest = attending(service, "V4P01", "s06v4-p01-a");
+    const tableId = publishedTableId(store);
+    const draft = await v2.createRule(
+      actor(people.personPlanner),
+      envelope(people.assignPlanner, "s06v4-p01-create"),
+      requireTableSubjects([guest.id], tableId),
+    );
+    await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v4-p01-act"), {
+      editionId: draft.value.id,
+    });
+    const frozen = await v2.freezePackage(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-p01-freeze"), {
+      seed: "seed-v4-p01",
+    });
+    const run = await v2.launchRun(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-p01-run"), {
+      packageId: frozen.value.id,
+    });
+    const adopted = await v2.adoptRun(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-p01-adopt"), {
+      runId: run.value.id,
+    });
+    const seated = await planAssignment(v2, adopted.value.id, guest.id);
+    push("runStatus", run.value.status, "FEASIBLE");
+    push("solverClaim", run.value.solverClaim, "FEASIBLE");
+    push("seatedAtRequiredTable", seated?.state === "SEATED" && samePublishedTable(seated.layoutTableId, tableId), true);
+    return { observations, assertions };
+  }
+
+  if (id === "S06V4-PATH-02") {
+    const { service, store } = fixture();
+    const v2 = service.seatingV2Commands();
+    const guestA = attending(service, "V4P02A", "s06v4-p02-a");
+    const guestB = attending(service, "V4P02B", "s06v4-p02-b");
+    const tableId = publishedTableId(store);
+    const draft = await v2.createRule(
+      actor(people.personPlanner),
+      envelope(people.assignPlanner, "s06v4-p02-create"),
+      requireTable(guestA.id, guestB.id, tableId),
+    );
+    await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v4-p02-act"), {
+      editionId: draft.value.id,
+    });
+    const frozen = await v2.freezePackage(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-p02-freeze"), {
+      seed: "seed-v4-p02",
+    });
+    const run = await v2.launchRun(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-p02-run"), {
+      packageId: frozen.value.id,
+    });
+    const adopted = await v2.adoptRun(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-p02-adopt"), {
+      runId: run.value.id,
+    });
+    const seatedA = await planAssignment(v2, adopted.value.id, guestA.id);
+    const seatedB = await planAssignment(v2, adopted.value.id, guestB.id);
+    push("runStatus", run.value.status, "FEASIBLE");
+    push(
+      "bothSeatedAtRequiredTable",
+      seatedA?.state === "SEATED" &&
+        seatedB?.state === "SEATED" &&
+        samePublishedTable(seatedA.layoutTableId, tableId) &&
+        samePublishedTable(seatedB.layoutTableId, tableId),
+      true,
+    );
+    return { observations, assertions };
+  }
+
+  if (id === "S06V4-PATH-03") {
+    const { service, store } = fixture();
+    const v2 = service.seatingV2Commands();
+    const tables = publishedTables(store);
+    const forbiddenId = tables[0]!.objectId;
+    const guest = attending(service, "V4P03", "s06v4-p03-a");
+    const draft = await v2.createRule(
+      actor(people.personPlanner),
+      envelope(people.assignPlanner, "s06v4-p03-create"),
+      forbidTable(guest.id, forbiddenId),
+    );
+    await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v4-p03-act"), {
+      editionId: draft.value.id,
+    });
+    const frozen = await v2.freezePackage(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-p03-freeze"), {
+      seed: "seed-v4-p03",
+    });
+    const run = await v2.launchRun(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-p03-run"), {
+      packageId: frozen.value.id,
+    });
+    const adopted = await v2.adoptRun(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-p03-adopt"), {
+      runId: run.value.id,
+    });
+    const seated = await planAssignment(v2, adopted.value.id, guest.id);
+    push("runStatus", run.value.status, "FEASIBLE");
+    push("forbidTableExcluded", seated?.state === "SEATED" && !samePublishedTable(seated.layoutTableId, forbiddenId), true);
+    return { observations, assertions };
+  }
+
+  if (id === "S06V4-PATH-04") {
+    const { service, store } = fixture();
+    const v2 = service.seatingV2Commands();
+    const tables = publishedTables(store);
+    const reservedTableId = tables[1]?.objectId ?? tables[0]!.objectId;
+    const guest = attending(service, "V4P04", "s06v4-p04-a");
+    const draft = await v2.createReservation(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-p04-create"), {
+      eligibleMemberIds: [guest.id],
+      targets: [{ type: "TABLE", idOrCode: reservedTableId }],
+      exact: 1,
+    });
+    await v2.activateReservation(actor(people.personDirector), envelope(people.assignDirector, "s06v4-p04-act"), {
+      editionId: draft.value.id,
+    });
+    const frozen = await v2.freezePackage(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-p04-freeze"), {
+      seed: "seed-v4-p04",
+    });
+    const run = await v2.launchRun(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-p04-run"), {
+      packageId: frozen.value.id,
+    });
+    const adopted = await v2.adoptRun(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-p04-adopt"), {
+      runId: run.value.id,
+    });
+    const seated = await planAssignment(v2, adopted.value.id, guest.id);
+    const packageReservations = await v2.repository.transaction(async (tx) =>
+      (
+        await tx.list<{ packageId: string; reservationEditionId: string }>("packageReservations", {
+          organisationId: people.orgMaison,
+          eventId: people.eventAlphaOne,
+        })
+      ).filter((item) => item.packageId === frozen.value.id),
+    );
+    push("runStatus", run.value.status, "FEASIBLE");
+    push("activeReservationFrozen", packageReservations.some((item) => item.reservationEditionId === draft.value.id), true);
+    push("reservationEnforced", seated?.state === "SEATED" && samePublishedTable(seated.layoutTableId, reservedTableId), true);
+    return { observations, assertions };
+  }
+
+  if (id === "S06V4-PATH-05") {
+    const { service, store } = fixture();
+    const v2 = service.seatingV2Commands();
+    const tableId = publishedTableId(store);
+    const g1 = attending(service, "V4G1", "s06v4-p05-g1");
+    const g2 = attending(service, "V4G2", "s06v4-p05-g2");
+    const g3 = attending(service, "V4G3", "s06v4-p05-g3");
+    const g4 = attending(service, "V4G4", "s06v4-p05-g4");
+    const activate = async (content: SeatingV2RuleContent, key: string) => {
+      const draft = await v2.createRule(actor(people.personPlanner), envelope(people.assignPlanner, `${key}-c`), content);
+      await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, `${key}-a`), {
+        editionId: draft.value.id,
+      });
+    };
+    await activate(requireTable(g1.id, g4.id, tableId), "s06v4-p05-r1");
+    await activate(keepApart(g1.id, g2.id), "s06v4-p05-r2");
+    await activate(keepApart(g3.id, g2.id), "s06v4-p05-r3");
+    const frozen = await v2.freezePackage(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-p05-freeze"), {
+      seed: "seed-v4-p05",
+    });
+    const run = await v2.launchRun(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-p05-run"), {
+      packageId: frozen.value.id,
+    });
+    const adopted = await v2.adoptRun(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-p05-adopt"), {
+      runId: run.value.id,
+    });
+    const seated = await Promise.all([g1, g2, g3, g4].map((guest) => planAssignment(v2, adopted.value.id, guest.id)));
+    const compiled = await compiledForPackage(v2, frozen.value.id);
+    const runAssignments = await v2.repository.transaction(async (tx) =>
+      (
+        await tx.list<{ runId: string; guestToken: string; state: string; positionToken: string | null; typedReasonCodes: string[] }>(
+          "runAssignments",
+          { organisationId: people.orgMaison, eventId: people.eventAlphaOne },
+        )
+      ).filter((item) => item.runId === run.value.id),
+    );
+    const report = validateSeatingV2(
+      { contentHash: frozen.value.contentHash, compiledRequest: compiled!.compiledRequestJson },
+      runAssignments.map((item) => ({
+        guestToken: item.guestToken,
+        state: item.state as "SEATED" | "UNSEATED",
+        positionToken: item.positionToken,
+        typedReasonCodes: item.typedReasonCodes,
+      })),
+      runAssignments.filter((item) => item.state === "UNSEATED").map((item) => item.guestToken),
+      NOW,
+    );
+    push("runStatus", run.value.status, "FEASIBLE");
+    push("solverClaim", run.value.solverClaim, "FEASIBLE");
+    push("fourGuestsSeated", seated.every((item) => item?.state === "SEATED"), true);
+    push("validatorFeasible", report.verdict, "FEASIBLE");
+    return { observations, assertions };
+  }
+
+  if (id === "S06V4-PATH-06") {
+    const { service, store } = fixture();
+    const tables = publishedTables(store);
+    const synthetic = tables.every(
+      (table) =>
+        table.positionSource === "DECLARED_SYNTHETIC" &&
+        table.physicalPositionCount === 0 &&
+        table.declaredCapacity === 8 &&
+        table.mismatch === false,
+    );
+    attending(service, "V4P06", "s06v4-p06-a");
+    const frozen = await service.seatingV2Commands().freezePackage(
+      actor(people.personPlanner),
+      envelope(people.assignPlanner, "s06v4-p06-freeze"),
+      { seed: "seed-v4-p06" },
+    );
+    push("declaredSynthetic", synthetic && tables.length === 2, true);
+    push("freezeApplied", frozen.application, "APPLIED");
+    return { observations, assertions };
+  }
+
+  if (id === "S06V4-M01") {
+    const { service } = fixture();
+    const v2 = service.seatingV2Commands();
+    const guest = attending(service, "V4M01", "s06v4-m01-a");
+    let rejected = false;
+    try {
+      await v2.createRule(
+        actor(people.personPlanner),
+        envelope(people.assignPlanner, "s06v4-m01-create"),
+        requireTableSubjects([guest.id], "00000000-0000-4000-8000-000000000099"),
+      );
+    } catch (error) {
+      rejected = error instanceof PlatformError && error.code === "VALIDATION_FAILED";
+    }
+    const packages = await v2.repository.transaction(async (tx) =>
+      tx.list("inputPackages", { organisationId: people.orgMaison, eventId: people.eventAlphaOne }),
+    );
+    push("missingTableRejected", rejected, true);
+    push("noPackageCreated", packages.length === 0, true);
+    return { observations, assertions };
+  }
+
+  if (id === "S06V4-M02") {
+    const { service } = fixture();
+    const path = await keepApartPath(service, "v4m02");
+    const compiled = await compiledForPackage(path.v2, path.frozen.value.id);
+    const injected = structuredClone(compiled!.compiledRequestJson);
+    injected.rules = [
+      ...injected.rules,
+      {
+        ...injected.rules[0]!,
+        tableTokens: ["00000000-0000-4000-8000-00000000aa01"],
+      },
+    ];
+    let rawRejected = false;
+    try {
+      assertSeatingV2CompiledRequest(injected);
+    } catch {
+      rawRejected = true;
+    }
+    const nested = structuredClone(compiled!.compiledRequestJson) as SeatingV2CompiledRequest & {
+      guests: Array<SeatingV2CompiledRequest["guests"][number] & { aliases?: string[] }>;
+    };
+    nested.guests = nested.guests.map((guest) => ({ ...guest, aliases: ["11111111-1111-4111-8111-111111111099"] }));
+    let nestedRejected = false;
+    try {
+      assertSeatingV2CompiledRequest(nested);
+    } catch {
+      nestedRejected = true;
+    }
+    push("rawUuidRejected", rawRejected, true);
+    push("nestedUuidRejected", nestedRejected, true);
+    return { observations, assertions };
+  }
+
+  if (id === "S06V4-M03") {
+    const { service } = fixture();
+    const path = await keepApartPath(service, "v4m03");
+    const compiled = await compiledForPackage(path.v2, path.frozen.value.id);
+    const request = compiled!.compiledRequestJson;
+    const violating = request.guests.map((guest) => ({
+      guestToken: guest.token,
+      state: "UNSEATED" as const,
+      positionToken: null,
+      typedReasonCodes: [],
+    }));
+    const report = validateSeatingV2(
+      { contentHash: path.frozen.value.contentHash, compiledRequest: request },
+      violating,
+      request.guests.map((guest) => guest.token),
+      NOW,
+    );
+    const unmatched = solveSeatingV1({
+      guests: [
+        { token: "guest-a", eligible: true, capabilityCodes: [], protocolCodes: [] },
+        { token: "guest-b", eligible: true, capabilityCodes: [], protocolCodes: [] },
+      ],
+      positions: [
+        { token: "pos-t2-1", tableToken: "table-two-token-aaaa", zoneCodes: [], capabilityCodes: [] },
+        { token: "pos-t2-2", tableToken: "table-two-token-aaaa", zoneCodes: [], capabilityCodes: [] },
+      ],
+      constraints: [
+        {
+          id: "require-t1",
+          kind: "HARD",
+          predicateType: "REQUIRE_TABLE",
+          payload: { predicateType: "REQUIRE_TABLE", guestTokens: ["guest-a"], tableTokens: ["table-one-token-bbbb"] },
+        },
+      ],
+      reservations: [],
+      config: defaultSolverConfig({ seed: "s06v4-false-feasible", timeLimitMs: 1_000, alternativeCount: 0 }),
+    });
+    push("validatorRejectedFalseFeasible", report.verdict, "INFEASIBLE");
+    push("solverDidNotClaimFeasible", unmatched.status !== "FEASIBLE", true);
+    return { observations, assertions };
+  }
+
+  if (id === "S06V4-M04") {
+    const guests = Array.from({ length: 9 }, (_, index) => ({
+      token: `guest-${String(index).padStart(2, "0")}`,
+      eligible: true,
+      capabilityCodes: [],
+      protocolCodes: [],
+    }));
+    const result = solveSeatingV1({
+      guests,
+      positions: Array.from({ length: 9 }, (_, index) => ({
+        token: `pos-${index}`,
+        tableToken: "only-table-token-aaaa",
+        zoneCodes: [],
+        capabilityCodes: [],
+      })),
+      constraints: guests.slice(0, -1).map((guest, index) => ({
+        id: `apart-${index}`,
+        kind: "HARD" as const,
+        predicateType: "KEEP_APART" as const,
+        payload: { predicateType: "KEEP_APART" as const, guestTokens: [guest.token, guests[index + 1]!.token] },
+      })),
+      reservations: [],
+      config: defaultSolverConfig({ seed: "s06v4-incomplete-proof", timeLimitMs: 50, alternativeCount: 0 }),
+    });
+    push("incompleteNotInfeasible", result.status, "TIMED_OUT");
+    push("didNotGuessInfeasible", result.status !== "INFEASIBLE", true);
+    return { observations, assertions };
+  }
+
+  if (id === "S06V4-M05") {
+    const { service } = fixture();
+    const path = await keepApartPath(service, "v4m05");
+    mutateStoredRun(path.v2, path.run.value.id, (run) => {
+      run.validatorVersion = SEATING_V2_LEGACY_VALIDATOR_VERSION;
+    });
+    const relaunch = await path.v2.launchRun(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-m05-relaunch"), {
+      packageId: path.frozen.value.id,
+    });
+    push("validatorChangeApplied", relaunch.application, "APPLIED");
+    push("validatorChangeNewRun", relaunch.value.id !== path.run.value.id, true);
+    push("currentValidator", relaunch.value.validatorVersion, SEATING_V2_VALIDATOR_VERSION);
+    return { observations, assertions };
+  }
+
+  if (id === "S06V4-M06") {
+    const { service } = fixture();
+    const path = await keepApartPath(service, "v4m06");
+    mutateStoredRun(path.v2, path.run.value.id, (run) => {
+      run.compilerVersion = SEATING_V2_LEGACY_COMPILER_VERSION;
+    });
+    let adoptRejected = false;
+    try {
+      await path.v2.adoptRun(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-m06-adopt"), {
+        runId: path.run.value.id,
+      });
+    } catch (error) {
+      adoptRejected = error instanceof PlatformError && error.code === "ADOPTION_MISMATCH";
+    }
+    const relaunch = await path.v2.launchRun(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-m06-relaunch"), {
+      packageId: path.frozen.value.id,
+    });
+    push("historicAdoptDenied", adoptRejected, true);
+    push("compilerChangeApplied", relaunch.application, "APPLIED");
+    push("compilerChangeNewRun", relaunch.value.id !== path.run.value.id, true);
+    return { observations, assertions };
+  }
+
+  if (id === "S06V4-M07") {
+    const { service, store } = bareFixture();
+    publishMismatchedCapacityLayout(service, store, "s06v4-m07");
+    const published = snapshotLayoutAdapter(store.snapshot(), people.orgMaison, people.eventAlphaOne);
+    attending(service, "V4M07", "s06v4-m07-a");
+    const v2 = service.seatingV2Commands();
+    let blocked = false;
+    try {
+      await v2.freezePackage(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-m07-freeze"), {
+        seed: "seed-v4-m07",
+      });
+    } catch (error) {
+      blocked = error instanceof PlatformError && error.code === "SEAT_CAPACITY_MISMATCH";
+    }
+    const packages = await v2.repository.transaction(async (tx) =>
+      tx.list("inputPackages", { organisationId: people.orgMaison, eventId: people.eventAlphaOne }),
+    );
+    push("mismatchDetected", published.tables.some((item) => item.mismatch === true), true);
+    push("freezeBlocked", blocked, true);
+    push("noPackageCreated", packages.length === 0, true);
+    return { observations, assertions };
+  }
+
+  if (id === "S06V4-M08") {
+    const { service, store } = fixture();
+    const v2 = service.seatingV2Commands();
+    const guest = attending(service, "V4M08", "s06v4-m08-a");
+    const tableId = publishedTableId(store);
+    const draft = await v2.createRule(
+      actor(people.personPlanner),
+      envelope(people.assignPlanner, "s06v4-m08-create"),
+      requireTableSubjects([guest.id], tableId),
+    );
+    await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v4-m08-act"), {
+      editionId: draft.value.id,
+    });
+    const frozen = await v2.freezePackage(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-m08-freeze"), {
+      seed: "seed-v4-m08",
+    });
+    const compiled = await compiledForPackage(v2, frozen.value.id);
+    const corrupted = structuredClone(compiled!.compiledRequestJson);
+    corrupted.rules = corrupted.rules.map((rule) => ({ ...rule, tableTokens: [tableId] }));
+    let rawTargetRejected = false;
+    try {
+      assertSeatingV2CompiledRequest(corrupted);
+    } catch {
+      rawTargetRejected = true;
+    }
+    let tokenAsObjectRejected = false;
+    try {
+      compileSeatingV2Request({
+        organisationId: people.orgMaison,
+        eventId: people.eventAlphaOne,
+        semanticHash: "sem",
+        pepper: "pepper",
+        configHash: "cfg",
+        seed: "seed",
+        guests: [{ eventGuestId: guest.id, eligible: true }],
+        positions: compiled!.compiledRequestJson.positions.map((item) => ({
+          positionToken: item.token,
+          tableToken: item.tableToken,
+        })),
+        rules: [
+          {
+            editionId: draft.value.id,
+            contentHash: draft.value.contentHash,
+            lifecycle: "ACTIVE",
+            content: requireTableSubjects([guest.id], seatingV2TableToken(tableId)),
+          },
+        ],
+        reservations: [],
+      });
+    } catch (error) {
+      tokenAsObjectRejected = error instanceof PlatformError && error.code === "VALIDATION_FAILED";
+    }
+    push("rawTargetRejected", rawTargetRejected, true);
+    push("tokenNamespaceRejected", tokenAsObjectRejected, true);
+    return { observations, assertions };
+  }
+
   throw new Error(`unhandled case ${id}`);
 }
 
-function evaluateCase(observations: S06V2Observation[], assertions: S06V2Assertion[]): "PASSED" | "FAILED" {
+export function evaluateS06V2Case(observations: S06V2Observation[], assertions: S06V2Assertion[]): "PASSED" | "FAILED" {
   return assertions.every((assertion) => assertionHolds(observations.find((item) => item.name === assertion.name), assertion))
     ? "PASSED"
     : "FAILED";
@@ -889,7 +1516,7 @@ export async function executeS06EvaluationV2(): Promise<S06V2EvaluationResult> {
         caseId,
         observations,
         assertions,
-        status: evaluateCase(observations, assertions),
+        status: evaluateS06V2Case(observations, assertions),
       });
     } catch (error) {
       cases.push({

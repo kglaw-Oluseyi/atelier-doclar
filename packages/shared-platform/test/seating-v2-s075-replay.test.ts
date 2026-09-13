@@ -13,6 +13,8 @@ import {
 } from "../src/seating-v2-schemas.js";
 import type { SeatingV2Run } from "../src/seating-v2-state.js";
 import type { SeatingV2RuleContent } from "../src/seating-v2-schemas.js";
+import type { PlatformService } from "../src/service.js";
+import type { PlatformStore } from "../src/store.js";
 import { actor, fixtureService, people, testClock } from "./helpers.js";
 
 function memoryRepo(v2: ReturnType<ReturnType<typeof fixtureService>["service"]["seatingV2Commands"]>) {
@@ -59,7 +61,7 @@ function keepApart(guestA: string, guestB: string): SeatingV2RuleContent {
   };
 }
 
-function preparePair(prefix: string, serviceStore?: ReturnType<typeof fixtureService>) {
+function preparePair(prefix: string, serviceStore?: { service: PlatformService; store: PlatformStore }) {
   const { service, store } = serviceStore ?? fixtureService();
   applyS06SeatingLayoutIfMissing(store, service);
   service.prepareEventRsvp(director(), {
