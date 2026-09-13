@@ -1012,11 +1012,18 @@ export {
   SeatingV2TableTokenSchema,
   SEATING_V2_VALIDATOR_VERSION,
   EOS_S06_SEATING_V2_MIGRATION_ID,
+  EOS_S06_SEATING_V2_REPLAY_IDENTITY_MIGRATION_ID,
   EOS_S06_SEATING_V2_RECEIPT_ID,
+  SEATING_V2_LEGACY_COMPILER_VERSION,
+  SEATING_V2_LEGACY_VALIDATOR_VERSION,
   SeatingV2CompiledRequestSchema,
   SeatingV2ValidationReportSchema,
 } from "./seating-v2-schemas.js";
-export { SEATING_V2_SQL_TABLES, SEATING_V2_POSTGRES_SCHEMA } from "./seating-v2-postgres-schema.js";
+export {
+  SEATING_V2_SQL_TABLES,
+  SEATING_V2_POSTGRES_SCHEMA,
+  SEATING_V2_REPLAY_IDENTITY_POSTGRES_SCHEMA,
+} from "./seating-v2-postgres-schema.js";
 export { emptySeatingV2State, SEATING_V2_COLLECTIONS, SEATING_V2_PURGE_CONFIRMATION } from "./seating-v2-state.js";
 export type { SeatingV2Repository, SeatingV2Transaction } from "./seating-v2-repository.js";
 export { MemorySeatingV2Repository, MemorySeatingV2Store } from "./memory-seating-v2-store.js";

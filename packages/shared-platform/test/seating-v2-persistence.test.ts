@@ -6,7 +6,13 @@ import { MemorySeatingV2Repository } from "../src/memory-seating-v2-store.js";
 import { PostgresSeatingV2Repository } from "../src/postgres-seating-v2-store.js";
 import { MemoryPlatformPg, PostgresPlatformStore } from "../src/postgres-store.js";
 import { SEATING_ALLOCATION_POSTGRES_SCHEMA } from "../src/seating-postgres-schema.js";
-import { EOS_S06_SEATING_V2_MIGRATION_ID, SEATING_V2_POSTGRES_SCHEMA, SEATING_V2_SQL_TABLES } from "../src/seating-v2-postgres-schema.js";
+import {
+  EOS_S06_SEATING_V2_MIGRATION_ID,
+  EOS_S06_SEATING_V2_REPLAY_IDENTITY_MIGRATION_ID,
+  SEATING_V2_POSTGRES_SCHEMA,
+  SEATING_V2_REPLAY_IDENTITY_POSTGRES_SCHEMA,
+  SEATING_V2_SQL_TABLES,
+} from "../src/seating-v2-postgres-schema.js";
 import type { SeatingV2Transaction } from "../src/seating-v2-repository.js";
 import { SEATING_V2_COLLECTIONS, SEATING_V2_PURGE_CONFIRMATION, emptySeatingV2State } from "../src/seating-v2-state.js";
 import { emptySnapshot } from "../src/store.js";
@@ -90,17 +96,28 @@ describe("EOS-S06 V2 additive persistence", () => {
     const ids = PLATFORM_MIGRATIONS.map((item) => item.id);
     const index007 = ids.indexOf("007_seating_allocation");
     const index008 = ids.indexOf(EOS_S06_SEATING_V2_MIGRATION_ID);
+    const index009 = ids.indexOf(EOS_S06_SEATING_V2_REPLAY_IDENTITY_MIGRATION_ID);
     assert.equal(EOS_S06_SEATING_V2_MIGRATION_ID, "008_seating_truth_v2");
+    assert.equal(EOS_S06_SEATING_V2_REPLAY_IDENTITY_MIGRATION_ID, "009_seating_v2_run_reuse_identity");
     assert.ok(index007 >= 0);
     assert.equal(index008, index007 + 1);
+    assert.equal(index009, index008 + 1);
     const seven = PLATFORM_MIGRATIONS[index007];
     const eight = PLATFORM_MIGRATIONS[index008];
+    const nine = PLATFORM_MIGRATIONS[index009];
     assert.ok(seven);
     assert.ok(eight);
+    assert.ok(nine);
     assert.equal(seven.id, "007_seating_allocation");
     assert.equal(seven.sql, SEATING_ALLOCATION_POSTGRES_SCHEMA);
     assert.equal(checksumFor(seven.sql), checksumFor(SEATING_ALLOCATION_POSTGRES_SCHEMA));
     assert.equal(eight.sql, SEATING_V2_POSTGRES_SCHEMA);
+    assert.equal(nine.sql, SEATING_V2_REPLAY_IDENTITY_POSTGRES_SCHEMA);
+    assert.ok(nine.sql.includes("legacy-unknown-compiler"));
+    assert.ok(nine.sql.includes("legacy-unknown-validator"));
+    assert.equal(nine.sql.includes("s06-compiler-v2"), false);
+    assert.equal(checksumFor(eight.sql), checksumFor(SEATING_V2_POSTGRES_SCHEMA));
+    assert.equal(checksumFor(nine.sql), checksumFor(SEATING_V2_REPLAY_IDENTITY_POSTGRES_SCHEMA));
     assert.equal(SEATING_V2_SQL_TABLES.length, 35);
     for (const table of SEATING_V2_SQL_TABLES) {
       assert.ok(SEATING_V2_POSTGRES_SCHEMA.includes(`CREATE TABLE IF NOT EXISTS ${table}`), table);
@@ -112,6 +129,7 @@ describe("EOS-S06 V2 additive persistence", () => {
     assert.equal(second.status, "APPLIED");
     assert.ok(first.applied.includes("007_seating_allocation"));
     assert.ok(first.applied.includes(EOS_S06_SEATING_V2_MIGRATION_ID));
+    assert.ok(first.applied.includes(EOS_S06_SEATING_V2_REPLAY_IDENTITY_MIGRATION_ID));
     assert.equal(
       pg.migrations.find((item) => item.id === "007_seating_allocation")?.checksum,
       checksumFor(SEATING_ALLOCATION_POSTGRES_SCHEMA),
@@ -119,6 +137,10 @@ describe("EOS-S06 V2 additive persistence", () => {
     assert.equal(
       pg.migrations.find((item) => item.id === EOS_S06_SEATING_V2_MIGRATION_ID)?.checksum,
       checksumFor(SEATING_V2_POSTGRES_SCHEMA),
+    );
+    assert.equal(
+      pg.migrations.find((item) => item.id === EOS_S06_SEATING_V2_REPLAY_IDENTITY_MIGRATION_ID)?.checksum,
+      checksumFor(SEATING_V2_REPLAY_IDENTITY_POSTGRES_SCHEMA),
     );
     await PostgresPlatformStore.migrate(pg);
   });

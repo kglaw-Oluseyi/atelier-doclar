@@ -237,8 +237,12 @@ export type SeatingV2Run = {
   schemaVersion: number;
   packageId: string;
   packageHash: string;
+  semanticHash?: string;
+  compiledRequestHash?: string;
+  compilerVersion?: string;
   solverVersion: string;
   solverConfigHash: string;
+  validatorVersion?: string;
   deterministicSeed: string;
   status: "QUEUED" | "RUNNING" | "FEASIBLE" | "INFEASIBLE" | "TIMED_OUT" | "CANCELLED" | "ERROR";
   solverClaim?: string | null;

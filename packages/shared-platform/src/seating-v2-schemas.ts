@@ -8,7 +8,10 @@ export const SeatingV2TableTokenSchema = z.string().regex(/^[0-9a-f]{32}$/);
 export type SeatingV2TableToken = z.infer<typeof SeatingV2TableTokenSchema>;
 export const SEATING_V2_SCHEMA_VERSION = 1 as const;
 export const EOS_S06_SEATING_V2_MIGRATION_ID = "008_seating_truth_v2" as const;
+export const EOS_S06_SEATING_V2_REPLAY_IDENTITY_MIGRATION_ID = "009_seating_v2_run_reuse_identity" as const;
 export const EOS_S06_SEATING_V2_RECEIPT_ID = "EOS-S06-SEATING-V2" as const;
+export const SEATING_V2_LEGACY_COMPILER_VERSION = "legacy-unknown-compiler" as const;
+export const SEATING_V2_LEGACY_VALIDATOR_VERSION = "legacy-unknown-validator" as const;
 
 export const SEATING_V2_PREDICATES = [
   "KEEP_TOGETHER",

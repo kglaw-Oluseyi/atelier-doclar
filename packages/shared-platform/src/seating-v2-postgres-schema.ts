@@ -1,5 +1,6 @@
 import {
   EOS_S06_SEATING_V2_MIGRATION_ID as SEATING_V2_MIGRATION_ID,
+  EOS_S06_SEATING_V2_REPLAY_IDENTITY_MIGRATION_ID as SEATING_V2_REPLAY_IDENTITY_MIGRATION_ID,
   EOS_S06_SEATING_V2_RECEIPT_ID as SEATING_V2_RECEIPT_ID,
   SEATING_V2_ASSIGNMENT_STATES,
   SEATING_V2_HARDNESS,
@@ -19,6 +20,7 @@ import {
 } from "./seating-v2-schemas.js";
 
 export const EOS_S06_SEATING_V2_MIGRATION_ID = SEATING_V2_MIGRATION_ID;
+export const EOS_S06_SEATING_V2_REPLAY_IDENTITY_MIGRATION_ID = SEATING_V2_REPLAY_IDENTITY_MIGRATION_ID;
 export const EOS_S06_SEATING_V2_RECEIPT_ID = SEATING_V2_RECEIPT_ID;
 
 export const SEATING_V2_SQL_TABLES = [
@@ -662,4 +664,63 @@ CREATE TABLE IF NOT EXISTS seating_v2_migration_receipts (
   applied_at TIMESTAMPTZ NOT NULL,
   counts JSONB NOT NULL
 );
+`;
+
+export const SEATING_V2_REPLAY_IDENTITY_POSTGRES_SCHEMA = `
+ALTER TABLE seating_v2_runs
+  ADD COLUMN IF NOT EXISTS semantic_hash TEXT,
+  ADD COLUMN IF NOT EXISTS compiled_request_hash TEXT,
+  ADD COLUMN IF NOT EXISTS compiler_version TEXT,
+  ADD COLUMN IF NOT EXISTS validator_version TEXT;
+
+UPDATE seating_v2_runs AS r
+SET
+  semantic_hash = COALESCE(p.semantic_hash, 'legacy-unknown-hash'),
+  compiled_request_hash = COALESCE(p.compiled_request_hash, 'legacy-unknown-hash'),
+  compiler_version = 'legacy-unknown-compiler',
+  validator_version = COALESCE((
+    SELECT vr.validator_version
+    FROM seating_v2_validation_reports vr
+    WHERE vr.package_id = r.package_id
+      AND (r.assignments_hash IS NULL OR vr.assignments_hash = r.assignments_hash)
+    ORDER BY vr.created_at DESC
+    LIMIT 1
+  ), 'legacy-unknown-validator')
+FROM seating_v2_input_packages p
+WHERE p.id = r.package_id
+  AND (r.compiler_version IS NULL OR r.semantic_hash IS NULL OR r.compiled_request_hash IS NULL OR r.validator_version IS NULL);
+
+UPDATE seating_v2_runs
+SET
+  semantic_hash = COALESCE(semantic_hash, 'legacy-unknown-hash'),
+  compiled_request_hash = COALESCE(compiled_request_hash, 'legacy-unknown-hash'),
+  compiler_version = COALESCE(compiler_version, 'legacy-unknown-compiler'),
+  validator_version = COALESCE(validator_version, 'legacy-unknown-validator')
+WHERE semantic_hash IS NULL
+   OR compiled_request_hash IS NULL
+   OR compiler_version IS NULL
+   OR validator_version IS NULL;
+
+ALTER TABLE seating_v2_runs
+  ALTER COLUMN semantic_hash SET NOT NULL,
+  ALTER COLUMN compiled_request_hash SET NOT NULL,
+  ALTER COLUMN compiler_version SET NOT NULL,
+  ALTER COLUMN validator_version SET NOT NULL;
+
+DROP INDEX IF EXISTS seating_v2_runs_replay;
+
+CREATE UNIQUE INDEX IF NOT EXISTS seating_v2_runs_replay_identity
+  ON seating_v2_runs (
+    organisation_id,
+    event_id,
+    package_hash,
+    semantic_hash,
+    compiled_request_hash,
+    compiler_version,
+    solver_version,
+    solver_config_hash,
+    validator_version,
+    deterministic_seed
+  )
+  WHERE status IN ('FEASIBLE', 'INFEASIBLE', 'QUEUED', 'RUNNING');
 `;
