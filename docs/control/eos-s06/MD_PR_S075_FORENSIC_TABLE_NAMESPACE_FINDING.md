@@ -1,9 +1,9 @@
 # MD-PR-S075 forensic table-namespace finding
 
-**Authority:** `docs/control/eos-s06/MD_PR_S075_EOS_S06_V2_TABLE_IDENTITY_COMPILER_AND_FEASIBILITY_TRUTH.md`  
-**Authority SHA-256:** `faae89b7bf10ecbe1884c4b375b35ca65b9f516fb3bd2ec89863c3c99d5081c0`  
-**Deployed application SHA:** `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3`  
-**Read method:** SELECT / `BEGIN READ ONLY` against the live Event OS Postgres. No mutation, freeze, launch or audit write.  
+**Authority:** `docs/control/eos-s06/MD_PR_S075_EOS_S06_V2_TABLE_IDENTITY_COMPILER_AND_FEASIBILITY_TRUTH.md`
+**Authority SHA-256:** `faae89b7bf10ecbe1884c4b375b35ca65b9f516fb3bd2ec89863c3c99d5081c0`
+**Deployed application SHA:** `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3`
+**Read method:** SELECT / `BEGIN READ ONLY` against the live Event OS Postgres. No mutation, freeze, launch or audit write.
 **Canonical token function:** `exactHash` from `packages/shared-platform/src/eec-hash.ts`, invoked as `exactHash({ table: tableObjectId }).slice(0, 32)` — the exact position expression in `seating-v2-package.ts`. The hash algorithm was not retyped.
 
 ## Baseline confirmation (Section 1.2)
