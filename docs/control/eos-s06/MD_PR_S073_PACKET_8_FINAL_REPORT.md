@@ -89,11 +89,20 @@ Current corpus `s06-eval-v3`, 35 cases, hash `e433882ed1a55c4896aaf9fdf524257b87
 | `@maison-doclar/shared-platform` unit | 590 pass / 0 fail |
 | `@maison-doclar/event-os` unit | 106 pass / 0 fail |
 | `pnpm programme:validate` | PASS (`verdict=NO_CYCLES`) |
-| Event OS `next build` | PASS (after a first concurrent-`.next` collect failure while Playwright was running; clean rebuild PASS) |
+| Event OS production build (`next build`) | PASS (after a first concurrent-`.next` collect failure while Playwright was running; clean rebuild PASS) |
 | `git diff --check` | PASS |
-| Focused S073 `s073-diagnostic-removed` | PASS |
-| Changed-risk S072 `s06-v2-s072` / `s06-studio-editing` / `s06-solver-feasible` | PASS (four login timeouts after a dying local Next worker on the first batched run; isolated rerun 4/4 PASS) |
-| Affected action-result `s05a-s049-action-result-truth` | PASS 3/3 on first run |
+| Production-mode Playwright (`PLAYWRIGHT_PROD=1`) | NOT EXECUTED — local production runtime requires `DATABASE_URL`; leftover job aborted and remains a first-run tooling failure, not a pass |
+| Isolated development-runtime Playwright (`pnpm dev`) | PASS — focused S073 `s073-diagnostic-removed`, changed-risk S072 `s06-v2-s072` / `s06-studio-editing` / `s06-solver-feasible`, and S049 `s05a-s049-action-result-truth` |
+| Live production verification | PASS on deployed application SHA `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3` |
+
+Packet 8 execution modes are distinct and must not be collapsed:
+
+```text
+Production build: passed
+Production-mode Playwright: not executed because DATABASE_URL was unavailable locally
+Isolated development-runtime Playwright: focused S073, S072 and S049 passed
+Live production verification: passed on deployed application SHA
+```
 
 ## 17. Every first-run failure
 
@@ -106,8 +115,10 @@ Preserved, not erased by later passes:
 5. Packet 7 Gate B: after Adopt the Studio form did not emit POST (consume-once remount). Corrected on `caff006`.
 6. Packet 7 Gate B test: 360s timeout because `textContent().catch` swallowed an already-rendered rejection banner. Test-only `2f97603` / `0e5f2c4`.
 7. Packet 7 Gate E wrapper `otherMs=3429` / `launchMs=5790` on `1ce6e0f`. Scoped internals were launch 3224/3162 and other 3429/3361, both replays. Retained in `MD_PR_S073_PACKET_7_GATE_E_TIMING.md`.
-8. Packet 8: first Event OS build collided with a live Playwright `.next` and failed collecting `/api/audit/export`. Clean rebuild PASS.
-9. Packet 8: first local Playwright batch 10 passed / 4 failed after the Next worker aborted (`ECONNRESET`). Isolated rerun of the four tests PASS.
+8. Packet 8: first Event OS production build collided with a live Playwright `.next` and failed collecting `/api/audit/export`. Clean rebuild PASS. This is the production-build gate, not a Playwright pass.
+9. Packet 8: first local development-runtime Playwright batch aborted after Next `SegmentViewNode` / `__webpack_modules__` / `ECONNRESET`. Recorded as a first-run environment/tooling failure. Not represented as a pass.
+10. Packet 8: production-mode Playwright (`PLAYWRIGHT_PROD=1`) aborted because Event OS production runtime requires `DATABASE_URL`, which was unavailable locally. Not executed. Not represented as a pass. The leftover process remains terminated; it was not rerun.
+11. Packet 8: isolated development-runtime Playwright (`pnpm dev`) subsequently passed focused S073, changed-risk S072 and S049. That later pass does not erase items 9–10.
 
 ## 18. Live remaining-gate evidence
 

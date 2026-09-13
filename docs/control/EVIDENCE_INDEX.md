@@ -551,7 +551,7 @@ RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S037`. Canonical corpus p
 **Prompt Control ID:** `MD-PR-S073`
 **Milestone:** `EOS-S06` — not accepted — READY FOR INDEPENDENT HOLDOUT AND CLAUDE
 
-`MD-PR-S073` diagnoses and corrects the remaining V2 live command-settlement and process-isolation failure. Deployed application SHA `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3`. Repository/docs SHA `3f5c09b37d683ad7192660a33f596b7e72d75583` is not redeployed. Live publication 3/4 replay passed. Live `s06-eval-v3` 35/35 PASSED, hash `e433882ed1a55c4896aaf9fdf524257b870a4e2a450d8ab614bc6763b110035c`. Gate E first-run `3429ms` / `5790ms` retained; scoped POST maxima 2931 / 1680. No queue/worker introduced. Claude was not run. EOS-S07 was not started. `EOS_S06_ACCEPTANCE.md` was not created.
+`MD-PR-S073` diagnoses and corrects the remaining V2 live command-settlement and process-isolation failure. Deployed application SHA `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3`. Repository/docs SHA `3f5c09b37d683ad7192660a33f596b7e72d75583` is not redeployed. Production build passed. Production-mode Playwright was not executed because `DATABASE_URL` was unavailable locally. Isolated development-runtime Playwright passed focused S073, S072 and S049. Live production verification passed on the deployed application SHA. Live publication 3/4 replay passed. Live `s06-eval-v3` 35/35 PASSED, hash `e433882ed1a55c4896aaf9fdf524257b870a4e2a450d8ab614bc6763b110035c`. Gate E first-run `3429ms` / `5790ms` retained; scoped POST maxima 2931 / 1680. No queue/worker introduced. Claude was not run. EOS-S07 was not started. `EOS_S06_ACCEPTANCE.md` was not created.
 
 | ID | Kind | Summary | Location |
 |----|------|---------|----------|

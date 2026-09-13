@@ -73,8 +73,9 @@ S05A/S05B remain PASSED. Providers remain INACTIVE. `productionAuthorised` remai
 | Packet 7 post-Adopt | Product | Studio form did not emit POST after Adopt (consume remount) | Consume action result once (`caff006`) | Live Gate B PASS on `1ce6e0f` |
 | Packet 7 Gate B spec | Test targeting | `textContent().catch` swallowed the rejection banner | Read the banner (`2f97603`, `0e5f2c4`) | Focused spec PASS |
 | Packet 7 Gate E wrapper | Measurement | `otherMs=3429` / `launchMs=5790` included other-tab navigation | Stage-scoped resample; wrapper retained | POST max launch 2931 / other 1680 |
-| Packet 8 `next build` | Tooling | Concurrent Playwright `.next` broke page collection | Clean rebuild | PASS |
-| Packet 8 local Playwright | Tooling | Four S072/studio tests timed out after Next `ECONNRESET` | Isolated rerun | 4/4 PASS |
+| Packet 8 `next build` | Tooling | Concurrent Playwright `.next` broke page collection | Clean rebuild | Production build PASS |
+| Packet 8 batched Playwright | Tooling | First development-runtime batch aborted (`SegmentViewNode` / `ECONNRESET`) | Isolated `pnpm dev` rerun of affected journeys | First run NOT a pass; isolated later PASS |
+| Packet 8 `PLAYWRIGHT_PROD=1` | Tooling | Production runtime requires `DATABASE_URL`; unavailable locally | Not rerun; leftover job terminated | NOT EXECUTED — not a pass |
 
 ## Local and live gates at S073 Packet 8
 
@@ -84,13 +85,23 @@ S05A/S05B remain PASSED. Providers remain INACTIVE. `productionAuthorised` remai
 | `@maison-doclar/shared-platform` unit | 590 pass / 0 fail |
 | `@maison-doclar/event-os` unit | 106 pass / 0 fail |
 | `pnpm programme:validate` | PASS (`verdict=NO_CYCLES`) |
-| `@maison-doclar/event-os` build | PASS |
+| `@maison-doclar/event-os` production build | PASS |
 | `git diff --check` | PASS |
-| Focused S073 / changed-risk S072 / S049 action-result Playwright | PASS |
-| Live readiness on `1ce6e0f` | PASS — POSTGRES / APPLIED / `productionAuthorised:false` / providers INACTIVE / S05A+S05B PASSED |
+| Production-mode Playwright | NOT EXECUTED — `DATABASE_URL` unavailable locally |
+| Isolated development-runtime Playwright | PASS — focused S073, S072 and S049 |
+| Live production verification on `1ce6e0f` | PASS — POSTGRES / APPLIED / `productionAuthorised:false` / providers INACTIVE / S05A+S05B PASSED |
 | Live diagnostics | 404; diagnostic token absent |
 | Live publication/replay (2) on `1ce6e0f` | PASS — Publication 3 `292fb1ea…` and Publication 4 `a6ac23f6…` |
 | Live CEO `s06-eval-v3` | PASS — 35 cases, hash `e433882ed1a55c4896aaf9fdf524257b870a4e2a450d8ab614bc6763b110035c` |
+
+Packet 8 execution modes remain distinct:
+
+```text
+Production build: passed
+Production-mode Playwright: not executed because DATABASE_URL was unavailable locally
+Isolated development-runtime Playwright: focused S073, S072 and S049 passed
+Live production verification: passed on deployed application SHA
+```
 
 S073 did not introduce a queue/worker. Launch still completes solver (11–17ms), independent validation (~0–1ms) and terminal persistence before 303. Live POST maxima: launch 2931ms, unrelated mutation 1680ms. No transaction exceeded 2s.
 

@@ -27,6 +27,7 @@ Historical S072 handoff status **NOT READY FOR CLAUDE** (live publication/replay
 | Legacy evaluation | `s06-eval-v1` and `s06-eval-v2` STALE/INCOMPATIBLE — not restamped |
 | Last-known-good publication | Publication 4 `a6ac23f65f23a10f0dc1deab9464e50791c055e825de3d541fd24a0a34dfbc4d` |
 | Temporary diagnostics | Routes 404; `EVENT_OS_DIAGNOSTIC_TOKEN` absent |
+| Local execution modes | Production build passed. Production-mode Playwright not executed (`DATABASE_URL` unavailable locally). Isolated development-runtime Playwright: focused S073, S072 and S049 passed. Live production verification passed on deployed application SHA `1ce6e0f`. |
 | Control Tower | untouched |
 
 ## Sealed holdout
