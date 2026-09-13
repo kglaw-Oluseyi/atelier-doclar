@@ -1,4 +1,5 @@
 import { exactHash } from "./eec-hash.js";
+import { PlatformError } from "./errors.js";
 import { defaultSolverConfig, solveSeatingV1 } from "./seating-solver-v1.js";
 import type { SolverConstraint, SolverRequest } from "./seating-solver-types.js";
 import type { SeatingV2Assignment, SeatingV2CompiledRequest, SeatingV2CompiledRule } from "./seating-v2-schemas.js";
@@ -76,7 +77,9 @@ export function solveSeatingV2Compiled(request: SeatingV2CompiledRequest): {
   rawOutputHash: string;
 } {
   if (!request.guests?.length || !request.positions?.length) {
-    return { solverClaim: "INFEASIBLE", assignments: [], rawOutputHash: exactHash({ empty: true }) };
+    throw new PlatformError("VALIDATION_FAILED", "compiled solver request has no guests or positions", {
+      publicMessage: "The seating package could not be solved.",
+    });
   }
   const solverRequest: SolverRequest = {
     guests: request.guests.map((guest) => ({

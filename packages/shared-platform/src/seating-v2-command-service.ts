@@ -801,7 +801,7 @@ export class SeatingV2CommandService {
         solverVersion: SEATING_V2_SOLVER_VERSION,
         solverConfigHash: pkg.solverConfigHash,
         deterministicSeed: pkg.deterministicSeed,
-        status: report.verdict,
+        status: solved.solverClaim === "TIMED_OUT" ? "TIMED_OUT" : report.verdict,
         solverClaim: solved.solverClaim,
         rawOutputHash: solved.rawOutputHash,
         assignmentsHash: seatingV2AssignmentsHash(solved.assignments),
