@@ -3,7 +3,7 @@
 **Headline:** `READY FOR INDEPENDENT HOLDOUT AND CLAUDE`
 
 **Deployed application SHA:** `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3`
-**Final repository/docs SHA:** the documentation/test commit that carries this report (later than `0e5f2c4`; not redeployed)
+**Final repository/docs SHA:** `3f5c09b37d683ad7192660a33f596b7e72d75583` (documentation/test only; not redeployed)
 **Authority:** `docs/control/eos-s06/MD_PR_S073_EOS_S06_V2_LIVE_COMMAND_SETTLEMENT_AND_PROCESS_ISOLATION.md`
 **Authority SHA-256:** `9e527f289b71c5d794f472bf271839799a042916985b1eda288028b8709537ff`
 **Parent:** ratified MD-PR-S072, SHA-256 `de154b2349f2056275d66dcc11d3ab88f3b283b16d0acd37311ea8ca628f3182`
@@ -29,7 +29,7 @@ Authority file remains at `docs/control/eos-s06/MD_PR_S073_EOS_S06_V2_LIVE_COMMA
 | 3 | ADR + failing outside-TX test | `2e38467` |
 | 4–6 | Solver/compile outside TX; test-clock corrections | `9dafb84`, `34d3faa`, `5064e2d`, `8089812`, `0255608` |
 | 7 | Remove diagnostics; consume-once Adopt fix; live gates | `d693400`, `caff006`, `1ce6e0f` (deployed) plus test-only `2f97603`, `0e5f2c4` |
-| 8 | Timing evidence, ledgers, this report | this docs/test commit |
+| 8 | Timing evidence, ledgers, this report | `3f5c09b` plus SHA-stamp commit |
 
 Application correction that remains deployed: `caff006` consume-once after Adopt, proven live as `1ce6e0f`.
 

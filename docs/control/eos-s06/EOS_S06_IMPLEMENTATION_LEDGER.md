@@ -4,7 +4,7 @@
 **Status:** IMPLEMENTED — NOT ACCEPTED — READY FOR INDEPENDENT HOLDOUT AND CLAUDE
 **Required S072 baseline:** `844f107fc70e1eaa8995e0c7c49c0c42d52b9dd1`
 **Deployed application SHA:** `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3`
-**Final repository/docs SHA:** later than `0e5f2c4`; documentation/test only; not redeployed
+**Final repository/docs SHA:** `3f5c09b37d683ad7192660a33f596b7e72d75583` (documentation/test only; not redeployed)
 **Authority:** MD-PR-S073 is the sole execution authority for live command settlement and process isolation. MD-PR-S072 remains the V2 seating-truth parent. S070/S071 artefacts remain readable as incompatible history.
 
 This ledger does not accept EOS-S06. It does not authorise real data or production operations. It does not create `EOS_S06_ACCEPTANCE.md`.
@@ -16,7 +16,7 @@ Historical S072 handoff status **NOT READY FOR CLAUDE** (live publication/replay
 | Item | Value |
 |---|---|
 | Application / deployed Event OS SHA | `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3` |
-| Repository/docs SHA | Packet 8 stamp; not the live application SHA |
+| Repository/docs SHA | `3f5c09b37d683ad7192660a33f596b7e72d75583`; not the live application SHA |
 | Railway project / env / service | `atelier-doclar` / `production` / `event-os` |
 | Live health SHA | `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3` |
 | Persistence | POSTGRES, migrations APPLIED |

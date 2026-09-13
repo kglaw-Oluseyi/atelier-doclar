@@ -3,7 +3,7 @@
 **Prompt Control ID:** MD-PR-S070 V2 + MD-PR-S071  
 **Not acceptance.** Passing retries do not erase first-run failures.  
 **Application / deployed SHA:** `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3`
-**Final repository/docs SHA:** Packet 8 stamp after `0e5f2c4` (not redeployed)
+**Final repository/docs SHA:** `3f5c09b37d683ad7192660a33f596b7e72d75583` (not redeployed)
 
 ## First-run failures
 
