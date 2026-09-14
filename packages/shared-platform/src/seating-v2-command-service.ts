@@ -31,6 +31,7 @@ import {
 import {
   LEGACY_DUPLICATE_RECONCILIATION_REASON,
   planLegacyDuplicateReconciliation,
+  selectAuthoritativeActiveRule,
   type LegacyDuplicateReconciliationPlan,
 } from "./seating-v2-rule-duplicates.js";
 import {
@@ -428,10 +429,7 @@ export class SeatingV2CommandService {
         (item) => item.lifecycle === "ACTIVE" && item.contentHash === draft.contentHash && item.id !== draft.id,
       );
       if (equivalents.length > 0) {
-        const authoritative = [...equivalents].sort(
-          (left, right) =>
-            (left.activatedAt ?? left.createdAt).localeCompare(right.activatedAt ?? right.createdAt) || left.id.localeCompare(right.id),
-        )[0]!;
+        const authoritative = selectAuthoritativeActiveRule(equivalents)!;
         return { replayed: true, value: authoritative, reason: "ALREADY_ACTIVE" as const };
       }
       const now = nowOf(actor);

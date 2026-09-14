@@ -1083,6 +1083,7 @@ export type { SeatingSettlementStage, SeatingSettlementTrace } from "./seating-s
 export { requireSeatingV2Writable, seatingV2ReplacementEnabled } from "./seating-v2-flag.js";
 export {
   LEGACY_DUPLICATE_RECONCILIATION_REASON,
+  ruleLifecycleStamp,
   selectAuthoritativeActiveRule,
   annotateSemanticRuleDuplicates,
   planLegacyDuplicateReconciliation,

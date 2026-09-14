@@ -5,14 +5,23 @@ export const LEGACY_DUPLICATE_RECONCILIATION_REASON =
 
 export type SeatingRuleDuplicateRole = "AUTHORITATIVE" | "REDUNDANT_HISTORICAL" | "ALREADY_ACTIVE_DRAFT";
 
+/** Coerce Postgres Date / string stamps before lexicographic compare (hydration-safe). */
+export function ruleLifecycleStamp(value: unknown, fallback: unknown = ""): string {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString();
+  if (typeof value === "string" && value.length > 0) return value;
+  if (fallback instanceof Date && !Number.isNaN(fallback.getTime())) return fallback.toISOString();
+  if (typeof fallback === "string") return fallback;
+  return "";
+}
+
 /** Deterministic authoritative ACTIVE survivor for one semantic contentHash in event scope. */
-export function selectAuthoritativeActiveRule<T extends { id: string; createdAt: string; activatedAt?: string | null }>(
-  actives: readonly T[],
-): T | undefined {
+export function selectAuthoritativeActiveRule<
+  T extends { id: string; createdAt: string | Date; activatedAt?: string | Date | null },
+>(actives: readonly T[]): T | undefined {
   if (actives.length === 0) return undefined;
   return [...actives].sort((left, right) => {
-    const leftStamp = left.activatedAt ?? left.createdAt;
-    const rightStamp = right.activatedAt ?? right.createdAt;
+    const leftStamp = ruleLifecycleStamp(left.activatedAt, left.createdAt);
+    const rightStamp = ruleLifecycleStamp(right.activatedAt, right.createdAt);
     return leftStamp.localeCompare(rightStamp) || left.id.localeCompare(right.id);
   })[0];
 }
@@ -30,7 +39,9 @@ export function groupActiveRulesByContentHash<T extends { id: string; lifecycle:
   return groups;
 }
 
-export type AnnotatedRuleDuplicate<T extends { id: string; lifecycle: string; contentHash: string; createdAt: string; activatedAt?: string | null }> = {
+export type AnnotatedRuleDuplicate<
+  T extends { id: string; lifecycle: string; contentHash: string; createdAt: string | Date; activatedAt?: string | Date | null },
+> = {
   edition: T;
   role: SeatingRuleDuplicateRole;
   authoritativeId: string;
@@ -38,7 +49,7 @@ export type AnnotatedRuleDuplicate<T extends { id: string; lifecycle: string; co
 };
 
 export function annotateSemanticRuleDuplicates<
-  T extends { id: string; lifecycle: string; contentHash: string; createdAt: string; activatedAt?: string | null },
+  T extends { id: string; lifecycle: string; contentHash: string; createdAt: string | Date; activatedAt?: string | Date | null },
 >(editions: readonly T[]): AnnotatedRuleDuplicate<T>[] {
   const activeGroups = groupActiveRulesByContentHash(editions);
   const authoritativeByHash = new Map<string, string>();

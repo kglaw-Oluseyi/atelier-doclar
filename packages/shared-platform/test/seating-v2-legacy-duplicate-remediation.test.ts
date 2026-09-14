@@ -80,6 +80,38 @@ describe("EOS-S06 remediation 2 duplicate identity", () => {
     assert.equal(survivor?.id, "a");
   });
 
+  it("coerces Postgres Date stamps before authoritative selection", () => {
+    const survivor = selectAuthoritativeActiveRule([
+      {
+        id: "later",
+        createdAt: new Date("2026-09-12T19:00:00.000Z"),
+        activatedAt: new Date("2026-09-12T19:20:00.000Z"),
+      },
+      {
+        id: "earliest",
+        createdAt: new Date("2026-09-12T19:10:00.000Z"),
+        activatedAt: new Date("2026-09-12T19:16:00.000Z"),
+      },
+    ]);
+    assert.equal(survivor?.id, "earliest");
+    const annotated = annotateSemanticRuleDuplicates([
+      edition({
+        id: "later",
+        lifecycle: "ACTIVE",
+        createdAt: new Date("2026-09-12T19:00:00.000Z") as unknown as string,
+        activatedAt: new Date("2026-09-12T19:20:00.000Z") as unknown as string,
+      }),
+      edition({
+        id: "earliest",
+        lifecycle: "ACTIVE",
+        createdAt: new Date("2026-09-12T19:10:00.000Z") as unknown as string,
+        activatedAt: new Date("2026-09-12T19:16:00.000Z") as unknown as string,
+      }),
+    ]);
+    assert.equal(annotated.find((row) => row.edition.id === "earliest")?.role, "AUTHORITATIVE");
+    assert.equal(annotated.find((row) => row.edition.id === "later")?.role, "REDUNDANT_HISTORICAL");
+  });
+
   it("distinguishes full hash identity even when shortened prefixes match", () => {
     const left = seatingV2RuleContentHash(
       keepApart("00000000-0000-4000-8000-000000000072", "00000000-0000-4000-8000-000000000073"),
