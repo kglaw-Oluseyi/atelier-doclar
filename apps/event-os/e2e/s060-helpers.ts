@@ -102,6 +102,7 @@ export async function submitScopedSeatingMutation(
         location: "none",
         actionRedirect: "none",
         resultId: landedResult,
+        settleAttempts: 1,
       };
     }
     throw new Error(
@@ -137,7 +138,26 @@ export async function submitScopedSeatingMutation(
       `${buttonName} redirect had no new result UUID (previous=${previousResult || "none"} location=${location})`,
     );
   }
-  await page.goto(href, { waitUntil: "domcontentloaded", timeout: 25_000 });
+  const live = process.env.PLAYWRIGHT_LIVE === "1";
+  const settleTimeout = live ? 60_000 : 25_000;
+  let settled = false;
+  let lastGotoError: unknown;
+  let settleAttempts = 0;
+  for (let attempt = 1; attempt <= (live ? 2 : 1); attempt += 1) {
+    settleAttempts = attempt;
+    try {
+      await page.goto(href, { waitUntil: "domcontentloaded", timeout: settleTimeout });
+      settled = true;
+      break;
+    } catch (error) {
+      lastGotoError = error;
+      if (!live || attempt >= 2) break;
+      await page.waitForTimeout(1_500);
+    }
+  }
+  if (!settled) {
+    throw lastGotoError instanceof Error ? lastGotoError : new Error(String(lastGotoError));
+  }
   const resultId = await expectFreshResultQuery(page, previousResult);
   const bannerEl = page.getByTestId("action-result-banner");
   await expect(bannerEl).toBeVisible({ timeout: 30_000 });
@@ -150,6 +170,7 @@ export async function submitScopedSeatingMutation(
     location: locationHeader || "none",
     actionRedirect: actionRedirect || "none",
     resultId,
+    settleAttempts,
   };
 }
 

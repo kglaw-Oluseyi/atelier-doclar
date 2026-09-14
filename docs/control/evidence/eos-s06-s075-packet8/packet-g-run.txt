@@ -1,0 +1,10 @@
+
+Running 4 tests using 1 worker
+
+[1/4] [chromium] › e2e/s075-layout-binding-live.spec.ts:39:1 › S075G live readiness, S05 unchanged, and evaluation compatibility
+[2/4] [chromium] › e2e/s075-layout-binding-live.spec.ts:85:1 › S075G reports whether a genuine live ambiguous binding already exists
+[3/4] [chromium] › e2e/s075-layout-binding-live.spec.ts:159:1 › S075G synthetic binding, witness and named infeasible
+[4/4] [chromium] › e2e/s075-layout-binding-live.spec.ts:290:1 › S075G successor staleness, rebind and capacity mismatch
+  Slow test file: [chromium] › e2e/s075-layout-binding-live.spec.ts (5.4m)
+  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+  4 passed (5.4m)

@@ -9,7 +9,6 @@ import {
   isMutationActionPost,
   pageActionResult,
   readActionCorrelation,
-  submitScopedSeatingMutation,
 } from "./s060-helpers";
 import { provisionS073Event, seatingPathFor, type ProvisionedS073Event } from "./s073-provision";
 import { seatingBindingStatus } from "./s075-layout-binding";
@@ -18,6 +17,183 @@ import { settleLiveScopedSeatingClick, settleLiveSeatingClick } from "./s075-lay
 export type Section13Fixture = ProvisionedS073Event;
 
 export const SECTION13_EVIDENCE = "/tmp/s075-section-13-evidence.jsonl";
+export const SECTION13_ACTION_TIMING = "/tmp/s075-p8-evidence/section13-action-timing.jsonl";
+export const SECTION13_ACTION_LIMIT_MS = 30_000;
+
+export type Section13JourneyId = "J1" | "J2" | "J3" | "J4";
+
+type Section13JourneyContext = {
+  journey: Section13JourneyId;
+  eventId: string | null;
+  role: string | null;
+  seq: number;
+};
+
+let section13Journey: Section13JourneyContext = {
+  journey: "J1",
+  eventId: null,
+  role: null,
+  seq: 0,
+};
+
+export function beginSection13Journey(journey: Section13JourneyId, eventId?: string, role = "planner") {
+  section13Journey = { journey, eventId: eventId ?? null, role, seq: 0 };
+}
+
+export function setSection13Role(role: string) {
+  section13Journey.role = role;
+}
+
+export function setSection13EventId(eventId: string) {
+  section13Journey.eventId = eventId;
+}
+
+export function classifySection13Outcome(text: string): string {
+  const sample = text.replace(/\s+/g, " ").trim();
+  if (!sample) return "UNKNOWN";
+  if (/Succeeded|The change was recorded/i.test(sample) && !/No change was recorded/i.test(sample)) return "SUCCESS";
+  if (/changed elsewhere|version conflict|stale|does not match/i.test(sample)) return "VERSION_CONFLICT";
+  if (/rejected by the independent validator|hard or structural/i.test(sample)) return "VALIDATOR_REJECTED";
+  if (/not permitted|permission|forbidden|This assignment cannot/i.test(sample)) return "PERMISSION_DENIED";
+  if (/not available/i.test(sample)) return "NOT_AVAILABLE";
+  if (/not applied|No change/i.test(sample)) return "NOT_APPLIED";
+  if (/conflict/i.test(sample)) return "CONFLICT";
+  return "OTHER";
+}
+
+export async function timeSection13Action<T>(input: {
+  actionName: string;
+  role?: string | null;
+  eventId?: string | null;
+  expectedClassification: string;
+  beforeHash?: string | null;
+  work: () => Promise<{
+    value: T;
+    actualClassification: string;
+    correlationId?: string | null;
+    afterHash?: string | null;
+    attemptCount?: number;
+  }>;
+}): Promise<T> {
+  const startedAtMs = Date.now();
+  const startedAt = new Date(startedAtMs).toISOString();
+  section13Journey.seq += 1;
+  const actionId = `${section13Journey.journey}-${String(section13Journey.seq).padStart(3, "0")}`;
+  const role = input.role ?? section13Journey.role;
+  const eventId = input.eventId ?? section13Journey.eventId;
+  let attemptCount = 1;
+  let actualClassification: string | null = null;
+  let correlationId: string | null = null;
+  let afterHash: string | null = null;
+  let result: "PASS" | "FAIL" = "FAIL";
+  let value: T | undefined;
+  let thrown: unknown;
+
+  try {
+    const out = await input.work();
+    value = out.value;
+    actualClassification = out.actualClassification;
+    correlationId = out.correlationId ?? null;
+    afterHash = out.afterHash ?? null;
+    attemptCount = out.attemptCount ?? 1;
+    const durationMs = Date.now() - startedAtMs;
+    expect(
+      durationMs,
+      `${actionId} ${input.actionName} durationMs=${durationMs} exceeded ${SECTION13_ACTION_LIMIT_MS}`,
+    ).toBeLessThan(SECTION13_ACTION_LIMIT_MS);
+    result = "PASS";
+    return value;
+  } catch (error) {
+    thrown = error;
+    throw error;
+  } finally {
+    const endedAtMs = Date.now();
+    const durationMs = endedAtMs - startedAtMs;
+    if (durationMs >= SECTION13_ACTION_LIMIT_MS) result = "FAIL";
+    recordSection13ActionTiming({
+      journey: section13Journey.journey,
+      actionId,
+      actionName: input.actionName,
+      role,
+      eventId,
+      startedAt,
+      endedAt: new Date(endedAtMs).toISOString(),
+      durationMs,
+      attemptCount,
+      expectedClassification: input.expectedClassification,
+      actualClassification,
+      correlationId,
+      beforeHash: input.beforeHash ?? null,
+      afterHash,
+      result,
+    });
+  }
+}
+
+export function recordSection13ActionTiming(entry: Record<string, unknown>) {
+  mkdirSync("/tmp/s075-p8-evidence", { recursive: true });
+  appendFileSync(SECTION13_ACTION_TIMING, `${JSON.stringify({ at: new Date().toISOString(), kind: "section13-action-timing", ...entry })}\n`);
+}
+
+async function outcomeFromPage(page: Page, fallback = "UNKNOWN") {
+  const banner = ((await page.getByTestId("action-result-banner").innerText().catch(() => "")) ?? "").replace(/\s+/g, " ").trim();
+  const heading = ((await page.getByRole("heading").first().innerText().catch(() => "")) ?? "").replace(/\s+/g, " ").trim();
+  return classifySection13Outcome(`${banner} ${heading}`) || fallback;
+}
+
+export async function timedSettleLiveSeatingClick(
+  page: Page,
+  buttonName: string,
+  expectedClassification: string,
+  banner = /Succeeded|The change was recorded|No change/i,
+  options?: { actionName?: string; role?: string; beforeHash?: string | null },
+) {
+  const beforeHash = options?.beforeHash ?? (await workingHash(page).catch(() => null));
+  return timeSection13Action({
+    actionName: options?.actionName ?? buttonName,
+    role: options?.role,
+    expectedClassification,
+    beforeHash,
+    work: async () => {
+      const settle = await settleLiveSeatingClick(page, buttonName, banner);
+      return {
+        value: settle,
+        actualClassification: await outcomeFromPage(page, expectedClassification),
+        correlationId: (await readActionCorrelation(page).catch(() => null)) || settle.resultId || null,
+        afterHash: await workingHash(page).catch(() => null),
+        attemptCount: settle.settleAttempts ?? 1,
+      };
+    },
+  });
+}
+
+export async function timedSettleLiveScopedSeatingClick(
+  page: Page,
+  form: Locator,
+  buttonName: string,
+  expectedClassification: string,
+  banner = /Succeeded|The change was recorded|No change/i,
+  options?: { actionName?: string; role?: string; beforeHash?: string | null },
+) {
+  const beforeHash = options?.beforeHash ?? (await workingHash(page).catch(() => null));
+  return timeSection13Action({
+    actionName: options?.actionName ?? buttonName,
+    role: options?.role,
+    expectedClassification,
+    beforeHash,
+    work: async () => {
+      const settle = await settleLiveScopedSeatingClick(page, form, buttonName, banner);
+      return {
+        value: settle,
+        actualClassification: await outcomeFromPage(page, expectedClassification),
+        correlationId: (await readActionCorrelation(page).catch(() => null)) || settle.resultId || null,
+        afterHash: await workingHash(page).catch(() => null),
+        attemptCount: settle.settleAttempts ?? 1,
+      };
+    },
+  });
+}
+
 export const SECTION13_FIRST_RUN_FAILURES = [
   "S073 provision treated publication-status /CURRENT|publication/ as success; it matched “No current publication”, so binding had no candidates.",
   "Rule activate looked for the authored name; the rules list shows predicate preview, not the name field.",
@@ -49,9 +225,49 @@ export async function provisionSection13Event(
   return provisionS073Event(page, browser, { labelPrefix: "S075S13", skipBinding: options?.skipBinding });
 }
 
+export async function assertLiveSection13Preflight(page: Page) {
+  if (process.env.PLAYWRIGHT_LIVE !== "1") {
+    throw new Error("live Section 13 requires PLAYWRIGHT_LIVE=1");
+  }
+  const expectedSha = process.env.PLAYWRIGHT_EXPECTED_SHA?.trim();
+  if (!expectedSha) {
+    throw new Error("live Section 13 requires PLAYWRIGHT_EXPECTED_SHA");
+  }
+  const base = process.env.PLAYWRIGHT_BASE_URL ?? "";
+  if (!/railway\.app|event-os-production/i.test(base)) {
+    throw new Error("live Section 13 requires a Railway PLAYWRIGHT_BASE_URL");
+  }
+  const live = await page.request.get("/api/health/live");
+  const ready = await page.request.get("/api/health/ready");
+  expect(live.ok()).toBeTruthy();
+  expect(ready.ok()).toBeTruthy();
+  const liveBody = (await live.json()) as Record<string, unknown>;
+  const readyBody = (await ready.json()) as Record<string, unknown>;
+  expect(liveBody.deployedSha).toBe(expectedSha);
+  expect(readyBody.deployedSha).toBe(expectedSha);
+  expect(readyBody.persistence).toBe("POSTGRES");
+  expect(readyBody.migrationStatus).toBe("APPLIED");
+  expect(readyBody.productionAuthorised).toBe(false);
+  recordSection13({
+    kind: "live-preflight",
+    deployedSha: readyBody.deployedSha,
+    persistence: readyBody.persistence,
+    migrationStatus: readyBody.migrationStatus,
+    productionAuthorised: readyBody.productionAuthorised,
+    baseUrlHost: (() => {
+      try {
+        return new URL(base).host;
+      } catch {
+        return "invalid-base-url";
+      }
+    })(),
+  });
+}
+
 export async function assertLocalSection13Preflight(page: Page) {
   if (process.env.PLAYWRIGHT_LIVE === "1") {
-    throw new Error("local Section 13 refused PLAYWRIGHT_LIVE=1");
+    await assertLiveSection13Preflight(page);
+    return;
   }
   if (process.env.PLAYWRIGHT_PROD === "1") {
     throw new Error("local Section 13 refused PLAYWRIGHT_PROD=1; next start is not the local file-store path");
@@ -108,9 +324,9 @@ export async function guestOptionByLabel(page: Page, selectName: string, label: 
 
 export async function freezeLaunchAdopt(page: Page, seatingPath: string) {
   await gotoSeating(page, seatingPath, "#inputs");
-  await submitScopedSeatingMutation(page, page.getByTestId("seating-freeze"), "Freeze new input edition", pageActionResult(page));
+  await timedSettleLiveSeatingClick(page, "Freeze new input edition", "SUCCESS");
   await gotoSeating(page, seatingPath, "#runs");
-  await submitScopedSeatingMutation(page, page.getByTestId("seating-run-form"), "Launch seating run", pageActionResult(page));
+  await timedSettleLiveSeatingClick(page, "Launch seating run", "SUCCESS");
   let feasible = page.getByTestId("seating-run-card").filter({ hasText: /Validator FEASIBLE/ }).filter({
     has: page.getByRole("button", { name: "Adopt run" }),
   });
@@ -126,7 +342,12 @@ export async function freezeLaunchAdopt(page: Page, seatingPath: string) {
   await expect(feasible).toContainText(/unseated 0/);
   const runId = (await feasible.getAttribute("data-run-id")) ?? "";
   expect(runId).toMatch(/^[0-9a-f-]{36}$/i);
-  await submitScopedSeatingMutation(page, feasible.locator("form").filter({ hasText: "Adopt run" }), "Adopt run", pageActionResult(page));
+  await timedSettleLiveScopedSeatingClick(
+    page,
+    feasible.locator("form").filter({ hasText: "Adopt run" }),
+    "Adopt run",
+    "SUCCESS",
+  );
   await expect(page.getByTestId("seating-edit-form")).toBeVisible({ timeout: 20_000 });
   return runId;
 }
@@ -144,12 +365,14 @@ export async function saveNamedHardRule(
   await form.locator('select[name="guestIdA"]').selectOption(input.guestA);
   await form.locator('select[name="guestIdB"]').selectOption(input.guestB);
   if (input.reviewDomain) await form.locator('select[name="reviewDomain"]').selectOption(input.reviewDomain);
-  await settleLiveScopedSeatingClick(page, form, "Save rule");
+  await timedSettleLiveScopedSeatingClick(page, form, "Save rule", "SUCCESS");
 }
 
 export async function directorActivateNamedRule(browser: Browser, seatingPath: string, ruleName: string) {
   const director = await openStaffContext(browser, "director");
+  const previousRole = section13Journey.role;
   try {
+    setSection13Role("director");
     await gotoSeating(director.page, seatingPath, "#rules");
     const draft = director.page
       .getByTestId("seating-rules")
@@ -158,8 +381,16 @@ export async function directorActivateNamedRule(browser: Browser, seatingPath: s
       .filter({ hasText: /Adaeze Okeke/i })
       .filter({ has: director.page.getByRole("button", { name: "Activate" }) });
     await expect(draft, `draft not visible for ${ruleName}`).toHaveCount(1);
-    await settleLiveScopedSeatingClick(director.page, draft.locator("form").filter({ hasText: "Activate" }), "Activate");
+    await timedSettleLiveScopedSeatingClick(
+      director.page,
+      draft.locator("form").filter({ hasText: "Activate" }),
+      "Activate",
+      "SUCCESS",
+      undefined,
+      { role: "director", actionName: `Activate rule ${ruleName}` },
+    );
   } finally {
+    setSection13Role(previousRole ?? "planner");
     await director.context.close();
   }
 }
@@ -226,7 +457,11 @@ export async function applyVacantMove(
   const submittedVersion = await form.locator('input[name="expectedVersion"]').inputValue();
   const submittedEdition = await form.locator('input[name="editionId"]').inputValue();
   await expect(form.getByRole("button", { name: "Apply seating change" })).toBeEnabled({ timeout: 30_000 });
-  await settleLiveScopedSeatingClick(page, form, "Apply seating change", banner);
+  const expected = /rejected|not applied|No change/i.test(String(banner)) ? "VALIDATOR_REJECTED" : "SUCCESS";
+  await timedSettleLiveScopedSeatingClick(page, form, "Apply seating change", expected, banner, {
+    actionName: "Apply seating change MOVE",
+    beforeHash: before.contentHash,
+  });
   return {
     before,
     target,

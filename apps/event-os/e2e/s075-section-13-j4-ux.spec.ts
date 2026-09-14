@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import {
   assertLocalSection13Preflight,
+  beginSection13Journey,
   directorActivateNamedRule,
   freezeLaunchAdopt,
   gotoSeating,
@@ -11,21 +12,24 @@ import {
   provisionSection13Event,
   recordSection13,
   saveNamedHardRule,
+  setSection13EventId,
+  setSection13Role,
+  timedSettleLiveSeatingClick,
   SECTION13_FIRST_RUN_FAILURES,
 } from "./s075-section-13";
-import { settleLiveSeatingClick } from "./s075-layout-binding-live";
 
-const LIVE = process.env.PLAYWRIGHT_LIVE === "1";
 const TOGETHER = "S075S13 KEEP_TOGETHER";
 
 test.use({ screenshot: "off", video: "off", trace: "off" });
 
 test("S075 Section 13 journey 4: responsive, accessibility and repeated settlement", async ({ page, browser }) => {
   test.setTimeout(900_000);
-  if (LIVE) throw new Error("journey 4 must not run with PLAYWRIGHT_LIVE=1");
+  beginSection13Journey("J4");
   await assertLocalSection13Preflight(page);
   const fixture = await provisionSection13Event(page, browser);
   expect(fixture.eventName).toMatch(/^S075S13-/);
+  setSection13EventId(fixture.eventId);
+  setSection13Role("planner");
   recordSection13({
     kind: "j4-provisioned",
     eventId: fixture.eventId,
@@ -43,6 +47,7 @@ test("S075 Section 13 journey 4: responsive, accessibility and repeated settleme
   });
   await directorActivateNamedRule(browser, fixture.seatingPath, TOGETHER);
   await loginPlannerOnSeating(page, fixture.seatingPath);
+  setSection13Role("planner");
   await freezeLaunchAdopt(page, fixture.seatingPath);
 
   for (const width of [360, 768, 1440] as const) {
@@ -71,7 +76,9 @@ test("S075 Section 13 journey 4: responsive, accessibility and repeated settleme
 
   for (let index = 0; index < 5; index += 1) {
     await gotoSeating(page, fixture.seatingPath, "#runs");
-    await settleLiveSeatingClick(page, "Launch seating run");
+    await timedSettleLiveSeatingClick(page, "Launch seating run", "SUCCESS", undefined, {
+      actionName: `Launch seating run repetition ${index + 1}`,
+    });
     await pageStillResponsive(page);
     await expect(page.getByTestId("seating-overview")).toBeVisible();
     await expect(page.getByTestId("action-result-banner")).toBeVisible();

@@ -1,8 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { openStaffContext } from "./login";
-import { expectLocalFileStore } from "./s060-helpers";
 import {
+  assertLocalSection13Preflight,
   applyVacantMove,
+  beginSection13Journey,
   directorActivateNamedRule,
   freezeLaunchAdopt,
   gotoSeating,
@@ -13,15 +14,16 @@ import {
   recordSection13,
   reloadCanonicalSeating,
   saveNamedHardRule,
+  setSection13EventId,
+  setSection13Role,
   studioIdentity,
+  timedSettleLiveScopedSeatingClick,
   vacantPositionToken,
   workingHash,
   SECTION13_FIRST_RUN_FAILURES,
   type Section13Fixture,
 } from "./s075-section-13";
-import { settleLiveScopedSeatingClick } from "./s075-layout-binding-live";
 
-const LIVE = process.env.PLAYWRIGHT_LIVE === "1";
 const TOGETHER = "S075S13 KEEP_TOGETHER";
 
 test.use({ screenshot: "off", video: "off", trace: "off" });
@@ -31,8 +33,11 @@ let fixture: Section13Fixture | undefined;
 
 test("S075 Section 13 journey 1: studio and two-tab concurrency", async ({ page, browser }) => {
   test.setTimeout(900_000);
-  if (!LIVE) await expectLocalFileStore(page);
+  beginSection13Journey("J1");
+  await assertLocalSection13Preflight(page);
   fixture = await provisionSection13Event(page, browser);
+  setSection13EventId(fixture.eventId);
+  setSection13Role("planner");
   recordSection13({
     kind: "j1-provisioned",
     eventId: fixture.eventId,
@@ -51,6 +56,7 @@ test("S075 Section 13 journey 1: studio and two-tab concurrency", async ({ page,
   });
   await directorActivateNamedRule(browser, fixture.seatingPath, TOGETHER);
   await loginPlannerOnSeating(page, fixture.seatingPath);
+  setSection13Role("planner");
   await freezeLaunchAdopt(page, fixture.seatingPath);
   await pageStillResponsive(page);
   await expect(page.getByTestId("seating-edit-form")).toBeVisible({ timeout: 20_000 });
@@ -66,11 +72,13 @@ test("S075 Section 13 journey 1: studio and two-tab concurrency", async ({ page,
   await form.locator('select[name="guestId"]').selectOption(ada);
   await form.locator('select[name="command"]').selectOption("UNSEAT");
   await form.locator('select[name="reasonCode"]').selectOption("MANUAL_UNSEAT");
-  await settleLiveScopedSeatingClick(
+  await timedSettleLiveScopedSeatingClick(
     page,
     form,
     "Apply seating change",
+    "VALIDATOR_REJECTED",
     /rejected by the independent validator|hard or structural|not applied|That change|No change/i,
+    { actionName: "Apply seating change UNSEAT reject", beforeHash: hashBeforeReject },
   );
   await expect(page.getByTestId("action-result-data-changed")).toContainText(/No/i);
   expect(await workingHash(page)).toBe(hashBeforeReject);
@@ -91,11 +99,13 @@ test("S075 Section 13 journey 1: studio and two-tab concurrency", async ({ page,
     await staleForm.locator('select[name="guestId"]').selectOption(damilola);
     await staleForm.locator('select[name="command"]').selectOption("MOVE");
     await staleForm.locator('select[name="targetPositionId"]').selectOption(staleTarget);
-    await settleLiveScopedSeatingClick(
+    await timedSettleLiveScopedSeatingClick(
       other.page,
       staleForm,
       "Apply seating change",
+      "VERSION_CONFLICT",
       /changed elsewhere|conflict|stale|version/i,
+      { actionName: "Apply seating change stale tab B", beforeHash: tabBLoad.contentHash },
     );
     await expect(staleForm.getByRole("button", { name: /Reload before retrying|Apply seating change/ })).toBeDisabled();
     await expect(other.page.getByRole("button", { name: "Freeze new input edition" })).toBeEnabled();

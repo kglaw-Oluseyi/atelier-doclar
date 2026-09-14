@@ -16,16 +16,19 @@ import {
   settleLiveSeatingClick,
 } from "./s075-layout-binding-live";
 
-const EVIDENCE = "/tmp/s075g-live-evidence.jsonl";
-const EXPECTED_SHA = process.env.PLAYWRIGHT_EXPECTED_SHA ?? "f4862f9f9e2b8759e4991436a40a3873f52993c2";
+const EVIDENCE = "/tmp/s075-p8-evidence/packet-g-live.jsonl";
+const EXPECTED_SHA = process.env.PLAYWRIGHT_EXPECTED_SHA ?? "5179ffd0189a9c88f458e5e4d3865cafa4d92627";
 const ALPHA_ONE_SEATING = "/app/events/00000000-0000-4000-8000-000000000021/seating";
+const ALPHA_ONE_EVENT = "00000000-0000-4000-8000-000000000021";
+const ORG_MAISON = "00000000-0000-4000-8000-000000000001";
+const CLIENT_ALPHA = "00000000-0000-4000-8000-000000000011";
 
 test.skip(process.env.PLAYWRIGHT_LIVE !== "1", "MD-PR-S075 Packet G live Railway gates only");
 test.use({ screenshot: "off", video: "off", trace: "off" });
 test.describe.configure({ mode: "serial" });
 
 function record(entry: Record<string, unknown>) {
-  mkdirSync("/tmp", { recursive: true });
+  mkdirSync("/tmp/s075-p8-evidence", { recursive: true });
   appendFileSync(EVIDENCE, `${JSON.stringify({ at: new Date().toISOString(), ...entry })}\n`);
 }
 
@@ -62,6 +65,20 @@ test("S075G live readiness, S05 unchanged, and evaluation compatibility", async 
   const evaluationText = ((await evaluation.innerText()) ?? "").replace(/\s+/g, " ");
   expect(evaluationText).toMatch(/s06-eval-v4/i);
   expect(evaluationText).not.toMatch(/INCOMPATIBLE|FAILED|STALE/i);
+  record({
+    kind: "G.1-deploy-readiness",
+    gate: "G.1",
+    deployedSha: readyBody.deployedSha,
+    persistence: readyBody.persistence,
+    migrationStatus: readyBody.migrationStatus,
+    productionAuthorised: readyBody.productionAuthorised,
+    s05a: readyBody.s05aEvaluationStatus,
+    s05b: readyBody.s05bEvaluationStatus,
+    adapters: readyBody.s05bAdapters,
+    evaluationText,
+    docsBaseline: "aa23f5abd87fd3cf6ac4910bd1ac8dbd3a5dbbd2",
+    applicationSha: EXPECTED_SHA,
+  });
   record({ kind: "readiness", liveBody, readyBody, evaluationText });
 });
 
@@ -71,7 +88,18 @@ test("S075G reports whether a genuine live ambiguous binding already exists", as
   await page.goto(`${ALPHA_ONE_SEATING}#inputs`, { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("seating-layout-binding")).toBeVisible({ timeout: 30_000 });
   const status = await seatingBindingStatus(page);
-  record({ kind: "alpha-one-binding", status });
+  record({
+    kind: "G.3-ambiguity-probe",
+    gate: "G.3",
+    eventId: ALPHA_ONE_EVENT,
+    organisationId: ORG_MAISON,
+    clientId: CLIENT_ALPHA,
+    status,
+    note:
+      status.state === "AMBIGUOUS"
+        ? "live ambiguity present — subsequent resolution required"
+        : "no governed live ambiguity on Alpha One; rely on clean-state proof + product fail-closed ABSENT/AMBIGUOUS typing",
+  });
   expect(status.state).not.toBe("AMBIGUOUS");
 });
 
@@ -116,9 +144,21 @@ async function loadSyntheticFixture(page: Parameters<typeof loginAs>[0], browser
   return { fixture, lineageB };
 }
 
+/** Serial tests 3→4 must share one synthetic event; otherwise test 4 provisions unbound and has no package hash. */
+let sharedSyntheticFixture: Awaited<ReturnType<typeof loadSyntheticFixture>> | undefined;
+
+async function loadSharedSyntheticFixture(
+  page: Parameters<typeof loginAs>[0],
+  browser: Parameters<typeof publishNamedLayout>[1],
+) {
+  if (sharedSyntheticFixture) return sharedSyntheticFixture;
+  sharedSyntheticFixture = await loadSyntheticFixture(page, browser);
+  return sharedSyntheticFixture;
+}
+
 test("S075G synthetic binding, witness and named infeasible", async ({ page, browser }) => {
   test.setTimeout(600_000);
-  const { fixture, lineageB } = await loadSyntheticFixture(page, browser);
+  const { fixture, lineageB } = await loadSharedSyntheticFixture(page, browser);
   const seatingPath = fixture.seatingPath;
   const lineageBName = `${fixture.eventName} Lineage B`;
 
@@ -150,6 +190,19 @@ test("S075G synthetic binding, witness and named infeasible", async ({ page, bro
     }
     expect(bound.hashPrefix).toBe(lineageB.hashPrefix);
     expect(bound.publicationNumber).toBe(lineageB.publicationNumber);
+    record({
+      kind: "G.1-canonical-authority",
+      gate: "G.1",
+      eventId: fixture.eventId,
+      eventName: fixture.eventName,
+      organisationId: ORG_MAISON,
+      binding: bound,
+      lineageBPublication: lineageB.publicationNumber,
+      lineageBHashPrefix: lineageB.hashPrefix,
+      lineageBFullHash: lineageB.fullHash,
+      proposeOptions: 2,
+      authority: "seating layout binding selects exactly one CURRENT publication/hash for Freeze",
+    });
     record({ kind: "bound", bound, migration010: "binding-commands-applied" });
 
     await loginAs(page, "planner");
@@ -160,6 +213,15 @@ test("S075G synthetic binding, witness and named infeasible", async ({ page, bro
     expect(firstPackage.layoutHash).toBe(lineageB.fullHash);
     expect(firstPackage.hash).toMatch(/^[a-f0-9]{32,}$/i);
     await expect(page.getByTestId("seating-freshness-badge")).toContainText(firstPackage.hash.slice(0, 12));
+    record({
+      kind: "G.2-clean-state-freeze",
+      gate: "G.2",
+      eventId: fixture.eventId,
+      packageHash: firstPackage.hash,
+      layoutHash: firstPackage.layoutHash,
+      bindingHashPrefix: bound.hashPrefix,
+      provenanceMatch: firstPackage.layoutHash === lineageB.fullHash,
+    });
     const runsBeforeWitness = await runCards(page);
     await page.goto(`${seatingPath}#runs`, { waitUntil: "domcontentloaded" });
     await settleLiveSeatingClick(page, "Launch seating run");
@@ -227,7 +289,7 @@ test("S075G synthetic binding, witness and named infeasible", async ({ page, bro
 
 test("S075G successor staleness, rebind and capacity mismatch", async ({ page, browser }) => {
   test.setTimeout(600_000);
-  const { fixture, lineageB } = await loadSyntheticFixture(page, browser);
+  const { fixture, lineageB } = await loadSharedSyntheticFixture(page, browser);
   const seatingPath = fixture.seatingPath;
   const lineageBName = `${fixture.eventName} Lineage B`;
   const mismatchName = `${fixture.eventName} Mismatch`;
@@ -270,7 +332,9 @@ test("S075G successor staleness, rebind and capacity mismatch", async ({ page, b
       expect(rebound.hashPrefix).toBe(successor.hashPrefix);
       expect(rebound.publicationNumber).toBe(successor.publicationNumber);
       await expect(successorChecker.page.getByTestId("seating-layout-binding-history")).toContainText("SUPERSEDED");
-      await expect(successorChecker.page.getByTestId("seating-layout-binding-history")).toContainText(/0af494b1b7e9|SUPERSEDED/);
+      await expect(successorChecker.page.getByTestId("seating-layout-binding-history")).toContainText(
+        new RegExp(`${successor.hashPrefix}|SUPERSEDED`, "i"),
+      );
     } finally {
       await successorChecker.context.close();
     }
@@ -319,15 +383,33 @@ test("S075G successor staleness, rebind and capacity mismatch", async ({ page, b
   expect(mismatchBound.freezeDisabled).toBe("true");
   expect(mismatchBound.text).toMatch(/Mismatch/i);
   await expect(page.getByTestId("seating-layout-binding-history")).toContainText("SUPERSEDED");
-  await expect(page.getByTestId("seating-package-history")).toContainText("0af494b1b7e9");
-  await expect(page.getByTestId("seating-package-history")).toContainText("f650bf1decde");
+  // History lists earlier freezes only — never hard-code transient live package hashes.
+  await expect(page.getByTestId("seating-package-history")).toContainText(/Earlier frozen input packages \([1-9]\d*\)/i);
+  if (firstPackage.hash && successorPackage.hash && firstPackage.hash !== successorPackage.hash) {
+    await expect(page.getByTestId("seating-package-history")).toContainText(firstPackage.hash);
+  } else {
+    await expect(page.getByTestId("seating-package-history")).toContainText(/Hash [a-f0-9]{32,}/i);
+  }
   const packageBeforeMismatch = await seatingInputHash(page);
   const runsBeforeMismatch = await runCards(page);
   await forceSubmitDisabledFreeze(page);
-  await expect(page.locator("#operational-state-title")).toContainText("The published layout capacity needs correction");
+  await expect(page.getByTestId("action-result-banner")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId("action-result-banner")).toContainText(/not applied|capacity|correction|stale|mismatch/i);
   await expect(page.getByTestId("action-result-banner")).not.toContainText(/The change was recorded/i);
+  await expect(page.getByText(/Physical seat count and declared capacity disagree|capacity needs correction/i).first()).toBeVisible();
   expect((await seatingInputHash(page)).hash).toBe(packageBeforeMismatch.hash);
   expect(await runCards(page)).toBe(runsBeforeMismatch);
+  record({
+    kind: "G.4-section12-reconfirm-complete",
+    gate: "G.4",
+    eventId: fixture.eventId,
+    eventName: fixture.eventName,
+    lineageB,
+    successor,
+    successorPackage,
+    mismatch,
+    firstRunFailures: FIRST_RUN_FAILURES,
+  });
   record({
     kind: "complete",
     eventId: fixture.eventId,

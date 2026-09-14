@@ -23,18 +23,33 @@ export function staffNavIdentity(page: Page) {
 }
 
 export async function login(page: Page, email = STAFF_IDENTITIES.ceo.email): Promise<void> {
-  await page.goto("/sign-in");
-  await page.getByLabel("Staff email").fill(email);
+  const live = process.env.PLAYWRIGHT_LIVE === "1";
   const localToken = "event-os-access-token-not-for-production";
-  const accessToken =
-    process.env.PLAYWRIGHT_LIVE === "1" ? (process.env.EVENT_OS_ACCESS_TOKEN ?? localToken) : localToken;
-  await page.getByLabel("Access token").fill(accessToken);
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await page.waitForURL(/\/app(?:\/|$)/, { timeout: 20_000 });
-  await page
-    .getByRole("heading", { name: "Home" })
-    .or(page.getByRole("heading", { name: /not available|cannot|assignment/i }))
-    .waitFor({ timeout: 20_000 });
+  const accessToken = live ? (process.env.EVENT_OS_ACCESS_TOKEN ?? localToken) : localToken;
+  if (live && !process.env.EVENT_OS_ACCESS_TOKEN) {
+    throw new Error("live login requires EVENT_OS_ACCESS_TOKEN (fail closed)");
+  }
+  const navTimeout = live ? 40_000 : 20_000;
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= (live ? 3 : 1); attempt += 1) {
+    try {
+      await page.goto("/sign-in", { waitUntil: "domcontentloaded" });
+      await page.getByLabel("Staff email").fill(email);
+      await page.getByLabel("Access token").fill(accessToken);
+      await page.getByRole("button", { name: "Sign in" }).click();
+      await page.waitForURL(/\/app(?:\/|$)/, { timeout: navTimeout });
+      await page
+        .getByRole("heading", { name: "Home" })
+        .or(page.getByRole("heading", { name: /not available|cannot|assignment/i }))
+        .waitFor({ timeout: navTimeout });
+      return;
+    } catch (error) {
+      lastError = error;
+      if (!live || attempt >= 3) break;
+      await page.waitForTimeout(2_000 * attempt);
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error(String(lastError));
 }
 
 export async function loginAs(page: Page, identity: StaffIdentityKey): Promise<void> {

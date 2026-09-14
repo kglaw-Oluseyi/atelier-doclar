@@ -575,4 +575,8 @@ RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S037`. Canonical corpus p
 | EV-EOS-S06-S075-ADR | DOCUMENT | Canonical table-token compiler | `docs/control/eos-s06/ADR_EOS_S06_V2_TABLE_TOKEN_COMPILER.md` |
 | EV-EOS-S06-S075-REPLAY-ADR | DOCUMENT | Full run-reuse identity and additive migration 009 | `docs/control/eos-s06/ADR_EOS_S06_V2_RUN_REUSE_IDENTITY.md` |
 | EV-EOS-S06-S075-CAPACITY | TEST | Physical/declared capacity truth and Studio persistence | `packages/shared-platform/test/seating-v2-s075-capacity.test.ts`, `apps/event-os/e2e/s075-capacity.spec.ts` |
+| EV-EOS-S06-S075-P8-EVIDENCE | DOCUMENT | Packet 8 durable freeze: Packet G, §8.2 matrix, Section 13 timed journeys on deployed SHA `5179ffd…` | `docs/control/evidence/eos-s06-s075-packet8/MANIFEST.md` |
+| EV-EOS-S06-S075-P8-TIMING | TEST | Section 13 J1–J4 per-action timing (`durationMs < 30000`, max 4393 ms) | `docs/control/evidence/eos-s06-s075-packet8/section13-action-timing.jsonl` |
+| EV-EOS-S06-S075-P8-MATRIX | TEST | §8.2 trusted-boundary live matrix P8-0 preflight + P8-1–P8-9 | `docs/control/evidence/eos-s06-s075-packet8/trusted-boundary-matrix.jsonl` |
+| EV-EOS-S06-S075-P8-HARNESS | TEST | Live Packet G / Packet 8 / Section 13 harness | `apps/event-os/e2e/s075-layout-binding-live.spec.ts`, `apps/event-os/e2e/s075-packet8-trusted-boundary-live.spec.ts`, `apps/event-os/e2e/s075-section-13*.spec.ts` |
 
