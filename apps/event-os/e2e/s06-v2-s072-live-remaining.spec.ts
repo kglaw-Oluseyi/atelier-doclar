@@ -173,7 +173,7 @@ async function directorActivateHard(browser: Parameters<typeof openStaffContext>
 
 async function publicationIdentity(page: Page) {
   const badge = ((await page.getByTestId("seating-publication-badge").textContent()) ?? "").trim();
-  const current = ((await page.getByTestId("seating-publication").locator("article").filter({ hasText: "Current publication" }).textContent()) ?? "").trim();
+  const current = ((await page.getByTestId("seating-publication").locator("article").filter({ hasText: "Current operational publication" }).textContent()) ?? "").trim();
   const history = ((await page.getByTestId("seating-publication").locator("article").filter({ hasText: "History" }).textContent()) ?? "").trim();
   return { badge, current, history };
 }

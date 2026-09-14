@@ -380,6 +380,8 @@ export function buildSeatingV2Workspace(
         validatorVerdict: report?.validatorVersion === SEATING_V2_VALIDATOR_VERSION ? report.verdict : undefined,
         validatorVersion: report?.validatorVersion,
         violatedSummary: violatedSummary || undefined,
+        startedAt: item.startedAt ?? item.generatedAt ?? item.createdAt,
+        initiatingActorLabel: undefined,
       };
     }),
     reviews: state.specialistReviews.filter((item) => item.eventId === eventId).map((item) => ({

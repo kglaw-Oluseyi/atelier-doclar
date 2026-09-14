@@ -2383,8 +2383,28 @@ body.atelier {
 .seating-studio-grid {
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
   min-width: 0;
+  max-width: 100%;
+}
+
+[data-testid="seating-publication-badge"],
+[data-testid="seating-run-card"],
+[data-testid="seating-run-identity"],
+[data-testid="seating-run-full-id"],
+[data-testid="seating-run-started"],
+[data-testid="seating-tables-empty"],
+[data-testid="seating-publication-dual-truth"] {
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+[data-testid="seating-run-card"] code,
+.canonical-id code {
+  overflow-wrap: anywhere;
+  word-break: break-all;
 }
 
 #overview,

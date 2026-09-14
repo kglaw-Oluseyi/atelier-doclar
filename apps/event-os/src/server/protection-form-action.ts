@@ -104,7 +104,12 @@ export async function runProtectionFormAction(input: {
               correlationId,
               status: "SUCCESS",
               code: "SUCCESS",
-              message: (outcome.application === "REPLAYED" ? "No change. This command was already applied." : "Protection command applied.").slice(0, 400),
+              message: (outcome.application === "REPLAYED"
+                ? input.actionType === "seating.rule.activate"
+                  ? "No data changed. An equivalent ACTIVE rule already governs this scope."
+                  : "No change. This command was already applied."
+                : "Protection command applied."
+              ).slice(0, 400),
               application: outcome.application,
               didDataChange: outcome.didDataChange,
               eventId: input.trustedScope?.eventId ?? formScope.eventId,

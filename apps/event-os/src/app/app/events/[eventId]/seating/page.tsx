@@ -3,7 +3,7 @@ import { AtelierOperationalState } from "../../../../../components/atelier-opera
 import { AtelierSectionTabs } from "../../../../../components/atelier-section-tabs";
 import { AppShell } from "../../../../../components/shell";
 import { ActionResultBanner } from "../../../../../components/action-result-banner";
-import { HistoryDisclosure } from "../../../../../components/canonical-evidence";
+import { CanonicalId, CanonicalTime, HistoryDisclosure } from "../../../../../components/canonical-evidence";
 import { IdempotencyField, PendingSubmit } from "../../../../../components/atelier-pending-submit";
 import { ProtectionMutationForm } from "../../../../../components/protection-mutation-form";
 import { SeatingRuleAuthoringFields } from "../../../../../components/seating-rule-authoring-fields";
@@ -202,8 +202,13 @@ export default async function EventSeatingPage({
         lede="The solver recommends. Authorised people decide. Published seating does not send messages, issue credentials or change check-in."
       />
       <p data-testid="seating-publication-badge">
-        Current publication: {publication ? `Publication ${publication.publicationNumber}` : "None"}
+        {publication
+          ? `Current operational publication: Publication ${publication.publicationNumber}`
+          : "No current operational publication"}
         {publicationSource === "LEGACY" ? ` · ${LEGACY_S06_PUBLICATION_LABEL}` : ""}
+        {publication && working && working.status !== "PUBLISHED"
+          ? ` · Current working edition: ${working.status} / unpublished`
+          : ""}
       </p>
       <p data-testid="seating-freshness-badge">{workspace.freshnessCopy}</p>
       <p
@@ -227,7 +232,16 @@ export default async function EventSeatingPage({
           <li><a href="#studio">Seated · {workspace.counts.seated}</a></li>
           <li><a href="#studio">Unseated · {workspace.counts.unseated}</a></li>
           <li><a href="#rules">Hard blockers · {workspace.counts.hardBlockers}</a></li>
-          <li><a href="#publication">Current publication · {publication ? `No. ${publication.publicationNumber}` : "None"}</a></li>
+          <li>
+            <a href="#publication">
+              Current operational publication · {publication ? `No. ${publication.publicationNumber}` : "None"}
+            </a>
+          </li>
+          <li>
+            <a href="#publication">
+              Working edition · {working ? `${working.status}${working.status === "PUBLISHED" ? "" : " / unpublished"}` : "None"}
+            </a>
+          </li>
         </ul>
         <h3>What needs attention</h3>
         {workspace.attention.length ? (
@@ -291,12 +305,14 @@ export default async function EventSeatingPage({
           <h3>RSVP truth</h3>
           <p>Attendance intent is RSVP truth. Forecast does not overwrite it.</p>
         </article>
-        <article>
-          <h3>Layout publication</h3>
+        <article data-testid="seating-layout-publication">
+          <h3>Venue layout tables</h3>
           <p>
             {workspace.tables.length
-              ? `${workspace.tables.length} published tables${workspace.tables.some((table) => table.mismatch) ? " · physical and declared capacity disagree" : ""}`
-              : "No current layout is published."}
+              ? `${workspace.tables.length} bound published tables available for seating${workspace.tables.some((table) => table.mismatch) ? " · physical and declared capacity disagree" : ""}`
+              : workspace.seatingLayoutBinding?.status === "BOUND"
+                ? "The bound layout publication has no usable tables yet."
+                : "No venue layout tables are available for seating until a seating layout binding is active against a current layout publication. This is separate from the operational seating publication."}
           </p>
         </article>
         <article data-testid="seating-layout-binding">
@@ -635,35 +651,65 @@ export default async function EventSeatingPage({
           </ProtectionMutationForm>
         ) : null}
         <ul>
-          {visibleSeatingRuns(workspace.runs, workspace.currentRunId).map((run) => (
-            <li key={run.id} data-testid={`seating-run-${run.status}`}>
-              <article
-                data-testid="seating-run-card"
-                data-run-id={run.id}
-                data-current={run.id === workspace.currentRunId ? "true" : "false"}
-                data-stale={run.stale ? "true" : "false"}
-              >
-                Validator {run.validatorVerdict ?? "not independently validated on the current validator"} · seated {run.seated ?? 0} · unseated {run.unseated ?? 0}
-                {run.stale ? " · Upstream event information changed. Review and run again." : ""}
-                {run.validatorVerdict === "INFEASIBLE" || run.status === "INFEASIBLE" ? " · No safe seating plan satisfies every hard rule." : ""}
-                {run.violatedSummary ? ` · Violated: ${run.violatedSummary}` : ""}
-                {permissions.edit && (seatingV2ReplacementEnabled() ? run.validatorVerdict === "FEASIBLE" : run.status === "FEASIBLE" || run.status === "INFEASIBLE") ? (
-                  <ProtectionMutationForm action={adoptSeatingRunAction.bind(null, event.id)} className="actions">
-                    <Envelope fields={{ ...envelopeFields, runId: run.id }} />
-                    <IdempotencyField />
-                    <button type="submit" className="button secondary">Adopt run</button>
-                  </ProtectionMutationForm>
-                ) : null}
-                {permissions.run && (run.status === "QUEUED" || run.status === "RUNNING") ? (
-                  <ProtectionMutationForm action={cancelSeatingRunAction.bind(null, event.id)} className="actions">
-                    <Envelope fields={{ ...envelopeFields, runId: run.id, expectedVersion: 0 }} />
-                    <IdempotencyField />
-                    <button type="submit" className="button secondary">Cancel run</button>
-                  </ProtectionMutationForm>
-                ) : null}
-              </article>
-            </li>
-          ))}
+          {visibleSeatingRuns(workspace.runs, workspace.currentRunId).map((run) => {
+            const isCurrent = run.id === workspace.currentRunId || Boolean(run.current);
+            const outcome = run.validatorVerdict ?? run.status;
+            return (
+              <li key={run.id} data-testid={`seating-run-${run.status}`}>
+                <article
+                  data-testid="seating-run-card"
+                  data-run-id={run.id}
+                  data-current={isCurrent ? "true" : "false"}
+                  data-stale={run.stale ? "true" : "false"}
+                  data-outcome={outcome}
+                >
+                  <p data-testid="seating-run-identity">
+                    Run <code>{run.id.slice(0, 8)}</code>
+                    {isCurrent ? " · Current" : " · Not current"}
+                    {run.stale ? " · Stale" : " · Fresh"}
+                    {" · "}
+                    {outcome}
+                  </p>
+                  <CanonicalId id={run.id} label="Full immutable run ID" testId="seating-run-full-id" />
+                  <p data-testid="seating-run-started">
+                    Started{" "}
+                    {run.startedAt ? <CanonicalTime iso={run.startedAt} /> : "unavailable"}
+                    {" · Initiating actor: "}
+                    {run.initiatingActorLabel ?? "unavailable"}
+                  </p>
+                  <p data-testid="seating-run-counts">
+                    Seated {run.seated ?? 0} · Unseated {run.unseated ?? 0}
+                  </p>
+                  {isCurrent && run.stale ? (
+                    <p data-testid="seating-run-current-stale">
+                      This is the selected/current run, and it is also stale because upstream seating inputs changed after it was produced. Review and run again before treating it as fresh authority.
+                    </p>
+                  ) : null}
+                  {run.stale && !isCurrent ? (
+                    <p>Upstream event information changed after this run. Review and run again.</p>
+                  ) : null}
+                  {run.validatorVerdict === "INFEASIBLE" || run.status === "INFEASIBLE" ? (
+                    <p>No safe seating plan satisfies every hard rule.</p>
+                  ) : null}
+                  {run.violatedSummary ? <p>Violated: {run.violatedSummary}</p> : null}
+                  {permissions.edit && (seatingV2ReplacementEnabled() ? run.validatorVerdict === "FEASIBLE" : run.status === "FEASIBLE" || run.status === "INFEASIBLE") ? (
+                    <ProtectionMutationForm action={adoptSeatingRunAction.bind(null, event.id)} className="actions">
+                      <Envelope fields={{ ...envelopeFields, runId: run.id }} />
+                      <IdempotencyField />
+                      <button type="submit" className="button secondary">Adopt run</button>
+                    </ProtectionMutationForm>
+                  ) : null}
+                  {permissions.run && (run.status === "QUEUED" || run.status === "RUNNING") ? (
+                    <ProtectionMutationForm action={cancelSeatingRunAction.bind(null, event.id)} className="actions">
+                      <Envelope fields={{ ...envelopeFields, runId: run.id, expectedVersion: 0 }} />
+                      <IdempotencyField />
+                      <button type="submit" className="button secondary">Cancel run</button>
+                    </ProtectionMutationForm>
+                  ) : null}
+                </article>
+              </li>
+            );
+          })}
         </ul>
       </section>
 
@@ -672,14 +718,29 @@ export default async function EventSeatingPage({
         <div className="seating-studio-grid">
           <div>
             <h3>Tables</h3>
-            <ul>
-              {workspace.tables.map((table) => (
-                <li key={table.id} data-testid="seating-table-capacity">
-                  {table.label} · {table.seated}/{table.capacity}
-                  {table.mismatch ? " · capacity mismatch" : ""}
-                </li>
-              ))}
-            </ul>
+            {workspace.tables.length ? (
+              <ul>
+                {workspace.tables.map((table) => (
+                  <li key={table.id} data-testid="seating-table-capacity">
+                    {table.label} · {table.seated}/{table.capacity}
+                    {table.mismatch ? " · capacity mismatch" : ""}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div data-testid="seating-tables-empty" className="atelier-empty">
+                <p>No table layout is configured for seating placements.</p>
+                <p>
+                  Placements cannot be displayed until a current venue layout publication is bound for this event.
+                  {permissions.prepare
+                    ? " Propose and activate a seating layout binding under Inputs."
+                    : " Ask an authorised planner or director to bind a current layout publication. This assignment cannot change the binding."}
+                </p>
+                <p>
+                  <a href="#inputs">Open Inputs · seating layout binding</a>
+                </p>
+              </div>
+            )}
           </div>
           <div>
             <h3>Guests</h3>
@@ -791,7 +852,15 @@ export default async function EventSeatingPage({
       <section id="review" className="atelier-panel" data-testid="seating-review">
         <h2>Review</h2>
         <p data-testid="seating-review-lineage">Package → Run → Validation → Plan edition</p>
-        <p data-testid="seating-review-event">{event.name} · {working ? `${working.status} working edition` : "No working edition"}</p>
+        <p data-testid="seating-review-event">
+          {event.name}
+          {" · "}
+          {publication
+            ? `Current operational publication: Publication ${publication.publicationNumber}`
+            : "No current operational publication"}
+          {" · "}
+          {working ? `Current working edition: ${working.status}${working.status === "PUBLISHED" ? "" : " / unpublished"}` : "No working edition"}
+        </p>
         <p data-testid="seating-review-requirement">{workspace.reviewRequirementCopy}</p>
         <ul data-testid="seating-review-evidence">
           {workspace.constraints.filter((item) => item.reviewDomain && workspace.implicatedReviewDomains.includes(item.reviewDomain as "PROTOCOL" | "ACCESSIBILITY" | "SECURITY")).map((item) => (
@@ -869,17 +938,28 @@ export default async function EventSeatingPage({
       <section id="publication" className="atelier-panel" data-testid="seating-publication">
         <h2>Publication</h2>
         <p>Published without sending messages, issuing credentials or changing check-in.</p>
-        <article>
-          <h3>Current publication</h3>
+        <article data-testid="seating-current-publication">
+          <h3>Current operational publication</h3>
           <p>
             {publication
-              ? `Publication ${publication.publicationNumber} remains the operational seating.${publicationSource === "LEGACY" ? ` ${LEGACY_S06_PUBLICATION_LABEL}` : ""}`
-              : "No current publication."}
+              ? `Publication ${publication.publicationNumber} remains the operational seating until a successor is published.${publicationSource === "LEGACY" ? ` ${LEGACY_S06_PUBLICATION_LABEL}` : ""}`
+              : "No current operational publication."}
           </p>
         </article>
-        <article>
-          <h3>Working edition</h3>
-          <p>{working ? `${working.status} · ${working.contentHash}` : "No working edition."}</p>
+        <article data-testid="seating-working-edition">
+          <h3>Current working edition</h3>
+          <p>
+            {working
+              ? working.status === "PUBLISHED"
+                ? `PUBLISHED · ${working.contentHash}`
+                : `${working.status} / unpublished · ${working.contentHash}`
+              : "No working edition."}
+          </p>
+          {publication && working && working.status !== "PUBLISHED" ? (
+            <p data-testid="seating-publication-dual-truth">
+              Publication {publication.publicationNumber} remains operational while this working edition stays unpublished.
+            </p>
+          ) : null}
         </article>
         <article>
           <h3>Operational approval</h3>

@@ -8,6 +8,6 @@ test("S06 publication tab keeps current publication above drafts", async ({ page
   await loginAs(page, "ceo");
   await page.goto(`${SEATING}#publication`);
   await expect(page.getByTestId("seating-publication")).toBeVisible();
-  await expect(page.getByTestId("seating-publication").getByRole("heading", { name: "Current publication" })).toBeVisible();
+  await expect(page.getByTestId("seating-publication").getByRole("heading", { name: "Current operational publication" })).toBeVisible();
   await expect(page.getByText("Published without sending messages, issuing credentials or changing check-in.")).toBeVisible();
 });

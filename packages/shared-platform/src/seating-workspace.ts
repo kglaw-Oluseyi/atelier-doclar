@@ -62,6 +62,10 @@ export type SeatingWorkspaceView = SeatingWorkspaceProjection & {
     validatorVerdict?: string;
     validatorVersion?: string;
     violatedSummary?: string;
+    /** ISO timestamp for operator display (started/created). */
+    startedAt?: string;
+    /** Explicit when the durable run record does not retain an initiating actor. */
+    initiatingActorLabel?: string;
   }>;
   reviews: Array<{ id: string; domain: string; decision: string; reviewerLabel: string; reason: string; createdAt: string }>;
   approvals: Array<{ id: string; decision: string; createdAt: string }>;
@@ -194,7 +198,7 @@ export function buildSeatingWorkspace(
     .filter((item) => item.eventId === eventId && item.severity === "BLOCKER" && item.state === "OPEN")
     .map((item) => ({ code: item.code, message: item.code === "INFEASIBLE" ? "No safe seating plan satisfies every hard rule." : item.code }));
   const attention: SeatingWorkspaceView["attention"] = [];
-  if (!layout) attention.push({ kind: "blocker", message: "No current layout is published. Freeze cannot start.", href: "#inputs" });
+  if (!layout) attention.push({ kind: "blocker", message: "No venue layout tables are available for seating. Bind a current layout publication before freeze.", href: "#inputs" });
   if (overbooked) attention.push({ kind: "blocker", message: "Reserved minima exceed published capacity.", href: "#reservations" });
   if (tables.some((item) => item.mismatch)) {
     attention.push({
@@ -293,6 +297,8 @@ export function buildSeatingWorkspace(
         unseated: state.runAssignments.filter((assignment) => assignment.runId === item.id && assignment.state === "UNSEATED").length,
         stale: Boolean(input && item.inputHash !== input.contentHash),
         current: Boolean(working?.sourceRunId && item.id === working.sourceRunId),
+        startedAt: item.createdAt,
+        initiatingActorLabel: item.createdBy ? personLabel(snap, item.createdBy, disclosure) : undefined,
       })),
     reviews: state.reviews
       .filter((item) => item.eventId === eventId)

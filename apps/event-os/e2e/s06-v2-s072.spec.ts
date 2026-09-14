@@ -24,8 +24,8 @@ test("S072 V2 publication keeps CURRENT first and shows lineage", async ({ page 
   await page.goto(`${SEATING}#publication`);
   const publication = page.getByTestId("seating-publication");
   await expect(publication).toBeVisible();
-  const current = publication.getByRole("heading", { name: "Current publication" });
-  const working = publication.getByRole("heading", { name: "Working edition" });
+  const current = publication.getByRole("heading", { name: "Current operational publication" });
+  const working = publication.getByRole("heading", { name: "Current working edition" });
   await expect(current).toBeVisible();
   await expect(working).toBeVisible();
   const currentBox = await current.boundingBox();
@@ -41,7 +41,8 @@ test("S072 V2 publication keeps CURRENT first and shows lineage", async ({ page 
   expect(currentCount, "more than one CURRENT run is a product defect").toBeLessThanOrEqual(1);
   if (currentCount === 1) {
     await expect(currentRun).toHaveCount(1);
-    await expect(currentRun.getByText(/Validator/i)).toBeVisible();
+    await expect(currentRun.getByTestId("seating-run-identity")).toBeVisible();
+    await expect(currentRun.getByTestId("seating-run-counts")).toContainText(/Seated/i);
   }
 });
 
@@ -91,6 +92,7 @@ for (const width of [360, 768, 1440] as const) {
 
 test("S072 V2 seating axe, 200% zoom and reduced motion", async ({ page }) => {
   test.setTimeout(60_000);
+  await page.setViewportSize({ width: 1280, height: 900 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await loginAs(page, "planner");
   await page.goto(SEATING);

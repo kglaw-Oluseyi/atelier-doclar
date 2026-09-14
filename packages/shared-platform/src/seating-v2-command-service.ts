@@ -161,7 +161,7 @@ type CommandDeps = {
   onEffect?: (effect: DurableMutationEffect) => void;
 };
 
-type WorkResult<T> = T | { replayed: true; value: T };
+type WorkResult<T> = T | { replayed: true; value: T; reason?: "ALREADY_ACTIVE" | "DUPLICATE_ACTIVE" };
 
 function nowOf(actor: SeatingV2Actor): string {
   return actor.now ?? new Date().toISOString();
@@ -308,6 +308,7 @@ export class SeatingV2CommandService {
       const raw = await work(tx, people);
       const replayed = isReplay(raw);
       const value = replayed ? raw.value : raw;
+      const replayReason = replayed && "reason" in raw ? raw.reason : undefined;
       await tx.insertIdempotency({
         organisationId: canonical.organisationId,
         eventId: canonical.eventId,
@@ -333,7 +334,10 @@ export class SeatingV2CommandService {
         resourceId: value.id,
         correlationId: actor.correlationId,
         idempotencyKey: canonical.idempotencyKey,
-        metadata: { replayed },
+        metadata: {
+          replayed,
+          ...(replayReason ? { reason: replayReason, authoritativeEditionId: value.id } : {}),
+        },
         schemaVersion: 1,
       });
       if (replayed) {
@@ -395,6 +399,8 @@ export class SeatingV2CommandService {
     input: { editionId: string },
   ): Promise<SeatingV2CommandResult<SeatingV2RuleEdition>> {
     return this.mutate(actor, envelope, "seating.view", "seatingV2.activateRule", async (tx) => {
+      // Serialize activations per event so concurrent equivalent drafts cannot both become ACTIVE.
+      await tx.lockEventCurrent(envelope, "FOR_UPDATE");
       const draft = await this.requireOwned<SeatingV2RuleEdition>(tx, "ruleEditions", input.editionId, envelope, "draft rule edition");
       if (draft.lifecycle !== "DRAFT") {
         throw new PlatformError("NOT_FOUND", "draft rule edition was not found");
@@ -410,6 +416,15 @@ export class SeatingV2CommandService {
       const concurrency = this.requireConcurrency(envelope);
       if (draft.editionNo !== concurrency.expectedVersion || draft.contentHash !== concurrency.expectedContentHash) {
         throw new PlatformError("VERSION_CONFLICT", "stale rule edition does not match");
+      }
+      // Semantic duplicate protection: one ACTIVE edition per contentHash in event scope.
+      // Content hash already normalises subject/target order (KEEP_TOGETHER A,B ≡ B,A).
+      const equivalents = (await tx.list<SeatingV2RuleEdition>("ruleEditions", envelope)).filter(
+        (item) => item.lifecycle === "ACTIVE" && item.contentHash === draft.contentHash && item.id !== draft.id,
+      );
+      if (equivalents.length > 0) {
+        const authoritative = [...equivalents].sort((left, right) => left.createdAt.localeCompare(right.createdAt) || left.id.localeCompare(right.id))[0]!;
+        return { replayed: true, value: authoritative, reason: "ALREADY_ACTIVE" as const };
       }
       const now = nowOf(actor);
       return tx.updateLifecycle<SeatingV2RuleEdition>("ruleEditions", draft.id, envelope, {

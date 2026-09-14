@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import type { Person } from "@maison-doclar/shared-platform";
+import { authorize, type Person } from "@maison-doclar/shared-platform";
 import { LogoutButton } from "./logout-button";
 import { presentStaffIdentity } from "../server/staff-identity-display";
+import { getRuntime } from "../server/runtime";
 
 export function AppShell({
   person,
@@ -20,22 +21,38 @@ export function AppShell({
   children: ReactNode;
 }) {
   const identity = presentStaffIdentity(person, eventId);
-  const operations = [
+  const actorSnap = getRuntime().service.resolveActor(person.id);
+  const orgId =
+    actorSnap.assignments.find((item) => item.status === "ACTIVE" && (!eventId || item.eventId === eventId || !item.eventId))
+      ?.organisationId ?? actorSnap.assignments.find((item) => item.status === "ACTIVE")?.organisationId;
+  const scope = orgId ? { organisationId: orgId } : undefined;
+  const canOpenCommand = Boolean(
+    scope && authorize({ actor: actorSnap, permission: "executiveCommand.view", scope }).allow,
+  );
+  const canOpenAccess = Boolean(
+    scope && authorize({ actor: actorSnap, permission: "platform.access.administer", scope }).allow,
+  );
+  const canOpenAudit = Boolean(
+    scope &&
+      (authorize({ actor: actorSnap, permission: "platform.audit.read_all", scope }).allow ||
+        authorize({ actor: actorSnap, permission: "platform.audit.read_operational", scope }).allow ||
+        authorize({ actor: actorSnap, permission: "audit.view", scope }).allow),
+  );
+
+  const operations: Array<readonly [string, string]> = [
     ["/app", "Home"],
     ["/app/clients", "Clients"],
     ["/app/events", "Events"],
     ["/app/venues", "Venues"],
     ["/app/discovery", "Discovery"],
-    ["/app/command", "Event Command"],
-    ["/app/protection", "Protection"],
-    ["/app/my-work", "My Work"],
-    ["/app/academy", "Academy"],
-  ] as const;
-  const governance = [
-    ["/app/admin/access", "Access"],
-    ["/app/admin/audit", "Audit"],
-    ["/app/admin/system", "System"],
-  ] as const;
+  ];
+  if (canOpenCommand) operations.push(["/app/command", "Event Command"]);
+  operations.push(["/app/protection", "Protection"], ["/app/my-work", "My Work"], ["/app/academy", "Academy"]);
+
+  const governance: Array<readonly [string, string]> = [];
+  if (canOpenAccess) governance.push(["/app/admin/access", "Access"]);
+  if (canOpenAudit) governance.push(["/app/admin/audit", "Audit"]);
+  governance.push(["/app/admin/system", "System"]);
 
   return (
     <div className="shell atelier-shell at-scope">

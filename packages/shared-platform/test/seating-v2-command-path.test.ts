@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { PlatformError } from "../src/errors.js";
+import { MemorySeatingV2Repository } from "../src/memory-seating-v2-store.js";
 import { applyS06SeatingLayoutIfMissing, ensureS06SeatingLayoutBinding } from "../src/seating-fixtures.js";
 import type { SeatingV2RuleContent } from "../src/seating-v2-schemas.js";
 import { actor, fixtureService, people } from "./helpers.js";
@@ -348,7 +349,7 @@ describe("EOS-S06 V2 command path", () => {
     void approved;
   });
 
-  it("stores one validation outcome per package rule when two ACTIVE KEEP_APART editions share a hash", async () => {
+  it("rejects equivalent ACTIVE KEEP_APART activation as idempotent ALREADY_ACTIVE replay", async () => {
     const { service, store } = fixtureService();
     await prepareSurface(service, store);
     const guestA = attendingGuest(service, "Chi", "s072-dup-a");
@@ -356,8 +357,88 @@ describe("EOS-S06 V2 command path", () => {
     const v2 = service.seatingV2Commands();
     const first = await v2.createRule(planner(), envelope(people.assignPlanner, "s072-dup-create-01"), keepApart(guestA.id, guestB.id));
     const second = await v2.createRule(planner(), envelope(people.assignPlanner, "s072-dup-create-02"), keepApart(guestA.id, guestB.id));
-    await v2.activateRule(director(), cas(people.assignDirector, "s072-dup-act-01", first.value), { editionId: first.value.id });
-    await v2.activateRule(director(), cas(people.assignDirector, "s072-dup-act-02", second.value), { editionId: second.value.id });
+    const activated = await v2.activateRule(director(), cas(people.assignDirector, "s072-dup-act-01", first.value), { editionId: first.value.id });
+    assert.equal(activated.application, "APPLIED");
+    assert.equal(activated.didDataChange, true);
+    const duplicate = await v2.activateRule(director(), cas(people.assignDirector, "s072-dup-act-02", second.value), { editionId: second.value.id });
+    assert.equal(duplicate.application, "REPLAYED");
+    assert.equal(duplicate.didDataChange, false);
+    assert.equal(duplicate.value.id, first.value.id);
+    const editions = await v2.repository.transaction(async (tx) =>
+      tx.list<{ id: string; lifecycle: string; contentHash: string }>("ruleEditions", {
+        organisationId: people.orgMaison,
+        eventId: people.eventAlphaOne,
+      }),
+    );
+    const active = editions.filter((item) => item.lifecycle === "ACTIVE" && item.contentHash === first.value.contentHash);
+    assert.equal(active.length, 1);
+    assert.equal(active[0]?.id, first.value.id);
+    const stillDraft = editions.find((item) => item.id === second.value.id);
+    assert.equal(stillDraft?.lifecycle, "DRAFT");
+  });
+
+  it("treats concurrent activation of equivalent drafts as a single ACTIVE outcome", async () => {
+    const { service, store } = fixtureService();
+    await prepareSurface(service, store);
+    const guestA = attendingGuest(service, "Eve", "s072-conc-a");
+    const guestB = attendingGuest(service, "Fay", "s072-conc-b");
+    const v2 = service.seatingV2Commands();
+    const first = await v2.createRule(planner(), envelope(people.assignPlanner, "s072-conc-create-01"), keepApart(guestA.id, guestB.id));
+    const second = await v2.createRule(planner(), envelope(people.assignPlanner, "s072-conc-create-02"), keepApart(guestA.id, guestB.id));
+    const settled = await Promise.allSettled([
+      v2.activateRule(director(), cas(people.assignDirector, "s072-conc-act-01", first.value), { editionId: first.value.id }),
+      v2.activateRule(director(), cas(people.assignDirector, "s072-conc-act-02", second.value), { editionId: second.value.id }),
+    ]);
+    assert.equal(settled.filter((item) => item.status === "fulfilled").length, 2);
+    const applications = settled
+      .filter((item): item is PromiseFulfilledResult<Awaited<ReturnType<typeof v2.activateRule>>> => item.status === "fulfilled")
+      .map((item) => item.value.application)
+      .sort();
+    assert.deepEqual(applications, ["APPLIED", "REPLAYED"]);
+    const editions = await v2.repository.transaction(async (tx) =>
+      tx.list<{ id: string; lifecycle: string; contentHash: string }>("ruleEditions", {
+        organisationId: people.orgMaison,
+        eventId: people.eventAlphaOne,
+      }),
+    );
+    const active = editions.filter((item) => item.lifecycle === "ACTIVE" && item.contentHash === first.value.contentHash);
+    assert.equal(active.length, 1);
+    assert.ok(v2.repository instanceof MemorySeatingV2Repository);
+    const audits = v2.repository.backingStore.audit.filter((item) => item.action === "seatingV2.activateRule");
+    assert.ok(audits.some((item) => item.metadata && (item.metadata as { reason?: string }).reason === "ALREADY_ACTIVE"));
+  });
+
+  it("allows materially different ACTIVE rules in the same event scope", async () => {
+    const { service, store } = fixtureService();
+    await prepareSurface(service, store);
+    const guestA = attendingGuest(service, "Gus", "s072-diff-a");
+    const guestB = attendingGuest(service, "Hal", "s072-diff-b");
+    const guestC = attendingGuest(service, "Ida", "s072-diff-c");
+    const v2 = service.seatingV2Commands();
+    const left = await v2.createRule(planner(), envelope(people.assignPlanner, "s072-diff-create-01"), keepApart(guestA.id, guestB.id));
+    const right = await v2.createRule(planner(), envelope(people.assignPlanner, "s072-diff-create-02"), keepApart(guestA.id, guestC.id));
+    const activatedLeft = await v2.activateRule(director(), cas(people.assignDirector, "s072-diff-act-01", left.value), { editionId: left.value.id });
+    const activatedRight = await v2.activateRule(director(), cas(people.assignDirector, "s072-diff-act-02", right.value), { editionId: right.value.id });
+    assert.equal(activatedLeft.application, "APPLIED");
+    assert.equal(activatedRight.application, "APPLIED");
+    assert.notEqual(left.value.contentHash, right.value.contentHash);
+    const editions = await v2.repository.transaction(async (tx) =>
+      tx.list<{ id: string; lifecycle: string }>("ruleEditions", {
+        organisationId: people.orgMaison,
+        eventId: people.eventAlphaOne,
+      }),
+    );
+    assert.equal(editions.filter((item) => item.lifecycle === "ACTIVE").length, 2);
+  });
+
+  it("stores one validation outcome per package rule for a single ACTIVE KEEP_APART edition", async () => {
+    const { service, store } = fixtureService();
+    await prepareSurface(service, store);
+    const guestA = attendingGuest(service, "Chi", "s072-dup-a2");
+    const guestB = attendingGuest(service, "Dee", "s072-dup-b2");
+    const v2 = service.seatingV2Commands();
+    const first = await v2.createRule(planner(), envelope(people.assignPlanner, "s072-dup-create-11"), keepApart(guestA.id, guestB.id));
+    await v2.activateRule(director(), cas(people.assignDirector, "s072-dup-act-11", first.value), { editionId: first.value.id });
     const frozen = await v2.freezePackage(planner(), envelope(people.assignPlanner, "s072-dup-freeze-01"), { seed: "seed-dup" });
     const run = await v2.launchRun(planner(), envelope(people.assignPlanner, "s072-dup-run-01"), { packageId: frozen.value.id });
     assert.ok(run.value.status === "FEASIBLE" || run.value.status === "INFEASIBLE");
@@ -370,7 +451,6 @@ describe("EOS-S06 V2 command path", () => {
     const editionIds = new Set(outcomes.map((item) => item.ruleEditionId));
     assert.equal(editionIds.size, outcomes.length);
     assert.ok(editionIds.has(first.value.id));
-    assert.ok(editionIds.has(second.value.id));
   });
 
   it("exposes the latest frozen package for launch after a working edition exists", async () => {

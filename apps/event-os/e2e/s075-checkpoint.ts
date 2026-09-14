@@ -792,7 +792,7 @@ export async function assertJ2LkgPrerequisites(page: Page, manifest: CheckpointM
   expect(manifest.eventName).toMatch(/^S075CK-/);
   expect(manifest.publicationNumber).toBe("1");
   expect(manifest.contentHashPrefix).toMatch(/^[a-f0-9]{12}$/i);
-  expect(manifest.j2PublicationBadge).toMatch(/Current publication:\s*Publication 1/i);
+  expect(manifest.j2PublicationBadge).toMatch(/Current operational publication:\s*Publication 1/i);
   expect(manifest.j2SubmittedHash).toMatch(/^[a-f0-9]{64}$/i);
   expect(manifest.j2LkgDraftHash).toMatch(/^[a-f0-9]{64}$/i);
   expect(manifest.j2LkgDraftHash).toBe(manifest.j2SubmittedHash);
@@ -810,7 +810,7 @@ export async function assertJ2LkgPrerequisites(page: Page, manifest: CheckpointM
   await expect(page.locator("main")).toContainText(manifest.contentHashPrefix!);
   const draftHash = await workingHash(page);
   expect(draftHash).toBe(manifest.j2LkgDraftHash);
-  await expect(page.getByTestId("seating-publication-badge")).toContainText(/Current publication:\s*Publication 1/i);
+  await expect(page.getByTestId("seating-publication-badge")).toContainText(/Current operational publication:\s*Publication 1/i);
 }
 
 /** J3 — exports and role boundaries against j2 LKG on a fresh server. */
