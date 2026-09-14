@@ -30,6 +30,7 @@ test("Planner Academy path remains assigned and unauthenticated academy fails cl
   await expect(page).toHaveURL(/sign-in/);
   await loginAs(page, "planner");
   await page.goto("/app/academy/aca-s04a");
-  await expect(page.getByText("Academy · PLANNER")).toBeVisible();
+  await expect(page.getByText(/Academy · ACA-S04A · .+ · PLANNER/)).toBeVisible();
+  await expect(page.getByText(/Assigned path:\s*PLANNER/i)).toBeVisible();
   await expect(page.getByRole("note")).toContainText(/does not grant Event OS permissions/i);
 });

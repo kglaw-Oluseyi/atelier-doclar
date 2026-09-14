@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { runCheckpointJ3 } from "./s075-checkpoint";
+import {runCheckpointJ3, checkpointManifestConfigured} from "./s075-checkpoint";
 
 test.use({ screenshot: "off", video: "off", trace: "off" });
+
+test.skip(!checkpointManifestConfigured(), "checkpoint phases require EVENT_OS_CHECKPOINT_MANIFEST");
 
 test("S075 checkpoint j3: exports and role boundaries on j2 LKG", async ({ page, browser, request }) => {
   test.setTimeout(600_000);

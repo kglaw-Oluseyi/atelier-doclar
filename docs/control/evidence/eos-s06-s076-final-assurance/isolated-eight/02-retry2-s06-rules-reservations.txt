@@ -1,0 +1,12 @@
+CMD: pnpm exec playwright test e2e/s06-rules-reservations.spec.ts --workers=1 --reporter=list
+MODE: next-dev after ensureAlphaOneSeatingLayoutBinding harness fix
+STARTED: 2026-09-14T20:31:58Z
+
+Running 1 test using 1 worker
+
+[WebServer]  ⚠ Cross origin request detected from 127.0.0.1 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+[WebServer] Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+  ✓  1 [chromium] › e2e/s06-rules-reservations.spec.ts:8:1 › S06 rules and reservations use governed selectors (14.1s)
+
+  1 passed (20.9s)
+ENDED: 2026-09-14T20:32:20Z EXIT=0

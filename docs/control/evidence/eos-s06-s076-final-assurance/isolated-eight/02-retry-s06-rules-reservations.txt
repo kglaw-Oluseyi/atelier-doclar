@@ -1,0 +1,44 @@
+CMD: pnpm exec playwright test e2e/s06-rules-reservations.spec.ts --workers=1 --reporter=list
+MODE: next-dev after harness clean-e2e-store seating-v2 fix
+STARTED: 2026-09-14T20:28:54Z
+
+Running 1 test using 1 worker
+
+[WebServer]  ⚠ Cross origin request detected from 127.0.0.1 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+[WebServer] Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+  ✘  1 [chromium] › e2e/s06-rules-reservations.spec.ts:7:1 › S06 rules and reservations use governed selectors (13.1s)
+
+
+  1) [chromium] › e2e/s06-rules-reservations.spec.ts:7:1 › S06 rules and reservations use governed selectors 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByTestId('action-result-banner')
+    Expected pattern: /Succeeded|The change was recorded|No change/i
+    Received string:  "A seating layout binding is requiredWhat happenedActivate a seating layout binding before freezing seating inputs.Server detailActivate a seating layout binding before freezing seating inputs. no active seating layout bindingActionseating constraint createResultNot appliedCorrelation20cd74c6-6521-40ec-90e2-ca79fd16bdeaDid data changeNo — the durable record was left unchanged.What you may do nextPropose a binding to one current layout publication, then have an independent checker activate it.Is retry safeYes — retry will not invent a second success."
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toContainText" getByTestId('action-result-banner') with timeout 5000ms
+      - waiting for getByTestId('action-result-banner')
+        14 × locator resolved to <section role="alert" data-tone="danger" class="atelier-state" data-kind="validation" data-retry-safe="true" id="operational-state" data-testid="action-result-banner" aria-labelledby="operational-state-title">…</section>
+           - unexpected value "A seating layout binding is requiredWhat happenedActivate a seating layout binding before freezing seating inputs.Server detailActivate a seating layout binding before freezing seating inputs. no active seating layout bindingActionseating constraint createResultNot appliedCorrelation20cd74c6-6521-40ec-90e2-ca79fd16bdeaDid data changeNo — the durable record was left unchanged.What you may do nextPropose a binding to one current layout publication, then have an independent checker activate it.Is retry safeYes — retry will not invent a second success."
+
+
+       at s060-helpers.ts:164
+
+      162 |   const bannerEl = page.getByTestId("action-result-banner");
+      163 |   await expect(bannerEl).toBeVisible({ timeout: 30_000 });
+    > 164 |   await expect(bannerEl).toContainText(banner);
+          |                          ^
+      165 |   await expect(bannerEl).toContainText(resultId);
+      166 |   if (previousResult) await expect(bannerEl).not.toContainText(previousResult);
+      167 |   return {
+        at submitScopedSeatingMutation (/Users/maisondoclar/Desktop/atelier-doclar/apps/event-os/e2e/s060-helpers.ts:164:26)
+        at /Users/maisondoclar/Desktop/atelier-doclar/apps/event-os/e2e/s06-rules-reservations.spec.ts:28:21
+
+    Error Context: test-results/s06-rules-reservations-S06-92c31-ions-use-governed-selectors-chromium/error-context.md
+
+  1 failed
+    [chromium] › e2e/s06-rules-reservations.spec.ts:7:1 › S06 rules and reservations use governed selectors 
+ENDED: 2026-09-14T20:29:14Z EXIT=1

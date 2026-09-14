@@ -1,0 +1,42 @@
+CMD: pnpm exec playwright test e2e/s075-layout-binding.spec.ts --workers=1 --reporter=list
+MODE: next-dev after harness clean-e2e-store seating-v2 fix
+STARTED: 2026-09-14T20:29:15Z
+
+Running 2 tests using 1 worker
+
+[WebServer]  ⚠ Cross origin request detected from 127.0.0.1 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+[WebServer] Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+[WebServer]  ⨯ [Error: aborted] { code: 'ECONNRESET', digest: '3419021255' }
+  ✓  1 [chromium] › e2e/s075-layout-binding.spec.ts:56:1 › S075 planner proposes and checker activates an exact current layout publication (14.8s)
+  ✘  2 [chromium] › e2e/s075-layout-binding.spec.ts:116:1 › S075 successor publication makes the seating layout binding stale (55.6s)
+
+
+  1) [chromium] › e2e/s075-layout-binding.spec.ts:116:1 › S075 successor publication makes the seating layout binding stale 
+
+    Error: expect(received).toMatch(expected)
+
+    Expected pattern: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    Received string:  ""
+
+    Call Log:
+    - Timeout 30000ms exceeded while waiting on the predicate
+
+       at s060-helpers.ts:260
+
+      258 |       return uuid.test(value) && value !== previous ? value : "";
+      259 |     }, { timeout })
+    > 260 |     .toMatch(uuid);
+          |      ^
+      261 |   return pageActionResult(page);
+      262 | }
+      263 |
+        at expectFreshResultQuery (/Users/maisondoclar/Desktop/atelier-doclar/apps/event-os/e2e/s060-helpers.ts:260:6)
+        at expectFreshActionSuccess (/Users/maisondoclar/Desktop/atelier-doclar/apps/event-os/e2e/s060-helpers.ts:13:9)
+        at /Users/maisondoclar/Desktop/atelier-doclar/apps/event-os/e2e/s075-layout-binding.spec.ts:197:11
+
+    Error Context: test-results/s075-layout-binding-S075-s-c250e-eating-layout-binding-stale-chromium/error-context.md
+
+  1 failed
+    [chromium] › e2e/s075-layout-binding.spec.ts:116:1 › S075 successor publication makes the seating layout binding stale 
+  1 passed (1.3m)
+ENDED: 2026-09-14T20:30:33Z EXIT=1

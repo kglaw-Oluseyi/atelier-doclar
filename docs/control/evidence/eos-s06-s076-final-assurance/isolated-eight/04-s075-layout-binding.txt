@@ -1,0 +1,34 @@
+CMD: pnpm exec playwright test e2e/s075-layout-binding.spec.ts --workers=1 --reporter=list
+MODE: next-dev (file-store)
+STARTED: 2026-09-14T20:28:00Z
+
+Running 2 tests using 1 worker
+
+[WebServer]  ⚠ Cross origin request detected from 127.0.0.1 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+[WebServer] Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+  ✘  1 [chromium] › e2e/s075-layout-binding.spec.ts:56:1 › S075 planner proposes and checker activates an exact current layout publication (6.4s)
+  -  2 [chromium] › e2e/s075-layout-binding.spec.ts:116:1 › S075 successor publication makes the seating layout binding stale
+
+
+  1) [chromium] › e2e/s075-layout-binding.spec.ts:56:1 › S075 planner proposes and checker activates an exact current layout publication 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: "ABSENT"
+    Received: "MISMATCH"
+
+      60 |   await loginPlannerOnSeating(page);
+      61 |   const absent = await seatingBindingStatus(page);
+    > 62 |   expect(absent.state).toBe("ABSENT");
+         |                        ^
+      63 |   expect(absent.freezeDisabled).toBe("true");
+      64 |   await expect(page.getByTestId("seating-layout-binding-status")).toContainText("No active seating layout binding.");
+      65 |   await expect(page.getByRole("button", { name: "Freeze new input edition" })).toBeDisabled();
+        at /Users/maisondoclar/Desktop/atelier-doclar/apps/event-os/e2e/s075-layout-binding.spec.ts:62:24
+
+    Error Context: test-results/s075-layout-binding-S075-p-69852--current-layout-publication-chromium/error-context.md
+
+  1 failed
+    [chromium] › e2e/s075-layout-binding.spec.ts:56:1 › S075 planner proposes and checker activates an exact current layout publication 
+  1 did not run
+ENDED: 2026-09-14T20:28:14Z EXIT=1

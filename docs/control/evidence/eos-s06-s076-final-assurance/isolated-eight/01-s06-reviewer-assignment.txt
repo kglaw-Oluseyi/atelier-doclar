@@ -1,0 +1,17 @@
+CMD: pnpm exec playwright test e2e/s06-reviewer-assignment.spec.ts --workers=1 --reporter=list
+MODE: next-dev (file-store; PLAYWRIGHT_PROD unsupported)
+STARTED: 2026-09-14T20:25:54Z
+
+Running 2 tests using 1 worker
+
+[WebServer]  ⚠ Cross origin request detected from 127.0.0.1 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+[WebServer] Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+  ✓  1 [chromium] › e2e/s06-reviewer-assignment.spec.ts:10:1 › S06 reviewer discovers only Alpha One and stays read-only without an implicated domain (14.3s)
+[WebServer] [Error: aborted] { code: 'ECONNRESET' }
+[WebServer]  ⨯ uncaughtException: [Error: aborted] { code: 'ECONNRESET' }
+[WebServer]  ⨯ uncaughtException:  [Error: aborted] { code: 'ECONNRESET' }
+[WebServer]  ⨯ [Error: aborted] { code: 'ECONNRESET', digest: '3419021255' }
+  ✓  2 [chromium] › e2e/s06-reviewer-assignment.spec.ts:31:1 › S06 reviewer records only the implicated protocol review on the exact hash (29.6s)
+
+  2 passed (50.5s)
+ENDED: 2026-09-14T20:26:45Z EXIT=0

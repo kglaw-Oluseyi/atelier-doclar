@@ -39,8 +39,10 @@ export async function login(page: Page, email = STAFF_IDENTITIES.ceo.email): Pro
       await page.goto("/sign-in", { waitUntil: "domcontentloaded" });
       await page.getByLabel("Staff email").fill(email);
       await page.getByLabel("Access token").fill(accessToken);
-      await page.getByRole("button", { name: "Sign in" }).click();
-      await page.waitForURL(/\/app(?:\/|$)/, { timeout: navTimeout });
+      await Promise.all([
+        page.waitForURL(/\/app(?:\/|$)/, { timeout: navTimeout }),
+        page.getByRole("button", { name: "Sign in" }).click(),
+      ]);
       await page
         .getByRole("heading", { name: "Home" })
         .or(page.getByRole("heading", { name: /not available|cannot|assignment/i }))

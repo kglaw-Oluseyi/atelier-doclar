@@ -1,12 +1,14 @@
 import { expect, test } from "@playwright/test";
 import { loginAs } from "./login";
 import { expectFreshSyntheticEvent, expectLocalFileStore, readSettlementTraces, submitScopedSeatingMutation } from "./s060-helpers";
+import { ensureAlphaOneSeatingLayoutBinding } from "./s075-layout-binding";
 
 const SEATING = "/app/events/00000000-0000-4000-8000-000000000021/seating";
 
-test("S06 rules and reservations use governed selectors", async ({ page }) => {
+test("S06 rules and reservations use governed selectors", async ({ page, browser }) => {
   test.setTimeout(90_000);
   await expectLocalFileStore(page);
+  await ensureAlphaOneSeatingLayoutBinding(browser);
   await loginAs(page, "planner");
   await page.goto(`${SEATING}#rules`);
   await expect(page.getByTestId("seating-rules")).toBeVisible();

@@ -76,6 +76,11 @@ export type CheckpointManifest = {
   phasesCompleted: string[];
 };
 
+/** True when the dedicated checkpoint runner supplied a manifest path. */
+export function checkpointManifestConfigured(): boolean {
+  return Boolean(process.env.EVENT_OS_CHECKPOINT_MANIFEST?.trim());
+}
+
 export function assertCheckpointLocalGuards() {
   if (process.env.PLAYWRIGHT_LIVE === "1") {
     throw new Error("checkpoint workflow refused PLAYWRIGHT_LIVE=1");

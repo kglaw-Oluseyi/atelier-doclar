@@ -24,8 +24,12 @@ test("titled Yorùbá adult addressing journey with permissions and fallback", a
 
   await page.setViewportSize({ width: 360, height: 800 });
   await expect(page.getByTestId("formal-salutation")).toBeVisible();
+  // Viewport resize can remount dossier nodes; wait for a stable layout box.
+  await expect
+    .poll(async () => (await page.getByTestId("formal-salutation").boundingBox())?.width ?? null)
+    .not.toBeNull();
   const box = await page.getByTestId("formal-salutation").boundingBox();
-  expect(box?.width).toBeLessThanOrEqual(360);
+  expect(box!.width).toBeLessThanOrEqual(360);
 
   await page.keyboard.press("Tab");
   const focused = await page.evaluate(() => document.activeElement?.tagName);

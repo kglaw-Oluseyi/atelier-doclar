@@ -1,0 +1,19 @@
+CMD: pnpm exec playwright test e2e/s06-v2-s072.spec.ts --workers=1 --reporter=list
+MODE: next-dev (file-store)
+STARTED: 2026-09-14T20:27:31Z
+
+Running 8 tests using 1 worker
+
+[WebServer]  ⚠ Cross origin request detected from 127.0.0.1 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+[WebServer] Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+  ✓  1 [chromium] › e2e/s06-v2-s072.spec.ts:8:1 › S072 V2 rules are human-safe and grouped by lifecycle (5.5s)
+  ✓  2 [chromium] › e2e/s06-v2-s072.spec.ts:21:1 › S072 V2 publication keeps CURRENT first and shows lineage (1.7s)
+  ✓  3 [chromium] › e2e/s06-v2-s072.spec.ts:48:1 › S072 V2 role matrix denies Director admin, Auditor mutation and Admin seating (5.9s)
+  ✓  4 [chromium] › e2e/s06-v2-s072.spec.ts:63:1 › S072 V2 evaluation surface is v2 and not a restamped v1 pass (1.6s)
+  ✓  5 [chromium] › e2e/s06-v2-s072.spec.ts:81:3 › S072 V2 seating does not overflow at 360 (1.4s)
+  ✓  6 [chromium] › e2e/s06-v2-s072.spec.ts:81:3 › S072 V2 seating does not overflow at 768 (1.5s)
+  ✓  7 [chromium] › e2e/s06-v2-s072.spec.ts:81:3 › S072 V2 seating does not overflow at 1440 (1.6s)
+  ✓  8 [chromium] › e2e/s06-v2-s072.spec.ts:92:1 › S072 V2 seating axe, 200% zoom and reduced motion (1.9s)
+
+  8 passed (26.9s)
+ENDED: 2026-09-14T20:28:00Z EXIT=0

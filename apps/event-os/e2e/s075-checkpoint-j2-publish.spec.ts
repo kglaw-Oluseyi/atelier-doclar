@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { runCheckpointJ2Publish } from "./s075-checkpoint";
+import {runCheckpointJ2Publish, checkpointManifestConfigured} from "./s075-checkpoint";
 
 test.use({ screenshot: "off", video: "off", trace: "off" });
+
+test.skip(!checkpointManifestConfigured(), "checkpoint phases require EVENT_OS_CHECKPOINT_MANIFEST");
 
 test("S075 checkpoint J2-publish: approve and CEO publish LKG", async ({ page, browser }) => {
   test.setTimeout(600_000);

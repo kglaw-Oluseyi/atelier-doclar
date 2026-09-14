@@ -1,0 +1,36 @@
+CMD: pnpm exec playwright test e2e/s075-section-13-j2-governance.spec.ts --workers=1 --reporter=list
+MODE: next-dev (Section 13 local file-store)
+STARTED: 2026-09-14T20:36:44Z
+
+Running 1 test using 1 worker
+
+[WebServer]  ⚠ Cross origin request detected from 127.0.0.1 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+[WebServer] Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+[WebServer]  ⚠ Server is approaching the used memory threshold, restarting...
+  ✘  1 [chromium] › e2e/s075-section-13-j2-governance.spec.ts:30:1 › S075 Section 13 journey 2: reviewer, director and CEO governance (1.0m)
+
+
+  1) [chromium] › e2e/s075-section-13-j2-governance.spec.ts:30:1 › S075 Section 13 journey 2: reviewer, director and CEO governance 
+
+    Error: page.waitForURL: net::ERR_CONNECTION_REFUSED
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at s073-provision.ts:201
+
+      199 |   await page.getByTestId("layout-create-form").locator('input[name="name"]').fill(`${label} hall`);
+      200 |   await submitNamed(page, "Save layout", "layout-create-form");
+    > 201 |   await page.waitForURL(/\/layouts\/[0-9a-f-]{36}/i, { timeout: 30_000 });
+          |              ^
+      202 |   const layoutPath = new URL(page.url()).pathname;
+      203 |   await expect(page.getByTestId("layout-studio")).toBeVisible({ timeout: 30_000 });
+      204 |   if (await page.getByRole("button", { name: "Acquire lease" }).count()) {
+        at provisionS073Event (/Users/maisondoclar/Desktop/atelier-doclar/apps/event-os/e2e/s073-provision.ts:201:14)
+        at /Users/maisondoclar/Desktop/atelier-doclar/apps/event-os/e2e/s075-section-13-j2-governance.spec.ts:34:19
+
+    Error Context: test-results/s075-section-13-j2-governa-1284c-director-and-CEO-governance-chromium/error-context.md
+
+  1 failed
+    [chromium] › e2e/s075-section-13-j2-governance.spec.ts:30:1 › S075 Section 13 journey 2: reviewer, director and CEO governance 
+ENDED: 2026-09-14T20:37:55Z EXIT=1

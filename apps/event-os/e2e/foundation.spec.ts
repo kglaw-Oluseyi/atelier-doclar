@@ -24,7 +24,7 @@ test("CEO can create a client and event", async ({ page }) => {
   await page.getByRole("button", { name: "Create event in Discover" }).click();
   await page.waitForURL(/\/app\/events\/[0-9a-f-]{36}/, { timeout: 15_000 });
   await expect(page.getByRole("heading", { name: "Epsilon First" })).toBeVisible();
-  await expect(page.getByText("DISCOVER")).toBeVisible();
+  await expect(page.getByText("DISCOVER", { exact: true })).toBeVisible();
 });
 
 test("planner cannot open another event by URL", async ({ page }) => {

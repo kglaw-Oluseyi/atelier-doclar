@@ -5,8 +5,12 @@ import { fileURLToPath } from "node:url";
 const appRoot = dirname(fileURLToPath(new URL(".", import.meta.url)));
 const paths = [
   join(appRoot, "data", "event-os-non-production.json"),
+  join(appRoot, "data", "event-os-non-production.seating-v2.json"),
+  join(appRoot, "data", "event-os-non-production.seating-v2.json.lock"),
   join(appRoot, "data", "academy-s04a.json"),
   join(process.cwd(), "data", "event-os-non-production.json"),
+  join(process.cwd(), "data", "event-os-non-production.seating-v2.json"),
+  join(process.cwd(), "data", "event-os-non-production.seating-v2.json.lock"),
   join(process.cwd(), "data", "academy-s04a.json"),
 ];
 

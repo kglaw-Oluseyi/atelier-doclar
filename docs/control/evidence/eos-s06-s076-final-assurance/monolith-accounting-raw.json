@@ -1,0 +1,2376 @@
+{
+  "rows": [
+    {
+      "file": "academy-s04a.spec.ts",
+      "line": 5,
+      "title": "ACA-S04A assignment, assessment and authority disclaimer",
+      "key": "academy-s04a.spec.ts:5:ACA-S04A assignment, assessment and authority disclaimer",
+      "status": "PASS",
+      "class": "PASS",
+      "error": ""
+    },
+    {
+      "file": "academy-s04a.spec.ts",
+      "line": 28,
+      "title": "Planner Academy path remains assigned and unauthenticated academy fails closed",
+      "key": "academy-s04a.spec.ts:28:Planner Academy path remains assigned and unauthenticated academy fails closed",
+      "status": "FAIL",
+      "class": "UNCLASSIFIED",
+      "error": "Error: expect(locator).toBeVisible() failed"
+    },
+    {
+      "file": "addressing.spec.ts",
+      "line": 5,
+      "title": "titled Yor\u00f9b\u00e1 adult addressing journey with permissions and fallback",
+      "key": "addressing.spec.ts:5:titled Yor\u00f9b\u00e1 adult addressing journey with permissions and fallback",
+      "status": "FAIL",
+      "class": "UNCLASSIFIED",
+      "error": "Error: expect(locator).toHaveText(expected) failed"
+    },
+    {
+      "file": "addressing.spec.ts",
+      "line": 46,
+      "title": "blank title uses a safe fallback and material failure is visible",
+      "key": "addressing.spec.ts:46:blank title uses a safe fallback and material failure is visible",
+      "status": "PASS",
+      "class": "PASS",
+      "error": ""
+    },
+    {
+      "file": "atelier-global.spec.ts",
+      "line": 30,
+      "title": "Command Atelier covers every authenticated route family",
+      "key": "atelier-global.spec.ts:30:Command Atelier covers every authenticated route family",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: Test timeout of 90000ms exceeded."
+    },
+    {
+      "file": "atelier-global.spec.ts",
+      "line": 69,
+      "title": "exceptional and guest surfaces stay in Command Atelier",
+      "key": "atelier-global.spec.ts:69:exceptional and guest surfaces stay in Command Atelier",
+      "status": "PASS",
+      "class": "PASS",
+      "error": ""
+    },
+    {
+      "file": "atelier.spec.ts",
+      "line": 22,
+      "title": "Command Atelier prototype screens and interaction states",
+      "key": "atelier.spec.ts:22:Command Atelier prototype screens and interaction states",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "atelier.spec.ts",
+      "line": 104,
+      "title": "Command Atelier reduced motion, cursors and 200% zoom remain operable",
+      "key": "atelier.spec.ts:104:Command Atelier reduced motion, cursors and 200% zoom remain operable",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "atelier.spec.ts",
+      "line": 123,
+      "title": "records navigation, directory, tabs and button feedback",
+      "key": "atelier.spec.ts:123:records navigation, directory, tabs and button feedback",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "foundation.spec.ts",
+      "line": 5,
+      "title": "unauthenticated visitors are sent to sign-in",
+      "key": "foundation.spec.ts:5:unauthenticated visitors are sent to sign-in",
+      "status": "PASS",
+      "class": "PASS",
+      "error": ""
+    },
+    {
+      "file": "foundation.spec.ts",
+      "line": 10,
+      "title": "CEO can create a client and event",
+      "key": "foundation.spec.ts:10:CEO can create a client and event",
+      "status": "FAIL",
+      "class": "UNCLASSIFIED",
+      "error": "Error: expect(locator).toBeVisible() failed"
+    },
+    {
+      "file": "foundation.spec.ts",
+      "line": 30,
+      "title": "planner cannot open another event by URL",
+      "key": "foundation.spec.ts:30:planner cannot open another event by URL",
+      "status": "PASS",
+      "class": "PASS",
+      "error": ""
+    },
+    {
+      "file": "foundation.spec.ts",
+      "line": 36,
+      "title": "desktop and mobile journeys are accessible",
+      "key": "foundation.spec.ts:36:desktop and mobile journeys are accessible",
+      "status": "PASS",
+      "class": "PASS",
+      "error": ""
+    },
+    {
+      "file": "guests.spec.ts",
+      "line": 5,
+      "title": "authorised operator can intake, search and amend a guest",
+      "key": "guests.spec.ts:5:authorised operator can intake, search and amend a guest",
+      "status": "FAIL",
+      "class": "UNCLASSIFIED",
+      "error": "Error: expect(locator).toBeVisible() failed"
+    },
+    {
+      "file": "guests.spec.ts",
+      "line": 30,
+      "title": "auditor cannot intake and planner cannot open another event directory",
+      "key": "guests.spec.ts:30:auditor cannot intake and planner cannot open another event directory",
+      "status": "FAIL",
+      "class": "UNCLASSIFIED",
+      "error": "TimeoutError: page.waitForURL: Timeout 20000ms exceeded."
+    },
+    {
+      "file": "guests.spec.ts",
+      "line": 44,
+      "title": "guest directory is accessible on desktop and mobile",
+      "key": "guests.spec.ts:44:guest directory is accessible on desktop and mobile",
+      "status": "PASS",
+      "class": "PASS",
+      "error": ""
+    },
+    {
+      "file": "rsvp.spec.ts",
+      "line": 5,
+      "title": "guest can respond and staff can see the RSVP",
+      "key": "rsvp.spec.ts:5:guest can respond and staff can see the RSVP",
+      "status": "FAIL",
+      "class": "UNCLASSIFIED",
+      "error": "Error: expect(locator).toBeVisible() failed"
+    },
+    {
+      "file": "rsvp.spec.ts",
+      "line": 46,
+      "title": "invalid guest access and insufficient staff role are denied",
+      "key": "rsvp.spec.ts:46:invalid guest access and insufficient staff role are denied",
+      "status": "FAIL",
+      "class": "UNCLASSIFIED",
+      "error": "Error: expect(locator).toBeVisible() failed"
+    },
+    {
+      "file": "rsvp.spec.ts",
+      "line": 63,
+      "title": "guest RSVP is accessible on desktop and mobile",
+      "key": "rsvp.spec.ts:63:guest RSVP is accessible on desktop and mobile",
+      "status": "FAIL",
+      "class": "UNCLASSIFIED",
+      "error": "Error: expect(locator).toBeVisible() failed"
+    },
+    {
+      "file": "s04a-acceptance-remediation.spec.ts",
+      "line": 23,
+      "title": "stale two-tab amendment surfaces a conflict and does not persist the rejected edit",
+      "key": "s04a-acceptance-remediation.spec.ts:23:stale two-tab amendment surfaces a conflict and does not persist the rejected edit",
+      "status": "PASS",
+      "class": "PASS",
+      "error": ""
+    },
+    {
+      "file": "s04a-acceptance-remediation.spec.ts",
+      "line": 53,
+      "title": "identical rapid double-submit is idempotent and different values still conflict",
+      "key": "s04a-acceptance-remediation.spec.ts:53:identical rapid double-submit is idempotent and different values still conflict",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: Test timeout of 120000ms exceeded."
+    },
+    {
+      "file": "s04a-acceptance-remediation.spec.ts",
+      "line": 85,
+      "title": "field conflict raises matching directory and dossier attention",
+      "key": "s04a-acceptance-remediation.spec.ts:85:field conflict raises matching directory and dossier attention",
+      "status": "FAIL",
+      "class": "UNCLASSIFIED",
+      "error": "Error: expect(locator).toContainText(expected) failed"
+    },
+    {
+      "file": "s04a-acceptance-remediation.spec.ts",
+      "line": 109,
+      "title": "title change requires explicit salutation update or retention",
+      "key": "s04a-acceptance-remediation.spec.ts:109:title change requires explicit salutation update or retention",
+      "status": "FAIL",
+      "class": "UNCLASSIFIED",
+      "error": "Error: expect(page).toHaveURL(expected) failed"
+    },
+    {
+      "file": "s04a-acceptance-remediation.spec.ts",
+      "line": 141,
+      "title": "authenticated RSC prefetch is role-controlled and not an unexplained 503",
+      "key": "s04a-acceptance-remediation.spec.ts:141:authenticated RSC prefetch is role-controlled and not an unexplained 503",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: apiRequestContext.get: Test ended."
+    },
+    {
+      "file": "s04a-acceptance-remediation.spec.ts",
+      "line": 174,
+      "title": "conflict is an accessible alert and survives reload",
+      "key": "s04a-acceptance-remediation.spec.ts:174:conflict is an accessible alert and survives reload",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_EMPTY_RESPONSE at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04a-acceptance-remediation.spec.ts",
+      "line": 193,
+      "title": "guest amendment API reports conflict and treats identical replay as success",
+      "key": "s04a-acceptance-remediation.spec.ts:193:guest amendment API reports conflict and treats identical replay as success",
+      "status": "FAIL",
+      "class": "UNCLASSIFIED",
+      "error": "Error: expect(page).toHaveURL(expected) failed"
+    },
+    {
+      "file": "s04a-final-acceptance-ii.spec.ts",
+      "line": 23,
+      "title": "RETAIN keeps the authored salutation and UPDATE stores only the authored replacement",
+      "key": "s04a-final-acceptance-ii.spec.ts:23:RETAIN keeps the authored salutation and UPDATE stores only the authored replacement",
+      "status": "PASS",
+      "class": "PASS",
+      "error": ""
+    },
+    {
+      "file": "s04a-final-acceptance-ii.spec.ts",
+      "line": 52,
+      "title": "one-click recovery unlocks forms twice without a second browser reload",
+      "key": "s04a-final-acceptance-ii.spec.ts:52:one-click recovery unlocks forms twice without a second browser reload",
+      "status": "PASS",
+      "class": "PASS",
+      "error": ""
+    },
+    {
+      "file": "s04a-final-acceptance-ii.spec.ts",
+      "line": 90,
+      "title": "Planner and Auditor cannot load or submit Access Administration",
+      "key": "s04a-final-acceptance-ii.spec.ts:90:Planner and Auditor cannot load or submit Access Administration",
+      "status": "PASS",
+      "class": "PASS",
+      "error": ""
+    },
+    {
+      "file": "s04a-final-acceptance-ii.spec.ts",
+      "line": 120,
+      "title": "authorised CEO access administration remains usable",
+      "key": "s04a-final-acceptance-ii.spec.ts:120:authorised CEO access administration remains usable",
+      "status": "PASS",
+      "class": "PASS",
+      "error": ""
+    },
+    {
+      "file": "s04a-final-acceptance-ii.spec.ts",
+      "line": 129,
+      "title": "system health exposes no secrets and prefetch stays permission-controlled",
+      "key": "s04a-final-acceptance-ii.spec.ts:129:system health exposes no secrets and prefetch stays permission-controlled",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: apiRequestContext.get: read ECONNRESET"
+    },
+    {
+      "file": "s04a-final-acceptance-ii.spec.ts",
+      "line": 158,
+      "title": "addressing API and form agree on RETAIN exact value",
+      "key": "s04a-final-acceptance-ii.spec.ts:158:addressing API and form agree on RETAIN exact value",
+      "status": "PASS",
+      "class": "PASS",
+      "error": ""
+    },
+    {
+      "file": "s04a-final-acceptance-ii.spec.ts",
+      "line": 198,
+      "title": "expired session during recovery returns to sign-in",
+      "key": "s04a-final-acceptance-ii.spec.ts:198:expired session during recovery returns to sign-in",
+      "status": "PASS",
+      "class": "PASS",
+      "error": ""
+    },
+    {
+      "file": "s04a-final-journeys.spec.ts",
+      "line": 7,
+      "title": "P11 remaining entitlement and relationship journeys",
+      "key": "s04a-final-journeys.spec.ts:7:P11 remaining entitlement and relationship journeys",
+      "status": "FAIL",
+      "class": "UNCLASSIFIED",
+      "error": "Error: expect(locator).toBeVisible() failed"
+    },
+    {
+      "file": "s04a-final-journeys.spec.ts",
+      "line": 43,
+      "title": "P11 planner expansion and auditor mutation remain denied",
+      "key": "s04a-final-journeys.spec.ts:43:P11 planner expansion and auditor mutation remain denied",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04a-hardening.spec.ts",
+      "line": 10,
+      "title": "directory renders structured Yor\u00f9b\u00e1 names and transforms at 360px",
+      "key": "s04a-hardening.spec.ts:10:directory renders structured Yor\u00f9b\u00e1 names and transforms at 360px",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04a-hardening.spec.ts",
+      "line": 28,
+      "title": "intake, party, child and entitlement states remain accessible",
+      "key": "s04a-hardening.spec.ts:28:intake, party, child and entitlement states remain accessible",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04a-hardening.spec.ts",
+      "line": 58,
+      "title": "role visibility and server-backed denial states",
+      "key": "s04a-hardening.spec.ts:58:role visibility and server-backed denial states",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04a-hardening.spec.ts",
+      "line": 79,
+      "title": "keyboard focus, 200% zoom and reduced motion on the dossier",
+      "key": "s04a-hardening.spec.ts:79:keyboard focus, 200% zoom and reduced motion on the dossier",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04a-integration.spec.ts",
+      "line": 20,
+      "title": "P09 vertical journey with visual evidence",
+      "key": "s04a-integration.spec.ts:20:P09 vertical journey with visual evidence",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04a-integration.spec.ts",
+      "line": 141,
+      "title": "P09 unauthenticated and validation evidence",
+      "key": "s04a-integration.spec.ts:141:P09 unauthenticated and validation evidence",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/app/events/00000000-0000-4000-8000-000000000021/guests/00000000-0000-4000-8000-000000000072"
+    },
+    {
+      "file": "s04b-responsive-a11y.spec.ts",
+      "line": 189,
+      "title": "EOS-S04B 360px mobile responsive accessibility",
+      "key": "s04b-responsive-a11y.spec.ts:189:EOS-S04B 360px mobile responsive accessibility",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04b-responsive-a11y.spec.ts",
+      "line": 201,
+      "title": "EOS-S04B 768px tablet responsive accessibility",
+      "key": "s04b-responsive-a11y.spec.ts:201:EOS-S04B 768px tablet responsive accessibility",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04b-responsive-a11y.spec.ts",
+      "line": 212,
+      "title": "EOS-S04B 1440px desktop responsive accessibility",
+      "key": "s04b-responsive-a11y.spec.ts:212:EOS-S04B 1440px desktop responsive accessibility",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04b-responsive-a11y.spec.ts",
+      "line": 223,
+      "title": "EOS-S04B 1440px at 200% zoom and 720px layout equivalent",
+      "key": "s04b-responsive-a11y.spec.ts:223:EOS-S04B 1440px at 200% zoom and 720px layout equivalent",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04b-vertical.spec.ts",
+      "line": 8,
+      "title": "S04B vertical: default simplicity, church/reception, roles and forged denial",
+      "key": "s04b-vertical.spec.ts:8:S04B vertical: default simplicity, church/reception, roles and forged denial",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/app/events/00000000-0000-4000-8000-000000000021/programme"
+    },
+    {
+      "file": "s04c-access-lifecycle.spec.ts",
+      "line": 9,
+      "title": "guest and vendor access issue, renew, revoke and forged denial",
+      "key": "s04c-access-lifecycle.spec.ts:9:guest and vendor access issue, renew, revoke and forged denial",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04c-guest-renewal-conflict.spec.ts",
+      "line": 36,
+      "title": "stale two-tab guest renewal surfaces a conflict, keeps the winner, and recovers on reload",
+      "key": "s04c-guest-renewal-conflict.spec.ts:36:stale two-tab guest renewal surfaces a conflict, keeps the winner, and recovers on reload",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04c-guest-renewal-conflict.spec.ts",
+      "line": 112,
+      "title": "rapid identical guest renewal remains one logical mutation",
+      "key": "s04c-guest-renewal-conflict.spec.ts:112:rapid identical guest renewal remains one logical mutation",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04c-guest-renewal-conflict.spec.ts",
+      "line": 133,
+      "title": "staff cookie without a vendor cookie cannot open /vendor",
+      "key": "s04c-guest-renewal-conflict.spec.ts:133:staff cookie without a vendor cookie cannot open /vendor",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04c-responsive-a11y.spec.ts",
+      "line": 78,
+      "title": "EOS-S04C 360 / 768 / desktop / 200% and axe",
+      "key": "s04c-responsive-a11y.spec.ts:78:EOS-S04C 360 / 768 / desktop / 200% and axe",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04c-vertical.spec.ts",
+      "line": 20,
+      "title": "S04C vertical: staff offers, guest choice, cap consent, vendor isolation and denials",
+      "key": "s04c-vertical.spec.ts:20:S04C vertical: staff offers, guest choice, cap consent, vendor isolation and denials",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/app/events/00000000-0000-4000-8000-000000000021/merchandise"
+    },
+    {
+      "file": "s04c-vertical.spec.ts",
+      "line": 173,
+      "title": "ACA-S04C assignment, assessment and no-authority-on-completion",
+      "key": "s04c-vertical.spec.ts:173:ACA-S04C assignment, assessment and no-authority-on-completion",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04d-remediation.spec.ts",
+      "line": 53,
+      "title": "CEO denial then later success shows only the success",
+      "key": "s04d-remediation.spec.ts:53:CEO denial then later success shows only the success",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04d-remediation.spec.ts",
+      "line": 80,
+      "title": "Event Director denial then later success shows only the success",
+      "key": "s04d-remediation.spec.ts:80:Event Director denial then later success shows only the success",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04d-remediation.spec.ts",
+      "line": 111,
+      "title": "sign-out then another actor success does not transfer a stale banner",
+      "key": "s04d-remediation.spec.ts:111:sign-out then another actor success does not transfer a stale banner",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04d-remediation.spec.ts",
+      "line": 134,
+      "title": "stale override decide conflict, reload, then later success",
+      "key": "s04d-remediation.spec.ts:134:stale override decide conflict, reload, then later success",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04d-remediation.spec.ts",
+      "line": 172,
+      "title": "ACA-S04D is on the index, canonical route, and grants no authority",
+      "key": "s04d-remediation.spec.ts:172:ACA-S04D is on the index, canonical route, and grants no authority",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04d-responsive-a11y.spec.ts",
+      "line": 86,
+      "title": "EOS-S04D 360 / 768 / desktop / 200% and axe",
+      "key": "s04d-responsive-a11y.spec.ts:86:EOS-S04D 360 / 768 / desktop / 200% and axe",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04d-vertical.spec.ts",
+      "line": 13,
+      "title": "S04D vertical: known-population forecast, product separation, maker/checker and host calm",
+      "key": "s04d-vertical.spec.ts:13:S04D vertical: known-population forecast, product separation, maker/checker and host calm",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/app/events/00000000-0000-4000-8000-000000000021/forecast"
+    },
+    {
+      "file": "s04d-vertical.spec.ts",
+      "line": 100,
+      "title": "ACA-S04D assignment, assessment and no-authority-on-completion",
+      "key": "s04d-vertical.spec.ts:100:ACA-S04D assignment, assessment and no-authority-on-completion",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04d-vertical.spec.ts",
+      "line": 118,
+      "title": "S04D axe on forecast workspace and host projection",
+      "key": "s04d-vertical.spec.ts:118:S04D axe on forecast workspace and host projection",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04e-responsive-a11y.spec.ts",
+      "line": 50,
+      "title": "EOS-S04E 360 / 768 / desktop / 200% and axe",
+      "key": "s04e-responsive-a11y.spec.ts:50:EOS-S04E 360 / 768 / desktop / 200% and axe",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04e-vertical.spec.ts",
+      "line": 8,
+      "title": "S04E vertical: staff publish, host exchange, receipt, replay denial and role isolation",
+      "key": "s04e-vertical.spec.ts:8:S04E vertical: staff publish, host exchange, receipt, replay denial and role isolation",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/app/events/00000000-0000-4000-8000-000000000021/atelier"
+    },
+    {
+      "file": "s04e-vertical.spec.ts",
+      "line": 104,
+      "title": "ACA-S04E assignment, assessment and no-authority-on-completion",
+      "key": "s04e-vertical.spec.ts:104:ACA-S04E assignment, assessment and no-authority-on-completion",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04f-lineage.spec.ts",
+      "line": 8,
+      "title": "S04F lineage: source revision, staleness, fallback, placeholders and two-tab conflict",
+      "key": "s04f-lineage.spec.ts:8:S04F lineage: source revision, staleness, fallback, placeholders and two-tab conflict",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04f-responsive-a11y.spec.ts",
+      "line": 8,
+      "title": "S04F responsive and accessibility: 360, 768, desktop, diacritics and comparison",
+      "key": "s04f-responsive-a11y.spec.ts:8:S04F responsive and accessibility: 360, 768, desktop, diacritics and comparison",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s04f-vertical.spec.ts",
+      "line": 8,
+      "title": "S04F vertical: preference, translation, fallback, assembly, academy and role isolation",
+      "key": "s04f-vertical.spec.ts:8:S04F vertical: preference, translation, fallback, assembly, academy and role isolation",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/app/events/00000000-0000-4000-8000-000000000021/language"
+    },
+    {
+      "file": "s05-assurance-vertical.spec.ts",
+      "line": 25,
+      "title": "S05 Milestone 3 assurance: validation, snapshot, maker/checker, publication",
+      "key": "s05-assurance-vertical.spec.ts:25:S05 Milestone 3 assurance: validation, snapshot, maker/checker, publication",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05-assurance-vertical.spec.ts",
+      "line": 61,
+      "title": "S05 Milestone 3 keyboard, 360px, 200% zoom",
+      "key": "s05-assurance-vertical.spec.ts:61:S05 Milestone 3 keyboard, 360px, 200% zoom",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05-export-provenance.spec.ts",
+      "line": 41,
+      "title": "S05 export provenance: long layout name keeps visible hash, status and timestamp",
+      "key": "s05-export-provenance.spec.ts:41:S05 export provenance: long layout name keeps visible hash, status and timestamp",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05-m4-live-smoke.spec.ts",
+      "line": 13,
+      "title": "S05 Milestone 4 live: upload, calibrate, export, restore, conflict, downstream",
+      "key": "s05-m4-live-smoke.spec.ts:13:S05 Milestone 4 live: upload, calibrate, export, restore, conflict, downstream",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s05-responsive-a11y.spec.ts",
+      "line": 7,
+      "title": "S05 responsive and accessibility: 360, tablet, desktop and 200% zoom",
+      "key": "s05-responsive-a11y.spec.ts:7:S05 responsive and accessibility: 360, tablet, desktop and 200% zoom",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05-s033-remediation.spec.ts",
+      "line": 58,
+      "title": "S033 override survives same-hash revalidation and validation summary distinguishes counts",
+      "key": "s05-s033-remediation.spec.ts:58:S033 override survives same-hash revalidation and validation summary distinguishes counts",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05-s033-remediation.spec.ts",
+      "line": 81,
+      "title": "S033 snapshot comparison is discoverable and textual",
+      "key": "s05-s033-remediation.spec.ts:81:S033 snapshot comparison is discoverable and textual",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05-s033-remediation.spec.ts",
+      "line": 115,
+      "title": "S033 maximum-length names do not create document overflow; count-fact guidance is friendly",
+      "key": "s05-s033-remediation.spec.ts:115:S033 maximum-length names do not create document overflow; count-fact guidance is friendly",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05-s033-remediation.spec.ts",
+      "line": 148,
+      "title": "S033 published export shows marking and generated time; Auditor cannot recover restricted labels",
+      "key": "s05-s033-remediation.spec.ts:148:S033 published export shows marking and generated time; Auditor cannot recover restricted labels",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05-s034-traceability.spec.ts",
+      "line": 46,
+      "title": "S034 Event Director can review durable override substance after same-hash revalidation",
+      "key": "s05-s034-traceability.spec.ts:46:S034 Event Director can review durable override substance after same-hash revalidation",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05-s034-traceability.spec.ts",
+      "line": 78,
+      "title": "S034 Auditor sees permission-safe override and no privileged DRAFT download",
+      "key": "s05-s034-traceability.spec.ts:78:S034 Auditor sees permission-safe override and no privileged DRAFT download",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05-studio-vertical.spec.ts",
+      "line": 7,
+      "title": "S05 Milestone 2 studio: create object, inspector edit, refresh and keyboard",
+      "key": "s05-studio-vertical.spec.ts:7:S05 Milestone 2 studio: create object, inspector edit, refresh and keyboard",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05-studio-vertical.spec.ts",
+      "line": 46,
+      "title": "S05 Milestone 2 responsive studio: 360, tablet, desktop and 200% zoom",
+      "key": "s05-studio-vertical.spec.ts:46:S05 Milestone 2 responsive studio: 360, tablet, desktop and 200% zoom",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05-venue-vertical.spec.ts",
+      "line": 7,
+      "title": "S05 Milestone 1 vertical: registry, facts, adopt, blank layout and role isolation",
+      "key": "s05-venue-vertical.spec.ts:7:S05 Milestone 1 vertical: registry, facts, adopt, blank layout and role isolation",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/app/venues"
+    },
+    {
+      "file": "s05a-discovery-foundation.spec.ts",
+      "line": 10,
+      "title": "S05A Milestone A: planner authors discovery; auditor cannot mutate; CEO wayfinding",
+      "key": "s05a-discovery-foundation.spec.ts:10:S05A Milestone A: planner authors discovery; auditor cannot mutate; CEO wayfinding",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05a-evaluation-readiness.spec.ts",
+      "line": 4,
+      "title": "S05A executable evaluation: fail-closed, authorised run, roles and overflow",
+      "key": "s05a-evaluation-readiness.spec.ts:4:S05A executable evaluation: fail-closed, authorised run, roles and overflow",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05a-responsive.spec.ts",
+      "line": 4,
+      "title": "S05A responsive: discovery, budget, roadmap, command at 360, tablet, desktop and 200% zoom",
+      "key": "s05a-responsive.spec.ts:4:S05A responsive: discovery, budget, roadmap, command at 360, tablet, desktop and 200% zoom",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05a-s043-human-verification-remediation.spec.ts",
+      "line": 49,
+      "title": "S043 Journey 1 \u2014 Auditor confidentiality",
+      "key": "s05a-s043-human-verification-remediation.spec.ts:49:S043 Journey 1 \u2014 Auditor confidentiality",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05a-s043-human-verification-remediation.spec.ts",
+      "line": 89,
+      "title": "S043 Journey 2 \u2014 extraction and contradiction",
+      "key": "s05a-s043-human-verification-remediation.spec.ts:89:S043 Journey 2 \u2014 extraction and contradiction",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05a-s043-human-verification-remediation.spec.ts",
+      "line": 121,
+      "title": "S043 Journey 3 \u2014 separate client consent",
+      "key": "s05a-s043-human-verification-remediation.spec.ts:121:S043 Journey 3 \u2014 separate client consent",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05a-s043-human-verification-remediation.spec.ts",
+      "line": 172,
+      "title": "S043 Journey 4 \u2014 UX and accessibility sample",
+      "key": "s05a-s043-human-verification-remediation.spec.ts:172:S043 Journey 4 \u2014 UX and accessibility sample",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05a-s045-truthful-decision.spec.ts",
+      "line": 46,
+      "title": "S045 Journey 1 \u2014 truthful extraction replay",
+      "key": "s05a-s045-truthful-decision.spec.ts:46:S045 Journey 1 \u2014 truthful extraction replay",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05a-s045-truthful-decision.spec.ts",
+      "line": 68,
+      "title": "S045 Journey 2 \u2014 explicit 360 governing choice",
+      "key": "s05a-s045-truthful-decision.spec.ts:68:S045 Journey 2 \u2014 explicit 360 governing choice",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05a-s045-truthful-decision.spec.ts",
+      "line": 126,
+      "title": "S045 Journey 3 \u2014 Budget Studio keeps the governing brief gate",
+      "key": "s05a-s045-truthful-decision.spec.ts:126:S045 Journey 3 \u2014 Budget Studio keeps the governing brief gate",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05a-s047-budget-studio-override.spec.ts",
+      "line": 69,
+      "title": "S047 Journey 1 \u2014 360 to 350 persists through refresh and reopen",
+      "key": "s05a-s047-budget-studio-override.spec.ts:69:S047 Journey 1 \u2014 360 to 350 persists through refresh and reopen",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05a-s047-budget-studio-override.spec.ts",
+      "line": 103,
+      "title": "S047 Journey 2 \u2014 idempotent 350 replay",
+      "key": "s05a-s047-budget-studio-override.spec.ts:103:S047 Journey 2 \u2014 idempotent 350 replay",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05a-s047-budget-studio-override.spec.ts",
+      "line": 117,
+      "title": "S047 Journey 3 \u2014 350 to 340 successor keeps the prior 350 result",
+      "key": "s05a-s047-budget-studio-override.spec.ts:117:S047 Journey 3 \u2014 350 to 340 successor keeps the prior 350 result",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05a-s047-budget-studio-override.spec.ts",
+      "line": 134,
+      "title": "S047 Journey 4 \u2014 stale hash fails honestly and keeps the typed override",
+      "key": "s05a-s047-budget-studio-override.spec.ts:134:S047 Journey 4 \u2014 stale hash fails honestly and keeps the typed override",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05a-s047-budget-studio-override.spec.ts",
+      "line": 151,
+      "title": "S047 Journey 5 \u2014 contradiction resolution focuses the result heading",
+      "key": "s05a-s047-budget-studio-override.spec.ts:151:S047 Journey 5 \u2014 contradiction resolution focuses the result heading",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05a-s049-action-result-truth.spec.ts",
+      "line": 65,
+      "title": "S049 Journey A \u2014 replay truth and durable generated time",
+      "key": "s05a-s049-action-result-truth.spec.ts:65:S049 Journey A \u2014 replay truth and durable generated time",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05a-s049-action-result-truth.spec.ts",
+      "line": 101,
+      "title": "S049 Journey B \u2014 shared focus after denial, stale conflict and refresh",
+      "key": "s05a-s049-action-result-truth.spec.ts:101:S049 Journey B \u2014 shared focus after denial, stale conflict and refresh",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05a-s049-action-result-truth.spec.ts",
+      "line": 129,
+      "title": "S049 Journey C \u2014 scoped stale lock clears on F5",
+      "key": "s05a-s049-action-result-truth.spec.ts:129:S049 Journey C \u2014 scoped stale lock clears on F5",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05a-s051-decision-result-focus.spec.ts",
+      "line": 97,
+      "title": "S051 maker/checker denial focuses the result heading after the real click",
+      "key": "s05a-s051-decision-result-focus.spec.ts:97:S051 maker/checker denial focuses the result heading after the real click",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05a-s051-decision-result-focus.spec.ts",
+      "line": 148,
+      "title": "S051 stale-write conflict focuses the error heading",
+      "key": "s05a-s051-decision-result-focus.spec.ts:148:S051 stale-write conflict focuses the error heading",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05a-s051-decision-result-focus.spec.ts",
+      "line": 172,
+      "title": "S051 contradiction resolution focuses its result heading",
+      "key": "s05a-s051-decision-result-focus.spec.ts:172:S051 contradiction resolution focuses its result heading",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05a-whole-slice.spec.ts",
+      "line": 4,
+      "title": "S05A whole slice: brief, budget, roadmap, change and command",
+      "key": "s05a-whole-slice.spec.ts:4:S05A whole slice: brief, budget, roadmap, change and command",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-ceo-concurrency.spec.ts",
+      "line": 4,
+      "title": "S05B CEO no-blind-spots headlines link to composing records",
+      "key": "s05b-ceo-concurrency.spec.ts:4:S05B CEO no-blind-spots headlines link to composing records",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-ceo-concurrency.spec.ts",
+      "line": 13,
+      "title": "S05B two-tab concurrency keeps the later stale write from silently winning",
+      "key": "s05b-ceo-concurrency.spec.ts:13:S05B two-tab concurrency keeps the later stale write from silently winning",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-clause-vendor.spec.ts",
+      "line": 4,
+      "title": "S05B organisation clause template authoring",
+      "key": "s05b-clause-vendor.spec.ts:4:S05B organisation clause template authoring",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-clause-vendor.spec.ts",
+      "line": 20,
+      "title": "S05B organisation vendor assessment is operator-entered",
+      "key": "s05b-clause-vendor.spec.ts:20:S05B organisation vendor assessment is operator-entered",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-dossier-client.spec.ts",
+      "line": 4,
+      "title": "S05B dossier assemble submit approve publish export across roles",
+      "key": "s05b-dossier-client.spec.ts:4:S05B dossier assemble submit approve publish export across roles",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-dossier-client.spec.ts",
+      "line": 42,
+      "title": "S05B auditor cannot mutate protection and 360px does not overflow",
+      "key": "s05b-dossier-client.spec.ts:42:S05B auditor cannot mutate protection and 360px does not overflow",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-durable-truth.spec.ts",
+      "line": 4,
+      "title": "S05B Budget governing edition stays unchanged with named successor and result",
+      "key": "s05b-durable-truth.spec.ts:4:S05B Budget governing edition stays unchanged with named successor and result",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-durable-truth.spec.ts",
+      "line": 24,
+      "title": "S05B Budget replay returns no-change and the same identifiers",
+      "key": "s05b-durable-truth.spec.ts:24:S05B Budget replay returns no-change and the same identifiers",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-durable-truth.spec.ts",
+      "line": 42,
+      "title": "S05B stale Budget tab is an action-scoped conflict with no new successor",
+      "key": "s05b-durable-truth.spec.ts:42:S05B stale Budget tab is an action-scoped conflict with no new successor",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-durable-truth.spec.ts",
+      "line": 61,
+      "title": "S05B dossier cannot skip submit or approve",
+      "key": "s05b-durable-truth.spec.ts:61:S05B dossier cannot skip submit or approve",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-durable-truth.spec.ts",
+      "line": 81,
+      "title": "S05B published dossier export remains permission-safe",
+      "key": "s05b-durable-truth.spec.ts:81:S05B published dossier export remains permission-safe",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-durable-truth.spec.ts",
+      "line": 91,
+      "title": "S05B CEO evaluation panel is fail-closed before run",
+      "key": "s05b-durable-truth.spec.ts:91:S05B CEO evaluation panel is fail-closed before run",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-event-workspace.spec.ts",
+      "line": 4,
+      "title": "S05B event coverage, residual, continuity and incident journeys",
+      "key": "s05b-event-workspace.spec.ts:4:S05B event coverage, residual, continuity and incident journeys",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-event-workspace.spec.ts",
+      "line": 35,
+      "title": "S05B Budget Intelligence successor request",
+      "key": "s05b-event-workspace.spec.ts:35:S05B Budget Intelligence successor request",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-fallback-incident.spec.ts",
+      "line": 4,
+      "title": "S05B fallback proposal and life-safety incident stay undispatched",
+      "key": "s05b-fallback-incident.spec.ts:4:S05B fallback proposal and life-safety incident stay undispatched",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-fallback-incident.spec.ts",
+      "line": 35,
+      "title": "S05B planner cannot authorise fallback or publish a dossier",
+      "key": "s05b-fallback-incident.spec.ts:35:S05B planner cannot authorise fallback or publish a dossier",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-human-safe-validation.spec.ts",
+      "line": 4,
+      "title": "S05B policy authoring uses a governed insurer chooser and recovers in-page",
+      "key": "s05b-human-safe-validation.spec.ts:4:S05B policy authoring uses a governed insurer chooser and recovers in-page",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-human-safe-validation.spec.ts",
+      "line": 32,
+      "title": "S05B forged insurer id is server-denied and source authoring recovers in-page",
+      "key": "s05b-human-safe-validation.spec.ts:32:S05B forged insurer id is server-denied and source authoring recovers in-page",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-human-safe-validation.spec.ts",
+      "line": 70,
+      "title": "S05B consumed evaluation result does not resurrect after unrelated navigation",
+      "key": "s05b-human-safe-validation.spec.ts:70:S05B consumed evaluation result does not resurrect after unrelated navigation",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-human-safe-validation.spec.ts",
+      "line": 87,
+      "title": "S05B CEO release-evidence shows exact v3 edition, hash, counts and truthful release state",
+      "key": "s05b-human-safe-validation.spec.ts:87:S05B CEO release-evidence shows exact v3 edition, hash, counts and truthful release state",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-human-safe-validation.spec.ts",
+      "line": 107,
+      "title": "S05B changed surfaces remain usable at 360px, tablet, desktop and 200% zoom",
+      "key": "s05b-human-safe-validation.spec.ts:107:S05B changed surfaces remain usable at 360px, tablet, desktop and 200% zoom",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-org-authoring.spec.ts",
+      "line": 4,
+      "title": "S05B organisation policy and source authoring",
+      "key": "s05b-org-authoring.spec.ts:4:S05B organisation policy and source authoring",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-org-authoring.spec.ts",
+      "line": 28,
+      "title": "S05B System Administrator is denied Protection Command",
+      "key": "s05b-org-authoring.spec.ts:28:S05B System Administrator is denied Protection Command",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-responsive-keyboard.spec.ts",
+      "line": 4,
+      "title": "S05B keyboard and zoom authoring remains labelled",
+      "key": "s05b-responsive-keyboard.spec.ts:4:S05B keyboard and zoom authoring remains labelled",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-s060-authority.spec.ts",
+      "line": 5,
+      "title": "S060 auditor forged dossier assemble is denied",
+      "key": "s05b-s060-authority.spec.ts:5:S060 auditor forged dossier assemble is denied",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-s060-budget-conflict.spec.ts",
+      "line": 5,
+      "title": "S060 two-tab Budget conflict is VERSION_CONFLICT without 503",
+      "key": "s05b-s060-budget-conflict.spec.ts:5:S060 two-tab Budget conflict is VERSION_CONFLICT without 503",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-s060-client-access.spec.ts",
+      "line": 5,
+      "title": "S060 staff issues dossier access, client enters, revoke fails",
+      "key": "s05b-s060-client-access.spec.ts:5:S060 staff issues dossier access, client enters, revoke fails",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-s060-continuity-incident.spec.ts",
+      "line": 5,
+      "title": "S060 checkpoints and structured incident learning are visible without dispatch",
+      "key": "s05b-s060-continuity-incident.spec.ts:5:S060 checkpoints and structured incident learning are visible without dispatch",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-s060-human-detail.spec.ts",
+      "line": 4,
+      "title": "S060 vendor label and inert clause body across viewports",
+      "key": "s05b-s060-human-detail.spec.ts:4:S060 vendor label and inert clause body across viewports",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-s060-publication.spec.ts",
+      "line": 5,
+      "title": "S060 planner director CEO exact-hash publish leaves last-known-good visible",
+      "key": "s05b-s060-publication.spec.ts:5:S060 planner director CEO exact-hash publish leaves last-known-good visible",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-s061-authority.spec.ts",
+      "line": 5,
+      "title": "S061 governing authority, publication and client access",
+      "key": "s05b-s061-authority.spec.ts:5:S061 governing authority, publication and client access",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-s062-authority-queue.spec.ts",
+      "line": 5,
+      "title": "S062 focused authority queue, withdrawal and interrupted lineage",
+      "key": "s05b-s062-authority-queue.spec.ts:5:S062 focused authority queue, withdrawal and interrupted lineage",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-s062-authority-queue.spec.ts",
+      "line": 70,
+      "title": "S062 two interrupted runs cannot accumulate governing fixture rules",
+      "key": "s05b-s062-authority-queue.spec.ts:70:S062 two interrupted runs cannot accumulate governing fixture rules",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-s062-client-session.spec.ts",
+      "line": 5,
+      "title": "S062 separate client grant session and revocation",
+      "key": "s05b-s062-client-session.spec.ts:5:S062 separate client grant session and revocation",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-s062-live-publication.spec.ts",
+      "line": 5,
+      "title": "S062 planner director CEO publication survives successor drafting",
+      "key": "s05b-s062-live-publication.spec.ts:5:S062 planner director CEO publication survives successor drafting",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-s062-live-withdraw.spec.ts",
+      "line": 12,
+      "title": "S062 live exact S060 fixture classification and withdrawal",
+      "key": "s05b-s062-live-withdraw.spec.ts:12:S062 live exact S060 fixture classification and withdrawal",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s05b-s063-dossier-performance.spec.ts",
+      "line": 14,
+      "title": "S063 focused dossier GET and assemble stay inside steady-state bounds",
+      "key": "s05b-s063-dossier-performance.spec.ts:14:S063 focused dossier GET and assemble stay inside steady-state bounds",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-s063-live-corpus.spec.ts",
+      "line": 5,
+      "title": "S063 live CEO corpus s05b-eval-v6 completes without restamp",
+      "key": "s05b-s063-live-corpus.spec.ts:5:S063 live CEO corpus s05b-eval-v6 completes without restamp",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s05b-s063-live-withdraw.spec.ts",
+      "line": 15,
+      "title": "S063 live exact S061 QA fixture classification and withdrawal",
+      "key": "s05b-s063-live-withdraw.spec.ts:15:S063 live exact S061 QA fixture classification and withdrawal",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s05b-s063-publication-client.spec.ts",
+      "line": 15,
+      "title": "S063 planner director CEO publication, last-known-good and separate client revocation",
+      "key": "s05b-s063-publication-client.spec.ts:15:S063 planner director CEO publication, last-known-good and separate client revocation",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-s063-repository-concurrency.spec.ts",
+      "line": 17,
+      "title": "S063 identical live publish replays instead of creating a second CURRENT",
+      "key": "s05b-s063-repository-concurrency.spec.ts:17:S063 identical live publish replays instead of creating a second CURRENT",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-s065-publication-result.spec.ts",
+      "line": 31,
+      "title": "S065 first publish and identical replay each show a fresh truthful result",
+      "key": "s05b-s065-publication-result.spec.ts:31:S065 first publish and identical replay each show a fresh truthful result",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-s067-live-recovery.spec.ts",
+      "line": 14,
+      "title": "S067 live governed withdrawal of the three obsolete S061 QA editions",
+      "key": "s05b-s067-live-recovery.spec.ts:14:S067 live governed withdrawal of the three obsolete S061 QA editions",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s05b-s067-reviewer-date.spec.ts",
+      "line": 5,
+      "title": "S067 Reviewer source approval requires an explicit future review date",
+      "key": "s05b-s067-reviewer-date.spec.ts:5:S067 Reviewer source approval requires an explicit future review date",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s05b-whole-slice.spec.ts",
+      "line": 3,
+      "title": "S05B omnibus smoke retired in favour of focused journeys",
+      "key": "s05b-whole-slice.spec.ts:3:S05B omnibus smoke retired in favour of focused journeys",
+      "status": "SKIPPED",
+      "class": "SKIPPED",
+      "error": "",
+      "note": "retired omnibus smoke"
+    },
+    {
+      "file": "s06-input-readiness.spec.ts",
+      "line": 8,
+      "title": "S06 input readiness freeze",
+      "key": "s06-input-readiness.spec.ts:8:S06 input readiness freeze",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s06-live-s070-gates.spec.ts",
+      "line": 385,
+      "title": "CURSOR-S06-S070 live gates \u203a S070 readiness is the unchanged deployed SHA",
+      "key": "s06-live-s070-gates.spec.ts:385:CURSOR-S06-S070 live gates \u203a S070 readiness is the unchanged deployed SHA",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s06-live-s070-gates.spec.ts",
+      "line": 404,
+      "title": "CURSOR-S06-S070 live gates \u203a S070 role boundaries for CEO, Auditor and Admin",
+      "key": "s06-live-s070-gates.spec.ts:404:CURSOR-S06-S070 live gates \u203a S070 role boundaries for CEO, Auditor and Admin",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s06-live-s070-gates.spec.ts",
+      "line": 450,
+      "title": "CURSOR-S06-S070 live gates \u203a S070 publication sequence 1",
+      "key": "s06-live-s070-gates.spec.ts:450:CURSOR-S06-S070 live gates \u203a S070 publication sequence 1",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s06-live-s070-gates.spec.ts",
+      "line": 450,
+      "title": "CURSOR-S06-S070 live gates \u203a S070 publication sequence 2",
+      "key": "s06-live-s070-gates.spec.ts:450:CURSOR-S06-S070 live gates \u203a S070 publication sequence 2",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s06-live-s070-gates.spec.ts",
+      "line": 478,
+      "title": "CURSOR-S06-S070 live gates \u203a S070 CEO evaluation twice persists with current publication",
+      "key": "s06-live-s070-gates.spec.ts:478:CURSOR-S06-S070 live gates \u203a S070 CEO evaluation twice persists with current publication",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s06-live-whole-slice.spec.ts",
+      "line": 8,
+      "title": "S06 whole-slice planner freeze without stale banners",
+      "key": "s06-live-whole-slice.spec.ts:8:S06 whole-slice planner freeze without stale banners",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s06-permissions.spec.ts",
+      "line": 6,
+      "title": "S06 auditor and admin cannot mutate seating",
+      "key": "s06-permissions.spec.ts:6:S06 auditor and admin cannot mutate seating",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s06-publication.spec.ts",
+      "line": 6,
+      "title": "S06 publication tab keeps current publication above drafts",
+      "key": "s06-publication.spec.ts:6:S06 publication tab keeps current publication above drafts",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s06-responsive-accessibility.spec.ts",
+      "line": 8,
+      "title": "S06 seating does not overflow at 360",
+      "key": "s06-responsive-accessibility.spec.ts:8:S06 seating does not overflow at 360",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s06-responsive-accessibility.spec.ts",
+      "line": 8,
+      "title": "S06 seating does not overflow at 768",
+      "key": "s06-responsive-accessibility.spec.ts:8:S06 seating does not overflow at 768",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s06-responsive-accessibility.spec.ts",
+      "line": 8,
+      "title": "S06 seating does not overflow at 1440",
+      "key": "s06-responsive-accessibility.spec.ts:8:S06 seating does not overflow at 1440",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s06-responsive-accessibility.spec.ts",
+      "line": 19,
+      "title": "S06 seating axe and reduced motion",
+      "key": "s06-responsive-accessibility.spec.ts:19:S06 seating axe and reduced motion",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s06-reviewer-assignment.spec.ts",
+      "line": 10,
+      "title": "S06 reviewer discovers only Alpha One and stays read-only without an implicated domain",
+      "key": "s06-reviewer-assignment.spec.ts:10:S06 reviewer discovers only Alpha One and stays read-only without an implicated domain",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s06-reviewer-assignment.spec.ts",
+      "line": 31,
+      "title": "S06 reviewer records only the implicated protocol review on the exact hash",
+      "key": "s06-reviewer-assignment.spec.ts:31:S06 reviewer records only the implicated protocol review on the exact hash",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3020"
+    },
+    {
+      "file": "s06-rules-reservations.spec.ts",
+      "line": 7,
+      "title": "S06 rules and reservations use governed selectors",
+      "key": "s06-rules-reservations.spec.ts:7:S06 rules and reservations use governed selectors",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3020"
+    },
+    {
+      "file": "s06-solver-feasible.spec.ts",
+      "line": 8,
+      "title": "S06 solver feasible launch",
+      "key": "s06-solver-feasible.spec.ts:8:S06 solver feasible launch",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s06-solver-infeasible.spec.ts",
+      "line": 6,
+      "title": "S06 infeasible copy is explicit",
+      "key": "s06-solver-infeasible.spec.ts:6:S06 infeasible copy is explicit",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s06-studio-editing.spec.ts",
+      "line": 6,
+      "title": "S06 studio exposes keyboard edit commands",
+      "key": "s06-studio-editing.spec.ts:6:S06 studio exposes keyboard edit commands",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s06-v2-s072-live-remaining.spec.ts",
+      "line": 220,
+      "title": "CURSOR-S06V2-S072 remaining live gates \u203a S072 remaining live readiness still matches the proven application SHA",
+      "key": "s06-v2-s072-live-remaining.spec.ts:220:CURSOR-S06V2-S072 remaining live gates \u203a S072 remaining live readiness still matches the proven application SHA",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s06-v2-s072-live-remaining.spec.ts",
+      "line": 232,
+      "title": "CURSOR-S06V2-S072 remaining live gates \u203a S072 live impossible HARD set is INFEASIBLE, exposes violations, and cannot be adopted",
+      "key": "s06-v2-s072-live-remaining.spec.ts:232:CURSOR-S06V2-S072 remaining live gates \u203a S072 live impossible HARD set is INFEASIBLE, exposes violations, and cannot be adopted",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s06-v2-s072-live-remaining.spec.ts",
+      "line": 288,
+      "title": "CURSOR-S06V2-S072 remaining live gates \u203a S072 live assign-unseated succeeds and a hard-rule violation does not write",
+      "key": "s06-v2-s072-live-remaining.spec.ts:288:CURSOR-S06V2-S072 remaining live gates \u203a S072 live assign-unseated succeeds and a hard-rule violation does not write",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s06-v2-s072-live-remaining.spec.ts",
+      "line": 353,
+      "title": "CURSOR-S06V2-S072 remaining live gates \u203a S072 live withdraw, recall and successor preserve last-known-good and bind specialist review",
+      "key": "s06-v2-s072-live-remaining.spec.ts:353:CURSOR-S06V2-S072 remaining live gates \u203a S072 live withdraw, recall and successor preserve last-known-good and bind specialist review",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s06-v2-s072-live-remaining.spec.ts",
+      "line": 477,
+      "title": "CURSOR-S06V2-S072 remaining live gates \u203a S072 live reservation activation, withdrawal and next-package absence",
+      "key": "s06-v2-s072-live-remaining.spec.ts:477:CURSOR-S06V2-S072 remaining live gates \u203a S072 live reservation activation, withdrawal and next-package absence",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s06-v2-s072-live.spec.ts",
+      "line": 143,
+      "title": "CURSOR-S06V2-S072 live gates \u203a S072 live readiness matches the pushed application SHA",
+      "key": "s06-v2-s072-live.spec.ts:143:CURSOR-S06V2-S072 live gates \u203a S072 live readiness matches the pushed application SHA",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s06-v2-s072-live.spec.ts",
+      "line": 161,
+      "title": "CURSOR-S06V2-S072 live gates \u203a S072 Director admin denial, Auditor export-safe view, Admin no seating",
+      "key": "s06-v2-s072-live.spec.ts:161:CURSOR-S06V2-S072 live gates \u203a S072 Director admin denial, Auditor export-safe view, Admin no seating",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s06-v2-s072-live.spec.ts",
+      "line": 180,
+      "title": "CURSOR-S06V2-S072 live gates \u203a S072 Planner SOFT self-activation is allowed and HARD self-activation is denied",
+      "key": "s06-v2-s072-live.spec.ts:180:CURSOR-S06V2-S072 live gates \u203a S072 Planner SOFT self-activation is allowed and HARD self-activation is denied",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s06-v2-s072-live.spec.ts",
+      "line": 355,
+      "title": "CURSOR-S06V2-S072 live gates \u203a S072 first live publication and replay sequence",
+      "key": "s06-v2-s072-live.spec.ts:355:CURSOR-S06V2-S072 live gates \u203a S072 first live publication and replay sequence",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s06-v2-s072-live.spec.ts",
+      "line": 360,
+      "title": "CURSOR-S06V2-S072 live gates \u203a S072 second live publication and replay sequence preserves last-known-good",
+      "key": "s06-v2-s072-live.spec.ts:360:CURSOR-S06V2-S072 live gates \u203a S072 second live publication and replay sequence preserves last-known-good",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s06-v2-s072-live.spec.ts",
+      "line": 373,
+      "title": "CURSOR-S06V2-S072 live gates \u203a S072 CEO s06-eval-v3 persists as release-ready and proves the prior corpus STALE",
+      "key": "s06-v2-s072-live.spec.ts:373:CURSOR-S06V2-S072 live gates \u203a S072 CEO s06-eval-v3 persists as release-ready and proves the prior corpus STALE",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s06-v2-s072.spec.ts",
+      "line": 8,
+      "title": "S072 V2 rules are human-safe and grouped by lifecycle",
+      "key": "s06-v2-s072.spec.ts:8:S072 V2 rules are human-safe and grouped by lifecycle",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s06-v2-s072.spec.ts",
+      "line": 21,
+      "title": "S072 V2 publication keeps CURRENT first and shows lineage",
+      "key": "s06-v2-s072.spec.ts:21:S072 V2 publication keeps CURRENT first and shows lineage",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s06-v2-s072.spec.ts",
+      "line": 48,
+      "title": "S072 V2 role matrix denies Director admin, Auditor mutation and Admin seating",
+      "key": "s06-v2-s072.spec.ts:48:S072 V2 role matrix denies Director admin, Auditor mutation and Admin seating",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s06-v2-s072.spec.ts",
+      "line": 63,
+      "title": "S072 V2 evaluation surface is v2 and not a restamped v1 pass",
+      "key": "s06-v2-s072.spec.ts:63:S072 V2 evaluation surface is v2 and not a restamped v1 pass",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s06-v2-s072.spec.ts",
+      "line": 81,
+      "title": "S072 V2 seating does not overflow at 360",
+      "key": "s06-v2-s072.spec.ts:81:S072 V2 seating does not overflow at 360",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s06-v2-s072.spec.ts",
+      "line": 81,
+      "title": "S072 V2 seating does not overflow at 768",
+      "key": "s06-v2-s072.spec.ts:81:S072 V2 seating does not overflow at 768",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s06-v2-s072.spec.ts",
+      "line": 81,
+      "title": "S072 V2 seating does not overflow at 1440",
+      "key": "s06-v2-s072.spec.ts:81:S072 V2 seating does not overflow at 1440",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s06-v2-s072.spec.ts",
+      "line": 92,
+      "title": "S072 V2 seating axe, 200% zoom and reduced motion",
+      "key": "s06-v2-s072.spec.ts:92:S072 V2 seating axe, 200% zoom and reduced motion",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s06-verify-as.spec.ts",
+      "line": 6,
+      "title": "S06 verify-as is hidden unless the triple gate is on",
+      "key": "s06-verify-as.spec.ts:6:S06 verify-as is hidden unless the triple gate is on",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s073-diagnostic-removed.spec.ts",
+      "line": 3,
+      "title": "S073 retired diagnostic routes return 404",
+      "key": "s073-diagnostic-removed.spec.ts:3:S073 retired diagnostic routes return 404",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3020"
+    },
+    {
+      "file": "s073-diagnostic-settlement.spec.ts",
+      "line": 37,
+      "title": "S073 diagnostic: provision a fresh synthetic event",
+      "key": "s073-diagnostic-settlement.spec.ts:37:S073 diagnostic: provision a fresh synthetic event",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_S073_DIAG/LIVE gate"
+    },
+    {
+      "file": "s073-diagnostic-settlement.spec.ts",
+      "line": 51,
+      "title": "S073 diagnostic: healthy first mutation, expensive launch, concurrent unrelated mutation",
+      "key": "s073-diagnostic-settlement.spec.ts:51:S073 diagnostic: healthy first mutation, expensive launch, concurrent unrelated mutation",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_S073_DIAG/LIVE gate"
+    },
+    {
+      "file": "s073-gate-b-adopt-lifecycle.spec.ts",
+      "line": 45,
+      "title": "S073 classify post-Adopt page process",
+      "key": "s073-gate-b-adopt-lifecycle.spec.ts:45:S073 classify post-Adopt page process",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s073-gate-b-adopt-lifecycle.spec.ts",
+      "line": 176,
+      "title": "S073 post-Adopt Studio form and CDP remain operable",
+      "key": "s073-gate-b-adopt-lifecycle.spec.ts:176:S073 post-Adopt Studio form and CDP remain operable",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s073-gate-e-timing.spec.ts",
+      "line": 162,
+      "title": "S073 Gate E stage-scoped timing samples",
+      "key": "s073-gate-e-timing.spec.ts:162:S073 Gate E stage-scoped timing samples",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s073-live-gates.spec.ts",
+      "line": 292,
+      "title": "S073 live readiness and retired diagnostics",
+      "key": "s073-live-gates.spec.ts:292:S073 live readiness and retired diagnostics",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s073-live-gates.spec.ts",
+      "line": 308,
+      "title": "S073 provision a fresh synthetic event",
+      "key": "s073-live-gates.spec.ts:308:S073 provision a fresh synthetic event",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s073-live-gates.spec.ts",
+      "line": 321,
+      "title": "S073 Gate A impossible HARD set is independently INFEASIBLE and cannot be adopted",
+      "key": "s073-live-gates.spec.ts:321:S073 Gate A impossible HARD set is independently INFEASIBLE and cannot be adopted",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s073-live-gates.spec.ts",
+      "line": 370,
+      "title": "S073 Gate B assign-unseated persists and a hard-violating placement is NOT_APPLIED",
+      "key": "s073-live-gates.spec.ts:370:S073 Gate B assign-unseated persists and a hard-violating placement is NOT_APPLIED",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s073-live-gates.spec.ts",
+      "line": 440,
+      "title": "S073 Gate C withdrawal, recall and material successor",
+      "key": "s073-live-gates.spec.ts:440:S073 Gate C withdrawal, recall and material successor",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s073-live-gates.spec.ts",
+      "line": 495,
+      "title": "S073 Gate D implicated specialist is bound to the assigned event and exact hash",
+      "key": "s073-live-gates.spec.ts:495:S073 Gate D implicated specialist is bound to the assigned event and exact hash",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s073-live-gates.spec.ts",
+      "line": 529,
+      "title": "S073 Gate E launch stays responsive to an unrelated same-event mutation",
+      "key": "s073-live-gates.spec.ts:529:S073 Gate E launch stays responsive to an unrelated same-event mutation",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s073-live-gates.spec.ts",
+      "line": 619,
+      "title": "S073 first publication and identical publish replay",
+      "key": "s073-live-gates.spec.ts:619:S073 first publication and identical publish replay",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s073-live-gates.spec.ts",
+      "line": 624,
+      "title": "S073 second publication preserves last-known-good and replay identity",
+      "key": "s073-live-gates.spec.ts:624:S073 second publication preserves last-known-good and replay identity",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s073-live-gates.spec.ts",
+      "line": 644,
+      "title": "S073 CEO s06-eval-v3 persists as release-ready",
+      "key": "s073-live-gates.spec.ts:644:S073 CEO s06-eval-v3 persists as release-ready",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s073-post-adopt-responsiveness.spec.ts",
+      "line": 96,
+      "title": "S073 post-Adopt Studio remains responsive and hard UNSEAT POSTs once",
+      "key": "s073-post-adopt-responsiveness.spec.ts:96:S073 post-Adopt Studio remains responsive and hard UNSEAT POSTs once",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s075-capacity.spec.ts",
+      "line": 34,
+      "title": "S075 studio derives seat count from persisted layout truth and lists usable seats",
+      "key": "s075-capacity.spec.ts:34:S075 studio derives seat count from persisted layout truth and lists usable seats",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s075-checkpoint-j2-prep.spec.ts",
+      "line": 6,
+      "title": "S075 checkpoint J2-prep: SECURITY rule, freeze, submit",
+      "key": "s075-checkpoint-j2-prep.spec.ts:6:S075 checkpoint J2-prep: SECURITY rule, freeze, submit",
+      "status": "FAIL",
+      "class": "HARNESS-FAILURE",
+      "error": "Error: EVENT_OS_CHECKPOINT_MANIFEST is required for checkpoint phases"
+    },
+    {
+      "file": "s075-checkpoint-j2-publish.spec.ts",
+      "line": 6,
+      "title": "S075 checkpoint J2-publish: approve and CEO publish LKG",
+      "key": "s075-checkpoint-j2-publish.spec.ts:6:S075 checkpoint J2-publish: approve and CEO publish LKG",
+      "status": "FAIL",
+      "class": "HARNESS-FAILURE",
+      "error": "Error: EVENT_OS_CHECKPOINT_MANIFEST is required for checkpoint phases"
+    },
+    {
+      "file": "s075-checkpoint-j2-reviewer.spec.ts",
+      "line": 6,
+      "title": "S075 checkpoint J2-reviewer: specialist review and denials",
+      "key": "s075-checkpoint-j2-reviewer.spec.ts:6:S075 checkpoint J2-reviewer: specialist review and denials",
+      "status": "FAIL",
+      "class": "HARNESS-FAILURE",
+      "error": "Error: EVENT_OS_CHECKPOINT_MANIFEST is required for checkpoint phases"
+    },
+    {
+      "file": "s075-checkpoint-j3-exports.spec.ts",
+      "line": 6,
+      "title": "S075 checkpoint j3: exports and role boundaries on j2 LKG",
+      "key": "s075-checkpoint-j3-exports.spec.ts:6:S075 checkpoint j3: exports and role boundaries on j2 LKG",
+      "status": "FAIL",
+      "class": "HARNESS-FAILURE",
+      "error": "Error: EVENT_OS_CHECKPOINT_MANIFEST is required for checkpoint phases"
+    },
+    {
+      "file": "s075-checkpoint-j4-ux.spec.ts",
+      "line": 6,
+      "title": "S075 checkpoint j4: UX accessibility and settlement on j2 LKG",
+      "key": "s075-checkpoint-j4-ux.spec.ts:6:S075 checkpoint j4: UX accessibility and settlement on j2 LKG",
+      "status": "FAIL",
+      "class": "HARNESS-FAILURE",
+      "error": "Error: EVENT_OS_CHECKPOINT_MANIFEST is required for checkpoint phases"
+    },
+    {
+      "file": "s075-checkpoint-p1-guests.spec.ts",
+      "line": 6,
+      "title": "S075 checkpoint P1-guests: intake and RSVP",
+      "key": "s075-checkpoint-p1-guests.spec.ts:6:S075 checkpoint P1-guests: intake and RSVP",
+      "status": "FAIL",
+      "class": "HARNESS-FAILURE",
+      "error": "Error: EVENT_OS_CHECKPOINT_MANIFEST is required for checkpoint phases"
+    },
+    {
+      "file": "s075-checkpoint-p1-venue.spec.ts",
+      "line": 6,
+      "title": "S075 checkpoint P1-venue: adopt venue",
+      "key": "s075-checkpoint-p1-venue.spec.ts:6:S075 checkpoint P1-venue: adopt venue",
+      "status": "FAIL",
+      "class": "HARNESS-FAILURE",
+      "error": "Error: EVENT_OS_CHECKPOINT_MANIFEST is required for checkpoint phases"
+    },
+    {
+      "file": "s075-checkpoint-p1.spec.ts",
+      "line": 6,
+      "title": "S075 checkpoint P1: event foundation",
+      "key": "s075-checkpoint-p1.spec.ts:6:S075 checkpoint P1: event foundation",
+      "status": "FAIL",
+      "class": "HARNESS-FAILURE",
+      "error": "Error: EVENT_OS_CHECKPOINT_MANIFEST is required for checkpoint phases"
+    },
+    {
+      "file": "s075-checkpoint-p2.spec.ts",
+      "line": 6,
+      "title": "S075 checkpoint P2: layout publish",
+      "key": "s075-checkpoint-p2.spec.ts:6:S075 checkpoint P2: layout publish",
+      "status": "FAIL",
+      "class": "HARNESS-FAILURE",
+      "error": "Error: EVENT_OS_CHECKPOINT_MANIFEST is required for checkpoint phases"
+    },
+    {
+      "file": "s075-checkpoint-p3.spec.ts",
+      "line": 6,
+      "title": "S075 checkpoint P3: seating binding and baseline",
+      "key": "s075-checkpoint-p3.spec.ts:6:S075 checkpoint P3: seating binding and baseline",
+      "status": "FAIL",
+      "class": "HARNESS-FAILURE",
+      "error": "Error: EVENT_OS_CHECKPOINT_MANIFEST is required for checkpoint phases"
+    },
+    {
+      "file": "s075-checkpoint-p4.spec.ts",
+      "line": 6,
+      "title": "S075 checkpoint P4: j1a hard rejection",
+      "key": "s075-checkpoint-p4.spec.ts:6:S075 checkpoint P4: j1a hard rejection",
+      "status": "FAIL",
+      "class": "HARNESS-FAILURE",
+      "error": "Error: EVENT_OS_CHECKPOINT_MANIFEST is required for checkpoint phases"
+    },
+    {
+      "file": "s075-checkpoint-p5.spec.ts",
+      "line": 6,
+      "title": "S075 checkpoint P5: j1b two-tab CAS",
+      "key": "s075-checkpoint-p5.spec.ts:6:S075 checkpoint P5: j1b two-tab CAS",
+      "status": "FAIL",
+      "class": "HARNESS-FAILURE",
+      "error": "Error: EVENT_OS_CHECKPOINT_MANIFEST is required for checkpoint phases"
+    },
+    {
+      "file": "s075-layout-binding-live.spec.ts",
+      "line": 39,
+      "title": "S075G live readiness, S05 unchanged, and evaluation compatibility",
+      "key": "s075-layout-binding-live.spec.ts:39:S075G live readiness, S05 unchanged, and evaluation compatibility",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s075-layout-binding-live.spec.ts",
+      "line": 85,
+      "title": "S075G reports whether a genuine live ambiguous binding already exists",
+      "key": "s075-layout-binding-live.spec.ts:85:S075G reports whether a genuine live ambiguous binding already exists",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s075-layout-binding-live.spec.ts",
+      "line": 159,
+      "title": "S075G synthetic binding, witness and named infeasible",
+      "key": "s075-layout-binding-live.spec.ts:159:S075G synthetic binding, witness and named infeasible",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s075-layout-binding-live.spec.ts",
+      "line": 290,
+      "title": "S075G successor staleness, rebind and capacity mismatch",
+      "key": "s075-layout-binding-live.spec.ts:290:S075G successor staleness, rebind and capacity mismatch",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s075-layout-binding.spec.ts",
+      "line": 56,
+      "title": "S075 planner proposes and checker activates an exact current layout publication",
+      "key": "s075-layout-binding.spec.ts:56:S075 planner proposes and checker activates an exact current layout publication",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3020"
+    },
+    {
+      "file": "s075-layout-binding.spec.ts",
+      "line": 116,
+      "title": "S075 successor publication makes the seating layout binding stale",
+      "key": "s075-layout-binding.spec.ts:116:S075 successor publication makes the seating layout binding stale",
+      "status": "NOT-EXECUTED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "did not run (worker/suite ended)"
+    },
+    {
+      "file": "s075-packet-3-actions.spec.ts",
+      "line": 13,
+      "title": "P3 trusted-scope denial uses the route contract and does not emit a mutation result",
+      "key": "s075-packet-3-actions.spec.ts:13:P3 trusted-scope denial uses the route contract and does not emit a mutation result",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3020"
+    },
+    {
+      "file": "s075-packet-3-actions.spec.ts",
+      "line": 27,
+      "title": "P3 one valid rule mutation: one POST, fresh correlation, durable reload",
+      "key": "s075-packet-3-actions.spec.ts:27:P3 one valid rule mutation: one POST, fresh correlation, durable reload",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3020"
+    },
+    {
+      "file": "s075-packet-3-actions.spec.ts",
+      "line": 54,
+      "title": "P3 one valid Studio mutation with mandatory CAS: one POST, fresh correlation, durable reload",
+      "key": "s075-packet-3-actions.spec.ts:54:P3 one valid Studio mutation with mandatory CAS: one POST, fresh correlation, durable reload",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3020"
+    },
+    {
+      "file": "s075-packet8-trusted-boundary-live.spec.ts",
+      "line": 59,
+      "title": "P8 \u00a78.2 readiness on deployed application SHA",
+      "key": "s075-packet8-trusted-boundary-live.spec.ts:59:P8 \u00a78.2 readiness on deployed application SHA",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s075-packet8-trusted-boundary-live.spec.ts",
+      "line": 65,
+      "title": "P8-1 Event A form rejects injected Event B / foreign org fields",
+      "key": "s075-packet8-trusted-boundary-live.spec.ts:65:P8-1 Event A form rejects injected Event B / foreign org fields",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s075-packet8-trusted-boundary-live.spec.ts",
+      "line": 141,
+      "title": "P8-2 foreign Event B resource IDs through Event A are NOT_FOUND-equivalent",
+      "key": "s075-packet8-trusted-boundary-live.spec.ts:141:P8-2 foreign Event B resource IDs through Event A are NOT_FOUND-equivalent",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s075-packet8-trusted-boundary-live.spec.ts",
+      "line": 227,
+      "title": "P8-3 client-scoped assignment cannot mutate another client event",
+      "key": "s075-packet8-trusted-boundary-live.spec.ts:227:P8-3 client-scoped assignment cannot mutate another client event",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s075-packet8-trusted-boundary-live.spec.ts",
+      "line": 269,
+      "title": "P8-4 event-scoped assignment cannot mutate another event",
+      "key": "s075-packet8-trusted-boundary-live.spec.ts:269:P8-4 event-scoped assignment cannot mutate another event",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s075-packet8-trusted-boundary-live.spec.ts",
+      "line": 331,
+      "title": "P8-5 organisation-wide CEO authority works where accepted",
+      "key": "s075-packet8-trusted-boundary-live.spec.ts:331:P8-5 organisation-wide CEO authority works where accepted",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s075-packet8-trusted-boundary-live.spec.ts",
+      "line": 353,
+      "title": "P8-6 narrow plus broad assignment does not union privileges",
+      "key": "s075-packet8-trusted-boundary-live.spec.ts:353:P8-6 narrow plus broad assignment does not union privileges",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s075-packet8-trusted-boundary-live.spec.ts",
+      "line": 378,
+      "title": "P8-7 revoked assignment cannot replay a captured action",
+      "key": "s075-packet8-trusted-boundary-live.spec.ts:378:P8-7 revoked assignment cannot replay a captured action",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s075-packet8-trusted-boundary-live.spec.ts",
+      "line": 470,
+      "title": "P8-8 nonexistent event cannot create root Seating rows",
+      "key": "s075-packet8-trusted-boundary-live.spec.ts:470:P8-8 nonexistent event cannot create root Seating rows",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s075-packet8-trusted-boundary-live.spec.ts",
+      "line": 492,
+      "title": "P8-9 Verify-as unavailable on production when flag is off",
+      "key": "s075-packet8-trusted-boundary-live.spec.ts:492:P8-9 Verify-as unavailable on production when flag is off",
+      "status": "SKIPPED",
+      "class": "NOT-EXECUTED",
+      "error": "",
+      "note": "PLAYWRIGHT_LIVE gate"
+    },
+    {
+      "file": "s075-rule-form.spec.ts",
+      "line": 19,
+      "title": "S075 rule form is predicate-specific, keyboard operable and readable at 360/768/1440",
+      "key": "s075-rule-form.spec.ts:19:S075 rule form is predicate-specific, keyboard operable and readable at 360/768/1440",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "s075-section-13-j1-studio.spec.ts",
+      "line": 34,
+      "title": "S075 Section 13 journey 1: studio and two-tab concurrency",
+      "key": "s075-section-13-j1-studio.spec.ts:34:S075 Section 13 journey 1: studio and two-tab concurrency",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3020"
+    },
+    {
+      "file": "s075-section-13-j1a-plan-integrity.spec.ts",
+      "line": 28,
+      "title": "S075 Section 13 j1a: plan integrity (rule, freeze, adopt, hard reject)",
+      "key": "s075-section-13-j1a-plan-integrity.spec.ts:28:S075 Section 13 j1a: plan integrity (rule, freeze, adopt, hard reject)",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3020"
+    },
+    {
+      "file": "s075-section-13-j1b-concurrency.spec.ts",
+      "line": 30,
+      "title": "S075 Section 13 j1b: two-tab Studio CAS concurrency",
+      "key": "s075-section-13-j1b-concurrency.spec.ts:30:S075 Section 13 j1b: two-tab Studio CAS concurrency",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3020"
+    },
+    {
+      "file": "s075-section-13-j2-governance.spec.ts",
+      "line": 30,
+      "title": "S075 Section 13 journey 2: reviewer, director and CEO governance",
+      "key": "s075-section-13-j2-governance.spec.ts:30:S075 Section 13 journey 2: reviewer, director and CEO governance",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3020"
+    },
+    {
+      "file": "s075-section-13-j3-exports.spec.ts",
+      "line": 26,
+      "title": "S075 Section 13 journey 3: exports and role boundaries",
+      "key": "s075-section-13-j3-exports.spec.ts:26:S075 Section 13 journey 3: exports and role boundaries",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3020"
+    },
+    {
+      "file": "s075-section-13-j4-ux.spec.ts",
+      "line": 25,
+      "title": "S075 Section 13 journey 4: responsive, accessibility and repeated settlement",
+      "key": "s075-section-13-j4-ux.spec.ts:25:S075 Section 13 journey 4: responsive, accessibility and repeated settlement",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3020"
+    },
+    {
+      "file": "ux001-authority.spec.ts",
+      "line": 8,
+      "title": "auditor has no Event-create affordance and is denied on direct access and API",
+      "key": "ux001-authority.spec.ts:8:auditor has no Event-create affordance and is denied on direct access and API",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "ux001-authority.spec.ts",
+      "line": 38,
+      "title": "authorised CEO and Event Director retain event creation",
+      "key": "ux001-authority.spec.ts:38:authorised CEO and Event Director retain event creation",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "ux001-responsive.spec.ts",
+      "line": 13,
+      "title": "guest directory remains usable at 360px, tablet and desktop without document overflow",
+      "key": "ux001-responsive.spec.ts:13:guest directory remains usable at 360px, tablet and desktop without document overflow",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "ux001-responsive.spec.ts",
+      "line": 30,
+      "title": "representative pages remain usable at 200% zoom and keep visible focus",
+      "key": "ux001-responsive.spec.ts:30:representative pages remain usable at 200% zoom and keep visible focus",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "zz-communications-hv.spec.ts",
+      "line": 59,
+      "title": "HV remediation operator journey for unmatched, correction, author and quiet hours",
+      "key": "zz-communications-hv.spec.ts:59:HV remediation operator journey for unmatched, correction, author and quiet hours",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "zz-communications.spec.ts",
+      "line": 7,
+      "title": "staff can prepare, approve, send synthetically and receive inbound",
+      "key": "zz-communications.spec.ts:7:staff can prepare, approve, send synthetically and receive inbound",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "zz-communications.spec.ts",
+      "line": 75,
+      "title": "auditor cannot prepare communications",
+      "key": "zz-communications.spec.ts:75:auditor cannot prepare communications",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "zz-communications.spec.ts",
+      "line": 84,
+      "title": "communications surfaces are accessible on desktop and mobile",
+      "key": "zz-communications.spec.ts:84:communications surfaces are accessible on desktop and mobile",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "zz-correction-review.spec.ts",
+      "line": 67,
+      "title": "Event Director maker and CEO checker review a correction in isolated contexts",
+      "key": "zz-correction-review.spec.ts:67:Event Director maker and CEO checker review a correction in isolated contexts",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "zz-correction-review.spec.ts",
+      "line": 259,
+      "title": "auditor receives a forbidden correction-review experience",
+      "key": "zz-correction-review.spec.ts:259:auditor receives a forbidden correction-review experience",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "zz-staff-session.spec.ts",
+      "line": 26,
+      "title": "staff logout revokes the session and requires an explicit named identity",
+      "key": "zz-staff-session.spec.ts:26:staff logout revokes the session and requires an explicit named identity",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "zz-staff-session.spec.ts",
+      "line": 102,
+      "title": "keyboard sign-in and sign-out remain operable",
+      "key": "zz-staff-session.spec.ts:102:keyboard sign-in and sign-out remain operable",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in"
+    },
+    {
+      "file": "zz-staff-session.spec.ts",
+      "line": 122,
+      "title": "session status, viewports, zoom and reduced motion stay usable",
+      "key": "zz-staff-session.spec.ts:122:session status, viewports, zoom and reduced motion stay usable",
+      "status": "FAIL",
+      "class": "RESOURCE-PRESSURE",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3020/sign-in?status=expired"
+    }
+  ],
+  "summary": {
+    "PASS": 14,
+    "FAIL": 190,
+    "SKIPPED": 52,
+    "NOT-EXECUTED": 1
+  }
+}

@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { runCheckpointJ4 } from "./s075-checkpoint";
+import {runCheckpointJ4, checkpointManifestConfigured} from "./s075-checkpoint";
 
 test.use({ screenshot: "off", video: "off", trace: "off" });
+
+test.skip(!checkpointManifestConfigured(), "checkpoint phases require EVENT_OS_CHECKPOINT_MANIFEST");
 
 test("S075 checkpoint j4: UX accessibility and settlement on j2 LKG", async ({ page, browser }) => {
   test.setTimeout(600_000);
