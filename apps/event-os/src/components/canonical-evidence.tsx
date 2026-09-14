@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 function CopyExact({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
@@ -22,6 +22,12 @@ function CopyExact({ value }: { value: string }) {
   );
 }
 
+function coerceIso(iso: string | Date): string {
+  if (typeof iso === "string") return iso;
+  if (iso instanceof Date && !Number.isNaN(iso.getTime())) return iso.toISOString();
+  return String(iso ?? "");
+}
+
 export function CanonicalTime({
   iso,
   testId,
@@ -29,20 +35,24 @@ export function CanonicalTime({
   iso: string | Date;
   testId?: string;
 }) {
-  const exact =
-    typeof iso === "string"
-      ? iso
-      : iso instanceof Date
-        ? iso.toISOString()
-        : String(iso ?? "");
-  const parsed = new Date(exact);
-  const label = Number.isNaN(parsed.getTime())
-    ? "Time unavailable"
-    : new Intl.DateTimeFormat("en-GB", {
+  const exact = coerceIso(iso);
+  // Defer locale formatting until after mount so Node ICU and browser ICU cannot
+  // diverge during hydration (React #418). First paint shows the exact ISO stamp.
+  const [label, setLabel] = useState(exact);
+  useEffect(() => {
+    const parsed = new Date(exact);
+    if (Number.isNaN(parsed.getTime())) {
+      setLabel("Time unavailable");
+      return;
+    }
+    setLabel(
+      new Intl.DateTimeFormat("en-GB", {
         dateStyle: "medium",
         timeStyle: "short",
         timeZone: "Africa/Lagos",
-      }).format(parsed);
+      }).format(parsed),
+    );
+  }, [exact]);
   return (
     <span className="canonical-evidence" data-testid={testId}>
       <time dateTime={exact}>{label}</time>

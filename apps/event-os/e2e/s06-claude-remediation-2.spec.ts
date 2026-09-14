@@ -24,6 +24,8 @@ test("remediation2 governing list shows one authoritative KEEP_APART authority",
 
 test("remediation2 export request does not blank the publication surface", async ({ page }) => {
   test.setTimeout(120_000);
+  const pageErrors: string[] = [];
+  page.on("pageerror", (error) => pageErrors.push(String(error)));
   await loginAs(page, "ceo");
   await page.goto(`${SEATING}#publication`);
   await expect(page.getByTestId("seating-publication")).toBeVisible();
@@ -44,6 +46,7 @@ test("remediation2 export request does not blank the publication surface", async
   });
   await expect(page.getByRole("heading", { name: /could not finish rendering|requested record is not available/i })).toHaveCount(0);
   await expect(page.locator("main")).not.toBeEmpty();
+  expect(pageErrors.filter((item) => /#418|Hydration|did not match/i.test(item))).toEqual([]);
   await page.goto(`${SEATING}#publication`);
   await expect(page.getByTestId("seating-publication")).toBeAttached();
   await expect(page.getByTestId("seating-export-list")).toBeAttached();

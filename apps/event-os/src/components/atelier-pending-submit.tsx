@@ -56,7 +56,7 @@ export function IdempotencyField({ name = "idempotencyKey" }: { name?: string })
   const reactId = useId();
   // Defer UUID generation until after mount so SSR HTML matches the first client paint
   // (crypto.randomUUID in useState caused React hydration error #418 on seating forms).
-  const [key, setKey] = useState("");
+  const [key, setKey] = useState<string | null>(null);
   useEffect(() => {
     if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
       setKey(crypto.randomUUID());
@@ -64,5 +64,7 @@ export function IdempotencyField({ name = "idempotencyKey" }: { name?: string })
     }
     setKey(`idem-${reactId.replace(/:/g, "")}-${Date.now()}`);
   }, [reactId]);
-  return <input type="hidden" name={name} value={key} suppressHydrationWarning />;
+  // Omit the field until mounted; server actions already mint a key when absent.
+  if (key == null) return null;
+  return <input type="hidden" name={name} value={key} readOnly />;
 }
