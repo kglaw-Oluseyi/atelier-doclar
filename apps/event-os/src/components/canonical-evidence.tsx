@@ -26,10 +26,16 @@ export function CanonicalTime({
   iso,
   testId,
 }: {
-  iso: string;
+  iso: string | Date;
   testId?: string;
 }) {
-  const parsed = new Date(iso);
+  const exact =
+    typeof iso === "string"
+      ? iso
+      : iso instanceof Date
+        ? iso.toISOString()
+        : String(iso ?? "");
+  const parsed = new Date(exact);
   const label = Number.isNaN(parsed.getTime())
     ? "Time unavailable"
     : new Intl.DateTimeFormat("en-GB", {
@@ -39,11 +45,11 @@ export function CanonicalTime({
       }).format(parsed);
   return (
     <span className="canonical-evidence" data-testid={testId}>
-      <time dateTime={iso}>{label}</time>
+      <time dateTime={exact}>{label}</time>
       <details>
         <summary>Exact time</summary>
-        <code>{iso}</code>
-        <CopyExact value={iso} />
+        <code>{exact}</code>
+        <CopyExact value={exact} />
       </details>
     </span>
   );

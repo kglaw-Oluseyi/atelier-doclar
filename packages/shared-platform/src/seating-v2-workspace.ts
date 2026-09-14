@@ -15,6 +15,12 @@ import type { PlatformSnapshot } from "./store.js";
 
 export const LEGACY_S06_PUBLICATION_LABEL = "LEGACY S06 PUBLICATION — not V2 validated";
 
+function asIsoTimestamp(value: unknown): string | undefined {
+  if (value == null) return undefined;
+  if (typeof value === "string") return value;
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString();
+  return undefined;
+}
 export function currentSeatingV2RunId(
   state: Pick<SeatingV2State, "eventCurrent" | "publications" | "planEditions" | "runs">,
   eventId: string,
@@ -380,7 +386,7 @@ export function buildSeatingV2Workspace(
         validatorVerdict: report?.validatorVersion === SEATING_V2_VALIDATOR_VERSION ? report.verdict : undefined,
         validatorVersion: report?.validatorVersion,
         violatedSummary: violatedSummary || undefined,
-        startedAt: item.startedAt ?? item.generatedAt ?? item.createdAt,
+        startedAt: asIsoTimestamp(item.startedAt ?? item.generatedAt ?? item.createdAt),
         initiatingActorLabel: undefined,
       };
     }),
