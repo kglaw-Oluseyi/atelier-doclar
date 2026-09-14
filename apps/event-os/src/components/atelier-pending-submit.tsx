@@ -54,9 +54,15 @@ export function PendingSubmit({
 
 export function IdempotencyField({ name = "idempotencyKey" }: { name?: string }) {
   const reactId = useId();
-  const [key] = useState(() => {
-    if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
-    return `idem-${reactId.replace(/:/g, "")}-${Date.now()}`;
-  });
-  return <input type="hidden" name={name} value={key} />;
+  // Defer UUID generation until after mount so SSR HTML matches the first client paint
+  // (crypto.randomUUID in useState caused React hydration error #418 on seating forms).
+  const [key, setKey] = useState("");
+  useEffect(() => {
+    if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+      setKey(crypto.randomUUID());
+      return;
+    }
+    setKey(`idem-${reactId.replace(/:/g, "")}-${Date.now()}`);
+  }, [reactId]);
+  return <input type="hidden" name={name} value={key} suppressHydrationWarning />;
 }

@@ -446,9 +446,14 @@ export default async function EventSeatingPage({
       <section id="rules" className="atelier-panel" data-testid="seating-rules">
         <h2>Rules</h2>
         {(["Governing", "Draft", "Historical"] as const).map((group) => {
-          const items = workspace.constraints.filter((item) =>
-            group === "Governing" ? item.status === "ACTIVE" : group === "Draft" ? item.status === "DRAFT" : item.status !== "ACTIVE" && item.status !== "DRAFT",
-          ).slice(group === "Historical" ? -12 : undefined);
+          const items = workspace.constraints.filter((item) => {
+            if (group === "Governing") return item.status === "ACTIVE" && item.duplicateRole !== "REDUNDANT_HISTORICAL";
+            if (group === "Draft") return item.status === "DRAFT";
+            return (
+              (item.status !== "ACTIVE" && item.status !== "DRAFT") ||
+              item.duplicateRole === "REDUNDANT_HISTORICAL"
+            );
+          }).slice(group === "Historical" ? -24 : undefined);
           return (
             <div key={group}>
               <h3>{group}</h3>
@@ -456,10 +461,46 @@ export default async function EventSeatingPage({
                 {items.map((item) => {
                   const softDraft = item.status === "DRAFT" && item.kind !== "HARD";
                   const hardDraft = item.status === "DRAFT" && item.kind === "HARD";
-                  const canActivate = (hardDraft && permissions.ruleActivate) || (softDraft && permissions.constraintManage);
+                  const alreadyActiveDraft = item.duplicateRole === "ALREADY_ACTIVE_DRAFT";
+                  const canActivate =
+                    !alreadyActiveDraft && ((hardDraft && permissions.ruleActivate) || (softDraft && permissions.constraintManage));
+                  const canWithdraw =
+                    item.duplicateRole !== "REDUNDANT_HISTORICAL" &&
+                    (item.status === "DRAFT" || item.status === "ACTIVE") &&
+                    permissions.constraintManage;
                   return (
-                    <li key={item.id}>
+                    <li
+                      key={item.id}
+                      data-testid={
+                        item.duplicateRole === "AUTHORITATIVE"
+                          ? "seating-rule-authoritative"
+                          : item.duplicateRole === "REDUNDANT_HISTORICAL"
+                            ? "seating-rule-redundant-historical"
+                            : item.duplicateRole === "ALREADY_ACTIVE_DRAFT"
+                              ? "seating-rule-already-active-draft"
+                              : "seating-rule-item"
+                      }
+                      data-duplicate-role={item.duplicateRole ?? ""}
+                      data-authoritative-id={item.authoritativeEditionId ?? ""}
+                    >
                       {item.preview}
+                      {item.duplicateRole === "AUTHORITATIVE" && (item.redundantActiveCount ?? 0) > 0 ? (
+                        <p data-testid="seating-rule-authoritative-note">
+                          Authoritative governing rule for this semantic content. {item.redundantActiveCount} redundant ACTIVE
+                          duplicate{item.redundantActiveCount === 1 ? "" : "s"} predate the uniqueness invariant and are listed under Historical.
+                        </p>
+                      ) : null}
+                      {item.duplicateRole === "REDUNDANT_HISTORICAL" ? (
+                        <p data-testid="seating-rule-redundant-note">
+                          Redundant historical duplicate of authoritative rule {item.authoritativeEditionId?.slice(0, 8)}. Not separately governing.
+                          Retained for audit/replay; predates semantic uniqueness enforcement.
+                        </p>
+                      ) : null}
+                      {alreadyActiveDraft ? (
+                        <p data-testid="seating-rule-already-active">
+                          ALREADY ACTIVE — equivalent rule {item.authoritativeEditionId?.slice(0, 8)} already governs this scope. Activation would make no data change.
+                        </p>
+                      ) : null}
                       {canActivate ? (
                         <ProtectionMutationForm action={activateSeatingRuleAction.bind(null, event.id)} className="actions">
                           <Envelope
@@ -474,7 +515,7 @@ export default async function EventSeatingPage({
                           <button type="submit" className="button secondary">Activate</button>
                         </ProtectionMutationForm>
                       ) : null}
-                      {(item.status === "DRAFT" || item.status === "ACTIVE") && permissions.constraintManage ? (
+                      {canWithdraw ? (
                         <ProtectionMutationForm action={withdrawSeatingRuleAction.bind(null, event.id)} className="actions">
                           <Envelope
                             fields={{
@@ -1005,7 +1046,13 @@ export default async function EventSeatingPage({
             <button type="submit" className="button">Request export</button>
           </ProtectionMutationForm>
         ) : null}
-        <ul>{workspace.exports.map((item) => <li key={item.id}>{item.format} · {item.status} · {item.projectionClass}</li>)}</ul>
+        <ul data-testid="seating-export-list">
+          {workspace.exports.map((item) => (
+            <li key={item.id} data-testid="seating-export-item" data-export-id={item.id}>
+              {item.format} · {item.status} · {item.projectionClass === "FULL" ? "CEO" : item.projectionClass}
+            </li>
+          ))}
+        </ul>
       </section>
     </AppShell>
   );

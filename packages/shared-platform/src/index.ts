@@ -1081,6 +1081,13 @@ export {
 } from "./seating-settlement-trace.js";
 export type { SeatingSettlementStage, SeatingSettlementTrace } from "./seating-settlement-trace.js";
 export { requireSeatingV2Writable, seatingV2ReplacementEnabled } from "./seating-v2-flag.js";
+export {
+  LEGACY_DUPLICATE_RECONCILIATION_REASON,
+  selectAuthoritativeActiveRule,
+  annotateSemanticRuleDuplicates,
+  planLegacyDuplicateReconciliation,
+} from "./seating-v2-rule-duplicates.js";
+export type { SeatingRuleDuplicateRole, LegacyDuplicateReconciliationPlan } from "./seating-v2-rule-duplicates.js";
 export { LEGACY_S06_PUBLICATION_LABEL, currentSeatingV2RunId } from "./seating-v2-workspace.js";
 export type { SeatingV2RuleContent } from "./seating-v2-schemas.js";
 export { snapshotGuestCohortAdapter, snapshotLayoutAdapter, seatingToken } from "./seating-adapters.js";

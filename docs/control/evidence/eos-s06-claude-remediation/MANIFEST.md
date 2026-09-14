@@ -112,6 +112,8 @@ Prepared for later Claude session (do not execute from this remediation pass):
 
 Prompt path: `docs/control/evidence/eos-s06-claude-remediation/CLAUDE_REVERIFICATION_PROMPT.md`
 
+**Forward link:** Remediation 2 package — `docs/control/evidence/eos-s06-claude-remediation-2/` (legacy duplicate presentation, reconciliation, export hydration #418).
+
 ## Explicit non-acceptance
 
 **EOS-S06 remains unaccepted.** This remediation does not create an acceptance record and does not start EOS-S07.

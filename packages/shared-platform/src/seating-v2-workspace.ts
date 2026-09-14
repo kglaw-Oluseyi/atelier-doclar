@@ -8,6 +8,7 @@ import {
 import { snapshotGuestCohortAdapter } from "./seating-adapters.js";
 import { projectPublishedLayout, resolveSeatingLayoutAuthority } from "./seating-v2-layout-binding.js";
 import { seatingV2RuleSemanticSentence } from "./seating-v2-authoring.js";
+import { annotateSemanticRuleDuplicates } from "./seating-v2-rule-duplicates.js";
 import { SEATING_V2_VALIDATOR_VERSION } from "./seating-v2-schemas.js";
 import type { SeatingDisclosure, SeatingWorkspaceView } from "./seating-workspace.js";
 import type { SeatingV2State } from "./seating-v2-state.js";
@@ -288,37 +289,44 @@ export function buildSeatingV2Workspace(
     currentRunId,
     guests,
     tables,
-    constraints: rules.map((item) => {
-      const subjectLabels = state.ruleSubjects
-        .filter((subject) => subject.ruleEditionId === item.id)
-        .map((subject) => guests.find((guest) => guest.id === subject.subjectId)?.label ?? "Guest");
-      const targetLabels = state.ruleTargets
-        .filter((target) => target.ruleEditionId === item.id)
-        .map((target) => tables.find((table) => table.id === target.targetIdOrCode)?.label ?? target.targetIdOrCode);
-      const subjectCopy = subjectLabels.length ? subjectLabels.join(" and ") : "named subjects";
-      const targetCopy = targetLabels.length ? ` at ${targetLabels.join(", ")}` : "";
-      const sentence = seatingV2RuleSemanticSentence({
-        kind: item.kind,
-        subjectLabels,
-        tableLabels: targetLabels,
+    constraints: (() => {
+      const annotations = new Map(annotateSemanticRuleDuplicates(rules).map((row) => [row.edition.id, row]));
+      return rules.map((item) => {
+        const subjectLabels = state.ruleSubjects
+          .filter((subject) => subject.ruleEditionId === item.id)
+          .map((subject) => guests.find((guest) => guest.id === subject.subjectId)?.label ?? "Guest");
+        const targetLabels = state.ruleTargets
+          .filter((target) => target.ruleEditionId === item.id)
+          .map((target) => tables.find((table) => table.id === target.targetIdOrCode)?.label ?? target.targetIdOrCode);
+        const subjectCopy = subjectLabels.length ? subjectLabels.join(" and ") : "named subjects";
+        const targetCopy = targetLabels.length ? ` at ${targetLabels.join(", ")}` : "";
+        const sentence = seatingV2RuleSemanticSentence({
+          kind: item.kind,
+          subjectLabels,
+          tableLabels: targetLabels,
+        });
+        const authority = item.activatedByPersonId
+          ? "Activated by an authorised checker"
+          : item.createdByPersonId
+            ? "Drafted by the planner"
+            : "No author recorded";
+        const decidedAt = asIsoTimestamp(item.activatedAt ?? item.createdAt) ?? String(item.activatedAt ?? item.createdAt);
+        const annotation = annotations.get(item.id);
+        return {
+          id: item.id,
+          kind: item.hardness,
+          predicateType: item.kind,
+          status: item.lifecycle,
+          preview: `${item.kind.replaceAll("_", " ")} · ${item.scope} · ${subjectCopy}${targetCopy} · ${item.hardness} · ${item.lifecycle} · ${authority} · ${decidedAt} · ${sentence} · ${item.contentHash.slice(0, 12)}`,
+          reviewDomain: item.specialistDomain === "NONE" ? undefined : item.specialistDomain,
+          contentHash: item.contentHash,
+          editionNo: item.editionNo,
+          duplicateRole: annotation?.role,
+          authoritativeEditionId: annotation?.authoritativeId,
+          redundantActiveCount: annotation?.redundantCount,
+        };
       });
-      const authority = item.activatedByPersonId
-        ? "Activated by an authorised checker"
-        : item.createdByPersonId
-          ? "Drafted by the planner"
-          : "No author recorded";
-      const decidedAt = item.activatedAt ?? item.createdAt;
-      return {
-        id: item.id,
-        kind: item.hardness,
-        predicateType: item.kind,
-        status: item.lifecycle,
-        preview: `${item.kind.replaceAll("_", " ")} · ${item.scope} · ${subjectCopy}${targetCopy} · ${item.hardness} · ${item.lifecycle} · ${authority} · ${decidedAt} · ${sentence} · ${item.contentHash.slice(0, 12)}`,
-        reviewDomain: item.specialistDomain === "NONE" ? undefined : item.specialistDomain,
-        contentHash: item.contentHash,
-        editionNo: item.editionNo,
-      };
-    }),
+    })(),
     implicatedReviewDomains: [...new Set(rules.filter((item) => item.lifecycle === "ACTIVE" && item.specialistDomain !== "NONE").map((item) => item.specialistDomain))] as SeatingWorkspaceView["implicatedReviewDomains"],
     reviewRequirementCopy: "Specialist review binds the exact submitted plan hash and implicated rule hashes.",
     reservations: state.reservationEditions.filter((item) => item.eventId === eventId).map((item) => {
@@ -415,12 +423,16 @@ export function buildSeatingV2Workspace(
         ? [{ id: legacyPublication.id, status: "CURRENT", publicationNumber: legacyPublication.publicationNumber, editionHash: legacyPublication.editionHash, publishedAt: legacyPublication.publishedAt }]
         : []),
     ],
-    exports: state.exportJobs.filter((item) => item.eventId === eventId).map((item) => ({
-      id: item.id,
-      format: item.format,
-      status: item.status,
-      projectionClass: item.projectionClass,
-    })),
+    exports: state.exportJobs
+      .filter((item) => item.eventId === eventId)
+      .slice()
+      .sort((left, right) => String(right.createdAt).localeCompare(String(left.createdAt)) || left.id.localeCompare(right.id))
+      .map((item) => ({
+        id: String(item.id),
+        format: String(item.format),
+        status: String(item.status),
+        projectionClass: String(item.projectionClass),
+      })),
     decisions: state.manualDecisions.filter((item) => item.eventId === eventId).map((item) => ({
       id: item.id,
       command: item.commandType,

@@ -31,6 +31,10 @@ export type SeatingWorkspaceView = SeatingWorkspaceProjection & {
     reviewDomain?: string;
     contentHash?: string;
     editionNo?: number;
+    /** AUTHORITATIVE governing rule, REDUNDANT_HISTORICAL ACTIVE duplicate, or draft blocked by ACTIVE peer. */
+    duplicateRole?: "AUTHORITATIVE" | "REDUNDANT_HISTORICAL" | "ALREADY_ACTIVE_DRAFT";
+    authoritativeEditionId?: string;
+    redundantActiveCount?: number;
   }>;
   implicatedReviewDomains: Array<"PROTOCOL" | "ACCESSIBILITY" | "SECURITY">;
   reviewRequirementCopy: string;

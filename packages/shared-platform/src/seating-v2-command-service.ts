@@ -29,6 +29,11 @@ import {
   seatingV2RuleContentHash,
 } from "./seating-v2-hash.js";
 import {
+  LEGACY_DUPLICATE_RECONCILIATION_REASON,
+  planLegacyDuplicateReconciliation,
+  type LegacyDuplicateReconciliationPlan,
+} from "./seating-v2-rule-duplicates.js";
+import {
   buildSeatingV2Package,
   finishSeatingV2Package,
   packageIsFresh,
@@ -423,7 +428,10 @@ export class SeatingV2CommandService {
         (item) => item.lifecycle === "ACTIVE" && item.contentHash === draft.contentHash && item.id !== draft.id,
       );
       if (equivalents.length > 0) {
-        const authoritative = [...equivalents].sort((left, right) => left.createdAt.localeCompare(right.createdAt) || left.id.localeCompare(right.id))[0]!;
+        const authoritative = [...equivalents].sort(
+          (left, right) =>
+            (left.activatedAt ?? left.createdAt).localeCompare(right.activatedAt ?? right.createdAt) || left.id.localeCompare(right.id),
+        )[0]!;
         return { replayed: true, value: authoritative, reason: "ALREADY_ACTIVE" as const };
       }
       const now = nowOf(actor);
@@ -455,6 +463,57 @@ export class SeatingV2CommandService {
         withdrawnAt: nowOf(actor),
         withdrawalReason: input.reason,
       });
+    });
+  }
+
+  /**
+   * Dry-run or execute withdrawal of redundant ACTIVE editions (and equivalent drafts)
+   * that share a contentHash, retaining the earliest activated authoritative survivor.
+   */
+  async reconcileLegacyDuplicateRules(
+    actor: SeatingV2Actor,
+    envelope: SeatingV2CommandEnvelope,
+    input: { dryRun?: boolean; contentHash?: string } = {},
+  ): Promise<
+    SeatingV2CommandResult<{ id: string; dryRun: boolean; plans: LegacyDuplicateReconciliationPlan[]; withdrawnIds: string[] }>
+  > {
+    const dryRun = input.dryRun ?? true;
+    if (dryRun) {
+      const trusted = this.trustedEnvelope(actor, envelope, "seating.constraint.manage");
+      const editions = await this.repo.transaction(async (tx) => tx.list<SeatingV2RuleEdition>("ruleEditions", trusted.envelope));
+      const plans = planLegacyDuplicateReconciliation(editions, input.contentHash);
+      return {
+        application: "NOT_APPLIED",
+        didDataChange: false,
+        value: { id: `dry-run:${trusted.envelope.eventId}:${input.contentHash ?? "all"}`, dryRun: true, plans, withdrawnIds: [] },
+        correlationId: actor.correlationId,
+      };
+    }
+    return this.mutate(actor, envelope, "seating.constraint.manage", "seatingV2.reconcileLegacyDuplicateRules", async (tx) => {
+      await tx.lockEventCurrent(envelope, "FOR_UPDATE");
+      const editions = await tx.list<SeatingV2RuleEdition>("ruleEditions", envelope);
+      const plans = planLegacyDuplicateReconciliation(editions, input.contentHash);
+      const now = nowOf(actor);
+      const withdrawnIds: string[] = [];
+      for (const plan of plans) {
+        for (const editionId of [...plan.withdrawActiveIds, ...plan.withdrawDraftIds]) {
+          const edition = editions.find((item) => item.id === editionId);
+          if (!edition || (edition.lifecycle !== "ACTIVE" && edition.lifecycle !== "DRAFT")) continue;
+          await tx.updateLifecycle<SeatingV2RuleEdition>("ruleEditions", editionId, envelope, {
+            lifecycle: "WITHDRAWN",
+            withdrawnByPersonId: actor.personId,
+            withdrawnAt: now,
+            withdrawalReason: LEGACY_DUPLICATE_RECONCILIATION_REASON,
+          });
+          withdrawnIds.push(editionId);
+        }
+      }
+      return {
+        id: plans[0]?.authoritativeId ?? envelope.eventId,
+        dryRun: false,
+        plans,
+        withdrawnIds: withdrawnIds.sort(),
+      };
     });
   }
 
@@ -1626,6 +1685,16 @@ export class SeatingV2CommandService {
               .planContentHash
           : (await this.requireOwned<SeatingV2PlanEdition>(tx, "planEditions", input.sourceId, envelope, "plan edition"))
               .contentHash;
+      const existing = (await tx.list<SeatingV2ExportJob>("exportJobs", envelope)).find(
+        (item) =>
+          item.sourceType === input.sourceType &&
+          item.sourceId === input.sourceId &&
+          item.sourceHash === sourceHash &&
+          item.format === input.format &&
+          item.projectionClass === input.projectionClass &&
+          item.status === "READY",
+      );
+      if (existing) return { replayed: true, value: existing };
       const job: SeatingV2ExportJob = {
         id: randomUUID(),
         organisationId: envelope.organisationId,
