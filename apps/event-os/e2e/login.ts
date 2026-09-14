@@ -25,7 +25,10 @@ export function staffNavIdentity(page: Page) {
 export async function login(page: Page, email = STAFF_IDENTITIES.ceo.email): Promise<void> {
   const live = process.env.PLAYWRIGHT_LIVE === "1";
   const localToken = "event-os-access-token-not-for-production";
-  const accessToken = live ? (process.env.EVENT_OS_ACCESS_TOKEN ?? localToken) : localToken;
+  // Live and CI supply EVENT_OS_ACCESS_TOKEN via the environment (railway run / workflow).
+  // Local non-CI browser runs keep the fixture token.
+  const accessToken =
+    live || process.env.CI === "1" ? (process.env.EVENT_OS_ACCESS_TOKEN ?? localToken) : localToken;
   if (live && !process.env.EVENT_OS_ACCESS_TOKEN) {
     throw new Error("live login requires EVENT_OS_ACCESS_TOKEN (fail closed)");
   }
