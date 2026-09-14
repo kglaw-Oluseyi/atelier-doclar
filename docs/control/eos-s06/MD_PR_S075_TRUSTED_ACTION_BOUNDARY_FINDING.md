@@ -1,11 +1,11 @@
 # MD-PR-S075 TRUSTED ACTION BOUNDARY — PACKET 1 FINDING
 
-**Status:** PACKET 1 COMPLETE — PACKET 2 RED-TEST CONTRACT IN PROGRESS  
-**Addendum:** `docs/control/eos-s06/MD_PR_S075_ADDENDUM_TRUSTED_SEATING_ACTION_BOUNDARY.md`  
-**Addendum SHA-256:** `a065a7b010c4a7df4f7c4a8b3ba7c6fa196297da597ed62ae1a35d9f5de8637b`  
-**Parent SHA-256 (unchanged):** `faae89b7bf10ecbe1884c4b375b35ca65b9f516fb3bd2ec89863c3c99d5081c0`  
-**Canonical-layout addendum SHA-256 (unchanged):** `1451974301041c4632c3c6c7fcf20d715fddabc729ea8bf1eb19cae15186d479`  
-**Recorded:** 2026-09-13  
+**Status:** PACKET 1 COMPLETE — PACKET 2 RED-TEST CONTRACT IN PROGRESS
+**Addendum:** `docs/control/eos-s06/MD_PR_S075_ADDENDUM_TRUSTED_SEATING_ACTION_BOUNDARY.md`
+**Addendum SHA-256:** `a065a7b010c4a7df4f7c4a8b3ba7c6fa196297da597ed62ae1a35d9f5de8637b`
+**Parent SHA-256 (unchanged):** `faae89b7bf10ecbe1884c4b375b35ca65b9f516fb3bd2ec89863c3c99d5081c0`
+**Canonical-layout addendum SHA-256 (unchanged):** `1451974301041c4632c3c6c7fcf20d715fddabc729ea8bf1eb19cae15186d479`
+**Recorded:** 2026-09-13
 **Packet 2 recorded:** 2026-09-14
 
 No Seating application or domain implementation was edited in this packet.
@@ -594,4 +594,3 @@ Deleted obsolete ad-hoc diagnostics: `s075-section-13-two-tab-diagnostic.spec.ts
 Original long-j1 memory failures remain preserved. Rule Activate/Withdraw and Submit CAS product fixes remain.
 
 **Verdict: NOT READY FOR CLAUDE** (Packet 7 gates + candidate SHA pending review; no deploy).
-
