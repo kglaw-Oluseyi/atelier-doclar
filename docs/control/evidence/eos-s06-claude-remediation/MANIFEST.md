@@ -21,7 +21,10 @@ No committed in-repo Claude defect report with these IDs was found; the CEO-issu
 | Item | Value |
 |------|-------|
 | Start HEAD / origin/main | `d9c54518f92ed4731304fadc9ccd49742398afb4` |
+| Remediation application commits | `c548372b019b9f24dbe1d9a5ab7fb34f4bdcc5a8` (DEF-01–05) · `0ca9ceb4bc3a9c589f21f4f3b89948f12ea57410` (CanonicalTime Date coerce) |
+| Ending HEAD / origin/main / deployed Event OS | `0ca9ceb4bc3a9c589f21f4f3b89948f12ea57410` |
 | Prior deployed Event OS | `5179ffd0189a9c88f458e5e4d3865cafa4d92627` |
+| Railway event-os deployment | `c9efd641-2d21-4542-853a-a127ff9fe24a` · SUCCESS |
 | Repository | `kglaw-Oluseyi/atelier-doclar` · branch `main` |
 | Railway | `atelier-doclar` / `production` / `event-os` only |
 | Live origin | `https://event-os-production-bc8d.up.railway.app` |
@@ -83,6 +86,19 @@ Mistaken Cursor BLOCKED browser-verification report is **not** included as indep
 | Typecheck shared-platform + event-os | pass |
 
 Not run: Packet 8, 257-test monolith, S076 shards, broad legacy regression, authenticated Claude verification.
+
+## Focused live smoke (post-deploy)
+
+Against `https://event-os-production-bc8d.up.railway.app` at SHA `0ca9ceb4…`:
+
+| Check | Result |
+|-------|--------|
+| DEF-01 runs identity | pass |
+| DEF-02 publication dual truth | pass |
+| DEF-03 tables empty/populated | pass |
+| DEF-05 | covered by unit concurrency/idempotency gates; no destructive live duplicate activation against Alpha One |
+
+First deploy of `c548372` crashed seating pages when Postgres `Date` values reached `CanonicalTime` exact-time details; fixed in `0ca9ceb` and redeployed.
 
 ## Remaining manual re-verification scope
 
