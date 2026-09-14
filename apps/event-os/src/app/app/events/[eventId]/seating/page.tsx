@@ -712,12 +712,12 @@ export default async function EventSeatingPage({
                     {outcome}
                   </p>
                   <CanonicalId id={run.id} label="Full immutable run ID" testId="seating-run-full-id" />
-                  <p data-testid="seating-run-started">
+                  <div data-testid="seating-run-started">
                     Started{" "}
                     {run.startedAt ? <CanonicalTime iso={run.startedAt} /> : "unavailable"}
                     {" · Initiating actor: "}
                     {run.initiatingActorLabel ?? "unavailable"}
-                  </p>
+                  </div>
                   <p data-testid="seating-run-counts">
                     Seated {run.seated ?? 0} · Unseated {run.unseated ?? 0}
                   </p>

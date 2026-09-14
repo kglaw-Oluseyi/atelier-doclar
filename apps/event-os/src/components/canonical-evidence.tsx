@@ -39,6 +39,7 @@ export function CanonicalTime({
   // Defer locale formatting until after mount so Node ICU and browser ICU cannot
   // diverge during hydration (React #418). First paint shows the exact ISO stamp.
   const [label, setLabel] = useState(exact);
+  const [exactOpen, setExactOpen] = useState(false);
   useEffect(() => {
     const parsed = new Date(exact);
     if (Number.isNaN(parsed.getTime())) {
@@ -53,14 +54,25 @@ export function CanonicalTime({
       }).format(parsed),
     );
   }, [exact]);
+  // Keep the tree span-only so parents may safely wrap CanonicalTime in <p>
+  // (a nested <details> would be hoisted by the browser and break hydration).
   return (
     <span className="canonical-evidence" data-testid={testId}>
-      <time dateTime={exact}>{label}</time>
-      <details>
-        <summary>Exact time</summary>
-        <code>{exact}</code>
-        <CopyExact value={exact} />
-      </details>
+      <time dateTime={exact}>{label}</time>{" "}
+      <button
+        type="button"
+        className="secondary canonical-exact-toggle"
+        aria-expanded={exactOpen}
+        onClick={() => setExactOpen((open) => !open)}
+      >
+        {exactOpen ? "Hide exact time" : "Exact time"}
+      </button>
+      {exactOpen ? (
+        <span className="canonical-exact">
+          <code>{exact}</code>
+          <CopyExact value={exact} />
+        </span>
+      ) : null}
     </span>
   );
 }
