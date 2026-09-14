@@ -629,6 +629,9 @@ export const SEATING_V2_COLLECTIONS: SeatingV2Collection[] = [
   "migrationReceipts",
 ];
 
+export const SEATING_V2_ORG_ONLY_COLLECTIONS = new Set<SeatingV2Collection>(["evaluationRuns", "evaluationCaseResults"]);
+export const SEATING_V2_UNSCOPED_COLLECTIONS = new Set<SeatingV2Collection>(["migrationReceipts"]);
+
 /** Collections required to project the seating command workspace. Heavy blobs stay off this path. */
 export const SEATING_V2_WORKSPACE_COLLECTIONS: SeatingV2Collection[] = [
   "ruleEditions",

@@ -41,13 +41,23 @@ function actor(personId: string) {
   return { personId, correlationId: `s06v2-eval-${personId.slice(-4)}`, now: NOW, actorKind: "HUMAN" as const };
 }
 
-function envelope(assignmentId: string, key: string) {
-  return {
+function envelope(
+  assignmentId: string,
+  key: string,
+  row?: { contentHash: string; editionNo?: number; version?: number },
+) {
+  const base = {
     organisationId: people.orgMaison,
     eventId: people.eventAlphaOne,
     actorAssignmentId: assignmentId,
     idempotencyKey: key,
   };
+  if (!row) return base;
+  const expectedVersion = row.version ?? row.editionNo;
+  if (typeof expectedVersion !== "number") {
+    throw new Error("version and content hash are required");
+  }
+  return { ...base, expectedVersion, expectedContentHash: row.contentHash };
 }
 
 function keepApart(guestA: string, guestB: string, domain: SeatingV2RuleContent["specialistDomain"] = "NONE"): SeatingV2RuleContent {
@@ -305,7 +315,7 @@ async function keepApartPath(service: PlatformService, suffix: string) {
   const guestA = attending(service, `A${suffix}`, `s06v2-${suffix}-a`);
   const guestB = attending(service, `B${suffix}`, `s06v2-${suffix}-b`);
   const draft = await v2.createRule(actor(people.personPlanner), envelope(people.assignPlanner, `s06v2-${suffix}-create`), keepApart(guestA.id, guestB.id));
-  const activated = await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, `s06v2-${suffix}-act`), {
+  const activated = await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, `s06v2-${suffix}-act`, draft.value), {
     editionId: draft.value.id,
   });
   const frozen = await v2.freezePackage(actor(people.personPlanner), envelope(people.assignPlanner, `s06v2-${suffix}-freeze`), {
@@ -334,10 +344,10 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
     push("runStatus", path.run.value.status, "FEASIBLE");
     push("packageBound", Boolean(path.frozen.value.contentHash && path.run.value.packageHash === path.frozen.value.contentHash), true);
     if (path.adopted) {
-      const submitted = await path.v2.submitPlan(actor(people.personPlanner), envelope(people.assignPlanner, `${id}-submit`), {
+      const submitted = await path.v2.submitPlan(actor(people.personPlanner), envelope(people.assignPlanner, `${id}-submit`, path.adopted.value), {
         editionId: path.adopted.value.id,
       });
-      const approved = await path.v2.approvePlan(actor(people.personDirector), envelope(people.assignDirector, `${id}-approve`), {
+      const approved = await path.v2.approvePlan(actor(people.personDirector), envelope(people.assignDirector, `${id}-approve`, submitted.value), {
         editionId: submitted.value.id,
         editionHash: submitted.value.contentHash,
         decision: "APPROVED",
@@ -345,18 +355,18 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
       });
       let directorPublishDenied = false;
       try {
-        await path.v2.publishPlan(actor(people.personDirector), envelope(people.assignDirector, `${id}-dir-pub`), {
+        await path.v2.publishPlan(actor(people.personDirector), envelope(people.assignDirector, `${id}-dir-pub`, { contentHash: submitted.value.contentHash, version: submitted.value.version + 1 }), {
           editionId: submitted.value.id,
           editionHash: submitted.value.contentHash,
         });
       } catch (error) {
         directorPublishDenied = error instanceof PlatformError && error.code === "FORBIDDEN";
       }
-      const published = await path.v2.publishPlan(actor(people.personCeo), envelope(people.assignCeo, `${id}-pub`), {
+      const published = await path.v2.publishPlan(actor(people.personCeo), envelope(people.assignCeo, `${id}-pub`, { contentHash: submitted.value.contentHash, version: submitted.value.version + 1 }), {
         editionId: submitted.value.id,
         editionHash: submitted.value.contentHash,
       });
-      const replay = await path.v2.publishPlan(actor(people.personCeo), envelope(people.assignCeo, `${id}-pub-2`), {
+      const replay = await path.v2.publishPlan(actor(people.personCeo), envelope(people.assignCeo, `${id}-pub-2`, { contentHash: submitted.value.contentHash, version: submitted.value.version + 1 }), {
         editionId: submitted.value.id,
         editionHash: submitted.value.contentHash,
       });
@@ -408,7 +418,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
   if (id === "S06V2-PATH-03" || id === "S06V2-M03") {
     const { service } = await fixture();
     const path = await keepApartPath(service, "03");
-    await path.v2.withdrawRule(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-03-withdraw"), {
+    await path.v2.withdrawRule(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-03-withdraw", path.activated.value), {
       editionId: path.activated.value.id,
       reason: "replace",
     });
@@ -417,7 +427,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
       envelope(people.assignPlanner, "s06v2-03-create-2"),
       keepApart(path.guestA.id, path.guestB.id, "PROTOCOL"),
     );
-    await path.v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v2-03-act-2"), { editionId: next.value.id });
+    await path.v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v2-03-act-2", next.value), { editionId: next.value.id });
     const frozen2 = await path.v2.freezePackage(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-03-freeze-2"), {
       seed: "seed-03",
     });
@@ -433,7 +443,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
     const { service } = await fixture();
     const path = await keepApartPath(service, "04");
     if (!path.adopted) throw new Error("adopt required");
-    const submitted = await path.v2.submitPlan(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-04-submit"), {
+    const submitted = await path.v2.submitPlan(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-04-submit", path.adopted.value), {
       editionId: path.adopted.value.id,
     });
     const extra = await path.v2.createRule(
@@ -441,14 +451,14 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
       envelope(people.assignPlanner, "s06v2-04-extra"),
       keepApart(path.guestA.id, path.guestB.id, "SECURITY"),
     );
-    await path.v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v2-04-extra-act"), { editionId: extra.value.id });
+    await path.v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v2-04-extra-act", extra.value), { editionId: extra.value.id });
     const freshness = await path.v2.currentFreshness(
       { organisationId: people.orgMaison, eventId: people.eventAlphaOne },
       submitted.value.packageId,
     );
     let blocked = false;
     try {
-      await path.v2.approvePlan(actor(people.personDirector), envelope(people.assignDirector, "s06v2-04-approve"), {
+      await path.v2.approvePlan(actor(people.personDirector), envelope(people.assignDirector, "s06v2-04-approve", submitted.value), {
         editionId: submitted.value.id,
         editionHash: submitted.value.contentHash,
         decision: "APPROVED",
@@ -470,7 +480,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
     const guestB = attending(service, "B05", "s06v2-05-b");
     const guestC = attending(service, "C05", "s06v2-05-c");
     const draft = await v2.createRule(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-05-create"), keepApart(guestA.id, guestB.id));
-    await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v2-05-act"), { editionId: draft.value.id });
+    await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v2-05-act", draft.value), { editionId: draft.value.id });
     const frozen = await v2.freezePackage(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-05-freeze"), { seed: "seed-05" });
     const run = await v2.launchRun(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-05-run"), { packageId: frozen.value.id });
     if (run.value.status !== "FEASIBLE") throw new Error("adopt required");
@@ -494,14 +504,14 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
     );
     let rejected = false;
     try {
-      await v2.applyManual(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-05-bad"), {
+      await v2.applyManual(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-05-bad", adopted.value), {
         planEditionId: adopted.value.id,
         command: { type: "MOVE", eventGuestId: guestA.id, positionToken: sameTable?.positionToken ?? "" },
       });
     } catch (error) {
       rejected = error instanceof PlatformError && error.code === "SEATING_VALIDATION_REJECTED";
     }
-    const excepted = await v2.applyManual(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-05-unseat-c"), {
+    const excepted = await v2.applyManual(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-05-unseat-c", adopted.value), {
       planEditionId: adopted.value.id,
       command: { type: "UNSEAT", eventGuestId: guestC.id, reasonCode: "GOVERNED_UNSEATED" },
     });
@@ -513,7 +523,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
     );
     const usedAfter = new Set(afterExcept.map((item) => item.logicalPositionId));
     const freeSeat = positions.find((item) => item.packageId === adopted.value.packageId && !usedAfter.has(item.positionToken));
-    const assigned = await v2.assignUnseated(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-05-good"), {
+    const assigned = await v2.assignUnseated(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-05-good", excepted.value), {
       planEditionId: excepted.value.id,
       eventGuestId: guestC.id,
       positionToken: freeSeat?.positionToken ?? "",
@@ -533,21 +543,21 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
       envelope(people.assignPlanner, "s06v2-06-create"),
       keepApart(guestA.id, guestB.id, "SECURITY"),
     );
-    await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v2-06-act"), { editionId: draft.value.id });
+    await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v2-06-act", draft.value), { editionId: draft.value.id });
     const frozen = await v2.freezePackage(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-06-freeze"), { seed: "seed-06" });
     const run = await v2.launchRun(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-06-run"), { packageId: frozen.value.id });
     const adopted = await v2.adoptRun(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-06-adopt"), { runId: run.value.id });
-    const submitted = await v2.submitPlan(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-06-submit"), {
+    const submitted = await v2.submitPlan(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-06-submit", adopted.value), {
       editionId: adopted.value.id,
     });
-    const review = await v2.recordSpecialistReview(actor(people.personRiskReviewer), envelope(people.assignRiskReviewerAlphaOne, "s06v2-06-review"), {
+    const review = await v2.recordSpecialistReview(actor(people.personRiskReviewer), envelope(people.assignRiskReviewerAlphaOne, "s06v2-06-review", submitted.value), {
       editionId: submitted.value.id,
       editionHash: submitted.value.contentHash,
       domain: "SECURITY",
       decision: "APPROVED",
       reason: "security accepted",
     });
-    const replay = await v2.recordSpecialistReview(actor(people.personRiskReviewer), envelope(people.assignRiskReviewerAlphaOne, "s06v2-06-review-2"), {
+    const replay = await v2.recordSpecialistReview(actor(people.personRiskReviewer), envelope(people.assignRiskReviewerAlphaOne, "s06v2-06-review-2", submitted.value), {
       editionId: submitted.value.id,
       editionHash: submitted.value.contentHash,
       domain: "SECURITY",
@@ -556,7 +566,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
     });
     let staleDenied = false;
     try {
-      await v2.recordSpecialistReview(actor(people.personRiskReviewer), envelope(people.assignRiskReviewerAlphaOne, "s06v2-06-stale"), {
+      await v2.recordSpecialistReview(actor(people.personRiskReviewer), envelope(people.assignRiskReviewerAlphaOne, "s06v2-06-stale", submitted.value), {
         editionId: submitted.value.id,
         editionHash: "0".repeat(64),
         domain: "SECURITY",
@@ -576,10 +586,10 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
     const { service } = await fixture();
     const path = await keepApartPath(service, "08");
     if (!path.adopted) throw new Error("adopt required");
-    const submitted = await path.v2.submitPlan(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-08-submit"), {
+    const submitted = await path.v2.submitPlan(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-08-submit", path.adopted.value), {
       editionId: path.adopted.value.id,
     });
-    await path.v2.approvePlan(actor(people.personDirector), envelope(people.assignDirector, "s06v2-08-approve"), {
+    await path.v2.approvePlan(actor(people.personDirector), envelope(people.assignDirector, "s06v2-08-approve", submitted.value), {
       editionId: submitted.value.id,
       editionHash: submitted.value.contentHash,
       decision: "APPROVED",
@@ -625,16 +635,16 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
     const guestA = attending(service, "CeoA", "s06v2-10-a");
     const guestB = attending(service, "CeoB", "s06v2-10-b");
     const draft = await v2.createRule(actor(people.personCeo), envelope(people.assignCeo, "s06v2-10-create"), keepApart(guestA.id, guestB.id));
-    await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v2-10-act"), { editionId: draft.value.id });
+    await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v2-10-act", draft.value), { editionId: draft.value.id });
     const frozen = await v2.freezePackage(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-10-freeze"), { seed: "seed-10" });
     const run = await v2.launchRun(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-10-run"), { packageId: frozen.value.id });
     const adopted = await v2.adoptRun(actor(people.personCeo), envelope(people.assignCeo, "s06v2-10-adopt"), { runId: run.value.id });
-    const submitted = await v2.submitPlan(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-10-submit"), {
+    const submitted = await v2.submitPlan(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-10-submit", adopted.value), {
       editionId: adopted.value.id,
     });
     let ceoApproveDenied = false;
     try {
-      await v2.approvePlan(actor(people.personCeo), envelope(people.assignCeo, "s06v2-10-approve"), {
+      await v2.approvePlan(actor(people.personCeo), envelope(people.assignCeo, "s06v2-10-approve", submitted.value), {
         editionId: submitted.value.id,
         editionHash: submitted.value.contentHash,
         decision: "APPROVED",
@@ -643,7 +653,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
     } catch (error) {
       ceoApproveDenied = error instanceof PlatformError && error.code === "FORBIDDEN";
     }
-    await v2.approvePlan(actor(people.personDirector), envelope(people.assignDirector, "s06v2-10-dir-approve"), {
+    await v2.approvePlan(actor(people.personDirector), envelope(people.assignDirector, "s06v2-10-dir-approve", submitted.value), {
       editionId: submitted.value.id,
       editionHash: submitted.value.contentHash,
       decision: "APPROVED",
@@ -651,7 +661,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
     });
     let ceoPublishDenied = false;
     try {
-      await v2.publishPlan(actor(people.personCeo), envelope(people.assignCeo, "s06v2-10-pub"), {
+      await v2.publishPlan(actor(people.personCeo), envelope(people.assignCeo, "s06v2-10-pub", { contentHash: submitted.value.contentHash, version: submitted.value.version + 1 }), {
         editionId: submitted.value.id,
         editionHash: submitted.value.contentHash,
       });
@@ -795,7 +805,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
     const draft = await v2.createRule(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-m12-create"), keepApart(guestA.id, guestB.id));
     let denied = false;
     try {
-      await v2.activateRule(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-m12-self"), { editionId: draft.value.id });
+      await v2.activateRule(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-m12-self", draft.value), { editionId: draft.value.id });
     } catch (error) {
       denied = error instanceof PlatformError && error.code === "FORBIDDEN";
     }
@@ -807,20 +817,20 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
     const { service } = await fixture();
     const path = await keepApartPath(service, "15");
     if (!path.adopted) throw new Error("adopt required");
-    const submitted = await path.v2.submitPlan(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-15-submit"), {
+    const submitted = await path.v2.submitPlan(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-15-submit", path.adopted.value), {
       editionId: path.adopted.value.id,
     });
-    await path.v2.approvePlan(actor(people.personDirector), envelope(people.assignDirector, "s06v2-15-approve"), {
+    await path.v2.approvePlan(actor(people.personDirector), envelope(people.assignDirector, "s06v2-15-approve", submitted.value), {
       editionId: submitted.value.id,
       editionHash: submitted.value.contentHash,
       decision: "APPROVED",
       reason: "publish",
     });
-    const published = await path.v2.publishPlan(actor(people.personCeo), envelope(people.assignCeo, "s06v2-15-pub"), {
+    const published = await path.v2.publishPlan(actor(people.personCeo), envelope(people.assignCeo, "s06v2-15-pub", { contentHash: submitted.value.contentHash, version: submitted.value.version + 1 }), {
       editionId: submitted.value.id,
       editionHash: submitted.value.contentHash,
     });
-    const draftSuccessor = await path.v2.recallPlan(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-15-recall-fail"), {
+    const draftSuccessor = await path.v2.recallPlan(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-15-recall-fail", submitted.value), {
       editionId: submitted.value.id,
     }).catch(() => undefined);
     void draftSuccessor;
@@ -858,23 +868,23 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
     const { service } = await fixture();
     const path = await keepApartPath(service, "11");
     if (!path.adopted) throw new Error("adopt required");
-    const submitted = await path.v2.submitPlan(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-11-submit"), {
+    const submitted = await path.v2.submitPlan(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-11-submit", path.adopted.value), {
       editionId: path.adopted.value.id,
     });
     let stale = false;
     try {
       await path.v2.recallPlan(
         actor(people.personPlanner),
-        { ...envelope(people.assignPlanner, "s06v2-11-stale"), expectedContentHash: "0".repeat(64) },
+        { ...envelope(people.assignPlanner, "s06v2-11-stale", submitted.value), expectedContentHash: "0".repeat(64) },
         { editionId: submitted.value.id },
       );
     } catch (error) {
       stale = error instanceof PlatformError && error.code === "VERSION_CONFLICT";
     }
-    const recalled = await path.v2.recallPlan(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-11-recall"), {
+    const recalled = await path.v2.recallPlan(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-11-recall", submitted.value), {
       editionId: submitted.value.id,
     });
-    const replay = await path.v2.recallPlan(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-11-recall"), {
+    const replay = await path.v2.recallPlan(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-11-recall", submitted.value), {
       editionId: submitted.value.id,
     });
     const assignments = await path.v2.repository.transaction(async (tx) =>
@@ -894,7 +904,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
     const freeSameTable = positions.find(
       (item) => item.layoutTableId === seatedA?.layoutTableId && !used.has(item.positionToken),
     );
-    const moved = await path.v2.applyManual(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-11-move"), {
+    const moved = await path.v2.applyManual(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-11-move", recalled.value), {
       planEditionId: recalled.value.id,
       command: { type: "MOVE", eventGuestId: path.guestA.id, positionToken: freeSameTable?.positionToken ?? "" },
     });
@@ -929,8 +939,8 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
       envelope(people.assignPlanner, "s06v2-12-apart"),
       keepApart(guestA.id, guestB.id),
     );
-    await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v2-12-act-r"), { editionId: requireDraft.value.id });
-    await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v2-12-act-a"), { editionId: apartDraft.value.id });
+    await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v2-12-act-r", requireDraft.value), { editionId: requireDraft.value.id });
+    await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v2-12-act-a", apartDraft.value), { editionId: apartDraft.value.id });
     const frozen = await v2.freezePackage(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-12-freeze"), { seed: "seed-12" });
     const run = await v2.launchRun(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-12-run"), { packageId: frozen.value.id });
     let adoptOffered = false;
@@ -989,21 +999,21 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
     });
     let selfDenied = false;
     try {
-      await v2.activateReservation(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-13-self"), { editionId: draft.value.id });
+      await v2.activateReservation(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-13-self", draft.value), { editionId: draft.value.id });
     } catch (error) {
       selfDenied = error instanceof PlatformError && error.code === "FORBIDDEN";
     }
-    const activated = await v2.activateReservation(actor(people.personDirector), envelope(people.assignDirector, "s06v2-13-act"), {
+    const activated = await v2.activateReservation(actor(people.personDirector), envelope(people.assignDirector, "s06v2-13-act", draft.value), {
       editionId: draft.value.id,
     });
-    const replay = await v2.activateReservation(actor(people.personDirector), envelope(people.assignDirector, "s06v2-13-act"), {
+    const replay = await v2.activateReservation(actor(people.personDirector), envelope(people.assignDirector, "s06v2-13-act", draft.value), {
       editionId: draft.value.id,
     });
     let stale = false;
     try {
       await v2.activateReservation(
         actor(people.personDirector),
-        { ...envelope(people.assignDirector, "s06v2-13-stale"), expectedContentHash: "0".repeat(64) },
+        { ...envelope(people.assignDirector, "s06v2-13-stale", draft.value), expectedContentHash: "0".repeat(64) },
         { editionId: draft.value.id },
       );
     } catch (error) {
@@ -1013,7 +1023,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
     try {
       await v2.activateReservation(
         actor(people.personDirector),
-        { ...envelope(people.assignDirector, "s06v2-13-cross"), eventId: people.eventAlphaTwo },
+        { ...envelope(people.assignDirector, "s06v2-13-cross", draft.value), eventId: people.eventAlphaTwo },
         { editionId: draft.value.id },
       );
     } catch (error) {
@@ -1026,7 +1036,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
         eventId: people.eventAlphaOne,
       })).filter((item) => item.packageId === frozenActive.value.id),
     );
-    await v2.withdrawReservation(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-13-withdraw"), {
+    await v2.withdrawReservation(actor(people.personPlanner), envelope(people.assignPlanner, "s06v2-13-withdraw", activated.value), {
       editionId: activated.value.id,
       reason: "withdraw governing reservation",
     });
@@ -1057,7 +1067,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
       envelope(people.assignPlanner, "s06v4-p01-create"),
       requireTableSubjects([guest.id], tableId),
     );
-    await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v4-p01-act"), {
+    await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v4-p01-act", draft.value), {
       editionId: draft.value.id,
     });
     const frozen = await v2.freezePackage(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-p01-freeze"), {
@@ -1087,7 +1097,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
       envelope(people.assignPlanner, "s06v4-p02-create"),
       requireTable(guestA.id, guestB.id, tableId),
     );
-    await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v4-p02-act"), {
+    await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v4-p02-act", draft.value), {
       editionId: draft.value.id,
     });
     const frozen = await v2.freezePackage(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-p02-freeze"), {
@@ -1124,7 +1134,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
       envelope(people.assignPlanner, "s06v4-p03-create"),
       forbidTable(guest.id, forbiddenId),
     );
-    await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v4-p03-act"), {
+    await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v4-p03-act", draft.value), {
       editionId: draft.value.id,
     });
     const frozen = await v2.freezePackage(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-p03-freeze"), {
@@ -1153,7 +1163,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
       targets: [{ type: "TABLE", idOrCode: reservedTableId }],
       exact: 1,
     });
-    await v2.activateReservation(actor(people.personDirector), envelope(people.assignDirector, "s06v4-p04-act"), {
+    await v2.activateReservation(actor(people.personDirector), envelope(people.assignDirector, "s06v4-p04-act", draft.value), {
       editionId: draft.value.id,
     });
     const frozen = await v2.freezePackage(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-p04-freeze"), {
@@ -1190,7 +1200,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
     const g4 = attending(service, "V4G4", "s06v4-p05-g4");
     const activate = async (content: SeatingV2RuleContent, key: string) => {
       const draft = await v2.createRule(actor(people.personPlanner), envelope(people.assignPlanner, `${key}-c`), content);
-      await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, `${key}-a`), {
+      await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, `${key}-a`, draft.value), {
         editionId: draft.value.id,
       });
     };
@@ -1460,7 +1470,7 @@ async function runCase(id: S06V2CaseId): Promise<{ observations: S06V2Observatio
       envelope(people.assignPlanner, "s06v4-m08-create"),
       requireTableSubjects([guest.id], tableId),
     );
-    await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v4-m08-act"), {
+    await v2.activateRule(actor(people.personDirector), envelope(people.assignDirector, "s06v4-m08-act", draft.value), {
       editionId: draft.value.id,
     });
     const frozen = await v2.freezePackage(actor(people.personPlanner), envelope(people.assignPlanner, "s06v4-m08-freeze"), {

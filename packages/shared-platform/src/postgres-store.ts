@@ -326,6 +326,83 @@ export class PostgresPlatformStore implements PlatformStore {
     return structuredClone(this.state);
   }
 
+  loadEventById(eventId: string) {
+    const hit = this.state.events.find((item) => item.id === eventId);
+    return hit ? structuredClone(hit) : undefined;
+  }
+
+  loadLayoutPublicationById(id: string, organisationId: string, eventId: string) {
+    const hit = this.state.layoutPublications.find(
+      (item) => item.id === id && item.organisationId === organisationId && item.eventId === eventId,
+    );
+    return hit ? structuredClone(hit) : undefined;
+  }
+
+  loadLayoutRevisionById(id: string, organisationId: string, eventId: string) {
+    const hit = this.state.layoutRevisions.find(
+      (item) => item.id === id && item.organisationId === organisationId && item.eventId === eventId,
+    );
+    return hit ? structuredClone(hit) : undefined;
+  }
+
+  loadCurrentLayoutPublication(organisationId: string, eventId: string, layoutId: string) {
+    const hit = this.state.layoutPublications.find(
+      (item) =>
+        item.organisationId === organisationId &&
+        item.eventId === eventId &&
+        item.layoutId === layoutId &&
+        item.status === "CURRENT",
+    );
+    return hit ? structuredClone(hit) : undefined;
+  }
+
+  listOperationalGuestsByEventId(organisationId: string, eventId: string) {
+    return structuredClone(
+      this.state.operationalGuests.filter((item) => item.organisationId === organisationId && item.eventId === eventId),
+    );
+  }
+
+  listRsvpResponsesByEventId(organisationId: string, eventId: string) {
+    return structuredClone(
+      this.state.rsvpResponses.filter((item) => item.organisationId === organisationId && item.eventId === eventId),
+    );
+  }
+
+  listDiscoveryEngagementsByEventId(organisationId: string, eventId: string) {
+    return structuredClone(
+      this.state.discoveryEngagements.filter(
+        (item) =>
+          item.organisationId === organisationId &&
+          (item.convertedEventId === eventId || item.opportunityId === eventId),
+      ),
+    );
+  }
+
+  listPublishedEventBriefsForEvent(organisationId: string, eventId: string) {
+    const engagement = this.state.discoveryEngagements.find(
+      (item) =>
+        item.organisationId === organisationId &&
+        (item.convertedEventId === eventId || item.opportunityId === eventId),
+    );
+    return structuredClone(
+      this.state.eventBriefEditions.filter(
+        (item) =>
+          item.organisationId === organisationId &&
+          item.status === "PUBLISHED" &&
+          item.current &&
+          (!engagement || item.engagementId === engagement.id),
+      ),
+    );
+  }
+
+  listRiskApplicabilitySnapshotsByEventId(organisationId: string, eventId: string) {
+    return structuredClone(
+      this.state.riskApplicabilitySnapshots.filter(
+        (item) => item.organisationId === organisationId && item.eventId === eventId,
+      ),
+    );
+  }
+
   dossierRepository(): PostgresRiskDossierRepository {
     return new PostgresRiskDossierRepository(this.client);
   }

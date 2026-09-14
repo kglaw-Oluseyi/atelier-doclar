@@ -1,12 +1,11 @@
 import { exactHash } from "./eec-hash.js";
 import {
-  snapshotBriefAdapter,
-  snapshotGuestCohortAdapter,
-  snapshotProtectionAdapter,
-  uniqueSeatAnchors,
+  type ApplicableProtectionConstraints,
+  type EligibleBriefFacts,
+  type GovernedGuestCohort,
   type PublishedSpatialLayout,
+  uniqueSeatAnchors,
 } from "./seating-adapters.js";
-import { requireSeatingLayoutAuthority } from "./seating-v2-layout-binding.js";
 import { assertSeatingV2CapacityTruth, seatingV2TableCapacityTruth } from "./seating-v2-capacity.js";
 import { compileSeatingV2Request } from "./seating-v2-compiler.js";
 import {
@@ -28,7 +27,6 @@ import type {
   SeatingV2ReservationEdition,
   SeatingV2RuleEdition,
 } from "./seating-v2-state.js";
-import type { PlatformSnapshot } from "./store.js";
 
 export const SEATING_V2_DEFAULT_SEED = "s06-v2-default-seed";
 
@@ -50,11 +48,11 @@ export type SeatingV2BuiltPackage = {
   semanticHash: string;
   compiled: ReturnType<typeof compileSeatingV2Request>;
   contentHash: string;
-  cohort: ReturnType<typeof snapshotGuestCohortAdapter>;
+  cohort: GovernedGuestCohort;
   layout: PublishedSpatialLayout;
   binding: SeatingV2LayoutBinding;
-  brief: ReturnType<typeof snapshotBriefAdapter>;
-  protection: ReturnType<typeof snapshotProtectionAdapter>;
+  brief: EligibleBriefFacts;
+  protection: ApplicableProtectionConstraints;
   editions: SeatingV2RuleEdition[];
   reservations: SeatingV2ReservationEdition[];
   lockSetHash: string;
@@ -64,21 +62,15 @@ export type SeatingV2BuiltPackage = {
 export async function readSeatingV2PackageMaterials(input: {
   tx: SeatingV2Transaction;
   scope: SeatingV2Scope;
-  snapshot: PlatformSnapshot;
   pepper: string;
   seed?: string;
+  layout: PublishedSpatialLayout;
+  binding: SeatingV2LayoutBinding;
+  cohort: GovernedGuestCohort;
+  brief: EligibleBriefFacts;
+  protection: ApplicableProtectionConstraints;
 }): Promise<Parameters<typeof finishSeatingV2Package>[0]> {
-  const cohort = snapshotGuestCohortAdapter(input.snapshot, input.scope.eventId);
-  const bindings = await input.tx.list<SeatingV2LayoutBinding>("layoutBindings", input.scope);
-  const authority = requireSeatingLayoutAuthority(
-    input.snapshot,
-    bindings,
-    input.scope.organisationId,
-    input.scope.eventId,
-  );
-  const layout = authority.layout;
-  const brief = snapshotBriefAdapter(input.snapshot, input.scope.eventId);
-  const protection = snapshotProtectionAdapter(input.snapshot, input.scope.eventId);
+  const { cohort, layout, binding, brief, protection } = input;
   const editions = (await input.tx.list<SeatingV2RuleEdition>("ruleEditions", input.scope)).filter(
     (item) => item.lifecycle === "ACTIVE",
   );
@@ -90,7 +82,7 @@ export async function readSeatingV2PackageMaterials(input: {
   const semanticHash = seatingV2SemanticHash({
     cohortHash: cohort.cohortHash,
     rsvpSnapshotHash: cohort.rsvpTruthHash,
-    seatingLayoutBindingId: authority.binding.id,
+    seatingLayoutBindingId: binding.id,
     layoutPublicationId: layout.publicationId,
     layoutContentHash: layout.contentHash,
     eventBriefContentHash: brief.contentHash ?? null,
@@ -126,7 +118,7 @@ export async function readSeatingV2PackageMaterials(input: {
     semanticHash,
     cohort,
     layout,
-    binding: authority.binding,
+    binding,
     brief,
     protection,
     editions,
@@ -144,11 +136,11 @@ export function finishSeatingV2Package(input: {
   scope: SeatingV2Scope;
   pepper: string;
   semanticHash: string;
-  cohort: ReturnType<typeof snapshotGuestCohortAdapter>;
+  cohort: GovernedGuestCohort;
   layout: PublishedSpatialLayout;
   binding: SeatingV2LayoutBinding;
-  brief: ReturnType<typeof snapshotBriefAdapter>;
-  protection: ReturnType<typeof snapshotProtectionAdapter>;
+  brief: EligibleBriefFacts;
+  protection: ApplicableProtectionConstraints;
   editions: SeatingV2RuleEdition[];
   reservations: SeatingV2ReservationEdition[];
   subjects: Array<{ ruleEditionId: string; subjectType: "EVENT_GUEST" | "GOVERNED_GROUP"; subjectId: string }>;
@@ -253,9 +245,13 @@ export function finishSeatingV2Package(input: {
 export async function buildSeatingV2Package(input: {
   tx: SeatingV2Transaction;
   scope: SeatingV2Scope;
-  snapshot: PlatformSnapshot;
   pepper: string;
   seed?: string;
+  layout: PublishedSpatialLayout;
+  binding: SeatingV2LayoutBinding;
+  cohort: GovernedGuestCohort;
+  brief: EligibleBriefFacts;
+  protection: ApplicableProtectionConstraints;
 }): Promise<SeatingV2BuiltPackage> {
   return finishSeatingV2Package(await readSeatingV2PackageMaterials(input));
 }

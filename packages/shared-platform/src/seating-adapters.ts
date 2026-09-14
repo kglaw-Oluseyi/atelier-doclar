@@ -66,11 +66,15 @@ export function seatingToken(pepper: string, eventId: string, subject: string): 
   return createHmac("sha256", pepper).update(`s06:${eventId}:${subject}`).digest("hex").slice(0, 32);
 }
 
-export function snapshotGuestCohortAdapter(snap: PlatformSnapshot, eventId: string): GovernedGuestCohort {
-  const guests = (snap.operationalGuests ?? []).filter((guest: OperationalGuest) => guest.eventId === eventId);
-  const responses = (snap.rsvpResponses ?? []).filter((item) => item.eventId === eventId);
-  const mapped = guests.map((guest) => {
-    const response = responses.find((item) => item.guestId === guest.id);
+export function guestCohortFromRecords(
+  guests: OperationalGuest[],
+  responses: Array<{ eventId: string; guestId: string; attendanceIntent?: string; status?: string }>,
+  eventId: string,
+): GovernedGuestCohort {
+  const eventGuests = guests.filter((guest) => guest.eventId === eventId);
+  const eventResponses = responses.filter((item) => item.eventId === eventId);
+  const mapped = eventGuests.map((guest) => {
+    const response = eventResponses.find((item) => item.guestId === guest.id);
     const attending = response?.attendanceIntent === "ATTENDING";
     const unknown = !response || response.attendanceIntent === "NOT_SUPPLIED";
     return {
@@ -87,11 +91,15 @@ export function snapshotGuestCohortAdapter(snap: PlatformSnapshot, eventId: stri
     guests: mapped,
     cohortHash: exactHash(mapped.map((item) => item.eventGuestId).sort()),
     rsvpTruthHash: exactHash(
-      responses
+      eventResponses
         .map((item) => ({ guestId: item.guestId, intent: item.attendanceIntent, status: item.status }))
         .sort((left, right) => left.guestId.localeCompare(right.guestId)),
     ),
   };
+}
+
+export function snapshotGuestCohortAdapter(snap: PlatformSnapshot, eventId: string): GovernedGuestCohort {
+  return guestCohortFromRecords(snap.operationalGuests ?? [], snap.rsvpResponses ?? [], eventId);
 }
 
 export function uniqueSeatAnchors(anchors: Array<{ id: string; ordinal: number }>): Array<{ id: string; ordinal: number }> {
@@ -156,18 +164,32 @@ export function snapshotLayoutAdapter(snap: PlatformSnapshot, organisationId: st
   };
 }
 
-export function snapshotBriefAdapter(snap: PlatformSnapshot, eventId: string): EligibleBriefFacts {
-  const engagement = snap.discoveryEngagements?.find((item) => item.convertedEventId === eventId || item.opportunityId === eventId);
-  const published = snap.eventBriefEditions?.find(
+export function briefFactsFromRecords(
+  engagements: Array<{ convertedEventId?: string; opportunityId?: string; id: string }>,
+  editions: Array<{ status?: string; current?: boolean; engagementId?: string; id: string; contentHash?: string }>,
+  eventId: string,
+): EligibleBriefFacts {
+  const engagement = engagements.find((item) => item.convertedEventId === eventId || item.opportunityId === eventId);
+  const published = editions.find(
     (item) => item.status === "PUBLISHED" && item.current && (!engagement || item.engagementId === engagement.id),
   );
   return published ? { editionId: published.id, contentHash: published.contentHash } : {};
 }
 
-export function snapshotProtectionAdapter(snap: PlatformSnapshot, eventId: string): ApplicableProtectionConstraints {
-  const snapshots = (snap.riskApplicabilitySnapshots ?? []).filter((item) => item.eventId === eventId);
-  const latest = snapshots.at(-1);
+export function snapshotBriefAdapter(snap: PlatformSnapshot, eventId: string): EligibleBriefFacts {
+  return briefFactsFromRecords(snap.discoveryEngagements ?? [], snap.eventBriefEditions ?? [], eventId);
+}
+
+export function protectionFactsFromRecords(
+  snapshots: Array<{ eventId: string; contentHash?: string }>,
+  eventId: string,
+): ApplicableProtectionConstraints {
+  const latest = snapshots.filter((item) => item.eventId === eventId).at(-1);
   return latest?.contentHash ? { snapshotHash: latest.contentHash } : {};
+}
+
+export function snapshotProtectionAdapter(snap: PlatformSnapshot, eventId: string): ApplicableProtectionConstraints {
+  return protectionFactsFromRecords(snap.riskApplicabilitySnapshots ?? [], eventId);
 }
 
 export function layoutDownstreamForbidden(_projection: LayoutDownstreamProjection): void {

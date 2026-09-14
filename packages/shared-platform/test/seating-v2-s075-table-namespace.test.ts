@@ -21,13 +21,23 @@ function director() {
   return actor(people.personDirector, { now: NOW, correlationId: "s075-director" });
 }
 
-function envelope(assignmentId: string, key: string) {
-  return {
+function envelope(
+  assignmentId: string,
+  key: string,
+  row?: { contentHash: string; editionNo?: number; version?: number },
+) {
+  const base = {
     organisationId: people.orgMaison,
     eventId: people.eventAlphaOne,
     actorAssignmentId: assignmentId,
     idempotencyKey: key,
   };
+  if (!row) return base;
+  const expectedVersion = row.version ?? row.editionNo;
+  if (typeof expectedVersion !== "number") {
+    throw new Error("version and content hash are required");
+  }
+  return { ...base, expectedVersion, expectedContentHash: row.contentHash };
 }
 
 function positionTableToken(tableObjectId: string): string {
@@ -117,7 +127,7 @@ async function activate(
   key: string,
 ) {
   const created = await v2.createRule(planner(), envelope(people.assignPlanner, `${key}-create`), content);
-  const activated = await v2.activateRule(director(), envelope(people.assignDirector, `${key}-act`), {
+  const activated = await v2.activateRule(director(), envelope(people.assignDirector, `${key}-act`, created.value), {
     editionId: created.value.id,
   });
   return activated.value;
@@ -282,7 +292,7 @@ describe("S075 corrected compiler contract", () => {
       eligibleMemberIds: [guest.id],
       targets: [{ type: "TABLE", idOrCode: t1 }],
     });
-    await v2.activateReservation(director(), envelope(people.assignDirector, "s075-resv-act"), { editionId: draft.value.id });
+    await v2.activateReservation(director(), envelope(people.assignDirector, "s075-resv-act", draft.value), { editionId: draft.value.id });
     const frozen = await v2.freezePackage(planner(), envelope(people.assignPlanner, "s075-resv-freeze"), { seed: "s075-resv" });
     const request = await compiledForPackage(v2, frozen.value.id);
     assert.equal(request.reservations.length, 1);

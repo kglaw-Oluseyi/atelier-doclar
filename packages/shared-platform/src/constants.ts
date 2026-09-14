@@ -454,6 +454,7 @@ export const PERMISSION_KEYS = [
   "seating.plan.publish",
   "seating.export",
   "seating.evaluate",
+  "seating.fixture_verify_as",
 ] as const;
 
 export const SYSTEM_ROLE_KEYS = [
@@ -707,6 +708,7 @@ export const S06_SENSITIVE_PERMISSIONS = [
   "seating.plan.review.protocol",
   "seating.plan.review.accessibility",
   "seating.plan.review.security",
+  "seating.fixture_verify_as",
 ] as const;
 
 export const ASSERTION_KINDS = [

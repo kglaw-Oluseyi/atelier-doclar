@@ -1,5 +1,13 @@
 import { expect, type Browser, type Page } from "@playwright/test";
 import { loginAs, openStaffContext } from "./login";
+import {
+  actionRedirectHref,
+  actionResultId,
+  expectFreshActionSuccess,
+  pageActionResult,
+  readActionCorrelation,
+} from "./s060-helpers";
+import { activateSeatingLayoutBinding, proposeSeatingLayoutBinding } from "./s075-layout-binding";
 
 export function nextS073Label() {
   return `S073-${new Date().toISOString().replace(/[-:]/g, "").slice(0, 15)}`;
@@ -37,7 +45,7 @@ async function submitNamed(page: Page, name: string, testId?: string) {
   });
 }
 
-async function grantEventRole(page: Page, personLabel: string, roleKey: string, eventName: string, reason: string) {
+export async function grantEventRole(page: Page, personLabel: string, roleKey: string, eventName: string, reason: string) {
   await page.goto("/app/admin/access", { waitUntil: "domcontentloaded" });
   const form = page.getByTestId("grant-assignment-form");
   await expect(form).toBeVisible({ timeout: 30_000 });
@@ -61,7 +69,7 @@ async function grantEventRole(page: Page, personLabel: string, roleKey: string, 
   await expect(page.getByTestId("access-assignment").filter({ hasText: eventName }).first()).toBeVisible();
 }
 
-async function intakeGuest(page: Page, eventId: string, given: string, family: string) {
+export async function intakeGuest(page: Page, eventId: string, given: string, family: string) {
   await page.goto(`/app/events/${eventId}/guests/new`, { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { name: "Manual guest intake" })).toBeVisible({ timeout: 30_000 });
   await page.getByLabel("Given name").fill(given);
@@ -74,14 +82,30 @@ async function intakeGuest(page: Page, eventId: string, given: string, family: s
   return guestId;
 }
 
-async function markAttending(page: Page, eventId: string, guestId: string) {
+export async function markAttending(page: Page, eventId: string, guestId: string) {
   await page.goto(`/app/events/${eventId}/guests/${guestId}`, { waitUntil: "domcontentloaded" });
-  await expect(page.getByRole("button", { name: "Record staff response" })).toBeVisible({ timeout: 30_000 });
-  await page.locator('select[name="attendanceIntent"]').selectOption("ATTENDING");
-  await page.locator('form').filter({ has: page.getByRole("button", { name: "Record staff response" }) }).getByLabel("Reason").fill(
-    "S073 mark attending",
+  const form = page.locator("form").filter({ has: page.getByRole("button", { name: "Record staff response" }) });
+  await expect(form.getByRole("button", { name: "Record staff response" })).toBeVisible({ timeout: 30_000 });
+  await page.waitForLoadState("networkidle").catch(() => undefined);
+  await form.locator('select[name="attendanceIntent"]').selectOption("ATTENDING");
+  await expect(form.locator('select[name="attendanceIntent"]')).toHaveValue("ATTENDING");
+  await form.locator('input[name="reason"]').fill("S073 mark attending");
+  const previous = pageActionResult(page);
+  const pending = page.waitForResponse(
+    (response) => response.request().method() === "POST" && Boolean(response.request().headers()["next-action"]),
+    { timeout: 30_000 },
   );
   await submitNamed(page, "Record staff response");
+  const response = await pending;
+  const rawLocation = response.headers()["location"] ?? response.headers()["x-action-redirect"] ?? "";
+  const location = actionResultId(rawLocation);
+  if (location) {
+    const href = actionRedirectHref(page, location);
+    const nextResult = new URL(href, page.url()).searchParams.get("result") ?? "";
+    if (nextResult && nextResult !== previous) {
+      await page.goto(href, { waitUntil: "domcontentloaded", timeout: 25_000 });
+    }
+  }
   await expect(page.locator(".md-status", { hasText: "ATTENDING" })).toBeVisible({ timeout: 30_000 });
 }
 
@@ -94,8 +118,8 @@ export async function reuseProvisionedS073Event(page: Page, eventId: string): Pr
   await expect(page.getByTestId("seating-overview")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId("seating-capacity-ledger")).toContainText(/Capacity [1-9]/);
   const eventName = ((await page.locator(".event-crumb-name").textContent()) ?? "").replace(/^[·\s]+/, "").trim();
-  if (!/^S073-/.test(eventName) || /Alpha One|P09Live|IdemTest-339344/i.test(await page.locator("main").innerText())) {
-    throw new Error(`refusing non-S073 or accumulated event ${eventName || eventId}`);
+  if (!/^(S073-|S075S13-)/.test(eventName) || /Alpha One|P09Live|IdemTest-339344/i.test(await page.locator("main").innerText())) {
+    throw new Error(`refusing non-S073/S075S13 or accumulated event ${eventName || eventId}`);
   }
   return {
     eventId,
@@ -110,10 +134,16 @@ export async function reuseProvisionedS073Event(page: Page, eventId: string): Pr
  * Governed UI provision of one unique S073 event: guests, RSVP, layout, seating authority.
  * Does not mutate Alpha One and does not use SQL.
  */
-export async function provisionS073Event(page: Page, browser: Browser): Promise<ProvisionedS073Event> {
+export async function provisionS073Event(
+  page: Page,
+  browser: Browser,
+  options?: { labelPrefix?: string; skipBinding?: boolean },
+): Promise<ProvisionedS073Event> {
   const reused = process.env.PLAYWRIGHT_S073_EVENT_ID?.trim();
   if (reused) return reuseProvisionedS073Event(page, reused);
-  const label = nextS073Label();
+  const label = options?.labelPrefix
+    ? `${options.labelPrefix}-${new Date().toISOString().replace(/[-:]/g, "").slice(0, 15)}`
+    : nextS073Label();
   const eventName = `${label} Seating`;
   const eventCode = `S73${Date.now().toString().slice(-6)}`;
   await loginAs(page, "ceo");
@@ -192,6 +222,11 @@ export async function provisionS073Event(page: Page, browser: Browser): Promise<
     timeout: 30_000,
   }).toMatch(/saved/);
   await expect(page.getByTestId("studio-navigator")).toContainText(/Seat/i, { timeout: 20_000 });
+  await page.getByLabel("Operational quantity").fill("8");
+  await page.getByLabel("Source label").fill(`${label} planner count`);
+  await page.getByLabel("Rationale").fill("Match published physical seats");
+  await submitNamed(page, "Record operational capacity");
+  await expect(page.getByTestId("action-result-banner")).toBeVisible({ timeout: 30_000 });
 
   await page.goto(layoutPath, { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("button", { name: "Run validation" })).toBeVisible({ timeout: 30_000 });
@@ -204,20 +239,46 @@ export async function provisionS073Event(page: Page, browser: Browser): Promise<
   try {
     await director.page.goto(layoutPath, { waitUntil: "domcontentloaded" });
     await expect(director.page.getByRole("button", { name: "Record decision" })).toBeVisible({ timeout: 30_000 });
+    const decideBefore = await readActionCorrelation(director.page);
     await submitNamed(director.page, "Record decision");
-    await expect(director.page.getByTestId("layout-approval-APPROVED").first()).toBeVisible({ timeout: 30_000 });
+    await expectFreshActionSuccess(director.page, decideBefore);
+    await expect(director.page.getByTestId("layout-approval-APPROVED")).toBeVisible({ timeout: 30_000 });
+    const publishBefore = await readActionCorrelation(director.page);
+    await expect(director.page.getByRole("button", { name: "Publish approved hash" })).toBeEnabled();
     await submitNamed(director.page, "Publish approved hash");
-    await expect(director.page.getByTestId("publication-status")).toContainText(/CURRENT|publication/i, {
-      timeout: 30_000,
-    });
+    await expectFreshActionSuccess(director.page, publishBefore);
+    await expect(director.page.getByTestId("publication-status")).toContainText(/CURRENT publication \d+/);
+    await expect(director.page.getByTestId("publication-status")).toContainText(/hash\s+[a-f0-9]{12}/i);
   } finally {
     await director.context.close();
   }
 
   await loginAs(page, "planner");
+  await page.goto(layoutPath, { waitUntil: "domcontentloaded" });
+  const publication = ((await page.getByTestId("publication-status").innerText()) ?? "").replace(/\s+/g, " ");
+  const publicationNumber = publication.match(/CURRENT publication (\d+)/)?.[1] ?? "";
+  const hashPrefix = publication.match(/hash\s+([a-f0-9]{12})/i)?.[1] ?? "";
+  const hallName = `${label} hall`;
+  if (!options?.skipBinding) {
+    await proposeSeatingLayoutBinding(
+      page,
+      seatingPathFor(eventId),
+      new RegExp(`${hallName} · CURRENT publication ${publicationNumber} · hash ${hashPrefix}`),
+    );
+    const binder = await openStaffContext(browser, "director");
+    try {
+      await activateSeatingLayoutBinding(binder.page, seatingPathFor(eventId));
+    } finally {
+      await binder.context.close();
+    }
+  }
+
+  await loginAs(page, "planner");
   await page.goto(seatingPathFor(eventId), { waitUntil: "domcontentloaded" });
   await expect(page.getByTestId("seating-overview")).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByTestId("seating-capacity-ledger")).toContainText(/Capacity [1-9]/);
+  if (!options?.skipBinding) {
+    await expect(page.getByTestId("seating-capacity-ledger")).toContainText(/Capacity [1-9]/);
+  }
   await expect(page.getByRole("heading", { name: new RegExp(eventName) })).toBeVisible();
   if (/Alpha One|P09Live|IdemTest-339344/i.test(await page.locator("main").innerText())) {
     throw new Error("S073 provision landed on accumulated Alpha One state");

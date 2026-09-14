@@ -3,6 +3,7 @@ import { seatingV2TableCapacityTruth } from "./seating-v2-capacity.js";
 import { uniqueSeatAnchors, type PublishedSpatialLayout } from "./seating-adapters.js";
 import type { SeatingV2LayoutBinding } from "./seating-v2-state.js";
 import type { PlatformSnapshot } from "./store.js";
+import type { LayoutRevision } from "./venue-schemas.js";
 
 export const SEATING_LAYOUT_BINDING_STATES = ["DRAFT", "ACTIVE", "SUPERSEDED", "WITHDRAWN"] as const;
 export type SeatingLayoutBindingState = (typeof SEATING_LAYOUT_BINDING_STATES)[number];
@@ -44,10 +45,10 @@ export function activeSeatingLayoutBindings(
   );
 }
 
-export function projectPublishedLayout(snap: PlatformSnapshot, publicationId: string): PublishedSpatialLayout | undefined {
-  const publication = snap.layoutPublications.find((item) => item.id === publicationId);
-  if (!publication) return undefined;
-  const revision = snap.layoutRevisions.find((item) => item.id === publication.revisionId);
+export function projectPublishedLayoutFrom(
+  publication: { id: string; contentHash: string; revisionId: string },
+  revision: LayoutRevision | undefined,
+): PublishedSpatialLayout | undefined {
   const objects = revision?.objects ?? [];
   const tables = objects
     .filter((item) => item.objectType === "TABLE" && !item.tombstoned)
@@ -90,20 +91,37 @@ export function projectPublishedLayout(snap: PlatformSnapshot, publicationId: st
   };
 }
 
-export function snapshotBoundLayout(
-  snap: PlatformSnapshot,
+export function projectPublishedLayout(snap: PlatformSnapshot, publicationId: string): PublishedSpatialLayout | undefined {
+  const publication = snap.layoutPublications.find((item) => item.id === publicationId);
+  if (!publication) return undefined;
+  const revision = snap.layoutRevisions.find((item) => item.id === publication.revisionId);
+  return projectPublishedLayoutFrom(publication, revision);
+}
+
+export function boundLayoutFromLoadedPublication(
   organisationId: string,
   eventId: string,
   binding: Pick<SeatingV2LayoutBinding, "layoutId" | "layoutPublicationId" | "layoutContentHash">,
+  publication:
+    | {
+        id: string;
+        layoutId: string;
+        eventId: string;
+        organisationId: string;
+        contentHash: string;
+        status: string;
+        revisionId: string;
+      }
+    | undefined,
+  currentForLineage: { id: string; contentHash: string } | undefined,
+  revision: Parameters<typeof projectPublishedLayoutFrom>[1],
 ): PublishedSpatialLayout {
-  const publication = snap.layoutPublications.find(
-    (item) =>
-      item.id === binding.layoutPublicationId &&
-      item.layoutId === binding.layoutId &&
-      item.eventId === eventId &&
-      item.organisationId === organisationId,
-  );
-  if (!publication) {
+  if (
+    !publication ||
+    publication.layoutId !== binding.layoutId ||
+    publication.eventId !== eventId ||
+    publication.organisationId !== organisationId
+  ) {
     throw new PlatformError("SEATING_LAYOUT_PUBLICATION_MISMATCH", "bound layout publication was not found", {
       publicMessage:
         "The seating layout binding does not match a current publication. Resolve the layout record before freezing seating inputs.",
@@ -121,20 +139,13 @@ export function snapshotBoundLayout(
         "The seating layout binding is stale. Propose and activate a successor binding for the current publication.",
     });
   }
-  const currentForLineage = snap.layoutPublications.find(
-    (item) =>
-      item.layoutId === binding.layoutId &&
-      item.eventId === eventId &&
-      item.organisationId === organisationId &&
-      item.status === "CURRENT",
-  );
   if (!currentForLineage || currentForLineage.id !== publication.id || currentForLineage.contentHash !== publication.contentHash) {
     throw new PlatformError("SEATING_LAYOUT_BINDING_STALE", "bound layout publication is not the lineage current", {
       publicMessage:
         "The seating layout binding is stale. Propose and activate a successor binding for the current publication.",
     });
   }
-  const layout = projectPublishedLayout(snap, publication.id);
+  const layout = projectPublishedLayoutFrom(publication, revision);
   if (!layout) {
     throw new PlatformError("SEATING_LAYOUT_PUBLICATION_MISMATCH", "bound layout revision was not found", {
       publicMessage:
@@ -142,6 +153,24 @@ export function snapshotBoundLayout(
     });
   }
   return layout;
+}
+
+export function snapshotBoundLayout(
+  snap: PlatformSnapshot,
+  organisationId: string,
+  eventId: string,
+  binding: Pick<SeatingV2LayoutBinding, "layoutId" | "layoutPublicationId" | "layoutContentHash">,
+): PublishedSpatialLayout {
+  const publication = snap.layoutPublications.find((item) => item.id === binding.layoutPublicationId);
+  const currentForLineage = snap.layoutPublications.find(
+    (item) =>
+      item.layoutId === binding.layoutId &&
+      item.eventId === eventId &&
+      item.organisationId === organisationId &&
+      item.status === "CURRENT",
+  );
+  const revision = publication ? snap.layoutRevisions.find((item) => item.id === publication.revisionId) : undefined;
+  return boundLayoutFromLoadedPublication(organisationId, eventId, binding, publication, currentForLineage, revision);
 }
 
 export function resolveSeatingLayoutAuthority(

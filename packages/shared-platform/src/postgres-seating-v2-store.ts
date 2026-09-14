@@ -15,8 +15,10 @@ import {
   type SeatingV2Transaction,
 } from "./seating-v2-repository.js";
 import {
+  SEATING_V2_ORG_ONLY_COLLECTIONS,
   SEATING_V2_PURGE_CONFIRMATION,
   SEATING_V2_TABLE_FOR_COLLECTION,
+  SEATING_V2_UNSCOPED_COLLECTIONS,
   type SeatingV2Collection,
   emptySeatingV2State,
   type SeatingV2EventCurrent,
@@ -36,9 +38,6 @@ const JSON_COLUMNS = new Set([
   "assertions",
   "counts",
 ]);
-
-const ORG_ONLY_COLLECTIONS = new Set<SeatingV2Collection>(["evaluationRuns", "evaluationCaseResults"]);
-const UNSCOPED_COLLECTIONS = new Set<SeatingV2Collection>(["migrationReceipts"]);
 
 function hasTransaction(client: PgQueryable): client is PgTransactor {
   return typeof (client as PgTransactor).transaction === "function";
@@ -78,41 +77,47 @@ export class PostgresSeatingV2Transaction implements SeatingV2Transaction {
   async load<T>(collection: SeatingV2Collection, id: string, scope: Partial<SeatingV2Scope>): Promise<T | undefined> {
     const table = SEATING_V2_TABLE_FOR_COLLECTION[collection];
     const identityColumn = collection === "migrationReceipts" ? "migration_id" : "id";
-    const result = UNSCOPED_COLLECTIONS.has(collection)
-      ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE ${identityColumn} = $1`, [id])
-      : ORG_ONLY_COLLECTIONS.has(collection) && scope.organisationId
-        ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE id = $1 AND organisation_id = $2`, [
-            id,
-            scope.organisationId,
-          ])
-        : scope.organisationId && scope.eventId
-          ? await this.client.query<Record<string, unknown>>(
-              `SELECT * FROM ${table} WHERE id = $1 AND organisation_id = $2 AND event_id = $3`,
-              [id, scope.organisationId, scope.eventId],
-            )
-          : await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE ${identityColumn} = $1`, [id]);
+    if (SEATING_V2_UNSCOPED_COLLECTIONS.has(collection)) {
+      const result = await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE ${identityColumn} = $1`, [id]);
+      const row = result.rows[0];
+      return row ? (parseRow(row) as T) : undefined;
+    }
+    if (SEATING_V2_ORG_ONLY_COLLECTIONS.has(collection)) {
+      if (!scope.organisationId) return undefined;
+      const result = await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE id = $1 AND organisation_id = $2`, [
+        id,
+        scope.organisationId,
+      ]);
+      const row = result.rows[0];
+      return row ? (parseRow(row) as T) : undefined;
+    }
+    if (!scope.organisationId || !scope.eventId) return undefined;
+    const result = await this.client.query<Record<string, unknown>>(
+      `SELECT * FROM ${table} WHERE id = $1 AND organisation_id = $2 AND event_id = $3`,
+      [id, scope.organisationId, scope.eventId],
+    );
     const row = result.rows[0];
     return row ? (parseRow(row) as T) : undefined;
   }
 
   async list<T>(collection: SeatingV2Collection, scope: Partial<SeatingV2Scope>): Promise<T[]> {
     const table = SEATING_V2_TABLE_FOR_COLLECTION[collection];
-    const result = UNSCOPED_COLLECTIONS.has(collection)
-      ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table}`)
-      : ORG_ONLY_COLLECTIONS.has(collection) && scope.organisationId
-        ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE organisation_id = $1`, [scope.organisationId])
-        : ORG_ONLY_COLLECTIONS.has(collection)
-          ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table}`)
-          : scope.organisationId && scope.eventId
-            ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE organisation_id = $1 AND event_id = $2`, [
-                scope.organisationId,
-                scope.eventId,
-              ])
-            : scope.organisationId
-              ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE organisation_id = $1`, [scope.organisationId])
-              : scope.eventId
-                ? await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE event_id = $1`, [scope.eventId])
-                : await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table}`);
+    if (SEATING_V2_UNSCOPED_COLLECTIONS.has(collection)) {
+      const result = await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table}`);
+      return result.rows.map((row) => parseRow(row) as T);
+    }
+    if (SEATING_V2_ORG_ONLY_COLLECTIONS.has(collection)) {
+      if (!scope.organisationId) return [];
+      const result = await this.client.query<Record<string, unknown>>(`SELECT * FROM ${table} WHERE organisation_id = $1`, [
+        scope.organisationId,
+      ]);
+      return result.rows.map((row) => parseRow(row) as T);
+    }
+    if (!scope.organisationId || !scope.eventId) return [];
+    const result = await this.client.query<Record<string, unknown>>(
+      `SELECT * FROM ${table} WHERE organisation_id = $1 AND event_id = $2`,
+      [scope.organisationId, scope.eventId],
+    );
     return result.rows.map((row) => parseRow(row) as T);
   }
 
@@ -289,6 +294,18 @@ export class PostgresSeatingV2Transaction implements SeatingV2Transaction {
     const result = await this.client.query<Record<string, unknown>>(
       `SELECT * FROM seating_v2_idempotency_receipts WHERE organisation_id = $1 AND event_id = $2 AND action = $3 AND idempotency_key = $4`,
       [scope.organisationId, scope.eventId, action, key],
+    );
+    return result.rows[0] ? (seatingRecordFromRow(result.rows[0]) as SeatingV2IdempotencyReceipt) : undefined;
+  }
+
+  async findIdempotencyByActionKey(
+    organisationId: string,
+    action: string,
+    key: string,
+  ): Promise<SeatingV2IdempotencyReceipt | undefined> {
+    const result = await this.client.query<Record<string, unknown>>(
+      `SELECT * FROM seating_v2_idempotency_receipts WHERE organisation_id = $1 AND action = $2 AND idempotency_key = $3`,
+      [organisationId, action, key],
     );
     return result.rows[0] ? (seatingRecordFromRow(result.rows[0]) as SeatingV2IdempotencyReceipt) : undefined;
   }

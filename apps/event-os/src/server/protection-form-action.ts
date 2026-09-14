@@ -39,20 +39,28 @@ export async function runProtectionFormAction(input: {
   formData: FormData;
   scopePath: string;
   actionType: string;
+  actor?: Awaited<ReturnType<typeof requireActor>>["actor"];
+  trustedScope?: { eventId: string; organisationId: string; scopePath: string };
   parse?: (formData: FormData) => { success: true; data?: unknown } | { success: false; fieldErrors: ProtectionFieldErrors };
   execute: (
     actor: Awaited<ReturnType<typeof requireActor>>["actor"],
     formData: FormData,
   ) => { id?: string } | void | Promise<{ id?: string } | void>;
+  subjectFromForm?: (formData: FormData) => { subjectId?: string; attemptedVersion?: number } | undefined;
 }): Promise<ProtectionFormState> {
   const attempted = attemptedFromForm(input.formData);
   const requestId = crypto.randomUUID();
   const commandId = settlementCommandIdFromIdempotency(String(input.formData.get("idempotencyKey") ?? ""), requestId);
-  const eventId = String(input.formData.get("eventId") ?? "") || undefined;
+  const eventId = input.trustedScope?.eventId ?? (String(input.formData.get("eventId") ?? "") || undefined);
+  const formScope = {
+    eventId: String(input.formData.get("eventId") ?? "") || undefined,
+    organisationId: String(input.formData.get("organisationId") ?? "") || undefined,
+  };
+  const scopePath = input.trustedScope?.scopePath ?? input.scopePath;
   return runWithSettlementTrace({ commandId, requestId, commandType: input.actionType, eventId }, async () => {
     emitSettlementStage({ stage: "HTTP_RECEIVED", commandType: input.actionType, eventId });
     await ensureRuntime();
-    const { actor } = await requireActor();
+    const { actor } = input.actor ? { actor: input.actor } : await requireActor();
     const correlationId = actor.correlationId;
     bindSettlementResult(correlationId);
     emitSettlementStage({
@@ -91,7 +99,7 @@ export async function runProtectionFormAction(input: {
             buildActionResult({
               sessionHash: sessionHashFromToken((await readStaffSessionCookie()) ?? ""),
               actorPersonId: actor.personId,
-              scopePath: input.scopePath,
+              scopePath,
               actionType: input.actionType,
               correlationId,
               status: "SUCCESS",
@@ -99,8 +107,8 @@ export async function runProtectionFormAction(input: {
               message: (outcome.application === "REPLAYED" ? "No change. This command was already applied." : "Protection command applied.").slice(0, 400),
               application: outcome.application,
               didDataChange: outcome.didDataChange,
-              eventId: String(input.formData.get("eventId") ?? "") || undefined,
-              organisationId: String(input.formData.get("organisationId") ?? "") || undefined,
+              eventId: input.trustedScope?.eventId ?? formScope.eventId,
+              organisationId: input.trustedScope?.organisationId ?? formScope.organisationId,
             }),
           ),
       });
@@ -112,7 +120,7 @@ export async function runProtectionFormAction(input: {
       });
       redirect(
         resultHref(
-          input.scopePath,
+          scopePath,
           correlationId,
           outcome.result && "id" in (outcome.result ?? {}) ? { subjectId: String((outcome.result as { id?: string }).id ?? "") } : undefined,
         ),
@@ -162,7 +170,7 @@ export async function runProtectionFormAction(input: {
           buildActionResult({
             sessionHash: sessionHashFromToken((await readStaffSessionCookie()) ?? ""),
             actorPersonId: actor.personId,
-            scopePath: input.scopePath,
+            scopePath,
             actionType: input.actionType,
             correlationId,
             status: "FAILURE",
@@ -170,8 +178,9 @@ export async function runProtectionFormAction(input: {
             message: classified.message,
             application: "NOT_APPLIED",
             didDataChange: false,
-            eventId: String(input.formData.get("eventId") ?? "") || undefined,
-            organisationId: String(input.formData.get("organisationId") ?? "") || undefined,
+                    eventId: input.trustedScope?.eventId ?? formScope.eventId,
+                    organisationId: input.trustedScope?.organisationId ?? formScope.organisationId,
+            ...(input.subjectFromForm?.(input.formData) ?? {}),
           }),
         ),
     });
@@ -181,7 +190,7 @@ export async function runProtectionFormAction(input: {
       outcome: "NOT_APPLIED",
       reasonClass: classified.code,
     });
-    redirect(resultHref(input.scopePath, correlationId));
+    redirect(resultHref(scopePath, correlationId));
     }
   });
 }

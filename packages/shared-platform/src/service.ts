@@ -793,6 +793,7 @@ import { SeatingCommandService } from "./seating-command-service.js";
 import { SeatingV2CommandService } from "./seating-v2-command-service.js";
 import { MemorySeatingRepository } from "./memory-seating-store.js";
 import { MemorySeatingV2Repository } from "./memory-seating-v2-store.js";
+import type { SeatingV2Repository } from "./seating-v2-repository.js";
 import { RiskAuthorityCommandService, type AuthorityOverlay } from "./risk-authority-command-service.js";
 import { MemoryRiskDossierRepository } from "./memory-risk-dossier-store.js";
 import { MemoryRiskProtectionRepository, MemoryRiskProtectionStore } from "./memory-risk-store.js";
@@ -819,6 +820,8 @@ export interface PlatformServiceOptions {
   layoutExportEnabled?: boolean;
   layoutAssetStoreConfigured?: boolean;
   clock?: PlatformClock;
+  /** Non-Postgres seating V2 repository (e.g. file-backed checkpoint store). */
+  seatingV2Repository?: SeatingV2Repository;
 }
 
 export interface IssuedRsvpInvitation {
@@ -937,10 +940,30 @@ export class PlatformService {
   seatingV2Commands(): SeatingV2CommandService {
     if (!this.seatingV2CommandService) {
       const postgres = this.store instanceof PostgresPlatformStore ? this.store : undefined;
-      const repo = postgres ? postgres.seatingV2Repository() : (this.seatingV2MemoryRepository ??= new MemorySeatingV2Repository());
+      const repo = postgres
+        ? postgres.seatingV2Repository()
+        : (this.options.seatingV2Repository ??
+          (this.seatingV2MemoryRepository ??= new MemorySeatingV2Repository()));
       this.seatingV2CommandService = new SeatingV2CommandService(repo, {
         resolveActor: (personId) => this.resolveActor(personId),
         snapshot: () => this.store.snapshot(),
+        loadEventById: (eventId) => this.store.loadEventById(eventId),
+        loadLayoutPublicationById: (id, organisationId, eventId) =>
+          this.store.loadLayoutPublicationById(id, organisationId, eventId),
+        loadLayoutRevisionById: (id, organisationId, eventId) =>
+          this.store.loadLayoutRevisionById(id, organisationId, eventId),
+        loadCurrentLayoutPublication: (organisationId, eventId, layoutId) =>
+          this.store.loadCurrentLayoutPublication(organisationId, eventId, layoutId),
+        listOperationalGuestsByEventId: (organisationId, eventId) =>
+          this.store.listOperationalGuestsByEventId(organisationId, eventId),
+        listRsvpResponsesByEventId: (organisationId, eventId) =>
+          this.store.listRsvpResponsesByEventId(organisationId, eventId),
+        listDiscoveryEngagementsByEventId: (organisationId, eventId) =>
+          this.store.listDiscoveryEngagementsByEventId(organisationId, eventId),
+        listPublishedEventBriefsForEvent: (organisationId, eventId) =>
+          this.store.listPublishedEventBriefsForEvent(organisationId, eventId),
+        listRiskApplicabilitySnapshotsByEventId: (organisationId, eventId) =>
+          this.store.listRiskApplicabilitySnapshotsByEventId(organisationId, eventId),
         tokenPepper: () => this.options.staffSession?.sessionSecret ?? "s06-non-production-pepper",
         onEffect: (effect) => {
           this.lastMutationEffect = effect;

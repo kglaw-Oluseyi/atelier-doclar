@@ -26,6 +26,20 @@ function envelope(assignmentId: string, key: string) {
   };
 }
 
+function cas(
+  assignmentId: string,
+  key: string,
+  row: { contentHash: string; editionNo?: number; version?: number },
+) {
+  const expectedVersion = row.version ?? row.editionNo;
+  assert.ok(typeof expectedVersion === "number" && expectedVersion >= 1);
+  return {
+    ...envelope(assignmentId, key),
+    expectedVersion,
+    expectedContentHash: row.contentHash,
+  };
+}
+
 function keepApart(guestA: string, guestB: string, domain: SeatingV2RuleContent["specialistDomain"] = "NONE"): SeatingV2RuleContent {
   return {
     kind: "KEEP_APART",
@@ -94,7 +108,7 @@ describe("EOS-S06 V2 command path", () => {
       (error: unknown) => error instanceof PlatformError && error.code === "FORBIDDEN",
     );
 
-    const activated = await v2.activateRule(director(), envelope(people.assignDirector, "s072-ka-activate-01"), {
+    const activated = await v2.activateRule(director(), cas(people.assignDirector, "s072-ka-activate-01", created.value), {
       editionId: created.value.id,
     });
     assert.equal(activated.value.lifecycle, "ACTIVE");
@@ -131,10 +145,10 @@ describe("EOS-S06 V2 command path", () => {
     assert.ok(seatedB?.layoutTableId);
     assert.notEqual(seatedA?.layoutTableId, seatedB?.layoutTableId);
 
-    const submitted = await v2.submitPlan(planner(), envelope(people.assignPlanner, "s072-ka-submit-01"), { editionId: adopted.value.id });
+    const submitted = await v2.submitPlan(planner(), cas(people.assignPlanner, "s072-ka-submit-01", adopted.value), { editionId: adopted.value.id });
     assert.equal(submitted.value.status, "SUBMITTED");
 
-    const approved = await v2.approvePlan(director(), envelope(people.assignDirector, "s072-ka-approve-01"), {
+    const approved = await v2.approvePlan(director(), cas(people.assignDirector, "s072-ka-approve-01", submitted.value), {
       editionId: submitted.value.id,
       editionHash: submitted.value.contentHash,
       decision: "APPROVED",
@@ -142,22 +156,27 @@ describe("EOS-S06 V2 command path", () => {
     });
     assert.equal(approved.value.decision, "APPROVED");
 
+    const approvedEdition = {
+      contentHash: submitted.value.contentHash,
+      version: submitted.value.version + 1,
+    };
+
     await assert.rejects(
       () =>
-        v2.publishPlan(director(), envelope(people.assignDirector, "s072-ka-dir-pub-01"), {
+        v2.publishPlan(director(), cas(people.assignDirector, "s072-ka-dir-pub-01", approvedEdition), {
           editionId: submitted.value.id,
           editionHash: submitted.value.contentHash,
         }),
       (error: unknown) => error instanceof PlatformError && error.code === "FORBIDDEN",
     );
 
-    const published = await v2.publishPlan(ceo(), envelope(people.assignCeo, "s072-ka-pub-01"), {
+    const published = await v2.publishPlan(ceo(), cas(people.assignCeo, "s072-ka-pub-01", approvedEdition), {
       editionId: submitted.value.id,
       editionHash: submitted.value.contentHash,
     });
     assert.equal(published.application, "APPLIED");
     assert.equal(published.value.status, "CURRENT");
-    const republished = await v2.publishPlan(ceo(), envelope(people.assignCeo, "s072-ka-pub-02"), {
+    const republished = await v2.publishPlan(ceo(), cas(people.assignCeo, "s072-ka-pub-02", approvedEdition), {
       editionId: submitted.value.id,
       editionHash: submitted.value.contentHash,
     });
@@ -183,13 +202,13 @@ describe("EOS-S06 V2 command path", () => {
     );
     assert.equal(firstRules.length, 0);
 
-    const activated = await v2.activateRule(director(), envelope(people.assignDirector, "s072-neg-act-01"), { editionId: draft.value.id });
+    const activated = await v2.activateRule(director(), cas(people.assignDirector, "s072-neg-act-01", draft.value), { editionId: draft.value.id });
     const frozen = await v2.freezePackage(planner(), envelope(people.assignPlanner, "s072-neg-freeze-01"), { seed: "seed-neg" });
     assert.notEqual(frozen.value.contentHash, frozenDraft.value.contentHash);
     const run = await v2.launchRun(planner(), envelope(people.assignPlanner, "s072-neg-run-01"), { packageId: frozen.value.id });
     assert.equal(run.value.status, "FEASIBLE");
 
-    await v2.withdrawRule(planner(), envelope(people.assignPlanner, "s072-neg-withdraw-01"), {
+    await v2.withdrawRule(planner(), cas(people.assignPlanner, "s072-neg-withdraw-01", activated.value), {
       editionId: activated.value.id,
       reason: "replace KEEP_APART",
     });
@@ -198,7 +217,7 @@ describe("EOS-S06 V2 command path", () => {
       envelope(people.assignPlanner, "s072-neg-create-02"),
       keepApart(guestA.id, guestB.id, "SECURITY"),
     );
-    await v2.activateRule(director(), envelope(people.assignDirector, "s072-neg-act-02"), { editionId: successor.value.id });
+    await v2.activateRule(director(), cas(people.assignDirector, "s072-neg-act-02", successor.value), { editionId: successor.value.id });
     const frozen2 = await v2.freezePackage(planner(), envelope(people.assignPlanner, "s072-neg-freeze-02"), { seed: "seed-neg" });
     assert.notEqual(frozen2.value.contentHash, frozen.value.contentHash);
     const run2 = await v2.launchRun(planner(), envelope(people.assignPlanner, "s072-neg-run-02"), { packageId: frozen2.value.id });
@@ -224,7 +243,7 @@ describe("EOS-S06 V2 command path", () => {
     assert.ok(seatedB?.layoutTableId);
     await assert.rejects(
       () =>
-        v2.applyManual(planner(), envelope(people.assignPlanner, "s072-neg-unseat-required"), {
+        v2.applyManual(planner(), cas(people.assignPlanner, "s072-neg-unseat-required", adopted.value), {
           planEditionId: adopted.value.id,
           command: { type: "UNSEAT", eventGuestId: guestA.id, reasonCode: "MANUAL_UNSEAT" },
         }),
@@ -246,13 +265,13 @@ describe("EOS-S06 V2 command path", () => {
     assert.ok(sameTableFree);
     await assert.rejects(
       () =>
-        v2.applyManual(planner(), envelope(people.assignPlanner, "s072-neg-bad-assign-01"), {
+        v2.applyManual(planner(), cas(people.assignPlanner, "s072-neg-bad-assign-01", adopted.value), {
           planEditionId: adopted.value.id,
           command: { type: "MOVE", eventGuestId: guestA.id, positionToken: sameTableFree.positionToken },
         }),
       (error: unknown) => error instanceof PlatformError && error.code === "SEATING_VALIDATION_REJECTED",
     );
-    const excepted = await v2.applyManual(planner(), envelope(people.assignPlanner, "s072-neg-unseat-c"), {
+    const excepted = await v2.applyManual(planner(), cas(people.assignPlanner, "s072-neg-unseat-c", adopted.value), {
       planEditionId: adopted.value.id,
       command: { type: "UNSEAT", eventGuestId: guestC.id, reasonCode: "GOVERNED_UNSEATED" },
     });
@@ -265,7 +284,7 @@ describe("EOS-S06 V2 command path", () => {
     const usedAfter = new Set(after.map((item) => item.logicalPositionId));
     const freeSeat = positions.find((item) => item.packageId === adopted.value.packageId && !usedAfter.has(item.positionToken));
     assert.ok(freeSeat);
-    const assigned = await v2.assignUnseated(planner(), envelope(people.assignPlanner, "s072-neg-assign-01"), {
+    const assigned = await v2.assignUnseated(planner(), cas(people.assignPlanner, "s072-neg-assign-01", excepted.value), {
       planEditionId: excepted.value.id,
       eventGuestId: guestC.id,
       positionToken: freeSeat.positionToken,
@@ -280,14 +299,14 @@ describe("EOS-S06 V2 command path", () => {
     const guestB = attendingGuest(service, "Fola", "s072-sep-b");
     const v2 = service.seatingV2Commands();
     const created = await v2.createRule(ceo(), envelope(people.assignCeo, "s072-sep-create-01"), keepApart(guestA.id, guestB.id));
-    await v2.activateRule(director(), envelope(people.assignDirector, "s072-sep-act-01"), { editionId: created.value.id });
+    await v2.activateRule(director(), cas(people.assignDirector, "s072-sep-act-01", created.value), { editionId: created.value.id });
     const frozen = await v2.freezePackage(planner(), envelope(people.assignPlanner, "s072-sep-freeze-01"), { seed: "seed-sep" });
     const run = await v2.launchRun(planner(), envelope(people.assignPlanner, "s072-sep-run-01"), { packageId: frozen.value.id });
     const adopted = await v2.adoptRun(ceo(), envelope(people.assignCeo, "s072-sep-adopt-01"), { runId: run.value.id });
-    const submitted = await v2.submitPlan(planner(), envelope(people.assignPlanner, "s072-sep-submit-01"), { editionId: adopted.value.id });
+    const submitted = await v2.submitPlan(planner(), cas(people.assignPlanner, "s072-sep-submit-01", adopted.value), { editionId: adopted.value.id });
     await assert.rejects(
       () =>
-        v2.approvePlan(ceo(), envelope(people.assignCeo, "s072-sep-ceo-approve-01"), {
+        v2.approvePlan(ceo(), cas(people.assignCeo, "s072-sep-ceo-approve-01", submitted.value), {
           editionId: submitted.value.id,
           editionHash: submitted.value.contentHash,
           decision: "APPROVED",
@@ -295,7 +314,7 @@ describe("EOS-S06 V2 command path", () => {
         }),
       (error: unknown) => error instanceof PlatformError && error.code === "FORBIDDEN",
     );
-    const approved = await v2.approvePlan(director(), envelope(people.assignDirector, "s072-sep-approve-01"), {
+    const approved = await v2.approvePlan(director(), cas(people.assignDirector, "s072-sep-approve-01", submitted.value), {
       editionId: submitted.value.id,
       editionHash: submitted.value.contentHash,
       decision: "APPROVED",
@@ -303,7 +322,10 @@ describe("EOS-S06 V2 command path", () => {
     });
     await assert.rejects(
       () =>
-        v2.publishPlan(ceo(), envelope(people.assignCeo, "s072-sep-ceo-pub-01"), {
+        v2.publishPlan(ceo(), cas(people.assignCeo, "s072-sep-ceo-pub-01", {
+          contentHash: submitted.value.contentHash,
+          version: submitted.value.version + 1,
+        }), {
           editionId: submitted.value.id,
           editionHash: submitted.value.contentHash,
         }),
@@ -334,8 +356,8 @@ describe("EOS-S06 V2 command path", () => {
     const v2 = service.seatingV2Commands();
     const first = await v2.createRule(planner(), envelope(people.assignPlanner, "s072-dup-create-01"), keepApart(guestA.id, guestB.id));
     const second = await v2.createRule(planner(), envelope(people.assignPlanner, "s072-dup-create-02"), keepApart(guestA.id, guestB.id));
-    await v2.activateRule(director(), envelope(people.assignDirector, "s072-dup-act-01"), { editionId: first.value.id });
-    await v2.activateRule(director(), envelope(people.assignDirector, "s072-dup-act-02"), { editionId: second.value.id });
+    await v2.activateRule(director(), cas(people.assignDirector, "s072-dup-act-01", first.value), { editionId: first.value.id });
+    await v2.activateRule(director(), cas(people.assignDirector, "s072-dup-act-02", second.value), { editionId: second.value.id });
     const frozen = await v2.freezePackage(planner(), envelope(people.assignPlanner, "s072-dup-freeze-01"), { seed: "seed-dup" });
     const run = await v2.launchRun(planner(), envelope(people.assignPlanner, "s072-dup-run-01"), { packageId: frozen.value.id });
     assert.ok(run.value.status === "FEASIBLE" || run.value.status === "INFEASIBLE");
@@ -358,7 +380,7 @@ describe("EOS-S06 V2 command path", () => {
     const guestB = attendingGuest(service, "Fay", "s072-latest-b");
     const v2 = service.seatingV2Commands();
     const draft = await v2.createRule(planner(), envelope(people.assignPlanner, "s072-latest-create-01"), keepApart(guestA.id, guestB.id));
-    await v2.activateRule(director(), envelope(people.assignDirector, "s072-latest-act-01"), { editionId: draft.value.id });
+    await v2.activateRule(director(), cas(people.assignDirector, "s072-latest-act-01", draft.value), { editionId: draft.value.id });
     const first = await v2.freezePackage(planner(), envelope(people.assignPlanner, "s072-latest-freeze-01"), { seed: "seed-latest-1" });
     const run = await v2.launchRun(planner(), envelope(people.assignPlanner, "s072-latest-run-01"), { packageId: first.value.id });
     let adopted = false;
@@ -367,7 +389,7 @@ describe("EOS-S06 V2 command path", () => {
       adopted = true;
     }
     const next = await v2.createRule(planner(), envelope(people.assignPlanner, "s072-latest-create-02"), keepApart(guestA.id, guestB.id, "PROTOCOL"));
-    await v2.activateRule(director(), envelope(people.assignDirector, "s072-latest-act-02"), { editionId: next.value.id });
+    await v2.activateRule(director(), cas(people.assignDirector, "s072-latest-act-02", next.value), { editionId: next.value.id });
     const second = await v2.freezePackage(planner(), envelope(people.assignPlanner, "s072-latest-freeze-02"), { seed: "seed-latest-2" });
     assert.notEqual(second.value.id, first.value.id);
     const workspace = await v2.projectWorkspace(planner(), people.eventAlphaOne);
@@ -388,14 +410,14 @@ describe("EOS-S06 V2 command path", () => {
       eligibleMemberIds: [guestA.id, guestB.id],
       targets: [],
     });
-    await v2.activateReservation(director(), envelope(people.assignDirector, "s072-resv-act-01"), { editionId: draft.value.id });
+    await v2.activateReservation(director(), cas(people.assignDirector, "s072-resv-act-01", draft.value), { editionId: draft.value.id });
     const activeView = await v2.projectWorkspace(planner(), people.eventAlphaOne);
     assert.equal(activeView.capacityLedger.reservedMin, 2);
     const withReservation = await v2.freezePackage(planner(), envelope(people.assignPlanner, "s072-resv-freeze-01"), { seed: "seed-resv" });
     assert.notEqual(withReservation.value.contentHash, baseline.value.contentHash);
     const frozenActive = await v2.projectWorkspace(planner(), people.eventAlphaOne);
     assert.equal(frozenActive.inputEdition?.contentHash, withReservation.value.contentHash);
-    await v2.withdrawReservation(planner(), envelope(people.assignPlanner, "s072-resv-wd-01"), {
+    await v2.withdrawReservation(planner(), cas(people.assignPlanner, "s072-resv-wd-01", draft.value), {
       editionId: draft.value.id,
       reason: "Withdrawn from governing set",
     });
@@ -408,5 +430,104 @@ describe("EOS-S06 V2 command path", () => {
     assert.equal(after.inputEdition?.id, baseline.value.id);
     assert.equal(after.inputEdition?.contentHash, baseline.value.contentHash);
     assert.notEqual(after.inputEdition?.contentHash, withReservation.value.contentHash);
+  });
+
+  it("rejects a stale applyManual against a superseded working edition as VERSION_CONFLICT", async () => {
+    const { service, store } = fixtureService();
+    await prepareSurface(service, store);
+    const guestA = attendingGuest(service, "Adaeze", "s075-cas-a");
+    attendingGuest(service, "Bola", "s075-cas-b");
+    attendingGuest(service, "Chioma", "s075-cas-c");
+    attendingGuest(service, "Dami", "s075-cas-d");
+    const v2 = service.seatingV2Commands();
+    const frozen = await v2.freezePackage(planner(), envelope(people.assignPlanner, "s075-cas-freeze-01"), { seed: "seed-cas" });
+    const run = await v2.launchRun(planner(), envelope(people.assignPlanner, "s075-cas-run-01"), { packageId: frozen.value.id });
+    const adopted = await v2.adoptRun(planner(), envelope(people.assignPlanner, "s075-cas-adopt-01"), { runId: run.value.id });
+    const scope = { organisationId: people.orgMaison, eventId: people.eventAlphaOne };
+    const assignments = await v2.repository.transaction(async (tx) =>
+      (await tx.list<{
+        planEditionId: string;
+        eventGuestId: string;
+        logicalPositionId?: string | null;
+        state: string;
+      }>("planAssignments", scope)).filter((item) => item.planEditionId === adopted.value.id),
+    );
+    const positions = await v2.repository.transaction(async (tx) =>
+      tx.list<{ packageId: string; positionToken: string }>("packagePositions", scope),
+    );
+    const used = new Set(
+      assignments.map((item) => item.logicalPositionId).filter((token): token is string => typeof token === "string"),
+    );
+    const vacantA = positions.find((item) => item.packageId === adopted.value.packageId && !used.has(item.positionToken));
+    assert.ok(vacantA);
+    const first = await v2.applyManual(
+      planner(),
+      cas(people.assignPlanner, "s075-cas-move-a", adopted.value),
+      {
+        planEditionId: adopted.value.id,
+        command: { type: "MOVE", eventGuestId: guestA.id, positionToken: vacantA.positionToken },
+      },
+    );
+    assert.equal(first.application, "APPLIED");
+    assert.notEqual(first.value.id, adopted.value.id);
+    await assert.rejects(
+      () =>
+        v2.applyManual(planner(), envelope(people.assignPlanner, "s075-cas-missing"), {
+          planEditionId: first.value.id,
+          command: { type: "MOVE", eventGuestId: guestA.id, positionToken: vacantA.positionToken },
+        }),
+      (error: unknown) => error instanceof PlatformError && error.code === "VALIDATION_FAILED",
+    );
+    await assert.rejects(
+      () =>
+        v2.applyManual(
+          planner(),
+          cas(people.assignPlanner, "s075-cas-move-stale", adopted.value),
+          {
+            planEditionId: adopted.value.id,
+            command: { type: "MOVE", eventGuestId: guestA.id, positionToken: vacantA.positionToken },
+          },
+        ),
+      (error: unknown) =>
+        error instanceof PlatformError &&
+        error.code === "VERSION_CONFLICT" &&
+        /stale plan edition/i.test(error.message),
+    );
+    const afterFirst = await v2.repository.transaction(async (tx) =>
+      (await tx.list<{ planEditionId: string; logicalPositionId?: string | null; eventGuestId: string; state: string }>(
+        "planAssignments",
+        scope,
+      )).filter((item) => item.planEditionId === first.value.id),
+    );
+    const usedAfter = new Set(afterFirst.map((item) => item.logicalPositionId).filter((token): token is string => typeof token === "string"));
+    const vacantB = positions.find((item) => item.packageId === adopted.value.packageId && !usedAfter.has(item.positionToken));
+    assert.ok(vacantB);
+    const refreshed = await v2.applyManual(
+      planner(),
+      cas(people.assignPlanner, "s075-cas-move-b", first.value),
+      {
+        planEditionId: first.value.id,
+        command: { type: "MOVE", eventGuestId: guestA.id, positionToken: vacantB.positionToken },
+      },
+    );
+    assert.equal(refreshed.application, "APPLIED");
+    const occupied = afterFirst.find((item) => item.state === "SEATED" && item.eventGuestId !== guestA.id);
+    const occupiedSeat = occupied?.logicalPositionId;
+    if (typeof occupiedSeat !== "string" || occupiedSeat.length === 0) {
+      throw new Error("expected an occupied seat token on the successor edition");
+    }
+    await assert.rejects(
+      () =>
+        v2.applyManual(
+          planner(),
+          cas(people.assignPlanner, "s075-cas-occupied", refreshed.value),
+          {
+            planEditionId: refreshed.value.id,
+            command: { type: "MOVE", eventGuestId: guestA.id, positionToken: occupiedSeat },
+          },
+        ),
+      (error: unknown) =>
+        error instanceof PlatformError && error.code === "VALIDATION_FAILED" && /occupied/i.test(error.message),
+    );
   });
 });

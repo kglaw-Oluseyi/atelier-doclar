@@ -1,18 +1,37 @@
-import { authorize, type Person } from "@maison-doclar/shared-platform";
+import {
+  authorize,
+  resolveTrustedSeatingAssignment,
+  seatingAssignmentAllowsPermission,
+  type Person,
+} from "@maison-doclar/shared-platform";
 import { getRuntime } from "./runtime";
 
 export function preferredSeatingAssignment(personId: string, organisationId: string, eventId: string) {
-  const assignments = getRuntime()
-    .service.resolveActor(personId)
-    .assignments.filter((item) => item.status === "ACTIVE" && item.organisationId === organisationId);
-  return assignments.find((item) => item.eventId === eventId) ?? assignments.find((item) => !item.eventId);
+  const runtime = getRuntime();
+  const event = runtime.store.loadEventById(eventId);
+  if (!event || event.organisationId !== organisationId) return undefined;
+  const people = runtime.service.resolveActor(personId);
+  try {
+    return resolveTrustedSeatingAssignment(people, event, new Date().toISOString());
+  } catch {
+    return undefined;
+  }
 }
 
 export function seatingPermissions(person: Person, organisationId: string, eventId: string) {
-  const actorSnap = getRuntime().service.resolveActor(person.id);
-  const scope = { organisationId, eventId };
-  const allow = (permission: Parameters<typeof authorize>[0]["permission"]) =>
-    authorize({ actor: actorSnap, permission, scope }).allow;
+  const runtime = getRuntime();
+  const event = runtime.store.loadEventById(eventId);
+  const actorSnap = runtime.service.resolveActor(person.id);
+  const now = new Date().toISOString();
+  const allow = (permission: Parameters<typeof authorize>[0]["permission"]) => {
+    if (!event || event.organisationId !== organisationId) return false;
+    try {
+      const assignment = resolveTrustedSeatingAssignment(actorSnap, event, now);
+      return seatingAssignmentAllowsPermission(actorSnap, assignment, permission);
+    } catch {
+      return false;
+    }
+  };
   return {
     view: allow("seating.view"),
     prepare: allow("seating.input.prepare"),
@@ -29,5 +48,6 @@ export function seatingPermissions(person: Person, organisationId: string, event
     reviewProtocol: allow("seating.plan.review.protocol"),
     reviewAccessibility: allow("seating.plan.review.accessibility"),
     reviewSecurity: allow("seating.plan.review.security"),
+    fixtureVerifyAs: allow("seating.fixture_verify_as"),
   };
 }

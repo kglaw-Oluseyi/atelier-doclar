@@ -22,7 +22,16 @@ export type SeatingWorkspaceView = SeatingWorkspaceProjection & {
     physicalPositionCount?: number;
     mismatch?: boolean;
   }>;
-  constraints: Array<{ id: string; kind: string; predicateType: string; status: string; preview: string; reviewDomain?: string }>;
+  constraints: Array<{
+    id: string;
+    kind: string;
+    predicateType: string;
+    status: string;
+    preview: string;
+    reviewDomain?: string;
+    contentHash?: string;
+    editionNo?: number;
+  }>;
   implicatedReviewDomains: Array<"PROTOCOL" | "ACCESSIBILITY" | "SECURITY">;
   reviewRequirementCopy: string;
   reservations: Array<{

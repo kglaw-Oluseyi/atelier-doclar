@@ -252,6 +252,7 @@ const PERMISSION_IDS: Record<PermissionKey, string> = {
   "seating.plan.publish": "11111111-1111-4111-8111-111111111227",
   "seating.export": "11111111-1111-4111-8111-111111111228",
   "seating.evaluate": "11111111-1111-4111-8111-111111111229",
+  "seating.fixture_verify_as": "11111111-1111-4111-8111-111111111234",
 };
 
 const ROLE_IDS: Record<(typeof SYSTEM_ROLE_KEYS)[number], string> = {

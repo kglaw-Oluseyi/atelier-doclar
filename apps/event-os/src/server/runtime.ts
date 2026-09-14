@@ -1,5 +1,4 @@
 import "server-only";
-import { join } from "node:path";
 import { Pool } from "pg";
 import {
   LOCAL_STORE_PRODUCTION_STATUS,
@@ -17,7 +16,9 @@ import {
 } from "@maison-doclar/shared-platform";
 import { accessAuthority, atelierAccessConfig, databaseUrl, fixturesAllowed, rsvpAccessConfig, sessionConfig, vendorAccessConfig } from "./config";
 import { FileBackedPlatformStore } from "./file-store";
+import { FileBackedSeatingV2Repository, seatingV2StorePathFor } from "./file-seating-v2-store";
 import { fixtureExportStoreEnabled, layoutAssetEnvBound, layoutExportEnabled, resolveLayoutBinaryStore } from "./layout-s3-store";
+import { resolveNonProductionStorePath as resolveStorePath } from "./non-production-store-path";
 
 export type PersistenceLabel = "POSTGRES" | "MEMORY_NON_PRODUCTION" | "UNAVAILABLE";
 export type MigrationStatus = "APPLIED" | "FAILED" | "UNAVAILABLE";
@@ -41,8 +42,17 @@ export function readPoolSnapshot(): { acquireMs: number; total: number; idle: nu
   return globalStore.__eventOsPoolSnapshot ?? { acquireMs: 0, total: 0, idle: 0, waiting: 0 };
 }
 
+export function resolveNonProductionStorePath(): string {
+  return resolveStorePath({
+    override: process.env.EVENT_OS_NON_PRODUCTION_STORE_PATH,
+    fixturesAllowed: fixturesAllowed(),
+    databaseUrl: databaseUrl(),
+    nodeEnv: process.env.NODE_ENV,
+  });
+}
+
 function storePath(): string {
-  return join(process.cwd(), "data", "event-os-non-production.json");
+  return resolveNonProductionStorePath();
 }
 
 function composeClock(): PlatformClock {
@@ -76,8 +86,15 @@ function seedSeatingLayout(store: PlatformStore, service: PlatformService): void
 }
 
 function fileRuntime(): Runtime {
-  const store = new FileBackedPlatformStore(storePath());
-  const options = platformOptions();
+  const path = storePath();
+  const store = new FileBackedPlatformStore(path);
+  const seatingV2Repository = new FileBackedSeatingV2Repository(seatingV2StorePathFor(path), {
+    platformStorePath: path,
+  });
+  const options = {
+    ...platformOptions(),
+    seatingV2Repository,
+  };
   const service = applySyntheticSnapshot(store, options);
   seedSeatingLayout(store, service);
   return {

@@ -4,7 +4,7 @@ import { AtelierSectionTabs } from "../../../../../components/atelier-section-ta
 import { AppShell } from "../../../../../components/shell";
 import { ActionResultBanner } from "../../../../../components/action-result-banner";
 import { HistoryDisclosure } from "../../../../../components/canonical-evidence";
-import { IdempotencyField } from "../../../../../components/atelier-pending-submit";
+import { IdempotencyField, PendingSubmit } from "../../../../../components/atelier-pending-submit";
 import { ProtectionMutationForm } from "../../../../../components/protection-mutation-form";
 import { SeatingRuleAuthoringFields } from "../../../../../components/seating-rule-authoring-fields";
 import { loadPresentedActionResult } from "../../../../../server/action-flash";
@@ -37,7 +37,7 @@ import {
 } from "../../../../../server/seating-actions";
 import { switchSeatingVerifyAsAction } from "../../../../../server/seating-verify-as-action";
 import { eventOsVerifyAsAvailable } from "../../../../../server/seating-verify-as";
-import { emitSettlementStage, LEGACY_S06_PUBLICATION_LABEL, PlatformError, seatingV2ReplacementEnabled } from "@maison-doclar/shared-platform";
+import { emitSettlementStage, LEGACY_S06_PUBLICATION_LABEL, PlatformError, retryLockApplies, seatingV2ReplacementEnabled } from "@maison-doclar/shared-platform";
 import { activateSeatingRuleAction, withdrawSeatingRuleAction } from "../../../../../server/seating-actions";
 
 function visibleSeatingRuns<T extends { id: string }>(runs: T[], currentRunId: string | undefined, limit = 12): T[] {
@@ -193,7 +193,7 @@ export default async function EventSeatingPage({
   const working = workspace.workingEdition as { id?: string; contentHash?: string; status?: string; version?: number } | undefined;
   const input = workspace.inputEdition as { id?: string; contentHash?: string; layoutContentHash?: string } | undefined;
   const publication = workspace.currentPublication as { id?: string; publicationNumber?: number; editionHash?: string } | undefined;
-  const verifyAs = eventOsVerifyAsAvailable();
+  const verifyAs = eventOsVerifyAsAvailable() && permissions.fixtureVerifyAs;
   return (
     <AppShell person={person} organisationName={organisation.displayName} eventName={event.name} eventId={event.id} current="/app/events">
       <AtelierPageHeader
@@ -243,7 +243,7 @@ export default async function EventSeatingPage({
         )}
         <p data-testid="seating-next-action">Next authorised action: {workspace.nextAction}</p>
         {permissions.evaluate ? (
-          <ProtectionMutationForm action={runS06EvaluationAction} className="actions" testId="seating-evaluate">
+          <ProtectionMutationForm action={runS06EvaluationAction.bind(null, event.id)} className="actions" testId="seating-evaluate">
             <Envelope fields={envelopeFields} />
             <IdempotencyField />
             <button type="submit" className="button">
@@ -260,7 +260,7 @@ export default async function EventSeatingPage({
           <section className="atelier-panel" data-testid="seating-verify-as">
             <h3>Synthetic verification</h3>
             <p>This switches the signed-in fixture role. It is not Access Administration and cannot be used under production authorisation.</p>
-            <ProtectionMutationForm action={switchSeatingVerifyAsAction} className="atelier-form" testId="seating-verify-as-form">
+            <ProtectionMutationForm action={switchSeatingVerifyAsAction.bind(null, event.id)} className="atelier-form" testId="seating-verify-as-form">
               <Envelope fields={envelopeFields} />
               <IdempotencyField />
               <label>
@@ -319,7 +319,7 @@ export default async function EventSeatingPage({
                     : "No active seating layout binding."}
           </p>
           {permissions.prepare && (workspace.seatingLayoutBindingCandidates?.length ?? 0) > 0 ? (
-            <ProtectionMutationForm action={proposeSeatingLayoutBindingAction} className="atelier-form" testId="seating-layout-binding-propose">
+            <ProtectionMutationForm action={proposeSeatingLayoutBindingAction.bind(null, event.id)} className="atelier-form" testId="seating-layout-binding-propose">
               <Envelope fields={envelopeFields} />
               <IdempotencyField />
               <label>
@@ -336,7 +336,7 @@ export default async function EventSeatingPage({
             </ProtectionMutationForm>
           ) : null}
           {permissions.ruleActivate && workspace.seatingLayoutBinding?.draftId ? (
-            <ProtectionMutationForm action={activateSeatingLayoutBindingAction} className="actions" testId="seating-layout-binding-activate">
+            <ProtectionMutationForm action={activateSeatingLayoutBindingAction.bind(null, event.id)} className="actions" testId="seating-layout-binding-activate">
               <Envelope fields={{ ...envelopeFields, bindingId: workspace.seatingLayoutBinding.draftId, expectedVersion: workspace.seatingLayoutBinding.draftVersion ?? 1 }} />
               <IdempotencyField />
               <p data-testid="seating-layout-binding-activate-identity">
@@ -346,14 +346,14 @@ export default async function EventSeatingPage({
             </ProtectionMutationForm>
           ) : null}
           {permissions.prepare && workspace.seatingLayoutBinding?.draftId ? (
-            <ProtectionMutationForm action={withdrawSeatingLayoutBindingAction} className="actions" testId="seating-layout-binding-withdraw-draft">
+            <ProtectionMutationForm action={withdrawSeatingLayoutBindingAction.bind(null, event.id)} className="actions" testId="seating-layout-binding-withdraw-draft">
               <Envelope fields={{ ...envelopeFields, bindingId: workspace.seatingLayoutBinding.draftId, expectedVersion: workspace.seatingLayoutBinding.draftVersion ?? 1 }} />
               <IdempotencyField />
               <button type="submit" className="button">Withdraw draft binding</button>
             </ProtectionMutationForm>
           ) : null}
           {permissions.ruleActivate && workspace.seatingLayoutBinding?.status === "BOUND" && workspace.seatingLayoutBinding.activeId ? (
-            <ProtectionMutationForm action={withdrawSeatingLayoutBindingAction} className="actions" testId="seating-layout-binding-withdraw">
+            <ProtectionMutationForm action={withdrawSeatingLayoutBindingAction.bind(null, event.id)} className="actions" testId="seating-layout-binding-withdraw">
               <Envelope fields={{ ...envelopeFields, bindingId: workspace.seatingLayoutBinding.activeId, expectedVersion: workspace.seatingLayoutBinding.activeVersion ?? 1 }} />
               <IdempotencyField />
               <button type="submit" className="button">Withdraw active binding</button>
@@ -382,7 +382,7 @@ export default async function EventSeatingPage({
           <p>Optional coded protection constraints only.</p>
         </article>
         {permissions.prepare ? (
-          <ProtectionMutationForm action={freezeSeatingInputsAction} className="actions" testId="seating-freeze">
+          <ProtectionMutationForm action={freezeSeatingInputsAction.bind(null, event.id)} className="actions" testId="seating-freeze">
             <Envelope fields={envelopeFields} />
             <IdempotencyField />
             <button
@@ -445,15 +445,30 @@ export default async function EventSeatingPage({
                     <li key={item.id}>
                       {item.preview}
                       {canActivate ? (
-                        <ProtectionMutationForm action={activateSeatingRuleAction} className="actions">
-                          <Envelope fields={{ ...envelopeFields, editionId: item.id }} />
+                        <ProtectionMutationForm action={activateSeatingRuleAction.bind(null, event.id)} className="actions">
+                          <Envelope
+                            fields={{
+                              ...envelopeFields,
+                              editionId: item.id,
+                              expectedVersion: item.editionNo ?? 1,
+                              expectedContentHash: item.contentHash ?? "",
+                            }}
+                          />
                           <IdempotencyField />
                           <button type="submit" className="button secondary">Activate</button>
                         </ProtectionMutationForm>
                       ) : null}
                       {(item.status === "DRAFT" || item.status === "ACTIVE") && permissions.constraintManage ? (
-                        <ProtectionMutationForm action={withdrawSeatingRuleAction} className="actions">
-                          <Envelope fields={{ ...envelopeFields, editionId: item.id, reason: "Withdrawn from governing set" }} />
+                        <ProtectionMutationForm action={withdrawSeatingRuleAction.bind(null, event.id)} className="actions">
+                          <Envelope
+                            fields={{
+                              ...envelopeFields,
+                              editionId: item.id,
+                              expectedVersion: item.editionNo ?? 1,
+                              expectedContentHash: item.contentHash ?? "",
+                              reason: "Withdrawn from governing set",
+                            }}
+                          />
                           <IdempotencyField />
                           <button type="submit" className="button secondary">Withdraw</button>
                         </ProtectionMutationForm>
@@ -466,7 +481,7 @@ export default async function EventSeatingPage({
           );
         })}
         {permissions.constraintManage ? (
-          <ProtectionMutationForm action={createSeatingConstraintAction} className="atelier-form seating-form" testId="seating-constraint-form">
+          <ProtectionMutationForm action={createSeatingConstraintAction.bind(null, event.id)} className="atelier-form seating-form" testId="seating-constraint-form">
             <Envelope fields={envelopeFields} />
             <IdempotencyField />
             <fieldset>
@@ -522,26 +537,27 @@ export default async function EventSeatingPage({
               {item.preview ?? `${item.setCode} · ${item.releaseState}`}. Reserved does not mean seated.
               {item.editionNo != null ? ` Edition ${item.editionNo}.` : ""}
               {permissions.ruleActivate && item.releaseState === "DRAFT" ? (
-                <ProtectionMutationForm action={activateReservationBlockAction} className="actions">
-                  <Envelope fields={{ ...envelopeFields, blockId: item.id, expectedContentHash: item.contentHash ?? "" }} />
+                <ProtectionMutationForm action={activateReservationBlockAction.bind(null, event.id)} className="actions">
+                  <Envelope fields={{ ...envelopeFields, blockId: item.id, expectedVersion: item.editionNo ?? 1, expectedContentHash: item.contentHash ?? "" }} />
                   <IdempotencyField />
                   <button type="submit" className="button secondary">Activate reservation</button>
                 </ProtectionMutationForm>
               ) : null}
               {permissions.reservationManage && (item.releaseState === "DRAFT" || item.releaseState === "ACTIVE") ? (
-                <ProtectionMutationForm action={withdrawReservationBlockAction} className="actions">
-                  <Envelope fields={{ ...envelopeFields, blockId: item.id, expectedContentHash: item.contentHash ?? "", reason: "Withdrawn from governing set" }} />
+                <ProtectionMutationForm action={withdrawReservationBlockAction.bind(null, event.id)} className="actions">
+                  <Envelope fields={{ ...envelopeFields, blockId: item.id, expectedVersion: item.editionNo ?? 1, expectedContentHash: item.contentHash ?? "", reason: "Withdrawn from governing set" }} />
                   <IdempotencyField />
                   <button type="submit" className="button secondary">Withdraw reservation</button>
                 </ProtectionMutationForm>
               ) : null}
               {permissions.reservationManage && item.releaseState === "ACTIVE" ? (
                 <>
-                  <ProtectionMutationForm action={supersedeReservationBlockAction} className="actions" testId={`seating-reservation-successor-${item.id}`}>
+                  <ProtectionMutationForm action={supersedeReservationBlockAction.bind(null, event.id)} className="actions" testId={`seating-reservation-successor-${item.id}`}>
                     <Envelope
                       fields={{
                         ...envelopeFields,
                         blockId: item.id,
+                        expectedVersion: item.editionNo ?? 1,
                         expectedContentHash: item.contentHash ?? "",
                         eligibleGuestIds: workspace.guests.filter((guest) => guest.eligible).map((guest) => guest.id).join(","),
                         exactCount: item.exact ?? 2,
@@ -550,8 +566,8 @@ export default async function EventSeatingPage({
                     <IdempotencyField />
                     <button type="submit" className="button secondary">Create successor reservation</button>
                   </ProtectionMutationForm>
-                  <ProtectionMutationForm action={releaseReservationBlockAction} className="actions">
-                    <Envelope fields={{ ...envelopeFields, blockId: item.id, expectedContentHash: item.contentHash ?? "" }} />
+                  <ProtectionMutationForm action={releaseReservationBlockAction.bind(null, event.id)} className="actions">
+                    <Envelope fields={{ ...envelopeFields, blockId: item.id, expectedVersion: item.editionNo ?? 1, expectedContentHash: item.contentHash ?? "" }} />
                     <IdempotencyField />
                     <button type="submit" className="button secondary">Release reservation</button>
                   </ProtectionMutationForm>
@@ -561,7 +577,7 @@ export default async function EventSeatingPage({
           ))}
         </ul>
         {permissions.reservationManage ? (
-          <ProtectionMutationForm action={createReservationBlockAction} className="atelier-form seating-form" testId="seating-reservation-form">
+          <ProtectionMutationForm action={createReservationBlockAction.bind(null, event.id)} className="atelier-form seating-form" testId="seating-reservation-form">
             <Envelope fields={envelopeFields} />
             <IdempotencyField />
             <fieldset>
@@ -603,7 +619,7 @@ export default async function EventSeatingPage({
         <h2>Runs</h2>
         <p>The solver recommends. Authorised people decide. Cancellation asks the worker to stop; a running attempt is not instantly erased.</p>
         {permissions.run && input ? (
-          <ProtectionMutationForm action={launchSeatingRunAction} className="atelier-form seating-form" testId="seating-run-form">
+          <ProtectionMutationForm action={launchSeatingRunAction.bind(null, event.id)} className="atelier-form seating-form" testId="seating-run-form">
             <Envelope fields={{ ...envelopeFields, inputEditionId: input.id ?? "" }} />
             <IdempotencyField />
             <fieldset>
@@ -632,14 +648,14 @@ export default async function EventSeatingPage({
                 {run.validatorVerdict === "INFEASIBLE" || run.status === "INFEASIBLE" ? " · No safe seating plan satisfies every hard rule." : ""}
                 {run.violatedSummary ? ` · Violated: ${run.violatedSummary}` : ""}
                 {permissions.edit && (seatingV2ReplacementEnabled() ? run.validatorVerdict === "FEASIBLE" : run.status === "FEASIBLE" || run.status === "INFEASIBLE") ? (
-                  <ProtectionMutationForm action={adoptSeatingRunAction} className="actions">
+                  <ProtectionMutationForm action={adoptSeatingRunAction.bind(null, event.id)} className="actions">
                     <Envelope fields={{ ...envelopeFields, runId: run.id }} />
                     <IdempotencyField />
                     <button type="submit" className="button secondary">Adopt run</button>
                   </ProtectionMutationForm>
                 ) : null}
                 {permissions.run && (run.status === "QUEUED" || run.status === "RUNNING") ? (
-                  <ProtectionMutationForm action={cancelSeatingRunAction} className="actions">
+                  <ProtectionMutationForm action={cancelSeatingRunAction.bind(null, event.id)} className="actions">
                     <Envelope fields={{ ...envelopeFields, runId: run.id, expectedVersion: 0 }} />
                     <IdempotencyField />
                     <button type="submit" className="button secondary">Cancel run</button>
@@ -681,8 +697,22 @@ export default async function EventSeatingPage({
           </div>
         </div>
         {permissions.edit && (working?.status === "DRAFT" || working?.status === "WORKING") ? (
-          <ProtectionMutationForm action={applySeatingChangeAction} className="atelier-form seating-form" testId="seating-edit-form">
-            <Envelope fields={{ ...envelopeFields, editionId: working.id ?? "", expectedVersion: working.version ?? 0 }} />
+          <ProtectionMutationForm action={applySeatingChangeAction.bind(null, event.id)} className="atelier-form seating-form" testId="seating-edit-form">
+            <div
+              hidden
+              data-testid="seating-edit-identity"
+              data-edition-id={working.id ?? ""}
+              data-edition-version={String(working.version ?? 0)}
+              data-edition-hash={working.contentHash ?? ""}
+            />
+            <Envelope
+              fields={{
+                ...envelopeFields,
+                editionId: working.id ?? "",
+                expectedVersion: working.version ?? 0,
+                expectedContentHash: working.contentHash ?? "",
+              }}
+            />
             <IdempotencyField />
             <fieldset>
               <legend>Apply a seating change</legend>
@@ -709,9 +739,16 @@ export default async function EventSeatingPage({
                 Target seat
                 <select name="targetPositionId">
                   <option value="">Choose seat</option>
-                  {workspace.positions.map((position) => (
-                    <option key={position.id} value={position.positionToken}>{position.positionToken}</option>
-                  ))}
+                  {workspace.positions.map((position) => {
+                    const occupied = workspace.workingAssignments.some(
+                      (item) => item.state === "SEATED" && item.positionId === position.positionToken,
+                    );
+                    return (
+                      <option key={position.id} value={position.positionToken} data-occupied={occupied ? "true" : "false"}>
+                        {position.positionToken}
+                      </option>
+                    );
+                  })}
                 </select>
               </label>
               <label>
@@ -731,9 +768,20 @@ export default async function EventSeatingPage({
                 <option value="GOVERNED_UNSEATED">Governed exception</option>
               </select>
             </label>
-            <button type="submit" className="button">
+            <PendingSubmit
+              locked={
+                Boolean(resultId) &&
+                (presented.mutationLocked ||
+                  presented.retryLock?.actionScope === "seating.plan.edit" ||
+                  retryLockApplies(presented.retryLock, {
+                    actionScope: "seating.plan.edit",
+                    subjectId: working.id ?? "",
+                    attemptedVersion: working.version,
+                  }))
+              }
+            >
               Apply seating change
-            </button>
+            </PendingSubmit>
           </ProtectionMutationForm>
         ) : (
           <p>Adopt a run before editing seats.</p>
@@ -759,22 +807,29 @@ export default async function EventSeatingPage({
         <h3>Specialist reviews</h3>
         <ul>{workspace.reviews.map((item) => <li key={item.id}>{item.domain} · {item.reviewerLabel} · {item.decision} · {item.reason}</li>)}</ul>
         {permissions.submit && (working?.status === "DRAFT" || working?.status === "WORKING") ? (
-          <ProtectionMutationForm action={submitSeatingPlanAction} className="actions">
-            <Envelope fields={{ ...envelopeFields, editionId: working.id ?? "" }} />
+          <ProtectionMutationForm action={submitSeatingPlanAction.bind(null, event.id)} className="actions">
+            <Envelope
+              fields={{
+                ...envelopeFields,
+                editionId: working.id ?? "",
+                expectedVersion: working.version ?? 0,
+                expectedContentHash: working.contentHash ?? "",
+              }}
+            />
             <IdempotencyField />
             <button type="submit" className="button">Submit seating plan</button>
           </ProtectionMutationForm>
         ) : null}
         {permissions.submit && working?.status === "SUBMITTED" ? (
-          <ProtectionMutationForm action={recallSeatingPlanAction} className="actions" testId="seating-recall">
+          <ProtectionMutationForm action={recallSeatingPlanAction.bind(null, event.id)} className="actions" testId="seating-recall">
             <Envelope fields={{ ...envelopeFields, editionId: working.id ?? "", expectedVersion: working.version ?? 0, expectedContentHash: working.contentHash ?? "" }} />
             <IdempotencyField />
             <button type="submit" className="button secondary">Recall submitted plan</button>
           </ProtectionMutationForm>
         ) : null}
         {(permissions.reviewProtocol || permissions.reviewAccessibility || permissions.reviewSecurity) && working?.status === "SUBMITTED" && workspace.implicatedReviewDomains.length ? (
-          <ProtectionMutationForm action={decideSeatingReviewAction} className="atelier-form seating-form" testId="seating-review-form">
-            <Envelope fields={{ ...envelopeFields, editionId: working.id ?? "", editionHash: working.contentHash ?? "", expectedVersion: working.version ?? 0 }} />
+          <ProtectionMutationForm action={decideSeatingReviewAction.bind(null, event.id)} className="atelier-form seating-form" testId="seating-review-form">
+            <Envelope fields={{ ...envelopeFields, editionId: working.id ?? "", editionHash: working.contentHash ?? "", expectedVersion: working.version ?? 0, expectedContentHash: working.contentHash ?? "" }} />
             <IdempotencyField />
             <fieldset>
               <legend>Record specialist review</legend>
@@ -802,8 +857,8 @@ export default async function EventSeatingPage({
           </ProtectionMutationForm>
         ) : null}
         {permissions.approve && working?.status === "SUBMITTED" ? (
-          <ProtectionMutationForm action={decideSeatingApprovalAction} className="actions" testId="seating-approve">
-            <Envelope fields={{ ...envelopeFields, editionId: working.id ?? "", editionHash: working.contentHash ?? "", expectedVersion: working.version ?? 0 }} />
+          <ProtectionMutationForm action={decideSeatingApprovalAction.bind(null, event.id)} className="actions" testId="seating-approve">
+            <Envelope fields={{ ...envelopeFields, editionId: working.id ?? "", editionHash: working.contentHash ?? "", expectedVersion: working.version ?? 0, expectedContentHash: working.contentHash ?? "" }} />
             <IdempotencyField />
             <input type="hidden" name="decision" value="APPROVED" />
             <button type="submit" className="button">Approve seating plan</button>
@@ -835,15 +890,15 @@ export default async function EventSeatingPage({
           <ul>{workspace.publications.map((item) => <li key={item.id}>{item.status} · {item.publicationNumber} · {item.editionHash}</li>)}</ul>
         </article>
         {permissions.publish && working?.status === "APPROVED" ? (
-          <ProtectionMutationForm action={publishSeatingPlanAction} className="actions" testId="seating-publish">
-            <Envelope fields={{ ...envelopeFields, editionId: working.id ?? "", editionHash: working.contentHash ?? "" }} />
+          <ProtectionMutationForm action={publishSeatingPlanAction.bind(null, event.id)} className="actions" testId="seating-publish">
+            <Envelope fields={{ ...envelopeFields, editionId: working.id ?? "", editionHash: working.contentHash ?? "", expectedVersion: working.version ?? 0, expectedContentHash: working.contentHash ?? "" }} />
             <IdempotencyField />
             <p>Published without sending messages, issuing credentials or changing check-in.</p>
             <button type="submit" className="button">Publish seating plan</button>
           </ProtectionMutationForm>
         ) : null}
         {permissions.exportJob ? (
-          <ProtectionMutationForm action={requestSeatingExportAction} className="atelier-form seating-form" testId="seating-export">
+          <ProtectionMutationForm action={requestSeatingExportAction.bind(null, event.id)} className="atelier-form seating-form" testId="seating-export">
             <Envelope fields={{ ...envelopeFields, publicationId: publication?.id ?? "", editionId: working?.id ?? "" }} />
             <IdempotencyField />
             <fieldset>

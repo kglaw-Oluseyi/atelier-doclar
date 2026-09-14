@@ -227,7 +227,17 @@ export {
 } from "./mutation-replay.js";
 export { parseCanonicalCsv, CANONICAL_CSV_COLUMNS } from "./guest-intake.js";
 export { seededPermissions, seededRoles, permissionsForRole, roleIdForKey, roleKeyForId } from "./catalog.js";
-export { authorize, assignmentIsActive, assignmentCoversScope, canSeeClient, canSeeEvent, singleCoveringRoleKey, type ActorSnapshot, type PolicyDecision } from "./policy.js";
+export {
+  authorize,
+  assignmentIsActive,
+  assignmentCoversScope,
+  canSeeClient,
+  canSeeEvent,
+  singleCoveringRoleKey,
+  type ActorSnapshot,
+  type PolicyDecision,
+} from "./policy.js";
+export { resolveTrustedSeatingAssignment, seatingAssignmentAllowsPermission } from "./seating-v2-trusted-assignment.js";
 export { allowedNextPhases, assertPhaseTransition, isScaffoldedPhase, SCAFFOLDED_PHASES } from "./transitions.js";
 export { redactValue, stableHash } from "./redaction.js";
 export {
@@ -1035,6 +1045,11 @@ export {
   findSeatingV2ReusableRun,
 } from "./seating-v2-run-identity.js";
 export { emptySeatingV2State, SEATING_V2_COLLECTIONS, SEATING_V2_PURGE_CONFIRMATION } from "./seating-v2-state.js";
+export type {
+  SeatingV2State,
+  SeatingV2LayoutBinding,
+  SeatingV2Collection,
+} from "./seating-v2-state.js";
 export type { SeatingV2Repository, SeatingV2Transaction } from "./seating-v2-repository.js";
 export { MemorySeatingV2Repository, MemorySeatingV2Store } from "./memory-seating-v2-store.js";
 export {
@@ -1065,7 +1080,7 @@ export {
   withSettlementTransaction,
 } from "./seating-settlement-trace.js";
 export type { SeatingSettlementStage, SeatingSettlementTrace } from "./seating-settlement-trace.js";
-export { seatingV2ReplacementEnabled } from "./seating-v2-flag.js";
+export { requireSeatingV2Writable, seatingV2ReplacementEnabled } from "./seating-v2-flag.js";
 export { LEGACY_S06_PUBLICATION_LABEL, currentSeatingV2RunId } from "./seating-v2-workspace.js";
 export type { SeatingV2RuleContent } from "./seating-v2-schemas.js";
 export { snapshotGuestCohortAdapter, snapshotLayoutAdapter, seatingToken } from "./seating-adapters.js";

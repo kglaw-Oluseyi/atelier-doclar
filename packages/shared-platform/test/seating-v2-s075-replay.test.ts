@@ -36,13 +36,23 @@ function planner() {
 function director() {
   return actor(people.personDirector, { now: NOW, correlationId: "s075-replay-director" });
 }
-function envelope(assignmentId: string, key: string) {
-  return {
+function envelope(
+  assignmentId: string,
+  key: string,
+  row?: { contentHash: string; editionNo?: number; version?: number },
+) {
+  const base = {
     organisationId: people.orgMaison,
     eventId: people.eventAlphaOne,
     actorAssignmentId: assignmentId,
     idempotencyKey: key.length >= 12 ? key : `s075-replay-${key}`,
   };
+  if (!row) return base;
+  const expectedVersion = row.version ?? row.editionNo;
+  if (typeof expectedVersion !== "number") {
+    throw new Error("version and content hash are required");
+  }
+  return { ...base, expectedVersion, expectedContentHash: row.contentHash };
 }
 
 function keepApart(guestA: string, guestB: string): SeatingV2RuleContent {
@@ -104,7 +114,7 @@ async function activateKeepApart(
   key: string,
 ) {
   const created = await v2.createRule(planner(), envelope(people.assignPlanner, `${key}-c`), keepApart(guestA, guestB));
-  await v2.activateRule(director(), envelope(people.assignDirector, `${key}-a`), { editionId: created.value.id });
+  await v2.activateRule(director(), envelope(people.assignDirector, `${key}-a`, created.value), { editionId: created.value.id });
 }
 
 describe("S075 run reuse identity", () => {
@@ -225,7 +235,7 @@ describe("S075 run reuse identity", () => {
       eligibleMemberIds: [guests[0]!.id],
       targets: [{ type: "TABLE", idOrCode: tableId }],
     });
-    await v2.activateReservation(director(), envelope(people.assignDirector, "revert-res-a"), {
+    await v2.activateReservation(director(), envelope(people.assignDirector, "revert-res-a", reserved.value), {
       editionId: reserved.value.id,
     });
     const withReservation = await v2.freezePackage(planner(), envelope(people.assignPlanner, "revert-freeze-1"), {
@@ -234,7 +244,7 @@ describe("S075 run reuse identity", () => {
     const runReserved = await v2.launchRun(planner(), envelope(people.assignPlanner, "revert-run-1"), {
       packageId: withReservation.value.id,
     });
-    await v2.withdrawReservation(planner(), envelope(people.assignPlanner, "revert-res-w"), {
+    await v2.withdrawReservation(planner(), envelope(people.assignPlanner, "revert-res-w", reserved.value), {
       editionId: reserved.value.id,
       reason: "Withdraw reservation for S075 replay",
     });

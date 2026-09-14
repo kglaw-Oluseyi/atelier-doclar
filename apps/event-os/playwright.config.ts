@@ -6,6 +6,7 @@ const appDir = dirname(fileURLToPath(import.meta.url));
 
 const productionLike = process.env.PLAYWRIGHT_PROD === "1" || process.env.CI === "1";
 const live = process.env.PLAYWRIGHT_LIVE === "1";
+const checkpoint = Boolean(process.env.EVENT_OS_CHECKPOINT_MANIFEST?.trim());
 /** Use installed Google Chrome on Windows when Playwright-managed browsers are unavailable. */
 const chromiumUse =
   process.platform === "win32" ? ({ channel: "chrome" as const } as const) : ({} as const);
@@ -24,7 +25,8 @@ export default defineConfig({
     ...chromiumUse,
   },
   projects: [{ name: "chromium", use: { browserName: "chromium" as const, ...chromiumUse } }],
-  webServer: live
+  // Checkpointed Section 13 phases share a temp file store and manage next-dev themselves.
+  webServer: live || checkpoint
     ? undefined
     : {
         command: productionLike
@@ -38,7 +40,15 @@ export default defineConfig({
           const env = {
             ...process.env,
             PORT: "3020",
-            NODE_OPTIONS: [process.env.NODE_OPTIONS, "--max-old-space-size=8192"].filter(Boolean).join(" "),
+            // Prefer a host-safe default. Forcing 16GiB (or even 8GiB) on an 8GiB laptop
+            // made next-dev hit its memory threshold and restart mid Section 13.
+            // Override with EVENT_OS_E2E_HEAP_MB on larger runners (e.g. CI).
+            NODE_OPTIONS: [
+              process.env.NODE_OPTIONS,
+              `--max-old-space-size=${process.env.EVENT_OS_E2E_HEAP_MB ?? "4096"}`,
+            ]
+              .filter(Boolean)
+              .join(" "),
             EVENT_OS_ALLOW_FIXTURES: "1",
             EVENT_OS_TEST_NOW: "2026-09-05T14:00:00.000Z",
             CI: process.env.CI ?? "1",
@@ -65,6 +75,9 @@ export default defineConfig({
               process.env.EVENT_OS_DIAGNOSTIC_TOKEN ?? "s073-local-diagnostic-token-not-for-production",
           };
           delete env.DATABASE_URL;
+          delete env.PLAYWRIGHT_LIVE;
+          delete env.PLAYWRIGHT_BASE_URL;
+          delete env.PLAYWRIGHT_EXPECTED_SHA;
           return env;
         })(),
       },

@@ -309,6 +309,8 @@ export function buildSeatingV2Workspace(
         status: item.lifecycle,
         preview: `${item.kind.replaceAll("_", " ")} · ${item.scope} · ${subjectCopy}${targetCopy} · ${item.hardness} · ${item.lifecycle} · ${authority} · ${decidedAt} · ${sentence} · ${item.contentHash.slice(0, 12)}`,
         reviewDomain: item.specialistDomain === "NONE" ? undefined : item.specialistDomain,
+        contentHash: item.contentHash,
+        editionNo: item.editionNo,
       };
     }),
     implicatedReviewDomains: [...new Set(rules.filter((item) => item.lifecycle === "ACTIVE" && item.specialistDomain !== "NONE").map((item) => item.specialistDomain))] as SeatingWorkspaceView["implicatedReviewDomains"],

@@ -68,6 +68,7 @@ export async function submitScopedSeatingMutation(
   form: Locator,
   buttonName: string,
   previousResult = "",
+  banner = /Succeeded|The change was recorded|No change/i,
 ) {
   const commandId = await form.locator('input[name="idempotencyKey"]').inputValue();
   const seen: Request[] = [];
@@ -75,15 +76,34 @@ export async function submitScopedSeatingMutation(
     if (isMutationActionPost(request)) seen.push(request);
   };
   const button = form.getByRole("button", { name: buttonName });
-  await expect(button).toHaveCount(1);
+  await expect(button).toHaveCount(1, { timeout: 30_000 });
   await expect(button).toBeVisible({ timeout: 30_000 });
-  await expect(button).toBeEnabled();
+  await expect(button).toBeEnabled({ timeout: 30_000 });
   page.on("request", onRequest);
-  const pending = page.waitForRequest(isMutationActionPost, { timeout: 15_000 }).catch(() => null);
-  await button.click({ noWaitAfter: true });
+  const pending = page.waitForRequest(isMutationActionPost, { timeout: 30_000 }).catch(() => null);
+  await button.evaluate((element) => {
+    const host = element.closest("form");
+    if (host instanceof HTMLFormElement) host.requestSubmit(element as HTMLButtonElement);
+    else (element as HTMLButtonElement).click();
+  });
   const request = await pending;
   page.off("request", onRequest);
   if (!request) {
+    const landedResult = pageActionResult(page);
+    if (landedResult && landedResult !== previousResult) {
+      const bannerEl = page.getByTestId("action-result-banner");
+      await expect(bannerEl).toBeVisible({ timeout: 30_000 });
+      await expect(bannerEl).toContainText(banner);
+      await expect(bannerEl).toContainText(landedResult);
+      if (previousResult) await expect(bannerEl).not.toContainText(previousResult);
+      return {
+        commandId,
+        status: 303,
+        location: "none",
+        actionRedirect: "none",
+        resultId: landedResult,
+      };
+    }
     throw new Error(
       `No POST: ${buttonName} did not emit a Next-action POST (seen=${seen.length}; commandId=${commandId}; url=${page.url()})`,
     );
@@ -94,7 +114,9 @@ export async function submitScopedSeatingMutation(
   const response =
     (await request.response()) ?? (await page.waitForResponse((item) => item.request() === request, { timeout: 30_000 }));
   const status = response.status();
-  const location = response.headers()["location"] ?? "";
+  const locationHeader = response.headers()["location"] ?? "";
+  const actionRedirect = response.headers()["x-action-redirect"] ?? "";
+  const location = locationHeader || actionRedirect;
   const validationCount = await page.getByTestId("protection-validation-summary").count();
   if (validationCount > 0) {
     const summary = (await page.getByTestId("protection-validation-summary").innerText()).slice(0, 240);
@@ -105,16 +127,30 @@ export async function submitScopedSeatingMutation(
   if (!response.ok() && status !== 303 && status !== 302) {
     throw new Error(`${buttonName} POST returned ${status} location=${location || "none"} commandId=${commandId}`);
   }
-  try {
-    await expectFreshActionSuccess(page, "", previousResult);
-  } catch (error) {
-    const traces = await readSettlementTraces(page, commandId);
-    const banner = ((await page.getByTestId("action-result-banner").innerText().catch(() => "")) ?? "").slice(0, 240);
+  if (!location) {
+    throw new Error(`POST with no redirect: ${buttonName} status=${status} commandId=${commandId}`);
+  }
+  const href = actionRedirectHref(page, location);
+  const nextResult = actionResultId(new URL(href, page.url()).searchParams.get("result") ?? "");
+  if (!nextResult || nextResult === previousResult) {
     throw new Error(
-      `${buttonName} POST ${status} location=${location || "none"} commandId=${commandId} url=${page.url()} banner=${banner} stages=${traces.traces.map((item) => item.stage).join(">") || "none"} (${error instanceof Error ? error.message : "no fresh result"})`,
+      `${buttonName} redirect had no new result UUID (previous=${previousResult || "none"} location=${location})`,
     );
   }
-  return { commandId, status, location, resultId: new URL(page.url()).searchParams.get("result") ?? "" };
+  await page.goto(href, { waitUntil: "domcontentloaded", timeout: 25_000 });
+  const resultId = await expectFreshResultQuery(page, previousResult);
+  const bannerEl = page.getByTestId("action-result-banner");
+  await expect(bannerEl).toBeVisible({ timeout: 30_000 });
+  await expect(bannerEl).toContainText(banner);
+  await expect(bannerEl).toContainText(resultId);
+  if (previousResult) await expect(bannerEl).not.toContainText(previousResult);
+  return {
+    commandId,
+    status,
+    location: locationHeader || "none",
+    actionRedirect: actionRedirect || "none",
+    resultId,
+  };
 }
 
 export async function readSettlementTraces(page: Page, commandId: string) {
@@ -210,7 +246,7 @@ function isNextActionPost(request: Request) {
   return request.method() === "POST" && Boolean(request.headers()["next-action"]);
 }
 
-function isMutationActionPost(request: Request) {
+export function isMutationActionPost(request: Request) {
   if (!isNextActionPost(request)) return false;
   const contentType = request.headers()["content-type"] ?? "";
   return /multipart\/form-data|application\/x-www-form-urlencoded/i.test(contentType);

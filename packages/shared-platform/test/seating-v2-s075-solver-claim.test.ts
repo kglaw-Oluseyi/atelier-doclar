@@ -18,13 +18,23 @@ function planner() {
 function director() {
   return actor(people.personDirector, { now: NOW, correlationId: "s075-claim-director" });
 }
-function envelope(assignmentId: string, key: string) {
-  return {
+function envelope(
+  assignmentId: string,
+  key: string,
+  row?: { contentHash: string; editionNo?: number; version?: number },
+) {
+  const base = {
     organisationId: people.orgMaison,
     eventId: people.eventAlphaOne,
     actorAssignmentId: assignmentId,
     idempotencyKey: key,
   };
+  if (!row) return base;
+  const expectedVersion = row.version ?? row.editionNo;
+  if (typeof expectedVersion !== "number") {
+    throw new Error("version and content hash are required");
+  }
+  return { ...base, expectedVersion, expectedContentHash: row.contentHash };
 }
 
 function requireTable(guestIds: string[], tableObjectId: string): SeatingV2RuleContent {
@@ -298,7 +308,7 @@ describe("S075 solver-claim honesty", () => {
     const v2 = service.seatingV2Commands();
     const create = async (content: SeatingV2RuleContent, key: string) => {
       const draft = await v2.createRule(planner(), envelope(people.assignPlanner, `${key}-c`), content);
-      await v2.activateRule(director(), envelope(people.assignDirector, `${key}-a`), { editionId: draft.value.id });
+      await v2.activateRule(director(), envelope(people.assignDirector, `${key}-a`, draft.value), { editionId: draft.value.id });
     };
     await create(requireTable([g1.id, g4.id], t1), "s075-claim-r1");
     await create(keepApart(g1.id, g2.id), "s075-claim-r2");

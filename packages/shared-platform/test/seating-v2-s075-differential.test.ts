@@ -26,13 +26,23 @@ function planner() {
 function director() {
   return actor(people.personDirector, { now: NOW, correlationId: "s075-diff-director" });
 }
-function envelope(assignmentId: string, key: string) {
-  return {
+function envelope(
+  assignmentId: string,
+  key: string,
+  row?: { contentHash: string; editionNo?: number; version?: number },
+) {
+  const base = {
     organisationId: people.orgMaison,
     eventId: people.eventAlphaOne,
     actorAssignmentId: assignmentId,
     idempotencyKey: key.length >= 12 ? key : `s075-diff-${key}`,
   };
+  if (!row) return base;
+  const expectedVersion = row.version ?? row.editionNo;
+  if (typeof expectedVersion !== "number") {
+    throw new Error("version and content hash are required");
+  }
+  return { ...base, expectedVersion, expectedContentHash: row.contentHash };
 }
 function cas(layout: { id: string; version: number; currentRevisionNumber: number }) {
   return {
@@ -191,7 +201,7 @@ async function buildInstance(spec: InstanceSpec) {
       envelope(people.assignPlanner, `${spec.id}-rule-c`),
       ruleContent(spec.rule, guests.map((item) => item.id), tableId),
     );
-    await v2.activateRule(director(), envelope(people.assignDirector, `${spec.id}-rule-a`), { editionId: created.value.id });
+    await v2.activateRule(director(), envelope(people.assignDirector, `${spec.id}-rule-a`, created.value), { editionId: created.value.id });
   }
   if (spec.reserve) {
     const reserved = await v2.createReservation(planner(), envelope(people.assignPlanner, `${spec.id}-res-c`), {
@@ -199,7 +209,7 @@ async function buildInstance(spec: InstanceSpec) {
       eligibleMemberIds: [guests[spec.reserve.guestIndex]!.id],
       targets: [{ type: "TABLE", idOrCode: published.tables[spec.reserve.tableIndex]!.objectId }],
     });
-    await v2.activateReservation(director(), envelope(people.assignDirector, `${spec.id}-res-a`), { editionId: reserved.value.id });
+    await v2.activateReservation(director(), envelope(people.assignDirector, `${spec.id}-res-a`, reserved.value), { editionId: reserved.value.id });
   }
   const frozen = await v2.freezePackage(planner(), envelope(people.assignPlanner, `${spec.id}-freeze`), {
     seed: `${S075_DIFFERENTIAL_SEED}:${spec.id}`,

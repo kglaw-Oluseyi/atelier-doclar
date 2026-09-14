@@ -559,6 +559,27 @@ export interface PlatformStore {
   readonly productionStatus: StoreProductionStatus;
   snapshot(): PlatformSnapshot;
   replace(next: PlatformSnapshot): void;
+  loadEventById(eventId: string): EventRecord | undefined;
+  loadLayoutPublicationById(
+    id: string,
+    organisationId: string,
+    eventId: string,
+  ): LayoutPublication | undefined;
+  loadLayoutRevisionById(
+    id: string,
+    organisationId: string,
+    eventId: string,
+  ): LayoutRevision | undefined;
+  loadCurrentLayoutPublication(
+    organisationId: string,
+    eventId: string,
+    layoutId: string,
+  ): LayoutPublication | undefined;
+  listOperationalGuestsByEventId(organisationId: string, eventId: string): OperationalGuest[];
+  listRsvpResponsesByEventId(organisationId: string, eventId: string): RsvpResponse[];
+  listDiscoveryEngagementsByEventId(organisationId: string, eventId: string): DiscoveryEngagement[];
+  listPublishedEventBriefsForEvent(organisationId: string, eventId: string): EventBriefEdition[];
+  listRiskApplicabilitySnapshotsByEventId(organisationId: string, eventId: string): RiskApplicabilitySnapshot[];
 }
 
 export function emptySnapshot(): PlatformSnapshot {

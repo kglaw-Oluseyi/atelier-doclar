@@ -2,13 +2,23 @@ import { randomUUID } from "node:crypto";
 import { exactHash } from "./eec-hash.js";
 import { appliedMutationEffect, notAppliedMutationEffect, replayedMutationEffect, type DurableMutationEffect } from "./durable-mutation-effect.js";
 import { PlatformError } from "./errors.js";
+import type { OperationalGuest } from "./guest-schemas.js";
 import { authorize, canSeeEvent, type ActorSnapshot } from "./policy.js";
+import { resolveTrustedSeatingAssignment, seatingAssignmentAllowsPermission } from "./seating-v2-trusted-assignment.js";
 import { roleKeyForId } from "./catalog.js";
 import { seatingDisclosureForRole } from "./seating-workspace.js";
 import { buildSeatingV2Workspace } from "./seating-v2-workspace.js";
 import { emptySeatingV2State, SEATING_V2_WORKSPACE_COLLECTIONS, type SeatingV2State } from "./seating-v2-state.js";
 import type { SeatingWorkspaceView } from "./seating-workspace.js";
-import { requireSeatingLayoutAuthority } from "./seating-v2-layout-binding.js";
+import {
+  activeSeatingLayoutBindings,
+  boundLayoutFromLoadedPublication,
+} from "./seating-v2-layout-binding.js";
+import {
+  briefFactsFromRecords,
+  guestCohortFromRecords,
+  protectionFactsFromRecords,
+} from "./seating-adapters.js";
 import { assertSeatingV2RuleAuthoring } from "./seating-v2-authoring.js";
 import { assertSeatingV2CompiledRequest, compileSeatingV2Request } from "./seating-v2-compiler.js";
 import {
@@ -60,7 +70,9 @@ import type {
   SeatingV2SpecialistReview,
 } from "./seating-v2-state.js";
 import { validateSeatingV2 } from "./seating-v2-validator.js";
-import type { PermissionKey } from "./schemas.js";
+import type { EventRecord, PermissionKey } from "./schemas.js";
+import type { LayoutPublication } from "./layout-assurance-schemas.js";
+import type { LayoutRevision } from "./venue-schemas.js";
 import type { PlatformSnapshot } from "./store.js";
 
 export type SeatingV2Actor = {
@@ -120,6 +132,31 @@ export type SeatingV2ExportProjection = {
 type CommandDeps = {
   resolveActor: (personId: string) => ActorSnapshot;
   snapshot: () => PlatformSnapshot;
+  loadEventById: (eventId: string) => EventRecord | undefined;
+  loadLayoutPublicationById: (id: string, organisationId: string, eventId: string) => LayoutPublication | undefined;
+  loadLayoutRevisionById: (id: string, organisationId: string, eventId: string) => LayoutRevision | undefined;
+  loadCurrentLayoutPublication: (
+    organisationId: string,
+    eventId: string,
+    layoutId: string,
+  ) => LayoutPublication | undefined;
+  listOperationalGuestsByEventId: (organisationId: string, eventId: string) => OperationalGuest[];
+  listRsvpResponsesByEventId: (
+    organisationId: string,
+    eventId: string,
+  ) => Array<{ eventId: string; guestId: string; attendanceIntent?: string; status?: string }>;
+  listDiscoveryEngagementsByEventId: (
+    organisationId: string,
+    eventId: string,
+  ) => Array<{ convertedEventId?: string; opportunityId?: string; id: string }>;
+  listPublishedEventBriefsForEvent: (
+    organisationId: string,
+    eventId: string,
+  ) => Array<{ status?: string; current?: boolean; engagementId?: string; id: string; contentHash?: string }>;
+  listRiskApplicabilitySnapshotsByEventId: (
+    organisationId: string,
+    eventId: string,
+  ) => Array<{ eventId: string; contentHash?: string }>;
   tokenPepper: () => string;
   onEffect?: (effect: DurableMutationEffect) => void;
 };
@@ -154,22 +191,74 @@ export class SeatingV2CommandService {
     return this.repo;
   }
 
+  private denied(): never {
+    throw new PlatformError("FORBIDDEN", "This assignment cannot perform this seating action.");
+  }
+
+  private notFoundEvent(): never {
+    throw new PlatformError("NOT_FOUND", "event was not found");
+  }
+
+  private requireCanonicalEvent(envelope: SeatingV2CommandEnvelope): EventRecord {
+    const event = this.deps.loadEventById(envelope.eventId);
+    if (!event) this.notFoundEvent();
+    if (event.organisationId !== envelope.organisationId) this.notFoundEvent();
+    return event;
+  }
+
+  private requireConcurrency(envelope: SeatingV2CommandEnvelope): { expectedVersion: number; expectedContentHash: string } {
+    if (
+      envelope.expectedVersion === undefined ||
+      !Number.isInteger(envelope.expectedVersion) ||
+      envelope.expectedVersion < 1 ||
+      !envelope.expectedContentHash
+    ) {
+      throw new PlatformError("VALIDATION_FAILED", "version and content hash are required");
+    }
+    return { expectedVersion: envelope.expectedVersion, expectedContentHash: envelope.expectedContentHash };
+  }
+
+  private trustedEnvelope(
+    actor: SeatingV2Actor,
+    envelope: SeatingV2CommandEnvelope,
+    permission: PermissionKey,
+  ): { people: ActorSnapshot; event: EventRecord; envelope: SeatingV2CommandEnvelope } {
+    const event = this.requireCanonicalEvent(envelope);
+    const people = this.deps.resolveActor(actor.personId);
+    if (!canSeeEvent(people, event, nowOf(actor))) this.notFoundEvent();
+    const assignment = resolveTrustedSeatingAssignment(people, event, nowOf(actor));
+    if (!seatingAssignmentAllowsPermission(people, assignment, permission)) this.denied();
+    return {
+      people,
+      event,
+      envelope: {
+        ...envelope,
+        organisationId: event.organisationId,
+        eventId: event.id,
+        actorAssignmentId: assignment.id,
+      },
+    };
+  }
+
+  private async requireOwned<T extends { organisationId: string; eventId: string }>(
+    tx: SeatingV2Transaction,
+    collection: Parameters<SeatingV2Transaction["load"]>[0],
+    id: string,
+    scope: SeatingV2Scope,
+    publicLabel: string,
+  ): Promise<T> {
+    // Event-scoped collections: repository load already predicates organisation+event.
+    // Explicit ownership after load is defence in depth. Safe category: NOT_FOUND.
+    const row = await tx.load<T>(collection, id, scope);
+    if (!row || row.organisationId !== scope.organisationId || row.eventId !== scope.eventId) {
+      throw new PlatformError("NOT_FOUND", `${publicLabel} was not found`);
+    }
+    return row;
+  }
+
   private guard(actor: SeatingV2Actor, permission: PermissionKey, scope: SeatingV2Scope, assignmentId: string): ActorSnapshot {
-    const snap = this.deps.resolveActor(actor.personId);
-    const assignment = snap.assignments.find((item) => item.id === assignmentId);
-    if (!assignment || assignment.personId !== actor.personId) {
-      throw new PlatformError("FORBIDDEN", "This assignment cannot perform this seating action.");
-    }
-    const decision = authorize({
-      actor: snap,
-      permission,
-      scope: { organisationId: scope.organisationId, eventId: scope.eventId },
-      context: { now: nowOf(actor), actorKind: actor.actorKind },
-    });
-    if (!decision.allow) {
-      throw new PlatformError("FORBIDDEN", "This assignment cannot perform this seating action.");
-    }
-    return snap;
+    return this.trustedEnvelope(actor, { ...scope, actorAssignmentId: assignmentId, idempotencyKey: "guard-context-xx" }, permission)
+      .people;
   }
 
   private async mutate<T extends { id: string }>(
@@ -180,10 +269,30 @@ export class SeatingV2CommandService {
     work: (tx: SeatingV2Transaction, people: ActorSnapshot) => Promise<WorkResult<T>>,
   ): Promise<SeatingV2CommandResult<T>> {
     requireKey(envelope.idempotencyKey);
-    const requestHash = exactHash({ action, envelope, personId: actor.personId });
+    const trusted = this.trustedEnvelope(actor, envelope, permission);
+    const canonical = trusted.envelope;
+    envelope.organisationId = canonical.organisationId;
+    envelope.eventId = canonical.eventId;
+    envelope.actorAssignmentId = canonical.actorAssignmentId;
+    const requestHash = exactHash({
+      action,
+      envelope: {
+        organisationId: canonical.organisationId,
+        eventId: canonical.eventId,
+        actorAssignmentId: canonical.actorAssignmentId,
+        idempotencyKey: canonical.idempotencyKey,
+        expectedVersion: canonical.expectedVersion,
+        expectedContentHash: canonical.expectedContentHash,
+      },
+      personId: actor.personId,
+    });
     return this.repo.transaction(async (tx) => {
-      const people = this.guard(actor, permission, envelope, envelope.actorAssignmentId);
-      const existing = await tx.getIdempotency(envelope, action, envelope.idempotencyKey);
+      const people = this.trustedEnvelope(actor, envelope, permission).people;
+      const existingKey = await tx.findIdempotencyByActionKey(canonical.organisationId, action, canonical.idempotencyKey);
+      if (existingKey && existingKey.eventId !== canonical.eventId) {
+        throw new PlatformError("FORBIDDEN", "This assignment cannot perform this seating action.");
+      }
+      const existing = await tx.getIdempotency(canonical, action, canonical.idempotencyKey);
       if (existing) {
         if (existing.requestHash !== requestHash) {
           throw new PlatformError("IDEMPOTENCY_CONFLICT", "idempotency key was reused with a different payload");
@@ -200,11 +309,11 @@ export class SeatingV2CommandService {
       const replayed = isReplay(raw);
       const value = replayed ? raw.value : raw;
       await tx.insertIdempotency({
-        organisationId: envelope.organisationId,
-        eventId: envelope.eventId,
+        organisationId: canonical.organisationId,
+        eventId: canonical.eventId,
         schemaVersion: SEATING_V2_SCHEMA_VERSION,
         action,
-        idempotencyKey: envelope.idempotencyKey,
+        idempotencyKey: canonical.idempotencyKey,
         requestHash,
         resultIdentity: value.id,
         application: replayed ? "REPLAYED" : "APPLIED",
@@ -218,12 +327,12 @@ export class SeatingV2CommandService {
         service: "shared-platform",
         action,
         outcome: "SUCCESS",
-        organisationId: envelope.organisationId,
-        eventId: envelope.eventId,
+        organisationId: canonical.organisationId,
+        eventId: canonical.eventId,
         resourceType: "seating_v2",
         resourceId: value.id,
         correlationId: actor.correlationId,
-        idempotencyKey: envelope.idempotencyKey,
+        idempotencyKey: canonical.idempotencyKey,
         metadata: { replayed },
         schemaVersion: 1,
       });
@@ -286,8 +395,8 @@ export class SeatingV2CommandService {
     input: { editionId: string },
   ): Promise<SeatingV2CommandResult<SeatingV2RuleEdition>> {
     return this.mutate(actor, envelope, "seating.view", "seatingV2.activateRule", async (tx) => {
-      const draft = await tx.load<SeatingV2RuleEdition>("ruleEditions", input.editionId, envelope);
-      if (!draft || draft.lifecycle !== "DRAFT") {
+      const draft = await this.requireOwned<SeatingV2RuleEdition>(tx, "ruleEditions", input.editionId, envelope, "draft rule edition");
+      if (draft.lifecycle !== "DRAFT") {
         throw new PlatformError("NOT_FOUND", "draft rule edition was not found");
       }
       if (draft.hardness === "HARD") {
@@ -297,6 +406,10 @@ export class SeatingV2CommandService {
         }
       } else {
         this.guard(actor, "seating.constraint.manage", envelope, envelope.actorAssignmentId);
+      }
+      const concurrency = this.requireConcurrency(envelope);
+      if (draft.editionNo !== concurrency.expectedVersion || draft.contentHash !== concurrency.expectedContentHash) {
+        throw new PlatformError("VERSION_CONFLICT", "stale rule edition does not match");
       }
       const now = nowOf(actor);
       return tx.updateLifecycle<SeatingV2RuleEdition>("ruleEditions", draft.id, envelope, {
@@ -313,8 +426,12 @@ export class SeatingV2CommandService {
     input: { editionId: string; reason: string },
   ): Promise<SeatingV2CommandResult<SeatingV2RuleEdition>> {
     return this.mutate(actor, envelope, "seating.constraint.manage", "seatingV2.withdrawRule", async (tx) => {
-      const edition = await tx.load<SeatingV2RuleEdition>("ruleEditions", input.editionId, envelope);
-      if (!edition || (edition.lifecycle !== "DRAFT" && edition.lifecycle !== "ACTIVE")) {
+      const edition = await this.requireOwned<SeatingV2RuleEdition>(tx, "ruleEditions", input.editionId, envelope, "rule edition");
+      const concurrency = this.requireConcurrency(envelope);
+      if (edition.editionNo !== concurrency.expectedVersion || edition.contentHash !== concurrency.expectedContentHash) {
+        throw new PlatformError("VERSION_CONFLICT", "stale rule edition does not match");
+      }
+      if (edition.lifecycle !== "DRAFT" && edition.lifecycle !== "ACTIVE") {
         throw new PlatformError("TRANSITION_INVALID", "only DRAFT or ACTIVE rules may be withdrawn");
       }
       return tx.updateLifecycle<SeatingV2RuleEdition>("ruleEditions", edition.id, envelope, {
@@ -332,8 +449,8 @@ export class SeatingV2CommandService {
     input: { editionId: string; content: SeatingV2RuleContent },
   ): Promise<SeatingV2CommandResult<SeatingV2RuleEdition>> {
     return this.mutate(actor, envelope, "seating.constraint.manage", "seatingV2.supersedeRule", async (tx) => {
-      const current = await tx.load<SeatingV2RuleEdition>("ruleEditions", input.editionId, envelope);
-      if (!current || current.lifecycle !== "ACTIVE") {
+      const current = await this.requireOwned<SeatingV2RuleEdition>(tx, "ruleEditions", input.editionId, envelope, "rule edition");
+      if (current.lifecycle !== "ACTIVE") {
         throw new PlatformError("TRANSITION_INVALID", "only an ACTIVE rule may be superseded");
       }
       const now = nowOf(actor);
@@ -448,11 +565,15 @@ export class SeatingV2CommandService {
     input: { editionId: string },
   ): Promise<SeatingV2CommandResult<SeatingV2ReservationEdition>> {
     return this.mutate(actor, envelope, "seating.view", "seatingV2.activateReservation", async (tx) => {
-      const draft = await tx.load<SeatingV2ReservationEdition>("reservationEditions", input.editionId, envelope);
-      if (!draft) {
-        throw new PlatformError("NOT_FOUND", "reservation edition was not found");
-      }
-      if (envelope.expectedContentHash && envelope.expectedContentHash !== draft.contentHash) {
+      const draft = await this.requireOwned<SeatingV2ReservationEdition>(
+        tx,
+        "reservationEditions",
+        input.editionId,
+        envelope,
+        "reservation edition",
+      );
+      const concurrency = this.requireConcurrency(envelope);
+      if (draft.editionNo !== concurrency.expectedVersion || draft.contentHash !== concurrency.expectedContentHash) {
         throw new PlatformError("VERSION_CONFLICT", "reservation content hash does not match the bound edition");
       }
       if (draft.lifecycle !== "DRAFT") {
@@ -476,11 +597,15 @@ export class SeatingV2CommandService {
     input: { editionId: string; reason: string },
   ): Promise<SeatingV2CommandResult<SeatingV2ReservationEdition>> {
     return this.mutate(actor, envelope, "seating.reservation.manage", "seatingV2.withdrawReservation", async (tx) => {
-      const edition = await tx.load<SeatingV2ReservationEdition>("reservationEditions", input.editionId, envelope);
-      if (!edition) {
-        throw new PlatformError("NOT_FOUND", "reservation edition was not found");
-      }
-      if (envelope.expectedContentHash && envelope.expectedContentHash !== edition.contentHash) {
+      const edition = await this.requireOwned<SeatingV2ReservationEdition>(
+        tx,
+        "reservationEditions",
+        input.editionId,
+        envelope,
+        "reservation edition",
+      );
+      const concurrency = this.requireConcurrency(envelope);
+      if (edition.editionNo !== concurrency.expectedVersion || edition.contentHash !== concurrency.expectedContentHash) {
         throw new PlatformError("VERSION_CONFLICT", "reservation content hash does not match the bound edition");
       }
       if (edition.lifecycle !== "DRAFT" && edition.lifecycle !== "ACTIVE") {
@@ -508,11 +633,18 @@ export class SeatingV2CommandService {
     },
   ): Promise<SeatingV2CommandResult<SeatingV2ReservationEdition>> {
     return this.mutate(actor, envelope, "seating.reservation.manage", "seatingV2.supersedeReservation", async (tx) => {
-      const current = await tx.load<SeatingV2ReservationEdition>("reservationEditions", input.editionId, envelope);
-      if (!current || current.lifecycle !== "ACTIVE") {
+      const current = await this.requireOwned<SeatingV2ReservationEdition>(
+        tx,
+        "reservationEditions",
+        input.editionId,
+        envelope,
+        "reservation edition",
+      );
+      const concurrency = this.requireConcurrency(envelope);
+      if (current.lifecycle !== "ACTIVE") {
         throw new PlatformError("TRANSITION_INVALID", "only an ACTIVE reservation may be superseded");
       }
-      if (envelope.expectedContentHash && envelope.expectedContentHash !== current.contentHash) {
+      if (current.editionNo !== concurrency.expectedVersion || current.contentHash !== concurrency.expectedContentHash) {
         throw new PlatformError("VERSION_CONFLICT", "reservation content hash does not match the bound edition");
       }
       const now = nowOf(actor);
@@ -575,9 +707,19 @@ export class SeatingV2CommandService {
     input: { editionId: string; decision: string },
   ): Promise<SeatingV2CommandResult<SeatingV2ReservationEdition>> {
     return this.mutate(actor, envelope, "seating.reservation.manage", "seatingV2.releaseReservation", async (tx) => {
-      const edition = await tx.load<SeatingV2ReservationEdition>("reservationEditions", input.editionId, envelope);
-      if (!edition || edition.lifecycle !== "ACTIVE") {
+      const edition = await this.requireOwned<SeatingV2ReservationEdition>(
+        tx,
+        "reservationEditions",
+        input.editionId,
+        envelope,
+        "reservation edition",
+      );
+      const concurrency = this.requireConcurrency(envelope);
+      if (edition.lifecycle !== "ACTIVE") {
         throw new PlatformError("TRANSITION_INVALID", "only an ACTIVE reservation may be released");
+      }
+      if (edition.editionNo !== concurrency.expectedVersion || edition.contentHash !== concurrency.expectedContentHash) {
+        throw new PlatformError("VERSION_CONFLICT", "reservation content hash does not match the bound edition");
       }
       return tx.updateLifecycle<SeatingV2ReservationEdition>("reservationEditions", edition.id, envelope, {
         lifecycle: "RELEASED",
@@ -591,18 +733,30 @@ export class SeatingV2CommandService {
   async proposeLayoutBinding(
     actor: SeatingV2Actor,
     envelope: SeatingV2CommandEnvelope,
-    input: { layoutId: string; layoutPublicationId: string; layoutContentHash: string; reason: string },
+    input: { layoutPublicationId: string; reason: string; layoutId?: string; layoutContentHash?: string },
   ): Promise<SeatingV2CommandResult<SeatingV2LayoutBinding>> {
     return this.mutate(actor, envelope, "seating.input.prepare", "seatingV2.proposeLayoutBinding", async (tx) => {
-      this.assertBindablePublication(envelope, input);
+      const publication = this.loadBindablePublication(envelope, input.layoutPublicationId);
+      if (input.layoutId && input.layoutId !== publication.layoutId) {
+        throw new PlatformError("SEATING_LAYOUT_PUBLICATION_MISMATCH", "selected layout publication was not found", {
+          publicMessage:
+            "The seating layout binding does not match a current publication. Resolve the layout record before freezing seating inputs.",
+        });
+      }
+      if (input.layoutContentHash && input.layoutContentHash !== publication.contentHash) {
+        throw new PlatformError("SEATING_LAYOUT_PUBLICATION_MISMATCH", "selected layout publication hash does not match", {
+          publicMessage:
+            "The seating layout binding does not match a current publication. Resolve the layout record before freezing seating inputs.",
+        });
+      }
       const now = nowOf(actor);
       const binding: SeatingV2LayoutBinding = {
         id: randomUUID(),
         organisationId: envelope.organisationId,
         eventId: envelope.eventId,
-        layoutId: input.layoutId,
-        layoutPublicationId: input.layoutPublicationId,
-        layoutContentHash: input.layoutContentHash,
+        layoutId: publication.layoutId,
+        layoutPublicationId: publication.id,
+        layoutContentHash: publication.contentHash,
         state: "DRAFT",
         version: 1,
         proposedByPersonId: actor.personId,
@@ -624,8 +778,7 @@ export class SeatingV2CommandService {
   ): Promise<SeatingV2CommandResult<SeatingV2LayoutBinding>> {
     return this.mutate(actor, envelope, "seating.rule.activate", "seatingV2.activateLayoutBinding", async (tx) => {
       await tx.lockEventCurrent(envelope, "FOR_UPDATE");
-      const binding = await tx.load<SeatingV2LayoutBinding>("layoutBindings", input.bindingId, envelope);
-      if (!binding) throw new PlatformError("NOT_FOUND", "seating layout binding was not found");
+      const binding = await this.requireOwned<SeatingV2LayoutBinding>(tx, "layoutBindings", input.bindingId, envelope, "seating layout binding");
       if (binding.proposedByPersonId === actor.personId) {
         throw new PlatformError("FORBIDDEN", "maker and checker must be different people", {
           publicMessage: "An independent checker must activate the seating layout binding.",
@@ -642,7 +795,10 @@ export class SeatingV2CommandService {
           publicMessage: "The record changed elsewhere. Reload this item before retrying.",
         });
       }
-      this.assertBindablePublication(envelope, binding);
+      this.loadBindablePublication(envelope, binding.layoutPublicationId, {
+        layoutId: binding.layoutId,
+        layoutContentHash: binding.layoutContentHash,
+      });
       const now = nowOf(actor);
       return tx.updateLayoutBinding(binding.id, envelope, binding.version, {
         state: "ACTIVE",
@@ -658,11 +814,14 @@ export class SeatingV2CommandService {
     envelope: SeatingV2CommandEnvelope,
     input: { bindingId: string; expectedVersion: number },
   ): Promise<SeatingV2CommandResult<SeatingV2LayoutBinding>> {
-    const preview = await this.repo.transaction((tx) => tx.load<SeatingV2LayoutBinding>("layoutBindings", input.bindingId, envelope));
-    const permission = preview?.state === "ACTIVE" ? "seating.rule.activate" : "seating.input.prepare";
-    return this.mutate(actor, envelope, permission, "seatingV2.withdrawLayoutBinding", async (tx) => {
-      const binding = await tx.load<SeatingV2LayoutBinding>("layoutBindings", input.bindingId, envelope);
-      if (!binding) throw new PlatformError("NOT_FOUND", "seating layout binding was not found");
+    return this.mutate(actor, envelope, "seating.view", "seatingV2.withdrawLayoutBinding", async (tx) => {
+      const binding = await this.requireOwned<SeatingV2LayoutBinding>(tx, "layoutBindings", input.bindingId, envelope, "seating layout binding");
+      this.guard(
+        actor,
+        binding.state === "ACTIVE" ? "seating.rule.activate" : "seating.input.prepare",
+        envelope,
+        envelope.actorAssignmentId,
+      );
       if (binding.state === "WITHDRAWN" && binding.version === input.expectedVersion) {
         return { replayed: true, value: binding };
       }
@@ -692,13 +851,16 @@ export class SeatingV2CommandService {
     let built;
     try {
       const materials = await this.repo.transaction(async (tx) => {
-        this.guard(actor, "seating.input.prepare", envelope, envelope.actorAssignmentId);
+        const trusted = this.trustedEnvelope(actor, envelope, "seating.input.prepare");
+        envelope.organisationId = trusted.envelope.organisationId;
+        envelope.eventId = trusted.envelope.eventId;
+        envelope.actorAssignmentId = trusted.envelope.actorAssignmentId;
         return readSeatingV2PackageMaterials({
           tx,
-          scope: envelope,
-          snapshot: this.deps.snapshot(),
+          scope: trusted.envelope,
           pepper: this.deps.tokenPepper(),
           seed: input.seed,
+          ...this.packageInputs(trusted.envelope, await tx.list<SeatingV2LayoutBinding>("layoutBindings", trusted.envelope)),
         });
       });
       built = finishSeatingV2Package(materials);
@@ -828,20 +990,36 @@ export class SeatingV2CommandService {
     input: { packageId: string },
   ): Promise<SeatingV2CommandResult<SeatingV2Run>> {
     requireKey(envelope.idempotencyKey);
-    const requestHash = exactHash({ action: "seatingV2.launchRun", envelope, personId: actor.personId });
+    const trusted = this.trustedEnvelope(actor, envelope, "seating.run.execute");
+    const canonical = trusted.envelope;
+    const requestHash = exactHash({
+      action: "seatingV2.launchRun",
+      envelope: {
+        organisationId: canonical.organisationId,
+        eventId: canonical.eventId,
+        actorAssignmentId: canonical.actorAssignmentId,
+        idempotencyKey: canonical.idempotencyKey,
+        expectedVersion: canonical.expectedVersion,
+        expectedContentHash: canonical.expectedContentHash,
+      },
+      personId: actor.personId,
+    });
     const prepared = await this.repo.transaction(async (tx) => {
-      this.guard(actor, "seating.run.execute", envelope, envelope.actorAssignmentId);
-      const receipt = await tx.getIdempotency(envelope, "seatingV2.launchRun", envelope.idempotencyKey);
+      this.guard(actor, "seating.run.execute", canonical, canonical.actorAssignmentId);
+      const existingKey = await tx.findIdempotencyByActionKey(canonical.organisationId, "seatingV2.launchRun", canonical.idempotencyKey);
+      if (existingKey && existingKey.eventId !== canonical.eventId) {
+        throw new PlatformError("FORBIDDEN", "This assignment cannot perform this seating action.");
+      }
+      const receipt = await tx.getIdempotency(canonical, "seatingV2.launchRun", canonical.idempotencyKey);
       if (receipt) {
         if (receipt.requestHash !== requestHash) {
           throw new PlatformError("IDEMPOTENCY_CONFLICT", "idempotency key was reused with a different payload");
         }
-        const run = await tx.load<SeatingV2Run>("runs", receipt.resultIdentity, envelope);
-        return { kind: "replay" as const, value: run ?? ({ id: receipt.resultIdentity } as SeatingV2Run) };
+        const run = await this.requireOwned<SeatingV2Run>(tx, "runs", receipt.resultIdentity, canonical, "run");
+        return { kind: "replay" as const, value: run };
       }
-      const pkg = await tx.load<SeatingV2InputPackage>("inputPackages", input.packageId, envelope);
-      if (!pkg) throw new PlatformError("NOT_FOUND", "input package was not found");
-      const compiled = await this.requireCompiled(tx, envelope, pkg.id);
+      const pkg = await this.requireOwned<SeatingV2InputPackage>(tx, "inputPackages", input.packageId, canonical, "input package");
+      const compiled = await this.requireCompiled(tx, canonical, pkg.id);
       if (
         !compiled.request ||
         typeof compiled.request !== "object" ||
@@ -852,19 +1030,19 @@ export class SeatingV2CommandService {
         throw new PlatformError("VALIDATION_FAILED", "compiled solver request was not readable");
       }
       const identity = seatingV2RequestedRunReuseIdentity(pkg, compiled.compiledRequestHash);
-      const existing = findSeatingV2ReusableRun(await tx.list<SeatingV2Run>("runs", envelope), identity);
+      const existing = findSeatingV2ReusableRun(await tx.list<SeatingV2Run>("runs", canonical), identity);
       if (existing) return { kind: "replay" as const, value: existing.run };
       return { kind: "execute" as const, pkg, compiled, identity };
     });
     if (prepared.kind === "replay") {
-      return this.mutate(actor, envelope, "seating.run.execute", "seatingV2.launchRun", async () => ({
+      return this.mutate(actor, canonical, "seating.run.execute", "seatingV2.launchRun", async () => ({
         replayed: true,
         value: prepared.value,
       }));
     }
     let solved;
     try {
-      emitSettlementStage({ stage: "SOLVER_START", commandType: "seating.run.launch", eventId: envelope.eventId });
+      emitSettlementStage({ stage: "SOLVER_START", commandType: "seating.run.launch", eventId: canonical.eventId });
       const solverStarted = Date.now();
       solved = solveSeatingV2Compiled(prepared.compiled.request);
       emitSettlementStage({
@@ -1013,13 +1191,11 @@ export class SeatingV2CommandService {
     input: { runId: string },
   ): Promise<SeatingV2CommandResult<SeatingV2PlanEdition>> {
     return this.mutate(actor, envelope, "seating.plan.edit", "seatingV2.adoptRun", async (tx) => {
-      const run = await tx.load<SeatingV2Run>("runs", input.runId, envelope);
-      if (!run) throw new PlatformError("NOT_FOUND", "run was not found");
+      const run = await this.requireOwned<SeatingV2Run>(tx, "runs", input.runId, envelope, "run");
       if (run.status !== "FEASIBLE") {
         throw new PlatformError("SEATING_VALIDATION_REJECTED", "only a validator-FEASIBLE run may be adopted");
       }
-      const pkg = await tx.load<SeatingV2InputPackage>("inputPackages", run.packageId, envelope);
-      if (!pkg) throw new PlatformError("ADOPTION_MISMATCH", "package missing");
+      const pkg = await this.requireOwned<SeatingV2InputPackage>(tx, "inputPackages", run.packageId, envelope, "package");
       if (!seatingV2RunUsesCurrentCompiler(run, pkg)) {
         throw new PlatformError("ADOPTION_MISMATCH", "historic compiler result cannot be adopted", {
           publicMessage: "This seating run belongs to an earlier compiler and cannot be adopted.",
@@ -1108,8 +1284,8 @@ export class SeatingV2CommandService {
     return this.mutate(actor, envelope, "seating.plan.edit", "seatingV2.applyManual", async (tx) => {
       const proposed = await this.proposeManual(tx, envelope, input.planEditionId, input.command, nowOf(actor));
       if (input.previewId) {
-        const preview = await tx.load<SeatingV2ManualPreview>("manualPreviews", input.previewId, envelope);
-        if (!preview || preview.planEditionId !== input.planEditionId) {
+        const preview = await this.requireOwned<SeatingV2ManualPreview>(tx, "manualPreviews", input.previewId, envelope, "manual preview");
+        if (preview.planEditionId !== input.planEditionId) {
           throw new PlatformError("NOT_FOUND", "manual preview was not found");
         }
         if (preview.expiresAt <= nowOf(actor)) {
@@ -1155,9 +1331,13 @@ export class SeatingV2CommandService {
     input: { editionId: string },
   ): Promise<SeatingV2CommandResult<SeatingV2PlanEdition>> {
     return this.mutate(actor, envelope, "seating.plan.submit", "seatingV2.submitPlan", async (tx) => {
-      const edition = await tx.load<SeatingV2PlanEdition>("planEditions", input.editionId, envelope);
-      if (!edition || edition.status !== "WORKING") {
+      const edition = await this.requireOwned<SeatingV2PlanEdition>(tx, "planEditions", input.editionId, envelope, "plan edition");
+      const concurrency = this.requireConcurrency(envelope);
+      if (edition.status !== "WORKING") {
         throw new PlatformError("TRANSITION_INVALID", "only a WORKING edition may be submitted");
+      }
+      if (edition.version !== concurrency.expectedVersion || edition.contentHash !== concurrency.expectedContentHash) {
+        throw new PlatformError("VERSION_CONFLICT", "stale plan edition does not match");
       }
       await this.assertFreshFeasible(tx, envelope, edition, nowOf(actor));
       const submitted = await tx.updateLifecycle<SeatingV2PlanEdition>("planEditions", edition.id, envelope, {
@@ -1177,15 +1357,13 @@ export class SeatingV2CommandService {
     input: { editionId: string },
   ): Promise<SeatingV2CommandResult<SeatingV2PlanEdition>> {
     return this.mutate(actor, envelope, "seating.view", "seatingV2.recallPlan", async (tx) => {
-      const edition = await tx.load<SeatingV2PlanEdition>("planEditions", input.editionId, envelope);
-      if (!edition || edition.status !== "SUBMITTED") {
+      const edition = await this.requireOwned<SeatingV2PlanEdition>(tx, "planEditions", input.editionId, envelope, "plan edition");
+      const concurrency = this.requireConcurrency(envelope);
+      if (edition.status !== "SUBMITTED") {
         throw new PlatformError("TRANSITION_INVALID", "only a SUBMITTED edition may be recalled");
       }
-      if (envelope.expectedVersion !== undefined && edition.version !== envelope.expectedVersion) {
+      if (edition.version !== concurrency.expectedVersion || edition.contentHash !== concurrency.expectedContentHash) {
         throw new PlatformError("VERSION_CONFLICT", "stale recall: edition version does not match");
-      }
-      if (envelope.expectedContentHash && envelope.expectedContentHash !== edition.contentHash) {
-        throw new PlatformError("VERSION_CONFLICT", "stale recall: edition hash does not match");
       }
       const submitter = edition.submittedByPersonId === actor.personId;
       if (!submitter) this.guard(actor, "seating.plan.approve", envelope, envelope.actorAssignmentId);
@@ -1194,9 +1372,8 @@ export class SeatingV2CommandService {
         status: "RECALLED",
         version: edition.version + 1,
       });
-      const pkg = await tx.load<SeatingV2InputPackage>("inputPackages", edition.packageId, envelope);
+      const pkg = await this.requireOwned<SeatingV2InputPackage>(tx, "inputPackages", edition.packageId, envelope, "package");
       const compiled = await this.requireCompiled(tx, envelope, edition.packageId);
-      if (!pkg) throw new PlatformError("NOT_FOUND", "package missing");
       const assignments = (await tx.list<SeatingV2PlanAssignment>("planAssignments", envelope)).filter(
         (item) => item.planEditionId === edition.id,
       );
@@ -1234,11 +1411,16 @@ export class SeatingV2CommandService {
     },
   ): Promise<SeatingV2CommandResult<SeatingV2SpecialistReview>> {
     return this.mutate(actor, envelope, reviewPermission(input.domain), "seatingV2.recordSpecialistReview", async (tx) => {
-      const edition = await tx.load<SeatingV2PlanEdition>("planEditions", input.editionId, envelope);
-      if (!edition || edition.status !== "SUBMITTED") {
+      const edition = await this.requireOwned<SeatingV2PlanEdition>(tx, "planEditions", input.editionId, envelope, "plan edition");
+      const concurrency = this.requireConcurrency(envelope);
+      if (edition.status !== "SUBMITTED") {
         throw new PlatformError("TRANSITION_INVALID", "reviews bind a SUBMITTED edition");
       }
-      if (edition.contentHash !== input.editionHash) {
+      if (
+        edition.version !== concurrency.expectedVersion ||
+        edition.contentHash !== concurrency.expectedContentHash ||
+        edition.contentHash !== input.editionHash
+      ) {
         throw new PlatformError("VERSION_CONFLICT", "review hash does not match the submitted edition");
       }
       const authors = (await tx.list<{ planEditionId: string; personId: string }>("planAuthors", envelope)).filter(
@@ -1293,11 +1475,16 @@ export class SeatingV2CommandService {
     input: { editionId: string; editionHash: string; decision: "APPROVED" | "REJECTED"; reason: string },
   ): Promise<SeatingV2CommandResult<SeatingV2OperationalApproval>> {
     return this.mutate(actor, envelope, "seating.plan.approve", "seatingV2.approvePlan", async (tx) => {
-      const edition = await tx.load<SeatingV2PlanEdition>("planEditions", input.editionId, envelope);
-      if (!edition || edition.status !== "SUBMITTED") {
+      const edition = await this.requireOwned<SeatingV2PlanEdition>(tx, "planEditions", input.editionId, envelope, "plan edition");
+      const concurrency = this.requireConcurrency(envelope);
+      if (edition.status !== "SUBMITTED") {
         throw new PlatformError("TRANSITION_INVALID", "only a SUBMITTED edition may be approved");
       }
-      if (edition.contentHash !== input.editionHash) {
+      if (
+        edition.version !== concurrency.expectedVersion ||
+        edition.contentHash !== concurrency.expectedContentHash ||
+        edition.contentHash !== input.editionHash
+      ) {
         throw new PlatformError("VERSION_CONFLICT", "approval hash does not match the submitted edition");
       }
       const authors = (await tx.list<{ planEditionId: string; personId: string }>("planAuthors", envelope)).filter(
@@ -1348,11 +1535,16 @@ export class SeatingV2CommandService {
     input: { editionId: string; editionHash: string },
   ): Promise<SeatingV2CommandResult<SeatingV2Publication>> {
     return this.mutate(actor, envelope, "seating.plan.publish", "seatingV2.publishPlan", async (tx) => {
-      const edition = await tx.load<SeatingV2PlanEdition>("planEditions", input.editionId, envelope);
-      if (!edition || edition.status !== "APPROVED") {
+      const edition = await this.requireOwned<SeatingV2PlanEdition>(tx, "planEditions", input.editionId, envelope, "plan edition");
+      const concurrency = this.requireConcurrency(envelope);
+      if (edition.status !== "APPROVED") {
         throw new PlatformError("TRANSITION_INVALID", "only an APPROVED edition may be published");
       }
-      if (edition.contentHash !== input.editionHash) {
+      if (
+        edition.version !== concurrency.expectedVersion ||
+        edition.contentHash !== concurrency.expectedContentHash ||
+        edition.contentHash !== input.editionHash
+      ) {
         throw new PlatformError("VERSION_CONFLICT", "publication hash does not match the approved edition");
       }
       const authors = (await tx.list<{ planEditionId: string; personId: string }>("planAuthors", envelope)).filter(
@@ -1370,8 +1562,7 @@ export class SeatingV2CommandService {
         (item) => item.planEditionId === edition.id && item.planContentHash === edition.contentHash && item.status === "CURRENT",
       );
       if (existing) return { replayed: true, value: existing };
-      const pkg = await tx.load<SeatingV2InputPackage>("inputPackages", edition.packageId, envelope);
-      if (!pkg) throw new PlatformError("NOT_FOUND", "package missing");
+      const pkg = await this.requireOwned<SeatingV2InputPackage>(tx, "inputPackages", edition.packageId, envelope, "package");
       const current = (await tx.list<SeatingV2Publication>("publications", envelope)).find((item) => item.status === "CURRENT");
       const publication: SeatingV2Publication = {
         id: randomUUID(),
@@ -1416,9 +1607,10 @@ export class SeatingV2CommandService {
       }
       const sourceHash =
         input.sourceType === "PUBLICATION"
-          ? (await tx.load<SeatingV2Publication>("publications", input.sourceId, envelope))?.planContentHash
-          : (await tx.load<SeatingV2PlanEdition>("planEditions", input.sourceId, envelope))?.contentHash;
-      if (!sourceHash) throw new PlatformError("NOT_FOUND", "export source was not found");
+          ? (await this.requireOwned<SeatingV2Publication>(tx, "publications", input.sourceId, envelope, "publication"))
+              .planContentHash
+          : (await this.requireOwned<SeatingV2PlanEdition>(tx, "planEditions", input.sourceId, envelope, "plan edition"))
+              .contentHash;
       const job: SeatingV2ExportJob = {
         id: randomUUID(),
         organisationId: envelope.organisationId,
@@ -1441,13 +1633,10 @@ export class SeatingV2CommandService {
 
   async projectWorkspace(actor: SeatingV2Actor, eventId: string): Promise<SeatingWorkspaceView> {
     const people = this.deps.resolveActor(actor.personId);
-    const event = this.deps.snapshot().events.find((item) => item.id === eventId);
+    const event = this.deps.loadEventById(eventId);
     if (!event) throw new PlatformError("NOT_FOUND", "event was not found");
     if (!canSeeEvent(people, event, nowOf(actor))) throw new PlatformError("NOT_FOUND", "event was not found");
-    const assignment =
-      people.assignments.find((item) => item.status === "ACTIVE" && item.organisationId === event.organisationId && item.eventId === eventId) ??
-      people.assignments.find((item) => item.status === "ACTIVE" && item.organisationId === event.organisationId && !item.eventId);
-    if (!assignment) throw new PlatformError("FORBIDDEN", "This assignment cannot perform this seating action.");
+    const assignment = resolveTrustedSeatingAssignment(people, event, nowOf(actor));
     this.guard(actor, "seating.view", { organisationId: event.organisationId, eventId }, assignment.id);
     const state = await this.repo.transaction(async (tx) => {
       const next = emptySeatingV2State();
@@ -1466,32 +1655,39 @@ export class SeatingV2CommandService {
     envelope: SeatingV2CommandEnvelope,
     input: { jobId: string },
   ): Promise<SeatingV2ExportProjection> {
-    this.guard(actor, "seating.view", envelope, envelope.actorAssignmentId);
+    const trusted = this.trustedEnvelope(actor, envelope, "seating.view");
+    envelope.organisationId = trusted.envelope.organisationId;
+    envelope.eventId = trusted.envelope.eventId;
+    envelope.actorAssignmentId = trusted.envelope.actorAssignmentId;
+    const canonical = trusted.envelope;
     return this.repo.transaction(async (tx) => {
-      const job = await tx.load<SeatingV2ExportJob>("exportJobs", input.jobId, envelope);
-      if (!job) throw new PlatformError("NOT_FOUND", "export job was not found");
+      const job = await this.requireOwned<SeatingV2ExportJob>(tx, "exportJobs", input.jobId, canonical, "export job");
       let projectionClass = job.projectionClass;
       const canFull = authorize({
         actor: this.deps.resolveActor(actor.personId),
         permission: "seating.plan.approve",
-        scope: envelope,
+        scope: canonical,
         context: { now: nowOf(actor), actorKind: actor.actorKind },
       }).allow;
       if (projectionClass === "FULL" && !canFull) {
         projectionClass = "PERMISSION_SAFE";
       }
-      const editionId = job.sourceType === "EDITION" ? job.sourceId : (await tx.load<SeatingV2Publication>("publications", job.sourceId, envelope))?.planEditionId;
-      const edition = editionId ? await tx.load<SeatingV2PlanEdition>("planEditions", editionId, envelope) : undefined;
       const publication =
-        job.sourceType === "PUBLICATION" ? await tx.load<SeatingV2Publication>("publications", job.sourceId, envelope) : undefined;
+        job.sourceType === "PUBLICATION"
+          ? await this.requireOwned<SeatingV2Publication>(tx, "publications", job.sourceId, canonical, "publication")
+          : undefined;
+      const editionId = job.sourceType === "EDITION" ? job.sourceId : publication?.planEditionId;
+      const edition = editionId
+        ? await this.requireOwned<SeatingV2PlanEdition>(tx, "planEditions", editionId, canonical, "plan edition")
+        : undefined;
       const assignments = edition
-        ? (await tx.list<SeatingV2PlanAssignment>("planAssignments", envelope)).filter((item) => item.planEditionId === edition.id)
+        ? (await tx.list<SeatingV2PlanAssignment>("planAssignments", canonical)).filter((item) => item.planEditionId === edition.id)
         : [];
       return {
         contract: "eos-s06-seating-publication-v2",
         projectionClass,
-        organisationId: envelope.organisationId,
-        eventId: envelope.eventId,
+        organisationId: canonical.organisationId,
+        eventId: canonical.eventId,
         publicationId: publication?.id,
         publicationNo: publication?.publicationNo,
         sourceType: job.sourceType,
@@ -1557,8 +1753,7 @@ export class SeatingV2CommandService {
 
   async currentFreshness(envelope: SeatingV2Scope, packageId: string): Promise<{ fresh: boolean; currentSemanticHash: string; packageSemanticHash: string }> {
     return this.repo.transaction(async (tx) => {
-      const pkg = await tx.load<SeatingV2InputPackage>("inputPackages", packageId, envelope);
-      if (!pkg) throw new PlatformError("NOT_FOUND", "input package was not found");
+      const pkg = await this.requireOwned<SeatingV2InputPackage>(tx, "inputPackages", packageId, envelope, "input package");
       const built = await this.build(tx, envelope, pkg.deterministicSeed);
       return {
         fresh: packageIsFresh(pkg, built),
@@ -1601,35 +1796,70 @@ export class SeatingV2CommandService {
     }
   }
 
-  private async boundPublishedTableIds(tx: SeatingV2Transaction, envelope: SeatingV2Scope): Promise<Set<string>> {
-    const bindings = await tx.list<SeatingV2LayoutBinding>("layoutBindings", envelope);
-    const authority = requireSeatingLayoutAuthority(
-      this.deps.snapshot(),
-      bindings,
+  private requireBoundLayout(
+    envelope: SeatingV2Scope,
+    bindings: readonly SeatingV2LayoutBinding[],
+  ): { binding: SeatingV2LayoutBinding; layout: ReturnType<typeof boundLayoutFromLoadedPublication> } {
+    const active = activeSeatingLayoutBindings(bindings, envelope.organisationId, envelope.eventId);
+    if (active.length === 0) {
+      throw new PlatformError("NO_ACTIVE_SEATING_LAYOUT_BINDING", "no active seating layout binding", {
+        publicMessage: "Activate a seating layout binding before freezing seating inputs.",
+      });
+    }
+    if (active.length > 1) {
+      throw new PlatformError("MULTIPLE_ACTIVE_SEATING_LAYOUT_BINDINGS", "multiple active seating layout bindings", {
+        publicMessage:
+          "More than one seating layout binding is active for this event. Resolve the binding before freezing seating inputs.",
+      });
+    }
+    const binding = active[0]!;
+    const publication = this.deps.loadLayoutPublicationById(
+      binding.layoutPublicationId,
       envelope.organisationId,
       envelope.eventId,
     );
-    return new Set(authority.layout.tables.map((table) => table.objectId));
+    const current = this.deps.loadCurrentLayoutPublication(envelope.organisationId, envelope.eventId, binding.layoutId);
+    const revision = publication
+      ? this.deps.loadLayoutRevisionById(publication.revisionId, envelope.organisationId, envelope.eventId)
+      : undefined;
+    const layout = boundLayoutFromLoadedPublication(
+      envelope.organisationId,
+      envelope.eventId,
+      binding,
+      publication,
+      current,
+      revision,
+    );
+    return { binding, layout };
   }
 
-  private assertBindablePublication(
+  private async boundPublishedTableIds(tx: SeatingV2Transaction, envelope: SeatingV2Scope): Promise<Set<string>> {
+    const bindings = await tx.list<SeatingV2LayoutBinding>("layoutBindings", envelope);
+    return new Set(this.requireBoundLayout(envelope, bindings).layout.tables.map((table) => table.objectId));
+  }
+
+  private loadBindablePublication(
     envelope: SeatingV2Scope,
-    input: { layoutId: string; layoutPublicationId: string; layoutContentHash: string },
-  ): void {
-    const publication = this.deps.snapshot().layoutPublications.find(
-      (item) =>
-        item.id === input.layoutPublicationId &&
-        item.layoutId === input.layoutId &&
-        item.eventId === envelope.eventId &&
-        item.organisationId === envelope.organisationId,
+    layoutPublicationId: string,
+    expected?: { layoutId?: string; layoutContentHash?: string },
+  ): LayoutPublication {
+    const publication = this.deps.loadLayoutPublicationById(
+      layoutPublicationId,
+      envelope.organisationId,
+      envelope.eventId,
     );
-    if (!publication) {
+    if (
+      !publication ||
+      publication.eventId !== envelope.eventId ||
+      publication.organisationId !== envelope.organisationId ||
+      (expected?.layoutId && expected.layoutId !== publication.layoutId)
+    ) {
       throw new PlatformError("SEATING_LAYOUT_PUBLICATION_MISMATCH", "selected layout publication was not found", {
         publicMessage:
           "The seating layout binding does not match a current publication. Resolve the layout record before freezing seating inputs.",
       });
     }
-    if (publication.contentHash !== input.layoutContentHash) {
+    if (expected?.layoutContentHash && expected.layoutContentHash !== publication.contentHash) {
       throw new PlatformError("SEATING_LAYOUT_PUBLICATION_MISMATCH", "selected layout publication hash does not match", {
         publicMessage:
           "The seating layout binding does not match a current publication. Resolve the layout record before freezing seating inputs.",
@@ -1641,15 +1871,38 @@ export class SeatingV2CommandService {
           "The seating layout binding is stale. Propose and activate a successor binding for the current publication.",
       });
     }
+    return publication;
+  }
+
+  private packageInputs(envelope: SeatingV2Scope, bindings: readonly SeatingV2LayoutBinding[]) {
+    const authority = this.requireBoundLayout(envelope, bindings);
+    return {
+      layout: authority.layout,
+      binding: authority.binding,
+      cohort: guestCohortFromRecords(
+        this.deps.listOperationalGuestsByEventId(envelope.organisationId, envelope.eventId),
+        this.deps.listRsvpResponsesByEventId(envelope.organisationId, envelope.eventId),
+        envelope.eventId,
+      ),
+      brief: briefFactsFromRecords(
+        this.deps.listDiscoveryEngagementsByEventId(envelope.organisationId, envelope.eventId),
+        this.deps.listPublishedEventBriefsForEvent(envelope.organisationId, envelope.eventId),
+        envelope.eventId,
+      ),
+      protection: protectionFactsFromRecords(
+        this.deps.listRiskApplicabilitySnapshotsByEventId(envelope.organisationId, envelope.eventId),
+        envelope.eventId,
+      ),
+    };
   }
 
   private async build(tx: SeatingV2Transaction, envelope: SeatingV2Scope, seed?: string): Promise<SeatingV2BuiltPackage> {
     return buildSeatingV2Package({
       tx,
       scope: envelope,
-      snapshot: this.deps.snapshot(),
       pepper: this.deps.tokenPepper(),
       seed,
+      ...this.packageInputs(envelope, await tx.list<SeatingV2LayoutBinding>("layoutBindings", envelope)),
     });
   }
 
@@ -1690,8 +1943,7 @@ export class SeatingV2CommandService {
     edition: SeatingV2PlanEdition,
     now: string,
   ): Promise<void> {
-    const pkg = await tx.load<SeatingV2InputPackage>("inputPackages", edition.packageId, envelope);
-    if (!pkg) throw new PlatformError("NOT_FOUND", "package missing");
+    const pkg = await this.requireOwned<SeatingV2InputPackage>(tx, "inputPackages", edition.packageId, envelope, "package");
     const built = await this.build(tx, envelope, pkg.deterministicSeed);
     if (!packageIsFresh(pkg, built)) {
       throw new PlatformError("TRANSITION_INVALID", "governing inputs changed; create a successor from current governing inputs");
@@ -1851,7 +2103,7 @@ export class SeatingV2CommandService {
 
   private async proposeManual(
     tx: SeatingV2Transaction,
-    envelope: SeatingV2Scope,
+    envelope: SeatingV2CommandEnvelope,
     planEditionId: string,
     command: SeatingV2ManualCommand,
     now: string,
@@ -1865,14 +2117,25 @@ export class SeatingV2CommandService {
     if (command.type === "BULK" && command.commands.length > 50) {
       throw new PlatformError("VALIDATION_FAILED", "bulk apply is limited to 50 commands");
     }
-    const edition = await tx.load<SeatingV2PlanEdition>("planEditions", planEditionId, envelope);
-    if (!edition || edition.status !== "WORKING") {
+    const edition = await this.requireOwned<SeatingV2PlanEdition>(tx, "planEditions", planEditionId, envelope, "plan edition");
+    const concurrency = this.requireConcurrency(envelope);
+    if (edition.status !== "WORKING") {
       throw new PlatformError("TRANSITION_INVALID", "manual seating requires a WORKING edition");
+    }
+    const eventCurrent = await tx.lockEventCurrent(envelope);
+    if (!eventCurrent?.workingEditionId || eventCurrent.workingEditionId !== planEditionId) {
+      throw new PlatformError("VERSION_CONFLICT", "stale plan edition is no longer the current working edition");
+    }
+    if (edition.version !== concurrency.expectedVersion) {
+      throw new PlatformError("VERSION_CONFLICT", "stale plan edition version does not match");
+    }
+    if (edition.contentHash !== concurrency.expectedContentHash) {
+      throw new PlatformError("VERSION_CONFLICT", "stale plan edition hash does not match");
     }
     const current = (await tx.list<SeatingV2PlanAssignment>("planAssignments", envelope)).filter(
       (item) => item.planEditionId === edition.id,
     );
-    const pkg = await tx.load<SeatingV2InputPackage>("inputPackages", edition.packageId, envelope);
+    const pkg = await this.requireOwned<SeatingV2InputPackage>(tx, "inputPackages", edition.packageId, envelope, "package");
     const compiled = await this.requireCompiled(tx, envelope, edition.packageId);
     const guests = (await tx.list<{ packageId: string; eventGuestId: string; solverToken: string }>("packageGuests", envelope)).filter(
       (item) => item.packageId === edition.packageId,
@@ -1901,7 +2164,7 @@ export class SeatingV2CommandService {
       if (item.type === "ASSIGN_UNSEATED") {
         if (target.state === "SEATED") throw new PlatformError("VALIDATION_FAILED", "assign unseated cannot move a seated guest");
         if (next.some((row) => row.logicalPositionId === item.positionToken && row.state === "SEATED")) {
-          throw new PlatformError("VERSION_CONFLICT", "target position is occupied");
+          throw new PlatformError("VALIDATION_FAILED", "target position is occupied");
         }
         target.state = "SEATED";
         target.logicalPositionId = item.positionToken;
@@ -1909,7 +2172,7 @@ export class SeatingV2CommandService {
       } else if (item.type === "MOVE") {
         if (target.state !== "SEATED") throw new PlatformError("VALIDATION_FAILED", "move requires a seated guest");
         if (next.some((row) => row.logicalPositionId === item.positionToken && row.state === "SEATED" && row.eventGuestId !== target.eventGuestId)) {
-          throw new PlatformError("VERSION_CONFLICT", "target position is occupied");
+          throw new PlatformError("VALIDATION_FAILED", "target position is occupied");
         }
         target.logicalPositionId = item.positionToken;
         target.typedReasonCodes = ["MANUAL_MOVE"];

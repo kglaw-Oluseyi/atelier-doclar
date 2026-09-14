@@ -8,3 +8,9 @@ playwright-report/
 blob-report/
 *.tsbuildinfo
 data/
+**/event-os-non-production.json
+**/event-os-non-production.seating-v2.json
+**/event-os-non-production.seating-v2.json.lock
+**/s075-ckpt-*/
+**/checkpoint-store*.json
+**/checkpoint-manifest.json

@@ -1,6 +1,6 @@
 import { expect, type Browser, type Page } from "@playwright/test";
 import { loginAs, openStaffContext, selectOptionContaining } from "./login";
-import { expectFreshActionSuccess, submitScopedSeatingMutation } from "./s060-helpers";
+import { submitScopedSeatingMutation } from "./s060-helpers";
 
 export const ALPHA_ONE_SEATING = "/app/events/00000000-0000-4000-8000-000000000021/seating";
 export const ALPHA_ONE_LAYOUTS = "/app/events/00000000-0000-4000-8000-000000000021/layouts";
@@ -17,30 +17,54 @@ export async function seatingBindingStatus(page: Page) {
   };
 }
 
-export async function proposeAlphaOneSeatingLayoutBinding(page: Page, layoutLabel: string | RegExp = /Synthetic seating hall/) {
-  await page.goto(`${ALPHA_ONE_SEATING}#inputs`, { waitUntil: "domcontentloaded" });
+export function seatingPathForEvent(eventId: string) {
+  return `/app/events/${eventId}/seating`;
+}
+
+export async function proposeSeatingLayoutBinding(
+  page: Page,
+  seatingPath: string,
+  layoutLabel: string | RegExp,
+) {
+  await page.goto(`${seatingPath}#inputs`, { waitUntil: "domcontentloaded" });
   const propose = page.getByTestId("seating-layout-binding-propose");
   await expect(propose).toBeVisible({ timeout: 20_000 });
   await selectOptionContaining(propose.locator('select[name="layoutPublicationId"]'), layoutLabel);
-  await propose.getByRole("button", { name: "Propose seating layout binding" }).click();
-  await expectFreshActionSuccess(page);
+  await submitScopedSeatingMutation(page, propose, "Propose seating layout binding");
 }
 
-export async function activateAlphaOneSeatingLayoutBinding(page: Page) {
-  await page.goto(`${ALPHA_ONE_SEATING}#inputs`, { waitUntil: "domcontentloaded" });
+export async function activateSeatingLayoutBinding(
+  page: Page,
+  seatingPath: string,
+  options?: { requireFreezeEnabled?: boolean },
+) {
+  await page.goto(`${seatingPath}#inputs`, { waitUntil: "domcontentloaded" });
   const identity = page.getByTestId("seating-layout-binding-activate-identity");
   await expect(identity).toBeVisible({ timeout: 20_000 });
   await expect(identity).toContainText(/CURRENT publication \d+/);
   await expect(identity).toContainText(/hash [a-f0-9]{12}/i);
   await expect(identity).not.toContainText(/No current publication/i);
-  await page.getByTestId("seating-layout-binding-activate").getByRole("button", { name: "Activate seating layout binding" }).click();
-  await expectFreshActionSuccess(page);
+  await submitScopedSeatingMutation(
+    page,
+    page.getByTestId("seating-layout-binding-activate"),
+    "Activate seating layout binding",
+  );
   const bound = await seatingBindingStatus(page);
   expect(bound.state).toBe("BOUND");
-  expect(bound.freezeDisabled).toBe("false");
+  if (options?.requireFreezeEnabled !== false) {
+    expect(bound.freezeDisabled).toBe("false");
+  }
   expect(bound.text).toMatch(/CURRENT publication \d+/);
   expect(bound.hashPrefix).toMatch(/^[a-f0-9]{12}$/i);
   return bound;
+}
+
+export async function proposeAlphaOneSeatingLayoutBinding(page: Page, layoutLabel: string | RegExp = /Synthetic seating hall/) {
+  return proposeSeatingLayoutBinding(page, ALPHA_ONE_SEATING, layoutLabel);
+}
+
+export async function activateAlphaOneSeatingLayoutBinding(page: Page) {
+  return activateSeatingLayoutBinding(page, ALPHA_ONE_SEATING);
 }
 
 export async function ensureAlphaOneSeatingLayoutBinding(

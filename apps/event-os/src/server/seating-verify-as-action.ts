@@ -4,22 +4,24 @@ import { resolveVerifyAsRole, S06_VERIFY_AS_ALLOWLIST, type ProtectionFormState 
 import { sessionConfig } from "./config";
 import { getRuntime } from "./runtime";
 import { writeStaffSessionCookie } from "./staff-session-cookie";
-import { requireActor } from "./with-session";
-import { runProtectionFormAction } from "./protection-form-action";
 import { eventOsVerifyAsAvailable } from "./seating-verify-as";
+import { runTrustedSeatingAction } from "./trusted-seating-action-context";
 
-export async function switchSeatingVerifyAsAction(prev: ProtectionFormState, formData: FormData): Promise<ProtectionFormState> {
-  const eventId = String(formData.get("eventId") ?? "");
-  return runProtectionFormAction({
+export async function switchSeatingVerifyAsAction(
+  boundEventId: string,
+  prev: ProtectionFormState,
+  formData: FormData,
+): Promise<ProtectionFormState> {
+  return runTrustedSeatingAction({
+    boundEventId,
     prev,
     formData,
-    scopePath: `/app/events/${eventId}/seating`,
+    permission: "seating.fixture_verify_as",
     actionType: "seating.verify_as",
     execute: async () => {
       if (!eventOsVerifyAsAvailable()) {
         throw new Error("This assignment cannot perform this seating action.");
       }
-      await requireActor();
       const role = resolveVerifyAsRole(String(formData.get("symbolicRole") ?? ""));
       if (!role) throw new Error("This assignment cannot perform this seating action.");
       const mapped = S06_VERIFY_AS_ALLOWLIST[role];

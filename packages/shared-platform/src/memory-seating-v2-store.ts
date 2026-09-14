@@ -75,13 +75,13 @@ export class MemorySeatingV2Transaction implements SeatingV2Transaction {
 
   async load<T>(collection: SeatingV2Collection, id: string, scope: Partial<SeatingV2Scope>): Promise<T | undefined> {
     const hit = (this.store.collection(collection) as Identified[]).find((item) => rowIdentity(item) === id);
-    if (!hit || !assertSeatingV2Scope(hit, scope)) return undefined;
+    if (!hit || !assertSeatingV2Scope(hit, scope, collection)) return undefined;
     return structuredClone(hit) as T;
   }
 
   async list<T>(collection: SeatingV2Collection, scope: Partial<SeatingV2Scope>): Promise<T[]> {
     return (this.store.collection(collection) as Identified[])
-      .filter((item) => assertSeatingV2Scope(item, scope))
+      .filter((item) => assertSeatingV2Scope(item, scope, collection))
       .map((item) => structuredClone(item) as T);
   }
 
@@ -139,7 +139,7 @@ export class MemorySeatingV2Transaction implements SeatingV2Transaction {
     patch: SeatingV2LifecyclePatch,
   ): Promise<T> {
     const rows = this.store.collection(collection) as Identified[];
-    const index = rows.findIndex((item) => rowIdentity(item) === id && assertSeatingV2Scope(item, scope));
+    const index = rows.findIndex((item) => rowIdentity(item) === id && assertSeatingV2Scope(item, scope, collection));
     if (index < 0) throw new PlatformError("NOT_FOUND", `seating v2 ${collection} row was not found`);
     const current = rows[index] as Record<string, unknown>;
     const allowed: SeatingV2LifecyclePatch = {
@@ -183,7 +183,7 @@ export class MemorySeatingV2Transaction implements SeatingV2Transaction {
     >,
   ): Promise<SeatingV2LayoutBinding> {
     const rows = this.store.collection("layoutBindings");
-    const index = rows.findIndex((item) => item.id === id && assertSeatingV2Scope(item, scope));
+    const index = rows.findIndex((item) => item.id === id && assertSeatingV2Scope(item, scope, "layoutBindings"));
     if (index < 0) throw new PlatformError("NOT_FOUND", "seating layout binding was not found");
     const current = rows[index]!;
     if (current.version !== expectedVersion) {
@@ -246,6 +246,16 @@ export class MemorySeatingV2Transaction implements SeatingV2Transaction {
     );
   }
 
+  async findIdempotencyByActionKey(
+    organisationId: string,
+    action: string,
+    key: string,
+  ): Promise<SeatingV2IdempotencyReceipt | undefined> {
+    return this.store.collection("idempotencyReceipts").find(
+      (item) => item.organisationId === organisationId && item.action === action && item.idempotencyKey === key,
+    );
+  }
+
   async insertIdempotency(receipt: SeatingV2IdempotencyReceipt): Promise<SeatingV2IdempotencyReceipt> {
     const existing = await this.getIdempotency(
       { organisationId: receipt.organisationId, eventId: receipt.eventId },
@@ -282,7 +292,7 @@ export class MemorySeatingV2Transaction implements SeatingV2Transaction {
         item.runId === runId &&
         item.positionToken === positionToken &&
         item.state === "SEATED" &&
-        assertSeatingV2Scope(item, scope),
+        assertSeatingV2Scope(item, scope, "runAssignments"),
     );
     return hit ? structuredClone(hit) : undefined;
   }
@@ -299,7 +309,7 @@ export class MemorySeatingV2Transaction implements SeatingV2Transaction {
         item.planEditionId === planEditionId &&
         item.logicalPositionId === logicalPositionId &&
         item.state === "SEATED" &&
-        assertSeatingV2Scope(item, scope),
+        assertSeatingV2Scope(item, scope, "planAssignments"),
     );
     return hit ? structuredClone(hit) : undefined;
   }
@@ -320,7 +330,7 @@ export class MemorySeatingV2Transaction implements SeatingV2Transaction {
       const kept = rows.filter((item) => {
         const id = rowIdentity(item);
         if (!id || !allow.includes(id)) return true;
-        if (!assertSeatingV2Scope(item, scope)) return true;
+        if (!assertSeatingV2Scope(item, scope, collection)) return true;
         removed += 1;
         return false;
       });

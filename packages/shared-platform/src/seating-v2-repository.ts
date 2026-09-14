@@ -3,6 +3,8 @@ import type { AuditEvent } from "./schemas.js";
 import {
   emptySeatingV2State,
   SEATING_V2_COLLECTIONS,
+  SEATING_V2_ORG_ONLY_COLLECTIONS,
+  SEATING_V2_UNSCOPED_COLLECTIONS,
   type SeatingV2Collection,
   type SeatingV2EventCurrent,
   type SeatingV2IdempotencyReceipt,
@@ -80,6 +82,11 @@ export interface SeatingV2Transaction {
   ): Promise<SeatingV2LayoutBinding>;
   appendAudit(record: AuditEvent): Promise<void>;
   getIdempotency(scope: SeatingV2Scope, action: string, key: string): Promise<SeatingV2IdempotencyReceipt | undefined>;
+  findIdempotencyByActionKey(
+    organisationId: string,
+    action: string,
+    key: string,
+  ): Promise<SeatingV2IdempotencyReceipt | undefined>;
   insertIdempotency(receipt: SeatingV2IdempotencyReceipt): Promise<SeatingV2IdempotencyReceipt>;
   /** Postgres: SELECT ... FROM seating_v2_event_current ... FOR UPDATE. Memory is a no-op read. */
   lockEventCurrent(scope: SeatingV2Scope, lock?: SeatingV2Lock): Promise<SeatingV2EventCurrent | undefined>;
@@ -123,10 +130,16 @@ export function seatingV2RowId(record: { id?: string; migrationId?: string }): s
 export function assertSeatingV2Scope(
   record: { organisationId?: string; eventId?: string },
   scope: Partial<SeatingV2Scope>,
+  collection?: SeatingV2Collection,
 ): boolean {
-  if (scope.organisationId && record.organisationId && record.organisationId !== scope.organisationId) return false;
-  if (scope.eventId && record.eventId && record.eventId !== scope.eventId) return false;
-  return true;
+  if (collection && SEATING_V2_UNSCOPED_COLLECTIONS.has(collection)) return true;
+  if (collection && SEATING_V2_ORG_ONLY_COLLECTIONS.has(collection)) {
+    if (!scope.organisationId || !record.organisationId) return false;
+    return record.organisationId === scope.organisationId;
+  }
+  if (!scope.organisationId || !scope.eventId) return false;
+  if (!record.organisationId || !record.eventId) return false;
+  return record.organisationId === scope.organisationId && record.eventId === scope.eventId;
 }
 
 export function emptySeatingV2Snapshot(): SeatingV2State {
