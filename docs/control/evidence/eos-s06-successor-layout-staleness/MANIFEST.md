@@ -90,7 +90,8 @@ Artifacts: `/tmp/eos-s06-successor-layout-staleness/`
 | | SHA |
 |--|-----|
 | Starting HEAD | `305fb94751676083cb654323fb56997d8e700899` |
-| Ending (this remediation) | `42b0bb3f0976ca2b745a09f3952680afef69a1b9` |
+| Ending HEAD (docs tip) | `5499491f3e8c1c8dce4facd643726bbfa7c1ae99` |
+| Ending application / deployed SHA | `42b0bb3f0976ca2b745a09f3952680afef69a1b9` |
 
 ## 9. Commit / push / deployment
 
