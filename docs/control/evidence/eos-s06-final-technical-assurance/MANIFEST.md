@@ -82,7 +82,34 @@ Focused test: `test/s06-hard-conflict-identity-copy.test.ts` — **pass**.
 
 ## Deployment / CI / protected surfaces
 
-Filled after commit + event-os deploy + CI billing check.
+| Role | Value |
+|------|-------|
+| Application commit / ending HEAD | `c5e6cafe0de8a7ef2091aca28d2fd5bc1098b892` |
+| Ending Railway event-os deployment | `539ac317-f7d7-4dc1-bac4-d38f92fec9cc` SUCCESS |
+| Deployed SHA (ready) | `c5e6cafe0de8a7ef2091aca28d2fd5bc1098b892` |
+| Live posture | `ready:true` · `POSTGRES` · `APPLIED` · `productionAuthorised:false` · providers INACTIVE |
+| Control Tower | **not redeployed** (latest listed SKIPPED `856b968b…`) |
+
+### Live focused smoke (post-deploy)
+
+| Check | Result |
+|-------|--------|
+| One successful seating mutation HTTP status | **pass** — live `next-action` POST **303** (export request); not 503 |
+| Binding Activate/Withdraw `:focus-visible` | **pass** — `outline: solid 3px rgb(139,110,56)` + onyx/champagne ring |
+| Hard-conflict edition vs content-hash labels | **pass** — `rule edition 11c3f86c · content hash 2e8f84c6a882` |
+
+### CI
+
+Canonical `programme-validate` on push `c5e6caf` → run `34960260875` **did not start jobs**:
+
+> The job was not started because recent account payments have failed or your spending limit needs to be increased.
+
+**Formal acceptance blocker: GitHub Actions billing only** (not a product defect). Do not treat as product failure.
+
+## Protected files / Control Tower
+
+Protected files untouched: `Untitled`, `MD Academy/Untitled`, `apps/event-os/scripts/s076-shard-runner.sh`, `apps/event-os/scripts/s076-shard-plan.abandoned.json`.  
+Control Tower not deployed.
 
 ## Explicit non-acceptance
 
