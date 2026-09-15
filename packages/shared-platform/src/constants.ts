@@ -455,6 +455,12 @@ export const PERMISSION_KEYS = [
   "seating.export",
   "seating.evaluate",
   "seating.fixture_verify_as",
+  "atelierCommand.view",
+  "atelierCommand.instruct",
+  "atelierCommand.execute",
+  "atelierCommand.approve",
+  "atelierCommand.browser",
+  "atelierCommand.audit",
 ] as const;
 
 export const SYSTEM_ROLE_KEYS = [
@@ -709,6 +715,12 @@ export const S06_SENSITIVE_PERMISSIONS = [
   "seating.plan.review.accessibility",
   "seating.plan.review.security",
   "seating.fixture_verify_as",
+] as const;
+
+export const S06A_SENSITIVE_PERMISSIONS = [
+  "atelierCommand.execute",
+  "atelierCommand.approve",
+  "atelierCommand.browser",
 ] as const;
 
 export const ASSERTION_KINDS = [

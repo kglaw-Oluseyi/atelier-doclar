@@ -11,6 +11,7 @@ import {
   S05A_SENSITIVE_PERMISSIONS,
   S05B_SENSITIVE_PERMISSIONS,
   S06_SENSITIVE_PERMISSIONS,
+  S06A_SENSITIVE_PERMISSIONS,
   SCHEMA_VERSION,
   SYSTEM_ROLE_KEYS,
 } from "./constants.js";
@@ -253,6 +254,12 @@ const PERMISSION_IDS: Record<PermissionKey, string> = {
   "seating.export": "11111111-1111-4111-8111-111111111228",
   "seating.evaluate": "11111111-1111-4111-8111-111111111229",
   "seating.fixture_verify_as": "11111111-1111-4111-8111-111111111234",
+  "atelierCommand.view": "11111111-1111-4111-8111-111111111235",
+  "atelierCommand.instruct": "11111111-1111-4111-8111-111111111236",
+  "atelierCommand.execute": "11111111-1111-4111-8111-111111111237",
+  "atelierCommand.approve": "11111111-1111-4111-8111-111111111238",
+  "atelierCommand.browser": "11111111-1111-4111-8111-111111111239",
+  "atelierCommand.audit": "11111111-1111-4111-8111-111111111240",
 };
 
 const ROLE_IDS: Record<(typeof SYSTEM_ROLE_KEYS)[number], string> = {
@@ -467,6 +474,12 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "seating.view",
     "seating.rule.activate",
     "seating.plan.approve",
+    "atelierCommand.view",
+    "atelierCommand.instruct",
+    "atelierCommand.execute",
+    "atelierCommand.approve",
+    "atelierCommand.browser",
+    "atelierCommand.audit",
   ],
   CLIENT_LEAD: [
     "organisation.view",
@@ -634,6 +647,10 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "seating.plan.edit",
     "seating.plan.submit",
     "seating.export",
+    "atelierCommand.view",
+    "atelierCommand.instruct",
+    "atelierCommand.execute",
+    "atelierCommand.browser",
   ],
   SYSTEM_ADMINISTRATOR: [
     "organisation.view",
@@ -704,6 +721,8 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "risk.dossier.view",
     "risk.audit.view",
     "seating.view",
+    "atelierCommand.view",
+    "atelierCommand.audit",
   ],
   RISK_GOVERNANCE_REVIEWER: [
     "organisation.view",
@@ -746,6 +765,7 @@ function permissionRecord(key: PermissionKey): Permission {
       (S05A_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
       (S05B_SENSITIVE_PERMISSIONS as readonly string[]).includes(key) ||
       (S06_SENSITIVE_PERMISSIONS as readonly string[]).includes(key)
+      || (S06A_SENSITIVE_PERMISSIONS as readonly string[]).includes(key)
         ? "SENSITIVE"
         : "NORMAL",
     schemaVersion: SCHEMA_VERSION,

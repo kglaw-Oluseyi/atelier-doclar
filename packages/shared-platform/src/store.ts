@@ -1,3 +1,4 @@
+import type { AtelierCommandLedgerDocument } from "./atelier-command/types.js";
 import type { StoreProductionStatus } from "./constants.js";
 import type {
   Assignment,
@@ -551,6 +552,7 @@ export interface PlatformSnapshot {
   riskEvaluationCaseResults: RiskEvaluationCaseResult[];
   riskEvaluationRunLeases: RiskEvaluationRunLease[];
   s05bMigrationReceipts: S05BMigrationReceipt[];
+  atelierCommandLedgers: AtelierCommandLedgerDocument[];
   audit: AuditEvent[];
   idempotency: IdempotencyRecord[];
 }
@@ -839,6 +841,7 @@ export function emptySnapshot(): PlatformSnapshot {
     riskEvaluationCaseResults: [],
     riskEvaluationRunLeases: [],
     s05bMigrationReceipts: [],
+    atelierCommandLedgers: [],
     audit: [],
     idempotency: [],
   };
@@ -1089,5 +1092,8 @@ export function normalizeSnapshot(input: PlatformSnapshot): PlatformSnapshot {
     riskEvaluationCaseResults: input.riskEvaluationCaseResults ?? [],
     riskEvaluationRunLeases: input.riskEvaluationRunLeases ?? [],
     s05bMigrationReceipts: input.s05bMigrationReceipts ?? [],
+    atelierCommandLedgers: input.atelierCommandLedgers ?? [],
+    audit: input.audit ?? [],
+    idempotency: input.idempotency ?? [],
   };
 }

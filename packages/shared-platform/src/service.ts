@@ -896,6 +896,7 @@ function parseStrict<T>(schema: { safeParse: (value: unknown) => { success: true
   return parsed.data;
 }
 
+import * as AtelierCommand from "./atelier-command/index.js";
 export class PlatformService {
   private lastMutationEffect: DurableMutationEffect | undefined;
   private dossierCommandService: RiskDossierCommandService | undefined;
@@ -9612,6 +9613,191 @@ export class PlatformService {
       schemaVersion: SCHEMA_VERSION,
     };
     snap.audit.push(entry);
+  }
+
+
+
+
+  getAtelierCommandWorkspace(
+    actor: ActorContext,
+    organisationId: string,
+    eventId: string,
+    options?: { taskQuery?: string; taskDomain?: string; roleKey?: string; eventName?: string; organisationName?: string },
+  ) {
+    const { snap } = this.authorizeQuery(actor, "atelierCommand.view", { organisationId, eventId });
+    const actorSnap = this.resolveActor(actor.personId);
+    const view = AtelierCommand.getAtelierWorkspace({
+      snap,
+      actor: actorSnap,
+      organisationId,
+      eventId,
+      eventName: options?.eventName,
+      organisationName: options?.organisationName,
+      taskQuery: options?.taskQuery,
+      taskDomain: options?.taskDomain,
+      roleKey: options?.roleKey,
+      now: this.tokenNow(actor),
+    });
+    this.store.replace(snap);
+    return view;
+  }
+
+  submitAtelierCommandInstruction(
+    actor: ActorContext,
+    organisationId: string,
+    eventId: string,
+    input: { sessionId: string; rawText: string; dryRun?: boolean },
+  ) {
+    const { snap } = this.authorizeQuery(actor, "atelierCommand.instruct", { organisationId, eventId });
+    const actorSnap = this.resolveActor(actor.personId);
+    const result = AtelierCommand.submitInstruction({
+      snap,
+      actor: actorSnap,
+      organisationId,
+      eventId,
+      sessionId: input.sessionId,
+      rawText: input.rawText,
+      dryRun: input.dryRun,
+      now: this.tokenNow(actor),
+    });
+    this.writeAudit(snap, {
+      action: "atelierCommand.instruct",
+      outcome: result.instruction.status === "REJECTED" ? "DENIED" : "SUCCESS",
+      actorPersonId: actor.personId,
+      organisationId,
+      eventId,
+      resourceType: "atelier_instruction",
+      resourceId: result.instruction.id,
+      correlationId: result.receipt?.correlationId ?? result.instruction.id,
+      occurredAt: this.tokenNow(actor),
+    });
+    this.store.replace(snap);
+    return result;
+  }
+
+  invokeAtelierCommandTask(
+    actor: ActorContext,
+    organisationId: string,
+    eventId: string,
+    input: {
+      sessionId: string;
+      taskId: string;
+      taskVersion?: number;
+      operatorEdits?: Record<string, unknown>;
+      dryRun?: boolean;
+    },
+  ) {
+    const { snap } = this.authorizeQuery(actor, "atelierCommand.instruct", { organisationId, eventId });
+    const actorSnap = this.resolveActor(actor.personId);
+    const result = AtelierCommand.invokeTaskBankTask({
+      snap,
+      actor: actorSnap,
+      organisationId,
+      eventId,
+      sessionId: input.sessionId,
+      taskId: input.taskId,
+      taskVersion: input.taskVersion,
+      operatorEdits: input.operatorEdits,
+      dryRun: input.dryRun,
+      now: this.tokenNow(actor),
+    });
+    this.store.replace(snap);
+    return result;
+  }
+
+  confirmAtelierCommandPlan(actor: ActorContext, organisationId: string, eventId: string, planId: string) {
+    const { snap } = this.authorizeQuery(actor, "atelierCommand.execute", { organisationId, eventId });
+    const actorSnap = this.resolveActor(actor.personId);
+    const plan = AtelierCommand.confirmPlan({
+      snap,
+      actor: actorSnap,
+      organisationId,
+      eventId,
+      planId,
+      now: this.tokenNow(actor),
+    });
+    this.store.replace(snap);
+    return plan;
+  }
+
+  approveAtelierCommandPlan(actor: ActorContext, organisationId: string, eventId: string, planId: string) {
+    const { snap } = this.authorizeQuery(actor, "atelierCommand.approve", { organisationId, eventId });
+    const actorSnap = this.resolveActor(actor.personId);
+    const plan = AtelierCommand.approvePlan({
+      snap,
+      actor: actorSnap,
+      organisationId,
+      eventId,
+      planId,
+      now: this.tokenNow(actor),
+    });
+    this.store.replace(snap);
+    return plan;
+  }
+
+  executeAtelierCommandPlan(
+    actor: ActorContext,
+    organisationId: string,
+    eventId: string,
+    planId: string,
+    options?: { simulateLostResponse?: boolean; failAtOrdinal?: number },
+  ) {
+    const { snap } = this.authorizeQuery(actor, "atelierCommand.execute", { organisationId, eventId });
+    const actorSnap = this.resolveActor(actor.personId);
+    const result = AtelierCommand.executePlan({
+      snap,
+      actor: actorSnap,
+      organisationId,
+      eventId,
+      planId,
+      simulateLostResponse: options?.simulateLostResponse,
+      failAtOrdinal: options?.failAtOrdinal,
+      now: this.tokenNow(actor),
+    });
+    this.writeAudit(snap, {
+      action: "atelierCommand.execute",
+      outcome:
+        result.run.status === "COMPLETED" || result.run.status === "COMPLETED_WITH_RESIDUALS" ? "SUCCESS" : "DENIED",
+      actorPersonId: actor.personId,
+      organisationId,
+      eventId,
+      resourceType: "atelier_run",
+      resourceId: result.run.id,
+      correlationId: result.receipt.correlationId,
+      occurredAt: this.tokenNow(actor),
+    });
+    this.store.replace(snap);
+    return result;
+  }
+
+  reconcileAtelierCommandOutcome(actor: ActorContext, organisationId: string, eventId: string, stepExecutionId: string) {
+    const { snap } = this.authorizeQuery(actor, "atelierCommand.execute", { organisationId, eventId });
+    const actorSnap = this.resolveActor(actor.personId);
+    const result = AtelierCommand.reconcileUnknownOutcome({
+      snap,
+      actor: actorSnap,
+      organisationId,
+      eventId,
+      stepExecutionId,
+      now: this.tokenNow(actor),
+    });
+    this.store.replace(snap);
+    return result;
+  }
+
+  cancelAtelierCommandRun(actor: ActorContext, organisationId: string, eventId: string, runId: string) {
+    const { snap } = this.authorizeQuery(actor, "atelierCommand.execute", { organisationId, eventId });
+    const actorSnap = this.resolveActor(actor.personId);
+    const result = AtelierCommand.cancelRun({
+      snap,
+      actor: actorSnap,
+      organisationId,
+      eventId,
+      runId,
+      now: this.tokenNow(actor),
+    });
+    this.store.replace(snap);
+    return result;
   }
 
   private denyError(reason: string): PlatformError {

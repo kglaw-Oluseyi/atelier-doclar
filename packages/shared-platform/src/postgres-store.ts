@@ -285,6 +285,7 @@ const COLLECTIONS: Collection[] = [
   "riskEvaluationCaseResults",
   "riskEvaluationRunLeases",
   "s05bMigrationReceipts",
+  "atelierCommandLedgers",
 ];
 
 function idOf(collection: Collection, record: Record<string, unknown>): string {
