@@ -6,6 +6,7 @@ import { assertMakerChecker } from "../risk-command.js";
 import type { PlatformSnapshot } from "../store.js";
 import { simulateBrowserRun, DEFAULT_ALLOWED_DOMAINS } from "./browser.js";
 import { buildEventContextProjection } from "./context.js";
+import { buildIntelligenceResult } from "./intelligence.js";
 import { interpretInstruction, hashPlan } from "./interpreter.js";
 import {
   assertAtelierPermission,
@@ -26,6 +27,7 @@ import {
   type AtelierCommandSession,
   type AtelierConfirmation,
   type AtelierInstruction,
+  type AtelierIntelligenceResultPayload,
   type AtelierPlan,
   type AtelierPlanStep,
   type AtelierRun,
@@ -187,6 +189,7 @@ export function submitInstruction(input: {
   dryRun?: boolean;
   taskInvocationId?: string;
   forcedTools?: string[];
+  riskFloor?: import("./types.js").AtelierCommandRiskTier;
   now?: string;
 }) {
   assertAtelierPermission(input.actor, "atelierCommand.instruct", input.organisationId, input.eventId);
@@ -224,6 +227,9 @@ export function submitInstruction(input: {
     organisationName: session.scopeSnapshot.organisationName,
     now,
   });
+  const knownEvents = input.snap.events
+    .filter((event) => event.organisationId === input.organisationId)
+    .map((event) => ({ id: event.id, name: event.name }));
   const compiled = interpretInstruction({
     organisationId: input.organisationId,
     eventId: input.eventId,
@@ -231,6 +237,8 @@ export function submitInstruction(input: {
     context,
     dryRun: input.dryRun,
     forcedTools: input.forcedTools,
+    riskFloor: input.riskFloor,
+    knownEvents,
     now,
   });
   ledger.modelInvocations.push(compiled.modelInvocation);
@@ -259,6 +267,8 @@ export function submitInstruction(input: {
       unchangedReasons: [compiled.refuseReason ?? "Refused"],
       evidenceRefs: context.evidenceRefs,
       createdAt: now,
+      effectClass: "REFUSED",
+      dataChanged: false,
     };
     ledger.receipts.push(receipt);
     return { instruction, plan: null, steps: [], receipt, compiled };
@@ -305,9 +315,31 @@ export function submitInstruction(input: {
     compensationPolicy: "supersession-only",
     status: "PENDING",
   }));
-  plan.approvedPlanHash = hashPlan(compiled.steps, input.eventId);
-  if (plan.riskSummary === "R2" || plan.riskSummary === "R3" || plan.riskSummary === "R4") {
-    plan.status = plan.riskSummary === "R3" || plan.riskSummary === "R4" ? "AWAITING_APPROVAL" : "AWAITING_CONFIRMATION";
+  // Re-derive risk from trusted tool catalogue only (ignore any client/model downgrade).
+  plan.riskSummary = maxRisk([plan.riskSummary, ...steps.map((step) => step.riskTier), ...(input.riskFloor ? [input.riskFloor] : [])]);
+  for (const step of steps) {
+    const tool = getAtelierTool(step.toolName);
+    if (tool && tool.riskTier !== step.riskTier) {
+      step.riskTier = tool.riskTier;
+    }
+  }
+  plan.approvedPlanHash = hashPlan(
+    steps.map((step) => ({
+      toolName: step.toolName,
+      toolVersion: step.toolVersion,
+      riskTier: step.riskTier,
+      confirmationMode: step.confirmationMode,
+      approvalRequirement: step.approvalRequirement,
+      executionRoute: step.executionRoute,
+      input: step.input,
+      targetRefs: step.targetRefs,
+    })),
+    input.eventId,
+  );
+  if (plan.riskSummary === "R3") {
+    plan.status = "AWAITING_APPROVAL";
+  } else if (plan.riskSummary === "R2" || plan.riskSummary === "R4" || plan.riskSummary === "R5") {
+    plan.status = "AWAITING_CONFIRMATION";
   }
   ledger.plans.push(plan);
   ledger.planSteps.push(...steps);
@@ -340,6 +372,9 @@ export function invokeTaskBankTask(input: {
   delete edits.approvalRequirement;
   delete edits.allowedDomains;
   delete edits.crossEvent;
+  delete edits.toolName;
+  delete edits.executionMode;
+  delete edits.externalEffect;
 
   const assignment = activeAssignment(input.actor, input.organisationId, input.eventId);
   const now = nowIso(input.now);
@@ -375,11 +410,24 @@ export function invokeTaskBankTask(input: {
     dryRun: input.dryRun ?? Boolean(edits.dryRun),
     taskInvocationId: invocation.id,
     forcedTools,
+    riskFloor: task.riskTier,
     now,
   });
+  if (result.plan) {
+    // Never allow compiled plan risk below canonical task risk.
+    result.plan.riskSummary = maxRisk([result.plan.riskSummary, task.riskTier]);
+    if (task.riskTier === "R4" || task.executionMode === "EXTERNAL_EFFECT") {
+      const toolsOk = result.steps.every((step) => {
+        const tool = getAtelierTool(step.toolName);
+        return tool && (tool.externalEffect || tool.riskTier === "R4" || tool.riskTier === "R5");
+      });
+      if (!toolsOk || (result.plan.riskSummary !== "R4" && result.plan.riskSummary !== "R5")) {
+        throw new PlatformError("FORBIDDEN", "External-effect task cannot be compiled below its canonical risk");
+      }
+    }
+  }
   invocation.status = result.plan ? "COMPILED" : result.instruction.status === "REJECTED" ? "CANCELLED" : "DRAFT";
   invocation.compiledPlanId = result.plan?.id;
-  // Material edits invalidate prior approval by creating a new plan version via submitInstruction.
   return { invocation, ...result, task };
 }
 
@@ -511,8 +559,13 @@ function executeToolStep(input: {
     execution.errorClass = decision.reasonCode;
     execution.resultSummary =
       decision.reasonCode === "PRODUCTION_OR_PROVIDER_BLOCK"
-        ? "External effect blocked while production is unauthorised and providers are inactive"
+        ? "External effect blocked — production is unauthorised and providers are inactive. No real send or provider action occurred. This is a governance refusal, not a completed send."
         : `Action refused: ${decision.reasonCode}`;
+    execution.resultPayload = {
+      effectClass: "EXTERNAL_BLOCKED",
+      dataChanged: false,
+      reasonCode: decision.reasonCode,
+    };
     execution.endedAt = input.now;
     input.step.status = execution.status;
     input.ledger.stepExecutions.push(execution);
@@ -552,7 +605,40 @@ function executeToolStep(input: {
     execution.status = "SUCCEEDED";
     execution.resultRef = simulated.downloadQuarantineRef;
     execution.resultSummary = "Browser simulation completed; download quarantined; profile destroyed";
+    execution.resultPayload = { effectClass: "SIMULATED_BROWSER", dataChanged: false };
     execution.afterStateHash = inputHash({ browserRun: simulated.run.id });
+    execution.endedAt = input.now;
+  } else if (!tool.mutating && tool.riskTier === "R0") {
+    const instructionText =
+      typeof input.step.input.instruction === "string" ? input.step.input.instruction : tool.description;
+    const context = buildEventContextProjection({
+      snap: input.snap,
+      organisationId: input.organisationId,
+      eventId: input.eventId,
+      now: input.now,
+    });
+    const intelligence = buildIntelligenceResult({
+      toolName: tool.name.startsWith("intelligence.") ? tool.name : "intelligence.answer",
+      instruction: instructionText,
+      organisationId: input.organisationId,
+      eventId: input.eventId,
+      context,
+      posture: input.posture,
+      now: input.now,
+    });
+    // Preserve tool-specific grounding in the answer text.
+    if (!tool.name.startsWith("intelligence.")) {
+      intelligence.answer = `${intelligence.answer} (via ${tool.name})`;
+      intelligence.supportingFacts = [
+        ...intelligence.supportingFacts,
+        `Read tool ${tool.name} completed inside the authorised event only.`,
+      ];
+    }
+    execution.status = "SUCCEEDED";
+    execution.resultRef = `read:${tool.name}:${execution.commandId}`;
+    execution.resultSummary = intelligence.answer;
+    execution.resultPayload = intelligence as AtelierIntelligenceResultPayload;
+    execution.afterStateHash = inputHash({ intelligence: intelligence.answer, eventId: input.eventId, tool: tool.name });
     execution.endedAt = input.now;
   } else {
     // Native deterministic adapters: event-scoped synthetic effect records only.
@@ -561,6 +647,11 @@ function executeToolStep(input: {
     execution.resultSummary = tool.mutating
       ? `Native draft/command applied within event ${input.eventId} via ${tool.name}`
       : `Native read completed for event ${input.eventId} via ${tool.name}`;
+    execution.resultPayload = {
+      effectClass: tool.mutating ? "DRAFT" : "READ",
+      dataChanged: Boolean(tool.mutating && !input.step.input.dryRun),
+      toolName: tool.name,
+    };
     execution.afterStateHash = inputHash({ tool: tool.name, eventId: input.eventId, commandId: execution.commandId });
     execution.endedAt = input.now;
   }
@@ -615,6 +706,40 @@ export function executePlan(input: {
   if (plan.status === "STALE") {
     throw new PlatformError("VERSION_CONFLICT", "Underlying event state changed; replan required");
   }
+  const steps = ledger.planSteps.filter((s) => s.planId === plan.id).sort((a, b) => a.ordinal - b.ordinal);
+  // Revalidate trusted tool risk at execution — refuse tampered/stale plans.
+  for (const step of steps) {
+    const tool = getAtelierTool(step.toolName);
+    if (!tool) throw new PlatformError("VALIDATION_FAILED", `Unknown tool ${step.toolName}`);
+    if (tool.riskTier !== step.riskTier) {
+      throw new PlatformError("FORBIDDEN", "Plan step risk does not match trusted tool catalogue");
+    }
+    if (step.input && typeof step.input === "object") {
+      if ("eventId" in step.input && step.input.eventId !== input.eventId) {
+        throw new PlatformError("SCOPE_MISMATCH", "Plan step event does not match authorised event");
+      }
+    }
+  }
+  const trustedRisk = maxRisk(steps.map((s) => s.riskTier));
+  if (trustedRisk !== plan.riskSummary) {
+    throw new PlatformError("FORBIDDEN", "Plan risk summary does not match trusted step risks");
+  }
+  const expectedHash = hashPlan(
+    steps.map((step) => ({
+      toolName: step.toolName,
+      toolVersion: step.toolVersion,
+      riskTier: step.riskTier,
+      confirmationMode: step.confirmationMode,
+      approvalRequirement: step.approvalRequirement,
+      executionRoute: step.executionRoute,
+      input: step.input,
+      targetRefs: step.targetRefs,
+    })),
+    input.eventId,
+  );
+  if (plan.approvedPlanHash && plan.approvedPlanHash !== expectedHash) {
+    throw new PlatformError("VERSION_CONFLICT", "Plan hash mismatch — refuse stale or tampered plan");
+  }
   if (plan.status !== "APPROVED" && plan.riskSummary !== "R0" && plan.riskSummary !== "R1") {
     throw new PlatformError("FORBIDDEN", "Plan must be confirmed or approved before execution");
   }
@@ -643,7 +768,6 @@ export function executePlan(input: {
   };
   ledger.runs.push(run);
 
-  const steps = ledger.planSteps.filter((s) => s.planId === plan.id).sort((a, b) => a.ordinal - b.ordinal);
   const executions: AtelierStepExecution[] = [];
   let blocked = false;
   for (const step of steps) {
@@ -696,25 +820,71 @@ export function executePlan(input: {
     run.status = unknown ? "RECOVERING" : "COMPLETED";
   }
   run.endedAt = now;
-  run.completionSummary = `Executed ${executions.length} step(s); status ${run.status}`;
+
+  const instruction = ledger.instructions.find((i) => i.id === plan.instructionId);
+  const taskInvocation = instruction?.taskInvocationId
+    ? ledger.taskInvocations.find((t) => t.id === instruction.taskInvocationId)
+    : undefined;
+  const intelligence = executions
+    .map((e) => e.resultPayload)
+    .find((payload): payload is AtelierIntelligenceResultPayload =>
+      Boolean(payload && typeof payload === "object" && "answer" in payload && "instruction" in payload),
+    );
+  const mutatingSuccesses = executions.filter((e) => {
+    const tool = getAtelierTool(ledger.planSteps.find((s) => s.id === e.stepId)?.toolName ?? "");
+    return e.status === "SUCCEEDED" && tool?.mutating;
+  });
+  const effectOf = (payload: AtelierStepExecution["resultPayload"]) =>
+    payload && typeof payload === "object" && "effectClass" in payload
+      ? String((payload as { effectClass?: unknown }).effectClass ?? "")
+      : "";
+  const blockedExternal = executions.some(
+    (e) => e.status === "BLOCKED" && (e.errorClass === "PRODUCTION_OR_PROVIDER_BLOCK" || effectOf(e.resultPayload) === "EXTERNAL_BLOCKED"),
+  );
+  const effectClass: AtelierCommandReceipt["effectClass"] = blockedExternal
+    ? "EXTERNAL_BLOCKED"
+    : intelligence
+      ? "READ"
+      : mutatingSuccesses.length
+        ? "DRAFT"
+        : executions.some((e) => e.status === "SUCCEEDED" && effectOf(e.resultPayload) === "SIMULATED_BROWSER")
+          ? "SIMULATED_BROWSER"
+          : executions.some((e) => e.status === "REFUSED" || e.status === "BLOCKED")
+            ? "REFUSED"
+            : "NONE";
+
+  run.completionSummary = intelligence
+    ? `Intelligence completed for event ${input.eventId}`
+    : blockedExternal
+      ? `External effect blocked under current posture; status ${run.status}`
+      : `Executed ${executions.length} step(s); status ${run.status}`;
 
   const receipt: AtelierCommandReceipt = {
     id: randomUUID(),
     organisationId: input.organisationId,
     eventId: input.eventId,
-    sessionId: ledger.instructions.find((i) => i.id === plan.instructionId)?.sessionId ?? "",
+    sessionId: instruction?.sessionId ?? "",
     instructionId: plan.instructionId,
     planId: plan.id,
     runId: run.id,
     correlationId: executions[0]?.correlationId ?? randomUUID(),
-    kind: "RUN_RECEIPT",
-    summary: run.completionSummary,
-    changedRecordIds: executions.filter((e) => e.status === "SUCCEEDED").map((e) => e.commandId),
-    unchangedReasons: executions
-      .filter((e) => e.status === "REFUSED" || e.status === "BLOCKED" || e.status === "REPLAYED")
-      .map((e) => e.resultSummary ?? e.status),
+    kind: intelligence ? "INTELLIGENCE_RESULT" : blockedExternal ? "EXTERNAL_EFFECT_BLOCKED" : "RUN_RECEIPT",
+    summary: intelligence?.answer ?? run.completionSummary,
+    changedRecordIds: mutatingSuccesses.map((e) => e.commandId),
+    unchangedReasons: [
+      ...executions
+        .filter((e) => e.status === "REFUSED" || e.status === "BLOCKED" || e.status === "REPLAYED")
+        .map((e) => e.resultSummary ?? e.status),
+      ...(intelligence ? ["Intelligence read path — no event records mutated"] : []),
+    ],
     evidenceRefs: executions.map((e) => e.id),
     createdAt: now,
+    intelligenceResult: intelligence,
+    effectClass,
+    dataChanged: mutatingSuccesses.length > 0,
+    taskDefinitionId: taskInvocation?.taskDefinitionId,
+    taskVersion: taskInvocation?.taskVersion,
+    riskSummary: plan.riskSummary,
   };
   ledger.receipts.push(receipt);
   return { run, executions, receipt };

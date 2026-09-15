@@ -8,6 +8,15 @@ import {
   submitAtelierInstructionAction,
 } from "../server/atelier-command-actions";
 
+function effectLabel(mode: string, risk: string): string {
+  if (mode === "EXTERNAL_EFFECT" || risk === "R4" || risk === "R5") return "External effect";
+  if (mode === "READ_ONLY" || risk === "R0") return "Read-only";
+  if (mode === "DRAFT_ONLY" || risk === "R1") return "Preparatory / draft";
+  if (mode === "MAKER_CHECKER" || risk === "R3") return "Maker-checker";
+  if (mode === "CONFIRM_EACH" || risk === "R2") return "Confirm before act";
+  return mode;
+}
+
 export function AtelierCommandWorkspace({
   organisationId,
   eventId,
@@ -16,6 +25,8 @@ export function AtelierCommandWorkspace({
   canInstruct,
   canExecute,
   canApprove,
+  actorLabel,
+  assignmentLabel,
   taskQuery,
   taskDomain,
 }: {
@@ -26,13 +37,19 @@ export function AtelierCommandWorkspace({
   canInstruct: boolean;
   canExecute: boolean;
   canApprove: boolean;
+  actorLabel: string;
+  assignmentLabel: string;
   taskQuery: string;
   taskDomain: string;
 }) {
   const latestPlan = [...workspace.plans].sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
-  const latestSteps = latestPlan ? workspace.planSteps.filter((step) => step.planId === latestPlan.id).sort((a, b) => a.ordinal - b.ordinal) : [];
+  const latestSteps = latestPlan
+    ? workspace.planSteps.filter((step) => step.planId === latestPlan.id).sort((a, b) => a.ordinal - b.ordinal)
+    : [];
   const latestInstruction = [...workspace.instructions].sort((a, b) => b.sequence - a.sequence)[0];
   const latestReceipt = [...workspace.receipts].sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+  const intelligence = latestReceipt?.intelligenceResult;
+  const settlements = [...workspace.receipts].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 12);
 
   return (
     <div className="atelier-command" data-testid="atelier-command-workspace">
@@ -43,6 +60,9 @@ export function AtelierCommandWorkspace({
           </span>{" "}
           <strong>{eventName}</strong>
           <span className="atelier-command-muted"> · {eventId}</span>
+        </p>
+        <p className="atelier-command-muted" data-testid="atelier-command-actor">
+          Actor: {actorLabel} · Assignment: {assignmentLabel}
         </p>
         <p className="atelier-command-muted">
           Production authorised: {String(workspace.posture.productionAuthorised)} · Providers active:{" "}
@@ -104,7 +124,9 @@ export function AtelierCommandWorkspace({
                 ))}
               </ol>
               <div className="actions">
-                {canExecute && (latestPlan.status === "AWAITING_CONFIRMATION" || latestPlan.status === "READY") ? (
+                {canExecute &&
+                (latestPlan.status === "AWAITING_CONFIRMATION" || latestPlan.status === "READY") &&
+                latestPlan.riskSummary !== "R3" ? (
                   <form action={confirmAtelierPlanAction}>
                     <input type="hidden" name="organisationId" value={organisationId} />
                     <input type="hidden" name="eventId" value={eventId} />
@@ -124,7 +146,10 @@ export function AtelierCommandWorkspace({
                     </button>
                   </form>
                 ) : null}
-                {canExecute && (latestPlan.status === "APPROVED" || latestPlan.riskSummary === "R0" || latestPlan.riskSummary === "R1") ? (
+                {canExecute &&
+                (latestPlan.status === "APPROVED" ||
+                  latestPlan.riskSummary === "R0" ||
+                  latestPlan.riskSummary === "R1") ? (
                   <form action={executeAtelierPlanAction}>
                     <input type="hidden" name="organisationId" value={organisationId} />
                     <input type="hidden" name="eventId" value={eventId} />
@@ -138,11 +163,72 @@ export function AtelierCommandWorkspace({
             </div>
           ) : null}
 
+          {intelligence ? (
+            <div className="atelier-command-block" data-testid="atelier-command-intelligence">
+              <h3>Intelligence answer</h3>
+              <p data-testid="atelier-command-intelligence-answer">{intelligence.answer}</p>
+              <p className="atelier-command-muted">
+                Event: {intelligence.eventName ?? intelligence.eventId} · Intent: {intelligence.intent} · Data
+                changed: false · Interpreter: {intelligence.interpreterPosture}
+              </p>
+              {intelligence.supportingFacts.length ? (
+                <div>
+                  <h4>Supporting facts</h4>
+                  <ul>
+                    {intelligence.supportingFacts.map((fact) => (
+                      <li key={fact}>{fact}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              {intelligence.assumptions.length ? (
+                <div>
+                  <h4>Assumptions / limitations</h4>
+                  <ul>
+                    {[...intelligence.assumptions, ...intelligence.limitations].map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <div>
+                  <h4>Limitations</h4>
+                  <ul>
+                    {intelligence.limitations.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {intelligence.recommendations.length ? (
+                <div>
+                  <h4>Recommendations</h4>
+                  <ul>
+                    {intelligence.recommendations.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
           {latestReceipt ? (
             <div className="atelier-command-block" data-testid="atelier-command-receipt">
               <h3>Receipt</h3>
               <p>{latestReceipt.summary}</p>
-              <p className="atelier-command-muted">Correlation: {latestReceipt.correlationId}</p>
+              <p className="atelier-command-muted">
+                Correlation: {latestReceipt.correlationId}
+                {latestReceipt.planId ? ` · Plan: ${latestReceipt.planId}` : ""}
+                {latestReceipt.riskSummary ? ` · Risk: ${latestReceipt.riskSummary}` : ""}
+                {latestReceipt.effectClass ? ` · Effect: ${latestReceipt.effectClass}` : ""}
+                {` · Data changed: ${String(Boolean(latestReceipt.dataChanged))}`}
+              </p>
+              {latestReceipt.taskDefinitionId ? (
+                <p className="atelier-command-muted">
+                  Task: {latestReceipt.taskDefinitionId} v{latestReceipt.taskVersion ?? 1}
+                </p>
+              ) : null}
               {latestReceipt.unchangedReasons.length ? (
                 <ul>
                   {latestReceipt.unchangedReasons.map((reason) => (
@@ -185,14 +271,18 @@ export function AtelierCommandWorkspace({
           ) : (
             <ul className="atelier-command-tasks" data-testid="atelier-command-task-list">
               {workspace.taskBank.tasks.map((task) => (
-                <li key={task.id}>
+                <li key={task.id} data-testid={`atelier-task-${task.id}`}>
                   <article>
                     <h3>{task.name}</h3>
                     <p className="atelier-command-muted">
-                      {task.domain} · {task.riskTier} · {task.executionMode}
+                      {task.domain} · {task.riskTier} · {effectLabel(task.executionMode, task.riskTier)}
                       {task.requiredApprovals.length ? " · approval required" : ""}
                     </p>
                     <p>{task.description}</p>
+                    <p className="atelier-command-muted">
+                      Expected outcome: {task.outcome}. Tool: {task.planTemplate[0]?.toolName}. Event context
+                      required.
+                    </p>
                     {canInstruct ? (
                       <form action={invokeAtelierTaskAction} className="atelier-command-form">
                         <input type="hidden" name="organisationId" value={organisationId} />
@@ -220,6 +310,29 @@ export function AtelierCommandWorkspace({
         </section>
       </div>
 
+      <section className="atelier-command-panel" aria-labelledby="atelier-command-settlement-heading">
+        <h2 id="atelier-command-settlement-heading">Event settlements</h2>
+        <p className="atelier-command-muted">
+          Durable Atelier Command receipts for this event. CEO/Auditor can also find matching correlations in the
+          Executive Ledger filtered to Atelier Command.
+        </p>
+        {settlements.length === 0 ? (
+          <p className="empty">No settlements yet for this event.</p>
+        ) : (
+          <ul data-testid="atelier-command-settlements">
+            {settlements.map((receipt) => (
+              <li key={receipt.id}>
+                <strong>{receipt.kind}</strong> · {receipt.createdAt} · corr {receipt.correlationId}
+                {receipt.planId ? ` · plan ${receipt.planId}` : ""}
+                {receipt.riskSummary ? ` · ${receipt.riskSummary}` : ""}
+                {receipt.taskDefinitionId ? ` · ${receipt.taskDefinitionId}` : ""} · dataChanged=
+                {String(Boolean(receipt.dataChanged))}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
       <section className="atelier-command-panel" aria-labelledby="atelier-command-evidence-heading">
         <h2 id="atelier-command-evidence-heading">Event knowledge</h2>
         <ul>
@@ -232,6 +345,10 @@ export function AtelierCommandWorkspace({
         <p>
           <Link className="button secondary" href={`/app/events/${eventId}`}>
             Return to event overview
+          </Link>
+          {" · "}
+          <Link className="button secondary" href="/app/admin/audit?q=atelierCommand">
+            Executive Ledger · Atelier Command
           </Link>
         </p>
       </section>

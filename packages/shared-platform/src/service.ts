@@ -9690,6 +9690,14 @@ export class PlatformService {
       resourceType: "atelier_instruction",
       resourceId: result.instruction.id,
       correlationId: result.receipt?.correlationId ?? result.instruction.id,
+      reason: [
+        result.instruction.status === "REJECTED" ? "cross-event-or-policy-refusal" : "instruction-interpreted",
+        result.plan ? `plan=${result.plan.id}` : null,
+        result.plan ? `risk=${result.plan.riskSummary}` : null,
+        `event=${eventId}`,
+      ]
+        .filter(Boolean)
+        .join("; "),
       occurredAt: this.tokenNow(actor),
     });
     await this.persistAtelierSnapshot(snap);
@@ -9721,6 +9729,26 @@ export class PlatformService {
       operatorEdits: input.operatorEdits,
       dryRun: input.dryRun,
       now: this.tokenNow(actor),
+    });
+    this.writeAudit(snap, {
+      action: "atelierCommand.task",
+      outcome: result.instruction.status === "REJECTED" ? "DENIED" : "SUCCESS",
+      actorPersonId: actor.personId,
+      organisationId,
+      eventId,
+      resourceType: "atelier_task_invocation",
+      resourceId: result.invocation.id,
+      correlationId: result.receipt?.correlationId ?? result.invocation.id,
+      reason: [
+        `task=${result.task.id}`,
+        `taskVersion=${result.task.version}`,
+        `risk=${result.plan?.riskSummary ?? result.task.riskTier}`,
+        result.plan ? `plan=${result.plan.id}` : null,
+        `mode=${result.task.executionMode}`,
+      ]
+        .filter(Boolean)
+        .join("; "),
+      occurredAt: this.tokenNow(actor),
     });
     await this.persistAtelierSnapshot(snap);
     return result;
@@ -9785,6 +9813,18 @@ export class PlatformService {
       resourceType: "atelier_run",
       resourceId: result.run.id,
       correlationId: result.receipt.correlationId,
+      reason: [
+        `plan=${result.receipt.planId ?? planId}`,
+        `run=${result.run.id}`,
+        `status=${result.run.status}`,
+        `risk=${result.receipt.riskSummary ?? ""}`,
+        `effect=${result.receipt.effectClass ?? ""}`,
+        `dataChanged=${String(Boolean(result.receipt.dataChanged))}`,
+        result.receipt.taskDefinitionId ? `task=${result.receipt.taskDefinitionId}` : null,
+        result.receipt.intelligenceResult ? "intelligence=present" : null,
+      ]
+        .filter(Boolean)
+        .join("; "),
       occurredAt: this.tokenNow(actor),
     });
     await this.persistAtelierSnapshot(snap);

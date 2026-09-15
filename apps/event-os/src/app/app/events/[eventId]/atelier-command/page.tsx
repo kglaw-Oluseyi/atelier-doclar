@@ -104,6 +104,19 @@ export default async function AtelierCommandPage({
     scope: { organisationId: organisation.id, eventId: event.id },
   }).allow;
 
+  const activeAssignment =
+    actorSnap.assignments.find(
+      (assignment) =>
+        assignment.status === "ACTIVE" &&
+        assignment.organisationId === organisation.id &&
+        (assignment.eventId === event.id || !assignment.eventId),
+    ) ?? actorSnap.assignments.find((assignment) => assignment.status === "ACTIVE" && assignment.organisationId === organisation.id);
+  const role = actorSnap.roles.find((item) => item.id === activeAssignment?.roleId);
+  const actorLabel = person.displayName;
+  const assignmentLabel = role
+    ? `${role.key}${activeAssignment?.eventId ? " · event-scoped" : " · organisation-wide"}`
+    : "Assignment unavailable";
+
   const presented = await loadPresentedActionResult({
     requestPath: `/app/events/${event.id}/atelier-command`,
     resultId: typeof query.result === "string" ? query.result : undefined,
@@ -133,6 +146,8 @@ export default async function AtelierCommandPage({
         canInstruct={canInstruct}
         canExecute={canExecute}
         canApprove={canApprove}
+        actorLabel={actorLabel}
+        assignmentLabel={assignmentLabel}
         taskQuery={taskQuery ?? ""}
         taskDomain={taskDomain ?? ""}
       />

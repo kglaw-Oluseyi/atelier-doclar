@@ -34,7 +34,13 @@ function AuditDenied({
   );
 }
 
-export default async function AuditPage() {
+export default async function AuditPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ q?: string }>;
+}) {
+  const params = (await searchParams) ?? {};
+  const filter = typeof params.q === "string" ? params.q.trim().toLowerCase() : "";
   const { actor, person } = await guardedActor();
   const runtime = getRuntime();
   const organisation = runtime.service.listOrganisations(actor)[0];
@@ -63,7 +69,13 @@ export default async function AuditPage() {
   try {
     const audit = runtime.service.searchAudit(actor, organisation.id);
     const labels = buildGovernanceLabelIndex(runtime.service, actor, organisation.id);
-    const rows = audit.map((item) => presentAuditEvent(item, labels));
+    const filtered = filter
+      ? audit.filter((item) => {
+          const blob = `${item.action} ${item.resourceType ?? ""} ${item.correlationId} ${item.reason ?? ""} ${item.resourceId ?? ""}`.toLowerCase();
+          return blob.includes(filter);
+        })
+      : audit;
+    const rows = filtered.map((item) => presentAuditEvent(item, labels));
 
     return (
       <AppShell person={person} organisationName={organisation.displayName} current="/app/admin/audit">
@@ -72,12 +84,29 @@ export default async function AuditPage() {
           title="Audit"
           lede="Append-only consequential history. Display names are resolved at read time. Immutable identifiers remain the evidence."
         />
+        <form method="get" className="atelier-command-form" style={{ marginBottom: "1.5rem" }}>
+          <label htmlFor="audit-q">
+            Filter ledger
+            <input
+              id="audit-q"
+              name="q"
+              defaultValue={typeof params.q === "string" ? params.q : ""}
+              placeholder="e.g. atelierCommand"
+              data-testid="audit-filter"
+            />
+          </label>
+          <button type="submit" className="button secondary">
+            Apply filter
+          </button>
+        </form>
         {rows.length === 0 ? (
-          <p className="empty">No audit events are visible.</p>
+          <p className="empty">{filter ? "No audit events match this filter." : "No audit events are visible."}</p>
         ) : (
           <div className="table-wrap">
             <table className="data-table" data-testid="audit-ledger">
-              <caption>Consequential history</caption>
+              <caption>
+                Consequential history{filter ? ` · filtered to “${filter}”` : ""} · {rows.length} row(s)
+              </caption>
               <thead>
                 <tr>
                   <th>When</th>
@@ -90,7 +119,7 @@ export default async function AuditPage() {
               </thead>
               <tbody>
                 {rows.map((item) => (
-                  <tr key={item.id}>
+                  <tr key={item.id} data-action={item.action}>
                     <td data-label="When">
                       <CanonicalTime iso={item.occurredAt} />
                     </td>

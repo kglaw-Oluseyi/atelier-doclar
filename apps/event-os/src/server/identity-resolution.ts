@@ -97,6 +97,19 @@ export function resolveAuthorisedLabel(
 }
 
 export function governedActionLabel(action: string): string {
+  if (action.startsWith("atelierCommand.")) {
+    const map: Record<string, string> = {
+      "atelierCommand.instruct": "Atelier Command · instruct",
+      "atelierCommand.task": "Atelier Command · Task Bank",
+      "atelierCommand.execute": "Atelier Command · execute",
+      "atelierCommand.confirm": "Atelier Command · confirm",
+      "atelierCommand.approve": "Atelier Command · approve",
+    };
+    if (map[action]) return map[action];
+  }
+  if (action === "atelier_instruction") return "Atelier instruction";
+  if (action === "atelier_run") return "Atelier run";
+  if (action === "atelier_task_invocation") return "Atelier task invocation";
   const words = action.split(".");
   return words
     .map((word, index) => {

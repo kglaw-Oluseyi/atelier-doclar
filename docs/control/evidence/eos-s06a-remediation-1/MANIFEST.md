@@ -1,0 +1,27 @@
+# EOS-S06A Remediation 1 — Evidence manifest
+
+**Date:** 2026-09-15  
+**Control:** Consolidated Remediation 1
+
+## Investigation
+
+- `RECONSTRUCTION.md` — durable ledger + audit chronology from production
+- `ledger-recon-raw.txt` — raw reconstruction dump (no secrets)
+
+## Focused automation
+
+Command: `npx tsx --test test/atelier-command.test.ts` (packages/shared-platform)
+
+- tests: 16
+- pass: 16
+- fail: 0
+
+Includes remediation coverage for Intelligence answers, cross-event named refusal, R4 non-downgrade, explain_block vs send, executive audit discoverability.
+
+## Role-label disposition
+
+Fixture naming ambiguity: person `…042` displayName is “Event Director” while role key is `EVENT_DIRECTOR`. Assignment data is correct. Not a defect.
+
+## Claude continuation
+
+`docs/control/eos-s06a/EOS_S06A_REMEDIATION_1_CLAUDE_CONTINUATION_PROMPT.md` — prepared; not auto-run.

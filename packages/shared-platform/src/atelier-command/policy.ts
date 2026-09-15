@@ -175,7 +175,14 @@ export function decidePolicy(input: {
   return { decision: "ALLOW", reasonCode: "WITHIN_AUTHORITY" };
 }
 
-export function refuseCrossEventRequest(rawText: string): { refuse: boolean; handoff: string | null } {
+export function refuseCrossEventRequest(
+  rawText: string,
+  options?: {
+    activeEventId: string;
+    activeEventName?: string;
+    knownEvents?: Array<{ id: string; name: string }>;
+  },
+): { refuse: boolean; handoff: string | null; refusedPortion?: string } {
   const lowered = rawText.toLowerCase();
   const patterns = [
     /across (all|every) events?/,
@@ -184,16 +191,72 @@ export function refuseCrossEventRequest(rawText: string): { refuse: boolean; han
     /compare (every|all) events/,
     /control tower/,
     /other event['']?s? (guests?|budgets?|data)/,
+    /ignore (this|the) event(['']?s)? scope/,
+    /disregard any policy/,
+    /instead.*(another|other|different) event/,
   ];
   for (const p of patterns) {
     if (p.test(lowered)) {
       return {
         refuse: true,
+        refusedPortion: rawText.trim(),
         handoff:
-          "Organisation-wide and cross-event intelligence are handled by Executive Event Command / Control Tower. Atelier Command stays inside the selected event.",
+          "Organisation-wide and cross-event intelligence are handled by Executive Event Command / Control Tower. Atelier Command stays inside the selected event. The cross-event portion of this request was refused; nothing was executed for another event.",
       };
     }
   }
+
+  const activeId = options?.activeEventId?.toLowerCase() ?? "";
+  const activeName = (options?.activeEventName ?? "").trim().toLowerCase();
+  for (const event of options?.knownEvents ?? []) {
+    if (!event?.id || event.id.toLowerCase() === activeId) continue;
+    const name = event.name.trim();
+    if (!name) continue;
+    const nameLower = name.toLowerCase();
+    const idLower = event.id.toLowerCase();
+    const mentionsOther =
+      lowered.includes(nameLower) ||
+      lowered.includes(idLower) ||
+      new RegExp(`event\\s+[\"']${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[\"']`, "i").test(rawText);
+    if (mentionsOther) {
+      return {
+        refuse: true,
+        refusedPortion: `Reference to event "${name}" (${event.id})`,
+        handoff: [
+          `Requested work referenced another event ("${name}").`,
+          `Authorised Atelier Command context remains "${options?.activeEventName ?? options?.activeEventId}".`,
+          "The cross-event portion was refused and nothing was executed for the other event.",
+          "Open that event’s Atelier Command workspace to work there. Organisation-wide intelligence stays in Executive Event Command / Control Tower.",
+        ].join(" "),
+      };
+    }
+  }
+
+  // UUID-looking foreign event ids in the instruction
+  const uuidMatches = rawText.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi) ?? [];
+  for (const id of uuidMatches) {
+    if (id.toLowerCase() !== activeId) {
+      return {
+        refuse: true,
+        refusedPortion: `Reference to event id ${id}`,
+        handoff: [
+          `Requested work referenced event id ${id}, which is not the authorised event.`,
+          `Authorised context remains ${options?.activeEventName ?? options?.activeEventId}.`,
+          "The cross-event portion was refused; no data from the other event was returned.",
+        ].join(" "),
+      };
+    }
+  }
+
+  if (activeName && /other event|another event|different event/.test(lowered)) {
+    return {
+      refuse: true,
+      refusedPortion: "Indefinite other-event reference",
+      handoff:
+        "Requests that reach beyond the selected event are refused here. Open the intended event or use Executive Event Command / Control Tower for organisation-wide work.",
+    };
+  }
+
   return { refuse: false, handoff: null };
 }
 

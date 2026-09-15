@@ -53,9 +53,16 @@ export function interpretInstruction(input: {
   context: ContextBrokerProjection;
   dryRun?: boolean;
   forcedTools?: string[];
+  /** Canonical minimum risk that cannot be downgraded by interpretation. */
+  riskFloor?: AtelierCommandRiskTier;
+  knownEvents?: Array<{ id: string; name: string }>;
   now: string;
 }): CompiledPlanDraft {
-  const cross = refuseCrossEventRequest(input.rawText);
+  const cross = refuseCrossEventRequest(input.rawText, {
+    activeEventId: input.eventId,
+    activeEventName: input.context.scope.eventName,
+    knownEvents: input.knownEvents,
+  });
   const modelInvocation: AtelierModelInvocation = {
     id: randomUUID(),
     organisationId: input.organisationId,
@@ -100,7 +107,6 @@ export function interpretInstruction(input: {
   const toolNames = input.forcedTools?.length ? input.forcedTools : pickTools(input.rawText);
   const ambiguities: AtelierAmbiguity[] = [];
 
-  // Material ambiguity: mutating ask without named target when guest mutation implied.
   if (/update (the )?guest/.test(input.rawText.toLowerCase()) && !/guest [0-9a-f-]{8,}/i.test(input.rawText)) {
     ambiguities.push({
       id: randomUUID(),
@@ -111,7 +117,7 @@ export function interpretInstruction(input: {
   }
 
   const steps = [];
-  let riskSummary: AtelierCommandRiskTier = "R0";
+  let riskSummary: AtelierCommandRiskTier = input.riskFloor ?? "R0";
   const order: AtelierCommandRiskTier[] = ["R0", "R1", "R2", "R3", "R4", "R5"];
   for (const name of toolNames) {
     const tool = getAtelierTool(name);
@@ -121,7 +127,7 @@ export function interpretInstruction(input: {
       toolName: tool.name,
       toolVersion: tool.version,
       riskTier: tool.riskTier,
-      confirmationMode: input.dryRun ? "DRY_RUN" as const : modeForRisk(tool.riskTier),
+      confirmationMode: input.dryRun ? ("DRY_RUN" as const) : modeForRisk(tool.riskTier),
       approvalRequirement: tool.approvalPolicy === "MAKER_CHECKER",
       executionRoute: tool.route,
       input: {
@@ -132,6 +138,9 @@ export function interpretInstruction(input: {
       },
       targetRefs: [`event:${input.eventId}`],
     });
+  }
+  if (input.riskFloor && order.indexOf(input.riskFloor) > order.indexOf(riskSummary)) {
+    riskSummary = input.riskFloor;
   }
 
   if (injection.suspicious) {
@@ -160,7 +169,11 @@ export function interpretInstruction(input: {
       knowledge: input.context.knowledge,
       ambiguities,
       successCriteria: ["Plan previewed", "Authority respected", "Receipt durable"],
-      intentType: needsClarification ? "NEEDS_CLARIFICATION" : steps[0]?.toolName.startsWith("intelligence.") ? "ANSWER" : "EXECUTE",
+      intentType: needsClarification
+        ? "NEEDS_CLARIFICATION"
+        : steps[0]?.toolName.startsWith("intelligence.")
+          ? "ANSWER"
+          : "EXECUTE",
       confidence: needsClarification ? 0.45 : 0.86,
     },
     modelInvocation,

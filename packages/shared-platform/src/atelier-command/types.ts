@@ -256,6 +256,24 @@ export type AtelierRun = {
   version: number;
 };
 
+export type AtelierIntelligenceResultPayload = {
+  instruction: string;
+  eventId: string;
+  eventName?: string;
+  organisationId: string;
+  intent: string;
+  answer: string;
+  supportingFacts: string[];
+  assumptions: string[];
+  recommendations: string[];
+  limitations: string[];
+  interpreterPosture: "FIXTURE";
+  providersActive: boolean;
+  productionAuthorised: boolean;
+  dataChanged: false;
+  completedAt: string;
+};
+
 export type AtelierStepExecution = {
   id: string;
   runId: string;
@@ -274,6 +292,7 @@ export type AtelierStepExecution = {
   status: AtelierStepStatus;
   resultRef?: string;
   resultSummary?: string;
+  resultPayload?: AtelierIntelligenceResultPayload | Record<string, unknown>;
   errorClass?: string;
   startedAt?: string;
   endedAt?: string;
@@ -413,6 +432,13 @@ export type AtelierCommandReceipt = {
   unchangedReasons: string[];
   evidenceRefs: string[];
   createdAt: string;
+  /** Substantive Intelligence answer — must not be replaced by the generic run summary. */
+  intelligenceResult?: AtelierIntelligenceResultPayload;
+  effectClass?: "NONE" | "READ" | "DRAFT" | "MUTATION" | "EXTERNAL_BLOCKED" | "SIMULATED_BROWSER" | "REFUSED";
+  dataChanged?: boolean;
+  taskDefinitionId?: string;
+  taskVersion?: number;
+  riskSummary?: string;
 };
 
 export type AtelierCommandLedger = {
