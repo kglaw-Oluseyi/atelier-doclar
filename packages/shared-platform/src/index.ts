@@ -1099,7 +1099,11 @@ export {
   targetKeysForEdition,
 } from "./seating-v2-hard-rule-conflicts.js";
 export type { AnnotatedHardRuleConflict, HardRuleConflictHit } from "./seating-v2-hard-rule-conflicts.js";
-export { LEGACY_S06_PUBLICATION_LABEL, currentSeatingV2RunId } from "./seating-v2-workspace.js";
+export {
+  LEGACY_S06_PUBLICATION_LABEL,
+  currentSeatingV2RunId,
+  isPackageOrRunStaleAgainstCurrentAuthority,
+} from "./seating-v2-workspace.js";
 export type { SeatingV2RuleContent } from "./seating-v2-schemas.js";
 export { snapshotGuestCohortAdapter, snapshotLayoutAdapter, seatingToken } from "./seating-adapters.js";
 export { seatingV2TableCapacityTruth, assertSeatingV2CapacityTruth } from "./seating-v2-capacity.js";

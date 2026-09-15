@@ -1377,6 +1377,13 @@ export class SeatingV2CommandService {
           publicMessage: "This seating run belongs to an earlier compiler and cannot be adopted.",
         });
       }
+      const built = await this.build(tx, envelope, pkg.deterministicSeed);
+      if (!packageIsFresh(pkg, built)) {
+        throw new PlatformError("TRANSITION_INVALID", "governing inputs changed; create a successor from current governing inputs", {
+          publicMessage:
+            "This seating run is stale against current seating authority. Freeze a new input package, launch a new run, validate and adopt it.",
+        });
+      }
       const compiled = await this.requireCompiled(tx, envelope, run.packageId);
       try {
         assertSeatingV2CompiledRequest(compiled.request);

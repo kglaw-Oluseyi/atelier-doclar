@@ -9,13 +9,13 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const planPath = join(root, "scripts", "ci-e2e-shard-plan.json");
 
 describe("Event OS formal CI e2e shard accounting", () => {
-  it("assigns every listed Playwright test file exactly once with 279 tests", () => {
+  it("assigns every listed Playwright test file exactly once with 280 tests", () => {
     const plan = JSON.parse(readFileSync(planPath, "utf8"));
     assert.equal(plan.design, "sharded-postgres-next-start");
     assert.equal(plan.retries, 0);
     assert.equal(plan.workersPerShard, 1);
-    assert.equal(plan.totalTests, 279);
-    assert.equal(plan.totalFiles, 129);
+    assert.equal(plan.totalTests, 280);
+    assert.equal(plan.totalFiles, 130);
     assert.ok(plan.heapMbDefault <= 4096);
     assert.equal(plan.runtime, "next start");
     assert.equal(plan.database, "ephemeral-postgres");
@@ -32,8 +32,8 @@ describe("Event OS formal CI e2e shard accounting", () => {
       if (!match) continue;
       fileCounts.set(match[1], (fileCounts.get(match[1]) ?? 0) + 1);
     }
-    assert.equal(fileCounts.size, 129);
-    assert.equal([...fileCounts.values()].reduce((a, b) => a + b, 0), 279);
+    assert.equal(fileCounts.size, 130);
+    assert.equal([...fileCounts.values()].reduce((a, b) => a + b, 0), 280);
 
     const assigned = [];
     let testSum = 0;
@@ -49,10 +49,12 @@ describe("Event OS formal CI e2e shard accounting", () => {
       assert.equal(shard.tests, expected, `shard ${shard.name} test count mismatch`);
     }
     assert.equal(assigned.length, new Set(assigned).size, "duplicate file assignment");
-    assert.equal(assigned.length, 129);
-    assert.equal(testSum, 279);
+    assert.equal(assigned.length, 130);
+    assert.equal(testSum, 280);
     for (const file of fileCounts.keys()) {
       assert.ok(assigned.includes(file), `listed file omitted from plan: ${file}`);
     }
+    assert.equal(plan.shards[0]?.name, "eos-s06-current-acceptance");
+    assert.deepEqual(plan.shards[0]?.files, ["eos-s06-current-acceptance.spec.ts"]);
   });
 });

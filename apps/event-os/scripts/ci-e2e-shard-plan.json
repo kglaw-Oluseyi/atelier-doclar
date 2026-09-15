@@ -1,15 +1,24 @@
 {
   "version": 1,
   "design": "sharded-postgres-next-start",
-  "rationale": "Formal CI uses production build + next start + ephemeral Postgres. next-dev is forbidden. File-store fixtures remain refused under production NODE_ENV without a general bypass.",
-  "totalFiles": 129,
-  "totalTests": 279,
+  "rationale": "Formal CI uses production build + next start + ephemeral Postgres. next-dev is forbidden. File-store fixtures remain refused under production NODE_ENV without a general bypass. Shard 0 is the canonical current EOS-S06 seating acceptance gate; historical corpus shards remain separately reported.",
+  "totalFiles": 130,
+  "totalTests": 280,
   "heapMbDefault": 2048,
   "workersPerShard": 1,
   "retries": 0,
   "shards": [
     {
       "id": 0,
+      "name": "eos-s06-current-acceptance",
+      "files": [
+        "eos-s06-current-acceptance.spec.ts"
+      ],
+      "tests": 1,
+      "timeoutSeconds": 1500
+    },
+    {
+      "id": 1,
       "name": "s13-j1-studio",
       "files": [
         "s075-section-13-j1-studio.spec.ts"
@@ -18,7 +27,7 @@
       "timeoutSeconds": 1500
     },
     {
-      "id": 1,
+      "id": 2,
       "name": "s13-j1a-plan-integrity",
       "files": [
         "s075-section-13-j1a-plan-integrity.spec.ts"
@@ -27,7 +36,7 @@
       "timeoutSeconds": 1500
     },
     {
-      "id": 2,
+      "id": 3,
       "name": "s13-j1b-concurrency",
       "files": [
         "s075-section-13-j1b-concurrency.spec.ts"
@@ -36,7 +45,7 @@
       "timeoutSeconds": 1500
     },
     {
-      "id": 3,
+      "id": 4,
       "name": "s13-j2-governance",
       "files": [
         "s075-section-13-j2-governance.spec.ts"
@@ -45,7 +54,7 @@
       "timeoutSeconds": 1500
     },
     {
-      "id": 4,
+      "id": 5,
       "name": "s13-j3-exports",
       "files": [
         "s075-section-13-j3-exports.spec.ts"
@@ -54,7 +63,7 @@
       "timeoutSeconds": 1500
     },
     {
-      "id": 5,
+      "id": 6,
       "name": "s13-j4-ux",
       "files": [
         "s075-section-13-j4-ux.spec.ts"
@@ -63,7 +72,7 @@
       "timeoutSeconds": 1500
     },
     {
-      "id": 6,
+      "id": 7,
       "name": "pack-00",
       "files": [
         "academy-s04a.spec.ts",
@@ -79,7 +88,7 @@
       "timeoutSeconds": 2100
     },
     {
-      "id": 7,
+      "id": 8,
       "name": "pack-01",
       "files": [
         "s04a-final-acceptance-ii.spec.ts",
@@ -96,7 +105,7 @@
       "timeoutSeconds": 2100
     },
     {
-      "id": 8,
+      "id": 9,
       "name": "pack-02",
       "files": [
         "s04c-vertical.spec.ts",
@@ -118,7 +127,7 @@
       "timeoutSeconds": 2100
     },
     {
-      "id": 9,
+      "id": 10,
       "name": "pack-03",
       "files": [
         "s05-s034-traceability.spec.ts",
@@ -137,7 +146,7 @@
       "timeoutSeconds": 2100
     },
     {
-      "id": 10,
+      "id": 11,
       "name": "pack-04",
       "files": [
         "s05a-whole-slice.spec.ts",
@@ -156,7 +165,7 @@
       "timeoutSeconds": 2100
     },
     {
-      "id": 11,
+      "id": 12,
       "name": "pack-05",
       "files": [
         "s05b-s060-budget-conflict.spec.ts",
@@ -184,7 +193,7 @@
       "timeoutSeconds": 2100
     },
     {
-      "id": 12,
+      "id": 13,
       "name": "pack-06",
       "files": [
         "s06-claude-remediation-2.spec.ts",
@@ -198,7 +207,7 @@
       "timeoutSeconds": 2100
     },
     {
-      "id": 13,
+      "id": 14,
       "name": "pack-07",
       "files": [
         "s06-mutation-503-recoverable.spec.ts",
@@ -218,7 +227,7 @@
       "timeoutSeconds": 2100
     },
     {
-      "id": 14,
+      "id": 15,
       "name": "pack-08",
       "files": [
         "s06-v2-s072.spec.ts",
@@ -234,7 +243,7 @@
       "timeoutSeconds": 2100
     },
     {
-      "id": 15,
+      "id": 16,
       "name": "pack-09",
       "files": [
         "s075-capacity.spec.ts",
@@ -258,7 +267,7 @@
       "timeoutSeconds": 2100
     },
     {
-      "id": 16,
+      "id": 17,
       "name": "pack-10",
       "files": [
         "s075-packet8-trusted-boundary-live.spec.ts",

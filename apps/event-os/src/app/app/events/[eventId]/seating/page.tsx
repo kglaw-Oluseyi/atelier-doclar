@@ -191,7 +191,14 @@ export default async function EventSeatingPage({
     reasonClass: presented.correlationId ? "PRESENTED" : "ABSENT",
   });
   const envelopeFields = { organisationId: organisation.id, eventId: event.id, assignmentId };
-  const working = workspace.workingEdition as { id?: string; contentHash?: string; status?: string; version?: number } | undefined;
+  const working = workspace.workingEdition as {
+    id?: string;
+    contentHash?: string;
+    status?: string;
+    version?: number;
+    stale?: boolean;
+    sourceRunId?: string;
+  } | undefined;
   const input = workspace.inputEdition as { id?: string; contentHash?: string; layoutContentHash?: string } | undefined;
   const publication = workspace.currentPublication as { id?: string; publicationNumber?: number; editionHash?: string } | undefined;
   const verifyAs = eventOsVerifyAsAvailable() && permissions.fixtureVerifyAs;
@@ -208,7 +215,7 @@ export default async function EventSeatingPage({
           : "No current operational publication"}
         {publicationSource === "LEGACY" ? ` · ${LEGACY_S06_PUBLICATION_LABEL}` : ""}
         {publication && working && working.status !== "PUBLISHED"
-          ? ` · Current working edition: ${working.status} / unpublished`
+          ? ` · Current working edition: ${working.status} / unpublished${working.stale ? " · Stale" : ""}`
           : ""}
       </p>
       <p data-testid="seating-freshness-badge">{workspace.freshnessCopy}</p>
@@ -800,7 +807,11 @@ export default async function EventSeatingPage({
                     <p>No safe seating plan satisfies every hard rule.</p>
                   ) : null}
                   {run.violatedSummary ? <p>Violated: {run.violatedSummary}</p> : null}
-                  {permissions.edit && (seatingV2ReplacementEnabled() ? run.validatorVerdict === "FEASIBLE" : run.status === "FEASIBLE" || run.status === "INFEASIBLE") ? (
+                  {permissions.edit &&
+                  !run.stale &&
+                  (seatingV2ReplacementEnabled()
+                    ? run.validatorVerdict === "FEASIBLE"
+                    : run.status === "FEASIBLE" || run.status === "INFEASIBLE") ? (
                     <ProtectionMutationForm action={adoptSeatingRunAction.bind(null, event.id)} className="actions">
                       <Envelope fields={{ ...envelopeFields, runId: run.id }} />
                       <IdempotencyField />

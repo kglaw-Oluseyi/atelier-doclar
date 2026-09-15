@@ -17,6 +17,37 @@ import type { PlatformSnapshot } from "./store.js";
 
 export const LEGACY_S06_PUBLICATION_LABEL = "LEGACY S06 PUBLICATION — not V2 validated";
 
+/**
+ * Canonical seating authority freshness: a package or run is stale when any
+ * authoritative input used to create it no longer matches current authority —
+ * package identity under current rule/reservation/layout selection, and/or the
+ * sole ACTIVE layout-binding content hash.
+ */
+export function isPackageOrRunStaleAgainstCurrentAuthority(input: {
+  packageId: string;
+  packageLayoutContentHash: string;
+  /** Sole ACTIVE binding layout content hash when BOUND. */
+  activeLayoutContentHash?: string | null;
+  /** Package id matching current rule + reservation + layout authority, if any. */
+  currentAuthorityPackageId?: string | null;
+}): boolean {
+  if (
+    input.activeLayoutContentHash != null &&
+    input.activeLayoutContentHash !== "" &&
+    input.packageLayoutContentHash !== input.activeLayoutContentHash
+  ) {
+    return true;
+  }
+  if (
+    input.currentAuthorityPackageId != null &&
+    input.currentAuthorityPackageId !== "" &&
+    input.packageId !== input.currentAuthorityPackageId
+  ) {
+    return true;
+  }
+  return false;
+}
+
 function asIsoTimestamp(value: unknown): string | undefined {
   if (value == null) return undefined;
   if (typeof value === "string") return value;
@@ -77,21 +108,45 @@ export function buildSeatingV2Workspace(
   const activeRuleIds = new Set(rules.filter((item) => item.lifecycle === "ACTIVE").map((item) => item.id));
   const activeReservations = state.reservationEditions.filter((item) => item.eventId === eventId && item.lifecycle === "ACTIVE");
   const activeReservationIds = new Set(activeReservations.map((item) => item.id));
+  const assignments = edition ? state.planAssignments.filter((item) => item.planEditionId === edition.id) : [];
+  const cohort = snapshotGuestCohortAdapter(snap, eventId);
+  const authority = resolveSeatingLayoutAuthority(snap, state.layoutBindings, organisationId, eventId);
+  const layout = authority.state === "BOUND" ? authority.layout : undefined;
+  const activeLayoutContentHash = authority.state === "BOUND" ? authority.binding.layoutContentHash : undefined;
   const currentInputPackages = eventPackages.filter((item) => {
     const packagedRules = state.packageRules.filter((row) => row.packageId === item.id).map((row) => row.ruleEditionId);
     const packagedReservations = state.packageReservations
       .filter((row) => row.packageId === item.id)
       .map((row) => row.reservationEditionId);
-    return sameIdSet(packagedRules, activeRuleIds) && sameIdSet(packagedReservations, activeReservationIds);
+    const rulesAndReservationsMatch =
+      sameIdSet(packagedRules, activeRuleIds) && sameIdSet(packagedReservations, activeReservationIds);
+    const layoutMatches =
+      activeLayoutContentHash == null || item.layoutContentHash === activeLayoutContentHash;
+    return rulesAndReservationsMatch && layoutMatches;
   });
-  const latestPkg = currentInputPackages.at(-1) ?? eventPackages.at(-1);
+  const latestPkg = currentInputPackages.at(-1);
   const editionPkg = edition ? state.inputPackages.find((item) => item.id === edition.packageId) : undefined;
-  const packageDrifted = Boolean(edition && latestPkg && edition.packageId !== latestPkg.id);
-  const pkg = latestPkg ?? editionPkg;
-  const assignments = edition ? state.planAssignments.filter((item) => item.planEditionId === edition.id) : [];
-  const cohort = snapshotGuestCohortAdapter(snap, eventId);
-  const authority = resolveSeatingLayoutAuthority(snap, state.layoutBindings, organisationId, eventId);
-  const layout = authority.state === "BOUND" ? authority.layout : undefined;
+  const pkg = latestPkg ?? editionPkg ?? eventPackages.at(-1);
+  const packageAuthorityStale = Boolean(
+    pkg &&
+      isPackageOrRunStaleAgainstCurrentAuthority({
+        packageId: pkg.id,
+        packageLayoutContentHash: pkg.layoutContentHash,
+        activeLayoutContentHash,
+        currentAuthorityPackageId: latestPkg?.id,
+      }),
+  );
+  const editionAuthorityStale = Boolean(
+    editionPkg &&
+      isPackageOrRunStaleAgainstCurrentAuthority({
+        packageId: editionPkg.id,
+        packageLayoutContentHash: editionPkg.layoutContentHash,
+        activeLayoutContentHash,
+        currentAuthorityPackageId: latestPkg?.id,
+      }),
+  );
+  const packageDrifted =
+    Boolean(edition && latestPkg && edition.packageId !== latestPkg.id) || packageAuthorityStale || editionAuthorityStale;
   const boundPublication =
     authority.state === "BOUND"
       ? snap.layoutPublications.find((item) => item.id === authority.binding.layoutPublicationId)
@@ -172,12 +227,13 @@ export function buildSeatingV2Workspace(
   const inputPackageHistory = eventPackages.map((item) => ({
     contentHash: disclosure === "AUDITOR" ? "" : item.contentHash,
     layoutContentHash: disclosure === "AUDITOR" ? "" : item.layoutContentHash,
-    current: item.id === pkg?.id,
+    current: item.id === latestPkg?.id,
   }));
   const runs = state.runs.filter((item) => item.eventId === eventId);
   const currentRunId = currentSeatingV2RunId(state, eventId);
   const evalRun = state.evaluationRuns.at(-1);
   const inputFreshness = !layout ? "MISSING" : !pkg ? "MISSING" : packageDrifted ? "STALE" : "CURRENT";
+  const packageById = new Map(eventPackages.map((item) => [item.id, item]));
   const guests = cohort.guests.map((guest) => {
     const person = snap.operationalGuests.find((item) => item.id === guest.eventGuestId);
     const seated = assignments.find((item) => item.eventGuestId === guest.eventGuestId);
@@ -257,7 +313,13 @@ export function buildSeatingV2Workspace(
     });
   }
   if (packageDrifted) {
-    attention.push({ kind: "stale", message: "Upstream event information changed. Review and run again.", href: "#inputs" });
+    attention.push({
+      kind: "stale",
+      message: editionAuthorityStale || packageAuthorityStale
+        ? "Active seating layout authority changed. Freeze a new input package, launch a new run, validate and adopt it."
+        : "Upstream event information changed. Review and run again.",
+      href: "#inputs",
+    });
   }
   if (evalRun && seatingV2EvalReadiness(evalRun) !== "RELEASE_READY") {
     attention.push({
@@ -273,7 +335,9 @@ export function buildSeatingV2Workspace(
     ? "Activate a seating layout binding"
     : !pkg
     ? "Freeze inputs"
-    : packageDrifted || !edition
+    : packageAuthorityStale || editionAuthorityStale || (packageDrifted && !latestPkg)
+      ? "Freeze a new input package, launch a new run, validate and adopt it"
+      : packageDrifted || !edition
       ? "Launch and adopt a validator-FEASIBLE run"
       : edition.status === "WORKING"
         ? "Submit the working edition"
@@ -291,7 +355,16 @@ export function buildSeatingV2Workspace(
       : legacyPublication
         ? { id: legacyPublication.id, publicationNumber: legacyPublication.publicationNumber, editionHash: legacyPublication.editionHash, status: "CURRENT" }
         : undefined,
-    workingEdition: edition ? { id: edition.id, contentHash: edition.contentHash, status: edition.status, version: edition.version } : undefined,
+    workingEdition: edition
+      ? {
+          id: edition.id,
+          contentHash: edition.contentHash,
+          status: edition.status,
+          version: edition.version,
+          stale: editionAuthorityStale,
+          sourceRunId: edition.sourceRunId,
+        }
+      : undefined,
     inputEdition: pkg
       ? { id: pkg.id, contentHash: pkg.contentHash, layoutContentHash: pkg.layoutContentHash }
       : undefined,
@@ -406,6 +479,16 @@ export function buildSeatingV2Workspace(
       const violatedSummary = [...ruleOutcomes.map((row) => row.typedReasonCodes.join(" ")), ...structuralFailures.map((row) => row.checkCode)]
         .filter(Boolean)
         .join(" · ");
+      const runPackage = packageById.get(item.packageId);
+      const runStale = Boolean(
+        runPackage &&
+          isPackageOrRunStaleAgainstCurrentAuthority({
+            packageId: runPackage.id,
+            packageLayoutContentHash: runPackage.layoutContentHash,
+            activeLayoutContentHash,
+            currentAuthorityPackageId: latestPkg?.id,
+          }),
+      );
       return {
         id: item.id,
         status: item.status,
@@ -413,7 +496,7 @@ export function buildSeatingV2Workspace(
         resultHash: item.assignmentsHash ?? undefined,
         seated: state.runAssignments.filter((row) => row.runId === item.id && row.state === "SEATED").length,
         unseated: state.runAssignments.filter((row) => row.runId === item.id && row.state === "UNSEATED").length,
-        stale: Boolean(pkg && item.packageId !== pkg.id),
+        stale: runStale,
         current: item.id === currentRunId,
         validatorVerdict: report?.validatorVersion === SEATING_V2_VALIDATOR_VERSION ? report.verdict : undefined,
         validatorVersion: report?.validatorVersion,
