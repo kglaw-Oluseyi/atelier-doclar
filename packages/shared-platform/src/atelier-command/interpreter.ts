@@ -1,6 +1,7 @@
 /** Deterministic fixture interpreter — provider-inactive posture. */
 import { createHash, randomUUID } from "node:crypto";
 import type { ContextBrokerProjection } from "./context.js";
+import { assessIntentCompatibility } from "./intent-integrity.js";
 import { refuseCrossEventRequest, treatEventContentAsData } from "./policy.js";
 import { getAtelierTool, modeForRisk } from "./tools.js";
 import type {
@@ -49,7 +50,11 @@ function pickTools(rawText: string): string[] {
   if (/risk|incident|mitigation/.test(t)) return ["risk.raise"];
   if (/brief|discovery|interview|client vision/.test(t)) return ["eventBrief.read"];
   if (/browser simulation|simulated browser|browser posture|browser limitations/.test(t)) return ["intelligence.answer"];
-  if (/portal|browser|download|venue document/.test(t)) return ["browser.retrieveDocument"];
+  // Do not pick retrieve for payment / real external write — intent integrity refuses these.
+  if (/\b(pay|payment|purchase|real (payment|send|submission)|submit a real)\b/.test(t)) {
+    return [];
+  }
+  if (/portal|browser|download|venue document|retrieve|floor plan/.test(t)) return ["browser.retrieveDocument"];
   if (/send (the )?(message|communication|email)\b/.test(t)) return ["communication.sendApproved"];
   if (/diagnos|what (is|are) (wrong|blocking)/.test(t)) return ["intelligence.diagnose"];
   if (/recommend|should i|options/.test(t)) return ["intelligence.recommend"];
@@ -115,6 +120,52 @@ export function interpretInstruction(input: {
 
   const injection = treatEventContentAsData(input.rawText);
   const toolNames = input.forcedTools?.length ? input.forcedTools : pickTools(input.rawText);
+  const intent = assessIntentCompatibility({
+    rawText: input.rawText,
+    eventId: input.eventId,
+    toolNames,
+    forcedTools: Boolean(input.forcedTools?.length),
+  });
+
+  if (intent.decision === "REFUSE") {
+    return {
+      interpretation: {
+        requestedOutcome: intent.requestedOutcome,
+        requestedTarget: intent.requestedTarget,
+        requestedOperation: intent.requestedOperation,
+        requestedEffectClass: intent.requestedEffectClass,
+        matchedCanonicalTask: intent.matchedToolName,
+        supportedPortion: intent.supportedPortion,
+        unsupportedPortion: intent.unsupportedPortion,
+        refusedPortion: intent.refusedPortion,
+        materialSemanticDifferences: intent.materialSemanticDifferences,
+        scope: input.context.scope,
+        entities: [
+          {
+            kind: "EVENT",
+            suppliedText: input.eventId,
+            resolvedId: input.eventId,
+            resolution: "EXACT",
+          },
+        ],
+        knowledge: input.context.knowledge,
+        ambiguities: [],
+        successCriteria: [],
+        intentType: "UNSUPPORTED_INTENT_REFUSED",
+        confidence: 1,
+      },
+      modelInvocation: { ...modelInvocation, status: "REFUSED" },
+      steps: [],
+      riskSummary: "R0",
+      needsClarification: false,
+      ambiguities: [],
+      refused: true,
+      refuseReason: intent.refuseReason ?? "Unsupported intent refused",
+      handoffMessage:
+        "No executable plan was created. Use an authorised native workflow or Control Tower handoff when the requested external effect is separately authorised.",
+    };
+  }
+
   const ambiguities: AtelierAmbiguity[] = [];
 
   if (/update (the )?guest/.test(input.rawText.toLowerCase()) && !/guest [0-9a-f-]{8,}/i.test(input.rawText)) {
@@ -132,6 +183,42 @@ export function interpretInstruction(input: {
   for (const name of toolNames) {
     const tool = getAtelierTool(name);
     if (!tool) continue;
+    // Re-validate compatibility at compile time (trusted server code).
+    const stepIntent = assessIntentCompatibility({
+      rawText: input.rawText,
+      eventId: input.eventId,
+      toolNames: [tool.name],
+      forcedTools: Boolean(input.forcedTools?.length),
+    });
+    if (stepIntent.decision === "REFUSE") {
+      return {
+        interpretation: {
+          requestedOutcome: stepIntent.requestedOutcome,
+          requestedTarget: stepIntent.requestedTarget,
+          requestedOperation: stepIntent.requestedOperation,
+          requestedEffectClass: stepIntent.requestedEffectClass,
+          matchedCanonicalTask: tool.name,
+          supportedPortion: stepIntent.supportedPortion,
+          unsupportedPortion: stepIntent.unsupportedPortion,
+          refusedPortion: stepIntent.refusedPortion,
+          materialSemanticDifferences: stepIntent.materialSemanticDifferences,
+          scope: input.context.scope,
+          entities: [],
+          knowledge: input.context.knowledge,
+          ambiguities: [],
+          successCriteria: [],
+          intentType: "UNSUPPORTED_INTENT_REFUSED",
+          confidence: 1,
+        },
+        modelInvocation: { ...modelInvocation, status: "REFUSED" },
+        steps: [],
+        riskSummary: "R0",
+        needsClarification: false,
+        ambiguities: [],
+        refused: true,
+        refuseReason: stepIntent.refuseReason ?? "Incompatible tool mapping refused",
+      };
+    }
     if (order.indexOf(tool.riskTier) > order.indexOf(riskSummary)) riskSummary = tool.riskTier;
     steps.push({
       toolName: tool.name,
@@ -166,7 +253,15 @@ export function interpretInstruction(input: {
 
   return {
     interpretation: {
-      requestedOutcome: input.rawText.trim().slice(0, 500) || "Understand the selected event",
+      requestedOutcome: intent.requestedOutcome || input.rawText.trim().slice(0, 500) || "Understand the selected event",
+      requestedTarget: intent.requestedTarget,
+      requestedOperation: intent.requestedOperation,
+      requestedEffectClass: intent.requestedEffectClass,
+      matchedCanonicalTask: intent.matchedToolName ?? steps[0]?.toolName ?? null,
+      supportedPortion: intent.supportedPortion,
+      unsupportedPortion: intent.unsupportedPortion,
+      refusedPortion: intent.refusedPortion,
+      materialSemanticDifferences: intent.materialSemanticDifferences,
       scope: input.context.scope,
       entities: [
         {

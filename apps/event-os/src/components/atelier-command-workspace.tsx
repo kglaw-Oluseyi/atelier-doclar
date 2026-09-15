@@ -124,10 +124,16 @@ export function AtelierCommandWorkspace({
                 Version {latestPlan.planVersion} · Risk {latestPlan.riskSummary} · Status {latestPlan.status}
                 {latestPlan.dryRun ? " · Dry run" : ""}
               </p>
+              {latestSteps.some((step) => step.executionRoute === "BROWSER") ? (
+                <p data-testid="atelier-command-simulated-banner" className="atelier-command-simulated">
+                  SIMULATED · effect class SIMULATED_BROWSER · no real browser, provider, or external system will change
+                </p>
+              ) : null}
               <ol>
                 {latestSteps.map((step) => (
                   <li key={step.id}>
                     <strong>{step.toolName}</strong> · {step.executionRoute} · {step.riskTier}
+                    {step.executionRoute === "BROWSER" ? " · SIMULATED" : ""}
                     {step.approvalRequirement ? " · maker-checker" : ""} · {step.status}
                   </li>
                 ))}
@@ -155,18 +161,43 @@ export function AtelierCommandWorkspace({
                     </button>
                   </form>
                 ) : null}
-                {canExecute &&
-                (latestPlan.status === "APPROVED" ||
-                  latestPlan.riskSummary === "R0" ||
-                  latestPlan.riskSummary === "R1") ? (
+                {canExecute && latestPlan.status === "APPROVED" ? (
                   <form action={executeAtelierPlanAction}>
                     <input type="hidden" name="organisationId" value={organisationId} />
                     <input type="hidden" name="eventId" value={eventId} />
                     <input type="hidden" name="planId" value={latestPlan.id} />
-                    <button type="submit" className="button">
+                    <button type="submit" className="button" data-testid="atelier-command-execute">
                       Execute plan
                     </button>
                   </form>
+                ) : null}
+                {canExecute &&
+                (latestPlan.riskSummary === "R0" || latestPlan.riskSummary === "R1") &&
+                latestPlan.status === "READY" ? (
+                  <form action={executeAtelierPlanAction}>
+                    <input type="hidden" name="organisationId" value={organisationId} />
+                    <input type="hidden" name="eventId" value={eventId} />
+                    <input type="hidden" name="planId" value={latestPlan.id} />
+                    <button type="submit" className="button" data-testid="atelier-command-execute">
+                      Execute plan
+                    </button>
+                  </form>
+                ) : null}
+                {latestPlan.status === "COMPLETED" ||
+                latestPlan.status === "BLOCKED" ||
+                latestPlan.status === "REFUSED" ||
+                latestPlan.status === "CANCELLED" ||
+                latestPlan.status === "SUPERSEDED" ||
+                latestPlan.status === "FAILED" ||
+                latestPlan.status === "REJECTED" ||
+                latestPlan.status === "STALE" ? (
+                  <p data-testid="atelier-command-settled-state" className="atelier-command-muted">
+                    Settled · {latestPlan.status}
+                    {latestPlan.settlementCorrelationId
+                      ? ` · receipt ${latestPlan.settlementCorrelationId}`
+                      : ""}{" "}
+                    · Execute is not available
+                  </p>
                 ) : null}
               </div>
             </div>
@@ -221,6 +252,23 @@ export function AtelierCommandWorkspace({
           {latestReceipt ? (
             <div className="atelier-command-block" data-testid="atelier-command-receipt">
               <h3>Receipt</h3>
+              {latestReceipt.effectClass === "SIMULATED_BROWSER" || latestReceipt.simulated ? (
+                <p data-testid="atelier-command-receipt-simulated" className="atelier-command-simulated">
+                  SIMULATED · effect class SIMULATED_BROWSER · no real browser, provider, or external system changed
+                </p>
+              ) : null}
+              {latestReceipt.kind === "UNSUPPORTED_INTENT_REFUSED" || latestReceipt.effectClass === "REFUSED" ? (
+                <p data-testid="atelier-command-receipt-refused">
+                  Refused — original request was not fulfilled; no substitute action was executed.
+                </p>
+              ) : null}
+              {latestReceipt.kind === "ALREADY_SETTLED" || latestReceipt.settlementStatus === "ALREADY_SETTLED" ? (
+                <p data-testid="atelier-command-receipt-replayed">
+                  REPLAYED / ALREADY_SETTLED · original correlation {latestReceipt.originalCorrelationId ?? "n/a"}
+                  {latestReceipt.originalSettlementAt ? ` · settled ${latestReceipt.originalSettlementAt}` : ""} · no
+                  new effect
+                </p>
+              ) : null}
               <p>{latestReceipt.summary}</p>
               <p className="atelier-command-muted">
                 Correlation: {latestReceipt.correlationId}
@@ -232,6 +280,16 @@ export function AtelierCommandWorkspace({
                   ? ` · Command record saved: ${String(latestReceipt.intelligenceResult.commandRecordSaved ?? true)}`
                   : ""}
               </p>
+              {latestReceipt.originalRequestedIntent ? (
+                <p className="atelier-command-muted" data-testid="atelier-command-receipt-intent">
+                  Original intent: {latestReceipt.originalRequestedIntent}
+                </p>
+              ) : null}
+              {latestReceipt.actualAction ? (
+                <p className="atelier-command-muted" data-testid="atelier-command-receipt-action">
+                  Actual action: {latestReceipt.actualAction}
+                </p>
+              ) : null}
               {latestReceipt.taskDefinitionId ? (
                 <p className="atelier-command-muted">
                   Task: {latestReceipt.taskDefinitionId} v{latestReceipt.taskVersion ?? 1}

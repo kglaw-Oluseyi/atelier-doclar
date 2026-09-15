@@ -1,0 +1,223 @@
+Using SSH key from file /Users/maisondoclar/.ssh/id_ed25519.pub: railway-agent@maison-doclar
+RECEIPTS [
+  {
+    "id": "2651e7c8-3151-4c97-8935-0b62a90818de",
+    "kind": "RUN_RECEIPT",
+    "runId": "3b04c81a-238d-4b92-99cb-cf81e35f9c75",
+    "planId": "e04c1f14-9db6-49b9-8952-4c216896abef",
+    "eventId": "00000000-0000-4000-8000-000000000022",
+    "summary": "Executed 1 step(s); status COMPLETED",
+    "createdAt": "2026-09-15T23:19:42.008Z",
+    "sessionId": "58f8fa03-6ec7-4068-8c24-118100d45d2a",
+    "dataChanged": false,
+    "effectClass": "SIMULATED_BROWSER",
+    "riskSummary": "R2",
+    "evidenceRefs": [
+      "57f26e80-ff83-4df8-8608-6e719f1a78a5"
+    ],
+    "correlationId": "3a44c61b-7575-45fb-aae2-0bfd293a91ee",
+    "instructionId": "4f6e332a-0ad4-439c-a34b-3dc22cb43cd5",
+    "organisationId": "00000000-0000-4000-8000-000000000001",
+    "changedRecordIds": [],
+    "unchangedReasons": []
+  },
+  {
+    "id": "3d76cded-f1f2-486f-9bb9-f0e17838e988",
+    "kind": "RUN_RECEIPT",
+    "runId": "6e5cc6bf-4a06-45d6-aa75-eb8cdc970dc9",
+    "planId": "e04c1f14-9db6-49b9-8952-4c216896abef",
+    "eventId": "00000000-0000-4000-8000-000000000022",
+    "summary": "Executed 1 step(s); status COMPLETED",
+    "createdAt": "2026-09-15T23:20:16.328Z",
+    "sessionId": "58f8fa03-6ec7-4068-8c24-118100d45d2a",
+    "dataChanged": false,
+    "effectClass": "NONE",
+    "riskSummary": "R2",
+    "evidenceRefs": [
+      "1bbde4fa-8cbd-47c6-9e87-df18f6275f1b"
+    ],
+    "correlationId": "9271c13c-8ea1-435a-a2b0-6d786ccc44fc",
+    "instructionId": "4f6e332a-0ad4-439c-a34b-3dc22cb43cd5",
+    "organisationId": "00000000-0000-4000-8000-000000000001",
+    "changedRecordIds": [],
+    "unchangedReasons": [
+      "Idempotent replay — no duplicate mutation"
+    ]
+  }
+]
+{
+  "plan": {
+    "id": "e04c1f14-9db6-49b9-8952-4c216896abef",
+    "dryRun": false,
+    "status": "APPROVED",
+    "eventId": "00000000-0000-4000-8000-000000000022",
+    "version": 2,
+    "createdAt": "2026-09-15T23:18:25.531Z",
+    "planVersion": 1,
+    "riskSummary": "R2",
+    "estimatedCost": 0,
+    "instructionId": "4f6e332a-0ad4-439c-a34b-3dc22cb43cd5",
+    "policyVersion": "eos-s06a-pdp-v1",
+    "scopeSnapshot": {
+      "eventId": "00000000-0000-4000-8000-000000000022",
+      "eventName": "Alpha Two",
+      "crossEvent": false,
+      "organisationId": "00000000-0000-4000-8000-000000000001",
+      "organisationName": "Maison Doclar"
+    },
+    "organisationId": "00000000-0000-4000-8000-000000000001",
+    "approvedPlanHash": "3df1b0a2b1ecff4fb8d495939e64a33ca6bca01ad94af4b71310a3bbba6785c5",
+    "estimatedDurationMs": 1500
+  },
+  "instr": {
+    "id": "4f6e332a-0ad4-439c-a34b-3dc22cb43cd5",
+    "rawText": "Retrieve the standard floor plan PDF from our approved venue portal for this event (synthetic/test only, concurrency/reload test).",
+    "author": "00000000-0000-4000-8000-000000000041",
+    "status": "INTERPRETED",
+    "createdAt": "2026-09-15T23:18:25.531Z"
+  },
+  "steps": [
+    {
+      "id": "06026854-03d9-446a-b891-2df53144aedf",
+      "input": {
+        "dryRun": false,
+        "eventId": "00000000-0000-4000-8000-000000000022",
+        "instruction": "Retrieve the standard floor plan PDF from our approved venue portal for this event (synthetic/test only, concurrency/reload test).",
+        "organisationId": "00000000-0000-4000-8000-000000000001"
+      },
+      "planId": "e04c1f14-9db6-49b9-8952-4c216896abef",
+      "status": "REPLAYED",
+      "ordinal": 1,
+      "riskTier": "R2",
+      "toolName": "browser.retrieveDocument",
+      "targetRefs": [
+        "event:00000000-0000-4000-8000-000000000022"
+      ],
+      "toolVersion": "1.0.0",
+      "preconditions": [
+        "EVENT_SCOPE",
+        "PERMISSION"
+      ],
+      "executionRoute": "BROWSER",
+      "confirmationMode": "CONFIRM_EACH",
+      "dependsOnStepIds": [],
+      "expectedEvidence": [
+        "step-receipt"
+      ],
+      "compensationPolicy": "supersession-only",
+      "approvalRequirement": false
+    }
+  ],
+  "runs": [
+    {
+      "id": "3b04c81a-238d-4b92-99cb-cf81e35f9c75",
+      "planId": "e04c1f14-9db6-49b9-8952-4c216896abef",
+      "status": "COMPLETED",
+      "endedAt": "2026-09-15T23:19:42.008Z",
+      "eventId": "00000000-0000-4000-8000-000000000022",
+      "version": 1,
+      "startedAt": "2026-09-15T23:19:42.008Z",
+      "actualCost": 0,
+      "costBudget": 1,
+      "organisationId": "00000000-0000-4000-8000-000000000001",
+      "agentIdentityId": "agent:atelier-command:00000000-0000-4000-8000-000000000061",
+      "lastHeartbeatAt": "2026-09-15T23:19:42.008Z",
+      "completionSummary": "Executed 1 step(s); status COMPLETED",
+      "initiatedByPersonId": "00000000-0000-4000-8000-000000000041",
+      "modelPolicySnapshot": "fixture-v1",
+      "initiatedByAssignmentId": "00000000-0000-4000-8000-000000000061"
+    },
+    {
+      "id": "6e5cc6bf-4a06-45d6-aa75-eb8cdc970dc9",
+      "planId": "e04c1f14-9db6-49b9-8952-4c216896abef",
+      "status": "COMPLETED",
+      "endedAt": "2026-09-15T23:20:16.328Z",
+      "eventId": "00000000-0000-4000-8000-000000000022",
+      "version": 1,
+      "startedAt": "2026-09-15T23:20:16.328Z",
+      "actualCost": 0,
+      "costBudget": 1,
+      "organisationId": "00000000-0000-4000-8000-000000000001",
+      "agentIdentityId": "agent:atelier-command:00000000-0000-4000-8000-000000000061",
+      "lastHeartbeatAt": "2026-09-15T23:20:16.328Z",
+      "completionSummary": "Executed 1 step(s); status COMPLETED",
+      "initiatedByPersonId": "00000000-0000-4000-8000-000000000041",
+      "modelPolicySnapshot": "fixture-v1",
+      "initiatedByAssignmentId": "00000000-0000-4000-8000-000000000061"
+    }
+  ],
+  "execs": [
+    {
+      "id": "57f26e80-ff83-4df8-8608-6e719f1a78a5",
+      "runId": "3b04c81a-238d-4b92-99cb-cf81e35f9c75",
+      "status": "SUCCEEDED",
+      "stepId": "06026854-03d9-446a-b891-2df53144aedf",
+      "attempt": 1,
+      "endedAt": "2026-09-15T23:19:42.008Z",
+      "eventId": "00000000-0000-4000-8000-000000000022",
+      "commandId": "5b67e45b-16aa-432a-82e8-b428da23f8cd",
+      "inputHash": "7da4619cabdd99313b601f66a1bfbec786aa4ecbcc849ea6bc095c22bea5a8e9",
+      "resultRef": "quarantine:1ab0a9f9d5f0b092",
+      "startedAt": "2026-09-15T23:19:42.008Z",
+      "correlationId": "3a44c61b-7575-45fb-aae2-0bfd293a91ee",
+      "resultPayload": {
+        "dataChanged": false,
+        "effectClass": "SIMULATED_BROWSER"
+      },
+      "resultSummary": "Browser simulation completed; download quarantined; profile destroyed",
+      "scopeSnapshot": {
+        "eventId": "00000000-0000-4000-8000-000000000022",
+        "crossEvent": false,
+        "organisationId": "00000000-0000-4000-8000-000000000001"
+      },
+      "afterStateHash": "1c0b9a69e7ce9030e959e880466a01c08861d9e9f2dddf1da070b4477ed88fca",
+      "idempotencyKey": "e04c1f14-9db6-49b9-8952-4c216896abef:06026854-03d9-446a-b891-2df53144aedf:1.0.0:7da4619cabdd99313b601f66a1bfbec786aa4ecbcc849ea6bc095c22bea5a8e9",
+      "organisationId": "00000000-0000-4000-8000-000000000001",
+      "beforeStateHash": "88fcaf1d98754a611ea822a467a36c1819545fe6d242c24de45e5dcca8267640",
+      "effectiveCapability": [
+        "atelierCommand.browser"
+      ]
+    },
+    {
+      "id": "1bbde4fa-8cbd-47c6-9e87-df18f6275f1b",
+      "runId": "6e5cc6bf-4a06-45d6-aa75-eb8cdc970dc9",
+      "status": "REPLAYED",
+      "stepId": "06026854-03d9-446a-b891-2df53144aedf",
+      "attempt": 1,
+      "endedAt": "2026-09-15T23:20:16.328Z",
+      "eventId": "00000000-0000-4000-8000-000000000022",
+      "commandId": "5b67e45b-16aa-432a-82e8-b428da23f8cd",
+      "inputHash": "7da4619cabdd99313b601f66a1bfbec786aa4ecbcc849ea6bc095c22bea5a8e9",
+      "resultRef": "quarantine:1ab0a9f9d5f0b092",
+      "startedAt": "2026-09-15T23:20:16.328Z",
+      "correlationId": "9271c13c-8ea1-435a-a2b0-6d786ccc44fc",
+      "resultSummary": "Idempotent replay — no duplicate mutation",
+      "scopeSnapshot": {
+        "eventId": "00000000-0000-4000-8000-000000000022",
+        "crossEvent": false,
+        "organisationId": "00000000-0000-4000-8000-000000000001"
+      },
+      "idempotencyKey": "e04c1f14-9db6-49b9-8952-4c216896abef:06026854-03d9-446a-b891-2df53144aedf:1.0.0:7da4619cabdd99313b601f66a1bfbec786aa4ecbcc849ea6bc095c22bea5a8e9",
+      "organisationId": "00000000-0000-4000-8000-000000000001",
+      "effectiveCapability": [
+        "atelierCommand.browser"
+      ]
+    }
+  ]
+}
+MULTI_RECEIPT_BROWSER e04c1f14-9db6-49b9-8952-4c216896abef [
+  {
+    corr: '3a44c61b-7575-45fb-aae2-0bfd293a91ee',
+    at: '2026-09-15T23:19:42.008Z',
+    effect: 'SIMULATED_BROWSER',
+    dataChanged: false,
+    summary: 'Executed 1 step(s); status COMPLETED'
+  },
+  {
+    corr: '9271c13c-8ea1-435a-a2b0-6d786ccc44fc',
+    at: '2026-09-15T23:20:16.328Z',
+    effect: 'NONE',
+    dataChanged: false,
+    summary: 'Executed 1 step(s); status COMPLETED'
+  }
+]

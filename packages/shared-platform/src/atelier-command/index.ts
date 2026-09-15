@@ -8,4 +8,5 @@ export * from "./browser.js";
 export * from "./domain-resolvers.js";
 export * from "./intelligence.js";
 export * from "./interpreter.js";
+export * from "./intent-integrity.js";
 export * from "./service.js";

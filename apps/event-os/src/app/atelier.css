@@ -2485,6 +2485,16 @@ body.atelier {
   color: rgba(28, 25, 22, 0.72);
 }
 
+.atelier-command-simulated {
+  color: #5c4a1f;
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.18), rgba(212, 175, 55, 0.05));
+  border-left: 3px solid #b8860b;
+  padding: 0.55rem 0.75rem;
+  margin: 0.5rem 0;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
 .atelier-command-block {
   margin-top: 1.25rem;
   padding-top: 1rem;

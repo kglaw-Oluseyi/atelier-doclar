@@ -9793,6 +9793,37 @@ export class PlatformService {
   ) {
     const { snap } = this.authorizeQuery(actor, "atelierCommand.execute", { organisationId, eventId });
     const actorSnap = this.resolveActor(actor.personId);
+    // Claim before any await so concurrent callers settle once under shared snapshot.
+    const claimed = AtelierCommand.claimPlanExecution({
+      snap,
+      actor: actorSnap,
+      organisationId,
+      eventId,
+      planId,
+      now: this.tokenNow(actor),
+    });
+    if (claimed) {
+      this.writeAudit(snap, {
+        action: "atelierCommand.execute",
+        outcome: "SUCCESS",
+        actorPersonId: actor.personId,
+        organisationId,
+        eventId,
+        resourceType: "atelier_run",
+        resourceId: claimed.run.id,
+        correlationId: claimed.receipt.correlationId,
+        reason: [
+          `plan=${planId}`,
+          `status=ALREADY_SETTLED`,
+          `originalCorrelation=${claimed.receipt.originalCorrelationId ?? ""}`,
+          `dataChanged=false`,
+          `effect=${claimed.receipt.effectClass ?? ""}`,
+        ].join("; "),
+        occurredAt: this.tokenNow(actor),
+      });
+      await this.persistAtelierSnapshot(snap);
+      return claimed;
+    }
     let seating = null as import("./seating-workspace.js").SeatingWorkspaceView | null;
     try {
       seating = await this.seatingV2Commands().projectWorkspace(
@@ -9820,11 +9851,16 @@ export class PlatformService {
       failAtOrdinal: options?.failAtOrdinal,
       now: this.tokenNow(actor),
       domainEvidence: { seating, roleKey },
+      alreadyClaimed: true,
     });
     this.writeAudit(snap, {
       action: "atelierCommand.execute",
       outcome:
-        result.run.status === "COMPLETED" || result.run.status === "COMPLETED_WITH_RESIDUALS" ? "SUCCESS" : "DENIED",
+        result.receipt.settlementStatus === "ALREADY_SETTLED"
+          ? "SUCCESS"
+          : result.run.status === "COMPLETED" || result.run.status === "COMPLETED_WITH_RESIDUALS"
+            ? "SUCCESS"
+            : "DENIED",
       actorPersonId: actor.personId,
       organisationId,
       eventId,
@@ -9835,9 +9871,12 @@ export class PlatformService {
         `plan=${result.receipt.planId ?? planId}`,
         `run=${result.run.id}`,
         `status=${result.run.status}`,
+        result.receipt.settlementStatus ? `settlement=${result.receipt.settlementStatus}` : null,
+        result.receipt.originalCorrelationId ? `originalCorrelation=${result.receipt.originalCorrelationId}` : null,
         `risk=${result.receipt.riskSummary ?? ""}`,
         `effect=${result.receipt.effectClass ?? ""}`,
         `dataChanged=${String(Boolean(result.receipt.dataChanged))}`,
+        result.receipt.simulated ? "simulated=true" : null,
         result.receipt.taskDefinitionId ? `task=${result.receipt.taskDefinitionId}` : null,
         result.receipt.intelligenceResult ? "intelligence=present" : null,
         result.receipt.intelligenceResult?.domain ? `domain=${result.receipt.intelligenceResult.domain}` : null,

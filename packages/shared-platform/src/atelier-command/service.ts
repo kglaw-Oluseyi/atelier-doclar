@@ -9,6 +9,7 @@ import { buildEventContextProjection } from "./context.js";
 import { buildIntelligenceResult } from "./intelligence.js";
 import type { DomainEvidenceBag } from "./domain-resolvers.js";
 import { interpretInstruction, hashPlan } from "./interpreter.js";
+import { assessIntentCompatibility, isPlanTerminal, isStepTerminal } from "./intent-integrity.js";
 import {
   assertAtelierPermission,
   assertEventScoped,
@@ -255,6 +256,7 @@ export function submitInstruction(input: {
 
   if (compiled.refused) {
     instruction.status = "REJECTED";
+    const unsupported = compiled.interpretation.intentType === "UNSUPPORTED_INTENT_REFUSED";
     const receipt: AtelierCommandReceipt = {
       id: randomUUID(),
       organisationId: input.organisationId,
@@ -262,14 +264,25 @@ export function submitInstruction(input: {
       sessionId: session.id,
       instructionId: instruction.id,
       correlationId: randomUUID(),
-      kind: "CROSS_EVENT_HANDOFF",
+      kind: unsupported ? "UNSUPPORTED_INTENT_REFUSED" : "CROSS_EVENT_HANDOFF",
       summary: compiled.refuseReason ?? "Refused",
       changedRecordIds: [],
-      unchangedReasons: [compiled.refuseReason ?? "Refused"],
+      unchangedReasons: [
+        compiled.refuseReason ?? "Refused",
+        ...(compiled.interpretation.unsupportedPortion ? [compiled.interpretation.unsupportedPortion] : []),
+        ...(compiled.interpretation.refusedPortion
+          ? [`Refused portion: ${compiled.interpretation.refusedPortion}`]
+          : []),
+        "No substitute executable step was authorised.",
+        ...(compiled.handoffMessage ? [compiled.handoffMessage] : []),
+      ],
       evidenceRefs: context.evidenceRefs,
       createdAt: now,
       effectClass: "REFUSED",
       dataChanged: false,
+      settlementStatus: "REFUSED",
+      originalRequestedIntent: compiled.interpretation.requestedOutcome,
+      actualAction: "none — refused",
     };
     ledger.receipts.push(receipt);
     return { instruction, plan: null, steps: [], receipt, compiled };
@@ -446,13 +459,21 @@ export function confirmPlan(input: {
   if (!plan || plan.eventId !== input.eventId || plan.organisationId !== input.organisationId) {
     throw new PlatformError("NOT_FOUND", "Plan was not found for this event");
   }
+  if (isPlanTerminal(plan.status)) {
+    throw new PlatformError("FORBIDDEN", `Plan is terminal (${plan.status}) and cannot be confirmed`);
+  }
   if (plan.status === "STALE") {
     throw new PlatformError("VERSION_CONFLICT", "Plan is stale and must be recompiled before confirmation");
   }
   if (plan.riskSummary === "R3" || plan.status === "AWAITING_APPROVAL") {
     throw new PlatformError("FORBIDDEN", "This plan requires independent maker-checker approval");
   }
+  const instruction = ledger.instructions.find((i) => i.id === plan.instructionId);
+  const now = nowIso(input.now);
   plan.status = "APPROVED";
+  plan.makerPersonId = instruction?.authorPersonId ?? input.actor.person.id;
+  plan.approvalIdentityId = `confirm:${plan.id}:v${plan.planVersion}:${plan.approvedPlanHash ?? "none"}`;
+  plan.approvedAt = now;
   plan.version += 1;
   return plan;
 }
@@ -471,12 +492,242 @@ export function approvePlan(input: {
   if (!plan || plan.eventId !== input.eventId) {
     throw new PlatformError("NOT_FOUND", "Plan was not found for this event");
   }
+  if (isPlanTerminal(plan.status)) {
+    throw new PlatformError("FORBIDDEN", `Plan is terminal (${plan.status}) and cannot be approved again`);
+  }
   const instruction = ledger.instructions.find((i) => i.id === plan.instructionId);
   if (!instruction) throw new PlatformError("NOT_FOUND", "Instruction missing for plan");
   assertMakerChecker(instruction.authorPersonId, input.actor.person.id, "approve");
+  const now = nowIso(input.now);
   plan.status = "APPROVED";
+  plan.makerPersonId = instruction.authorPersonId;
+  plan.checkerPersonId = input.actor.person.id;
+  plan.approvalIdentityId = `approve:${plan.id}:v${plan.planVersion}:${plan.approvedPlanHash ?? "none"}:${input.actor.person.id}`;
+  plan.approvedAt = now;
   plan.version += 1;
   return plan;
+}
+
+/** Preserve history while ensuring an unexecuted pending plan cannot be actioned after policy change. */
+export function supersedePlan(input: {
+  snap: PlatformSnapshot;
+  planId: string;
+  reason: string;
+  now?: string;
+}) {
+  const ledger = ensureAtelierLedger(input.snap);
+  const plan = ledger.plans.find((p) => p.id === input.planId);
+  if (!plan) throw new PlatformError("NOT_FOUND", "Plan was not found");
+  if (plan.status === "SUPERSEDED") return plan;
+  if (plan.status === "COMPLETED") {
+    throw new PlatformError("FORBIDDEN", "Completed plans cannot be superseded for replay safety");
+  }
+  plan.status = "SUPERSEDED";
+  plan.version += 1;
+  for (const step of ledger.planSteps.filter((s) => s.planId === plan.id)) {
+    if (!isStepTerminal(step.status) || step.status === "PENDING" || step.status === "READY") {
+      step.status = "SUPERSEDED";
+    }
+  }
+  const instruction = ledger.instructions.find((i) => i.id === plan.instructionId);
+  const receipt: AtelierCommandReceipt = {
+    id: randomUUID(),
+    organisationId: plan.organisationId,
+    eventId: plan.eventId,
+    sessionId: instruction?.sessionId ?? "",
+    instructionId: plan.instructionId,
+    planId: plan.id,
+    correlationId: randomUUID(),
+    kind: "PLAN_CONFIRMATION",
+    summary: `Plan superseded — ${input.reason}`,
+    changedRecordIds: [],
+    unchangedReasons: [input.reason, "History preserved; plan is no longer executable."],
+    evidenceRefs: [],
+    createdAt: nowIso(input.now),
+    effectClass: "REFUSED",
+    dataChanged: false,
+    settlementStatus: "REFUSED",
+    riskSummary: plan.riskSummary,
+    originalRequestedIntent: instruction?.rawText,
+    actualAction: "superseded — no execution",
+  };
+  ledger.receipts.push(receipt);
+  return plan;
+}
+
+function buildAlreadySettledResponse(input: {
+  ledger: AtelierCommandLedger;
+  plan: AtelierPlan;
+  organisationId: string;
+  eventId: string;
+  now: string;
+  actor: ActorSnapshot;
+}) {
+  const original =
+    input.ledger.receipts.find((r) => r.id === input.plan.settlementReceiptId) ??
+    input.ledger.receipts
+      .filter((r) => r.planId === input.plan.id && r.settlementStatus === "EXECUTED")
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt))[0] ??
+    input.ledger.receipts
+      .filter((r) => r.planId === input.plan.id && (r.kind === "RUN_RECEIPT" || r.kind === "INTELLIGENCE_RESULT"))
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt))[0];
+  const originalCorr = input.plan.settlementCorrelationId ?? original?.correlationId ?? "unknown";
+  const originalAt = input.plan.settledAt ?? original?.createdAt ?? input.now;
+  const assignment = activeAssignment(input.actor, input.organisationId, input.eventId);
+  const run: AtelierRun = {
+    id: randomUUID(),
+    planId: input.plan.id,
+    organisationId: input.organisationId,
+    eventId: input.eventId,
+    initiatedByAssignmentId: assignment.id,
+    initiatedByPersonId: input.actor.person.id,
+    agentIdentityId: `agent:atelier-command:${assignment.id}`,
+    modelPolicySnapshot: "fixture-v1",
+    status: "COMPLETED",
+    startedAt: input.now,
+    endedAt: input.now,
+    costBudget: 0,
+    actualCost: 0,
+    lastHeartbeatAt: input.now,
+    completionSummary: "ALREADY_SETTLED — original settlement returned; no new effect",
+    version: 1,
+  };
+  input.ledger.runs.push(run);
+  const observation: AtelierStepExecution = {
+    id: randomUUID(),
+    runId: run.id,
+    stepId: input.ledger.planSteps.find((s) => s.planId === input.plan.id)?.id ?? "none",
+    organisationId: input.organisationId,
+    eventId: input.eventId,
+    attempt: 1,
+    commandId: original?.changedRecordIds[0] ?? originalCorr,
+    idempotencyKey: `replay:${input.plan.id}:${input.plan.planVersion}:${originalCorr}`,
+    correlationId: randomUUID(),
+    effectiveCapability: [],
+    scopeSnapshot: { organisationId: input.organisationId, eventId: input.eventId, crossEvent: false },
+    inputHash: "replay",
+    status: "REPLAYED",
+    resultSummary: `ALREADY_SETTLED / REPLAYED — original correlation ${originalCorr} at ${originalAt}; no new effect occurred`,
+    resultPayload: {
+      effectClass: original?.effectClass ?? "ALREADY_SETTLED",
+      dataChanged: false,
+      settlementStatus: "ALREADY_SETTLED",
+      originalCorrelationId: originalCorr,
+    },
+    startedAt: input.now,
+    endedAt: input.now,
+  };
+  input.ledger.stepExecutions.push(observation);
+  const simulated = original?.effectClass === "SIMULATED_BROWSER" || original?.simulated === true;
+  const receipt: AtelierCommandReceipt = {
+    id: randomUUID(),
+    organisationId: input.organisationId,
+    eventId: input.eventId,
+    sessionId: original?.sessionId ?? "",
+    instructionId: input.plan.instructionId,
+    planId: input.plan.id,
+    runId: run.id,
+    correlationId: observation.correlationId,
+    kind: "ALREADY_SETTLED",
+    summary: simulated
+      ? `REPLAYED / ALREADY_SETTLED — SIMULATED browser settlement ${originalCorr}; no real browser/provider/external system changed; no new effect`
+      : `REPLAYED / ALREADY_SETTLED — original settlement ${originalCorr}; no new effect occurred`,
+    changedRecordIds: [],
+    unchangedReasons: [
+      "ALREADY_SETTLED",
+      `Original correlation: ${originalCorr}`,
+      `Original settlement time: ${originalAt}`,
+      "Tool was not invoked again.",
+      "dataChanged:false for this replay.",
+    ],
+    evidenceRefs: [observation.id, ...(original ? [original.id] : [])],
+    createdAt: input.now,
+    effectClass: simulated ? "SIMULATED_BROWSER" : original?.effectClass === "REFUSED" ? "REFUSED" : "ALREADY_SETTLED",
+    dataChanged: false,
+    settlementStatus: "ALREADY_SETTLED",
+    originalCorrelationId: originalCorr,
+    originalSettlementAt: originalAt,
+    simulated: simulated || undefined,
+    riskSummary: input.plan.riskSummary,
+    taskDefinitionId: original?.taskDefinitionId,
+    taskVersion: original?.taskVersion,
+    intelligenceResult: original?.intelligenceResult,
+    originalRequestedIntent: original?.originalRequestedIntent,
+    actualAction: original?.actualAction ?? "replay of original settlement only",
+  };
+  input.ledger.receipts.push(receipt);
+  return { run, executions: [observation], receipt, alreadySettled: true as const };
+}
+
+/**
+ * Claim plan for execution before any await (concurrency). Returns already-settled response or null to proceed.
+ */
+export function claimPlanExecution(input: {
+  snap: PlatformSnapshot;
+  actor: ActorSnapshot;
+  organisationId: string;
+  eventId: string;
+  planId: string;
+  now?: string;
+}) {
+  assertAtelierPermission(input.actor, "atelierCommand.execute", input.organisationId, input.eventId);
+  const ledger = ensureAtelierLedger(input.snap);
+  const plan = ledger.plans.find((p) => p.id === input.planId);
+  if (!plan || plan.eventId !== input.eventId || plan.organisationId !== input.organisationId) {
+    throw new PlatformError("NOT_FOUND", "Plan was not found for this event");
+  }
+  const now = nowIso(input.now);
+  if (plan.settlementCorrelationId || plan.status === "COMPLETED") {
+    if (plan.status !== "COMPLETED") plan.status = "COMPLETED";
+    return buildAlreadySettledResponse({ ledger, plan, organisationId: input.organisationId, eventId: input.eventId, now, actor: input.actor });
+  }
+  if (isPlanTerminal(plan.status) && plan.status !== "FAILED") {
+    throw new PlatformError("FORBIDDEN", `Plan is terminal (${plan.status}) and cannot execute`);
+  }
+  // Retryable FAILED / RECOVERING paths may re-enter; EXECUTING means another request claimed first.
+  if (plan.status === "EXECUTING") {
+    if (plan.settlementCorrelationId) {
+      return buildAlreadySettledResponse({ ledger, plan, organisationId: input.organisationId, eventId: input.eventId, now, actor: input.actor });
+    }
+    // Another caller holds the claim. If a successful step already committed, settle as replay.
+    const steps = ledger.planSteps.filter((s) => s.planId === plan.id);
+    const priorSuccess = ledger.stepExecutions
+      .filter((e) => steps.some((s) => s.id === e.stepId) && e.status === "SUCCEEDED")
+      .sort((a, b) => (a.startedAt ?? "").localeCompare(b.startedAt ?? ""))[0];
+    if (priorSuccess) {
+      plan.settlementCorrelationId = priorSuccess.correlationId;
+      plan.settledAt = priorSuccess.endedAt ?? priorSuccess.startedAt ?? now;
+      plan.status = "COMPLETED";
+      return buildAlreadySettledResponse({ ledger, plan, organisationId: input.organisationId, eventId: input.eventId, now, actor: input.actor });
+    }
+    throw new PlatformError("VERSION_CONFLICT", "Plan execution already in progress");
+  }
+  if (plan.status === "STALE") {
+    throw new PlatformError("VERSION_CONFLICT", "Underlying event state changed; replan required");
+  }
+  if (plan.status !== "APPROVED" && plan.riskSummary !== "R0" && plan.riskSummary !== "R1") {
+    throw new PlatformError("FORBIDDEN", "Plan must be confirmed or approved before execution");
+  }
+  if ((plan.riskSummary === "R0" || plan.riskSummary === "R1") && plan.status === "READY") {
+    plan.status = "APPROVED";
+  }
+  // Steps already terminal with prior success → settle without re-tooling.
+  const steps = ledger.planSteps.filter((s) => s.planId === plan.id);
+  const allTerminalSuccess = steps.length > 0 && steps.every((s) => s.status === "SUCCEEDED" || s.status === "REPLAYED");
+  if (allTerminalSuccess) {
+    const priorExec = ledger.stepExecutions
+      .filter((e) => steps.some((s) => s.id === e.stepId) && e.status === "SUCCEEDED")
+      .sort((a, b) => (a.startedAt ?? "").localeCompare(b.startedAt ?? ""))[0];
+    if (priorExec) {
+      plan.settlementCorrelationId = priorExec.correlationId;
+      plan.settledAt = priorExec.endedAt ?? priorExec.startedAt;
+      plan.status = "COMPLETED";
+      return buildAlreadySettledResponse({ ledger, plan, organisationId: input.organisationId, eventId: input.eventId, now, actor: input.actor });
+    }
+  }
+  plan.status = "EXECUTING";
+  plan.version += 1;
+  return null;
 }
 
 function executeToolStep(input: {
@@ -496,11 +747,80 @@ function executeToolStep(input: {
   if (!tool) {
     throw new PlatformError("VALIDATION_FAILED", `Unknown tool ${input.step.toolName}`);
   }
+  if (isStepTerminal(input.step.status) && input.step.status !== "OUTCOME_UNKNOWN") {
+    const prior = input.ledger.stepExecutions
+      .filter((e) => e.stepId === input.step.id && (e.status === "SUCCEEDED" || e.status === "REPLAYED"))
+      .sort((a, b) => (a.startedAt ?? "").localeCompare(b.startedAt ?? ""))[0];
+    const replayed: AtelierStepExecution = {
+      id: randomUUID(),
+      runId: input.run.id,
+      stepId: input.step.id,
+      organisationId: input.organisationId,
+      eventId: input.eventId,
+      attempt: 1,
+      commandId: prior?.commandId ?? randomUUID(),
+      idempotencyKey: prior?.idempotencyKey ?? `terminal:${input.step.id}`,
+      correlationId: randomUUID(),
+      effectiveCapability: tool.requiredCapabilities,
+      scopeSnapshot: { organisationId: input.organisationId, eventId: input.eventId, crossEvent: false },
+      inputHash: inputHash(input.step.input),
+      status: "REPLAYED",
+      resultRef: prior?.resultRef,
+      resultSummary: `ALREADY_SETTLED — step terminal (${input.step.status}); tool not invoked`,
+      resultPayload: {
+        effectClass: "ALREADY_SETTLED",
+        dataChanged: false,
+        originalCorrelationId: prior?.correlationId,
+      },
+      startedAt: input.now,
+      endedAt: input.now,
+    };
+    input.ledger.stepExecutions.push(replayed);
+    return replayed;
+  }
+
+  // Intent integrity re-check at execution (trusted server code).
+  const instructionText =
+    typeof input.step.input.instruction === "string" ? input.step.input.instruction : tool.description;
+  const intent = assessIntentCompatibility({
+    rawText: instructionText,
+    eventId: input.eventId,
+    toolNames: [tool.name],
+  });
+  if (intent.decision === "REFUSE") {
+    const execution: AtelierStepExecution = {
+      id: randomUUID(),
+      runId: input.run.id,
+      stepId: input.step.id,
+      organisationId: input.organisationId,
+      eventId: input.eventId,
+      attempt: 1,
+      commandId: randomUUID(),
+      idempotencyKey: `${input.step.planId}:${input.step.id}:intent-refuse`,
+      correlationId: randomUUID(),
+      effectiveCapability: tool.requiredCapabilities,
+      scopeSnapshot: { organisationId: input.organisationId, eventId: input.eventId, crossEvent: false },
+      inputHash: inputHash(input.step.input),
+      status: "REFUSED",
+      errorClass: "INTENT_INCOMPATIBLE",
+      resultSummary: intent.refuseReason ?? "Intent incompatible at execution",
+      resultPayload: { effectClass: "REFUSED", dataChanged: false },
+      startedAt: input.now,
+      endedAt: input.now,
+    };
+    input.step.status = "REFUSED";
+    input.ledger.stepExecutions.push(execution);
+    return execution;
+  }
+
   const idempotencyKey = `${input.step.planId}:${input.step.id}:${input.step.toolVersion}:${inputHash(input.step.input)}`;
   const existing = input.ledger.idempotencyReceipts.find(
     (r) => r.idempotencyKey === idempotencyKey && r.eventId === input.eventId,
   );
   if (existing) {
+    const original = input.ledger.stepExecutions.find(
+      (e) => e.idempotencyKey === idempotencyKey && e.status === "SUCCEEDED",
+    );
     const replayed: AtelierStepExecution = {
       id: randomUUID(),
       runId: input.run.id,
@@ -516,7 +836,15 @@ function executeToolStep(input: {
       inputHash: inputHash(input.step.input),
       status: "REPLAYED",
       resultRef: existing.resultRef,
-      resultSummary: "Idempotent replay — no duplicate mutation",
+      resultSummary: `ALREADY_SETTLED / REPLAYED — original correlation ${original?.correlationId ?? existing.commandId}; no duplicate mutation`,
+      resultPayload: {
+        effectClass: original?.resultPayload && typeof original.resultPayload === "object" && "effectClass" in original.resultPayload
+          ? (original.resultPayload as { effectClass?: string }).effectClass
+          : "ALREADY_SETTLED",
+        dataChanged: false,
+        settlementStatus: "ALREADY_SETTLED",
+        originalCorrelationId: original?.correlationId,
+      },
       startedAt: input.now,
       endedAt: input.now,
     };
@@ -606,13 +934,12 @@ function executeToolStep(input: {
     }
     execution.status = "SUCCEEDED";
     execution.resultRef = simulated.downloadQuarantineRef;
-    execution.resultSummary = "Browser simulation completed; download quarantined; profile destroyed";
-    execution.resultPayload = { effectClass: "SIMULATED_BROWSER", dataChanged: false };
+    execution.resultSummary =
+      "SIMULATED browser retrieve completed; download quarantined; profile destroyed. No real browser, provider, or external system changed.";
+    execution.resultPayload = { effectClass: "SIMULATED_BROWSER", dataChanged: false, simulated: true };
     execution.afterStateHash = inputHash({ browserRun: simulated.run.id });
     execution.endedAt = input.now;
   } else if (!tool.mutating && tool.riskTier === "R0") {
-    const instructionText =
-      typeof input.step.input.instruction === "string" ? input.step.input.instruction : tool.description;
     const context = buildEventContextProjection({
       snap: input.snap,
       organisationId: input.organisationId,
@@ -631,7 +958,6 @@ function executeToolStep(input: {
       snap: input.snap,
       evidence: input.domainEvidence,
     });
-    // Preserve tool-specific grounding marker without drowning domain facts.
     if (!tool.name.startsWith("intelligence.")) {
       intelligence.supportingFacts = [
         ...intelligence.supportingFacts,
@@ -646,7 +972,6 @@ function executeToolStep(input: {
     execution.afterStateHash = inputHash({ intelligence: intelligence.answer, eventId: input.eventId, tool: tool.name });
     execution.endedAt = input.now;
   } else {
-    // Native deterministic adapters: event-scoped synthetic effect records only.
     execution.status = "SUCCEEDED";
     execution.resultRef = `native:${tool.name}:${execution.commandId}`;
     execution.resultSummary = tool.mutating
@@ -702,6 +1027,8 @@ export function executePlan(input: {
   failAtOrdinal?: number;
   now?: string;
   domainEvidence?: DomainEvidenceBag;
+  /** When claimPlanExecution already claimed — skip re-claim. */
+  alreadyClaimed?: boolean;
 }) {
   assertAtelierPermission(input.actor, "atelierCommand.execute", input.organisationId, input.eventId);
   const ledger = ensureAtelierLedger(input.snap);
@@ -709,11 +1036,30 @@ export function executePlan(input: {
   if (!plan || plan.eventId !== input.eventId || plan.organisationId !== input.organisationId) {
     throw new PlatformError("NOT_FOUND", "Plan was not found for this event");
   }
-  if (plan.status === "STALE") {
-    throw new PlatformError("VERSION_CONFLICT", "Underlying event state changed; replan required");
+  const now = nowIso(input.now);
+
+  if (!input.alreadyClaimed) {
+    const claimed = claimPlanExecution({
+      snap: input.snap,
+      actor: input.actor,
+      organisationId: input.organisationId,
+      eventId: input.eventId,
+      planId: input.planId,
+      now,
+    });
+    if (claimed) return claimed;
+  } else if (plan.settlementCorrelationId || plan.status === "COMPLETED") {
+    return buildAlreadySettledResponse({
+      ledger,
+      plan,
+      organisationId: input.organisationId,
+      eventId: input.eventId,
+      now,
+      actor: input.actor,
+    });
   }
+
   const steps = ledger.planSteps.filter((s) => s.planId === plan.id).sort((a, b) => a.ordinal - b.ordinal);
-  // Revalidate trusted tool risk at execution — refuse tampered/stale plans.
   for (const step of steps) {
     const tool = getAtelierTool(step.toolName);
     if (!tool) throw new PlatformError("VALIDATION_FAILED", `Unknown tool ${step.toolName}`);
@@ -746,15 +1092,18 @@ export function executePlan(input: {
   if (plan.approvedPlanHash && plan.approvedPlanHash !== expectedHash) {
     throw new PlatformError("VERSION_CONFLICT", "Plan hash mismatch — refuse stale or tampered plan");
   }
-  if (plan.status !== "APPROVED" && plan.riskSummary !== "R0" && plan.riskSummary !== "R1") {
-    throw new PlatformError("FORBIDDEN", "Plan must be confirmed or approved before execution");
+  // Approval binding: R3+ must carry approval identity bound to this plan version/hash.
+  if ((plan.riskSummary === "R3" || plan.riskSummary === "R4" || plan.riskSummary === "R5") && !plan.approvalIdentityId) {
+    throw new PlatformError("FORBIDDEN", "R3+ plan requires bound approval identity before execution");
   }
-  if ((plan.riskSummary === "R0" || plan.riskSummary === "R1") && plan.status === "READY") {
-    plan.status = "APPROVED";
+  if (plan.approvalIdentityId && plan.approvedPlanHash) {
+    const expectedApprovalSuffix = plan.approvedPlanHash;
+    if (!plan.approvalIdentityId.includes(expectedApprovalSuffix) && !plan.approvalIdentityId.includes(plan.id)) {
+      throw new PlatformError("FORBIDDEN", "Approval identity does not bind to this plan");
+    }
   }
 
   const assignment = activeAssignment(input.actor, input.organisationId, input.eventId);
-  const now = nowIso(input.now);
   const posture = resolveAtelierRuntimePosture();
   const run: AtelierRun = {
     id: randomUUID(),
@@ -849,23 +1198,66 @@ export function executePlan(input: {
   const blockedExternal = executions.some(
     (e) => e.status === "BLOCKED" && (e.errorClass === "PRODUCTION_OR_PROVIDER_BLOCK" || effectOf(e.resultPayload) === "EXTERNAL_BLOCKED"),
   );
-  const effectClass: AtelierCommandReceipt["effectClass"] = blockedExternal
-    ? "EXTERNAL_BLOCKED"
-    : intelligence
-      ? "READ"
-      : mutatingSuccesses.length
-        ? "DRAFT"
-        : executions.some((e) => e.status === "SUCCEEDED" && effectOf(e.resultPayload) === "SIMULATED_BROWSER")
-          ? "SIMULATED_BROWSER"
-          : executions.some((e) => e.status === "REFUSED" || e.status === "BLOCKED")
-            ? "REFUSED"
-            : "NONE";
+  const allReplayed = executions.length > 0 && executions.every((e) => e.status === "REPLAYED");
+  const simulatedBrowser = executions.some(
+    (e) =>
+      (e.status === "SUCCEEDED" || e.status === "REPLAYED") &&
+      (effectOf(e.resultPayload) === "SIMULATED_BROWSER" ||
+        /SIMULATED browser/i.test(e.resultSummary ?? "")),
+  );
+  const effectClass: AtelierCommandReceipt["effectClass"] = allReplayed
+    ? simulatedBrowser
+      ? "SIMULATED_BROWSER"
+      : "ALREADY_SETTLED"
+    : blockedExternal
+      ? "EXTERNAL_BLOCKED"
+      : intelligence
+        ? "READ"
+        : mutatingSuccesses.length
+          ? "DRAFT"
+          : simulatedBrowser
+            ? "SIMULATED_BROWSER"
+            : executions.some((e) => e.status === "REFUSED" || e.status === "BLOCKED")
+              ? "REFUSED"
+              : "NONE";
 
+  const browserStep = executions.find((e) => effectOf(e.resultPayload) === "SIMULATED_BROWSER" || /SIMULATED browser/i.test(e.resultSummary ?? ""));
   run.completionSummary = intelligence
     ? `Intelligence completed for event ${input.eventId}`
-    : blockedExternal
-      ? `External effect blocked under current posture; status ${run.status}`
-      : `Executed ${executions.length} step(s); status ${run.status}`;
+    : allReplayed
+      ? `ALREADY_SETTLED / REPLAYED — no new effect`
+      : blockedExternal
+        ? `External effect blocked under current posture; status ${run.status}`
+        : simulatedBrowser
+          ? `SIMULATED · SIMULATED_BROWSER · ${browserStep?.resultSummary ?? "Browser simulation completed"} · dataChanged:false`
+          : `Executed ${executions.length} step(s); status ${run.status}`;
+
+  const primaryCorr =
+    executions.find((e) => e.status === "SUCCEEDED")?.correlationId ??
+    executions[0]?.correlationId ??
+    randomUUID();
+
+  if (run.status === "COMPLETED" && !allReplayed && !executions.some((e) => e.status === "OUTCOME_UNKNOWN")) {
+    plan.status = "COMPLETED";
+    plan.settlementCorrelationId = primaryCorr;
+    plan.settledAt = now;
+  } else if (run.status === "BLOCKED") {
+    plan.status = "BLOCKED";
+  } else if (run.status === "FAILED") {
+    plan.status = "FAILED";
+  } else if (run.status === "RECOVERING") {
+    // Leave non-terminal so reconcile/retry policy can recover durable receipt.
+    plan.status = "APPROVED";
+  } else if (allReplayed) {
+    plan.status = "COMPLETED";
+    if (!plan.settlementCorrelationId) {
+      const prior = ledger.stepExecutions.find(
+        (e) => steps.some((s) => s.id === e.stepId) && e.status === "SUCCEEDED",
+      );
+      plan.settlementCorrelationId = prior?.correlationId ?? primaryCorr;
+      plan.settledAt = prior?.endedAt ?? now;
+    }
+  }
 
   const receipt: AtelierCommandReceipt = {
     id: randomUUID(),
@@ -875,8 +1267,14 @@ export function executePlan(input: {
     instructionId: plan.instructionId,
     planId: plan.id,
     runId: run.id,
-    correlationId: executions[0]?.correlationId ?? randomUUID(),
-    kind: intelligence ? "INTELLIGENCE_RESULT" : blockedExternal ? "EXTERNAL_EFFECT_BLOCKED" : "RUN_RECEIPT",
+    correlationId: primaryCorr,
+    kind: allReplayed
+      ? "ALREADY_SETTLED"
+      : intelligence
+        ? "INTELLIGENCE_RESULT"
+        : blockedExternal
+          ? "EXTERNAL_EFFECT_BLOCKED"
+          : "RUN_RECEIPT",
     summary: intelligence?.answer ?? run.completionSummary,
     changedRecordIds: mutatingSuccesses.map((e) => e.commandId),
     unchangedReasons: [
@@ -884,6 +1282,14 @@ export function executePlan(input: {
         .filter((e) => e.status === "REFUSED" || e.status === "BLOCKED" || e.status === "REPLAYED")
         .map((e) => e.resultSummary ?? e.status),
       ...(intelligence ? ["Intelligence read path — no event records mutated"] : []),
+      ...(simulatedBrowser
+        ? [
+            "SIMULATED",
+            "effectClass=SIMULATED_BROWSER",
+            "No real browser, provider, or external system changed.",
+            "dataChanged:false",
+          ]
+        : []),
     ],
     evidenceRefs: executions.map((e) => e.id),
     createdAt: now,
@@ -893,8 +1299,21 @@ export function executePlan(input: {
     taskDefinitionId: taskInvocation?.taskDefinitionId,
     taskVersion: taskInvocation?.taskVersion,
     riskSummary: plan.riskSummary,
+    settlementStatus: allReplayed ? "ALREADY_SETTLED" : "EXECUTED",
+    simulated: simulatedBrowser || undefined,
+    originalCorrelationId: allReplayed ? plan.settlementCorrelationId : undefined,
+    originalSettlementAt: allReplayed ? plan.settledAt : undefined,
+    originalRequestedIntent: instruction?.rawText,
+    actualAction: simulatedBrowser
+      ? "SIMULATED browser.retrieveDocument (quarantined download; profile destroyed)"
+      : intelligence
+        ? "intelligence read"
+        : executions.map((e) => `${e.status}:${ledger.planSteps.find((s) => s.id === e.stepId)?.toolName ?? "?"}`).join(", "),
   };
   ledger.receipts.push(receipt);
+  if (plan.status === "COMPLETED" && !plan.settlementReceiptId) {
+    plan.settlementReceiptId = receipt.id;
+  }
   return { run, executions, receipt };
 }
 

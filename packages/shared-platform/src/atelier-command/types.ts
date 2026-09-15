@@ -24,6 +24,12 @@ export const ATELIER_PLAN_STATUSES = [
   "AWAITING_APPROVAL",
   "APPROVED",
   "REJECTED",
+  "EXECUTING",
+  "COMPLETED",
+  "BLOCKED",
+  "REFUSED",
+  "CANCELLED",
+  "FAILED",
   "SUPERSEDED",
 ] as const;
 export type AtelierPlanStatus = (typeof ATELIER_PLAN_STATUSES)[number];
@@ -58,6 +64,7 @@ export const ATELIER_STEP_STATUSES = [
   "FAILED",
   "CANCELLED",
   "SKIPPED",
+  "SUPERSEDED",
 ] as const;
 export type AtelierStepStatus = (typeof ATELIER_STEP_STATUSES)[number];
 
@@ -150,6 +157,14 @@ export type AtelierAmbiguity = {
 
 export type AtelierInterpretationBody = {
   requestedOutcome: string;
+  requestedTarget?: string | null;
+  requestedOperation?: string;
+  requestedEffectClass?: string;
+  matchedCanonicalTask?: string | null;
+  supportedPortion?: string | null;
+  unsupportedPortion?: string | null;
+  refusedPortion?: string | null;
+  materialSemanticDifferences?: string[];
   scope: AtelierScopeSnapshot;
   entities: AtelierEntityResolution[];
   knowledge: AtelierKnowledgeItem[];
@@ -231,6 +246,15 @@ export type AtelierPlan = {
   estimatedDurationMs: number;
   status: AtelierPlanStatus;
   approvedPlanHash?: string;
+  /** Bound at confirm/approve — required for R3+ re-execution refusal. */
+  makerPersonId?: string;
+  checkerPersonId?: string;
+  approvalIdentityId?: string;
+  approvedAt?: string;
+  /** First authoritative settlement correlation for this plan version. */
+  settlementCorrelationId?: string;
+  settlementReceiptId?: string;
+  settledAt?: string;
   dryRun: boolean;
   createdAt: string;
   version: number;
@@ -440,11 +464,18 @@ export type AtelierCommandReceipt = {
   createdAt: string;
   /** Substantive Intelligence answer — must not be replaced by the generic run summary. */
   intelligenceResult?: AtelierIntelligenceResultPayload;
-  effectClass?: "NONE" | "READ" | "DRAFT" | "MUTATION" | "EXTERNAL_BLOCKED" | "SIMULATED_BROWSER" | "REFUSED";
+  effectClass?: "NONE" | "READ" | "DRAFT" | "MUTATION" | "EXTERNAL_BLOCKED" | "SIMULATED_BROWSER" | "REFUSED" | "ALREADY_SETTLED";
   dataChanged?: boolean;
   taskDefinitionId?: string;
   taskVersion?: number;
   riskSummary?: string;
+  /** When kind is REPLAY_RECEIPT / ALREADY_SETTLED — link to first settlement. */
+  originalCorrelationId?: string;
+  originalSettlementAt?: string;
+  settlementStatus?: "EXECUTED" | "REPLAYED" | "ALREADY_SETTLED" | "REFUSED";
+  simulated?: boolean;
+  originalRequestedIntent?: string;
+  actualAction?: string;
 };
 
 export type AtelierCommandLedger = {
