@@ -6,6 +6,7 @@ dist/
 test-results/
 playwright-report/
 blob-report/
+ci-e2e-shard-logs/
 *.tsbuildinfo
 data/
 **/event-os-non-production.json

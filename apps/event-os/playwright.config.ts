@@ -28,7 +28,9 @@ export default defineConfig({
   // Checkpointed Section 13 phases share a temp file store and manage next-dev themselves.
   // GitHub Actions always sets CI=1. Do not treat that as PLAYWRIGHT_PROD: `next start` is
   // NODE_ENV=production and refuses the fixture file-store without DATABASE_URL, which CI
-  // does not provide. Explicit PLAYWRIGHT_PROD=1 remains available for deliberate prod-like runs.
+  // must never supply (no Railway/Postgres). Formal CI therefore uses sharded next-dev
+  // (`pnpm e2e:ci`) with a fresh Playwright process / webServer per shard.
+  // Explicit PLAYWRIGHT_PROD=1 remains available for deliberate local prod-like experiments only.
   webServer: live || checkpoint
     ? undefined
     : {
@@ -43,12 +45,11 @@ export default defineConfig({
           const env = {
             ...process.env,
             PORT: "3020",
-            // Prefer a host-safe default. Forcing 16GiB (or even 8GiB) on an 8GiB laptop
-            // made next-dev hit its memory threshold and restart mid Section 13.
-            // Override with EVENT_OS_E2E_HEAP_MB on larger runners (e.g. CI).
+            // Prefer a host-safe default. Formal CI uses EVENT_OS_E2E_HEAP_MB=3072.
+            // Do not raise to 6144+ on GitHub-hosted runners — that recreates memory cascade.
             NODE_OPTIONS: [
               process.env.NODE_OPTIONS,
-              `--max-old-space-size=${process.env.EVENT_OS_E2E_HEAP_MB ?? "4096"}`,
+              `--max-old-space-size=${process.env.EVENT_OS_E2E_HEAP_MB ?? "3072"}`,
             ]
               .filter(Boolean)
               .join(" "),

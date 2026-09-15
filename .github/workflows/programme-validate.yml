@@ -51,7 +51,7 @@ jobs:
         run: pnpm --filter @maison-doclar/control-tower build && pnpm --filter @maison-doclar/event-os build
 
       - name: Install Playwright Chromium
-        run: pnpm --filter @maison-doclar/control-tower exec playwright install --with-deps chromium
+        run: pnpm --filter @maison-doclar/control-tower exec playwright install --with-deps chromium && pnpm --filter @maison-doclar/event-os exec playwright install chromium
 
       - name: Control Tower browser tests
         run: pnpm e2e
@@ -61,13 +61,29 @@ jobs:
           PROGRAMME_ACCESS_TOKEN: ci-control-tower-access-token
           PROGRAMME_SESSION_SECRET: ci-control-tower-session-secret-32b
 
-      - name: Event OS browser tests
-        run: pnpm --filter @maison-doclar/event-os e2e
+      # Formal Event OS browser corpus runs as deterministic shards. Each shard is a
+      # separate Playwright process so next-dev webServer starts and terminates between
+      # shards. Do not run the 279-test monolith against one persistent next-dev server.
+      - name: Event OS browser tests (sharded)
+        run: pnpm --filter @maison-doclar/event-os e2e:ci
+        timeout-minutes: 240
         env:
           EVENT_OS_ALLOW_FIXTURES: "1"
           CI: "1"
-          EVENT_OS_E2E_HEAP_MB: "6144"
+          EVENT_OS_E2E_HEAP_MB: "3072"
           EVENT_OS_ACCESS_TOKEN: ci-event-os-access-token
           EVENT_OS_SESSION_SECRET: ci-event-os-session-secret-32b
           EVENT_OS_RSVP_PEPPER: ci-event-os-rsvp-pepper-32bytes
           EVENT_OS_RSVP_SESSION_SECRET: ci-event-os-rsvp-session-secret-32
+
+      - name: Upload Event OS Playwright shard artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: event-os-playwright-shards
+          path: |
+            apps/event-os/ci-e2e-shard-logs/
+            apps/event-os/test-results/
+            apps/event-os/playwright-report/
+          if-no-files-found: warn
+          retention-days: 14
