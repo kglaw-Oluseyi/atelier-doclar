@@ -1,5 +1,38 @@
 # EOS-S06 Implementation Ledger
 
+**Prompt Control ID:** MD-PR-S077 (acceptance); historical implementation MD-PR-S075 / MD-PR-S073 / MD-PR-S072
+**Status:** ACCEPTED — CURRENT PRODUCT GATE GREEN / EXTENDED HISTORICAL REGRESSION RETAINED AS CONTROLLED DEBT (`MD-PR-S077`, 2026-09-15)
+**Accepted / deployed application SHA:** `42b0bb3f0976ca2b745a09f3952680afef69a1b9`
+**Railway deployment:** `bb0f03d1-81fb-4fba-bf86-206f92a5953d` SUCCESS
+**Pre-acceptance repository/docs tip reviewed:** `48cb593813a448c50bb506bd4cbc72e679cfb404`
+**Acceptance record:** `docs/control/EOS_S06_ACCEPTANCE.md`
+
+This ledger previously recorded implementation without acceptance. Those dated “NOT ACCEPTED” / “NOT READY FOR CLAUDE” states remain historical and are not rewritten. Formal acceptance is `MD-PR-S077` on 2026-09-15. This acceptance commit does not redeploy Event OS or Control Tower.
+
+## Addendum — 2026-09-15 formal acceptance (`MD-PR-S077`)
+
+| Item | Value |
+|---|---|
+| Decision authority | ChatGPT / AI CTO |
+| Acceptance date | 2026-09-15 |
+| Status | ACCEPTED — current product gate green; extended historical regression retained as controlled debt |
+| Catalogue accepted-slice count | 6 |
+| Persistence | POSTGRES |
+| Migrations | APPLIED |
+| `productionAuthorised` | false |
+| Providers | INACTIVE |
+| Control Tower | Not deployed |
+| Current-product blocking defects | ZERO |
+| CI boundary | Overall programme-validate run `35001426000` not globally green; shard 0 current acceptance PASSED; historical corpus failure retained as `TDR-S06-003` |
+| EOS-S06A | RATIFIED / ELIGIBLE / NOT STARTED |
+| EOS-S07 | NOT_STARTED / NOT_AUTHORISED |
+
+Historical S072/S073/S075 progress tables below remain dated implementation history.
+
+---
+
+**Historical header (2026-09-13, superseded for status only):**
+
 **Prompt Control ID:** MD-PR-S075 (parents MD-PR-S073 / MD-PR-S072)
 **Status:** IMPLEMENTED — NOT ACCEPTED — NOT READY FOR CLAUDE
 **Required S072 baseline:** `844f107fc70e1eaa8995e0c7c49c0c42d52b9dd1`

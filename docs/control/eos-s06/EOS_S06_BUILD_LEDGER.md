@@ -1,7 +1,31 @@
 # EOS-S06 Build Ledger
 
-**Prompt Control ID:** MD-PR-S070 V2 + MD-PR-S071  
-**Not acceptance.** Passing retries do not erase first-run failures.  
+**Prompt Control ID:** MD-PR-S077 (acceptance stamp); historical MD-PR-S070 V2 + MD-PR-S071 / S072 / S073 / S075
+**Accepted / deployed application SHA:** `42b0bb3f0976ca2b745a09f3952680afef69a1b9`
+**Railway deployment:** `bb0f03d1-81fb-4fba-bf86-206f92a5953d` SUCCESS
+**Pre-acceptance repository/docs tip reviewed:** `48cb593813a448c50bb506bd4cbc72e679cfb404`
+**Acceptance:** `docs/control/EOS_S06_ACCEPTANCE.md` (`MD-PR-S077`, 2026-09-15) — ACCEPTED; current product gate green; extended historical regression retained as controlled debt. First-run failures below remain dated history and are not erased.
+
+## Addendum — 2026-09-15 formal acceptance (`MD-PR-S077`)
+
+| Gate | Result |
+|---|---|
+| Formal acceptance | ACCEPTED by ChatGPT / AI CTO |
+| Catalogue accepted-slice count | 6 |
+| Current A–J local fresh-Postgres passes | PASS (×2) |
+| GitHub shard 0 `eos-s06-current-acceptance` run `35001426000` | PASS |
+| Overall programme-validate run `35001426000` | NOT globally green — historical corpus failure retained as `TDR-S06-003` |
+| Event OS / Control Tower redeploy for acceptance | NONE (documentation only) |
+| EOS-S06A | RATIFIED / ELIGIBLE / NOT STARTED |
+| EOS-S07 | NOT_STARTED / NOT_AUTHORISED |
+| `productionAuthorised` | false |
+
+---
+
+**Historical header (pre-acceptance):**
+
+**Prompt Control ID:** MD-PR-S070 V2 + MD-PR-S071
+**Not acceptance.** Passing retries do not erase first-run failures.
 **Application / deployed SHA:** `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3`
 **Final repository/docs SHA:** `3f5c09b37d683ad7192660a33f596b7e72d75583` (not redeployed)
 

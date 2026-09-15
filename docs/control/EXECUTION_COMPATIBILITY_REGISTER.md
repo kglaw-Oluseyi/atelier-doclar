@@ -400,3 +400,16 @@ Milestone 4 is authorised on the Milestone 1–3 contracts. Historic S5-01–S5-
 | Current corpus | `s06-eval-v4` / `s06-eval-contract-v4` / 49 cases / hash `0e1a6b403fdc85268e3eb9d154a496ac94c0017714445a677ac285f20df51369`. |
 | Live `s06-eval-v3` PASSED on `1ce6e0f` | Immutable history. Honestly STALE against current v4. Not restamped. Not redeployed. Live v4 persist waits for Section 12. |
 | Readiness | Fail-closed: persisted v3 `PASSED` is `BLOCKED`. Only current compatible v4 with 49 cases and zero failures is `RELEASE_READY`. |
+
+## Addendum — 2026-09-15 EOS-S06 formal technical acceptance (`MD-PR-S077`)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| EOS-S06 `IMPLEMENTED / NOT ACCEPTED` / `NOT READY FOR CLAUDE` | SUPERSEDED for programme status only. Formal acceptance is `MD-PR-S077` on 2026-09-15. Historical NOT ACCEPTED rows remain dated history. |
+| Catalogue accepted-slice count retained at 5 | SUPERSEDED. EOS-S06 is a catalogue-accepted slice. Count is **6**. |
+| Overall programme-validate run `35001426000` green | REJECTED. Run is not globally green. Current-product shard 0 passed. Extended historical regression retained as `TDR-S06-003` and must not be represented as green, deleted, or silently waived. |
+| EOS-S06A execution started by acceptance | REJECTED. EOS-S06A is RATIFIED / ELIGIBLE / NOT STARTED. |
+| EOS-S07 authorised | RETAINED false. `NOT_STARTED / NOT_AUTHORISED`. |
+| `productionAuthorised` | RETAINED false. Not changed. |
+| Control Tower deploy for acceptance | REJECTED. Compatibility-only; not deployed. |
+| Accepted application SHA vs docs tip | Accepted/deployed application SHA is `42b0bb3f0976ca2b745a09f3952680afef69a1b9`. Reviewed pre-acceptance tip is `48cb593813a448c50bb506bd4cbc72e679cfb404`. Do not conflate. |

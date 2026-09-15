@@ -1,8 +1,8 @@
 # Evidence Index
 
-**Slice:** MD-CT1  
-**Product:** FOUNDATION  
-**Prompt Control ID:** `MD-PR-0002`  
+**Slice:** MD-CT1
+**Product:** FOUNDATION
+**Prompt Control ID:** `MD-PR-0002`
 **Native ID:** `CT1`
 
 | ID | Kind | Summary | Location |
@@ -17,8 +17,8 @@ Acceptance of MD-CT1 still requires a named reviewer. This index is evidence of 
 
 ## MD-CT2
 
-**Prompt Control ID:** `MD-PR-0003`  
-**Native ID:** `CT2`  
+**Prompt Control ID:** `MD-PR-0003`
+**Native ID:** `CT2`
 **Slice ID:** `MD-CT2`
 
 | ID | Kind | Summary | Location |
@@ -33,8 +33,8 @@ Acceptance of MD-CT2 still requires a named reviewer. Not ACCEPTED.
 
 ## MD-CT3
 
-**Prompt Control ID:** `MD-PR-0004`  
-**Native ID:** `CT3`  
+**Prompt Control ID:** `MD-PR-0004`
+**Native ID:** `CT3`
 **Slice ID:** `MD-CT3`
 
 | ID | Kind | Summary | Location |
@@ -50,8 +50,8 @@ Acceptance of MD-CT3 still requires a named reviewer. Not ACCEPTED.
 
 ## MD-CT4
 
-**Prompt Control ID:** `MD-PR-0005`  
-**Native ID:** `CT4`  
+**Prompt Control ID:** `MD-PR-0005`
+**Native ID:** `CT4`
 **Slice ID:** `MD-CT4`
 
 | ID | Kind | Summary | Location |
@@ -114,8 +114,8 @@ Acceptance of MD-CT4 still requires a named reviewer. Not ACCEPTED.
 
 ## MD-FC1
 
-**Prompt Control ID:** `MD-PR-S001`  
-**Native ID:** `FC1`  
+**Prompt Control ID:** `MD-PR-S001`
+**Native ID:** `FC1`
 **Slice ID:** `MD-FC1`
 
 | ID | Kind | Summary | Location |
@@ -131,8 +131,8 @@ Acceptance of MD-CT4 still requires a named reviewer. Not ACCEPTED.
 
 ## MD-LV1
 
-**Prompt Control ID:** `MD-PR-S002`  
-**Native ID:** `LV1`  
+**Prompt Control ID:** `MD-PR-S002`
+**Native ID:** `LV1`
 **Slice ID:** `MD-LV1`
 
 | ID | Kind | Summary | Location |
@@ -144,8 +144,8 @@ Acceptance of MD-CT4 still requires a named reviewer. Not ACCEPTED.
 
 ## MD-HV1
 
-**Prompt Control ID:** `MD-PR-S003`  
-**Native ID:** `HV1`  
+**Prompt Control ID:** `MD-PR-S003`
+**Native ID:** `HV1`
 **Slice ID:** `MD-HV1`
 
 | ID | Kind | Summary | Location |
@@ -157,8 +157,8 @@ This is live-browser verification evidence. It is not formal slice acceptance, i
 
 ## EOS-S01
 
-**Prompt Control ID:** `MD-PR-S004`  
-**Native ID:** `S01`  
+**Prompt Control ID:** `MD-PR-S004`
+**Native ID:** `S01`
 **Slice ID:** `EOS-S01`
 
 | ID | Kind | Summary | Location |
@@ -172,8 +172,8 @@ Formal technical acceptance is recorded in `docs/control/EOS_S01_ACCEPTANCE.md`.
 
 ## EOS-S01-ACCEPT
 
-**Prompt Control ID:** `MD-PR-S007`  
-**Native ID:** `S01-ACCEPT`  
+**Prompt Control ID:** `MD-PR-S007`
+**Native ID:** `S01-ACCEPT`
 **Slice ID:** `EOS-S01`
 
 | ID | Kind | Summary | Location |
@@ -187,8 +187,8 @@ Formal technical acceptance is recorded in `docs/control/EOS_S01_ACCEPTANCE.md`.
 
 ## MD-GR1
 
-**Prompt Control ID:** `MD-PR-S006`  
-**Native ID:** `GR1`  
+**Prompt Control ID:** `MD-PR-S006`
+**Native ID:** `GR1`
 **Slice ID:** `MD-GR1`
 
 | ID | Kind | Summary | Location |
@@ -204,8 +204,8 @@ Progression authorisation is not formal slice acceptance and not production auth
 
 ## EOS-S02
 
-**Prompt Control ID:** `MD-PR-S008`  
-**Native ID:** `S02`  
+**Prompt Control ID:** `MD-PR-S008`
+**Native ID:** `S02`
 **Slice ID:** `EOS-S02`
 
 | ID | Kind | Summary | Location |
@@ -221,8 +221,8 @@ ACCEPTED under `MD-PR-S009` by `ChatGPT / AI CTO` at `2026-09-05T23:10:00Z`. Acc
 
 ## EOS-S03
 
-**Prompt Control ID:** `MD-PR-S010`  
-**Native ID:** `S03`  
+**Prompt Control ID:** `MD-PR-S010`
+**Native ID:** `S03`
 **Slice ID:** `EOS-S03`
 
 | ID | Kind | Summary | Location |
@@ -238,7 +238,7 @@ ACCEPTED under `MD-PR-S011` by `ChatGPT / AI CTO` at `2026-09-06T01:10:00Z`. Acc
 
 ## EOS-LV1
 
-**Prompt Control ID:** `MD-PR-S012`  
+**Prompt Control ID:** `MD-PR-S012`
 **Milestone:** `EOS-LV1`
 
 | ID | Kind | Summary | Location |
@@ -250,7 +250,7 @@ Automated live verification PASS. At deployment time, CEO human verification was
 
 ## EOS-HV1
 
-**Prompt Control ID:** `MD-PR-S013`  
+**Prompt Control ID:** `MD-PR-S013`
 **Milestone:** `EOS-HV1`
 
 | ID | Kind | Summary | Location |
@@ -262,8 +262,8 @@ CEO / George Lawson completed the walkthrough against deployment `9cee3095-cb37-
 
 ## EOS-S04-RECON
 
-**Prompt Control ID:** `MD-PR-S014`  
-**Milestone:** `EOS-S04-RECON`  
+**Prompt Control ID:** `MD-PR-S014`
+**Milestone:** `EOS-S04-RECON`
 **Slice ID:** `EOS-S04` (status remains `READY`; not started)
 
 | ID | Kind | Summary | Location |
@@ -277,8 +277,8 @@ Native pack extracted from `MDOS/slice4/Maison_Doclar_Slice_4_Cursor_Prompt_Pack
 
 ## EOS-S04
 
-**Prompt Control ID:** `MD-PR-S015` / `MD-PR-S016`  
-**Slice ID:** `EOS-S04`  
+**Prompt Control ID:** `MD-PR-S015` / `MD-PR-S016`
+**Slice ID:** `EOS-S04`
 **Status:** `CLOSED / ACCEPTED`
 
 | ID | Kind | Summary | Location |
@@ -534,7 +534,7 @@ RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S037`. Canonical corpus p
 
 ## EOS-S06 MD-PR-S072
 
-**Prompt Control ID:** `MD-PR-S072`  
+**Prompt Control ID:** `MD-PR-S072`
 **Milestone:** `EOS-S06` — not accepted
 
 `MD-PR-S072` replaces the defective S06 seating decision spine with V2 contracts. Baseline `844f107fc70e1eaa8995e0c7c49c0c42d52b9dd1`. Historical live SHA at S072 handoff `0d43a9e40ce63d4acb0c584f2f1ad308c400c412`. At that handoff live publication/replay and live eval persist were unfinished. That NOT READY report is preserved. Claude was not run. EOS-S07 was not started. `EOS_S06_ACCEPTANCE.md` was not created.
@@ -579,4 +579,26 @@ RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S037`. Canonical corpus p
 | EV-EOS-S06-S075-P8-TIMING | TEST | Section 13 J1–J4 per-action timing (`durationMs < 30000`, max 4393 ms) | `docs/control/evidence/eos-s06-s075-packet8/section13-action-timing.jsonl` |
 | EV-EOS-S06-S075-P8-MATRIX | TEST | §8.2 trusted-boundary live matrix P8-0 preflight + P8-1–P8-9 | `docs/control/evidence/eos-s06-s075-packet8/trusted-boundary-matrix.jsonl` |
 | EV-EOS-S06-S075-P8-HARNESS | TEST | Live Packet G / Packet 8 / Section 13 harness | `apps/event-os/e2e/s075-layout-binding-live.spec.ts`, `apps/event-os/e2e/s075-packet8-trusted-boundary-live.spec.ts`, `apps/event-os/e2e/s075-section-13*.spec.ts` |
+
+## EOS-S06 MD-PR-S077 formal acceptance
+
+**Date:** 2026-09-15
+**Milestone:** `EOS-S06` — ACCEPTED — current product gate green; extended historical regression retained as controlled debt
+**Prompt Control ID:** `MD-PR-S077`
+**Decision authority:** ChatGPT / AI CTO
+**Accepted / deployed application SHA:** `42b0bb3f0976ca2b745a09f3952680afef69a1b9`
+**Railway deployment:** `bb0f03d1-81fb-4fba-bf86-206f92a5953d` SUCCESS
+**Pre-acceptance repository/docs tip reviewed:** `48cb593813a448c50bb506bd4cbc72e679cfb404`
+**Persistence:** POSTGRES · Migrations: APPLIED · `productionAuthorised`: false · Providers: INACTIVE · Control Tower: not deployed
+**Catalogue accepted-slice count:** 6
+**EOS-S06A:** RATIFIED / ELIGIBLE / NOT STARTED · **EOS-S07:** NOT_STARTED / NOT_AUTHORISED
+
+| Evidence ID | Type | Summary | Path |
+|-------------|------|---------|------|
+| EV-EOS-S06-ACCEPT | DOCUMENT | Formal AI CTO acceptance record | `docs/control/EOS_S06_ACCEPTANCE.md` |
+| EV-EOS-S06-SUCCESSOR-STALE | DOCUMENT | Successor layout-binding staleness remediation evidence; tip vs application SHA corrected | `docs/control/evidence/eos-s06-successor-layout-staleness/MANIFEST.md` |
+| EV-EOS-S06-CURRENT-GATE | TEST | Canonical current A–J acceptance; two local fresh-Postgres passes; GitHub shard 0 run `35001426000` PASS | `apps/event-os/e2e/eos-s06-current-acceptance.spec.ts` |
+| EV-EOS-S06-CI-BOUNDARY | DOCUMENT | Overall run `35001426000` not globally green; historical corpus retained as `TDR-S06-003` | `docs/control/EOS_S06_ACCEPTANCE.md`, `docs/control/CUMULATIVE_TECHNICAL_DEBT_AND_REGRESSION_REGISTER.md` |
+
+`MD-PR-S077` records independent AI CTO acceptance of EOS-S06 at application SHA `42b0bb3f0976ca2b745a09f3952680afef69a1b9` after Packet 8 / Section 13, focused seating gates, Claude verification/remediation, layout maker-checker, security/role-boundary, canonical A–J current gate, and successor-layout staleness remediation. Catalogue accepted-slice count is 6. Documentation-only acceptance commit does not redeploy Event OS or Control Tower. Historical “not accepted” evidence rows above remain dated history.
 

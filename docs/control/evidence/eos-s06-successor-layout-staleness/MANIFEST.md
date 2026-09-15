@@ -1,6 +1,6 @@
 # EOS-S06 — Successor layout-binding staleness remediation
 
-**Not acceptance.** EOS-S06 remains unaccepted pending AI CTO review. EOS-S06A and EOS-S07 remain unstarted. Control Tower was not deployed.
+**Evidence packet for the accepted application SHA.** Formal acceptance is `docs/control/EOS_S06_ACCEPTANCE.md` under `MD-PR-S077` (2026-09-15). This MANIFEST is remediation evidence, not the acceptance decision itself. EOS-S06A remains RATIFIED / ELIGIBLE / NOT STARTED. EOS-S07 remains NOT_STARTED / NOT_AUTHORISED. Control Tower was not deployed for this remediation.
 
 ## 1. Exact root cause
 
@@ -87,11 +87,13 @@ Artifacts: `/tmp/eos-s06-successor-layout-staleness/`
 
 ## 8. SHAs
 
-| | SHA |
-|--|-----|
+| Field | SHA |
+|-------|-----|
 | Starting HEAD | `305fb94751676083cb654323fb56997d8e700899` |
-| Ending HEAD (docs tip) | `5499491f3e8c1c8dce4facd643726bbfa7c1ae99` |
-| Ending application / deployed SHA | `42b0bb3f0976ca2b745a09f3952680afef69a1b9` |
+| Reviewed pre-acceptance evidence tip | `48cb593813a448c50bb506bd4cbc72e679cfb404` |
+| Accepted / deployed application SHA | `42b0bb3f0976ca2b745a09f3952680afef69a1b9` |
+
+Do not use an ambiguous “ending HEAD” field. The reviewed pre-acceptance tip is documentation evidence reviewed before acceptance; it is not the accepted application SHA. Intermediate docs tip `5499491f3e8c1c8dce4facd643726bbfa7c1ae99` remains dated history only.
 
 ## 9. Commit / push / deployment
 

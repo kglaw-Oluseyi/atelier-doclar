@@ -322,6 +322,14 @@
       "product": "EVENT_OS",
       "title": "EOS-S05B Independent Acceptance Record",
       "authorising_instruction": "Record independent AI CTO acceptance of EOS-S05B Protection Command at SHA 84d58dd4590fb7d2087b436d10c0b2ae992b1621; documentation only; do not change application code, mutate live data, redeploy Event OS or Control Tower, invent catalogue acceptance, start EOS-S06, consume MD-PR-S036, or authorise production"
+    },
+    {
+      "prompt_control_id": "MD-PR-S077",
+      "native_id": "S06-ACCEPT",
+      "slice_id": "EOS-S06",
+      "product": "EVENT_OS",
+      "title": "EOS-S06 Formal Technical Acceptance Record",
+      "authorising_instruction": "Record independent AI CTO acceptance of EOS-S06 seating allocation at application SHA 42b0bb3f0976ca2b745a09f3952680afef69a1b9; documentation/governance only; current product gate green with extended historical regression retained as controlled debt; do not change application or test code, mutate data, redeploy Event OS or Control Tower, unpack or start EOS-S06A, start EOS-S07, rerun CI, or authorise production"
     }
   ]
 }

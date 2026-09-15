@@ -382,3 +382,15 @@ This addendum does not rewrite the B0 row set or earlier addenda. Catalogue acce
 | MD-PR-S073 execution authority | `docs/control/eos-s06/MD_PR_S073_EOS_S06_V2_LIVE_COMMAND_SETTLEMENT_AND_PROCESS_ISOLATION.md` | CONTROLLING IMPLEMENTATION AUTHORITY for live command settlement and process isolation | SHA-256 `9e527f289b71c5d794f472bf271839799a042916985b1eda288028b8709537ff`. Does not accept EOS-S06. |
 | MD-PR-S073 Packet 8 final report | `docs/control/eos-s06/MD_PR_S073_PACKET_8_FINAL_REPORT.md` | PACKET 8 FREEZE | Distinguishes deployed SHA `1ce6e0f` from the later docs SHA. |
 | MD-PR-S073 Gate E timing | `docs/control/eos-s06/MD_PR_S073_PACKET_7_GATE_E_TIMING.md` | IMPLEMENTATION EVIDENCE | Preserves `3429ms` / `5790ms` and the five-sample classification. |
+
+## Addendum — 2026-09-15 EOS-S06 formal technical acceptance (`MD-PR-S077`)
+
+This addendum does not rewrite the B0 row set or earlier addenda. Catalogue accepted-slice count is now 6. EOS-S06 is ACCEPTED. EOS-S06A is RATIFIED / ELIGIBLE / NOT STARTED. EOS-S07 remains NOT_STARTED / NOT_AUTHORISED. Production remains unauthorised. Event OS and Control Tower are not redeployed for this documentation-only acceptance.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| EOS-S06 acceptance record | `docs/control/EOS_S06_ACCEPTANCE.md` | CANONICAL ACCEPTANCE RECORD | Independent AI CTO acceptance under `MD-PR-S077`. Catalogue slice. Status `ACCEPTED` at application SHA `42b0bb3f0976ca2b745a09f3952680afef69a1b9`. Deployment `bb0f03d1-81fb-4fba-bf86-206f92a5953d`. Pre-acceptance tip `48cb593813a448c50bb506bd4cbc72e679cfb404`. |
+| EOS-S06 implementation ledger | `docs/control/eos-s06/EOS_S06_IMPLEMENTATION_LEDGER.md` | IMPLEMENTATION EVIDENCE + ACCEPTANCE STAMP | Historical NOT ACCEPTED rows retained; current status ACCEPTED under S077. |
+| EOS-S06 build ledger | `docs/control/eos-s06/EOS_S06_BUILD_LEDGER.md` | IMPLEMENTATION LEDGER + ACCEPTANCE STAMP | First-run failures retained. S077 acceptance stamp. |
+| Successor-layout staleness evidence | `docs/control/evidence/eos-s06-successor-layout-staleness/MANIFEST.md` | IMPLEMENTATION EVIDENCE | Tip vs accepted application SHA wording corrected. |
+| Cumulative debt register | `docs/control/CUMULATIVE_TECHNICAL_DEBT_AND_REGRESSION_REGISTER.md` | CONTROLLED DEBT | Entered `TDR-S06-003` for extended historical regression. |

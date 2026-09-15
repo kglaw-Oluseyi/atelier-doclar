@@ -12,7 +12,7 @@ Percent complete is not used. Unknown is not healthy. Documented ≠ implemented
 | Code | Name | Route | Implementation reality |
 |------|------|-------|------------------------|
 | FOUNDATION | Shared Foundation / Control Tower | `/programme` | Control Tower implemented; Foundation closeout IN_REVIEW; production unsigned |
-| EVENT_OS | Event OS | `/programme/event-os` | S01–S03 accepted; S04 CLOSED / ACCEPTED; S04A ACCEPTED (not catalogue); S04B ACCEPTED (not catalogue); S04C ACCEPTED (not catalogue); S04D ACCEPTED (not catalogue); S04E ACCEPTED (not catalogue); S04F ACCEPTED (not catalogue); S05 ACCEPTED (catalogue count 5); S05A ACCEPTED (not catalogue); S05B ACCEPTED (not catalogue); S06 implemented / not accepted / ready for independent holdout and Claude |
+| EVENT_OS | Event OS | `/programme/event-os` | S01–S03 accepted; S04 CLOSED / ACCEPTED; S04A ACCEPTED (not catalogue); S04B ACCEPTED (not catalogue); S04C ACCEPTED (not catalogue); S04D ACCEPTED (not catalogue); S04E ACCEPTED (not catalogue); S04F ACCEPTED (not catalogue); S05 ACCEPTED; S05A ACCEPTED (not catalogue); S05B ACCEPTED (not catalogue); S06 ACCEPTED (catalogue count 6); S06A RATIFIED / ELIGIBLE / NOT STARTED; S07 NOT_STARTED / NOT_AUTHORISED |
 | EVENT_DAY | Event-Day Runtime | `/programme/event-day` | Specs + contracts; no app |
 | ACADEMY | Academy | `/programme/academy` | Specified/prompted; no app |
 | MARKETING | Marketing OS | `/programme/marketing` | Specified/prompted; no app |
@@ -72,17 +72,18 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 | EOS-S05 | ACCEPTED — Venue registry and spatial layout; catalogue slice; SHA `eba137712c65c6f59b77fe2a88a8f4a277228cd9`; `MD-PR-S028`–`MD-PR-S035` |
 | EOS-S05A | ACCEPTED — Discovery, Investment & Executive Event Command; not a catalogue slice; SHA `50322fa5fdf7b46437dc9d62579e2e2ad918e762`; `MD-PR-S053` |
 | EOS-S05B | ACCEPTED — Risk, Protection & Continuity Command; not a catalogue slice; SHA `84d58dd4590fb7d2087b436d10c0b2ae992b1621`; `MD-PR-S069` |
-| EOS-S06 | IMPLEMENTED / NOT ACCEPTED — V2 seating under MD-PR-S072/S073; READY FOR INDEPENDENT HOLDOUT AND CLAUDE; `MD-PR-S036` was not consumed; historical `NOT_STARTED / NOT_AUTHORISED` remains dated history |
+| EOS-S06 | ACCEPTED — Seating allocation; catalogue slice; accepted/deployed application SHA `42b0bb3f0976ca2b745a09f3952680afef69a1b9`; deployment `bb0f03d1-81fb-4fba-bf86-206f92a5953d`; acceptance `MD-PR-S077` on 2026-09-15; current product gate green; extended historical regression retained as controlled debt (`TDR-S06-003`); historical `IMPLEMENTED / NOT ACCEPTED` and `NOT_STARTED / NOT_AUTHORISED` rows remain dated history |
+| EOS-S06A | RATIFIED / ELIGIBLE / NOT STARTED — Atelier Command; eligible for controlled execution under separate authority; not started by EOS-S06 acceptance |
 | All others | NOT_STARTED, READY, or BLOCKED only by valid Event OS / Event-Day dependencies |
 
 ## Now / next / later
 
 | Band | Content |
 |------|---------|
-| Now | Event OS S01–S05 accepted (catalogue count 5); EOS-S04A–F ACCEPTED (not catalogue); EOS-S05A ACCEPTED (not catalogue); EOS-S05B ACCEPTED (not catalogue); production unsigned; no real communication or translation provider |
-| Next | Independent holdout and Claude for EOS-S06; Cursor must not accept the slice or start EOS-S07 |
+| Now | Event OS S01–S06 accepted (catalogue count 6); EOS-S04A–F ACCEPTED (not catalogue); EOS-S05A ACCEPTED (not catalogue); EOS-S05B ACCEPTED (not catalogue); EOS-S06A RATIFIED / ELIGIBLE / NOT STARTED; production unsigned; no real communication or translation provider |
+| Next | Controlled EOS-S06A execution only under separate CEO/AI CTO authority; do not start EOS-S07; distinguish current-product gates from extended historical regression (`TDR-S06-003`) |
 | Later | Event OS S01 after a new authorised instruction; Runtime after Event OS foundations |
-| Held | All 693 product/recon prompts except CT0/CT1 wrappers; EOS-S06 acceptance and EOS-S07 |
+| Held | All 693 product/recon prompts except CT0/CT1 wrappers; EOS-S07; production authorisation |
 | External | Independent, specialist, venue, CEO gates — unsigned |
 
 ## Release rule

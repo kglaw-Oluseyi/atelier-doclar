@@ -929,6 +929,42 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 | Latest safe remediation milestone | After a separate venue-evidence authority |
 | Current status | OPEN |
 
+### TDR-S06-002 — Launch/persist latency exceeds preferred targets
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S06-002` |
+| Source slice | EOS-S06 |
+| Description | Synchronous seating run launch still completes solver + validate + persist before HTTP 303. Observed launch wall ~303s class remains far above preferred interactive targets; persist TX p95 ~794ms exceeds the 300ms preference while remaining under the 2s gate. No queue/worker was introduced under MD-PR-S073. |
+| Classification | Related observation / performance debt |
+| Severity | LOW |
+| Evidence | `docs/control/eos-s06/MD_PR_S073_PACKET_7_GATE_E_TIMING.md`; Packet 8 freeze |
+| Affected surface or contract | Seating V2 launch / persist path |
+| Reason for deferral | Current-product acceptance gate does not require interactive-latency closure; Gate E bounds were met without a worker. |
+| Blocking | NON_BLOCKING |
+| Current owner | Event OS / AI CTO |
+| Required regression coverage | Preserve Gate E classification and no silent queue introduction without authority |
+| Latest safe remediation milestone | Separate performance authority after EOS-S06 acceptance |
+| Current status | OPEN |
+
+### TDR-S06-003 — Extended historical browser-contract regression retained
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S06-003` |
+| Source slice | EOS-S06 |
+| Description | Programme-validate run `35001426000` is not globally green. Canonical current EOS-S06 acceptance shard 0 (`eos-s06-current-acceptance`) passed. Remaining failure is in the extended historical browser regression corpus (shard 4 / `s13-j2-governance` class). Historical browser-contract reconciliation is controlled debt and must not be represented as green, deleted, or silently waived. Future release-critical gates must distinguish current product acceptance from extended historical regression. |
+| Classification | Related observation / regression corpus debt |
+| Severity | MEDIUM |
+| Evidence | GitHub Actions run `35001426000`; `docs/control/EOS_S06_ACCEPTANCE.md`; `docs/control/evidence/eos-s06-successor-layout-staleness/MANIFEST.md` |
+| Affected surface or contract | Extended historical Playwright corpus / programme-validate gating policy |
+| Reason for deferral | Current-product A–J gate is green; overall historical corpus failure is explicitly non-blocking for this acceptance under AI CTO decision. |
+| Blocking | NON_BLOCKING |
+| Current owner | Event OS / AI CTO |
+| Required regression coverage | Separate current-product vs historical gates; do not delete or silently waive failing historical contracts |
+| Latest safe remediation milestone | Dedicated historical browser-contract reconciliation authority |
+| Current status | OPEN |
+
 ### TDR-S05A-001 — Discovery source binaries are not implemented
 
 | Field | Value |
@@ -1058,3 +1094,4 @@ These do not reopen EOS-S04A and do not create new blocking IDs.
 | EOS-S05B independent acceptance MD-PR-S069 2026-09-11 | ChatGPT accepted EOS-S05B at SHA `84d58dd4590fb7d2087b436d10c0b2ae992b1621` after Cursor implementation/live evidence and Claude narrow MD-PR-S068 verdict READY. Not a catalogue slice. Catalogue accepted-slice count remains 5. No new TDR is manufactured. Carried debt remains: permanent production identity provider unselected; inactive external integrations/content-safety limits; TDR-S04A-011 blocking before real-client onboarding only; TDR-S04F-001 process-local action-result recall; TDR-S05-002; inherited accepted S04/S05/S05A debt. Non-blocking observations retained: one authority history view omitted intermediate v2 with no established durable data loss; Claude could not drive every exact viewport/native-zoom/reduced-motion combination; hostile clause content was non-executing though a dedicated body-detail view was not located. None of the retained debt authorises production or affects this synthetic-environment acceptance. EOS-S06 remains NOT_STARTED / NOT_AUTHORISED. Production remains unauthorised. Documentation-only commit does not redeploy Event OS or Control Tower. |
 | EOS-S06 V2 replacement MD-PR-S072 2026-09-12 | Cursor executed MD-PR-S072 from baseline `844f107`. Live Event OS SHA `0d43a9e40ce63d4acb0c584f2f1ad308c400c412`. Entered TDR-S06-001: live V2 `seating run launch` still returns unexpected server failure after a successful freeze, so two publication/replay sequences and live `s06-eval-v2` persist are unfinished. Catalogue accepted-slice count remains 5. EOS-S06 is not accepted. Claude is not run. EOS-S07 is not started. Production remains unauthorised. Control Tower was not deployed. |
 | EOS-S06 live settlement MD-PR-S073 2026-09-13 | Cursor executed MD-PR-S073 on deployed application SHA `1ce6e0f286a88dfa358a966ea3c873b2540f5ee3`. Closed TDR-S06-001: two live publication/replay sequences and live `s06-eval-v3` persist passed. Gate E wrapper `3429ms`/`5790ms` retained; scoped POST maxima 2931/1680. No queue/worker introduced. Entered TDR-S06-002 (non-blocking): launch still 303s after solver+validate+persist; persist TX p95 794ms exceeds the 300ms target and stays under the 2s gate. Catalogue accepted-slice count remains 5. EOS-S06 is not accepted. Claude is not run by Cursor. EOS-S07 is not started. Production remains unauthorised. Control Tower was not deployed. Documentation/test Packet 8 stamp is not an Event OS redeploy. |
+| EOS-S06 formal technical acceptance MD-PR-S077 2026-09-15 | ChatGPT / AI CTO accepted EOS-S06 at application SHA `42b0bb3f0976ca2b745a09f3952680afef69a1b9`, deployment `bb0f03d1-81fb-4fba-bf86-206f92a5953d`, after reviewing pre-acceptance tip `48cb593813a448c50bb506bd4cbc72e679cfb404`. Catalogue accepted-slice count is 6. Current product gate green; current-product blocking defects zero. Entered TDR-S06-003 (non-blocking): extended historical browser-contract regression from programme-validate run `35001426000` (shard 0 current acceptance passed; overall run not globally green). TDR-S06-002 remains OPEN / NON_BLOCKING. EOS-S06A is RATIFIED / ELIGIBLE / NOT STARTED. EOS-S07 remains NOT_STARTED / NOT_AUTHORISED. Production remains unauthorised. Documentation-only commit does not redeploy Event OS or Control Tower. |
