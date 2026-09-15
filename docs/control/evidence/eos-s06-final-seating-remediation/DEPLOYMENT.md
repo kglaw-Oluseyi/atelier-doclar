@@ -32,5 +32,6 @@
 ## Follow-up deploy (successor fixture on live residue)
 - Commit: `52eb287fcd1e42ed3f4ab15bee024d0f018999ee`
 - Deployment ID: `8532a584-eddf-40ca-9335-3eac7d39b087` SUCCESS
-- Live options now include `Synthetic seating hall` and `EOS-S06 successor layout B`
-- ACTIVE binding switched to Synthetic seating hall (A) for Claude’s successor journey
+- Live propose options now include both `Synthetic seating hall` (A, 2 tables) and `EOS-S06 successor layout B` (B, 3 tables)
+- ACTIVE seating layout binding at smoke time remained Ceremony floor (pre-existing). Claude should propose/activate layout A first, then run the successor journey onto layout B.
+- Docs tip commit: `e78d9310b45325bf0f58f050e699cb0f96b62ed0`
