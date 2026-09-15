@@ -46,8 +46,9 @@ test.describe("EOS-S06A live smoke", () => {
       page.waitForURL(/atelier-command\?result=/, { timeout: 40_000 }),
       page.getByRole("button", { name: "Interpret instruction" }).click(),
     ]);
-    await expect(page.getByText(/Organisation-wide and cross-event intelligence/i)).toBeVisible({
-      timeout: 40_000,
-    });
+    await expect(page.getByTestId("atelier-command-receipt")).toContainText(
+      /Organisation-wide and cross-event intelligence/i,
+      { timeout: 40_000 },
+    );
   });
 });
