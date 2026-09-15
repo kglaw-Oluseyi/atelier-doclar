@@ -10,9 +10,12 @@
 |------|----------|
 | Start docs HEAD | `212548ef…` |
 | Start deployed Event OS | `9497f543ebfb7289170a3acc4d1ab69f20281692` |
-| Application commit | _(filled after push)_ |
-| Deployed Event OS | _(filled after Railway SUCCESS)_ |
-| Control Tower | **not redeployed** |
+| Application commit / ending HEAD | `c1be4a2cbb73a1640d0ac8f48212e15db269197f` |
+| Deployed Event OS | `c1be4a2cbb73a1640d0ac8f48212e15db269197f` |
+| Railway event-os deployment | `8514cb9f-58b4-4e89-9a77-8fbb02240d06` SUCCESS |
+| Control Tower | **not redeployed** (latest listed SKIPPED) |
+| Live origin | `https://event-os-production-bc8d.up.railway.app` |
+| Posture | POSTGRES · APPLIED · `productionAuthorised:false` · providers/adapters INACTIVE |
 
 ## Root causes and corrections
 
@@ -36,11 +39,20 @@
 | Gate | Result |
 |------|--------|
 | `test/s06-security-remediation-audit.test.ts` + copy DEF-04 | pass |
-| Playwright DEF-04 / CEO-Auditor Audit + Command visibility | pass |
-| Playwright identical export resubmit (source-gated; unit READY-reuse always) | pass |
+| Playwright DEF-04 / CEO-Auditor Audit + Command visibility | pass (local + live) |
+| Playwright identical export resubmit | pass (local source-gated; live pass) |
 | `seating-v2-command-path` READY export replay assertion | pass |
 | event-os + shared-platform typecheck | pass |
 | `git diff --check` | pass |
+
+## Live smoke (post-deploy `c1be4a2`)
+
+| Check | Result |
+|-------|--------|
+| Health ready posture | POSTGRES · APPLIED · productionAuthorised:false · adapters INACTIVE |
+| Director/Planner Audit + Command nav/card refusal | pass |
+| CEO/Auditor Executive Ledger; CEO Command card | pass |
+| Identical PDF/CEO export resubmit without #418 | pass |
 
 ## Explicit non-acceptance
 

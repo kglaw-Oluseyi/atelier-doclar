@@ -2,7 +2,7 @@
 
 **Status:** Prepared only. Do not open Chrome from Cursor; do not ask the CEO to authenticate in the remediation agent session.
 
-**Deployed Event OS (application):** _(fill after deploy)_  
+**Deployed Event OS (application):** `c1be4a2cbb73a1640d0ac8f48212e15db269197f`  
 **Repository/docs HEAD may include evidence commits — do not conflate with the application SHA.**  
 **Live origin:** `https://event-os-production-bc8d.up.railway.app`  
 **EOS-S06:** remains unaccepted. **EOS-S07:** remains unstarted.
