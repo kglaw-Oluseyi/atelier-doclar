@@ -1,0 +1,189 @@
+TAP version 13
+# Subtest: EOS-S06A remediation-3 intent integrity
+    # Subtest: 1 retrieve-document maps to retrieve-document
+    ok 1 - 1 retrieve-document maps to retrieve-document
+      ---
+      duration_ms: 96.69725
+      ...
+    # Subtest: 2 real payment cannot map to retrieve-document
+    ok 2 - 2 real payment cannot map to retrieve-document
+      ---
+      duration_ms: 71.999333
+      ...
+    # Subtest: 3 real send cannot map to read-only explain
+    not ok 3 - 3 real send cannot map to read-only explain
+      ---
+      duration_ms: 2.971083
+      location: '/Users/maisondoclar/Desktop/atelier-doclar/packages/shared-platform/test/atelier-command-remediation-3.test.ts:1:1906'
+      failureType: 'testCodeFailure'
+      error: |-
+        Expected values to be strictly equal:
+        + actual - expected
+        
+        + 'ALLOW'
+        - 'REFUSE'
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: 'REFUSE'
+      actual: 'ALLOW'
+      operator: 'strictEqual'
+      stack: |-
+        TestContext.<anonymous> (/Users/maisondoclar/Desktop/atelier-doclar/packages/shared-platform/test/atelier-command-remediation-3.test.ts:56:12)
+        Test.runInAsyncScope (node:async_hooks:206:9)
+        Test.run (node:internal/test_runner/test:796:25)
+        Suite.processPendingSubtests (node:internal/test_runner/test:526:18)
+        Test.postRun (node:internal/test_runner/test:889:19)
+        Test.run (node:internal/test_runner/test:835:12)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:526:7)
+      ...
+    # Subtest: 4 external-write cannot map to simulation without refusal
+    ok 4 - 4 external-write cannot map to simulation without refusal
+      ---
+      duration_ms: 0.093708
+      ...
+    # Subtest: 5 multi-clause cannot silently discard consequential clause
+    ok 5 - 5 multi-clause cannot silently discard consequential clause
+      ---
+      duration_ms: 68.356792
+      ...
+    # Subtest: 6 non-allowlisted target with payment is refused
+    ok 6 - 6 non-allowlisted target with payment is refused
+      ---
+      duration_ms: 66.835292
+      ...
+    # Subtest: 7 prompt-injection R0 / already approved cannot bypass
+    ok 7 - 7 prompt-injection R0 / already approved cannot bypass
+      ---
+      duration_ms: 68.080041
+      ...
+    # Subtest: 8 original supported unsupported refused preserved
+    ok 8 - 8 original supported unsupported refused preserved
+      ---
+      duration_ms: 66.825625
+      ...
+    # Subtest: 9 cross-event remains refused
+    ok 9 - 9 cross-event remains refused
+      ---
+      duration_ms: 67.234167
+      ...
+    # Subtest: 10 unsupported creates no executable step
+    ok 10 - 10 unsupported creates no executable step
+      ---
+      duration_ms: 66.25
+      ...
+    1..10
+not ok 1 - EOS-S06A remediation-3 intent integrity
+  ---
+  duration_ms: 576.36725
+  type: 'suite'
+  location: '/Users/maisondoclar/Desktop/atelier-doclar/packages/shared-platform/test/atelier-command-remediation-3.test.ts:1:474'
+  failureType: 'subtestsFailed'
+  error: '1 subtest failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: EOS-S06A remediation-3 terminality and replay
+    # Subtest: 11 successful step cannot execute twice as new effect
+    ok 1 - 11 successful step cannot execute twice as new effect
+      ---
+      duration_ms: 107.349292
+      ...
+    # Subtest: 12 completed plan has no executable server transition
+    ok 2 - 12 completed plan has no executable server transition
+      ---
+      duration_ms: 92.896917
+      ...
+    # Subtest: 13 changed client idempotency cannot bypass terminality
+    ok 3 - 13 changed client idempotency cannot bypass terminality
+      ---
+      duration_ms: 102.746625
+      ...
+    # Subtest: 14 changed hidden status cannot bypass terminality
+    ok 4 - 14 changed hidden status cannot bypass terminality
+      ---
+      duration_ms: 114.352167
+      ...
+    # Subtest: 17 direct stale execute returns original settlement
+    ok 5 - 17 direct stale execute returns original settlement
+      ---
+      duration_ms: 101.35775
+      ...
+    # Subtest: 18-19 concurrent execution invokes tool once and returns ALREADY_SETTLED
+    ok 6 - 18-19 concurrent execution invokes tool once and returns ALREADY_SETTLED
+      ---
+      duration_ms: 132.508167
+      ...
+    # Subtest: 20 replay links to original correlation
+    ok 7 - 20 replay links to original correlation
+      ---
+      duration_ms: 101.923416
+      ...
+    # Subtest: 21-22 blocked refused superseded cancelled cannot execute
+    ok 8 - 21-22 blocked refused superseded cancelled cannot execute
+      ---
+      duration_ms: 82.10725
+      ...
+    # Subtest: 23-24 lost-response recovery returns durable settlement without second effect
+    ok 9 - 23-24 lost-response recovery returns durable settlement without second effect
+      ---
+      duration_ms: 108.59825
+      ...
+    # Subtest: 25-26 R3 approval bound; new version needs fresh approval
+    not ok 10 - 25-26 R3 approval bound; new version needs fresh approval
+      ---
+      duration_ms: 92.459833
+      location: '/Users/maisondoclar/Desktop/atelier-doclar/packages/shared-platform/test/atelier-command-remediation-3.test.ts:1:13007'
+      failureType: 'testCodeFailure'
+      error: 'Missing expected rejection.'
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      stack: |-
+        async TestContext.<anonymous> (/Users/maisondoclar/Desktop/atelier-doclar/packages/shared-platform/test/atelier-command-remediation-3.test.ts:314:5)
+        async Test.run (node:internal/test_runner/test:797:9)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:526:7)
+      ...
+    1..10
+not ok 2 - EOS-S06A remediation-3 terminality and replay
+  ---
+  duration_ms: 1036.820708
+  type: 'suite'
+  location: '/Users/maisondoclar/Desktop/atelier-doclar/packages/shared-platform/test/atelier-command-remediation-3.test.ts:1:5675'
+  failureType: 'subtestsFailed'
+  error: '1 subtest failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: EOS-S06A remediation-3 simulation truth and regression
+    # Subtest: 27-30 browser labelled SIMULATED; receipt agrees with ledger
+    ok 1 - 27-30 browser labelled SIMULATED; receipt agrees with ledger
+      ---
+      duration_ms: 91.430375
+      ...
+    # Subtest: 31 domain Intelligence remains grounded
+    ok 2 - 31 domain Intelligence remains grounded
+      ---
+      duration_ms: 80.621208
+      ...
+    # Subtest: 32 R4 communications remains blocked
+    ok 3 - 32 R4 communications remains blocked
+      ---
+      duration_ms: 91.342459
+      ...
+    # Subtest: 33-35 audit discoverable; identity surfaces; auditor boundary
+    ok 4 - 33-35 audit discoverable; identity surfaces; auditor boundary
+      ---
+      duration_ms: 92.572417
+      ...
+    1..4
+ok 3 - EOS-S06A remediation-3 simulation truth and regression
+  ---
+  duration_ms: 356.129375
+  type: 'suite'
+  ...
+1..3
+# tests 24
+# suites 3
+# pass 22
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2451.777083
