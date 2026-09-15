@@ -154,7 +154,7 @@ export const PROTECTION_FIELD_MESSAGES: Record<string, string> = {
 export type ProtectionFieldErrors = Record<string, string>;
 
 export type ProtectionFormState = {
-  status: "idle" | "validation";
+  status: "idle" | "validation" | "failure";
   application: "APPLIED" | "REPLAYED" | "NOT_APPLIED" | null;
   didDataChange: boolean;
   fieldErrors: ProtectionFieldErrors;
@@ -163,6 +163,8 @@ export type ProtectionFormState = {
   focusField?: string;
   correlationId?: string;
   sensitiveCleared?: string[];
+  /** When true, retry should keep the same idempotency key to recover a durable commit. */
+  preserveIdempotencyKey?: boolean;
 };
 
 export const idleProtectionFormState: ProtectionFormState = {
@@ -303,6 +305,28 @@ export function validationFormState(input: {
     focusField: firstInvalidField(input.fieldErrors),
     correlationId: input.correlationId,
     sensitiveCleared: input.sensitiveCleared?.length ? input.sensitiveCleared : undefined,
+  };
+}
+
+export const PROTECTION_TRANSPORT_FAILURE_SUMMARY =
+  "The seating action could not be confirmed. Reload to verify whether it was recorded before retrying.";
+
+export function transportFailureFormState(input: {
+  attemptedValues: Record<string, string>;
+  sensitiveCleared?: string[];
+  summary?: string;
+  correlationId?: string;
+}): ProtectionFormState {
+  return {
+    status: "failure",
+    application: null,
+    didDataChange: false,
+    fieldErrors: {},
+    attemptedValues: input.attemptedValues,
+    summary: input.summary ?? PROTECTION_TRANSPORT_FAILURE_SUMMARY,
+    correlationId: input.correlationId,
+    sensitiveCleared: input.sensitiveCleared?.length ? input.sensitiveCleared : undefined,
+    preserveIdempotencyKey: true,
   };
 }
 

@@ -335,9 +335,20 @@ export default async function EventSeatingPage({
                     : "No active seating layout binding."}
           </p>
           {permissions.prepare && (workspace.seatingLayoutBindingCandidates?.length ?? 0) > 0 ? (
-            <ProtectionMutationForm action={proposeSeatingLayoutBindingAction.bind(null, event.id)} className="atelier-form" testId="seating-layout-binding-propose">
-              <Envelope fields={envelopeFields} />
-              <IdempotencyField />
+            <ProtectionMutationForm
+              key={`seating-layout-binding-propose-${presented.correlationId ?? "idle"}`}
+              action={proposeSeatingLayoutBindingAction.bind(null, event.id)}
+              className="atelier-form"
+              testId="seating-layout-binding-propose"
+            >
+              <Envelope
+                fields={{
+                  ...envelopeFields,
+                  // Server-minted key: stable for this form instance so transport failure
+                  // retry can recover a durable commit via idempotent replay.
+                  idempotencyKey: crypto.randomUUID(),
+                }}
+              />
               <label>
                 Current layout publication
                 <select name="layoutPublicationId" required>
@@ -348,7 +359,9 @@ export default async function EventSeatingPage({
                   ))}
                 </select>
               </label>
-              <button type="submit" className="button">Propose seating layout binding</button>
+              <PendingSubmit className="button" locked={presented.mutationLocked}>
+                Propose seating layout binding
+              </PendingSubmit>
             </ProtectionMutationForm>
           ) : null}
           {permissions.ruleActivate && workspace.seatingLayoutBinding?.draftId ? (
@@ -538,9 +551,20 @@ export default async function EventSeatingPage({
           );
         })}
         {permissions.constraintManage ? (
-          <ProtectionMutationForm action={createSeatingConstraintAction.bind(null, event.id)} className="atelier-form seating-form" testId="seating-constraint-form">
-            <Envelope fields={envelopeFields} />
-            <IdempotencyField />
+          <ProtectionMutationForm
+            key={`seating-constraint-form-${presented.correlationId ?? "idle"}`}
+            action={createSeatingConstraintAction.bind(null, event.id)}
+            className="atelier-form seating-form"
+            testId="seating-constraint-form"
+          >
+            <Envelope
+              fields={{
+                ...envelopeFields,
+                // Server-minted key: stable for this form instance so transport failure
+                // retry can recover a durable commit via idempotent replay.
+                idempotencyKey: crypto.randomUUID(),
+              }}
+            />
             <fieldset>
               <legend>Create a seating rule</legend>
               <label>
@@ -574,9 +598,9 @@ export default async function EventSeatingPage({
                 </select>
               </label>
             </fieldset>
-            <button type="submit" className="button">
+            <PendingSubmit className="button" locked={presented.mutationLocked}>
               Save rule
-            </button>
+            </PendingSubmit>
           </ProtectionMutationForm>
         ) : null}
       </section>
