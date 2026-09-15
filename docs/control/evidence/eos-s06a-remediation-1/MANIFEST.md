@@ -37,3 +37,14 @@ Command: `PLAYWRIGHT_LIVE=1` Playwright `e2e/eos-s06a-live-smoke.spec.ts` via `r
 - 4 passed / 0 failed
 
 Synthetic only. No provider activation. Control Tower SKIPPED.
+
+## Deployment-identity correction
+
+- `IDENTITY_ADDENDUM.md` — full SHA chain, root cause B+C, before/after health, bundle proof, tests, smoke
+- Correction commit / live application SHA: `d1ca4a7f4d92031ac236880c0e92f8c290546db4`
+- Railway event-os deployment: `1ac090cf-e3c0-4180-8ecd-d6b2fc0c46a0` SUCCESS
+- Focused identity tests: 7/7 PASS (`apps/event-os/test/build-identity.test.ts`)
+- Live smoke re-run after identity deploy: 4/4 PASS
+- Control Tower: SKIPPED
+- Claude: not run
+- EOS-S06A: NOT ACCEPTED

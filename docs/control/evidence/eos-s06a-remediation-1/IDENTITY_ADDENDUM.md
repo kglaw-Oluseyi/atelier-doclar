@@ -81,4 +81,72 @@ Not A (wrong source bundle), D (wrong health route), or E (build cache of old bu
 
 ## 5. After correction
 
-Filled after deploy.
+### Identity-correction application commit
+`d1ca4a7f4d92031ac236880c0e92f8c290546db4`  
+Subject: `fix(event-os): embed immutable build application SHA at deploy time`
+
+### Railway deployment
+- ID: `1ac090cf-e3c0-4180-8ecd-d6b2fc0c46a0`
+- status: SUCCESS (2026-09-15 21:24:17 +01:00)
+- reason: CLI upload (`railway up`) with deliberate `EVENT_OS_GIT_SHA` / `EVENT_OS_DOCS_HEAD` set to the identity-correction commit
+- `RAILWAY_GIT_COMMIT_SHA`: unset (upload/archive)
+- `RAILWAY_DEPLOYMENT_ID`: `1ac090cf-e3c0-4180-8ecd-d6b2fc0c46a0`
+- Control Tower: SKIPPED (`368c9c79-0946-4bf3-a769-8859fd2c520c` and prior)
+
+### Bundle proof (build-embedded identity on live container)
+`/app/apps/event-os/src/server/build-identity.generated.ts`:
+
+```
+export const BUILD_APPLICATION_SHA = "d1ca4a7f4d92031ac236880c0e92f8c290546db4" as const;
+export const BUILD_IDENTITY_SOURCE = "EVENT_OS_GIT_SHA" as const;
+export const BUILD_IDENTITY_CAPTURED_AT = "2026-09-15T20:25:01.617Z" as const;
+```
+
+Captured at build; runtime prefers this over any later stale `EVENT_OS_GIT_SHA`.
+
+### Before / after health
+
+| Surface | Before | After |
+|---|---|---|
+| `/api/health/live` deployedSha | `233afaaf8c3ee6eeca96914657f3af6041867c40` | `d1ca4a7f4d92031ac236880c0e92f8c290546db4` |
+| `/api/health/ready` deployedSha | `233afaaf8c3ee6eeca96914657f3af6041867c40` | `d1ca4a7f4d92031ac236880c0e92f8c290546db4` |
+| applicationSha | (collapsed into deployedSha) | `d1ca4a7f4d92031ac236880c0e92f8c290546db4` |
+| deploymentSourceSha | n/a | `null` (upload/archive; no Railway Git revision) |
+| documentationHead | n/a | `d1ca4a7f4d92031ac236880c0e92f8c290546db4` (declared via `EVENT_OS_DOCS_HEAD`) |
+| buildIdentitySource | (env pin only) | `EVENT_OS_GIT_SHA` (embedded at build from deliberate pin) |
+| productionAuthorised | false | false |
+
+### System page (authenticated `/app/admin/system`)
+- Deployed SHA: `d1ca4a7f4d92031ac236880c0e92f8c290546db4`
+- Application SHA: `d1ca4a7f4d92031ac236880c0e92f8c290546db4`
+- Documentation HEAD: `d1ca4a7f4d92031ac236880c0e92f8c290546db4`
+- Agreement with live + ready: **YES** (all three surfaces identical for application SHA)
+
+### Focused identity tests
+Command: `npx tsx --test test/build-identity.test.ts` (apps/event-os)
+
+- tests: 7
+- pass: 7
+- fail: 0
+
+Covers: identity present; live/ready/System contract fields; stale env cannot override known build SHA; upload-deploy deliberate SHA; documentation HEAD separate; productionAuthorised untouched by identity resolution.
+
+### Live smoke after identity deploy
+Command: `PLAYWRIGHT_LIVE=1` Playwright `e2e/eos-s06a-live-smoke.spec.ts` via `railway run` (one worker)
+
+- two Intelligence answers + reload persistence — PASS
+- named cross-event refusal — PASS
+- R4 send remains blocked / not claimed as real send — PASS
+- CEO audit filter + auditor non-mutation — PASS
+- **4 passed / 0 failed**
+
+Smoke assertion hardened to wait for status-specific first answer so a prior EXPLAIN_BLOCK receipt cannot satisfy the first capture (test-only; no application redeploy required).
+
+### Runtime posture
+POSTGRES · migrations APPLIED · `productionAuthorised: false` · adapters INACTIVE (COMMUNICATIONS INACTIVE) · fixtures allowed · non-production fixture IdP.
+
+### Disposition
+- Wrong application was **not** deployed on `d8b0f112…`; only the identity field was stale (**B + C**).
+- Identity contract corrected on `1ac090cf…` with immutable build-embedded application SHA.
+- **EOS-S06A remains NOT ACCEPTED.**
+- Claude: **not run.**

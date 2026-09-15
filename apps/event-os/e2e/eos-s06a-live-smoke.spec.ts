@@ -28,10 +28,14 @@ test.describe("EOS-S06A remediation live smoke", () => {
       page.waitForURL(/atelier-command\?result=/, { timeout: 40_000 }),
       page.getByRole("button", { name: "Execute plan" }).click(),
     ]);
-    await expect(page.getByTestId("atelier-command-intelligence-answer")).toBeVisible({ timeout: 40_000 });
+    // Wait for status-specific content so a prior EXPLAIN_BLOCK receipt cannot satisfy the first capture.
+    await expect(page.getByTestId("atelier-command-intelligence-answer")).toContainText(/Status for|Open assumptions|Limited confirmed facts/i, {
+      timeout: 40_000,
+    });
     const first = await page.getByTestId("atelier-command-intelligence-answer").innerText();
     expect(first.length).toBeGreaterThan(40);
     expect(first).not.toMatch(/^Executed 1 step\(s\); status COMPLETED$/);
+    expect(first).not.toMatch(/Sending communications .* is blocked/i);
     await page.reload();
     await expect(page.getByTestId("atelier-command-intelligence-answer")).toContainText(first.slice(0, 40), {
       timeout: 40_000,
@@ -51,7 +55,7 @@ test.describe("EOS-S06A remediation live smoke", () => {
       page.getByRole("button", { name: "Execute plan" }).click(),
     ]);
     await expect(page.getByTestId("atelier-command-intelligence-answer")).toContainText(
-      /blocked|productionAuthorised|providersActive|production authorised/i,
+      /Sending communications .* is blocked|productionAuthorised|providersActive|production authorised/i,
       { timeout: 40_000 },
     );
     const second = await page.getByTestId("atelier-command-intelligence-answer").innerText();
