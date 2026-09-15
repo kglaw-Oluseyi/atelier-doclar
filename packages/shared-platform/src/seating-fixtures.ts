@@ -213,9 +213,110 @@ export async function ensureS06SeatingLayoutBinding(store: PlatformStore, servic
 export const EOS_S06_SUCCESSOR_LAYOUT_A_NAME = "Synthetic seating hall";
 export const EOS_S06_SUCCESSOR_LAYOUT_B_NAME = "EOS-S06 successor layout B";
 
+function ensureVenueAdopted(store: PlatformStore, service: PlatformService) {
+  const snap = store.snapshot();
+  const venue =
+    snap.venues.find((item) => item.organisationId === FIXTURE_IDS.orgMaison && item.status === "ACTIVE") ??
+    service.createVenue(director(), {
+      organisationId: FIXTURE_IDS.orgMaison,
+      displayName: "Synthetic seating pavilion",
+      reason: "Seed seating layout fixture",
+      idempotencyKey: "s06-seating-venue-seed-01",
+    });
+  return (
+    store.snapshot().eventVenues.find((item) => item.eventId === FIXTURE_IDS.eventAlphaOne && item.venueId === venue.id) ??
+    service.adoptVenue(director(), {
+      organisationId: FIXTURE_IDS.orgMaison,
+      eventId: FIXTURE_IDS.eventAlphaOne,
+      venueId: venue.id,
+      reason: "Adopt seating fixture venue",
+      idempotencyKey: "s06-seating-adopt-seed-01",
+    })
+  );
+}
+
+function publishNamedLayoutIfMissing(
+  store: PlatformStore,
+  service: PlatformService,
+  input: {
+    name: string;
+    idempotencyPrefix: string;
+    widthMm: number;
+    heightMm: number;
+    tables: Array<{
+      label: string;
+      xMm: number;
+      yMm: number;
+      widthMm: number;
+      heightMm: number;
+      declaredCapacity: number;
+    }>;
+  },
+): { layoutId: string } {
+  const existing = store.snapshot().layouts.find(
+    (item) => item.eventId === FIXTURE_IDS.eventAlphaOne && item.name === input.name,
+  );
+  const hasCurrent = existing
+    ? store.snapshot().layoutPublications.some((item) => item.layoutId === existing.id && item.status === "CURRENT")
+    : false;
+  if (existing && hasCurrent) return { layoutId: existing.id };
+
+  const adopted = ensureVenueAdopted(store, service);
+  let layout =
+    existing ??
+    service.createBlankLayout(planner(), {
+      organisationId: FIXTURE_IDS.orgMaison,
+      eventId: FIXTURE_IDS.eventAlphaOne,
+      eventVenueId: adopted.id,
+      name: input.name,
+      widthMm: input.widthMm,
+      heightMm: input.heightMm,
+      reason: `Create ${input.name}`,
+      idempotencyKey: `${input.idempotencyPrefix}-layout-01`,
+    });
+
+  if (!existing) {
+    for (const [index, table] of input.tables.entries()) {
+      layout = service.applyLayoutCommand(planner(), {
+        ...cas(layout),
+        reason: `Add ${input.name} table ${table.label}`,
+        command: {
+          kind: "CREATE_OBJECT",
+          objectType: "TABLE",
+          label: table.label,
+          geometry: {
+            kind: "RECTANGLE",
+            xMm: table.xMm,
+            yMm: table.yMm,
+            widthMm: table.widthMm,
+            heightMm: table.heightMm,
+          },
+          subtype: { shape: "RECTANGLE", declaredCapacity: table.declaredCapacity },
+        },
+      });
+      void index;
+    }
+  }
+
+  service.runLayoutValidation(planner(), { ...cas(layout), reason: `Validate ${input.name}` });
+  const current = service.getLayoutSetupWorkspace(planner(), FIXTURE_IDS.orgMaison, FIXTURE_IDS.eventAlphaOne, layout.id).layout;
+  const submitted = service.submitLayoutApproval(planner(), { ...cas(current), reason: `Submit ${input.name}` });
+  const approvedLayout = service.getLayoutSetupWorkspace(director(), FIXTURE_IDS.orgMaison, FIXTURE_IDS.eventAlphaOne, layout.id).layout;
+  service.decideLayoutApproval(director(), {
+    ...cas(approvedLayout),
+    approvalId: submitted.id,
+    decision: "APPROVED",
+    reason: `Approve ${input.name}`,
+  });
+  const ready = service.getLayoutSetupWorkspace(director(), FIXTURE_IDS.orgMaison, FIXTURE_IDS.eventAlphaOne, layout.id).layout;
+  service.publishLayout(director(), { ...cas(ready), reason: `Publish ${input.name}` });
+  return { layoutId: ready.id };
+}
+
 /**
  * Idempotent synthetic fixture: CURRENT layout A (hall), materially different CURRENT layout B,
  * and an ACTIVE seating layout binding to A. Safe to rerun; excluded from real communications.
+ * Does not depend on Alpha One having zero CURRENT publications (live residue may already exist).
  */
 export function ensureEosS06SuccessorLayoutFixture(store: PlatformStore, service: PlatformService): {
   layoutAId: string;
@@ -223,105 +324,36 @@ export function ensureEosS06SuccessorLayoutFixture(store: PlatformStore, service
   layoutAName: string;
   layoutBName: string;
 } {
+  // Prefer the classic seed path when Alpha One has no CURRENT yet.
   applyS06SeatingLayoutIfMissing(store, service);
-  const snap = store.snapshot();
-  const layoutA = snap.layouts.find(
-    (item) => item.eventId === FIXTURE_IDS.eventAlphaOne && item.name === EOS_S06_SUCCESSOR_LAYOUT_A_NAME,
-  );
-  if (!layoutA) {
-    throw new Error("EOS-S06 successor fixture requires Synthetic seating hall (layout A).");
-  }
 
-  let layoutB = snap.layouts.find(
-    (item) => item.eventId === FIXTURE_IDS.eventAlphaOne && item.name === EOS_S06_SUCCESSOR_LAYOUT_B_NAME,
-  );
-  const hasCurrentB = layoutB
-    ? snap.layoutPublications.some((item) => item.layoutId === layoutB!.id && item.status === "CURRENT")
-    : false;
-
-  if (!hasCurrentB) {
-    const venue =
-      snap.venues.find((item) => item.organisationId === FIXTURE_IDS.orgMaison && item.status === "ACTIVE") ??
-      service.createVenue(director(), {
-        organisationId: FIXTURE_IDS.orgMaison,
-        displayName: "Synthetic seating pavilion",
-        reason: "Seed seating layout fixture",
-        idempotencyKey: "s06-seating-venue-seed-01",
-      });
-    const adopted =
-      store.snapshot().eventVenues?.find((item) => item.eventId === FIXTURE_IDS.eventAlphaOne && item.venueId === venue.id) ??
-      service.adoptVenue(director(), {
-        organisationId: FIXTURE_IDS.orgMaison,
-        eventId: FIXTURE_IDS.eventAlphaOne,
-        venueId: venue.id,
-        reason: "Adopt seating fixture venue",
-        idempotencyKey: "s06-seating-adopt-seed-01",
-      });
-    if (!layoutB) {
-      layoutB = service.createBlankLayout(planner(), {
-        organisationId: FIXTURE_IDS.orgMaison,
-        eventId: FIXTURE_IDS.eventAlphaOne,
-        eventVenueId: adopted.id,
-        name: EOS_S06_SUCCESSOR_LAYOUT_B_NAME,
-        widthMm: 28000,
-        heightMm: 20000,
-        reason: "Create EOS-S06 successor layout B",
-        idempotencyKey: "s06-successor-layout-b-seed-01",
-      });
-      // Materially different geometry vs hall (three round tables, different capacity).
-      layoutB = service.applyLayoutCommand(planner(), {
-        ...cas(layoutB),
-        reason: "Add successor fixture table North",
-        command: {
-          kind: "CREATE_OBJECT",
-          objectType: "TABLE",
-          label: "Table North",
-          geometry: { kind: "RECTANGLE", xMm: 2000, yMm: 2000, widthMm: 2200, heightMm: 2200 },
-          subtype: { shape: "RECTANGLE", declaredCapacity: 10 },
-        },
-      });
-      layoutB = service.applyLayoutCommand(planner(), {
-        ...cas(layoutB),
-        reason: "Add successor fixture table South",
-        command: {
-          kind: "CREATE_OBJECT",
-          objectType: "TABLE",
-          label: "Table South",
-          geometry: { kind: "RECTANGLE", xMm: 6000, yMm: 2000, widthMm: 2200, heightMm: 2200 },
-          subtype: { shape: "RECTANGLE", declaredCapacity: 10 },
-        },
-      });
-      layoutB = service.applyLayoutCommand(planner(), {
-        ...cas(layoutB),
-        reason: "Add successor fixture table East",
-        command: {
-          kind: "CREATE_OBJECT",
-          objectType: "TABLE",
-          label: "Table East",
-          geometry: { kind: "RECTANGLE", xMm: 4000, yMm: 6000, widthMm: 2200, heightMm: 2200 },
-          subtype: { shape: "RECTANGLE", declaredCapacity: 6 },
-        },
-      });
-    }
-    service.runLayoutValidation(planner(), { ...cas(layoutB), reason: "Validate EOS-S06 successor layout B" });
-    const current = service.getLayoutSetupWorkspace(planner(), FIXTURE_IDS.orgMaison, FIXTURE_IDS.eventAlphaOne, layoutB.id).layout;
-    const submitted = service.submitLayoutApproval(planner(), { ...cas(current), reason: "Submit EOS-S06 successor layout B" });
-    const approvedLayout = service.getLayoutSetupWorkspace(director(), FIXTURE_IDS.orgMaison, FIXTURE_IDS.eventAlphaOne, layoutB.id).layout;
-    service.decideLayoutApproval(director(), {
-      ...cas(approvedLayout),
-      approvalId: submitted.id,
-      decision: "APPROVED",
-      reason: "Approve EOS-S06 successor layout B",
-    });
-    const ready = service.getLayoutSetupWorkspace(director(), FIXTURE_IDS.orgMaison, FIXTURE_IDS.eventAlphaOne, layoutB.id).layout;
-    service.publishLayout(director(), { ...cas(ready), reason: "Publish EOS-S06 successor layout B" });
-  }
+  const layoutA = publishNamedLayoutIfMissing(store, service, {
+    name: EOS_S06_SUCCESSOR_LAYOUT_A_NAME,
+    idempotencyPrefix: "s06-successor-a",
+    widthMm: 24000,
+    heightMm: 18000,
+    tables: [
+      { label: "Table A", xMm: 1200, yMm: 1200, widthMm: 1800, heightMm: 1800, declaredCapacity: 8 },
+      { label: "Table B", xMm: 4200, yMm: 1200, widthMm: 1800, heightMm: 1800, declaredCapacity: 8 },
+    ],
+  });
+  const layoutB = publishNamedLayoutIfMissing(store, service, {
+    name: EOS_S06_SUCCESSOR_LAYOUT_B_NAME,
+    idempotencyPrefix: "s06-successor-b",
+    widthMm: 28000,
+    heightMm: 20000,
+    tables: [
+      { label: "Table North", xMm: 2000, yMm: 2000, widthMm: 2200, heightMm: 2200, declaredCapacity: 10 },
+      { label: "Table South", xMm: 6000, yMm: 2000, widthMm: 2200, heightMm: 2200, declaredCapacity: 10 },
+      { label: "Table East", xMm: 4000, yMm: 6000, widthMm: 2200, heightMm: 2200, declaredCapacity: 6 },
+    ],
+  });
 
   seedS06SeatingLayoutBindingIfMissing(store, service);
 
   return {
-    layoutAId: layoutA.id,
-    layoutBId: layoutB!.id,
+    layoutAId: layoutA.layoutId,
+    layoutBId: layoutB.layoutId,
     layoutAName: EOS_S06_SUCCESSOR_LAYOUT_A_NAME,
     layoutBName: EOS_S06_SUCCESSOR_LAYOUT_B_NAME,
   };
