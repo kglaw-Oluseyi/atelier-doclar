@@ -1,77 +1,64 @@
-# EOS-S06 — Final CI Remediation
+# EOS-S06 — Final CI Runtime Correction
 
 **Not acceptance.** EOS-S06 remains unaccepted pending AI CTO review. EOS-S07 remains unstarted.
 
-## Identities
+## 1. Final root cause
 
-| Role | Value |
-|------|-------|
-| Starting HEAD | `9eeed2433e0ae55415f4af6d4e602f04b2952858` |
-| Failed CI run (billing cleared) | `34960952874` / job `104367985331` |
-| Failing test | `apps/event-os/test/seating-trusted-action-boundary.test.ts` — subtest 13/14 |
+**HARNESS/RESOURCE.** Formal CI previously ran Event OS Playwright against `next-dev`. Even a single-test shard (`s13-j1-studio`) hit next-dev’s memory threshold (~80s) and restarted → `ERR_CONNECTION_REFUSED`. Sharding alone cannot fix next-dev memory behaviour on GitHub-hosted runners.
 
-## Root-cause classification
+## 2. Invalid prior runs (not product-attributable)
 
-**PRODUCT BOUNDARY**
+| Run | Classification |
+|-----|----------------|
+| `34966947067` | RESOURCE-CONSTRAINED / INVALID — 279-test monolith vs one next-dev; memory cascade; cancelled |
+| `34975914044` | RESOURCE-CONSTRAINED / INVALID — sharded next-dev; shard 0 alone OOM-restarted |
 
-`recoverProposeSeatingLayoutBindingAction` authenticated with a direct `requireActor()` call and manually re-derived event/assignment authority outside `runTrustedSeatingAction` / the Packet 2 trusted seating context. That bypassed the canonical “authenticate once via trusted context” boundary and tripped the Packet 2 static assertion `seatingActions.includes("requireActor()") === false`.
+## 3. Production-mode CI architecture
 
-This was not a stale test. The recovery endpoint is legitimate, but it must share the same trusted-context establishment path as propose/activate/withdraw.
+- Workflow **production build** reused.
+- Event OS browser corpus: **`next start` only** (never `next-dev` in formal CI).
+- Ephemeral GitHub Actions **Postgres 16** service (`ci`/`ci`/`event_os_ci`).
+- `DATABASE_URL` points only at that service.
+- `ci-postgres-reset.ts`: `DROP SCHEMA public CASCADE` → migrate via `PostgresPlatformStore.open` → `applySyntheticSeedIfNeeded` + seating layout fixtures.
+- `EVENT_OS_ALLOW_FIXTURES=1` for synthetic seed only; **no** general production file-store bypass; file-store still refused under production NODE_ENV without DATABASE_URL.
+- `productionAuthorised` remains hard-false.
+- 17 deterministic shards; DB reset + fresh `next start` per shard; workers=1; retries=0; heap 2048; hard timeouts; failure classification (`PRODUCT_ASSERTION` / `MEMORY` / `TRANSPORT` / `DATABASE` / `SERVER_STARTUP`); artifacts uploaded on failure.
 
-## Security invariant retained
+## 4. Ephemeral Postgres isolation
 
-- Authenticate exactly once (`requireActor` only inside `establishTrustedSeatingContext`).
-- Derive organisation / event / assignment authority from trusted server state + `boundEventId`.
-- Never accept authority or scope from FormData (FormData used only for idempotency key + scope tripwire).
-- Fail-closed: unauthenticated / forbidden / missing receipt → inline unconfirmed transport failure (no false SUCCESS).
-- Idempotent recovery: durable receipt lookup by idempotency key; REPLAYED result when already APPLIED/REPLAYED.
+- Service container health-checked; credentials only on the runner.
+- Reset script refuses Railway/remote hosts and requires `EVENT_OS_CI_POSTGRES=1`.
+- Never uses Railway/production Postgres.
 
-## Correction
+## 5. Accounting
 
-- Extracted `establishTrustedSeatingContext` in `trusted-seating-action-context.ts`.
-- `runTrustedSeatingAction` and `recoverProposeSeatingLayoutBindingAction` both use it (single auth).
-- Removed `requireActor` import/use from `seating-actions.ts`.
-- Strengthened Packet 2 assertions: recover must call `establishTrustedSeatingContext`; must not take org/event from FormData.
+`scripts/ci-e2e-shard-plan.json`: **129 files / 279 tests**, each exactly once (`test/ci-e2e-shard-accounting.test.ts`).
 
-## Focused validation
+## 6. Files changed
+
+- `.github/workflows/programme-validate.yml`
+- `apps/event-os/playwright.config.ts`
+- `apps/event-os/scripts/ci-e2e-run-shards.mjs`
+- `apps/event-os/scripts/ci-e2e-lifecycle-check.mjs`
+- `apps/event-os/scripts/ci-postgres-reset.ts`
+- `apps/event-os/scripts/ci-e2e-shard-plan.json`
+- `apps/event-os/e2e/s060-helpers.ts` / `s075-section-13.ts` (CI Postgres persistence acceptance)
+- `apps/event-os/package.json`
+- `apps/event-os/test/ci-e2e-shard-accounting.test.ts`
+- this MANIFEST
+
+## 7. Bounded local validation
 
 | Gate | Result |
 |------|--------|
-| `seating-trusted-action-boundary.test.ts` | pass |
-| `s06-mutation-recoverable.test.ts` | pass |
-| `seating-v2-mutation-503-idempotency.test.ts` | pass |
-| Event OS unit tests | 143/143 pass |
-| Repository `pnpm typecheck` | pass |
+| typecheck | pass |
+| shard accounting | pass |
+| disposable Postgres migrate+seed | pass (`event_os_ci_e2e`) |
+| lifecycle next start up/down | pass |
+| representative Postgres+next-start shard (`ux001-authority`, 2 tests) | pass |
 | `git diff --check` | pass |
+| Full 279 suite locally | **not run** |
 
-## Deployment / CI
+## 8–17. Commit / push / deploy / CI
 
-| Role | Value |
-|------|-------|
-| Ending HEAD / application commit | `233afaaf8c3ee6eeca96914657f3af6041867c40` |
-| Event OS deployment | `228bd93a-5016-4ab4-a7b0-20d6173607c7` SUCCESS |
-| Deployed SHA | `233afaaf8c3ee6eeca96914657f3af6041867c40` |
-| Live posture | ready · POSTGRES · APPLIED · `productionAuthorised:false` · providers INACTIVE |
-| Control Tower | not deployed (SKIPPED listings) |
-| Focused live propose smoke | pass |
-
-### Formal CI — run `34966947067`
-
-URL: https://github.com/kglaw-Oluseyi/atelier-doclar/actions/runs/34966947067  
-Started `2026-09-15T12:06:21Z` · ended `2026-09-15T13:26:52Z` · conclusion **cancelled** (canceled by `@kglaw-Oluseyi`).
-
-| Step | Result |
-|------|--------|
-| Checkout / install / Typecheck | success |
-| Test (includes trusted-boundary fix) | success |
-| Programme validate / project / ingest / reconcile | success |
-| Production build | success |
-| Install Playwright Chromium | success |
-| Control Tower browser tests | success |
-| Event OS browser tests | **cancelled** (~68 min in; human cancel) |
-
-**CI is not completely green** — infrastructure/operator cancel during Event OS e2e, not a product/test failure of the Packet 2 remediation. No second CI trigger per single-run rule.
-
-## Explicit non-acceptance
-
-EOS-S06 remains unaccepted pending AI CTO review. EOS-S07 remains unstarted. Protected files and Control Tower untouched.
+Filled after push and single programme-validate run.

@@ -269,7 +269,7 @@ export async function assertLocalSection13Preflight(page: Page) {
     await assertLiveSection13Preflight(page);
     return;
   }
-  if (process.env.PLAYWRIGHT_PROD === "1") {
+  if (process.env.PLAYWRIGHT_PROD === "1" && process.env.EVENT_OS_CI_POSTGRES !== "1") {
     throw new Error("local Section 13 refused PLAYWRIGHT_PROD=1; next start is not the local file-store path");
   }
   const leakedBase = process.env.PLAYWRIGHT_BASE_URL ?? "";
@@ -284,13 +284,18 @@ export async function assertLocalSection13Preflight(page: Page) {
   const readyUrl = new URL(ready.url());
   expect(readyUrl.origin).toBe("http://127.0.0.1:3020");
   const body = (await ready.json()) as { persistence?: string; productionAuthorised?: boolean };
-  expect(body.persistence).toBe("MEMORY_NON_PRODUCTION");
+  if (process.env.EVENT_OS_CI_POSTGRES === "1") {
+    expect(body.persistence).toBe("POSTGRES");
+  } else {
+    expect(body.persistence).toBe("MEMORY_NON_PRODUCTION");
+  }
   expect(body.productionAuthorised ?? false).toBeFalsy();
   recordSection13({
     kind: "local-preflight",
     origin: readyUrl.origin,
     persistence: body.persistence,
     live: process.env.PLAYWRIGHT_LIVE ?? "",
+    ciPostgres: process.env.EVENT_OS_CI_POSTGRES ?? "",
     baseUrl: leakedBase,
   });
 }

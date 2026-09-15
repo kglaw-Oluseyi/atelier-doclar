@@ -49,4 +49,31 @@ Event OS `watchPatterns` temporarily set to `/__CONTROLLED_DEPLOY_ONLY__/**` bef
 
 ## Formal CI
 
-Filled after single `programme-validate` trigger.
+| Field | Value |
+|-------|-------|
+| Ending HEAD | `dd3e18b67ebb706ff102986c5582a4a9a3a6bab0` |
+| Run | `34975914044` — https://github.com/kglaw-Oluseyi/atelier-doclar/actions/runs/34975914044 |
+| Conclusion | **failure** (not green) |
+| Duration | ~13m34s |
+| Event OS deploy from harness push | **none** (deployedSha remained `233afaa…`) |
+
+### Job steps
+
+All steps through Control Tower browser tests **success**.
+**Event OS browser tests (sharded)** **failed** on first shard.
+Artifact upload **success**.
+
+### Shard outcome
+
+| Shard | Result |
+|-------|--------|
+| 0 `s13-j1-studio` (1 test) | **failed** — next-dev: “Server is approaching the used memory threshold, restarting…” then `net::ERR_CONNECTION_REFUSED` on `page.goto` (guest staff-response navigation). **HARNESS/RESOURCE**, not a clean product assertion. |
+| 1–16 | not started (runner exits on first shard failure) |
+
+### Artifacts
+
+`event-os-playwright-shards` — `ci-e2e-shard-logs/`, `test-results/` (downloaded for analysis).
+
+### Attribution
+
+Formal CI is **not completely green**. Remaining blocker is still harness/resource pressure inside the heaviest Section 13 journey even as a single-file shard. Requires a further harness strategy (not product journey remediation from this failure alone).

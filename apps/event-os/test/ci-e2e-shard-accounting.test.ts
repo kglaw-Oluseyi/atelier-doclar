@@ -11,12 +11,14 @@ const planPath = join(root, "scripts", "ci-e2e-shard-plan.json");
 describe("Event OS formal CI e2e shard accounting", () => {
   it("assigns every listed Playwright test file exactly once with 279 tests", () => {
     const plan = JSON.parse(readFileSync(planPath, "utf8"));
-    assert.equal(plan.design, "sharded-next-dev");
+    assert.equal(plan.design, "sharded-postgres-next-start");
     assert.equal(plan.retries, 0);
     assert.equal(plan.workersPerShard, 1);
     assert.equal(plan.totalTests, 279);
     assert.equal(plan.totalFiles, 129);
     assert.ok(plan.heapMbDefault <= 4096);
+    assert.equal(plan.runtime, "next start");
+    assert.equal(plan.database, "ephemeral-postgres");
 
     const listed = spawnSync("pnpm", ["exec", "playwright", "test", "--list"], {
       cwd: root,

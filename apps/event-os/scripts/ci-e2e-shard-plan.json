@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "design": "sharded-next-dev",
-  "rationale": "next start (NODE_ENV=production) requires DATABASE_URL; CI must not use Railway/Postgres. Shards force fresh webServer per Playwright process.",
+  "design": "sharded-postgres-next-start",
+  "rationale": "Formal CI uses production build + next start + ephemeral Postgres. next-dev is forbidden. File-store fixtures remain refused under production NODE_ENV without a general bypass.",
   "totalFiles": 129,
   "totalTests": 279,
-  "heapMbDefault": 3072,
+  "heapMbDefault": 2048,
   "workersPerShard": 1,
   "retries": 0,
   "shards": [
@@ -273,5 +273,7 @@
       "tests": 24,
       "timeoutSeconds": 2100
     }
-  ]
+  ],
+  "runtime": "next start",
+  "database": "ephemeral-postgres"
 }

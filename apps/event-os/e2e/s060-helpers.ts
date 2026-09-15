@@ -40,9 +40,20 @@ export async function clickOnceNamed(page: Page, name: string) {
 export async function expectLocalFileStore(page: Page) {
   const response = await page.request.get("/api/health/ready");
   const readyUrl = new URL(response.url());
-  const body = (await response.json()) as { persistence?: string };
+  const body = (await response.json()) as { persistence?: string; productionAuthorised?: boolean };
   if (readyUrl.hostname !== "127.0.0.1" && readyUrl.hostname !== "localhost") {
     throw new Error(`local Playwright must use 127.0.0.1, not ${readyUrl.host}`);
+  }
+  if (process.env.EVENT_OS_CI_POSTGRES === "1") {
+    if (body.persistence !== "POSTGRES") {
+      throw new Error(
+        `formal CI Postgres Playwright requires persistence=POSTGRES; persistence=${body.persistence ?? "unknown"}`,
+      );
+    }
+    if (body.productionAuthorised === true) {
+      throw new Error("formal CI Postgres Playwright requires productionAuthorised=false");
+    }
+    return;
   }
   if (body.persistence !== "MEMORY_NON_PRODUCTION") {
     throw new Error(

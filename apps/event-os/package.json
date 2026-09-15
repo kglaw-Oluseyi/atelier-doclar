@@ -12,6 +12,7 @@
     "e2e": "playwright test",
     "e2e:ci": "node ./scripts/ci-e2e-run-shards.mjs",
     "e2e:ci:lifecycle": "node ./scripts/ci-e2e-lifecycle-check.mjs",
+    "e2e:ci:reset-db": "tsx ./scripts/ci-postgres-reset.ts",
     "seed:cleanup": "tsx ./scripts/synthetic-cleanup.ts"
   },
   "engines": {

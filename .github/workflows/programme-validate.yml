@@ -11,6 +11,21 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 300
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: event_os_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d event_os_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -61,16 +76,24 @@ jobs:
           PROGRAMME_ACCESS_TOKEN: ci-control-tower-access-token
           PROGRAMME_SESSION_SECRET: ci-control-tower-session-secret-32b
 
-      # Formal Event OS browser corpus runs as deterministic shards. Each shard is a
-      # separate Playwright process so next-dev webServer starts and terminates between
-      # shards. Do not run the 279-test monolith against one persistent next-dev server.
-      - name: Event OS browser tests (sharded)
+      - name: Bootstrap ephemeral CI Postgres (migrate + synthetic seed)
+        run: pnpm --filter @maison-doclar/event-os exec tsx ./scripts/ci-postgres-reset.ts
+        env:
+          EVENT_OS_CI_POSTGRES: "1"
+          DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/event_os_ci
+          EVENT_OS_ALLOW_FIXTURES: "1"
+
+      # Formal Event OS browser corpus: production build + next start + ephemeral Postgres.
+      # Never next-dev. Each shard resets the ephemeral database and starts a fresh next start.
+      - name: Event OS browser tests (sharded Postgres + next start)
         run: pnpm --filter @maison-doclar/event-os e2e:ci
         timeout-minutes: 240
         env:
+          EVENT_OS_CI_POSTGRES: "1"
+          DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/event_os_ci
           EVENT_OS_ALLOW_FIXTURES: "1"
           CI: "1"
-          EVENT_OS_E2E_HEAP_MB: "3072"
+          EVENT_OS_E2E_HEAP_MB: "2048"
           EVENT_OS_ACCESS_TOKEN: ci-event-os-access-token
           EVENT_OS_SESSION_SECRET: ci-event-os-session-secret-32b
           EVENT_OS_RSVP_PEPPER: ci-event-os-rsvp-pepper-32bytes
