@@ -81,55 +81,57 @@ Not A (wrong source bundle), D (wrong health route), or E (build cache of old bu
 
 ## 5. After correction
 
-### Identity-correction application commit
-`d1ca4a7f4d92031ac236880c0e92f8c290546db4`  
-Subject: `fix(event-os): embed immutable build application SHA at deploy time`
+### Identity-correction application commits
+| Full SHA | Subject |
+|---|---|
+| `d1ca4a7f4d92031ac236880c0e92f8c290546db4` | fix(event-os): embed immutable build application SHA at deploy time |
+| `037f60039a638b0c00b7f6a3e05c8cd364f8b8b5` | fix(event-os): prefer deliberate application SHA over Railway tip |
 
-### Railway deployment
-- ID: `1ac090cf-e3c0-4180-8ecd-d6b2fc0c46a0`
-- status: SUCCESS (2026-09-15 21:24:17 +01:00)
-- reason: CLI upload (`railway up`) with deliberate `EVENT_OS_GIT_SHA` / `EVENT_OS_DOCS_HEAD` set to the identity-correction commit
-- `RAILWAY_GIT_COMMIT_SHA`: unset (upload/archive)
-- `RAILWAY_DEPLOYMENT_ID`: `1ac090cf-e3c0-4180-8ecd-d6b2fc0c46a0`
-- Control Tower: SKIPPED (`368c9c79-0946-4bf3-a769-8859fd2c520c` and prior)
+**Canonical live application SHA (final):** `037f60039a638b0c00b7f6a3e05c8cd364f8b8b5`
+
+### Intermediate regression (documented)
+Setting `EVENT_OS_DOCS_HEAD` alone triggered Git rebuild `86673500-32e2-489a-8bd9-6ad7c36df039`, which embedded `RAILWAY_GIT_COMMIT_SHA=f9cde3681be2d9eb5943c6b0e736222e0f1b93a2` (docs tip) as application identity — collapsing fields. Corrected by preferring deliberate `EVENT_OS_GIT_SHA` for the application embed.
+
+### Final Railway deployment
+- ID: `9d88d3ad-ac21-4832-ba25-298e26792d93`
+- status: SUCCESS (2026-09-15 21:41:18 +01:00)
+- `RAILWAY_GIT_COMMIT_SHA`: `037f60039a638b0c00b7f6a3e05c8cd364f8b8b5`
+- `EVENT_OS_GIT_SHA`: `037f60039a638b0c00b7f6a3e05c8cd364f8b8b5`
+- `EVENT_OS_DOCS_HEAD`: `037f60039a638b0c00b7f6a3e05c8cd364f8b8b5`
+- Control Tower: SKIPPED (`7643893a-fc9e-4180-940b-85d4151518d7`)
 
 ### Bundle proof (build-embedded identity on live container)
-`/app/apps/event-os/src/server/build-identity.generated.ts`:
-
 ```
-export const BUILD_APPLICATION_SHA = "d1ca4a7f4d92031ac236880c0e92f8c290546db4" as const;
+export const BUILD_APPLICATION_SHA = "037f60039a638b0c00b7f6a3e05c8cd364f8b8b5" as const;
 export const BUILD_IDENTITY_SOURCE = "EVENT_OS_GIT_SHA" as const;
-export const BUILD_IDENTITY_CAPTURED_AT = "2026-09-15T20:25:01.617Z" as const;
+export const BUILD_IDENTITY_CAPTURED_AT = "2026-09-15T20:41:40.673Z" as const;
 ```
-
-Captured at build; runtime prefers this over any later stale `EVENT_OS_GIT_SHA`.
 
 ### Before / after health
 
-| Surface | Before | After |
+| Surface | Before correction | After final correction |
 |---|---|---|
-| `/api/health/live` deployedSha | `233afaaf8c3ee6eeca96914657f3af6041867c40` | `d1ca4a7f4d92031ac236880c0e92f8c290546db4` |
-| `/api/health/ready` deployedSha | `233afaaf8c3ee6eeca96914657f3af6041867c40` | `d1ca4a7f4d92031ac236880c0e92f8c290546db4` |
-| applicationSha | (collapsed into deployedSha) | `d1ca4a7f4d92031ac236880c0e92f8c290546db4` |
-| deploymentSourceSha | n/a | `null` (upload/archive; no Railway Git revision) |
-| documentationHead | n/a | `d1ca4a7f4d92031ac236880c0e92f8c290546db4` (declared via `EVENT_OS_DOCS_HEAD`) |
-| buildIdentitySource | (env pin only) | `EVENT_OS_GIT_SHA` (embedded at build from deliberate pin) |
+| `/api/health/live` deployedSha | `233afaaf8c3ee6eeca96914657f3af6041867c40` | `037f60039a638b0c00b7f6a3e05c8cd364f8b8b5` |
+| `/api/health/ready` deployedSha | `233afaaf8c3ee6eeca96914657f3af6041867c40` | `037f60039a638b0c00b7f6a3e05c8cd364f8b8b5` |
+| applicationSha | collapsed into stale pin | `037f60039a638b0c00b7f6a3e05c8cd364f8b8b5` |
+| deploymentSourceSha | n/a | `037f60039a638b0c00b7f6a3e05c8cd364f8b8b5` |
+| documentationHead | n/a | `037f60039a638b0c00b7f6a3e05c8cd364f8b8b5` |
+| buildIdentitySource | env pin only | `EVENT_OS_GIT_SHA` |
 | productionAuthorised | false | false |
 
+Prior successful identity deploy (upload path): `1ac090cf-e3c0-4180-8ecd-d6b2fc0c46a0` with application `d1ca4a7f4d92031ac236880c0e92f8c290546db4` — superseded by priority-fix deploy above.
+
 ### System page (authenticated `/app/admin/system`)
-- Deployed SHA: `d1ca4a7f4d92031ac236880c0e92f8c290546db4`
-- Application SHA: `d1ca4a7f4d92031ac236880c0e92f8c290546db4`
-- Documentation HEAD: `d1ca4a7f4d92031ac236880c0e92f8c290546db4`
-- Agreement with live + ready: **YES** (all three surfaces identical for application SHA)
+- Deployed SHA: `037f60039a638b0c00b7f6a3e05c8cd364f8b8b5`
+- Application SHA: `037f60039a638b0c00b7f6a3e05c8cd364f8b8b5`
+- Agreement with live + ready: **YES**
 
 ### Focused identity tests
 Command: `npx tsx --test test/build-identity.test.ts` (apps/event-os)
 
-- tests: 7
-- pass: 7
+- tests: 8
+- pass: 8
 - fail: 0
-
-Covers: identity present; live/ready/System contract fields; stale env cannot override known build SHA; upload-deploy deliberate SHA; documentation HEAD separate; productionAuthorised untouched by identity resolution.
 
 ### Live smoke after identity deploy
 Command: `PLAYWRIGHT_LIVE=1` Playwright `e2e/eos-s06a-live-smoke.spec.ts` via `railway run` (one worker)
@@ -140,13 +142,11 @@ Command: `PLAYWRIGHT_LIVE=1` Playwright `e2e/eos-s06a-live-smoke.spec.ts` via `r
 - CEO audit filter + auditor non-mutation — PASS
 - **4 passed / 0 failed**
 
-Smoke assertion hardened to wait for status-specific first answer so a prior EXPLAIN_BLOCK receipt cannot satisfy the first capture (test-only; no application redeploy required).
-
 ### Runtime posture
-POSTGRES · migrations APPLIED · `productionAuthorised: false` · adapters INACTIVE (COMMUNICATIONS INACTIVE) · fixtures allowed · non-production fixture IdP.
+POSTGRES · migrations APPLIED · `productionAuthorised: false` · adapters INACTIVE · fixtures allowed · non-production fixture IdP.
 
 ### Disposition
 - Wrong application was **not** deployed on `d8b0f112…`; only the identity field was stale (**B + C**).
-- Identity contract corrected on `1ac090cf…` with immutable build-embedded application SHA.
+- Identity contract corrected; deliberate application pin preferred over Railway tip.
 - **EOS-S06A remains NOT ACCEPTED.**
 - Claude: **not run.**

@@ -41,9 +41,9 @@ Synthetic only. No provider activation. Control Tower SKIPPED.
 ## Deployment-identity correction
 
 - `IDENTITY_ADDENDUM.md` — full SHA chain, root cause B+C, before/after health, bundle proof, tests, smoke
-- Correction commit / live application SHA: `d1ca4a7f4d92031ac236880c0e92f8c290546db4`
-- Railway event-os deployment: `1ac090cf-e3c0-4180-8ecd-d6b2fc0c46a0` SUCCESS
-- Focused identity tests: 7/7 PASS (`apps/event-os/test/build-identity.test.ts`)
+- Canonical live application SHA: `037f60039a638b0c00b7f6a3e05c8cd364f8b8b5`
+- Railway event-os deployment: `9d88d3ad-ac21-4832-ba25-298e26792d93` SUCCESS
+- Focused identity tests: 8/8 PASS (`apps/event-os/test/build-identity.test.ts`)
 - Live smoke re-run after identity deploy: 4/4 PASS
 - Control Tower: SKIPPED
 - Claude: not run
