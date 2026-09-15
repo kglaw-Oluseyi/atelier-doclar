@@ -42,14 +42,23 @@ export function AtelierCommandWorkspace({
   taskQuery: string;
   taskDomain: string;
 }) {
-  const latestPlan = [...workspace.plans].sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+  const latestPlan = [...workspace.plans].sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))[0];
   const latestSteps = latestPlan
     ? workspace.planSteps.filter((step) => step.planId === latestPlan.id).sort((a, b) => a.ordinal - b.ordinal)
     : [];
-  const latestInstruction = [...workspace.instructions].sort((a, b) => b.sequence - a.sequence)[0];
-  const latestReceipt = [...workspace.receipts].sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
-  const intelligence = latestReceipt?.intelligenceResult;
-  const settlements = [...workspace.receipts].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 12);
+  const latestInstruction = [...workspace.instructions].sort(
+    (a, b) => b.sequence - a.sequence || b.createdAt.localeCompare(a.createdAt),
+  )[0];
+  const latestReceipt = [...workspace.receipts]
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))
+    .find((receipt) => !latestPlan || !receipt.planId || receipt.planId === latestPlan.id || receipt.instructionId === latestInstruction?.id)
+    ?? [...workspace.receipts].sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))[0];
+  // Prefer the newest intelligence-bearing receipt so a later answer is never masked by an older one.
+  const intelligenceReceipt = [...workspace.receipts]
+    .filter((receipt) => receipt.intelligenceResult?.answer)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))[0];
+  const intelligence = intelligenceReceipt?.intelligenceResult ?? latestReceipt?.intelligenceResult;
+  const settlements = [...workspace.receipts].sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id)).slice(0, 12);
 
   return (
     <div className="atelier-command" data-testid="atelier-command-workspace">
