@@ -12,6 +12,7 @@ import {
   type SessionConfig,
   type VendorAccessConfig,
 } from "@maison-doclar/shared-platform";
+import { currentApplicationIdentity } from "./build-identity";
 
 const DEV_TOKEN = "event-os-access-token-not-for-production";
 const DEV_SECRET = "event-os-session-secret-not-for-production-32";
@@ -58,12 +59,13 @@ export function accessAuthority(): AccessAuthority {
   });
 }
 
+/** Truthful immutable application SHA for this running Event OS bundle. */
 export function deployedSha(): string {
-  return (
-    runtimeEnv("RAILWAY_GIT_COMMIT_SHA") ??
-    runtimeEnv("EVENT_OS_GIT_SHA") ??
-    "local-unreleased"
-  );
+  return currentApplicationIdentity().deployedSha;
+}
+
+export function applicationIdentity() {
+  return currentApplicationIdentity();
 }
 
 export function rsvpAccessConfig(): RsvpAccessConfig {

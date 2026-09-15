@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { deployedSha, fixturesAllowed, productionAuthorised } from "../../../../server/config";
+import { applicationIdentity, deployedSha, fixturesAllowed, productionAuthorised } from "../../../../server/config";
 import { createLayoutBinaryStoreFromEnv, probeLayoutAssetStore } from "../../../../server/layout-s3-store";
 import { ensureRuntime } from "../../../../server/runtime";
 
 export async function GET(): Promise<Response> {
+  const identity = applicationIdentity();
   try {
     const runtime = await ensureRuntime();
     const layoutAssetStore = await probeLayoutAssetStore(createLayoutBinaryStoreFromEnv());
@@ -19,6 +20,10 @@ export async function GET(): Promise<Response> {
       productionAuthorised: productionAuthorised(),
       productionIdpSelected: false,
       deployedSha: deployedSha(),
+      applicationSha: identity.applicationSha,
+      deploymentSourceSha: identity.deploymentSourceSha,
+      documentationHead: identity.documentationHead,
+      buildIdentitySource: identity.buildIdentitySource,
       layoutAssetStore,
       layoutExport: layoutAssetStore === "READY" ? "READY" : layoutAssetStore,
       s05aInterviewCorpus: s05a.interviewCorpusEdition,
@@ -53,6 +58,10 @@ export async function GET(): Promise<Response> {
         productionAuthorised: false,
         productionIdpSelected: false,
         deployedSha: deployedSha(),
+        applicationSha: identity.applicationSha,
+        deploymentSourceSha: identity.deploymentSourceSha,
+        documentationHead: identity.documentationHead,
+        buildIdentitySource: identity.buildIdentitySource,
         layoutAssetStore: "UNAVAILABLE",
         layoutExport: "UNAVAILABLE",
         bootFailure: `${code}: ${message}`,

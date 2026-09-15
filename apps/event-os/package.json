@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --port 3020",
+    "prebuild": "node ./scripts/write-build-identity.mjs",
     "build": "next build",
     "start": "next start --port ${PORT:-3020}",
     "typecheck": "tsc --noEmit",
