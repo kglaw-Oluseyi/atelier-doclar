@@ -117,34 +117,50 @@ async function writeMissingEventResult(input: {
   redirect(resultHref("/app/events", input.actor.correlationId));
 }
 
-export async function runTrustedSeatingAction(input: {
+export type EstablishTrustedSeatingResult =
+  | { ok: true; context: TrustedSeatingActionContext }
+  | { ok: false; actor: ActorContext; reason: "NOT_FOUND"; error: PlatformError }
+  | {
+      ok: false;
+      actor: ActorContext;
+      reason: "DENIED";
+      error: unknown;
+      eventId: string;
+      organisationId: string;
+      scopePath: `/app/events/${string}/seating`;
+    };
+
+/**
+ * Authenticate exactly once and derive seating organisation/event/assignment authority from
+ * boundEventId + server session. FormData never supplies authority (tripwire only).
+ */
+export async function establishTrustedSeatingContext(input: {
   boundEventId: string;
-  prev: ProtectionFormState;
   formData: FormData;
   permission: PermissionKey;
-  actionType: string;
-  parse?: (formData: FormData) => { success: true; data?: unknown } | { success: false; fieldErrors: ProtectionFieldErrors };
-  execute: (context: TrustedSeatingActionContext, formData: FormData) => Promise<{ id?: string } | void>;
-  subjectFromForm?: (formData: FormData) => { subjectId?: string; attemptedVersion?: number } | undefined;
-}): Promise<ProtectionFormState> {
+}): Promise<EstablishTrustedSeatingResult> {
   const { actor } = await requireActor();
   const runtime = getRuntime();
   const event = runtime.store.loadEventById(input.boundEventId);
   if (!event) {
-    return writeMissingEventResult({ actor, actionType: input.actionType });
+    return {
+      ok: false,
+      actor,
+      reason: "NOT_FOUND",
+      error: new PlatformError("NOT_FOUND", "event was not found"),
+    };
   }
   const people = runtime.service.resolveActor(actor.personId);
   const now = actor.now ?? new Date().toISOString();
   if (!canSeeEvent(people, event, now)) {
-    return writeMissingEventResult({ actor, actionType: input.actionType });
+    return {
+      ok: false,
+      actor,
+      reason: "NOT_FOUND",
+      error: new PlatformError("NOT_FOUND", "event was not found"),
+    };
   }
   const scopePath = `/app/events/${event.id}/seating` as const;
-  const trustedScope = {
-    eventId: event.id,
-    organisationId: event.organisationId,
-    scopePath,
-  };
-  let context: TrustedSeatingActionContext | undefined;
   try {
     const assignment = resolveTrustedSeatingAssignment(people, event, now);
     if (!seatingAssignmentAllowsPermission(people, assignment, input.permission)) denied();
@@ -159,43 +175,87 @@ export async function runTrustedSeatingAction(input: {
     };
     assertScopeTripwire(input.formData, scope);
     const concurrency = concurrencyFromForm(input.formData);
-    context = {
-      actor,
-      event,
-      scope,
-      correlationId: actor.correlationId,
-      envelope: {
-        organisationId: scope.organisationId,
-        eventId: scope.eventId,
-        actorAssignmentId: scope.assignmentId,
-        idempotencyKey: submitted(input.formData, "idempotencyKey"),
-        ...concurrency,
+    return {
+      ok: true,
+      context: {
+        actor,
+        event,
+        scope,
+        correlationId: actor.correlationId,
+        envelope: {
+          organisationId: scope.organisationId,
+          eventId: scope.eventId,
+          actorAssignmentId: scope.assignmentId,
+          idempotencyKey: submitted(input.formData, "idempotencyKey"),
+          ...concurrency,
+        },
       },
     };
   } catch (error) {
+    return {
+      ok: false,
+      actor,
+      reason: "DENIED",
+      error,
+      eventId: event.id,
+      organisationId: event.organisationId,
+      scopePath,
+    };
+  }
+}
+
+export async function runTrustedSeatingAction(input: {
+  boundEventId: string;
+  prev: ProtectionFormState;
+  formData: FormData;
+  permission: PermissionKey;
+  actionType: string;
+  parse?: (formData: FormData) => { success: true; data?: unknown } | { success: false; fieldErrors: ProtectionFieldErrors };
+  execute: (context: TrustedSeatingActionContext, formData: FormData) => Promise<{ id?: string } | void>;
+  subjectFromForm?: (formData: FormData) => { subjectId?: string; attemptedVersion?: number } | undefined;
+}): Promise<ProtectionFormState> {
+  const established = await establishTrustedSeatingContext({
+    boundEventId: input.boundEventId,
+    formData: input.formData,
+    permission: input.permission,
+  });
+  if (!established.ok && established.reason === "NOT_FOUND") {
+    return writeMissingEventResult({ actor: established.actor, actionType: input.actionType });
+  }
+  if (!established.ok) {
     return runProtectionFormAction({
       prev: input.prev,
       formData: input.formData,
-      scopePath,
+      scopePath: established.scopePath,
       actionType: input.actionType,
-      actor,
-      trustedScope,
+      actor: established.actor,
+      trustedScope: {
+        eventId: established.eventId,
+        organisationId: established.organisationId,
+        scopePath: established.scopePath,
+      },
       parse: () => ({ success: true as const }),
       execute: async () => {
-        throw error;
+        throw established.error;
       },
     });
   }
+  const context = established.context;
+  const trustedScope = {
+    eventId: context.event.id,
+    organisationId: context.event.organisationId,
+    scopePath: context.scope.scopePath,
+  };
   return runProtectionFormAction({
     prev: input.prev,
     formData: input.formData,
-    scopePath,
+    scopePath: context.scope.scopePath,
     actionType: input.actionType,
-    actor,
+    actor: context.actor,
     trustedScope,
     parse: input.parse ?? parseIdempotency,
     subjectFromForm: input.subjectFromForm,
     execute: async (authenticatedActor, formData) =>
-      input.execute({ ...context!, actor: authenticatedActor, correlationId: authenticatedActor.correlationId }, formData),
+      input.execute({ ...context, actor: authenticatedActor, correlationId: authenticatedActor.correlationId }, formData),
   });
 }

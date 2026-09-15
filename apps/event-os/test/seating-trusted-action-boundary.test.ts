@@ -57,6 +57,9 @@ describe("MD-PR-S075 Packet 2 Event OS trusted action boundary (red)", () => {
     assert.equal(/async function sessionEnvelope\(formData: FormData\)/.test(seatingActions), false);
     assert.equal(seatingActions.includes("requireActor()"), false);
     assert.equal(verifyAsAction.includes("await requireActor()"), false);
+    assert.match(seatingActions, /recoverProposeSeatingLayoutBindingAction[\s\S]*?establishTrustedSeatingContext\(/);
+    assert.equal(/recoverProposeSeatingLayoutBindingAction[\s\S]*?field\(formData, "organisationId"\)/.test(seatingActions), false);
+    assert.equal(/recoverProposeSeatingLayoutBindingAction[\s\S]*?field\(formData, "eventId"\)/.test(seatingActions), false);
   });
 
   it("16. Verify-as requires seating.fixture_verify_as, bound event and the one-way CEO fallback", () => {
