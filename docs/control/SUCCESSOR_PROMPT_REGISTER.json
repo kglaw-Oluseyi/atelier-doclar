@@ -8,7 +8,7 @@
       "native_id": "FC1",
       "slice_id": "MD-FC1",
       "product": "FOUNDATION",
-      "title": "Foundation Closeout — Control Tower Reconciliation",
+      "title": "Foundation Closeout \u2014 Control Tower Reconciliation",
       "authorising_instruction": "CEO-authorised Foundation closeout following independent AI CTO technical review"
     },
     {
@@ -72,7 +72,7 @@
       "native_id": "S03",
       "slice_id": "EOS-S03",
       "product": "EVENT_OS",
-      "title": "Event OS Slice 3 — RSVP and Guest Self-Service",
+      "title": "Event OS Slice 3 \u2014 RSVP and Guest Self-Service",
       "authorising_instruction": "CEO-authorised EOS-S03 execution wrapper; historical Slice 3 pack executed as one governed RSVP/self-service slice; do not accept EOS-S03 or authorise production"
     },
     {
@@ -81,22 +81,22 @@
       "slice_id": "EOS-S03",
       "product": "EVENT_OS",
       "title": "EOS-S03 Formal Technical Acceptance Record",
-      "authorising_instruction": "Record formal technical acceptance of EOS-S03 after independent AI CTO review; do not start EOS-S04 implementation or authorise production; next action is Event OS S01–S03 live-verification milestone"
+      "authorising_instruction": "Record formal technical acceptance of EOS-S03 after independent AI CTO review; do not start EOS-S04 implementation or authorise production; next action is Event OS S01\u2013S03 live-verification milestone"
     },
     {
       "prompt_control_id": "MD-PR-S012",
       "native_id": "EOS-LV1",
       "slice_id": "EOS-S03",
       "product": "EVENT_OS",
-      "title": "Event OS S01–S03 Controlled Live Deployment and Milestone Verification",
-      "authorising_instruction": "Deploy accepted Event OS S01–S03 to Railway project atelier-doclar for controlled non-production live verification; do not implement EOS-S04 or authorise production; CEO human verification remains PENDING until the user reports"
+      "title": "Event OS S01\u2013S03 Controlled Live Deployment and Milestone Verification",
+      "authorising_instruction": "Deploy accepted Event OS S01\u2013S03 to Railway project atelier-doclar for controlled non-production live verification; do not implement EOS-S04 or authorise production; CEO human verification remains PENDING until the user reports"
     },
     {
       "prompt_control_id": "MD-PR-S013",
       "native_id": "EOS-HV1",
       "slice_id": "EOS-S03",
       "product": "EVENT_OS",
-      "title": "Event OS S01–S03 CEO Human Live-Verification Closeout",
+      "title": "Event OS S01\u2013S03 CEO Human Live-Verification Closeout",
       "authorising_instruction": "Record CEO human live verification PASS WITH MINOR REFINEMENTS after the completed walkthrough; do not implement EOS-S04, reopen EOS-S03, mutate Railway, or authorise production"
     },
     {
@@ -105,14 +105,14 @@
       "slice_id": "EOS-S04",
       "product": "EVENT_OS",
       "title": "Event OS S04 Canonical Scope Reconciliation",
-      "authorising_instruction": "Reconcile native S4-01–S4-62 against accepted S01–S03 and HV-EOS-001–005; do not implement EOS-S04, change S04 from READY, mutate Railway, or authorise production"
+      "authorising_instruction": "Reconcile native S4-01\u2013S4-62 against accepted S01\u2013S03 and HV-EOS-001\u2013005; do not implement EOS-S04, change S04 from READY, mutate Railway, or authorise production"
     },
     {
       "prompt_control_id": "MD-PR-S015",
       "native_id": "S4-01-S4-62",
       "slice_id": "EOS-S04",
       "product": "EVENT_OS",
-      "title": "Event OS Slice 4 — Guest Communications and Concierge",
+      "title": "Event OS Slice 4 \u2014 Guest Communications and Concierge",
       "authorising_instruction": "Implement EOS-S04 only; synthetic delivery; no Railway; no real guest contact; do not accept S04, deploy, or start EOS-S05"
     },
     {
@@ -129,15 +129,15 @@
       "slice_id": "EOS-S04A",
       "product": "EVENT_OS",
       "title": "EOS-S04A Formal Technical Acceptance Record",
-      "authorising_instruction": "Record formal technical acceptance of EOS-S04A after independent AI CTO review and Claude-in-Chrome focused verification; do not start EOS-S04B–F or EOS-S05, invent catalogue acceptance, or authorise production"
+      "authorising_instruction": "Record formal technical acceptance of EOS-S04A after independent AI CTO review and Claude-in-Chrome focused verification; do not start EOS-S04B\u2013F or EOS-S05, invent catalogue acceptance, or authorise production"
     },
     {
       "prompt_control_id": "MD-PR-S018",
       "native_id": "S04B",
       "slice_id": "EOS-S04B",
       "product": "EVENT_OS",
-      "title": "EOS-S04B — Multi-Phase Events, Arrival Routing & Perimeter Access",
-      "authorising_instruction": "CEO ratification of the EOS-S04B Cursor prompt pack as controlling implementation pack, subject to the 2026-09-07 authority overlay; implement the first complete deployable vertical; push and deploy affected atelier-doclar services; do not start EOS-S04C–F or EOS-S05, invent catalogue acceptance, or authorise production"
+      "title": "EOS-S04B \u2014 Multi-Phase Events, Arrival Routing & Perimeter Access",
+      "authorising_instruction": "CEO ratification of the EOS-S04B Cursor prompt pack as controlling implementation pack, subject to the 2026-09-07 authority overlay; implement the first complete deployable vertical; push and deploy affected atelier-doclar services; do not start EOS-S04C\u2013F or EOS-S05, invent catalogue acceptance, or authorise production"
     },
     {
       "prompt_control_id": "MD-PR-S019",
@@ -145,15 +145,15 @@
       "slice_id": "EOS-S04B",
       "product": "EVENT_OS",
       "title": "EOS-S04B Formal Technical Acceptance Record",
-      "authorising_instruction": "Record formal technical acceptance of EOS-S04B after independent AI CTO review, Claude-in-Chrome first-vertical verification and accessibility/responsive remediation; do not start EOS-S04C–F or EOS-S05, invent catalogue acceptance, or authorise production"
+      "authorising_instruction": "Record formal technical acceptance of EOS-S04B after independent AI CTO review, Claude-in-Chrome first-vertical verification and accessibility/responsive remediation; do not start EOS-S04C\u2013F or EOS-S05, invent catalogue acceptance, or authorise production"
     },
     {
       "prompt_control_id": "MD-PR-S020",
       "native_id": "S04C",
       "slice_id": "EOS-S04C",
       "product": "EVENT_OS",
-      "title": "EOS-S04C — Aso-Ebi, Aso-Oke & Event Merchandise Coordination",
-      "authorising_instruction": "CEO ratification of the EOS-S04C controlled slice and Cursor prompt packs as controlling requirements and implementation packs, subject to the 2026-09-07 authority overlay; implement P00–P11; push and deploy affected atelier-doclar services; do not start EOS-S04D–F or EOS-S05, invent catalogue acceptance, or authorise production"
+      "title": "EOS-S04C \u2014 Aso-Ebi, Aso-Oke & Event Merchandise Coordination",
+      "authorising_instruction": "CEO ratification of the EOS-S04C controlled slice and Cursor prompt packs as controlling requirements and implementation packs, subject to the 2026-09-07 authority overlay; implement P00\u2013P11; push and deploy affected atelier-doclar services; do not start EOS-S04D\u2013F or EOS-S05, invent catalogue acceptance, or authorise production"
     },
     {
       "prompt_control_id": "MD-PR-S021",
@@ -161,15 +161,15 @@
       "slice_id": "EOS-S04C",
       "product": "EVENT_OS",
       "title": "EOS-S04C Formal Technical Acceptance Record",
-      "authorising_instruction": "Record formal technical acceptance of EOS-S04C after independent AI CTO review and Claude-in-Chrome verification through the guest-renewal false-success correction; do not start EOS-S04D–F or EOS-S05, invent catalogue acceptance, or authorise production"
+      "authorising_instruction": "Record formal technical acceptance of EOS-S04C after independent AI CTO review and Claude-in-Chrome verification through the guest-renewal false-success correction; do not start EOS-S04D\u2013F or EOS-S05, invent catalogue acceptance, or authorise production"
     },
     {
       "prompt_control_id": "MD-PR-S022",
       "native_id": "S04D",
       "slice_id": "EOS-S04D",
       "product": "EVENT_OS",
-      "title": "EOS-S04D — Attendance Forecasting & Planning Intelligence",
-      "authorising_instruction": "CEO ratification of the EOS-S04D controlled slice and Cursor prompt packs as controlling requirements and implementation packs, subject to the 2026-09-07 authority overlay; implement P00–P11; push and deploy affected atelier-doclar Event OS; do not start EOS-S04E–F or EOS-S05, invent catalogue acceptance, or authorise production"
+      "title": "EOS-S04D \u2014 Attendance Forecasting & Planning Intelligence",
+      "authorising_instruction": "CEO ratification of the EOS-S04D controlled slice and Cursor prompt packs as controlling requirements and implementation packs, subject to the 2026-09-07 authority overlay; implement P00\u2013P11; push and deploy affected atelier-doclar Event OS; do not start EOS-S04E\u2013F or EOS-S05, invent catalogue acceptance, or authorise production"
     },
     {
       "prompt_control_id": "MD-PR-S023",
@@ -177,15 +177,15 @@
       "slice_id": "EOS-S04D",
       "product": "EVENT_OS",
       "title": "EOS-S04D Formal Technical Acceptance Record",
-      "authorising_instruction": "Record formal technical acceptance of EOS-S04D after independent AI CTO review, Claude-in-Chrome verification and action-result / ACA-S04D / phase-labelling remediation; do not start EOS-S04E–F or EOS-S05, invent catalogue acceptance, or authorise production"
+      "authorising_instruction": "Record formal technical acceptance of EOS-S04D after independent AI CTO review, Claude-in-Chrome verification and action-result / ACA-S04D / phase-labelling remediation; do not start EOS-S04E\u2013F or EOS-S05, invent catalogue acceptance, or authorise production"
     },
     {
       "prompt_control_id": "MD-PR-S024",
       "native_id": "S04E",
       "slice_id": "EOS-S04E",
       "product": "EVENT_OS",
-      "title": "EOS-S04E — Maison Doclar Private Event Atelier: Event Blueprint, Journey & Host Experience",
-      "authorising_instruction": "CEO ratification of the EOS-S04E controlled slice and Cursor prompt packs as controlling requirements and implementation packs, subject to the 2026-09-07 authority overlay; implement P00–P11; push and deploy affected atelier-doclar Event OS; do not start EOS-S04F or EOS-S05, invent catalogue acceptance, or authorise production"
+      "title": "EOS-S04E \u2014 Maison Doclar Private Event Atelier: Event Blueprint, Journey & Host Experience",
+      "authorising_instruction": "CEO ratification of the EOS-S04E controlled slice and Cursor prompt packs as controlling requirements and implementation packs, subject to the 2026-09-07 authority overlay; implement P00\u2013P11; push and deploy affected atelier-doclar Event OS; do not start EOS-S04F or EOS-S05, invent catalogue acceptance, or authorise production"
     },
     {
       "prompt_control_id": "MD-PR-S025",
@@ -200,8 +200,8 @@
       "native_id": "S04F",
       "slice_id": "EOS-S04F",
       "product": "EVENT_OS",
-      "title": "EOS-S04F — Language, Cultural Text & Multilingual Editions",
-      "authorising_instruction": "CEO ratification of the EOS-S04F controlled slice and Cursor prompt packs as controlling requirements and implementation packs, subject to the 2026-09-07 authority overlay; implement P00–P11; push and deploy affected atelier-doclar Event OS; do not start EOS-S05, invent catalogue acceptance, or authorise production"
+      "title": "EOS-S04F \u2014 Language, Cultural Text & Multilingual Editions",
+      "authorising_instruction": "CEO ratification of the EOS-S04F controlled slice and Cursor prompt packs as controlling requirements and implementation packs, subject to the 2026-09-07 authority overlay; implement P00\u2013P11; push and deploy affected atelier-doclar Event OS; do not start EOS-S05, invent catalogue acceptance, or authorise production"
     },
     {
       "prompt_control_id": "MD-PR-S027",
@@ -241,7 +241,7 @@
       "slice_id": "EOS-S05",
       "product": "EVENT_OS",
       "title": "EOS-S05 Milestone 4 Production Completion, Hardening and Slice Qualification",
-      "authorising_instruction": "Complete EOS-S05 production asset pipeline, export, hardening and qualification on the MD-PR-S028–S030 contracts; push and deploy event-os only; do not start EOS-S06, invent catalogue acceptance, run Claude-in-Chrome, or authorise production"
+      "authorising_instruction": "Complete EOS-S05 production asset pipeline, export, hardening and qualification on the MD-PR-S028\u2013S030 contracts; push and deploy event-os only; do not start EOS-S06, invent catalogue acceptance, run Claude-in-Chrome, or authorise production"
     },
     {
       "prompt_control_id": "MD-PR-S032",
@@ -289,7 +289,7 @@
       "slice_id": "EOS-S01-S05",
       "product": "EVENT_OS",
       "title": "Event OS cross-slice UX quality uplift",
-      "authorising_instruction": "Implement the authorised UX uplift across accepted EOS-S01–EOS-S05 surfaces only. Do not consume MD-PR-S036, start EOS-S06, change accepted-slice count, or authorise production."
+      "authorising_instruction": "Implement the authorised UX uplift across accepted EOS-S01\u2013EOS-S05 surfaces only. Do not consume MD-PR-S036, start EOS-S06, change accepted-slice count, or authorise production."
     },
     {
       "prompt_control_id": "MD-PR-S037",
@@ -330,6 +330,14 @@
       "product": "EVENT_OS",
       "title": "EOS-S06 Formal Technical Acceptance Record",
       "authorising_instruction": "Record independent AI CTO acceptance of EOS-S06 seating allocation at application SHA 42b0bb3f0976ca2b745a09f3952680afef69a1b9; documentation/governance only; current product gate green with extended historical regression retained as controlled debt; do not change application or test code, mutate data, redeploy Event OS or Control Tower, unpack or start EOS-S06A, start EOS-S07, rerun CI, or authorise production"
+    },
+    {
+      "prompt_control_id": "MD-PR-S078",
+      "native_id": "S06A-IMPL",
+      "slice_id": "EOS-S06A",
+      "product": "EVENT_OS",
+      "title": "EOS-S06A Atelier Command Implementation Authority and Delivery",
+      "authorising_instruction": "Implement the ratified EOS-S06A Atelier Command pack including three capabilities and Task Bank on repository kglaw-Oluseyi/atelier-doclar main; Railway atelier-doclar production event-os only; keep productionAuthorised:false; do not deploy Control Tower; do not start EOS-S07; do not accept EOS-S06A without independent verification"
     }
   ]
 }
