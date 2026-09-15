@@ -25,3 +25,15 @@ Fixture naming ambiguity: person `…042` displayName is “Event Director” wh
 ## Claude continuation
 
 `docs/control/eos-s06a/EOS_S06A_REMEDIATION_1_CLAUDE_CONTINUATION_PROMPT.md` — prepared; not auto-run.
+
+## Live smoke (post-remediation)
+
+Command: `PLAYWRIGHT_LIVE=1` Playwright `e2e/eos-s06a-live-smoke.spec.ts` via `railway run` (one worker)
+
+- two Intelligence answers + reload persistence — PASS
+- named cross-event refusal — PASS
+- R4 send remains blocked / not claimed as real send — PASS
+- CEO audit filter + auditor non-mutation — PASS
+- 4 passed / 0 failed
+
+Synthetic only. No provider activation. Control Tower SKIPPED.
