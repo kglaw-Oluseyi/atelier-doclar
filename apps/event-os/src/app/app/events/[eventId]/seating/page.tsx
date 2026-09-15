@@ -1019,9 +1019,22 @@ export default async function EventSeatingPage({
           </ProtectionMutationForm>
         ) : null}
         {permissions.exportJob ? (
-          <ProtectionMutationForm action={requestSeatingExportAction.bind(null, event.id)} className="atelier-form seating-form" testId="seating-export">
-            <Envelope fields={{ ...envelopeFields, publicationId: publication?.id ?? "", editionId: working?.id ?? "" }} />
-            <IdempotencyField />
+          <ProtectionMutationForm
+            key={`seating-export-${presented.correlationId ?? "idle"}`}
+            action={requestSeatingExportAction.bind(null, event.id)}
+            className="atelier-form seating-form"
+            testId="seating-export"
+          >
+            <Envelope
+              fields={{
+                ...envelopeFields,
+                publicationId: publication?.id ?? "",
+                editionId: working?.id ?? "",
+                // Server-minted key: avoids client IdempotencyField SSR/reuse mismatch on
+                // identical READY-export replay navigations (React #418).
+                idempotencyKey: crypto.randomUUID(),
+              }}
+            />
             <fieldset>
               <legend>Request a seating export</legend>
               <label>

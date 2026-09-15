@@ -34,10 +34,13 @@ describe("EOS-S06 Claude remediation surface copy", () => {
     assert.match(seatingPage, /Ask an authorised planner or director/);
   });
 
-  it("DEF-04 nav is permission-gated for Access and Event Command", () => {
+  it("DEF-04 nav is permission-gated for Access, Audit and Event Command", () => {
     assert.match(shell, /executiveCommand\.view/);
     assert.match(shell, /platform\.access\.administer/);
+    assert.match(shell, /permission: "platform\.audit\.read_all"/);
+    assert.equal(shell.includes('permission: "platform.audit.read_operational"'), false);
     assert.match(shell, /canOpenCommand/);
     assert.match(shell, /canOpenAccess/);
+    assert.match(shell, /canOpenAudit/);
   });
 });

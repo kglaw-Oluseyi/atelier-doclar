@@ -74,23 +74,53 @@ test("DEF-03 Studio Tables empty or populated state is truthful", async ({ page 
   }
 });
 
-test("DEF-04 Director and Planner nav hide Access and Event Command dead ends", async ({ page }) => {
+test("DEF-04 Director and Planner nav hide Access, Audit and Event Command dead ends", async ({ page }) => {
   test.setTimeout(90_000);
   const staffNav = page.getByRole("navigation", { name: "Staff" });
   await loginAs(page, "director");
   await page.goto("/app");
   await expect(staffNavIdentity(page)).toBeVisible();
   await expect(staffNav.getByRole("link", { name: "Access" })).toHaveCount(0);
+  await expect(staffNav.getByRole("link", { name: "Audit" })).toHaveCount(0);
   await expect(staffNav.getByRole("link", { name: "Event Command" })).toHaveCount(0);
+  await expect(page.getByTestId("home-executive-command")).toHaveCount(0);
   await page.goto(ACCESS);
   await expect(page.getByText(/cannot administer access|FORBIDDEN|This assignment/i)).toBeVisible({ timeout: 20_000 });
+  await page.goto("/app/admin/audit");
+  await expect(page.getByText(/cannot view the audit ledger|FORBIDDEN|This assignment/i)).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByTestId("audit-ledger")).toHaveCount(0);
   await page.goto(COMMAND);
   await expect(page.getByText(/cannot|FORBIDDEN|This assignment|not authorised|not authorized/i)).toBeVisible({ timeout: 20_000 });
 
   await loginAs(page, "planner");
   await page.goto("/app");
   await expect(staffNav.getByRole("link", { name: "Access" })).toHaveCount(0);
+  await expect(staffNav.getByRole("link", { name: "Audit" })).toHaveCount(0);
   await expect(staffNav.getByRole("link", { name: "Event Command" })).toHaveCount(0);
+  await expect(page.getByTestId("home-executive-command")).toHaveCount(0);
+  await page.goto("/app/admin/audit");
+  await expect(page.getByText(/cannot view the audit ledger|FORBIDDEN|This assignment/i)).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByTestId("audit-ledger")).toHaveCount(0);
+});
+
+test("CEO and Auditor retain Executive Ledger; CEO sees Executive Command home card", async ({ page }) => {
+  test.setTimeout(90_000);
+  const staffNav = page.getByRole("navigation", { name: "Staff" });
+  await loginAs(page, "ceo");
+  await page.goto("/app");
+  await expect(page.getByTestId("home-executive-command")).toBeVisible();
+  await expect(staffNav.getByRole("link", { name: "Audit" })).toBeVisible();
+  await page.goto("/app/admin/audit");
+  await expect(page.getByRole("heading", { name: "Audit" })).toBeVisible();
+  await expect(page.getByTestId("audit-ledger").or(page.getByText(/No audit events are visible/i))).toBeVisible();
+
+  await loginAs(page, "auditor");
+  await page.goto("/app");
+  await expect(staffNav.getByRole("link", { name: "Audit" })).toBeVisible();
+  await expect(page.getByTestId("home-executive-command")).toHaveCount(0);
+  await page.goto("/app/admin/audit");
+  await expect(page.getByRole("heading", { name: "Audit" })).toBeVisible();
+  await expect(page.getByTestId("audit-ledger").or(page.getByText(/No audit events are visible/i))).toBeVisible();
 });
 
 test("Auditor direct seating mutation controls remain absent", async ({ page }) => {

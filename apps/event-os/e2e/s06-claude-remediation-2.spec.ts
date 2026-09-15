@@ -22,6 +22,69 @@ test("remediation2 governing list shows one authoritative KEEP_APART authority",
   await expect(activateOnAlreadyActive).toHaveCount(0);
 });
 
+test("remediation2 identical export resubmit reuses READY without React #418", async ({ page }) => {
+  test.setTimeout(180_000);
+  const pageErrors: string[] = [];
+  page.on("pageerror", (error) => pageErrors.push(String(error)));
+  page.on("console", (msg) => {
+    if (msg.type() === "error") pageErrors.push(msg.text());
+  });
+  await loginAs(page, "ceo");
+  await page.goto(`${SEATING}#publication`);
+  await expect(page.getByTestId("seating-publication")).toBeVisible();
+  const form = page.getByTestId("seating-export");
+  if ((await form.count()) === 0) {
+    test.info().annotations.push({ type: "note", description: "Export form not available for this role/state." });
+    return;
+  }
+  const publicationId = (await form.locator('input[name="publicationId"]').inputValue().catch(() => "")) || "";
+  const editionId = (await form.locator('input[name="editionId"]').inputValue().catch(() => "")) || "";
+  if (!publicationId && !editionId) {
+    test.info().annotations.push({
+      type: "note",
+      description: "Clean local fixture has no publication/edition export source; READY-reuse is covered by unit test + live smoke.",
+    });
+    return;
+  }
+
+  async function submitPdfCeo() {
+    const exportForm = page.getByTestId("seating-export");
+    await exportForm.getByLabel("Format").selectOption("PDF");
+    await exportForm.getByLabel("Projection").selectOption("CEO");
+    await Promise.all([
+      page.waitForURL(/\/seating/, { timeout: 60_000 }),
+      exportForm.getByRole("button", { name: "Request export" }).click(),
+    ]);
+    await expect(page.getByTestId("seating-publication").or(page.getByTestId("seating-error-boundary"))).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(page.getByRole("heading", { name: /could not finish rendering|requested record is not available/i })).toHaveCount(0);
+    await expect(page.locator("main")).not.toBeEmpty();
+  }
+
+  await submitPdfCeo();
+  await expect(page.getByTestId("seating-export-list")).toBeAttached();
+  const afterFirst = await page.getByTestId("seating-export-item").count();
+  await expect(page.getByTestId("action-result-banner")).toContainText(
+    /Succeeded|No new export was created|already applied|READY export was reused|No change|Protection command applied/i,
+  );
+
+  pageErrors.length = 0;
+  await submitPdfCeo();
+  await expect(page.getByTestId("seating-export-list")).toBeAttached();
+  const afterReplay = await page.getByTestId("seating-export-item").count();
+  expect(afterReplay).toEqual(afterFirst);
+  await expect(page.getByTestId("action-result-banner")).toContainText(
+    /No new export was created|already applied|READY export was reused|No change/i,
+  );
+  expect(pageErrors.filter((item) => /#418|Hydration|did not match/i.test(item))).toEqual([]);
+
+  await page.goto(`${SEATING}#publication`);
+  await expect(page.getByTestId("seating-export-list")).toBeAttached();
+  const afterReload = await page.getByTestId("seating-export-item").count();
+  expect(afterReload).toEqual(afterFirst);
+});
+
 test("remediation2 export request does not blank the publication surface", async ({ page }) => {
   test.setTimeout(120_000);
   const pageErrors: string[] = [];

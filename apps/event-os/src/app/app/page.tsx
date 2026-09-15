@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { authorize } from "@maison-doclar/shared-platform";
 import { AppShell } from "../../components/shell";
 import { guardedActor } from "../../server/guard";
 import { getRuntime } from "../../server/runtime";
@@ -8,6 +9,15 @@ export default async function HomeAppPage() {
   const runtime = getRuntime();
   const organisations = runtime.service.listOrganisations(actor);
   const organisation = organisations[0];
+  const actorSnap = runtime.service.resolveActor(person.id);
+  const canOpenCommand = Boolean(
+    organisation &&
+      authorize({
+        actor: actorSnap,
+        permission: "executiveCommand.view",
+        scope: { organisationId: organisation.id },
+      }).allow,
+  );
   let events: Awaited<ReturnType<typeof runtime.service.listEvents>> = [];
   let clients: Awaited<ReturnType<typeof runtime.service.listClients>> = [];
   try {
@@ -73,9 +83,11 @@ export default async function HomeAppPage() {
                 <Link className="button secondary" href="/app/discovery">
                   Open discovery
                 </Link>
-                <Link className="button secondary" href="/app/command">
-                  Executive Event Command
-                </Link>
+                {canOpenCommand ? (
+                  <Link className="button secondary" href="/app/command" data-testid="home-executive-command">
+                    Executive Event Command
+                  </Link>
+                ) : null}
                 <Link className="button secondary" href="/app/academy/ACA-S04A">
                   ACA-S04A training
                 </Link>

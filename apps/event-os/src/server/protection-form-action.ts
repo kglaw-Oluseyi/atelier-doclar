@@ -107,7 +107,9 @@ export async function runProtectionFormAction(input: {
               message: (outcome.application === "REPLAYED"
                 ? input.actionType === "seating.rule.activate"
                   ? "No data changed. An equivalent ACTIVE rule already governs this scope."
-                  : "No change. This command was already applied."
+                  : input.actionType === "seating.export"
+                    ? "No new export was created. The existing READY export was reused."
+                    : "No change. This command was already applied."
                 : "Protection command applied."
               ).slice(0, 400),
               application: outcome.application,

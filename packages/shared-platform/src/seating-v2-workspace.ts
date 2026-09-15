@@ -426,7 +426,11 @@ export function buildSeatingV2Workspace(
     exports: state.exportJobs
       .filter((item) => item.eventId === eventId)
       .slice()
-      .sort((left, right) => String(right.createdAt).localeCompare(String(left.createdAt)) || left.id.localeCompare(right.id))
+      .sort((left, right) => {
+        const leftAt = asIsoTimestamp(left.createdAt) ?? "";
+        const rightAt = asIsoTimestamp(right.createdAt) ?? "";
+        return rightAt.localeCompare(leftAt) || left.id.localeCompare(right.id);
+      })
       .map((item) => ({
         id: String(item.id),
         format: String(item.format),

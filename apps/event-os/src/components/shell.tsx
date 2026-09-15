@@ -32,11 +32,10 @@ export function AppShell({
   const canOpenAccess = Boolean(
     scope && authorize({ actor: actorSnap, permission: "platform.access.administer", scope }).allow,
   );
+  // Executive Ledger nav follows platform.audit.read_all only (same gate as /app/admin/audit).
+  // Operational audit remit must not open this Executive Ledger link.
   const canOpenAudit = Boolean(
-    scope &&
-      (authorize({ actor: actorSnap, permission: "platform.audit.read_all", scope }).allow ||
-        authorize({ actor: actorSnap, permission: "platform.audit.read_operational", scope }).allow ||
-        authorize({ actor: actorSnap, permission: "audit.view", scope }).allow),
+    scope && authorize({ actor: actorSnap, permission: "platform.audit.read_all", scope }).allow,
   );
 
   const operations: Array<readonly [string, string]> = [

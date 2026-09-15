@@ -332,6 +332,13 @@ function viewFromResult(result: ActionResult): OperationalStateView {
           whatHappened: result.message || "No data changed. This request matches the stored scenario and calculation.",
           tone: "brass" as const,
         }
+      : replayed && result.actionType === "seating.export"
+        ? {
+            title: "No new export was created",
+            whatHappened:
+              result.message || "The existing READY export was reused. No data changed.",
+            tone: "brass" as const,
+          }
       : replayedExtraction
         ? {
             title: "No new proposals were created",

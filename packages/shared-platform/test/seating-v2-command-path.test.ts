@@ -338,6 +338,16 @@ describe("EOS-S06 V2 command path", () => {
       format: "JSON",
       projectionClass: "FULL",
     });
+    assert.equal(job.application, "APPLIED");
+    const replay = await v2.requestExport(ceo(), envelope(people.assignCeo, "s072-sep-export-02"), {
+      sourceType: "EDITION",
+      sourceId: submitted.value.id,
+      format: "JSON",
+      projectionClass: "FULL",
+    });
+    assert.equal(replay.application, "REPLAYED");
+    assert.equal(replay.value.id, job.value.id);
+    assert.equal(replay.value.status, "READY");
     const auditorView = await v2.retrieveExport(actor(people.personAuditor, { now: NOW }), envelope(people.assignAuditor, "s072-sep-export-read"), {
       jobId: job.value.id,
     });
