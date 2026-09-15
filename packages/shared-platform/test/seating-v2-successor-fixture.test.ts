@@ -3,8 +3,10 @@ import { describe, it } from "node:test";
 import {
   EOS_S06_SUCCESSOR_LAYOUT_A_NAME,
   EOS_S06_SUCCESSOR_LAYOUT_B_NAME,
+  FIXTURE_IDS,
   ensureEosS06SuccessorLayoutBinding,
   ensureEosS06SuccessorLayoutFixture,
+  ensureSeatingLayoutBindingForLayout,
 } from "../src/index.js";
 import { fixtureService } from "./helpers.js";
 
@@ -29,5 +31,41 @@ describe("EOS-S06 successor layout fixture", () => {
     assert.ok(binding);
     assert.equal(binding!.layoutId, first.layoutAId);
     assert.equal(binding!.state, "ACTIVE");
+  });
+
+  it("supports the disposable A→B successor binding journey", async () => {
+    const { service, store } = fixtureService();
+    const fixture = ensureEosS06SuccessorLayoutFixture(store, service);
+
+    const bindingA = await ensureSeatingLayoutBindingForLayout(service, {
+      organisationId: FIXTURE_IDS.orgMaison,
+      eventId: FIXTURE_IDS.eventAlphaOne,
+      layoutId: fixture.layoutAId,
+      plannerAssignmentId: FIXTURE_IDS.assignPlanner,
+      directorAssignmentId: FIXTURE_IDS.assignDirector,
+      idempotencyPrefix: "s06-journey-a",
+    });
+    assert.equal(bindingA.state, "ACTIVE");
+    assert.equal(bindingA.layoutId, fixture.layoutAId);
+
+    const bindingB = await ensureSeatingLayoutBindingForLayout(service, {
+      organisationId: FIXTURE_IDS.orgMaison,
+      eventId: FIXTURE_IDS.eventAlphaOne,
+      layoutId: fixture.layoutBId,
+      plannerAssignmentId: FIXTURE_IDS.assignPlanner,
+      directorAssignmentId: FIXTURE_IDS.assignDirector,
+      idempotencyPrefix: "s06-journey-b",
+    });
+    assert.equal(bindingB.state, "ACTIVE");
+    assert.equal(bindingB.layoutId, fixture.layoutBId);
+
+    const history = await service.seatingV2Commands().repository.transaction(async (tx) =>
+      tx.list<{ id: string; state: string; layoutId: string }>("layoutBindings", {
+        organisationId: FIXTURE_IDS.orgMaison,
+        eventId: FIXTURE_IDS.eventAlphaOne,
+      }),
+    );
+    assert.ok(history.some((item) => item.layoutId === fixture.layoutAId && item.state === "SUPERSEDED"));
+    assert.ok(history.some((item) => item.id === bindingB.id && item.state === "ACTIVE"));
   });
 });

@@ -1136,7 +1136,9 @@ export {
   ensureS06SeatingLayoutBinding,
   ensureSeatingLayoutBindingForLayout,
   ensureEosS06SuccessorLayoutFixture,
+  ensureEosS06SuccessorLayoutFixtureForEvent,
   ensureEosS06SuccessorLayoutBinding,
+  EOS_S06_S073_SUCCESSOR_EVENT_ID,
   EOS_S06_SUCCESSOR_LAYOUT_A_NAME,
   EOS_S06_SUCCESSOR_LAYOUT_B_NAME,
 } from "./seating-fixtures.js";

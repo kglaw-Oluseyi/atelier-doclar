@@ -329,6 +329,20 @@ export function operationalStateFromCode(
         "assertive",
         message,
       );
+    case "SEATING_HARD_RULE_CONFLICT":
+      return view(
+        "conflict",
+        code,
+        "Activation not applied",
+        message ||
+          "This draft contradicts an ACTIVE hard seating rule. Withdraw or supersede the conflicting governing rule before activating the replacement.",
+        "no",
+        "Withdraw or supersede the conflicting ACTIVE rule through a governed action, then activate this draft.",
+        false,
+        "warn",
+        "assertive",
+        message,
+      );
     case "VERSION_CONFLICT":
       return {
         ...view(
