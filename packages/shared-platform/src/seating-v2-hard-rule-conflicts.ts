@@ -104,7 +104,7 @@ export function hardRuleConflictPlatformError(hit: HardRuleConflictHit): Platfor
     `HARD ${hit.draftKind} contradicts ACTIVE HARD ${hit.conflictingKind}`,
     {
       publicMessage:
-        `This draft cannot be activated while an ACTIVE HARD ${hit.conflictingKind.replaceAll("_", " ").toLowerCase()} rule still governs the same guests. Withdraw or supersede the conflicting governing rule (${hit.conflictingEditionId.slice(0, 8)}) through a governed action, then activate this replacement.`,
+        `This draft cannot be activated while an ACTIVE HARD ${hit.conflictingKind.replaceAll("_", " ").toLowerCase()} rule still governs the same guests. Withdraw or supersede the conflicting governing rule edition ${hit.conflictingEditionId.slice(0, 8)} through a governed action, then activate this replacement.`,
       details: [
         `draftEditionId:${hit.draftEditionId}`,
         `conflictingEditionId:${hit.conflictingEditionId}`,

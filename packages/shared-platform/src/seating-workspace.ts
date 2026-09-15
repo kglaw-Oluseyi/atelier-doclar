@@ -38,6 +38,8 @@ export type SeatingWorkspaceView = SeatingWorkspaceProjection & {
     /** ACTIVE HARD rule that logically contradicts this HARD draft (activation blocked). */
     hardConflictEditionId?: string;
     hardConflictKind?: string;
+    /** Content-hash prefix of the conflicting ACTIVE edition (distinct from edition ID). */
+    hardConflictContentHashPrefix?: string;
   }>;
   implicatedReviewDomains: Array<"PROTOCOL" | "ACCESSIBILITY" | "SECURITY">;
   reviewRequirementCopy: string;

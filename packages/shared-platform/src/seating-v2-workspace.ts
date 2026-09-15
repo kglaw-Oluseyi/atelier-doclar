@@ -345,6 +345,9 @@ export function buildSeatingV2Workspace(
           redundantActiveCount: annotation?.redundantCount,
           hardConflictEditionId: hardConflict?.conflictingEditionId,
           hardConflictKind: hardConflict?.conflictingKind,
+          hardConflictContentHashPrefix: hardConflict
+            ? rules.find((rule) => rule.id === hardConflict.conflictingEditionId)?.contentHash.slice(0, 12)
+            : undefined,
         };
       });
     })(),

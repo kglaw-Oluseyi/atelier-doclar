@@ -259,6 +259,26 @@
   outline: none;
 }
 
+.at-scope .button:focus-visible,
+.at-scope button[type="submit"]:focus-visible,
+.at-scope .at-button:focus-visible {
+  outline: 3px solid var(--at-focus-light);
+  outline-offset: 3px;
+  box-shadow:
+    0 0 0 1px var(--at-onyx),
+    0 0 0 4px rgba(var(--at-champagne-functional-rgb), 0.35),
+    inset 0 1px 0 rgba(252, 250, 247, 0.45);
+}
+
+.at-scope .button.secondary:focus-visible,
+.at-scope button.secondary:focus-visible {
+  outline: 3px solid var(--at-focus-light);
+  outline-offset: 3px;
+  box-shadow:
+    0 0 0 1px var(--at-onyx),
+    0 0 0 4px rgba(var(--at-champagne-functional-rgb), 0.28);
+}
+
 .at-scope :focus-visible {
   outline: 2px solid var(--at-focus-light);
   outline-offset: 3px;

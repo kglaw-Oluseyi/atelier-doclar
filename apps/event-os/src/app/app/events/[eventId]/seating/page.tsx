@@ -548,9 +548,13 @@ export default async function EventSeatingPage({
                       ) : null}
                       {hardConflict ? (
                         <p data-testid="seating-rule-hard-conflict">
-                          Conflicts with ACTIVE HARD {(item.hardConflictKind ?? "rule").replaceAll("_", " ")}{" "}
-                          {item.hardConflictEditionId?.slice(0, 8)}. Withdraw or supersede that governing rule through a governed
-                          action before activating this replacement. Activation is blocked while the contradiction remains.
+                          Conflicts with ACTIVE HARD {(item.hardConflictKind ?? "rule").replaceAll("_", " ")} rule
+                          edition {item.hardConflictEditionId?.slice(0, 8)}
+                          {item.hardConflictContentHashPrefix
+                            ? ` · content hash ${item.hardConflictContentHashPrefix}`
+                            : ""}
+                          . Withdraw or supersede that governing rule through a governed action before activating this
+                          replacement. Activation is blocked while the contradiction remains.
                         </p>
                       ) : null}
                       {canActivate ? (
