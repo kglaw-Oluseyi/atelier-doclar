@@ -18,6 +18,20 @@
 
 `docs/control/eos-s06a/EOS_S06A_REMEDIATION_2_CLAUDE_CONTINUATION_PROMPT.md` — prepared; not auto-run.
 
+## Live smoke (post-deploy)
+
+Command: `PLAYWRIGHT_LIVE=1` Playwright `e2e/eos-s06a-live-smoke.spec.ts` via `railway run`
+
+- readiness + seating distinct + reload + business/command truth — PASS
+- named cross-event refusal — PASS
+- R4 send remains blocked — PASS
+- CEO audit + auditor non-mutation — PASS
+- 4 passed / 0 failed
+
+Railway event-os: `3bc467b3-81c1-46e8-a39e-70b95ea9cb78` SUCCESS  
+Application SHA: `355aa9fc6859801c28f033ff354ba2c037fa76f2`  
+Control Tower: SKIPPED
+
 ## Explicit status
 
 - EOS-S06: ACCEPTED  

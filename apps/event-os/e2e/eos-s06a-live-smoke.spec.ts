@@ -47,19 +47,22 @@ test.describe("EOS-S06A remediation live smoke", () => {
       page.waitForURL(/atelier-command\?result=/, { timeout: 40_000 }),
       page.getByRole("button", { name: "Interpret instruction" }).click(),
     ]);
-    await expect(page.getByTestId("atelier-command-plan")).toContainText(/seating\.explainAuthority|intelligence/i, {
+    await expect(page.getByTestId("atelier-command-plan")).toContainText(/seating\.explainAuthority/i, {
       timeout: 40_000,
     });
     await Promise.all([
       page.waitForURL(/atelier-command\?result=/, { timeout: 40_000 }),
       page.getByRole("button", { name: "Execute plan" }).click(),
     ]);
-    await expect(page.getByTestId("atelier-command-intelligence-answer")).toContainText(
-      /Seating diagnosis|layout binding|Eligible|capacity|Missing prerequisite/i,
-      { timeout: 40_000 },
-    );
+    await expect(page.getByTestId("atelier-command-intelligence-meta")).toContainText(/Domain: seating/i, {
+      timeout: 40_000,
+    });
+    await expect(page.getByTestId("atelier-command-intelligence-answer")).toContainText(/Seating diagnosis for/i, {
+      timeout: 40_000,
+    });
     const seating = await page.getByTestId("atelier-command-intelligence-answer").innerText();
     expect(seating).not.toEqual(first);
+    expect(seating).toMatch(/layout binding|Eligible|capacity|Missing prerequisite/i);
     await expect(page.getByTestId("atelier-command-intelligence-meta")).toContainText(/Business data changed: false/i);
     await expect(page.getByTestId("atelier-command-intelligence-meta")).toContainText(/Command record saved: true/i);
 
