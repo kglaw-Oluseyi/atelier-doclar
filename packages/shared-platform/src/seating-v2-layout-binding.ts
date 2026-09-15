@@ -45,6 +45,37 @@ export function activeSeatingLayoutBindings(
   );
 }
 
+/**
+ * Canonical pending-draft policy: at most one DRAFT seating layout binding per event.
+ * Propose supersedes prior DRAFTs; projection and activation must agree on that single pending proposal.
+ */
+export function pendingSeatingLayoutBindings(
+  bindings: readonly SeatingV2LayoutBinding[],
+  organisationId: string,
+  eventId: string,
+): SeatingV2LayoutBinding[] {
+  return bindings.filter(
+    (item) =>
+      item.organisationId === organisationId && item.eventId === eventId && item.state === "DRAFT",
+  );
+}
+
+/** Selects the sole pending DRAFT; if residue left multiple, prefer the latest proposal (never silently pick the oldest). */
+export function selectPendingSeatingLayoutBinding(
+  bindings: readonly SeatingV2LayoutBinding[],
+  organisationId: string,
+  eventId: string,
+): SeatingV2LayoutBinding | undefined {
+  const pending = pendingSeatingLayoutBindings(bindings, organisationId, eventId);
+  if (pending.length === 0) return undefined;
+  if (pending.length === 1) return pending[0];
+  return [...pending].sort((left, right) => {
+    const byProposed = String(right.proposedAt).localeCompare(String(left.proposedAt));
+    if (byProposed !== 0) return byProposed;
+    return String(right.createdAt).localeCompare(String(left.createdAt)) || right.id.localeCompare(left.id);
+  })[0];
+}
+
 export function projectPublishedLayoutFrom(
   publication: { id: string; contentHash: string; revisionId: string },
   revision: LayoutRevision | undefined,

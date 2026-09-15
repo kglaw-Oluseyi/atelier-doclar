@@ -368,11 +368,36 @@ export default async function EventSeatingPage({
           ) : null}
           {permissions.ruleActivate && workspace.seatingLayoutBinding?.draftId ? (
             <ProtectionMutationForm action={activateSeatingLayoutBindingAction.bind(null, event.id)} className="actions" testId="seating-layout-binding-activate">
-              <Envelope fields={{ ...envelopeFields, bindingId: workspace.seatingLayoutBinding.draftId, expectedVersion: workspace.seatingLayoutBinding.draftVersion ?? 1 }} />
+              <Envelope
+                fields={{
+                  ...envelopeFields,
+                  bindingId: workspace.seatingLayoutBinding.draftId,
+                  expectedVersion: workspace.seatingLayoutBinding.draftVersion ?? 1,
+                  layoutPublicationId: workspace.seatingLayoutBinding.draftPublicationId ?? "",
+                  layoutContentHash: workspace.seatingLayoutBinding.draftContentHash ?? "",
+                }}
+              />
               <IdempotencyField />
-              <p data-testid="seating-layout-binding-activate-identity">
-                {workspace.seatingLayoutBinding.draftLayoutLabel ?? "Proposed layout"} · CURRENT publication {workspace.seatingLayoutBinding.draftPublicationNumber} · hash {workspace.seatingLayoutBinding.draftContentHashPrefix}
-              </p>
+              <div data-testid="seating-layout-binding-activate-identity">
+                <p data-testid="seating-layout-binding-proposal-review">
+                  Pending proposal {workspace.seatingLayoutBinding.draftId.slice(0, 8)} · {workspace.seatingLayoutBinding.draftStatus ?? "DRAFT"} ·{" "}
+                  {workspace.seatingLayoutBinding.draftLayoutLabel ?? "Proposed layout"} · CURRENT publication{" "}
+                  {workspace.seatingLayoutBinding.draftPublicationNumber} · hash {workspace.seatingLayoutBinding.draftContentHashPrefix}
+                </p>
+                <p data-testid="seating-layout-binding-proposal-proposer">
+                  Proposed by {workspace.seatingLayoutBinding.draftProposedByLabel ?? "Planner"}
+                  {workspace.seatingLayoutBinding.draftProposedAt ? ` · ${workspace.seatingLayoutBinding.draftProposedAt}` : ""}
+                </p>
+                <p data-testid="seating-layout-binding-proposal-current">
+                  {workspace.seatingLayoutBinding.status === "BOUND"
+                    ? `Current authoritative binding: ${workspace.seatingLayoutBinding.activeLayoutLabel ?? "Bound layout"} · hash ${workspace.seatingLayoutBinding.activeContentHashPrefix ?? workspace.seatingLayoutBinding.contentHashPrefix ?? "—"}`
+                    : "Current authoritative binding: none"}
+                </p>
+                <p data-testid="seating-layout-binding-proposal-target">
+                  Proposed replacement: {workspace.seatingLayoutBinding.draftLayoutLabel ?? "Proposed layout"} · hash{" "}
+                  {workspace.seatingLayoutBinding.draftContentHashPrefix}
+                </p>
+              </div>
               <button type="submit" className="button">Activate seating layout binding</button>
             </ProtectionMutationForm>
           ) : null}

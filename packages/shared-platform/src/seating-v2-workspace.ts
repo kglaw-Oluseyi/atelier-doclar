@@ -6,7 +6,7 @@ import {
   seatingV2EvalReadiness,
 } from "./seating-evaluation-v2-schemas.js";
 import { snapshotGuestCohortAdapter } from "./seating-adapters.js";
-import { projectPublishedLayout, resolveSeatingLayoutAuthority } from "./seating-v2-layout-binding.js";
+import { projectPublishedLayout, resolveSeatingLayoutAuthority, selectPendingSeatingLayoutBinding } from "./seating-v2-layout-binding.js";
 import { seatingV2RuleSemanticSentence } from "./seating-v2-authoring.js";
 import { annotateSemanticRuleDuplicates } from "./seating-v2-rule-duplicates.js";
 import { SEATING_V2_VALIDATOR_VERSION } from "./seating-v2-schemas.js";
@@ -98,13 +98,15 @@ export function buildSeatingV2Workspace(
       : undefined;
   const boundLayoutRecord =
     authority.state === "BOUND" ? snap.layouts.find((item) => item.id === authority.binding.layoutId) : undefined;
-  const draftBinding = state.layoutBindings.find(
-    (item) => item.organisationId === organisationId && item.eventId === eventId && item.state === "DRAFT",
-  );
+  const draftBinding = selectPendingSeatingLayoutBinding(state.layoutBindings, organisationId, eventId);
   const draftPublication = draftBinding
     ? snap.layoutPublications.find((item) => item.id === draftBinding.layoutPublicationId)
     : undefined;
   const draftLayoutRecord = draftBinding ? snap.layouts.find((item) => item.id === draftBinding.layoutId) : undefined;
+  const draftProposer =
+    disclosure === "AUDITOR" || !draftBinding
+      ? undefined
+      : snap.persons.find((item) => item.id === draftBinding.proposedByPersonId)?.displayName ?? "Planner";
   const seatingLayoutBindingCandidates = snap.layoutPublications
     .filter((item) => item.organisationId === organisationId && item.eventId === eventId && item.status === "CURRENT")
     .map((publication) => {
@@ -134,15 +136,23 @@ export function buildSeatingV2Workspace(
     contentHashPrefix:
       disclosure === "AUDITOR"
         ? undefined
-        : (boundPublication?.contentHash ?? draftBinding?.layoutContentHash)?.slice(0, 12),
+        : boundPublication?.contentHash?.slice(0, 12),
     freezeDisabled: authority.state !== "BOUND" || Boolean(layout?.tables.some((table) => table.mismatch)),
     draftId: disclosure === "AUDITOR" ? undefined : draftBinding?.id,
     draftLayoutLabel: disclosure === "AUDITOR" ? undefined : draftLayoutRecord?.name,
+    draftPublicationId: disclosure === "AUDITOR" ? undefined : draftBinding?.layoutPublicationId,
     draftPublicationNumber: disclosure === "AUDITOR" ? undefined : draftPublication?.publicationNumber,
+    draftContentHash: disclosure === "AUDITOR" ? undefined : draftBinding?.layoutContentHash,
     draftContentHashPrefix: disclosure === "AUDITOR" ? undefined : draftBinding?.layoutContentHash.slice(0, 12),
     draftVersion: disclosure === "AUDITOR" ? undefined : draftBinding?.version,
+    draftProposedByLabel: draftProposer,
+    draftProposedAt: disclosure === "AUDITOR" ? undefined : draftBinding?.proposedAt,
+    draftStatus: disclosure === "AUDITOR" || !draftBinding ? undefined : ("DRAFT" as const),
     activeId: disclosure === "AUDITOR" || authority.state !== "BOUND" ? undefined : authority.binding.id,
     activeVersion: disclosure === "AUDITOR" || authority.state !== "BOUND" ? undefined : authority.binding.version,
+    activeLayoutLabel: disclosure === "AUDITOR" || authority.state !== "BOUND" ? undefined : boundLayoutRecord?.name,
+    activeContentHashPrefix:
+      disclosure === "AUDITOR" || authority.state !== "BOUND" ? undefined : boundPublication?.contentHash?.slice(0, 12),
   };
   const seatingLayoutBindingHistory = state.layoutBindings
     .filter(

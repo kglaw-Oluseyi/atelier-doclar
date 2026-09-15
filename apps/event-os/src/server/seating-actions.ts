@@ -632,6 +632,8 @@ export async function activateSeatingLayoutBindingAction(
         await getRuntime().service.seatingV2Commands().activateLayoutBinding(actor, envelope, {
           bindingId: field(formData, "bindingId"),
           expectedVersion: Number(field(formData, "expectedVersion") || 0),
+          layoutPublicationId: field(formData, "layoutPublicationId") || undefined,
+          layoutContentHash: field(formData, "layoutContentHash") || undefined,
         }),
       );
     },

@@ -1147,5 +1147,8 @@ export {
   requireSeatingLayoutAuthority,
   projectPublishedLayout,
   historicBindingFromPackage,
+  pendingSeatingLayoutBindings,
+  selectPendingSeatingLayoutBinding,
+  activeSeatingLayoutBindings,
 } from "./seating-v2-layout-binding.js";
 export { S06_SENSITIVE_PERMISSIONS } from "./constants.js";

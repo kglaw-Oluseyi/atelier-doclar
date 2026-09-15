@@ -901,6 +901,17 @@ export class SeatingV2CommandService {
         });
       }
       const now = nowOf(actor);
+      // Canonical policy: one pending DRAFT per event. A new proposal supersedes prior pending drafts.
+      const existing = await tx.list<SeatingV2LayoutBinding>("layoutBindings", {
+        organisationId: envelope.organisationId,
+        eventId: envelope.eventId,
+      });
+      for (const prior of existing.filter((item) => item.state === "DRAFT")) {
+        await tx.updateLayoutBinding(prior.id, envelope, prior.version, {
+          state: "SUPERSEDED",
+          updatedAt: now,
+        });
+      }
       const binding: SeatingV2LayoutBinding = {
         id: randomUUID(),
         organisationId: envelope.organisationId,
@@ -925,7 +936,12 @@ export class SeatingV2CommandService {
   async activateLayoutBinding(
     actor: SeatingV2Actor,
     envelope: SeatingV2CommandEnvelope,
-    input: { bindingId: string; expectedVersion: number },
+    input: {
+      bindingId: string;
+      expectedVersion: number;
+      layoutPublicationId?: string;
+      layoutContentHash?: string;
+    },
   ): Promise<SeatingV2CommandResult<SeatingV2LayoutBinding>> {
     return this.mutate(actor, envelope, "seating.rule.activate", "seatingV2.activateLayoutBinding", async (tx) => {
       await tx.lockEventCurrent(envelope, "FOR_UPDATE");
@@ -944,6 +960,15 @@ export class SeatingV2CommandService {
       if (binding.version !== input.expectedVersion) {
         throw new PlatformError("VERSION_CONFLICT", "stale seating layout binding was not rescued", {
           publicMessage: "The record changed elsewhere. Reload this item before retrying.",
+        });
+      }
+      if (
+        (input.layoutPublicationId && input.layoutPublicationId !== binding.layoutPublicationId) ||
+        (input.layoutContentHash && input.layoutContentHash !== binding.layoutContentHash)
+      ) {
+        throw new PlatformError("SEATING_LAYOUT_PUBLICATION_MISMATCH", "activation target does not match the pending proposal", {
+          publicMessage:
+            "The activation target does not match the pending seating layout proposal. Reload and activate the displayed proposal only.",
         });
       }
       this.loadBindablePublication(envelope, binding.layoutPublicationId, {

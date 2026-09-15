@@ -96,11 +96,18 @@ export type SeatingWorkspaceView = SeatingWorkspaceProjection & {
     freezeDisabled?: boolean;
     draftId?: string;
     draftLayoutLabel?: string;
+    draftPublicationId?: string;
     draftPublicationNumber?: number;
+    draftContentHash?: string;
     draftContentHashPrefix?: string;
     draftVersion?: number;
+    draftProposedByLabel?: string;
+    draftProposedAt?: string;
+    draftStatus?: "DRAFT";
     activeId?: string;
     activeVersion?: number;
+    activeLayoutLabel?: string;
+    activeContentHashPrefix?: string;
   };
   seatingLayoutBindingCandidates?: Array<{
     layoutLabel: string;
