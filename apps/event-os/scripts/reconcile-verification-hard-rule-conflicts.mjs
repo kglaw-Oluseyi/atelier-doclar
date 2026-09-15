@@ -46,6 +46,7 @@ for (const row of actives) {
 const plans = [];
 const together = actives.filter((row) => row.kind === "KEEP_TOGETHER");
 const apart = actives.filter((row) => row.kind === "KEEP_APART");
+const seenWithdraw = new Set();
 
 for (const keep of together) {
   const key = subjectsByEdition.get(keep.id);
@@ -53,20 +54,17 @@ for (const keep of together) {
   for (const conflict of apart) {
     if (conflict.scope !== keep.scope) continue;
     if (subjectsByEdition.get(conflict.id) !== key) continue;
-    const keepStamp = String(keep.activated_at ?? keep.created_at);
-    const conflictStamp = String(conflict.activated_at ?? conflict.created_at);
-    // Preserve earlier KEEP_TOGETHER; withdraw the conflicting KEEP_APART.
-    if (conflictStamp >= keepStamp || conflict.id > keep.id) {
-      plans.push({
-        preserveEditionId: keep.id,
-        preserveKind: keep.kind,
-        withdrawEditionId: conflict.id,
-        withdrawKind: conflict.kind,
-        subjectKey: key,
-        scope: keep.scope,
-        reason: REASON,
-      });
-    }
+    if (seenWithdraw.has(conflict.id)) continue;
+    seenWithdraw.add(conflict.id);
+    plans.push({
+      preserveEditionId: keep.id,
+      preserveKind: keep.kind,
+      withdrawEditionId: conflict.id,
+      withdrawKind: conflict.kind,
+      subjectKey: key,
+      scope: keep.scope,
+      reason: REASON,
+    });
   }
 }
 
