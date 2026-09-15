@@ -278,8 +278,8 @@ test.describe("CURSOR-S06V2-S072 remaining live gates", () => {
     await expect(latest).toBeVisible();
     const latestCopy = ((await latest.textContent()) ?? "").replace(/\s+/g, " ");
     record({ kind: "impossible-run", latestCopy, diagnostics: await seatingDiagnostics(page) });
-    expect(latestCopy, "SATISFIED is not infeasibility").not.toMatch(/Validator FEASIBLE/i);
-    await expect(latest).toContainText(/Validator INFEASIBLE|No safe seating plan satisfies every hard rule/i);
+    expect(latestCopy, "SATISFIED is not infeasibility").not.toMatch(/\bFEASIBLE\b/);
+    await expect(latest).toContainText(/INFEASIBLE|No safe seating plan satisfies every hard rule/i);
     await expect(latest).toContainText(/Violated:|UNSEATED_REQUIRED|KEEP_APART_VIOLATED|REQUIRE_TABLE_VIOLATED/i);
     await expect(latest.getByRole("button", { name: "Adopt run" })).toHaveCount(0);
     await expect(page.getByTestId("seating-overview")).toContainText(/Hard blockers · [1-9]/);

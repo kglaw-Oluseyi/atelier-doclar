@@ -17,6 +17,18 @@ describe("EOS-S06 Claude remediation surface copy", () => {
     assert.match(seatingPage, /seating-run-counts/);
     assert.match(seatingPage, /seating-run-current-stale/);
     assert.match(seatingPage, /Current.*Stale|selected\/current run/);
+    assert.match(seatingPage, /data-outcome=\{outcome\}/);
+    assert.doesNotMatch(seatingPage, /Validator \{run\.validatorVerdict/);
+  });
+
+  it("DEF-01 adoptable-run e2e contract targets data-outcome FEASIBLE", () => {
+    const section13 = readFileSync(
+      fileURLToPath(new URL("../e2e/s075-section-13.ts", import.meta.url)),
+      "utf8",
+    );
+    assert.match(section13, /data-outcome="FEASIBLE"/);
+    assert.match(section13, /assertFeasibleFourGuestAdoptPrerequisites/);
+    assert.doesNotMatch(section13, /hasText:\s*\/Validator FEASIBLE\//);
   });
 
   it("DEF-02 never equates seating publication with missing venue layout tables", () => {

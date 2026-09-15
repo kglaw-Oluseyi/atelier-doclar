@@ -327,24 +327,46 @@ export async function guestOptionByLabel(page: Page, selectName: string, label: 
   return value;
 }
 
+/**
+ * Section 13 freeze→launch→adopt assumes a four-guest feasible plan:
+ * capacity ≥4, four eligible attending guests, and (when rules exist) no hard conflict
+ * that would withhold Adopt. Product run cards expose `data-outcome` (not a "Validator " prefix).
+ */
+export async function assertFeasibleFourGuestAdoptPrerequisites(page: Page, seatingPath: string) {
+  await gotoSeating(page, seatingPath, "#studio");
+  await expect(page.getByTestId("seating-capacity-ledger")).toContainText(/Capacity [4-9]|Capacity [1-9][0-9]/);
+  const guests = page.getByTestId("seating-studio").locator("li").filter({ hasText: /Eligible/i });
+  await expect(guests).toHaveCount(4, { timeout: 20_000 });
+  for (const name of ["Adaeze Okeke", "Bola Adeyemi", "Chioma Nwosu", "Damilola Fashola"]) {
+    await expect(page.getByTestId("seating-studio")).toContainText(name);
+  }
+  recordSection13({
+    kind: "feasible-adopt-prerequisites",
+    capacityLedger: ((await page.getByTestId("seating-capacity-ledger").textContent()) ?? "").replace(/\s+/g, " ").trim(),
+    eligibleGuestCount: await guests.count(),
+  });
+}
+
 export async function freezeLaunchAdopt(page: Page, seatingPath: string) {
+  await assertFeasibleFourGuestAdoptPrerequisites(page, seatingPath);
   await gotoSeating(page, seatingPath, "#inputs");
   await timedSettleLiveSeatingClick(page, "Freeze new input edition", "SUCCESS");
   await gotoSeating(page, seatingPath, "#runs");
   await timedSettleLiveSeatingClick(page, "Launch seating run", "SUCCESS");
-  let feasible = page.getByTestId("seating-run-card").filter({ hasText: /Validator FEASIBLE/ }).filter({
+  // DEF-01 run cards render data-outcome from validatorVerdict ?? status (e.g. FEASIBLE), without a Validator prefix.
+  let feasible = page.locator('[data-testid="seating-run-card"][data-outcome="FEASIBLE"]').filter({
     has: page.getByRole("button", { name: "Adopt run" }),
   });
   // A second freeze/launch (e.g. j2 after P3) can leave a stale FEASIBLE card; adopt the current non-stale run.
   if ((await feasible.count()) > 1) {
-    feasible = page.locator('[data-testid="seating-run-card"][data-stale="false"]').filter({
+    feasible = page.locator('[data-testid="seating-run-card"][data-outcome="FEASIBLE"][data-stale="false"]').filter({
       has: page.getByRole("button", { name: "Adopt run" }),
     });
   }
   await expect(feasible).toHaveCount(1, { timeout: 30_000 });
   await expect(feasible).toBeVisible({ timeout: 30_000 });
-  await expect(feasible).toContainText(/seated 4/);
-  await expect(feasible).toContainText(/unseated 0/);
+  await expect(feasible.getByTestId("seating-run-counts")).toContainText(/Seated 4/i);
+  await expect(feasible.getByTestId("seating-run-counts")).toContainText(/Unseated 0/i);
   const runId = (await feasible.getAttribute("data-run-id")) ?? "";
   expect(runId).toMatch(/^[0-9a-f-]{36}$/i);
   await timedSettleLiveScopedSeatingClick(

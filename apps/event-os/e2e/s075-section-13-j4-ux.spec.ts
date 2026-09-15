@@ -90,7 +90,7 @@ test("S075 Section 13 journey 4: responsive, accessibility and repeated settleme
   const runId = (await current.getAttribute("data-run-id")) ?? "";
   expect(runId).toMatch(/^[0-9a-f-]{36}$/i);
   await expect(page.locator(`[data-testid="seating-run-card"][data-run-id="${runId}"]`)).toContainText(
-    /Validator FEASIBLE|Validator INFEASIBLE|seated/,
+    /\bFEASIBLE\b|\bINFEASIBLE\b|seated/,
   );
 
   const headline = (

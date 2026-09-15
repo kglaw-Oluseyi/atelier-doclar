@@ -256,7 +256,8 @@ test.describe("CURSOR-S06V2-S072 live gates", () => {
     await gotoSeating(page, "#runs");
     const feasible = page.getByTestId("seating-run-FEASIBLE").filter({ has: page.getByRole("button", { name: "Adopt run" }) }).last();
     await expect(feasible).toBeVisible({ timeout: 20_000 });
-    await expect(feasible.getByText(/Validator FEASIBLE/i)).toBeVisible();
+    await expect(feasible).toHaveAttribute("data-outcome", "FEASIBLE");
+    await expect(feasible.getByTestId("seating-run-identity")).toContainText(/\bFEASIBLE\b/);
     await timedAction(page, `${prefix}-ADOPT`, async () => {
       const adopt = feasible.getByRole("button", { name: "Adopt run" });
       await adopt.evaluate((element) => {

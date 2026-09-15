@@ -1024,7 +1024,7 @@ export async function runCheckpointJ4(page: Page, _browser: Browser) {
   expect(runId).toMatch(/^[0-9a-f-]{36}$/i);
   await expect(current).toBeVisible();
   await expect(page.locator(`[data-testid="seating-run-card"][data-run-id="${runId}"]`)).toContainText(
-    /Validator FEASIBLE|Validator INFEASIBLE|seated/,
+    /\bFEASIBLE\b|\bINFEASIBLE\b|seated/,
   );
 
   const headline = (

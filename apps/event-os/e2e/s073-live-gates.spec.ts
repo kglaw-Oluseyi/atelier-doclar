@@ -361,7 +361,7 @@ test("S073 Gate A impossible HARD set is independently INFEASIBLE and cannot be 
   await freezeAndLaunch(page, `${FIXTURE}-A`);
   const infeasible = page.locator('[data-testid="seating-run-INFEASIBLE"] [data-testid="seating-run-card"]').first();
   await expect(infeasible).toBeVisible();
-  await expect(infeasible).toContainText(/Validator INFEASIBLE|No safe seating plan satisfies every hard rule/i);
+  await expect(infeasible).toContainText(/INFEASIBLE|No safe seating plan satisfies every hard rule/i);
   await expect(infeasible).toContainText(/Violated:|UNSEATED_REQUIRED|KEEP_APART_VIOLATED|REQUIRE_TABLE_VIOLATED/i);
   await expect(infeasible.getByRole("button", { name: "Adopt run" })).toHaveCount(0);
   await expect(page.getByTestId("seating-overview")).toContainText(/Hard blockers · [1-9]/);

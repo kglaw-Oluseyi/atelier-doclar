@@ -225,7 +225,7 @@ test("S075G synthetic binding, witness and named infeasible", async ({ page, bro
     const runsBeforeWitness = await runCards(page);
     await page.goto(`${seatingPath}#runs`, { waitUntil: "domcontentloaded" });
     await settleLiveSeatingClick(page, "Launch seating run");
-    const feasible = page.getByTestId("seating-run-card").filter({ hasText: /Validator FEASIBLE/ });
+    const feasible = page.locator('[data-testid="seating-run-card"][data-outcome="FEASIBLE"]');
     await expect(feasible).toBeVisible({ timeout: 30_000 });
     await expect(feasible).toContainText(/seated 4/);
     await expect(feasible).toContainText(/unseated 0/);
