@@ -9619,6 +9619,8 @@ export class PlatformService {
 
 
   private async persistAtelierSnapshot(snap: PlatformSnapshot): Promise<void> {
+    const ledger = AtelierCommand.ensureAtelierLedger(snap) as AtelierCommand.AtelierCommandLedgerDocument;
+    ledger.version = (ledger.version ?? 1) + 1;
     const store = this.store as PlatformStore & {
       replaceAsync?: (next: PlatformSnapshot) => Promise<void>;
       flush?: () => Promise<void>;
@@ -9641,6 +9643,7 @@ export class PlatformService {
   ) {
     const { snap } = this.authorizeQuery(actor, "atelierCommand.view", { organisationId, eventId });
     const actorSnap = this.resolveActor(actor.personId);
+    const before = JSON.stringify(snap.atelierCommandLedgers ?? []);
     const view = AtelierCommand.getAtelierWorkspace({
       snap,
       actor: actorSnap,
@@ -9653,7 +9656,10 @@ export class PlatformService {
       roleKey: options?.roleKey,
       now: this.tokenNow(actor),
     });
-    await this.persistAtelierSnapshot(snap);
+    const after = JSON.stringify(snap.atelierCommandLedgers ?? []);
+    if (before !== after) {
+      await this.persistAtelierSnapshot(snap);
+    }
     return view;
   }
 

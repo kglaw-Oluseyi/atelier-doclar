@@ -459,10 +459,10 @@ export function emptyAtelierCommandLedger(): AtelierCommandLedger {
   };
 }
 
-export type AtelierCommandLedgerDocument = AtelierCommandLedger & { id: string };
+export type AtelierCommandLedgerDocument = AtelierCommandLedger & { id: string; version: number };
 
 export const ATELIER_COMMAND_LEDGER_ID = "eos-s06a-atelier-command-ledger" as const;
 
 export function emptyAtelierCommandLedgerDocument(): AtelierCommandLedgerDocument {
-  return { id: ATELIER_COMMAND_LEDGER_ID, ...emptyAtelierCommandLedger() };
+  return { id: ATELIER_COMMAND_LEDGER_ID, version: 1, ...emptyAtelierCommandLedger() };
 }

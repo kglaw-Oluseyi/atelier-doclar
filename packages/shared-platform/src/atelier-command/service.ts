@@ -51,6 +51,8 @@ export function ensureAtelierLedger(snap: PlatformSnapshot): AtelierCommandLedge
   if (!doc) {
     doc = emptyAtelierCommandLedgerDocument();
     snap.atelierCommandLedgers.push(doc);
+  } else if (!doc.version) {
+    doc.version = 1;
   }
   return doc;
 }
