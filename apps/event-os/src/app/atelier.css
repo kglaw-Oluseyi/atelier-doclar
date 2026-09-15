@@ -2420,3 +2420,109 @@ body.atelier {
   max-width: 100%;
   overflow-wrap: anywhere;
 }
+
+/* EOS-S06A Atelier Command */
+.atelier-command {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.atelier-command-context {
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--at-champagne, #b89a62);
+  background: linear-gradient(90deg, rgba(184, 154, 98, 0.08), transparent);
+}
+
+.atelier-command-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 960px) {
+  .atelier-command-grid {
+    grid-template-columns: 1.1fr 0.9fr;
+  }
+}
+
+.atelier-command-panel {
+  padding: 1.25rem 1.35rem;
+  background: rgba(255, 252, 247, 0.72);
+  border: 1px solid rgba(17, 16, 15, 0.08);
+}
+
+.atelier-command-panel h2,
+.atelier-command-panel h3 {
+  font-family: var(--at-editorial, Georgia, serif);
+  color: var(--at-onyx, #11100f);
+}
+
+.atelier-command-form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.atelier-command-form textarea,
+.atelier-command-form input[type="text"],
+.atelier-command-form input:not([type]),
+.atelier-command-form select {
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid rgba(17, 16, 15, 0.16);
+  background: #fffdf9;
+  color: var(--at-ink, #1c1916);
+}
+
+.atelier-command-check {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  cursor: pointer;
+}
+
+.atelier-command-muted {
+  color: rgba(28, 25, 22, 0.72);
+}
+
+.atelier-command-block {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(17, 16, 15, 0.08);
+}
+
+.atelier-command-tasks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+  max-height: 42rem;
+  overflow: auto;
+}
+
+.atelier-command-tasks article {
+  padding: 0.85rem 0;
+  border-bottom: 1px solid rgba(17, 16, 15, 0.08);
+}
+
+.atelier-command .button,
+.atelier-command button {
+  cursor: pointer;
+}
+
+.atelier-command .button:focus-visible,
+.atelier-command button:focus-visible,
+.atelier-command textarea:focus-visible,
+.atelier-command input:focus-visible,
+.atelier-command select:focus-visible {
+  outline: 2px solid var(--at-champagne, #b89a62);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atelier-command * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
