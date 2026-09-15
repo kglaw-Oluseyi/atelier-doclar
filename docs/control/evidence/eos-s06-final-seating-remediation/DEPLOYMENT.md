@@ -28,3 +28,9 @@
 - Layout-binding propose settles without blank page: PASS
 - Identical export replay without #418: PASS
 - Successor A/B labels: initial live options still showed Ceremony-floor residue; fixture seed hardened to create A/B even when other CURRENT publications exist (follow-up deploy in same evidence train).
+
+## Follow-up deploy (successor fixture on live residue)
+- Commit: `52eb287fcd1e42ed3f4ab15bee024d0f018999ee`
+- Deployment ID: `8532a584-eddf-40ca-9335-3eac7d39b087` SUCCESS
+- Live options now include `Synthetic seating hall` and `EOS-S06 successor layout B`
+- ACTIVE binding switched to Synthetic seating hall (A) for Claude’s successor journey
