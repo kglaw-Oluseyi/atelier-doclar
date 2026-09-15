@@ -46,4 +46,32 @@ This was not a stale test. The recovery endpoint is legitimate, but it must shar
 
 ## Deployment / CI
 
-Filled after commit, event-os deploy, and single `programme-validate` run.
+| Role | Value |
+|------|-------|
+| Ending HEAD / application commit | `233afaaf8c3ee6eeca96914657f3af6041867c40` |
+| Event OS deployment | `228bd93a-5016-4ab4-a7b0-20d6173607c7` SUCCESS |
+| Deployed SHA | `233afaaf8c3ee6eeca96914657f3af6041867c40` |
+| Live posture | ready · POSTGRES · APPLIED · `productionAuthorised:false` · providers INACTIVE |
+| Control Tower | not deployed (SKIPPED listings) |
+| Focused live propose smoke | pass |
+
+### Formal CI — run `34966947067`
+
+URL: https://github.com/kglaw-Oluseyi/atelier-doclar/actions/runs/34966947067  
+Started `2026-09-15T12:06:21Z` · ended `2026-09-15T13:26:52Z` · conclusion **cancelled** (canceled by `@kglaw-Oluseyi`).
+
+| Step | Result |
+|------|--------|
+| Checkout / install / Typecheck | success |
+| Test (includes trusted-boundary fix) | success |
+| Programme validate / project / ingest / reconcile | success |
+| Production build | success |
+| Install Playwright Chromium | success |
+| Control Tower browser tests | success |
+| Event OS browser tests | **cancelled** (~68 min in; human cancel) |
+
+**CI is not completely green** — infrastructure/operator cancel during Event OS e2e, not a product/test failure of the Packet 2 remediation. No second CI trigger per single-run rule.
+
+## Explicit non-acceptance
+
+EOS-S06 remains unaccepted pending AI CTO review. EOS-S07 remains unstarted. Protected files and Control Tower untouched.
