@@ -33,6 +33,9 @@ export type CompiledPlanDraft = {
 
 function pickTools(rawText: string): string[] {
   const t = rawText.toLowerCase();
+  if (/explain why sending|sending is blocked|why (is )?sending|communication.*(blocked|block)/.test(t)) {
+    return ["intelligence.answer"];
+  }
   if (/seat|layout binding|table plan/.test(t)) return ["seating.explainAuthority"];
   if (/budget|investment|spend|scenario/.test(t)) return ["investment.explain"];
   if (/roadmap|critical path|milestone/.test(t)) return ["roadmap.explainCriticalPath"];
@@ -40,7 +43,7 @@ function pickTools(rawText: string): string[] {
   if (/risk|incident|mitigation/.test(t)) return ["risk.raise"];
   if (/brief|discovery|interview/.test(t)) return ["eventBrief.read"];
   if (/portal|browser|download|venue document/.test(t)) return ["browser.retrieveDocument"];
-  if (/send (the )?(message|communication|email)/.test(t)) return ["communication.sendApproved"];
+  if (/send (the )?(message|communication|email)\b/.test(t)) return ["communication.sendApproved"];
   if (/diagnos|blocker|what (is|are) (wrong|blocking)/.test(t)) return ["intelligence.diagnose"];
   if (/recommend|should i|options/.test(t)) return ["intelligence.recommend"];
   return ["intelligence.answer"];

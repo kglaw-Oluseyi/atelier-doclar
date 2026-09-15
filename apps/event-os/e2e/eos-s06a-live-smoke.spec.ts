@@ -42,16 +42,17 @@ test.describe("EOS-S06A remediation live smoke", () => {
       page.waitForURL(/atelier-command\?result=/, { timeout: 40_000 }),
       page.getByRole("button", { name: "Interpret instruction" }).click(),
     ]);
+    await expect(page.getByTestId("atelier-command-plan")).toContainText(/Risk R0/i, { timeout: 40_000 });
     await Promise.all([
       page.waitForURL(/atelier-command\?result=/, { timeout: 40_000 }),
       page.getByRole("button", { name: "Execute plan" }).click(),
     ]);
-    await expect(page.getByTestId("atelier-command-intelligence-answer")).toContainText(/blocked|production/i, {
+    await expect(page.getByTestId("atelier-command-intelligence-answer")).toContainText(/blocked|productionAuthorised|providersActive/i, {
       timeout: 40_000,
     });
     const second = await page.getByTestId("atelier-command-intelligence-answer").innerText();
     expect(second).not.toEqual(first);
-  });
+    expect(second).not.toMatch(/^Executed 1 step\(s\); status COMPLETED$/);  });
 
   test("named cross-event request is explicitly refused", async ({ page }) => {
     await loginAs(page, "ceo");
