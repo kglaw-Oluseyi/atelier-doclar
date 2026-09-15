@@ -66,7 +66,7 @@ export default async function AtelierCommandPage({
 
   let workspace;
   try {
-    workspace = runtime.service.getAtelierCommandWorkspace(actor, organisation.id, event.id, {
+    workspace = await runtime.service.getAtelierCommandWorkspace(actor, organisation.id, event.id, {
       eventName: event.name,
       organisationName: organisation.displayName,
       taskQuery,

@@ -9618,7 +9618,22 @@ export class PlatformService {
 
 
 
-  getAtelierCommandWorkspace(
+  private async persistAtelierSnapshot(snap: PlatformSnapshot): Promise<void> {
+    const store = this.store as PlatformStore & {
+      replaceAsync?: (next: PlatformSnapshot) => Promise<void>;
+      flush?: () => Promise<void>;
+    };
+    if (typeof store.replaceAsync === "function") {
+      await store.replaceAsync(snap);
+      return;
+    }
+    store.replace(snap);
+    if (typeof store.flush === "function") {
+      await store.flush();
+    }
+  }
+
+  async getAtelierCommandWorkspace(
     actor: ActorContext,
     organisationId: string,
     eventId: string,
@@ -9638,11 +9653,11 @@ export class PlatformService {
       roleKey: options?.roleKey,
       now: this.tokenNow(actor),
     });
-    this.store.replace(snap);
+    await this.persistAtelierSnapshot(snap);
     return view;
   }
 
-  submitAtelierCommandInstruction(
+  async submitAtelierCommandInstruction(
     actor: ActorContext,
     organisationId: string,
     eventId: string,
@@ -9671,11 +9686,11 @@ export class PlatformService {
       correlationId: result.receipt?.correlationId ?? result.instruction.id,
       occurredAt: this.tokenNow(actor),
     });
-    this.store.replace(snap);
+    await this.persistAtelierSnapshot(snap);
     return result;
   }
 
-  invokeAtelierCommandTask(
+  async invokeAtelierCommandTask(
     actor: ActorContext,
     organisationId: string,
     eventId: string,
@@ -9701,11 +9716,11 @@ export class PlatformService {
       dryRun: input.dryRun,
       now: this.tokenNow(actor),
     });
-    this.store.replace(snap);
+    await this.persistAtelierSnapshot(snap);
     return result;
   }
 
-  confirmAtelierCommandPlan(actor: ActorContext, organisationId: string, eventId: string, planId: string) {
+  async confirmAtelierCommandPlan(actor: ActorContext, organisationId: string, eventId: string, planId: string) {
     const { snap } = this.authorizeQuery(actor, "atelierCommand.execute", { organisationId, eventId });
     const actorSnap = this.resolveActor(actor.personId);
     const plan = AtelierCommand.confirmPlan({
@@ -9716,11 +9731,11 @@ export class PlatformService {
       planId,
       now: this.tokenNow(actor),
     });
-    this.store.replace(snap);
+    await this.persistAtelierSnapshot(snap);
     return plan;
   }
 
-  approveAtelierCommandPlan(actor: ActorContext, organisationId: string, eventId: string, planId: string) {
+  async approveAtelierCommandPlan(actor: ActorContext, organisationId: string, eventId: string, planId: string) {
     const { snap } = this.authorizeQuery(actor, "atelierCommand.approve", { organisationId, eventId });
     const actorSnap = this.resolveActor(actor.personId);
     const plan = AtelierCommand.approvePlan({
@@ -9731,11 +9746,11 @@ export class PlatformService {
       planId,
       now: this.tokenNow(actor),
     });
-    this.store.replace(snap);
+    await this.persistAtelierSnapshot(snap);
     return plan;
   }
 
-  executeAtelierCommandPlan(
+  async executeAtelierCommandPlan(
     actor: ActorContext,
     organisationId: string,
     eventId: string,
@@ -9766,11 +9781,11 @@ export class PlatformService {
       correlationId: result.receipt.correlationId,
       occurredAt: this.tokenNow(actor),
     });
-    this.store.replace(snap);
+    await this.persistAtelierSnapshot(snap);
     return result;
   }
 
-  reconcileAtelierCommandOutcome(actor: ActorContext, organisationId: string, eventId: string, stepExecutionId: string) {
+  async reconcileAtelierCommandOutcome(actor: ActorContext, organisationId: string, eventId: string, stepExecutionId: string) {
     const { snap } = this.authorizeQuery(actor, "atelierCommand.execute", { organisationId, eventId });
     const actorSnap = this.resolveActor(actor.personId);
     const result = AtelierCommand.reconcileUnknownOutcome({
@@ -9781,11 +9796,11 @@ export class PlatformService {
       stepExecutionId,
       now: this.tokenNow(actor),
     });
-    this.store.replace(snap);
+    await this.persistAtelierSnapshot(snap);
     return result;
   }
 
-  cancelAtelierCommandRun(actor: ActorContext, organisationId: string, eventId: string, runId: string) {
+  async cancelAtelierCommandRun(actor: ActorContext, organisationId: string, eventId: string, runId: string) {
     const { snap } = this.authorizeQuery(actor, "atelierCommand.execute", { organisationId, eventId });
     const actorSnap = this.resolveActor(actor.personId);
     const result = AtelierCommand.cancelRun({
@@ -9796,7 +9811,7 @@ export class PlatformService {
       runId,
       now: this.tokenNow(actor),
     });
-    this.store.replace(snap);
+    await this.persistAtelierSnapshot(snap);
     return result;
   }
 

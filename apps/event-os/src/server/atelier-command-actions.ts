@@ -67,7 +67,7 @@ export async function submitAtelierInstructionAction(formData: FormData): Promis
   const { actor, person } = await requireActor();
   const correlationId = actor.correlationId || randomUUID();
   try {
-    const result = getRuntime().service.submitAtelierCommandInstruction(actor, organisationId, eventId, {
+    const result = await getRuntime().service.submitAtelierCommandInstruction(actor, organisationId, eventId, {
       sessionId,
       rawText,
       dryRun,
@@ -119,7 +119,7 @@ export async function invokeAtelierTaskAction(formData: FormData): Promise<void>
   const { actor, person } = await requireActor();
   const correlationId = actor.correlationId || randomUUID();
   try {
-    getRuntime().service.invokeAtelierCommandTask(actor, organisationId, eventId, {
+    await getRuntime().service.invokeAtelierCommandTask(actor, organisationId, eventId, {
       sessionId,
       taskId,
       operatorEdits: notes ? { notes } : {},
@@ -163,7 +163,7 @@ export async function confirmAtelierPlanAction(formData: FormData): Promise<void
   const { actor, person } = await requireActor();
   const correlationId = actor.correlationId || randomUUID();
   try {
-    getRuntime().service.confirmAtelierCommandPlan(actor, organisationId, eventId, planId);
+    await getRuntime().service.confirmAtelierCommandPlan(actor, organisationId, eventId, planId);
     return finish({
       path,
       actorPersonId: person.id,
@@ -202,7 +202,7 @@ export async function approveAtelierPlanAction(formData: FormData): Promise<void
   const { actor, person } = await requireActor();
   const correlationId = actor.correlationId || randomUUID();
   try {
-    getRuntime().service.approveAtelierCommandPlan(actor, organisationId, eventId, planId);
+    await getRuntime().service.approveAtelierCommandPlan(actor, organisationId, eventId, planId);
     return finish({
       path,
       actorPersonId: person.id,
@@ -241,7 +241,7 @@ export async function executeAtelierPlanAction(formData: FormData): Promise<void
   const { actor, person } = await requireActor();
   const correlationId = actor.correlationId || randomUUID();
   try {
-    const result = getRuntime().service.executeAtelierCommandPlan(actor, organisationId, eventId, planId);
+    const result = await getRuntime().service.executeAtelierCommandPlan(actor, organisationId, eventId, planId);
     return finish({
       path,
       actorPersonId: person.id,
