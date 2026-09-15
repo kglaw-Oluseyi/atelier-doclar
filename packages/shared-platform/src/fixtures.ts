@@ -206,11 +206,11 @@ function person(id: string, subject: string, email: string, displayName: string)
 export function fixturePersons(): Person[] {
   return [
     person(FIXTURE_IDS.personCeo, "dev:ceo@maison-doclar.test", "ceo@maison-doclar.test", "George Lawson"),
-    person(FIXTURE_IDS.personDirector, "dev:director@maison-doclar.test", "director@maison-doclar.test", "Event Director"),
-    person(FIXTURE_IDS.personPlanner, "dev:planner@maison-doclar.test", "planner@maison-doclar.test", "Assigned Planner"),
-    person(FIXTURE_IDS.personAdmin, "dev:admin@maison-doclar.test", "admin@maison-doclar.test", "System Administrator"),
-    person(FIXTURE_IDS.personAuditor, "dev:auditor@maison-doclar.test", "auditor@maison-doclar.test", "Read Only Auditor"),
-    person(FIXTURE_IDS.personRiskReviewer, "dev:reviewer@maison-doclar.test", "reviewer@maison-doclar.test", "Risk Governance Reviewer"),
+    person(FIXTURE_IDS.personDirector, "dev:director@maison-doclar.test", "director@maison-doclar.test", "Amara Okonkwo"),
+    person(FIXTURE_IDS.personPlanner, "dev:planner@maison-doclar.test", "planner@maison-doclar.test", "James Whitfield"),
+    person(FIXTURE_IDS.personAdmin, "dev:admin@maison-doclar.test", "admin@maison-doclar.test", "Nora Adeyemi"),
+    person(FIXTURE_IDS.personAuditor, "dev:auditor@maison-doclar.test", "auditor@maison-doclar.test", "Priya Nair"),
+    person(FIXTURE_IDS.personRiskReviewer, "dev:reviewer@maison-doclar.test", "reviewer@maison-doclar.test", "Samuel Ikeda"),
     person(FIXTURE_IDS.personUnassigned, "dev:unassigned@maison-doclar.test", "unassigned@maison-doclar.test", "Unassigned User"),
     person(FIXTURE_IDS.personOtherOrg, "dev:other@other-house.test", "other@other-house.test", "Other House Operator"),
   ];

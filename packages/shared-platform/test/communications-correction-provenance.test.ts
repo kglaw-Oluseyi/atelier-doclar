@@ -109,8 +109,9 @@ describe("contact correction maker-checker provenance", () => {
     assert.equal(review.maker.state, "AVAILABLE");
     if (review.maker.state === "AVAILABLE") {
       assert.equal(review.maker.personId, people.personDirector);
-      assert.equal(review.maker.displayName, "Event Director");
+      assert.equal(review.maker.displayName, "Amara Okonkwo");
       assert.equal(review.maker.roleKey, "EVENT_DIRECTOR");
+      assert.notEqual(review.maker.displayName, "Event Director");
     }
     assert.equal(review.decision.state, "RECORDED");
     assert.ok(!("body" in review));

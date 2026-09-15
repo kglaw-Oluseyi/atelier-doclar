@@ -266,9 +266,23 @@ export function ensureMissingFixtureIdentities(store: PlatformStore): void {
   const snap = store.snapshot();
   let changed = false;
   for (const item of fixturePersons()) {
-    if (snap.persons.some((person) => person.id === item.id)) continue;
-    snap.persons.push(item);
-    changed = true;
+    const existing = snap.persons.find((person) => person.id === item.id);
+    if (!existing) {
+      snap.persons.push(item);
+      changed = true;
+      continue;
+    }
+    // Safe display-name reconcile for known synthetic fixture IDs only — permissions/assignments unchanged.
+    if (
+      existing.email === item.email &&
+      existing.displayName !== item.displayName &&
+      item.nonProductionFixture === true
+    ) {
+      existing.displayName = item.displayName;
+      existing.updatedAt = item.updatedAt;
+      existing.version = (existing.version ?? 1) + 1;
+      changed = true;
+    }
   }
   for (const item of fixtureMemberships()) {
     if (snap.memberships.some((membership) => membership.id === item.id)) continue;

@@ -16,7 +16,7 @@ describe("MD-PR-UX001 role-safe identity resolution", () => {
     const service = loadNonProductionFixtures(new MemoryPlatformStore());
     const actor = { personId: FIXTURE_IDS.personCeo, correlationId: "ux001-id-ceo", now: NOW };
     const index = buildGovernanceLabelIndex(service, actor, FIXTURE_IDS.orgMaison);
-    assert.equal(index.persons.get(FIXTURE_IDS.personDirector), "Event Director");
+    assert.equal(index.persons.get(FIXTURE_IDS.personDirector), "Amara Okonkwo");
     assert.equal(index.events.get(FIXTURE_IDS.eventAlphaOne), "Alpha One");
     assert.equal(index.persons.has(FIXTURE_IDS.personOtherOrg), false);
     const assignment = service.listAssignments(actor, FIXTURE_IDS.orgMaison).find((item) => item.eventId === FIXTURE_IDS.eventAlphaOne);

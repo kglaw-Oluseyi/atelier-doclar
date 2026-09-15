@@ -36,15 +36,22 @@ function pickTools(rawText: string): string[] {
   if (/explain why sending|sending is blocked|why (is )?sending|communication.*(blocked|block)/.test(t)) {
     return ["intelligence.answer"];
   }
-  if (/seat|layout binding|table plan/.test(t)) return ["seating.explainAuthority"];
-  if (/budget|investment|spend|scenario/.test(t)) return ["investment.explain"];
+  // Seating before generic readiness so “seating readiness” is domain-grounded.
+  if (/seat|layout binding|table plan|seating/.test(t)) return ["seating.explainAuthority"];
+  if (/budget|investment|spend|scenario|unpriced/.test(t)) return ["investment.explain"];
   if (/roadmap|critical path|milestone/.test(t)) return ["roadmap.explainCriticalPath"];
-  if (/guest|rsvp|household/.test(t)) return ["guest.find"];
+  if (/guest|rsvp|household|vip protocol/.test(t)) return ["guest.find"];
+  if (/programme|timing collision|unassigned movement/.test(t)) return ["programme.analyseCollisions"];
+  if (/supplier|vendor deliverable/.test(t)) return ["intelligence.diagnose"];
+  if (/merchandise|merch|size chart|fulfilment/.test(t)) return ["intelligence.diagnose"];
+  if (/change impact|stale publication|stale plan/.test(t)) return ["change.analyseImpact"];
+  if (/evidence|receipt|outstanding approval/.test(t)) return ["evidence.readReceipt"];
   if (/risk|incident|mitigation/.test(t)) return ["risk.raise"];
-  if (/brief|discovery|interview/.test(t)) return ["eventBrief.read"];
+  if (/brief|discovery|interview|client vision/.test(t)) return ["eventBrief.read"];
+  if (/browser simulation|simulated browser|browser posture|browser limitations/.test(t)) return ["intelligence.answer"];
   if (/portal|browser|download|venue document/.test(t)) return ["browser.retrieveDocument"];
   if (/send (the )?(message|communication|email)\b/.test(t)) return ["communication.sendApproved"];
-  if (/diagnos|blocker|what (is|are) (wrong|blocking)/.test(t)) return ["intelligence.diagnose"];
+  if (/diagnos|what (is|are) (wrong|blocking)/.test(t)) return ["intelligence.diagnose"];
   if (/recommend|should i|options/.test(t)) return ["intelligence.recommend"];
   return ["intelligence.answer"];
 }

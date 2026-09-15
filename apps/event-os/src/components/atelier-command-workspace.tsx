@@ -176,13 +176,18 @@ export function AtelierCommandWorkspace({
             <div className="atelier-command-block" data-testid="atelier-command-intelligence">
               <h3>Intelligence answer</h3>
               <p data-testid="atelier-command-intelligence-answer">{intelligence.answer}</p>
-              <p className="atelier-command-muted">
-                Event: {intelligence.eventName ?? intelligence.eventId} · Intent: {intelligence.intent} · Data
-                changed: false · Interpreter: {intelligence.interpreterPosture}
+              <p className="atelier-command-muted" data-testid="atelier-command-intelligence-meta">
+                Event: {intelligence.eventName ?? intelligence.eventId}
+                {" · "}Domain: {intelligence.domain ?? "unspecified"}
+                {" · "}Intent: {intelligence.intent}
+                {" · "}Business data changed:{" "}
+                {String(Boolean(intelligence.businessDataChanged ?? intelligence.dataChanged))}
+                {" · "}Command record saved: {String(intelligence.commandRecordSaved ?? true)}
+                {" · "}Interpreter: {intelligence.interpreterPosture}
               </p>
               {intelligence.supportingFacts.length ? (
                 <div>
-                  <h4>Supporting facts</h4>
+                  <h4>Authoritative facts consulted</h4>
                   <ul>
                     {intelligence.supportingFacts.map((fact) => (
                       <li key={fact}>{fact}</li>
@@ -190,28 +195,19 @@ export function AtelierCommandWorkspace({
                   </ul>
                 </div>
               ) : null}
-              {intelligence.assumptions.length ? (
+              {intelligence.assumptions.length || intelligence.limitations.length ? (
                 <div>
-                  <h4>Assumptions / limitations</h4>
+                  <h4>Gaps / assumptions / limitations</h4>
                   <ul>
                     {[...intelligence.assumptions, ...intelligence.limitations].map((item) => (
                       <li key={item}>{item}</li>
                     ))}
                   </ul>
                 </div>
-              ) : (
-                <div>
-                  <h4>Limitations</h4>
-                  <ul>
-                    {intelligence.limitations.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              ) : null}
               {intelligence.recommendations.length ? (
                 <div>
-                  <h4>Recommendations</h4>
+                  <h4>Recommended next steps</h4>
                   <ul>
                     {intelligence.recommendations.map((item) => (
                       <li key={item}>{item}</li>
@@ -231,7 +227,10 @@ export function AtelierCommandWorkspace({
                 {latestReceipt.planId ? ` · Plan: ${latestReceipt.planId}` : ""}
                 {latestReceipt.riskSummary ? ` · Risk: ${latestReceipt.riskSummary}` : ""}
                 {latestReceipt.effectClass ? ` · Effect: ${latestReceipt.effectClass}` : ""}
-                {` · Data changed: ${String(Boolean(latestReceipt.dataChanged))}`}
+                {` · Business data changed: ${String(Boolean(latestReceipt.dataChanged))}`}
+                {latestReceipt.intelligenceResult
+                  ? ` · Command record saved: ${String(latestReceipt.intelligenceResult.commandRecordSaved ?? true)}`
+                  : ""}
               </p>
               {latestReceipt.taskDefinitionId ? (
                 <p className="atelier-command-muted">

@@ -1,5 +1,11 @@
-/** Deterministic Intelligence answers — fixture posture; never authority. */
+/** Deterministic Intelligence answers — domain-grounded, fixture posture; never authority. */
+import type { PlatformSnapshot } from "../store.js";
 import type { ContextBrokerProjection } from "./context.js";
+import {
+  resolveDomainIntelligence,
+  resolveIntelligenceDomain,
+  type DomainEvidenceBag,
+} from "./domain-resolvers.js";
 import type { RuntimePosture } from "./policy.js";
 
 export type AtelierIntelligenceResult = {
@@ -8,29 +14,26 @@ export type AtelierIntelligenceResult = {
   eventName?: string;
   organisationId: string;
   intent: "ANSWER" | "DIAGNOSE" | "RECOMMEND" | "EXPLAIN_BLOCK";
+  domain: string;
   answer: string;
   supportingFacts: string[];
   assumptions: string[];
   recommendations: string[];
   limitations: string[];
+  risksOrBlockers: string[];
+  provenance: string[];
+  availability: string;
   interpreterPosture: "FIXTURE";
   providersActive: boolean;
   productionAuthorised: boolean;
+  /** Business / domain data mutation — always false for Intelligence. */
+  businessDataChanged: false;
+  /** Alias retained for older consumers; always false for Intelligence. */
   dataChanged: false;
+  /** Atelier Command ledger/history recording may still occur for the instruction/receipt. */
+  commandRecordSaved: true;
   completedAt: string;
 };
-
-function factsFromContext(context: ContextBrokerProjection): string[] {
-  return context.knowledge
-    .filter((item) => item.epistemicClass === "CONFIRMED_FACT" || item.epistemicClass === "DERIVED")
-    .map((item) => item.statement);
-}
-
-function assumptionsFromContext(context: ContextBrokerProjection): string[] {
-  return context.knowledge
-    .filter((item) => item.epistemicClass === "ASSUMPTION" || item.epistemicClass === "UNKNOWN")
-    .map((item) => item.statement);
-}
 
 export function buildIntelligenceResult(input: {
   toolName: string;
@@ -40,106 +43,66 @@ export function buildIntelligenceResult(input: {
   context: ContextBrokerProjection;
   posture: RuntimePosture;
   now: string;
+  snap: PlatformSnapshot;
+  evidence?: DomainEvidenceBag;
+  taskDomain?: string;
 }): AtelierIntelligenceResult {
-  const eventName = input.context.scope.eventName;
-  const supportingFacts = factsFromContext(input.context);
-  const assumptions = assumptionsFromContext(input.context);
   const lowered = input.instruction.toLowerCase();
+  const domain = resolveIntelligenceDomain({
+    toolName: input.toolName,
+    instruction: input.instruction,
+    taskDomain: input.taskDomain,
+  });
   const intent: AtelierIntelligenceResult["intent"] =
-    input.toolName === "intelligence.diagnose" || /diagnos|blocker|wrong|blocking/.test(lowered)
-      ? "DIAGNOSE"
-      : input.toolName === "intelligence.recommend" || /recommend|should i|options/.test(lowered)
-        ? "RECOMMEND"
-        : /sending is blocked|why .*send|communication.*block|explain why sending/.test(lowered)
-          ? "EXPLAIN_BLOCK"
+    domain === "communications" &&
+    /explain why sending|sending is blocked|why (is )?sending|communication.*(blocked|block)/.test(lowered)
+      ? "EXPLAIN_BLOCK"
+      : input.toolName === "intelligence.diagnose" || /diagnos|blocker|what (is|are) (wrong|blocking)/.test(lowered)
+        ? "DIAGNOSE"
+        : input.toolName === "intelligence.recommend" || /recommend|should i|options/.test(lowered)
+          ? "RECOMMEND"
           : "ANSWER";
 
-  let answer: string;
-  let recommendations: string[] = [];
+  const resolved = resolveDomainIntelligence({
+    toolName: input.toolName,
+    instruction: input.instruction,
+    organisationId: input.organisationId,
+    eventId: input.eventId,
+    context: input.context,
+    posture: input.posture,
+    snap: input.snap,
+    evidence: input.evidence,
+    taskDomain: input.taskDomain,
+  });
+
   const limitations = [
+    ...resolved.limitations,
     "Answer is produced by the deterministic fixture interpreter while the model provider is inactive.",
     "Authority, permissions and mutations remain enforced by trusted application code — not by this text.",
+    "Business event data was not changed; Atelier Command may still record instruction/receipt history.",
   ];
-
-  if (intent === "EXPLAIN_BLOCK") {
-    answer = [
-      `Sending communications for ${eventName ?? "the selected event"} is blocked under the current runtime posture.`,
-      `productionAuthorised is ${String(input.posture.productionAuthorised)} and providersActive is ${String(input.posture.providersActive)}.`,
-      "External-effect tools (R4), including communication.sendApproved, cannot perform a real send until production is authorised and the communications provider is active.",
-      "Drafting or explaining remains permitted as a preparatory / read-only action inside this event only.",
-    ].join(" ");
-    recommendations = [
-      "Use Task Bank task “Draft event update” or “Submit communication for approval” for preparatory work.",
-      "Do not use “Send an approved communication…” unless production authorisation and provider posture change under separate authority.",
-    ];
-    limitations.push("This explanation is not a send, draft mutation, or provider activation.");
-  } else if (intent === "DIAGNOSE") {
-    const gaps = [
-      ...assumptions,
-      ...input.context.contradictions.map((c) => `Contradiction signal: ${c}`),
-    ];
-    answer = [
-      `Diagnosis for ${eventName ?? input.eventId}:`,
-      gaps.length
-        ? `Current readiness gaps and signals — ${gaps.join(" ")}`
-        : "No material contradiction signals were present in the authorised event projection.",
-      supportingFacts[0] ? `Grounding: ${supportingFacts[0]}` : "",
-    ]
-      .filter(Boolean)
-      .join(" ");
-    recommendations = [
-      "Resolve missing brief or guest information before consequential seating or communications work.",
-      "Re-run this diagnosis after publishing an updated brief edition.",
-    ];
-  } else if (intent === "RECOMMEND") {
-    answer = [
-      `Recommended next decisions for ${eventName ?? input.eventId} stay inside this event’s authorised scope.`,
-      supportingFacts[0] ?? "Event facts are limited in the current projection.",
-      "Prefer native governed commands with plan preview over browser assistance.",
-    ].join(" ");
-    recommendations = [
-      "Confirm seating authority and input readiness before launching a seating run.",
-      "Keep investment and roadmap decisions maker-checker separated where risk is R3+.",
-    ];
-  } else if (/status|readiness|missing information|gaps/.test(lowered)) {
-    answer = [
-      `Status for ${eventName ?? input.eventId}:`,
-      supportingFacts.join(" ") || "Limited confirmed facts are available in the authorised projection.",
-      assumptions.length ? `Open assumptions — ${assumptions.join(" ")}` : "No open assumptions were listed.",
-    ].join(" ");
-    recommendations = [
-      "Close discovery gaps before treating guest or seating counts as final.",
-      "Use Task Bank readiness tasks for seating, guests and communications when preparing work.",
-    ];
-  } else if (/seat|authority|layout/.test(lowered)) {
-    answer = [
-      `Seating authority for ${eventName ?? input.eventId} is explained only from this event’s authorised seating records.`,
-      supportingFacts.find((f) => /guest/i.test(f)) ?? supportingFacts[0] ?? "Guest and layout inputs should be verified before binding.",
-    ].join(" ");
-    recommendations = ["Open the seating workspace for the same event to inspect authoritative plan state."];
-  } else {
-    answer = [
-      `For ${eventName ?? input.eventId}: ${input.instruction.trim()}`,
-      supportingFacts.slice(0, 3).join(" ") || "Authorised event facts were insufficient for a deeper answer.",
-    ].join(" — ");
-    recommendations = ["Ask a more specific question about investment, roadmap, guests, seating or communications inside this event."];
-  }
 
   return {
     instruction: input.instruction,
     eventId: input.eventId,
-    eventName,
+    eventName: input.context.scope.eventName,
     organisationId: input.organisationId,
     intent,
-    answer,
-    supportingFacts,
-    assumptions,
-    recommendations,
+    domain: resolved.domain,
+    answer: resolved.answer,
+    supportingFacts: resolved.supportingFacts,
+    assumptions: resolved.assumptions,
+    recommendations: resolved.recommendations,
     limitations,
+    risksOrBlockers: resolved.risksOrBlockers,
+    provenance: resolved.provenance,
+    availability: resolved.availability,
     interpreterPosture: "FIXTURE",
     providersActive: input.posture.providersActive,
     productionAuthorised: input.posture.productionAuthorised,
+    businessDataChanged: false,
     dataChanged: false,
+    commandRecordSaved: true,
     completedAt: input.now,
   };
 }

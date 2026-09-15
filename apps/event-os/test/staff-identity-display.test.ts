@@ -20,8 +20,9 @@ describe("staff identity presentation", () => {
       eventId: FIXTURE_IDS.eventAlphaOne,
       now: NOW,
     });
-    assert.equal(presented.displayName, "Event Director");
+    assert.equal(presented.displayName, "Amara Okonkwo");
     assert.equal(presented.roleLabel, "Event Director");
+    assert.notEqual(presented.displayName, presented.roleLabel);
     assert.doesNotMatch(presented.roleLabel, /EVENT_DIRECTOR/);
     assert.doesNotMatch(JSON.stringify(presented), new RegExp(FIXTURE_IDS.personDirector));
   });

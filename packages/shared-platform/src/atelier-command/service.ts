@@ -7,6 +7,7 @@ import type { PlatformSnapshot } from "../store.js";
 import { simulateBrowserRun, DEFAULT_ALLOWED_DOMAINS } from "./browser.js";
 import { buildEventContextProjection } from "./context.js";
 import { buildIntelligenceResult } from "./intelligence.js";
+import type { DomainEvidenceBag } from "./domain-resolvers.js";
 import { interpretInstruction, hashPlan } from "./interpreter.js";
 import {
   assertAtelierPermission,
@@ -489,6 +490,7 @@ function executeToolStep(input: {
   posture: RuntimePosture;
   now: string;
   simulateLostResponse?: boolean;
+  domainEvidence?: DomainEvidenceBag;
 }): AtelierStepExecution {
   const tool = getAtelierTool(input.step.toolName);
   if (!tool) {
@@ -615,24 +617,27 @@ function executeToolStep(input: {
       snap: input.snap,
       organisationId: input.organisationId,
       eventId: input.eventId,
+      eventName: input.snap.events.find((event) => event.id === input.eventId)?.name,
       now: input.now,
     });
     const intelligence = buildIntelligenceResult({
-      toolName: tool.name.startsWith("intelligence.") ? tool.name : "intelligence.answer",
+      toolName: tool.name.startsWith("intelligence.") ? tool.name : tool.name,
       instruction: instructionText,
       organisationId: input.organisationId,
       eventId: input.eventId,
       context,
       posture: input.posture,
       now: input.now,
+      snap: input.snap,
+      evidence: input.domainEvidence,
     });
-    // Preserve tool-specific grounding in the answer text.
+    // Preserve tool-specific grounding marker without drowning domain facts.
     if (!tool.name.startsWith("intelligence.")) {
-      intelligence.answer = `${intelligence.answer} (via ${tool.name})`;
       intelligence.supportingFacts = [
         ...intelligence.supportingFacts,
         `Read tool ${tool.name} completed inside the authorised event only.`,
       ];
+      intelligence.provenance = [...intelligence.provenance, `tool:${tool.name}`];
     }
     execution.status = "SUCCEEDED";
     execution.resultRef = `read:${tool.name}:${execution.commandId}`;
@@ -696,6 +701,7 @@ export function executePlan(input: {
   simulateLostResponse?: boolean;
   failAtOrdinal?: number;
   now?: string;
+  domainEvidence?: DomainEvidenceBag;
 }) {
   assertAtelierPermission(input.actor, "atelierCommand.execute", input.organisationId, input.eventId);
   const ledger = ensureAtelierLedger(input.snap);
@@ -786,6 +792,7 @@ export function executePlan(input: {
         step,
         posture,
         now,
+        domainEvidence: input.domainEvidence,
       });
       failed.status = "FAILED";
       failed.errorClass = "FORCED_PARTIAL_FAILURE";
@@ -807,6 +814,7 @@ export function executePlan(input: {
       posture,
       now,
       simulateLostResponse: input.simulateLostResponse && step.ordinal === 1,
+      domainEvidence: input.domainEvidence,
     });
     executions.push(execution);
     if (execution.status === "REFUSED" || execution.status === "BLOCKED" || execution.status === "FAILED") {

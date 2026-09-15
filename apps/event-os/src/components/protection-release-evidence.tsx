@@ -51,6 +51,9 @@ export function ProtectionReleaseEvidence({
   s05aStatus,
   s05aEdition,
   evaluation,
+  applicationSha,
+  documentationHead,
+  capabilityLabel,
 }: {
   deployedSha: string;
   persistence: string;
@@ -80,6 +83,9 @@ export function ProtectionReleaseEvidence({
     adapters?: Record<string, string>;
     productionAuthorised?: boolean;
   };
+  applicationSha?: string;
+  documentationHead?: string | null;
+  capabilityLabel?: string;
 }) {
   const adapters = evaluation.adapters ?? {};
   return (
@@ -89,7 +95,15 @@ export function ProtectionReleaseEvidence({
         Fixture assurance is not production authorisation. A current complete pass only means the synthetic corpus is ready; live operations remain unauthorised.
       </p>
       <dl className="protection-release-list">
+        <CopyableIdentifier label="Current application SHA" value={applicationSha ?? deployedSha} testId="release-application-sha" />
         <CopyableIdentifier label="Deployed application SHA" value={deployedSha} testId="release-deployed-sha" />
+        {documentationHead ? (
+          <CopyableIdentifier label="Documentation HEAD" value={documentationHead} testId="release-documentation-head" />
+        ) : null}
+        <div>
+          <dt>Current capability / Task Bank</dt>
+          <dd data-testid="release-capability-identity">{capabilityLabel ?? "EOS-S06A Atelier Command"}</dd>
+        </div>
         <div>
           <dt>Persistence</dt>
           <dd data-testid="release-persistence">{persistence}</dd>
@@ -102,19 +116,25 @@ export function ProtectionReleaseEvidence({
           <dt>Production authorised</dt>
           <dd data-testid="release-production-authorised">{String(productionAuthorised)}</dd>
         </div>
+      </dl>
+      <h4 data-testid="release-historical-heading">Historical S05A / S05B evaluation evidence</h4>
+      <p className="atelier-command-muted">
+        Preserved corpus evidence from prior gates. This section is not the current EOS-S06A application or Task Bank identity.
+      </p>
+      <dl className="protection-release-list">
         <div>
-          <dt>S05A evaluation</dt>
+          <dt>S05A evaluation (historical)</dt>
           <dd data-testid="release-s05a">
             {s05aStatus ?? "unavailable"} {s05aEdition ? `· ${s05aEdition}` : ""}
           </dd>
         </div>
         <div>
-          <dt>S05B evaluation edition</dt>
+          <dt>S05B evaluation edition (historical)</dt>
           <dd data-testid="release-s05b-edition">{evaluation.corpusEdition}</dd>
         </div>
-        <CopyableIdentifier label="S05B corpus hash" value={evaluation.corpusHash} testId="release-s05b-hash" />
+        <CopyableIdentifier label="S05B corpus hash (historical)" value={evaluation.corpusHash} testId="release-s05b-hash" />
         <div>
-          <dt>S05B counts</dt>
+          <dt>S05B counts (historical)</dt>
           <dd data-testid="release-s05b-counts">
             total {evaluation.caseCount} · passed {evaluation.passedCount} · failed {evaluation.failedCount} · persisted {evaluation.persistedResultCount}
           </dd>

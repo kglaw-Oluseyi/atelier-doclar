@@ -1193,6 +1193,10 @@ export {
   refuseCrossEventRequest,
   decidePolicy,
   assertAtelierPermission,
+  intelligenceTaskResolverMap,
+  resolveIntelligenceDomain,
+  resolveDomainIntelligence,
+  ATELIER_DOMAINS,
 } from "./atelier-command/index.js";
 export type {
   AtelierCommandLedger,

@@ -262,15 +262,21 @@ export type AtelierIntelligenceResultPayload = {
   eventName?: string;
   organisationId: string;
   intent: string;
+  domain?: string;
   answer: string;
   supportingFacts: string[];
   assumptions: string[];
   recommendations: string[];
   limitations: string[];
+  risksOrBlockers?: string[];
+  provenance?: string[];
+  availability?: string;
   interpreterPosture: "FIXTURE";
   providersActive: boolean;
   productionAuthorised: boolean;
+  businessDataChanged?: false;
   dataChanged: false;
+  commandRecordSaved?: true;
   completedAt: string;
 };
 

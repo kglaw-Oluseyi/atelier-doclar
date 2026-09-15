@@ -24,7 +24,7 @@ describe("revocable staff sessions", () => {
       { email: "director@maison-doclar.test", accessToken: ACCESS },
       NOW,
     );
-    assert.equal(issued.person.displayName, "Event Director");
+    assert.equal(issued.person.displayName, "Amara Okonkwo");
     assert.equal(issued.session.personId, people.personDirector);
     assert.equal(issued.session.revokedAt, undefined);
     assert.equal(store.snapshot().staffSessions.length, 1);

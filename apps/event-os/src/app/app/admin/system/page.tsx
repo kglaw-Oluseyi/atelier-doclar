@@ -28,6 +28,8 @@ export default async function SystemPage() {
       />
       <ul className="atelier-ledger" data-testid="system-health">
         <li>Service: Event OS foundation</li>
+        <li data-testid="system-programme-posture">Programme posture: EOS-S06 ACCEPTED · EOS-S06A IMPLEMENTED (not accepted) · productionAuthorised false</li>
+        <li data-testid="system-capability-identity">Capability / Task Bank: eos-s06a-task-bank-v1 · Atelier Command</li>
         <li>Persistence: {persistenceLabel()}</li>
         <li data-testid="system-deployed-sha">Deployed SHA: {deployedSha()}</li>
         <li data-testid="system-application-sha">Application SHA: {identity.applicationSha}</li>
@@ -51,6 +53,9 @@ export default async function SystemPage() {
           s05aStatus={s05a?.evaluationStatus}
           s05aEdition={s05a?.evaluationCorpusEdition}
           evaluation={evaluation}
+          applicationSha={identity.applicationSha}
+          documentationHead={identity.documentationHead}
+          capabilityLabel="EOS-S06A Atelier Command · Task Bank eos-s06a-task-bank-v1"
         />
       ) : null}
     </AppShell>

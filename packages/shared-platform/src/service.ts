@@ -9793,6 +9793,23 @@ export class PlatformService {
   ) {
     const { snap } = this.authorizeQuery(actor, "atelierCommand.execute", { organisationId, eventId });
     const actorSnap = this.resolveActor(actor.personId);
+    let seating = null as import("./seating-workspace.js").SeatingWorkspaceView | null;
+    try {
+      seating = await this.seatingV2Commands().projectWorkspace(
+        {
+          personId: actor.personId,
+          correlationId: `atelier-intelligence:${eventId}:${planId}`,
+          now: this.tokenNow(actor),
+          actorKind: "HUMAN",
+        },
+        eventId,
+      );
+    } catch {
+      seating = null;
+    }
+    const roleKey = actorSnap.roles.find((role) =>
+      actorSnap.assignments.some((assignment) => assignment.roleId === role.id),
+    )?.key;
     const result = AtelierCommand.executePlan({
       snap,
       actor: actorSnap,
@@ -9802,6 +9819,7 @@ export class PlatformService {
       simulateLostResponse: options?.simulateLostResponse,
       failAtOrdinal: options?.failAtOrdinal,
       now: this.tokenNow(actor),
+      domainEvidence: { seating, roleKey },
     });
     this.writeAudit(snap, {
       action: "atelierCommand.execute",
@@ -9822,6 +9840,7 @@ export class PlatformService {
         `dataChanged=${String(Boolean(result.receipt.dataChanged))}`,
         result.receipt.taskDefinitionId ? `task=${result.receipt.taskDefinitionId}` : null,
         result.receipt.intelligenceResult ? "intelligence=present" : null,
+        result.receipt.intelligenceResult?.domain ? `domain=${result.receipt.intelligenceResult.domain}` : null,
       ]
         .filter(Boolean)
         .join("; "),

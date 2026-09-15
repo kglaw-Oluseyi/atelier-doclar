@@ -9,11 +9,11 @@ export async function selectOptionContaining(select: Locator, text: string | Reg
 
 export const STAFF_IDENTITIES = {
   ceo: { email: "ceo@maison-doclar.test", displayName: "George Lawson", roleLabel: "CEO" },
-  director: { email: "director@maison-doclar.test", displayName: "Event Director", roleLabel: "Event Director" },
-  planner: { email: "planner@maison-doclar.test", displayName: "Assigned Planner", roleLabel: "Planner" },
-  auditor: { email: "auditor@maison-doclar.test", displayName: "Read Only Auditor", roleLabel: "Read-only Auditor" },
-  admin: { email: "admin@maison-doclar.test", displayName: "System Administrator", roleLabel: "System Administrator" },
-  reviewer: { email: "reviewer@maison-doclar.test", displayName: "Risk Governance Reviewer", roleLabel: "Risk Governance Reviewer" },
+  director: { email: "director@maison-doclar.test", displayName: "Amara Okonkwo", roleLabel: "Event Director" },
+  planner: { email: "planner@maison-doclar.test", displayName: "James Whitfield", roleLabel: "Planner" },
+  auditor: { email: "auditor@maison-doclar.test", displayName: "Priya Nair", roleLabel: "Read-only Auditor" },
+  admin: { email: "admin@maison-doclar.test", displayName: "Nora Adeyemi", roleLabel: "System Administrator" },
+  reviewer: { email: "reviewer@maison-doclar.test", displayName: "Samuel Ikeda", roleLabel: "Risk Governance Reviewer" },
 } as const;
 
 export type StaffIdentityKey = keyof typeof STAFF_IDENTITIES;

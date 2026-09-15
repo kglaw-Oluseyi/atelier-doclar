@@ -27,7 +27,7 @@ function baseReview(overrides: Partial<ContactCorrectionReview> = {}): ContactCo
     maker: {
       state: "AVAILABLE",
       personId: PERSON,
-      displayName: "Event Director",
+      displayName: "Amara Okonkwo",
       roleKey: "EVENT_DIRECTOR",
     },
     decision: { state: "PENDING" },
@@ -46,8 +46,9 @@ describe("correction review presentation", () => {
     const json = JSON.stringify(presented);
     assert.equal(presented.maker.state, "AVAILABLE");
     if (presented.maker.state === "AVAILABLE") {
-      assert.equal(presented.maker.displayName, "Event Director");
+      assert.equal(presented.maker.displayName, "Amara Okonkwo");
       assert.equal(presented.maker.roleLabel, "Event Director");
+      assert.notEqual(presented.maker.displayName, presented.maker.roleLabel);
       assert.match(presented.maker.proposedAtLabel, /2026/);
       assert.equal(presented.maker.explanation, "A different authorised person must review this correction.");
     }

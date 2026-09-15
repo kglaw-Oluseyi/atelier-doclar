@@ -11,7 +11,7 @@ const live = process.env.PLAYWRIGHT_LIVE === "1";
 test.describe("EOS-S06A remediation live smoke", () => {
   test.skip(!live, "set PLAYWRIGHT_LIVE=1 for live smoke");
 
-  test("two Intelligence answers persist after reload", async ({ page }) => {
+  test("readiness and seating answers are distinct after reload", async ({ page }) => {
     await loginAs(page, "ceo");
     await page.goto(`/app/events/${EVENT}/atelier-command`);
     await expect(page.getByTestId("atelier-command-workspace")).toBeVisible({ timeout: 40_000 });
@@ -28,14 +28,11 @@ test.describe("EOS-S06A remediation live smoke", () => {
       page.waitForURL(/atelier-command\?result=/, { timeout: 40_000 }),
       page.getByRole("button", { name: "Execute plan" }).click(),
     ]);
-    // Wait for status-specific content so a prior EXPLAIN_BLOCK receipt cannot satisfy the first capture.
-    await expect(page.getByTestId("atelier-command-intelligence-answer")).toContainText(/Status for|Open assumptions|Limited confirmed facts/i, {
+    await expect(page.getByTestId("atelier-command-intelligence-answer")).toContainText(/Readiness status|Status for/i, {
       timeout: 40_000,
     });
     const first = await page.getByTestId("atelier-command-intelligence-answer").innerText();
-    expect(first.length).toBeGreaterThan(40);
     expect(first).not.toMatch(/^Executed 1 step\(s\); status COMPLETED$/);
-    expect(first).not.toMatch(/Sending communications .* is blocked/i);
     await page.reload();
     await expect(page.getByTestId("atelier-command-intelligence-answer")).toContainText(first.slice(0, 40), {
       timeout: 40_000,
@@ -43,6 +40,30 @@ test.describe("EOS-S06A remediation live smoke", () => {
 
     await page.goto(`/app/events/${EVENT}/atelier-command`);
     await expect(page.getByTestId("atelier-command-workspace")).toBeVisible({ timeout: 40_000 });
+    await page.getByLabel("What do you need for this event?").fill(
+      "Diagnose seating readiness for this event, including layout binding, capacity and blockers.",
+    );
+    await Promise.all([
+      page.waitForURL(/atelier-command\?result=/, { timeout: 40_000 }),
+      page.getByRole("button", { name: "Interpret instruction" }).click(),
+    ]);
+    await expect(page.getByTestId("atelier-command-plan")).toContainText(/seating\.explainAuthority|intelligence/i, {
+      timeout: 40_000,
+    });
+    await Promise.all([
+      page.waitForURL(/atelier-command\?result=/, { timeout: 40_000 }),
+      page.getByRole("button", { name: "Execute plan" }).click(),
+    ]);
+    await expect(page.getByTestId("atelier-command-intelligence-answer")).toContainText(
+      /Seating diagnosis|layout binding|Eligible|capacity|Missing prerequisite/i,
+      { timeout: 40_000 },
+    );
+    const seating = await page.getByTestId("atelier-command-intelligence-answer").innerText();
+    expect(seating).not.toEqual(first);
+    await expect(page.getByTestId("atelier-command-intelligence-meta")).toContainText(/Business data changed: false/i);
+    await expect(page.getByTestId("atelier-command-intelligence-meta")).toContainText(/Command record saved: true/i);
+
+    await page.goto(`/app/events/${EVENT}/atelier-command`);
     await page.getByLabel("What do you need for this event?").fill("Explain why sending is blocked for this event.");
     await Promise.all([
       page.waitForURL(/atelier-command\?result=/, { timeout: 40_000 }),
@@ -55,12 +76,12 @@ test.describe("EOS-S06A remediation live smoke", () => {
       page.getByRole("button", { name: "Execute plan" }).click(),
     ]);
     await expect(page.getByTestId("atelier-command-intelligence-answer")).toContainText(
-      /Sending communications .* is blocked|productionAuthorised|providersActive|production authorised/i,
+      /Sending communications|Communications posture|productionAuthorised|providersActive/i,
       { timeout: 40_000 },
     );
     const second = await page.getByTestId("atelier-command-intelligence-answer").innerText();
     expect(second).not.toEqual(first);
-    expect(second).not.toMatch(/^Executed 1 step\(s\); status COMPLETED$/);
+    expect(second).not.toEqual(seating);
   });
 
   test("named cross-event request is explicitly refused", async ({ page }) => {

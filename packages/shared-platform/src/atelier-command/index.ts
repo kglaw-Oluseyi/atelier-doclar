@@ -5,6 +5,7 @@ export * from "./tools.js";
 export * from "./task-bank.js";
 export * from "./context.js";
 export * from "./browser.js";
+export * from "./domain-resolvers.js";
 export * from "./intelligence.js";
 export * from "./interpreter.js";
 export * from "./service.js";
