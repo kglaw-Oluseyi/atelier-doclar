@@ -58,6 +58,7 @@ const KIND_BY_CODE: Record<PlatformErrorCode, OperationalStateKind> = {
   MULTIPLE_ACTIVE_SEATING_LAYOUT_BINDINGS: "validation",
   SEATING_LAYOUT_BINDING_STALE: "validation",
   SEATING_LAYOUT_PUBLICATION_MISMATCH: "validation",
+  SEATING_HARD_RULE_CONFLICT: "conflict",
   IDEMPOTENCY_CONFLICT: "duplicate",
   DEPENDENCY_UNAVAILABLE: "postgres_unavailable",
   CAPABILITY_NOT_ENABLED: "readiness_unavailable",

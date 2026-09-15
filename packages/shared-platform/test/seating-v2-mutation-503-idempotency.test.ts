@@ -181,6 +181,23 @@ describe("EOS-S06 mutation recoverable — layout-binding proposal", () => {
     });
     assert.equal(recovered.application, "APPLIED");
   });
+
+  it("lookupMutationReceipt finds durable propose commit by idempotency key", async () => {
+    const { service, store } = fixtureService();
+    const room = await publishLineage(service, store, "M503 Lookup", 4);
+    const v2 = service.seatingV2Commands();
+    const key = "m503-propose-lookup-key";
+    const proposed = await v2.proposeLayoutBinding(planner(), envelope(people.assignPlanner, key), {
+      layoutPublicationId: room.publication.id,
+      reason: "Propose for lookup",
+    });
+    const missing = await v2.lookupMutationReceipt(planner(), envelope(people.assignPlanner, "m503-missing-keyxx"), "seatingV2.proposeLayoutBinding", "seating.input.prepare");
+    assert.equal(missing, undefined);
+    const found = await v2.lookupMutationReceipt(planner(), envelope(people.assignPlanner, key), "seatingV2.proposeLayoutBinding", "seating.input.prepare");
+    assert.ok(found);
+    assert.equal(found!.resultIdentity, proposed.value.id);
+    assert.equal(found!.application, "APPLIED");
+  });
 });
 
 function attendingGuest(service: ReturnType<typeof fixtureService>["service"], givenName: string, key: string) {

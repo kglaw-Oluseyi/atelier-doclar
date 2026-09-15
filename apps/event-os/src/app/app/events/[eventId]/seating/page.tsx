@@ -25,6 +25,7 @@ import {
   freezeSeatingInputsAction,
   launchSeatingRunAction,
   proposeSeatingLayoutBindingAction,
+  recoverProposeSeatingLayoutBindingAction,
   publishSeatingPlanAction,
   releaseReservationBlockAction,
   requestSeatingExportAction,
@@ -338,6 +339,7 @@ export default async function EventSeatingPage({
             <ProtectionMutationForm
               key={`seating-layout-binding-propose-${presented.correlationId ?? "idle"}`}
               action={proposeSeatingLayoutBindingAction.bind(null, event.id)}
+              recoverAction={recoverProposeSeatingLayoutBindingAction.bind(null, event.id)}
               className="atelier-form"
               testId="seating-layout-binding-propose"
             >
@@ -475,8 +477,10 @@ export default async function EventSeatingPage({
                   const softDraft = item.status === "DRAFT" && item.kind !== "HARD";
                   const hardDraft = item.status === "DRAFT" && item.kind === "HARD";
                   const alreadyActiveDraft = item.duplicateRole === "ALREADY_ACTIVE_DRAFT";
+                  const hardConflict = Boolean(item.hardConflictEditionId);
                   const canActivate =
-                    !alreadyActiveDraft && ((hardDraft && permissions.ruleActivate) || (softDraft && permissions.constraintManage));
+                    !alreadyActiveDraft &&
+                    ((hardDraft && permissions.ruleActivate) || (softDraft && permissions.constraintManage));
                   const canWithdraw =
                     item.duplicateRole !== "REDUNDANT_HISTORICAL" &&
                     (item.status === "DRAFT" || item.status === "ACTIVE") &&
@@ -491,10 +495,13 @@ export default async function EventSeatingPage({
                             ? "seating-rule-redundant-historical"
                             : item.duplicateRole === "ALREADY_ACTIVE_DRAFT"
                               ? "seating-rule-already-active-draft"
-                              : "seating-rule-item"
+                              : hardConflict
+                                ? "seating-rule-hard-conflict-draft"
+                                : "seating-rule-item"
                       }
                       data-duplicate-role={item.duplicateRole ?? ""}
                       data-authoritative-id={item.authoritativeEditionId ?? ""}
+                      data-hard-conflict-id={item.hardConflictEditionId ?? ""}
                     >
                       {item.preview}
                       {item.duplicateRole === "AUTHORITATIVE" && (item.redundantActiveCount ?? 0) > 0 ? (
@@ -512,6 +519,13 @@ export default async function EventSeatingPage({
                       {alreadyActiveDraft ? (
                         <p data-testid="seating-rule-already-active">
                           ALREADY ACTIVE — equivalent rule {item.authoritativeEditionId?.slice(0, 8)} already governs this scope. Activation would make no data change.
+                        </p>
+                      ) : null}
+                      {hardConflict ? (
+                        <p data-testid="seating-rule-hard-conflict">
+                          Conflicts with ACTIVE HARD {(item.hardConflictKind ?? "rule").replaceAll("_", " ")}{" "}
+                          {item.hardConflictEditionId?.slice(0, 8)}. Withdraw or supersede that governing rule through a governed
+                          action before activating this replacement. Activation is blocked while the contradiction remains.
                         </p>
                       ) : null}
                       {canActivate ? (

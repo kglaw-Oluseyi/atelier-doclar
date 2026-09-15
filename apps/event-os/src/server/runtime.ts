@@ -10,6 +10,7 @@ import {
   applySyntheticSnapshot,
   ensureEosS05ACollections,
   ensureEosS05BCollections,
+  ensureEosS06SuccessorLayoutFixture,
   type PgQueryable,
   type PlatformClock,
   type PlatformStore,
@@ -80,6 +81,7 @@ function platformOptions() {
 function seedSeatingLayout(store: PlatformStore, service: PlatformService): void {
   try {
     applyS06SeatingLayoutIfMissing(store, service);
+    ensureEosS06SuccessorLayoutFixture(store, service);
   } catch {
     // Missing layout remains an honest seating blocker; seed must not prevent boot.
   }

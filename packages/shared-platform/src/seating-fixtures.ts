@@ -208,3 +208,130 @@ export async function ensureS06SeatingLayoutBinding(store: PlatformStore, servic
     idempotencyPrefix: "s06-seating-binding",
   });
 }
+
+/** Stable labels for the EOS-S06 dual-layout successor verification fixture. */
+export const EOS_S06_SUCCESSOR_LAYOUT_A_NAME = "Synthetic seating hall";
+export const EOS_S06_SUCCESSOR_LAYOUT_B_NAME = "EOS-S06 successor layout B";
+
+/**
+ * Idempotent synthetic fixture: CURRENT layout A (hall), materially different CURRENT layout B,
+ * and an ACTIVE seating layout binding to A. Safe to rerun; excluded from real communications.
+ */
+export function ensureEosS06SuccessorLayoutFixture(store: PlatformStore, service: PlatformService): {
+  layoutAId: string;
+  layoutBId: string;
+  layoutAName: string;
+  layoutBName: string;
+} {
+  applyS06SeatingLayoutIfMissing(store, service);
+  const snap = store.snapshot();
+  const layoutA = snap.layouts.find(
+    (item) => item.eventId === FIXTURE_IDS.eventAlphaOne && item.name === EOS_S06_SUCCESSOR_LAYOUT_A_NAME,
+  );
+  if (!layoutA) {
+    throw new Error("EOS-S06 successor fixture requires Synthetic seating hall (layout A).");
+  }
+
+  let layoutB = snap.layouts.find(
+    (item) => item.eventId === FIXTURE_IDS.eventAlphaOne && item.name === EOS_S06_SUCCESSOR_LAYOUT_B_NAME,
+  );
+  const hasCurrentB = layoutB
+    ? snap.layoutPublications.some((item) => item.layoutId === layoutB!.id && item.status === "CURRENT")
+    : false;
+
+  if (!hasCurrentB) {
+    const venue =
+      snap.venues.find((item) => item.organisationId === FIXTURE_IDS.orgMaison && item.status === "ACTIVE") ??
+      service.createVenue(director(), {
+        organisationId: FIXTURE_IDS.orgMaison,
+        displayName: "Synthetic seating pavilion",
+        reason: "Seed seating layout fixture",
+        idempotencyKey: "s06-seating-venue-seed-01",
+      });
+    const adopted =
+      store.snapshot().eventVenues?.find((item) => item.eventId === FIXTURE_IDS.eventAlphaOne && item.venueId === venue.id) ??
+      service.adoptVenue(director(), {
+        organisationId: FIXTURE_IDS.orgMaison,
+        eventId: FIXTURE_IDS.eventAlphaOne,
+        venueId: venue.id,
+        reason: "Adopt seating fixture venue",
+        idempotencyKey: "s06-seating-adopt-seed-01",
+      });
+    if (!layoutB) {
+      layoutB = service.createBlankLayout(planner(), {
+        organisationId: FIXTURE_IDS.orgMaison,
+        eventId: FIXTURE_IDS.eventAlphaOne,
+        eventVenueId: adopted.id,
+        name: EOS_S06_SUCCESSOR_LAYOUT_B_NAME,
+        widthMm: 28000,
+        heightMm: 20000,
+        reason: "Create EOS-S06 successor layout B",
+        idempotencyKey: "s06-successor-layout-b-seed-01",
+      });
+      // Materially different geometry vs hall (three round tables, different capacity).
+      layoutB = service.applyLayoutCommand(planner(), {
+        ...cas(layoutB),
+        reason: "Add successor fixture table North",
+        command: {
+          kind: "CREATE_OBJECT",
+          objectType: "TABLE",
+          label: "Table North",
+          geometry: { kind: "RECTANGLE", xMm: 2000, yMm: 2000, widthMm: 2200, heightMm: 2200 },
+          subtype: { shape: "RECTANGLE", declaredCapacity: 10 },
+        },
+      });
+      layoutB = service.applyLayoutCommand(planner(), {
+        ...cas(layoutB),
+        reason: "Add successor fixture table South",
+        command: {
+          kind: "CREATE_OBJECT",
+          objectType: "TABLE",
+          label: "Table South",
+          geometry: { kind: "RECTANGLE", xMm: 6000, yMm: 2000, widthMm: 2200, heightMm: 2200 },
+          subtype: { shape: "RECTANGLE", declaredCapacity: 10 },
+        },
+      });
+      layoutB = service.applyLayoutCommand(planner(), {
+        ...cas(layoutB),
+        reason: "Add successor fixture table East",
+        command: {
+          kind: "CREATE_OBJECT",
+          objectType: "TABLE",
+          label: "Table East",
+          geometry: { kind: "RECTANGLE", xMm: 4000, yMm: 6000, widthMm: 2200, heightMm: 2200 },
+          subtype: { shape: "RECTANGLE", declaredCapacity: 6 },
+        },
+      });
+    }
+    service.runLayoutValidation(planner(), { ...cas(layoutB), reason: "Validate EOS-S06 successor layout B" });
+    const current = service.getLayoutSetupWorkspace(planner(), FIXTURE_IDS.orgMaison, FIXTURE_IDS.eventAlphaOne, layoutB.id).layout;
+    const submitted = service.submitLayoutApproval(planner(), { ...cas(current), reason: "Submit EOS-S06 successor layout B" });
+    const approvedLayout = service.getLayoutSetupWorkspace(director(), FIXTURE_IDS.orgMaison, FIXTURE_IDS.eventAlphaOne, layoutB.id).layout;
+    service.decideLayoutApproval(director(), {
+      ...cas(approvedLayout),
+      approvalId: submitted.id,
+      decision: "APPROVED",
+      reason: "Approve EOS-S06 successor layout B",
+    });
+    const ready = service.getLayoutSetupWorkspace(director(), FIXTURE_IDS.orgMaison, FIXTURE_IDS.eventAlphaOne, layoutB.id).layout;
+    service.publishLayout(director(), { ...cas(ready), reason: "Publish EOS-S06 successor layout B" });
+  }
+
+  seedS06SeatingLayoutBindingIfMissing(store, service);
+
+  return {
+    layoutAId: layoutA.id,
+    layoutBId: layoutB!.id,
+    layoutAName: EOS_S06_SUCCESSOR_LAYOUT_A_NAME,
+    layoutBName: EOS_S06_SUCCESSOR_LAYOUT_B_NAME,
+  };
+}
+
+/** Async binding ensure for tests/scripts that need ACTIVE binding to layout A after fixture seed. */
+export async function ensureEosS06SuccessorLayoutBinding(
+  store: PlatformStore,
+  service: PlatformService,
+): Promise<SeatingV2LayoutBinding | undefined> {
+  ensureEosS06SuccessorLayoutFixture(store, service);
+  return ensureS06SeatingLayoutBinding(store, service);
+}

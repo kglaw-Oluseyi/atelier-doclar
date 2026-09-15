@@ -35,6 +35,12 @@ import {
   type LegacyDuplicateReconciliationPlan,
 } from "./seating-v2-rule-duplicates.js";
 import {
+  findHardRuleConflicts,
+  hardRuleConflictPlatformError,
+  subjectIdsForEdition,
+  targetKeysForEdition,
+} from "./seating-v2-hard-rule-conflicts.js";
+import {
   buildSeatingV2Package,
   finishSeatingV2Package,
   packageIsFresh,
@@ -70,8 +76,11 @@ import type {
   SeatingV2Publication,
   SeatingV2Reservation,
   SeatingV2ReservationEdition,
+  SeatingV2IdempotencyReceipt,
   SeatingV2Rule,
   SeatingV2RuleEdition,
+  SeatingV2RuleSubject,
+  SeatingV2RuleTarget,
   SeatingV2Run,
   SeatingV2SpecialistReview,
 } from "./seating-v2-state.js";
@@ -404,41 +413,111 @@ export class SeatingV2CommandService {
     envelope: SeatingV2CommandEnvelope,
     input: { editionId: string },
   ): Promise<SeatingV2CommandResult<SeatingV2RuleEdition>> {
-    return this.mutate(actor, envelope, "seating.view", "seatingV2.activateRule", async (tx) => {
-      // Serialize activations per event so concurrent equivalent drafts cannot both become ACTIVE.
-      await tx.lockEventCurrent(envelope, "FOR_UPDATE");
-      const draft = await this.requireOwned<SeatingV2RuleEdition>(tx, "ruleEditions", input.editionId, envelope, "draft rule edition");
-      if (draft.lifecycle !== "DRAFT") {
-        throw new PlatformError("NOT_FOUND", "draft rule edition was not found");
-      }
-      if (draft.hardness === "HARD") {
-        this.guard(actor, "seating.rule.activate", envelope, envelope.actorAssignmentId);
-        if (draft.createdByPersonId === actor.personId) {
-          throw new PlatformError("FORBIDDEN", "HARD activation requires a different authorised person");
+    try {
+      return await this.mutate(actor, envelope, "seating.view", "seatingV2.activateRule", async (tx) => {
+        // Serialize activations per event so concurrent equivalent/contradictory drafts cannot both win.
+        await tx.lockEventCurrent(envelope, "FOR_UPDATE");
+        const draft = await this.requireOwned<SeatingV2RuleEdition>(tx, "ruleEditions", input.editionId, envelope, "draft rule edition");
+        if (draft.lifecycle !== "DRAFT") {
+          throw new PlatformError("NOT_FOUND", "draft rule edition was not found");
         }
-      } else {
-        this.guard(actor, "seating.constraint.manage", envelope, envelope.actorAssignmentId);
-      }
-      const concurrency = this.requireConcurrency(envelope);
-      if (draft.editionNo !== concurrency.expectedVersion || draft.contentHash !== concurrency.expectedContentHash) {
-        throw new PlatformError("VERSION_CONFLICT", "stale rule edition does not match");
-      }
-      // Semantic duplicate protection: one ACTIVE edition per contentHash in event scope.
-      // Content hash already normalises subject/target order (KEEP_TOGETHER A,B ≡ B,A).
-      const equivalents = (await tx.list<SeatingV2RuleEdition>("ruleEditions", envelope)).filter(
-        (item) => item.lifecycle === "ACTIVE" && item.contentHash === draft.contentHash && item.id !== draft.id,
-      );
-      if (equivalents.length > 0) {
-        const authoritative = selectAuthoritativeActiveRule(equivalents)!;
-        return { replayed: true, value: authoritative, reason: "ALREADY_ACTIVE" as const };
-      }
-      const now = nowOf(actor);
-      return tx.updateLifecycle<SeatingV2RuleEdition>("ruleEditions", draft.id, envelope, {
-        lifecycle: "ACTIVE",
-        activatedByPersonId: actor.personId,
-        activatedAt: now,
+        if (draft.hardness === "HARD") {
+          this.guard(actor, "seating.rule.activate", envelope, envelope.actorAssignmentId);
+          if (draft.createdByPersonId === actor.personId) {
+            throw new PlatformError("FORBIDDEN", "HARD activation requires a different authorised person");
+          }
+        } else {
+          this.guard(actor, "seating.constraint.manage", envelope, envelope.actorAssignmentId);
+        }
+        const concurrency = this.requireConcurrency(envelope);
+        if (draft.editionNo !== concurrency.expectedVersion || draft.contentHash !== concurrency.expectedContentHash) {
+          throw new PlatformError("VERSION_CONFLICT", "stale rule edition does not match");
+        }
+        // Semantic duplicate protection: one ACTIVE edition per contentHash in event scope.
+        // Content hash already normalises subject/target order (KEEP_TOGETHER A,B ≡ B,A).
+        const editions = await tx.list<SeatingV2RuleEdition>("ruleEditions", envelope);
+        const equivalents = editions.filter(
+          (item) => item.lifecycle === "ACTIVE" && item.contentHash === draft.contentHash && item.id !== draft.id,
+        );
+        if (equivalents.length > 0) {
+          const authoritative = selectAuthoritativeActiveRule(equivalents)!;
+          return { replayed: true, value: authoritative, reason: "ALREADY_ACTIVE" as const };
+        }
+        // HARD contradiction guard: KEEP_TOGETHER ↔ KEEP_APART (and other explicit matrix pairs).
+        const subjects = await tx.list<SeatingV2RuleSubject>("ruleSubjects", envelope);
+        const targets = await tx.list<SeatingV2RuleTarget>("ruleTargets", envelope);
+        const conflicts = findHardRuleConflicts({
+          draft,
+          draftSubjectIds: subjectIdsForEdition(draft.id, subjects),
+          draftTargetKey: targetKeysForEdition(draft.id, targets),
+          activeEditions: editions.filter((item) => item.lifecycle === "ACTIVE"),
+          subjects,
+          targets,
+        });
+        if (conflicts[0]) {
+          throw hardRuleConflictPlatformError(conflicts[0]);
+        }
+        const now = nowOf(actor);
+        return tx.updateLifecycle<SeatingV2RuleEdition>("ruleEditions", draft.id, envelope, {
+          lifecycle: "ACTIVE",
+          activatedByPersonId: actor.personId,
+          activatedAt: now,
+        });
       });
-    });
+    } catch (error) {
+      if (error instanceof PlatformError && error.code === "SEATING_HARD_RULE_CONFLICT") {
+        await this.recordRefusedHardRuleActivation(actor, envelope, error);
+      }
+      throw error;
+    }
+  }
+
+  /** Look up a durable seating V2 mutation receipt by action + idempotency key (recovery path). */
+  async lookupMutationReceipt(
+    actor: SeatingV2Actor,
+    envelope: SeatingV2CommandEnvelope,
+    action: string,
+    permission: PermissionKey = "seating.view",
+  ): Promise<SeatingV2IdempotencyReceipt | undefined> {
+    const trusted = this.trustedEnvelope(actor, envelope, permission);
+    return this.repo.transaction(async (tx) =>
+      tx.getIdempotency(trusted.envelope, action, trusted.envelope.idempotencyKey),
+    );
+  }
+
+  private async recordRefusedHardRuleActivation(
+    actor: SeatingV2Actor,
+    envelope: SeatingV2CommandEnvelope,
+    error: PlatformError,
+  ): Promise<void> {
+    try {
+      await this.repo.transaction(async (tx) => {
+        await tx.appendAudit({
+          id: randomUUID(),
+          occurredAt: nowOf(actor),
+          actorType: "USER",
+          actorPersonId: actor.personId,
+          service: "shared-platform",
+          action: "seatingV2.activateRule",
+          outcome: "FAILED",
+          organisationId: envelope.organisationId,
+          eventId: envelope.eventId,
+          resourceType: "seating_v2",
+          resourceId: envelope.idempotencyKey,
+          correlationId: actor.correlationId,
+          idempotencyKey: envelope.idempotencyKey,
+          metadata: {
+            refused: true,
+            code: error.code,
+            publicMessage: error.publicMessage,
+            details: error.details ?? [],
+          },
+          schemaVersion: 1,
+        });
+      });
+    } catch {
+      // Best-effort audit; the action result layer still records NOT_APPLIED.
+    }
   }
 
   async withdrawRule(

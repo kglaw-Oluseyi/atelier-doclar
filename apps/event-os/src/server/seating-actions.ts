@@ -1,14 +1,26 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import {
+  canSeeEvent,
   executeS06Evaluation,
+  formDataToRecord,
   PlatformError,
   requireSeatingV2Writable,
+  resolveTrustedSeatingAssignment,
+  safeAttemptedValues,
+  seatingAssignmentAllowsPermission,
+  transportFailureFormState,
   type ProtectionFormState,
   type SeatingV2RuleContent,
 } from "@maison-doclar/shared-platform";
+import { writeActionResult } from "./action-flash";
+import { buildActionResult, resultHref, sessionHashFromToken } from "./action-result";
+import { writeTruthfulActionResult } from "./protection-form-lifecycle";
 import { getRuntime } from "./runtime";
+import { readStaffSessionCookie } from "./staff-session-cookie";
 import { runTrustedSeatingAction } from "./trusted-seating-action-context";
+import { requireActor } from "./with-session";
 
 function asId(result: { value: { id: string } }) {
   return { id: result.value.id };
@@ -513,6 +525,94 @@ export async function proposeSeatingLayoutBindingAction(
       );
     },
   });
+}
+
+/**
+ * After a lost/503 transport response, look up the durable propose receipt by idempotency key.
+ * Committed → truthful recovered SUCCESS redirect. Not committed → inline failure with preserved form.
+ */
+export async function recoverProposeSeatingLayoutBindingAction(
+  boundEventId: string,
+  _prev: ProtectionFormState,
+  formData: FormData,
+): Promise<ProtectionFormState> {
+  const attempted = safeAttemptedValues(formDataToRecord(formData));
+  const unconfirmed =
+    "We could not confirm that this proposal was saved. Your entries are preserved. Check again or retry safely.";
+  const recovered =
+    "We temporarily lost the server response. Maison Doclar checked the saved state and confirmed that this proposal was created.";
+
+  const failInline = () =>
+    transportFailureFormState({
+      attemptedValues: attempted.values,
+      sensitiveCleared: attempted.sensitiveCleared,
+      summary: unconfirmed,
+    });
+
+  try {
+    requireV2Mutation();
+    const { actor } = await requireActor();
+    const runtime = getRuntime();
+    const event = runtime.store.loadEventById(boundEventId);
+    if (!event) return failInline();
+    const people = runtime.service.resolveActor(actor.personId);
+    const now = actor.now ?? new Date().toISOString();
+    if (!canSeeEvent(people, event, now)) return failInline();
+    const assignment = resolveTrustedSeatingAssignment(people, event, now);
+    if (!seatingAssignmentAllowsPermission(people, assignment, "seating.input.prepare")) {
+      throw new PlatformError("FORBIDDEN", "This assignment cannot recover this seating action.");
+    }
+    const idempotencyKey = field(formData, "idempotencyKey");
+    if (idempotencyKey.length < 12) return failInline();
+    const envelope = {
+      organisationId: event.organisationId,
+      eventId: event.id,
+      actorAssignmentId: assignment.id,
+      idempotencyKey,
+    };
+    const receipt = await runtime.service
+      .seatingV2Commands()
+      .lookupMutationReceipt(actor, envelope, "seatingV2.proposeLayoutBinding", "seating.input.prepare");
+    if (!receipt || (receipt.application !== "APPLIED" && receipt.application !== "REPLAYED")) {
+      return failInline();
+    }
+    const scopePath = `/app/events/${event.id}/seating`;
+    await writeTruthfulActionResult({
+      status: "SUCCESS",
+      code: "SUCCESS",
+      application: "REPLAYED",
+      didDataChange: false,
+      persist: async () =>
+        writeActionResult(
+          buildActionResult({
+            sessionHash: sessionHashFromToken((await readStaffSessionCookie()) ?? ""),
+            actorPersonId: actor.personId,
+            scopePath,
+            actionType: "seating.layout_binding.propose",
+            correlationId: actor.correlationId,
+            status: "SUCCESS",
+            code: "SUCCESS",
+            message: recovered,
+            application: "REPLAYED",
+            didDataChange: false,
+            eventId: event.id,
+            organisationId: event.organisationId,
+            subjectId: receipt.resultIdentity,
+          }),
+        ),
+    });
+    redirect(resultHref(scopePath, actor.correlationId, { subjectId: receipt.resultIdentity }));
+  } catch (error) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      String((error as { digest: unknown }).digest).startsWith("NEXT_REDIRECT")
+    ) {
+      throw error;
+    }
+    return failInline();
+  }
 }
 
 export async function activateSeatingLayoutBindingAction(

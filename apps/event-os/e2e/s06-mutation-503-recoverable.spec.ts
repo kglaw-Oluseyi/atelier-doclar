@@ -69,6 +69,46 @@ test("UI failure handling: simulated HTTP 503 keeps seating usable with explicit
     expect(pageErrors.filter((item) => /#418|Hydration|did not match/i.test(item))).toEqual([]);
   }
 
+  // Committed-then-lost-response: let the server commit, return 503 to the client, then recover via idempotency.
+  await page.goto("/app/events/00000000-0000-4000-8000-000000000021/seating#inputs", {
+    waitUntil: "domcontentloaded",
+  });
+  const proposeAgain = page.getByTestId("seating-layout-binding-propose");
+  if ((await proposeAgain.count()) > 0) {
+    let intercepted = 0;
+    await page.route("**/app/events/*/seating**", async (route) => {
+      const request = route.request();
+      if (isMutationActionPost(request) && intercepted < 1) {
+        intercepted += 1;
+        await route.fetch();
+        await route.fulfill({
+          status: 503,
+          contentType: "text/plain",
+          body: "Service Unavailable",
+        });
+        return;
+      }
+      await route.continue();
+    });
+    await proposeAgain.getByRole("button", { name: /Propose seating layout binding/i }).click();
+    await expect(
+      page
+        .getByTestId("action-result-banner")
+        .or(page.getByTestId("protection-mutation-failure-summary"))
+        .or(page.getByTestId("seating-layout-binding-activate")),
+    ).toBeVisible({ timeout: 40_000 });
+    await expect(page.getByTestId("seating-error-boundary")).toHaveCount(0);
+    await expect(page.locator("main")).not.toBeEmpty();
+    const banner = page.getByTestId("action-result-banner");
+    if ((await banner.count()) > 0) {
+      await expect(banner).toContainText(/checked the saved state|proposal was created|recorded|Succeeded|already applied/i);
+    }
+    await page.unroute("**/app/events/*/seating**");
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(page.getByTestId("seating-layout-binding")).toBeVisible({ timeout: 30_000 });
+    expect(pageErrors.filter((item) => /#418|Hydration|did not match/i.test(item))).toEqual([]);
+  }
+
   await page.goto("/app/events/00000000-0000-4000-8000-000000000021/seating#rules", {
     waitUntil: "domcontentloaded",
   });

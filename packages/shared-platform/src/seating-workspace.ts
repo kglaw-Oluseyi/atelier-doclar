@@ -35,6 +35,9 @@ export type SeatingWorkspaceView = SeatingWorkspaceProjection & {
     duplicateRole?: "AUTHORITATIVE" | "REDUNDANT_HISTORICAL" | "ALREADY_ACTIVE_DRAFT";
     authoritativeEditionId?: string;
     redundantActiveCount?: number;
+    /** ACTIVE HARD rule that logically contradicts this HARD draft (activation blocked). */
+    hardConflictEditionId?: string;
+    hardConflictKind?: string;
   }>;
   implicatedReviewDomains: Array<"PROTOCOL" | "ACCESSIBILITY" | "SECURITY">;
   reviewRequirementCopy: string;

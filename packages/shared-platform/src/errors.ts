@@ -14,6 +14,7 @@ export const PLATFORM_ERROR_CODES = [
   "MULTIPLE_ACTIVE_SEATING_LAYOUT_BINDINGS",
   "SEATING_LAYOUT_BINDING_STALE",
   "SEATING_LAYOUT_PUBLICATION_MISMATCH",
+  "SEATING_HARD_RULE_CONFLICT",
   "IDEMPOTENCY_CONFLICT",
   "DEPENDENCY_UNAVAILABLE",
   "CAPABILITY_NOT_ENABLED",
@@ -77,6 +78,8 @@ export function publicMessageFor(code: PlatformErrorCode): string {
       return "The seating layout binding is stale. Propose and activate a successor binding for the current publication.";
     case "SEATING_LAYOUT_PUBLICATION_MISMATCH":
       return "The seating layout binding does not match a current publication. Resolve the layout record before freezing seating inputs.";
+    case "SEATING_HARD_RULE_CONFLICT":
+      return "This draft contradicts an ACTIVE hard seating rule. Withdraw or supersede the conflicting governing rule before activating the replacement.";
     case "IDEMPOTENCY_CONFLICT":
       return "This request was already processed with different information.";
     case "DEPENDENCY_UNAVAILABLE":

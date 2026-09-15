@@ -1089,6 +1089,16 @@ export {
   planLegacyDuplicateReconciliation,
 } from "./seating-v2-rule-duplicates.js";
 export type { SeatingRuleDuplicateRole, LegacyDuplicateReconciliationPlan } from "./seating-v2-rule-duplicates.js";
+export {
+  HARD_RULE_CONTRADICTION_PAIRS,
+  VERIFICATION_HARD_RULE_CONFLICT_RECONCILIATION_REASON,
+  annotateHardRuleConflicts,
+  findHardRuleConflicts,
+  hardRuleConflictPlatformError,
+  subjectIdsForEdition,
+  targetKeysForEdition,
+} from "./seating-v2-hard-rule-conflicts.js";
+export type { AnnotatedHardRuleConflict, HardRuleConflictHit } from "./seating-v2-hard-rule-conflicts.js";
 export { LEGACY_S06_PUBLICATION_LABEL, currentSeatingV2RunId } from "./seating-v2-workspace.js";
 export type { SeatingV2RuleContent } from "./seating-v2-schemas.js";
 export { snapshotGuestCohortAdapter, snapshotLayoutAdapter, seatingToken } from "./seating-adapters.js";
@@ -1125,6 +1135,10 @@ export {
   seedS06SeatingLayoutBindingIfMissing,
   ensureS06SeatingLayoutBinding,
   ensureSeatingLayoutBindingForLayout,
+  ensureEosS06SuccessorLayoutFixture,
+  ensureEosS06SuccessorLayoutBinding,
+  EOS_S06_SUCCESSOR_LAYOUT_A_NAME,
+  EOS_S06_SUCCESSOR_LAYOUT_B_NAME,
 } from "./seating-fixtures.js";
 export {
   resolveSeatingLayoutAuthority,

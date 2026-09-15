@@ -14,6 +14,9 @@ const idleProtectionFormState: ProtectionFormState = {
 const TRANSPORT_FAILURE_SUMMARY =
   "The seating action could not be confirmed. Reload to verify whether it was recorded before retrying.";
 
+const TRANSPORT_UNCONFIRMED_SUMMARY =
+  "We could not confirm that this proposal was saved. Your entries are preserved. Check again or retry safely.";
+
 function isSensitiveFormKey(key: string): boolean {
   const lowered = key.toLowerCase();
   return /password|secret|token|ciphertext|objectkey/.test(lowered);
@@ -123,11 +126,14 @@ function attemptedFromFormData(formData: FormData) {
 
 export function ProtectionMutationForm({
   action,
+  recoverAction,
   children,
   className,
   testId,
 }: {
   action: (state: ProtectionFormState, formData: FormData) => Promise<ProtectionFormState>;
+  /** Optional durable recovery after transport loss (e.g. layout-binding propose by idempotency key). */
+  recoverAction?: (state: ProtectionFormState, formData: FormData) => Promise<ProtectionFormState>;
   children: ReactNode;
   className?: string;
   testId?: string;
@@ -152,6 +158,18 @@ export function ProtectionMutationForm({
         return await action(prev, formData);
       } catch (error) {
         if (isNextNavigationError(error)) throw error;
+        if (recoverAction) {
+          try {
+            return await recoverAction(prev, formData);
+          } catch (recoverError) {
+            if (isNextNavigationError(recoverError)) throw recoverError;
+            return transportFailureFormState({
+              attemptedValues: attempted.values,
+              sensitiveCleared: attempted.sensitiveCleared,
+              summary: TRANSPORT_UNCONFIRMED_SUMMARY,
+            });
+          }
+        }
         return transportFailureFormState({
           attemptedValues: attempted.values,
           sensitiveCleared: attempted.sensitiveCleared,

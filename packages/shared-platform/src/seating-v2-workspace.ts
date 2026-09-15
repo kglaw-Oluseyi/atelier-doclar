@@ -11,6 +11,7 @@ import { seatingV2RuleSemanticSentence } from "./seating-v2-authoring.js";
 import { annotateSemanticRuleDuplicates } from "./seating-v2-rule-duplicates.js";
 import { SEATING_V2_VALIDATOR_VERSION } from "./seating-v2-schemas.js";
 import type { SeatingDisclosure, SeatingWorkspaceView } from "./seating-workspace.js";
+import { annotateHardRuleConflicts } from "./seating-v2-hard-rule-conflicts.js";
 import type { SeatingV2State } from "./seating-v2-state.js";
 import type { PlatformSnapshot } from "./store.js";
 
@@ -291,6 +292,13 @@ export function buildSeatingV2Workspace(
     tables,
     constraints: (() => {
       const annotations = new Map(annotateSemanticRuleDuplicates(rules).map((row) => [row.edition.id, row]));
+      const hardConflicts = new Map(
+        annotateHardRuleConflicts({
+          editions: rules,
+          subjects: state.ruleSubjects,
+          targets: state.ruleTargets,
+        }).map((row) => [row.edition.id, row]),
+      );
       return rules.map((item) => {
         const subjectLabels = state.ruleSubjects
           .filter((subject) => subject.ruleEditionId === item.id)
@@ -312,6 +320,7 @@ export function buildSeatingV2Workspace(
             : "No author recorded";
         const decidedAt = asIsoTimestamp(item.activatedAt ?? item.createdAt) ?? String(item.activatedAt ?? item.createdAt);
         const annotation = annotations.get(item.id);
+        const hardConflict = hardConflicts.get(item.id);
         return {
           id: item.id,
           kind: item.hardness,
@@ -324,6 +333,8 @@ export function buildSeatingV2Workspace(
           duplicateRole: annotation?.role,
           authoritativeEditionId: annotation?.authoritativeId,
           redundantActiveCount: annotation?.redundantCount,
+          hardConflictEditionId: hardConflict?.conflictingEditionId,
+          hardConflictKind: hardConflict?.conflictingKind,
         };
       });
     })(),
