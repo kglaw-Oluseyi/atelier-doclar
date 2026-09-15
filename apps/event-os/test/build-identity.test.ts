@@ -68,23 +68,41 @@ describe("Event OS application identity", () => {
     assert.equal(identity.documentationHead, DOCS);
   });
 
-  it("falls back to railway or pinned env only when embed is local-unreleased", () => {
+  it("falls back to pinned application SHA before Railway tip when embed is local-unreleased", () => {
+    const fromPinnedOverRailway = resolveApplicationIdentity({
+      buildEmbeddedSha: "local-unreleased",
+      buildIdentitySource: "LOCAL_FALLBACK",
+      buildIdentityCapturedAt: "2026-09-15T20:00:00.000Z",
+      railwayGitCommitSha: RAILWAY,
+      eventOsGitSha: APP,
+      documentationHead: DOCS,
+    });
+    assert.equal(fromPinnedOverRailway.applicationSha, APP);
+    assert.equal(fromPinnedOverRailway.deploymentSourceSha, RAILWAY);
+    assert.equal(fromPinnedOverRailway.documentationHead, DOCS);
+
     const fromRailway = resolveApplicationIdentity({
       buildEmbeddedSha: "local-unreleased",
       buildIdentitySource: "LOCAL_FALLBACK",
       buildIdentityCapturedAt: "2026-09-15T20:00:00.000Z",
       railwayGitCommitSha: RAILWAY,
-      eventOsGitSha: STALE,
     });
     assert.equal(fromRailway.applicationSha, RAILWAY);
+  });
 
-    const fromPinned = resolveApplicationIdentity({
-      buildEmbeddedSha: "local-unreleased",
-      buildIdentitySource: "LOCAL_FALLBACK",
+  it("keeps Railway tip as deployment source without overriding embedded application SHA", () => {
+    const identity = resolveApplicationIdentity({
+      buildEmbeddedSha: APP,
+      buildIdentitySource: "EVENT_OS_GIT_SHA",
       buildIdentityCapturedAt: "2026-09-15T20:00:00.000Z",
-      eventOsGitSha: STALE,
+      railwayGitCommitSha: DOCS,
+      eventOsGitSha: APP,
+      documentationHead: DOCS,
     });
-    assert.equal(fromPinned.applicationSha, STALE);
+    assert.equal(identity.applicationSha, APP);
+    assert.equal(identity.deploymentSourceSha, DOCS);
+    assert.equal(identity.documentationHead, DOCS);
+    assert.notEqual(identity.applicationSha, identity.documentationHead);
   });
 
   it("does not treat productionAuthorised as mutable via identity resolution", () => {

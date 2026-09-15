@@ -34,11 +34,13 @@ export function resolveApplicationIdentity(input: {
   const pinned = input.eventOsGitSha?.trim().toLowerCase();
   const docs = input.documentationHead?.trim().toLowerCase();
 
-  // Build-embedded full SHA always wins — stale EVENT_OS_GIT_SHA must not override.
+  // Build-embedded full SHA always wins — stale env must not override a known build SHA.
+  // Fallback prefers deliberate EVENT_OS_GIT_SHA over Railway tip so docs-only Git rebuilds
+  // cannot collapse application identity into documentation HEAD.
   let applicationSha = embedded;
   if (!FULL_SHA.test(applicationSha)) {
-    if (railway && FULL_SHA.test(railway)) applicationSha = railway;
-    else if (pinned && FULL_SHA.test(pinned)) applicationSha = pinned;
+    if (pinned && FULL_SHA.test(pinned)) applicationSha = pinned;
+    else if (railway && FULL_SHA.test(railway)) applicationSha = railway;
     else applicationSha = embedded || "local-unreleased";
   }
 

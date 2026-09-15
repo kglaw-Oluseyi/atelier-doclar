@@ -1,8 +1,13 @@
 #!/usr/bin/env node
 /**
  * Embed immutable Event OS application identity at build time.
- * Priority: RAILWAY_GIT_COMMIT_SHA → EVENT_OS_GIT_SHA → git rev-parse HEAD → local-unreleased
- * Runtime must prefer this embedded value so a stale service env cannot override.
+ *
+ * Application SHA priority (deliberate application pin wins over repo tip):
+ *   EVENT_OS_GIT_SHA → RAILWAY_GIT_COMMIT_SHA → git rev-parse HEAD → local-unreleased
+ *
+ * RAILWAY_GIT_COMMIT_SHA remains available at runtime as deploymentSourceSha and must
+ * not silently replace a deliberate EVENT_OS_GIT_SHA application pin when a later
+ * documentation-only tip triggers a Git rebuild.
  */
 import { execSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
@@ -21,8 +26,8 @@ function readGitHead() {
 
 function resolveSha() {
   const candidates = [
-    process.env.RAILWAY_GIT_COMMIT_SHA,
     process.env.EVENT_OS_GIT_SHA,
+    process.env.RAILWAY_GIT_COMMIT_SHA,
     readGitHead(),
   ];
   for (const value of candidates) {
@@ -34,10 +39,10 @@ function resolveSha() {
 
 const sha = resolveSha();
 const source =
-  process.env.RAILWAY_GIT_COMMIT_SHA && FULL_SHA.test(process.env.RAILWAY_GIT_COMMIT_SHA.trim())
-    ? "RAILWAY_GIT_COMMIT_SHA"
-    : process.env.EVENT_OS_GIT_SHA && FULL_SHA.test(process.env.EVENT_OS_GIT_SHA.trim())
-      ? "EVENT_OS_GIT_SHA"
+  process.env.EVENT_OS_GIT_SHA && FULL_SHA.test(process.env.EVENT_OS_GIT_SHA.trim())
+    ? "EVENT_OS_GIT_SHA"
+    : process.env.RAILWAY_GIT_COMMIT_SHA && FULL_SHA.test(process.env.RAILWAY_GIT_COMMIT_SHA.trim())
+      ? "RAILWAY_GIT_COMMIT_SHA"
       : sha === "local-unreleased"
         ? "LOCAL_FALLBACK"
         : "GIT_REV_PARSE";
