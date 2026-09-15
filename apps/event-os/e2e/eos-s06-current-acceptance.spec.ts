@@ -93,7 +93,9 @@ async function readReady(page: Page) {
 
 async function assertEnvEvidence(page: Page) {
   await assertLocalSection13Preflight(page);
-  await expectLocalFileStore(page);
+  if (process.env.PLAYWRIGHT_LIVE !== "1") {
+    await expectLocalFileStore(page);
+  }
   const readyBody = await readReady(page);
   const adapters = (readyBody.s05bAdapters ?? {}) as Record<string, string>;
   expect(readyBody.persistence).toBe("POSTGRES");
@@ -102,8 +104,10 @@ async function assertEnvEvidence(page: Page) {
   expect(adapters.OBJECT_STORE ?? "INACTIVE").toMatch(/INACTIVE|UNAVAILABLE/);
   expect(adapters.SCAN ?? "INACTIVE").toMatch(/INACTIVE|UNAVAILABLE/);
   const dbUrl = process.env.DATABASE_URL ?? "";
-  expect(dbUrl).toBeTruthy();
-  expect(dbUrl).not.toMatch(/railway\.app|railway\.internal|amazonaws\.com|neon\.tech|supabase/i);
+  if (process.env.PLAYWRIGHT_LIVE !== "1") {
+    expect(dbUrl).toBeTruthy();
+    expect(dbUrl).not.toMatch(/railway\.app|railway\.internal|amazonaws\.com|neon\.tech|supabase/i);
+  }
   record({
     kind: "environment",
     repositoryHead: process.env.EVENT_OS_GIT_SHA ?? "unset",
@@ -112,7 +116,9 @@ async function assertEnvEvidence(page: Page) {
     migrationStatus: readyBody.migrationStatus,
     productionAuthorised: readyBody.productionAuthorised,
     adapters,
-    databaseHostHint: dbUrl.replace(/:[^:@/]+@/, ":***@").replace(/\/\/[^@/]+@/, "//***@"),
+    databaseHostHint: dbUrl
+      ? dbUrl.replace(/:[^:@/]+@/, ":***@").replace(/\/\/[^@/]+@/, "//***@")
+      : "live-managed",
     roles: Object.values(STAFF_IDENTITIES).map((item) => item.roleLabel),
   });
   return readyBody;

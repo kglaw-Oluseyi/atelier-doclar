@@ -90,24 +90,48 @@ Artifacts: `/tmp/eos-s06-successor-layout-staleness/`
 | | SHA |
 |--|-----|
 | Starting HEAD | `305fb94751676083cb654323fb56997d8e700899` |
-| Ending (this remediation) | *(filled after commit)* |
+| Ending (this remediation) | `42b0bb3f0976ca2b745a09f3952680afef69a1b9` |
 
 ## 9. Commit / push / deployment
 
-*(filled after push/deploy)*
+| Item | Identity |
+|------|----------|
+| Commit | `42b0bb3f0976ca2b745a09f3952680afef69a1b9` — `fix(eos-s06): mark seating runs stale when active layout hash drifts` |
+| Push | `main` `305fb94..42b0bb3` |
+| Railway deployment | `bb0f03d1-81fb-4fba-bf86-206f92a5953d` **SUCCESS** |
+| Deployed application SHA | `42b0bb3f0976ca2b745a09f3952680afef69a1b9` |
+| Control Tower | SKIPPED (`7c232556-…`) — not deployed |
 
 ## 10. Live posture and focused smoke
 
-*(filled after deploy)*
+### Posture (PASS)
+
+- ready: true
+- persistence: **POSTGRES**
+- migrationStatus: **APPLIED**
+- productionAuthorised: **false**
+- providers/adapters: **INACTIVE**
+- deployedSha matches ending SHA
+
+### Focused live smoke
+
+1. **Read-only** on disposable synthetic event `c188d79b-…` (created during live attempt): Publication **1** remains operational; no Publication 2; providers inactive. Confirms no silent unpublish / no automatic successor publication from deploy alone.
+2. **Mutation attempt** to publish a successor layout on that event was **server-refused** (layout lease held by prior editor). Banner: Did data change **No** — durable record unchanged. Confirms no unauthorized automatic transition.
+3. Full predecessor→successor **STALE** mutation proof on live was blocked by lease contention after the long A–G live setup; product behaviour is proven by the formal Postgres+next-start current gate and the two fresh-DB E2E passes on the same SHA that is now deployed.
 
 ## 11. Formal EOS-S06 current gate
 
-Canonical gate: shard 0 / `pnpm e2e:eos-s06-current` under Postgres + next start.
-*(filled after CI)*
+| Gate | Result |
+|------|--------|
+| Local formal `pnpm e2e:eos-s06-current` (fresh Postgres + next start) | **PASS** |
+| GitHub Actions run `35001426000` shard 0 `eos-s06-current-acceptance` | **PASS** (`1 passed` ~1.5m) |
+| Immediate seating decision | **current acceptance gate only** |
+
+CI URL: https://github.com/kglaw-Oluseyi/atelier-doclar/actions/runs/35001426000
 
 ## 12. Historical regression disposition
 
-The extended historical corpus is now **130 files / 280 tests** (was 129/279) because the current acceptance spec is shard 0. Immediate seating decision uses the **current acceptance gate only**. Full historical corpus result is reported separately when CI completes; it is **not** the immediate seating decision for this remediation.
+Overall programme-validate run `35001426000` **failed** on historical shard **4** (`s13-j2-governance`, classification `PRODUCT_ASSERTION`). That failure is **not** the immediate seating decision for this remediation. Extended historical corpus is now planned as **130 files / 280 tests** (shard 0 = current acceptance). Historical green is reported separately and does not block this layout-staleness correction.
 
 ## 13. Protected-file confirmation
 
@@ -121,7 +145,7 @@ Not touched:
 
 ## 14. Control Tower
 
-**Not deployed.**
+**Not deployed** (SKIPPED on the remediation SHA).
 
 ## 15–16. Programme gates
 
