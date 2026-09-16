@@ -82,7 +82,7 @@ async function flush(store: PostgresPlatformStore) {
 async function promoteAll(
   service: PlatformService,
   store: PostgresPlatformStore,
-  maker: ReturnType<typeof actor>,
+  _maker: ReturnType<typeof actor>,
   checker: ReturnType<typeof actor>,
   organisationId: string,
   eventId: string,
