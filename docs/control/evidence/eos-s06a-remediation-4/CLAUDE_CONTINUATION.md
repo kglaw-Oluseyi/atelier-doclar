@@ -13,4 +13,6 @@ Verify only:
 7. No regression: SIMULATED browser truth, unsupported payment refusal, terminal replay, role boundaries.
 8. One light responsive/keyboard smoke on the changed queue.
 
-Record application SHA, docs HEAD, deployment id, POSTGRES/APPLIED/productionAuthorised:false/providers INACTIVE. Control Tower untouched.
+Record application SHA `0ce5d23…`, docs HEAD `5e37570…`, deployment `94e54f4c-…`, POSTGRES/APPLIED/productionAuthorised:false/providers INACTIVE. Control Tower untouched.
+
+Evidence: `docs/control/evidence/eos-s06a-remediation-4/` (esp. `03-live-smoke-final.md`).

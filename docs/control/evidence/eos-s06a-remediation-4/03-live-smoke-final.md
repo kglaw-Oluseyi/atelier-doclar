@@ -2,8 +2,9 @@
 
 **Date:** 2026-09-16  
 **Application / docs / source SHA:** `0ce5d23db2af3c01650f97e510e145433360ed35`  
-**Railway deployment:** `c503ddfa-8205-46ed-b34b-b0eba69ae051` (SUCCESS)  
-**Control Tower:** SKIPPED (`ad896a38-646c-4098-ad1b-b2cc62f9bb84`)  
+**Railway deployment (runtime tip):** `94e54f4c-adcb-4af8-9522-b34a8a73bbb1` (SUCCESS; docs-head refresh on pinned app `0ce5d23…`)  
+**Prior app deploy:** `c503ddfa-8205-46ed-b34b-b0eba69ae051`  
+**Control Tower:** SKIPPED (`26faec65-b0b4-4f48-a40f-034bd9394029`)  
 **Runtime:** POSTGRES · migrations APPLIED · productionAuthorised:false · providers INACTIVE
 
 ## Fresh multi-plan journey (PASS)
