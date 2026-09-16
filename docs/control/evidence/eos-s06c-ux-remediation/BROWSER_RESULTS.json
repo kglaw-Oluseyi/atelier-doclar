@@ -1,0 +1,19 @@
+{
+  "createdAt": "2026-09-16T22:27:42.818Z",
+  "applicationSha": "d30643ca5ad347014d3a9a9457f2228783916540",
+  "productionAuthorised": false,
+  "adapters": {
+    "OBJECT_STORE": "INACTIVE",
+    "SCAN": "INACTIVE",
+    "OCR": "INACTIVE",
+    "SOURCE_MONITOR": "INACTIVE",
+    "COMMUNICATIONS": "INACTIVE"
+  },
+  "axe": {
+    "directorySeriousCritical": 0,
+    "intakeSeriousCritical": 0,
+    "systemSeriousCritical": 0,
+    "systemHeadingOrder": 0
+  },
+  "pass": true
+}

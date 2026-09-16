@@ -784,3 +784,16 @@ No assignment, posture, identity-field, findability, or seating mutations under 
 | EV-EOS-S06C-EXACT | DOCUMENT | Exact CAP1000 fixture stamp | `docs/control/evidence/eos-s06c-high-volume-intake/EXACT_CAP1000_FIXTURE.json` |
 | EV-EOS-S06C-BROWSER | DOCUMENT | Deployed browser closure results | `docs/control/evidence/eos-s06c-high-volume-intake/BROWSER_CLOSURE_RESULTS.json` |
 
+## EOS-S06C focused UX + programme-posture remediation
+
+**Date:** 2026-09-16
+**Status:** READY FOR CLAUDE UX RECHECK / **not accepted**
+**Live application SHA:** `d30643ca5ad347014d3a9a9457f2228783916540`
+**Live deployment ID:** `f0c37946-7210-4f6c-869f-89c157e74488`
+**productionAuthorised:** false · Providers: INACTIVE
+
+| Evidence ID | Type | Summary | Path |
+|-------------|------|---------|------|
+| EV-EOS-S06C-UX | DOCUMENT | UX remediation evidence pack | `docs/control/evidence/eos-s06c-ux-remediation/` |
+| EV-EOS-S06C-UX-CLAUDE | DOCUMENT | Focused Claude UX recheck prompt | `docs/control/evidence/eos-s06c-ux-remediation/CLAUDE_UX_RECHECK_PROMPT.md` |
+
