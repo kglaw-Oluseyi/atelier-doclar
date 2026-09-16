@@ -582,8 +582,8 @@ RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S037`. Canonical corpus p
 
 ## EOS-S06 Pre-Production Gate 1 — 600-Guest Capacity Qualification
 
-**Status:** Qualification claim — awaiting independent verification (not gate acceptance)  
-**Approved synthetic layout:** 63 tables / 600 seats (42×10 + 18×8 + 3×12) — not a production default  
+**Status:** Qualification claim — awaiting independent verification (not gate acceptance)
+**Approved synthetic layout:** 63 tables / 600 seats (42×10 + 18×8 + 3×12) — not a production default
 **Accepted application SHA:** `7f139a556f7c023efa98daccd7bfd29481a05775` (unchanged)
 
 | ID | Kind | Summary | Location |
@@ -597,6 +597,35 @@ RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S037`. Canonical corpus p
 | EV-EOS-S06-CAP600-BROWSER | TEST | 600-guest browser journeys retained 5/5 (CI Postgres + seed) | `apps/event-os/e2e/s06-capacity-600-browser.spec.ts`, `apps/event-os/scripts/s06-capacity-600-seed.ts`, `docs/control/evidence/eos-s06-capacity-600/browser/browser-action-timing.jsonl` |
 | EV-EOS-S06-CAP600-ASSURANCE | DOCUMENT | Focused command results and scan outcomes | `docs/control/evidence/eos-s06-capacity-600/test-results.txt` |
 | EV-EOS-S06-CAP600-CLAUDE | DOCUMENT | Independent verification handoff (not executed) | `docs/control/evidence/eos-s06-capacity-600/CLAUDE_VERIFICATION_PROMPT.md` |
+
+## EOS-S06 Gate 1 — Independent-verification blocker remediation
+
+**Date:** 2026-09-16
+**Disposition:** `BLOCKED — IDENTITY` (stop before mutation)
+**Prior Claude verdict:** Preserved as **BLOCKED** (first attempt)
+**Application SHA:** `7f139a556f7c023efa98daccd7bfd29481a05775` (unchanged; no deploy)
+**Root cause:** Live event `EOS-S06-CUR-20260915T173901 Seating` (`c188d79b-4c1a-4734-9da2-6296324958d0`) is not the Gate 1 CAP600 / 63×600 qualification fixture; CAP600 is absent from production (evidence ran on ephemeral Postgres only).
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-EOS-S06-G1-BLOCKER-MANIFEST | DOCUMENT | Remediation stop record and identity freeze | `docs/control/evidence/eos-s06-gate1-verification-blocker-remediation/MANIFEST.md` |
+| EV-EOS-S06-G1-BLOCKER-DIAGNOSIS | DOCUMENT | Read-only Section 1 diagnosis (fixture, assignments, System Health sources) | `docs/control/evidence/eos-s06-gate1-verification-blocker-remediation/DIAGNOSIS.md` |
+| EV-EOS-S06-G1-BLOCKER-CLAUDE-HOLD | DOCUMENT | Claude hold prompt — do not resume journeys until READY | `docs/control/evidence/eos-s06-gate1-verification-blocker-remediation/CLAUDE_HOLD_PROMPT.md` |
+
+No assignment, posture, identity-field, findability, or seating mutations under this record. EOS-S06B and EOS-S07 were not started. `productionAuthorised` remains false. Control Tower untouched.
+
+## EOS-S06 Gate 1 — Live verification bridge + CAP1000 stretch (authorised)
+
+**Date:** 2026-09-16
+**Authority:** CEO-authorised live CAP600 bridge + CAP1000 stretch + governance truth correction
+**Prior Claude BLOCKED diagnosis:** Preserved under `eos-s06-gate1-verification-blocker-remediation/`
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-EOS-S06-CAP600-LIVE | DOCUMENT | CAP600 live verification bridge | `docs/control/evidence/eos-s06-cap600-live-bridge/MANIFEST.md` |
+| EV-EOS-S06-CAP1000 | DOCUMENT | CAP1000 stretch corpus, layout, concurrency | `docs/control/evidence/eos-s06-capacity-1000/` |
+| EV-EOS-S06-CAP1000-CORPUS | TEST | Deterministic A–E corpus hashes | `docs/control/evidence/eos-s06-capacity-1000/corpus-manifest.json` |
+| EV-EOS-S06-G1-CLAUDE | DOCUMENT | Claude Part A CAP600 + Part B CAP1000 prompt | `docs/control/evidence/eos-s06-gate1-live-bridge-claude/CLAUDE_VERIFICATION_PROMPT.md` |
 
 ## EOS-S06 MD-PR-S077 formal acceptance
 

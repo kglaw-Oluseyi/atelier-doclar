@@ -1034,6 +1034,45 @@ export {
   CAPACITY_REALISTIC_TABLE_SPECS,
   type CapacityTableSpec,
 } from "./seating-capacity-layout-fixture.js";
+export {
+  buildCapacity1000Corpus,
+  capacity1000BrowserGuestNames,
+  capacity1000CorpusHash,
+  capacity1000CorpusManifest,
+  capacity1000ProductTableSpecs,
+  CAPACITY_1000_CORPUS_EDITION,
+  CAPACITY_1000_SCENARIO_IDS,
+  CAPACITY_1000_SCENARIO_SEEDS,
+  type Capacity1000ScenarioId,
+} from "./seating-capacity-1000-corpus.js";
+export {
+  applyCapacity1000SeatingLayout,
+  CAPACITY_1000_LAYOUT_JUSTIFICATION,
+  CAPACITY_1000_TABLE_SPECS,
+  type Capacity1000TableSpec,
+} from "./seating-capacity-1000-layout-fixture.js";
+export {
+  ACCEPTED_CAP600_CORPUS_HASHES,
+  CAP600_EDITION,
+  CAP600_EVENT_CODE,
+  CAP600_EVENT_NAME,
+  CAP600_EXPECTED,
+  CAP600_QUALIFICATION_EVIDENCE_COMMIT,
+  CAP1000_EDITION,
+  CAP1000_EVENT_CODE,
+  CAP1000_EVENT_NAME,
+  CAP1000_EXPECTED,
+  CAPACITY_LIVE_FIXTURE_CODES,
+  CAPACITY_LIVE_RAILWAY,
+  assertAcceptedCap600CorpusHashes,
+  assertCapacityLiveInstallSafety,
+  type CapacityLiveFixtureCode,
+} from "./capacity-live-install-guards.js";
+export {
+  installCapacityLiveFixture,
+  type CapacityLiveInstallOptions,
+  type CapacityLiveInstallResult,
+} from "./capacity-live-install.js";
 export { EOS_S06_SEATING_MIGRATION_ID, EOS_S06_SEATING_RECEIPT_ID, SEATING_SQL_TABLES } from "./seating-postgres-schema.js";
 export { emptySeatingState, SEATING_COLLECTIONS } from "./seating-schemas.js";
 export {

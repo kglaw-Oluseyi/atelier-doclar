@@ -307,6 +307,33 @@ body.atelier {
   background: rgba(252, 250, 247, 0.06);
 }
 
+.event-search-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  margin: 0 0 18px;
+}
+
+.event-search-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: min(100%, 280px);
+  flex: 1;
+  font-size: 0.85rem;
+}
+
+.event-search-form input[type="search"] {
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--at-line);
+  border-radius: 8px;
+  background: rgba(252, 250, 247, 0.92);
+  color: inherit;
+  font: inherit;
+}
+
 .atelier-folio {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));

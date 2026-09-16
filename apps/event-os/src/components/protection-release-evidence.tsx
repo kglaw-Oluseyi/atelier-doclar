@@ -53,6 +53,9 @@ export function ProtectionReleaseEvidence({
   evaluation,
   applicationSha,
   documentationHead,
+  deploymentSourceSha,
+  cap600EvidenceCommit,
+  cap1000EvidenceCommit,
   capabilityLabel,
 }: {
   deployedSha: string;
@@ -85,6 +88,9 @@ export function ProtectionReleaseEvidence({
   };
   applicationSha?: string;
   documentationHead?: string | null;
+  deploymentSourceSha?: string | null;
+  cap600EvidenceCommit?: string | null;
+  cap1000EvidenceCommit?: string | null;
   capabilityLabel?: string;
 }) {
   const adapters = evaluation.adapters ?? {};
@@ -92,13 +98,30 @@ export function ProtectionReleaseEvidence({
     <section className="atelier-panel protection-release-evidence" data-testid="protection-release-evidence">
       <h3>Release evidence</h3>
       <p>
-        Fixture assurance is not production authorisation. A current complete pass only means the synthetic corpus is ready; live operations remain unauthorised.
+        Fixture assurance is not production authorisation. A current complete pass only means the synthetic corpus is ready; live operations remain unauthorised. Evidence commits are not application SHAs.
       </p>
       <dl className="protection-release-list">
         <CopyableIdentifier label="Current application SHA" value={applicationSha ?? deployedSha} testId="release-application-sha" />
         <CopyableIdentifier label="Deployed application SHA" value={deployedSha} testId="release-deployed-sha" />
+        {deploymentSourceSha ? (
+          <CopyableIdentifier label="Deployment source SHA" value={deploymentSourceSha} testId="release-deployment-source-sha" />
+        ) : null}
         {documentationHead ? (
           <CopyableIdentifier label="Documentation HEAD" value={documentationHead} testId="release-documentation-head" />
+        ) : null}
+        {cap600EvidenceCommit ? (
+          <CopyableIdentifier
+            label="CAP600 qualification evidence commit"
+            value={cap600EvidenceCommit}
+            testId="release-cap600-evidence-commit"
+          />
+        ) : null}
+        {cap1000EvidenceCommit ? (
+          <CopyableIdentifier
+            label="CAP1000 stretch evidence commit"
+            value={cap1000EvidenceCommit}
+            testId="release-cap1000-evidence-commit"
+          />
         ) : null}
         <div>
           <dt>Current capability / Task Bank</dt>

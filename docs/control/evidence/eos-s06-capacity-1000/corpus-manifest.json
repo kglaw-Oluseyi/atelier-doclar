@@ -1,0 +1,81 @@
+{
+  "edition": "eos-s06-capacity-1000-v1",
+  "scenarios": [
+    {
+      "id": "A_LIGHT",
+      "seed": "eos-s06-cap-A-light-1000-v1",
+      "datasetHash": "6b4feefd0d441d777fbd3263a8fcdb549deb453909e171d0ac3ad08497ea291f",
+      "expectedStatus": "FEASIBLE",
+      "guestCount": 1000,
+      "eligibleCount": 1000,
+      "seatCount": 1000
+    },
+    {
+      "id": "B_TYPICAL",
+      "seed": "eos-s06-cap-B-typical-1000-v1",
+      "datasetHash": "57d5398b933e2fc4cfde85ffe70d1e0b7e03be00ddde8cb7511c1518bf57c1cc",
+      "expectedStatus": "FEASIBLE",
+      "guestCount": 1000,
+      "eligibleCount": 1000,
+      "seatCount": 1000
+    },
+    {
+      "id": "C_HEAVY",
+      "seed": "eos-s06-cap-C-heavy-1000-v1",
+      "datasetHash": "44fa00cfd5d745ba56a1a76fef79413164e8f5912789e5097bda5add36dbd454",
+      "expectedStatus": "FEASIBLE",
+      "guestCount": 1000,
+      "eligibleCount": 1000,
+      "seatCount": 1000
+    },
+    {
+      "id": "D_INFEASIBLE",
+      "seed": "eos-s06-cap-D-infeasible-1000-v1",
+      "datasetHash": "9cbc42bfc547bab64834c1f95d7f6a3e2b3b81065383776c229e08d110331c73",
+      "expectedStatus": "INFEASIBLE",
+      "guestCount": 1000,
+      "eligibleCount": 1000,
+      "seatCount": 1000
+    },
+    {
+      "id": "E_RECOVERY",
+      "seed": "eos-s06-cap-E-recovery-1000-v1",
+      "datasetHash": "dd126865bb4348c189844b607f558bbdef08df65bfa67012cbfd2a6b60d6bf0c",
+      "expectedStatus": "FEASIBLE",
+      "guestCount": 1000,
+      "eligibleCount": 1000,
+      "seatCount": 1000
+    }
+  ],
+  "layout": {
+    "totalTables": 110,
+    "totalSeats": 1000,
+    "intimate": {
+      "count": 5,
+      "seatsPerTable": 4,
+      "seats": 20
+    },
+    "compact": {
+      "count": 10,
+      "seatsPerTable": 6,
+      "seats": 60
+    },
+    "family": {
+      "count": 25,
+      "seatsPerTable": 8,
+      "seats": 200
+    },
+    "general": {
+      "count": 60,
+      "seatsPerTable": 10,
+      "seats": 600
+    },
+    "head": {
+      "count": 10,
+      "seatsPerTable": 12,
+      "seats": 120
+    },
+    "note": "Qualification-only stretch profile; not a production seating default."
+  },
+  "frozenAt": "2026-09-16T14:01:29.594Z"
+}
