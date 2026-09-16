@@ -1,0 +1,40 @@
+{
+  "stage": "STAGE_1_CAP600_CLOSURE",
+  "verifiedAt": "2026-09-16T15:13:17.020Z",
+  "applicationSha": "0a0be803f123e8326fb893db1e3562c724b70dd0",
+  "eventId": "053fa686-124e-49b3-b8a8-d0497c0a1668",
+  "guests": 600,
+  "tables": 63,
+  "seats": 600,
+  "profile": {
+    "10": 42,
+    "8": 18,
+    "12": 3
+  },
+  "duplicateGuestIds": 0,
+  "duplicateTableIds": 0,
+  "validation": {
+    "blockingCount": 0,
+    "unresolvedBlockingCount": 0,
+    "publicationBlocked": false,
+    "warningCount": 1
+  },
+  "assignments": [
+    "CEO",
+    "EVENT_DIRECTOR",
+    "PLANNER",
+    "READ_ONLY_AUDITOR"
+  ],
+  "browserSmoke": {
+    "passed": 3,
+    "failed": 0,
+    "duration": "1.6m"
+  },
+  "cap1000": {
+    "eventId": "3d212906-529e-4bd8-b13f-b0c2a24e5fba",
+    "status": "INCOMPLETE \u2014 INSTALLATION PAUSED \u2014 NOT FOR VERIFICATION",
+    "guestCount": 125,
+    "expectedGuests": 1000
+  },
+  "disposition": "CAP600 READY FOR CLAUDE"
+}

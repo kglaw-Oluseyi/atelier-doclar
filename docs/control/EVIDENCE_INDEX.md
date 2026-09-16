@@ -622,10 +622,10 @@ No assignment, posture, identity-field, findability, or seating mutations under 
 
 | ID | Kind | Summary | Location |
 |----|------|---------|----------|
-| EV-EOS-S06-CAP600-LIVE | DOCUMENT | CAP600 live verification bridge | `docs/control/evidence/eos-s06-cap600-live-bridge/MANIFEST.md` |
-| EV-EOS-S06-CAP1000 | DOCUMENT | CAP1000 stretch corpus, layout, concurrency | `docs/control/evidence/eos-s06-capacity-1000/` |
-| EV-EOS-S06-CAP1000-CORPUS | TEST | Deterministic A–E corpus hashes | `docs/control/evidence/eos-s06-capacity-1000/corpus-manifest.json` |
-| EV-EOS-S06-G1-CLAUDE | DOCUMENT | Claude Part A CAP600 + Part B CAP1000 prompt | `docs/control/evidence/eos-s06-gate1-live-bridge-claude/CLAUDE_VERIFICATION_PROMPT.md` |
+| EV-EOS-S06-CAP600-LIVE | DOCUMENT | CAP600 live verification bridge — Stage 1 closed; event `053fa686-…`; READY FOR CLAUDE | `docs/control/evidence/eos-s06-cap600-live-bridge/` |
+| EV-EOS-S06-CAP1000 | DOCUMENT | CAP1000 stretch — **INCOMPLETE — INSTALLATION PAUSED — NOT FOR VERIFICATION** (`3d212906-…`, ~125/1000) | `docs/control/evidence/eos-s06-capacity-1000/MANIFEST.md` |
+| EV-EOS-S06-CAP1000-CORPUS | TEST | Deterministic A–E corpus hashes (local stretch corpus; live install paused) | `docs/control/evidence/eos-s06-capacity-1000/corpus-manifest.json` |
+| EV-EOS-S06-G1-CLAUDE | DOCUMENT | Claude CAP600-only Stage 1 resumption prompt (CAP1000 out of scope) | `docs/control/evidence/eos-s06-gate1-live-bridge-claude/CLAUDE_VERIFICATION_PROMPT.md` |
 
 ## EOS-S06 MD-PR-S077 formal acceptance
 

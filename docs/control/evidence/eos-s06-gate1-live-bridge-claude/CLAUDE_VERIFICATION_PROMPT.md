@@ -1,75 +1,53 @@
-# Claude Independent Verification — EOS-S06 Gate 1 Live Bridge + CAP1000 Stretch
+# Claude Independent Verification — EOS-S06 Gate 1 CAP600 (Stage 1 release)
 
-**Authority:** Resume after live CAP600/CAP1000 installation and Event OS deploy.  
-**Preserve:** Your first Gate 1 attempt remains **BLOCKED**. Do not rewrite that history.  
-**Do not:** remediate defects; start EOS-S06B or EOS-S07; use real data; request credentials.
+**Authority:** Resume independent Gate 1 verification against the live CAP600 fixture only.  
+**Preserve:** Your earlier Gate 1 **BLOCKED** verdict remains valid evidence. Do not rewrite that history.  
+**Ignore:** The mistaken live `EOS-S06-CUR-*` seating fixture is not the Gate 1 qualification corpus.  
+**Do not:** remediate defects; inspect or verify CAP1000; reproduce automated suites; start EOS-S06B or EOS-S07; use real data; request credentials.
 
 Live Event OS: Railway project `atelier-doclar` / production / `event-os`.  
-`productionAuthorised` must remain false. Providers/communications inactive.
+Live application SHA: `0a0be803f123e8326fb893db1e3562c724b70dd0`  
+`productionAuthorised` must remain false. Providers/communications inactive. Control Tower untouched.
 
 ---
 
-## Part A — Formal Gate 1 CAP600 (ten journeys)
-
-**Fixture (exact):**
+## CAP600 fixture (exact — confirm before testing)
 
 | Field | Value |
 |-------|-------|
 | Name | `[SYNTHETIC QUALIFICATION] Capacity Qualification 600` |
 | Code | `CAP600` |
-| Immutable event ID | _(filled in post-deploy evidence — use live System Health / Events search)_ |
+| Immutable event ID | `053fa686-124e-49b3-b8a8-d0497c0a1668` |
+| Guests | 600 synthetic |
+| Tables | 63 |
+| Seats | 600 |
+| Target mix | **42×10 · 18×8 · 3×12** |
 | Edition | `eos-s06-capacity-600-v1` |
 | Evidence commit | `5561171261f3c193136a0b3be5dbd504a2ed8f70` |
 
-**Findability:** Events → search `CAP600` or `capacity` or `600`. Must show synthetic qualification badge. Do not use the audit ledger as the primary discovery path. Do **not** use `EOS-S06-CUR-*`.
+**Findability:** Events → search `CAP600` or `capacity` or `600`. Must show synthetic qualification badge. Do not use the audit ledger as the primary discovery path. Do **not** use `EOS-S06-CUR-*`. Do **not** use CAP1000.
 
 **Roles ready:** George Lawson (CEO), Amara Okonkwo (Event Director), James Whitfield (Planner), Priya Nair (Read-Only Auditor).
 
-Complete **all ten** original Gate 1 journeys against this exact event ID. Confirm:
+---
 
-- 63 tables / 600 seats / 600 synthetic guests  
-- CEO can open the event  
-- Director can perform director-authorised actions; Planner cannot approve/publish  
-- Auditor can inspect but cannot mutate  
-- Feasible and conflict handling remain truthful  
-- Persistence across reload  
+## CAP1000 — out of scope
 
-**Part A verdict required:** `READY` / `NOT READY` / `BLOCKED` with evidence — for CAP600 Gate 1 only.
+CAP1000 event `3d212906-529e-4bd8-b13f-b0c2a24e5fba` is:
+
+**`INCOMPLETE — INSTALLATION PAUSED — NOT FOR VERIFICATION`**
+
+Do not inspect, open for qualification, or include it in your verdict.
 
 ---
 
-## Part B — CAP1000 stretch (independent)
+## Required work
 
-**Fixture (exact):**
+1. Confirm fixture identity (exact event ID, 600/63/600, synthetic label) before testing.  
+2. Resume at **Journey 1**.  
+3. Complete **all ten** original Gate 1 journeys against this exact CAP600 event ID.  
+4. Confirm Director can perform director-authorised actions; Planner cannot approve/publish; Auditor can inspect but cannot mutate.  
+5. Confirm feasible and conflict handling remain truthful; persistence across reload.  
+6. Confirm System Health programme posture shows EOS-S06 ACCEPTED (MD-PR-S077), EOS-S06A ACCEPTED (MD-PR-S079), Gate 1 awaiting independent verification (not accepted), EOS-S06B/S07 NOT_STARTED, `productionAuthorised false`.
 
-| Field | Value |
-|-------|-------|
-| Name | `[SYNTHETIC STRETCH QUALIFICATION] Capacity Stretch 1000` |
-| Code | `CAP1000` |
-| Immutable event ID | _(filled in post-deploy evidence)_ |
-| Edition | `eos-s06-capacity-1000-v1` |
-
-Examine (do not reproduce automated performance suites):
-
-1. Discoverability (`CAP1000`, `1000`, `stretch`, `capacity`)  
-2. Exact 110-table / 1,000-seat reconciliation  
-3. 1,000 synthetic guests; representative search  
-4. Rules/reservations usable at scale  
-5. Feasible-result truthfulness  
-6. Conflict/infeasibility truthfulness  
-7. Persistence/replay clarity  
-8. Roles and isolation  
-9. Responsive/accessibility usability (360 / 768 / 1280)  
-10. Premium-product clarity  
-
-**Part B verdict required:** separate from Part A.
-
----
-
-## Combined recommendation
-
-State clearly whether CAP600 Gate 1 may proceed to AI CTO acceptance, and whether CAP1000 stretch is acceptable as stretch evidence — **without** allowing either result to conceal the other.
-
-## System Health checks (both parts)
-
-Confirm programme posture shows EOS-S06 ACCEPTED (MD-PR-S077), EOS-S06A ACCEPTED (MD-PR-S079), Gate 1 awaiting independent verification (not accepted), EOS-S06B/S07 NOT_STARTED, `productionAuthorised false`. Confirm Application SHA ≠ evidence commits; CAP600 evidence commit `5561171…` is visible.
+**Do not remediate.** Return one of: `PASS`, `PASS WITH CONTROLLED OBSERVATIONS`, `FAIL`, or `BLOCKED`.
