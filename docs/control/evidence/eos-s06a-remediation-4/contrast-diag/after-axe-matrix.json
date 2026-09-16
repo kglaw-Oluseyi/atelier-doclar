@@ -1,0 +1,24 @@
+{
+  "muted": {
+    "color": "rgb(90, 83, 75)",
+    "panelBg": "rgb(252, 250, 247)",
+    "mutedCount": 152
+  },
+  "rows": [
+    {
+      "width": 1440,
+      "violations": 0,
+      "incomplete": 497
+    },
+    {
+      "width": 768,
+      "violations": 0,
+      "incomplete": 520
+    },
+    {
+      "width": 390,
+      "violations": 0,
+      "incomplete": 522
+    }
+  ]
+}

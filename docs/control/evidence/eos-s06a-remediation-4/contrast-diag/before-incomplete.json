@@ -1,0 +1,402 @@
+[
+  {
+    "target": [
+      ".brand"
+    ],
+    "html": "<p class=\"brand\">Maison Doclar</p>",
+    "data": {
+      "fontSize": "16.8pt (22.4px)",
+      "fontWeight": "normal",
+      "messageKey": "pseudoContent",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a pseudo element"
+  },
+  {
+    "target": [
+      ".brand-note"
+    ],
+    "html": "<p class=\"brand-note\">Command Atelier</p>",
+    "data": {
+      "fontSize": "8.2pt (10.88px)",
+      "fontWeight": "normal",
+      "messageKey": "pseudoContent",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a pseudo element"
+  },
+  {
+    "target": [
+      ".brand-env"
+    ],
+    "html": "<p class=\"brand-env\">Event OS · staff environment</p>",
+    "data": {
+      "fontSize": "8.6pt (11.52px)",
+      "fontWeight": "normal",
+      "messageKey": "pseudoContent",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a pseudo element"
+  },
+  {
+    "target": [
+      ".nav-group:nth-child(4) > .nav-label"
+    ],
+    "html": "<p class=\"nav-label\">Operations</p>",
+    "data": {
+      "fontSize": "8.2pt (10.88px)",
+      "fontWeight": "normal",
+      "messageKey": "pseudoContent",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a pseudo element"
+  },
+  {
+    "target": [
+      ".nav-group:nth-child(4) > a[href$=\"app\"]"
+    ],
+    "html": "<a href=\"/app\">Home</a>",
+    "data": {
+      "fontSize": "12.0pt (16px)",
+      "fontWeight": "normal",
+      "messageKey": "pseudoContent",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a pseudo element"
+  },
+  {
+    "target": [
+      ".nav-group:nth-child(4) > a[href$=\"clients\"]"
+    ],
+    "html": "<a href=\"/app/clients\">Clients</a>",
+    "data": {
+      "fontSize": "12.0pt (16px)",
+      "fontWeight": "normal",
+      "messageKey": "pseudoContent",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a pseudo element"
+  },
+  {
+    "target": [
+      ".nav-group:nth-child(4) > a[aria-current=\"page\"][href$=\"events\"]"
+    ],
+    "html": "<a aria-current=\"page\" href=\"/app/events\">Events</a>",
+    "data": {
+      "fontSize": "12.0pt (16px)",
+      "fontWeight": "normal",
+      "messageKey": "pseudoContent",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a pseudo element"
+  },
+  {
+    "target": [
+      "a[href$=\"venues\"]"
+    ],
+    "html": "<a href=\"/app/venues\">Venues</a>",
+    "data": {
+      "fontSize": "12.0pt (16px)",
+      "fontWeight": "normal",
+      "messageKey": "pseudoContent",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a pseudo element"
+  },
+  {
+    "target": [
+      "a[href$=\"discovery\"]"
+    ],
+    "html": "<a href=\"/app/discovery\">Discovery</a>",
+    "data": {
+      "fontSize": "12.0pt (16px)",
+      "fontWeight": "normal",
+      "messageKey": "pseudoContent",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a pseudo element"
+  },
+  {
+    "target": [
+      "a[href$=\"command\"]"
+    ],
+    "html": "<a href=\"/app/command\">Event Command</a>",
+    "data": {
+      "fontSize": "12.0pt (16px)",
+      "fontWeight": "normal",
+      "messageKey": "pseudoContent",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a pseudo element"
+  },
+  {
+    "target": [
+      "a[href$=\"protection\"]"
+    ],
+    "html": "<a href=\"/app/protection\">Protection</a>",
+    "data": {
+      "fontSize": "12.0pt (16px)",
+      "fontWeight": "normal",
+      "messageKey": "pseudoContent",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a pseudo element"
+  },
+  {
+    "target": [
+      ".nav-group:nth-child(4) > a[href$=\"my-work\"]"
+    ],
+    "html": "<a href=\"/app/my-work\">My Work</a>",
+    "data": {
+      "fontSize": "12.0pt (16px)",
+      "fontWeight": "normal",
+      "messageKey": "pseudoContent",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a pseudo element"
+  },
+  {
+    "target": [
+      "a[href$=\"academy\"]"
+    ],
+    "html": "<a href=\"/app/academy\">Academy</a>",
+    "data": {
+      "fontSize": "12.0pt (16px)",
+      "fontWeight": "normal",
+      "messageKey": "pseudoContent",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a pseudo element"
+  },
+  {
+    "target": [
+      ".nav-group:nth-child(5) > .nav-label"
+    ],
+    "html": "<p class=\"nav-label\">Governance</p>",
+    "data": {
+      "fontSize": "8.2pt (10.88px)",
+      "fontWeight": "normal",
+      "messageKey": "pseudoContent",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a pseudo element"
+  },
+  {
+    "target": [
+      "a[href$=\"access\"]"
+    ],
+    "html": "<a href=\"/app/admin/access\">Access</a>",
+    "data": {
+      "fontSize": "12.0pt (16px)",
+      "fontWeight": "normal",
+      "messageKey": "pseudoContent",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a pseudo element"
+  },
+  {
+    "target": [
+      "a[href$=\"audit\"]"
+    ],
+    "html": "<a href=\"/app/admin/audit\">Audit</a>",
+    "data": {
+      "fontSize": "12.0pt (16px)",
+      "fontWeight": "normal",
+      "messageKey": "pseudoContent",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a pseudo element"
+  },
+  {
+    "target": [
+      "a[href$=\"system\"]"
+    ],
+    "html": "<a href=\"/app/admin/system\">System</a>",
+    "data": {
+      "fontSize": "12.0pt (16px)",
+      "fontWeight": "normal",
+      "messageKey": "pseudoContent",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a pseudo element"
+  },
+  {
+    "target": [
+      ".user-menu > .staff-identity > .staff-identity-name"
+    ],
+    "html": "<span class=\"staff-identity-name\">George Lawson</span>",
+    "data": {
+      "fontSize": "12.6pt (16.8px)",
+      "fontWeight": "normal",
+      "messageKey": "pseudoContent",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a pseudo element"
+  },
+  {
+    "target": [
+      ".user-menu > .staff-identity > .staff-identity-role"
+    ],
+    "html": "<span class=\"staff-identity-role\">CEO</span>",
+    "data": {
+      "fontSize": "8.2pt (10.88px)",
+      "fontWeight": "normal",
+      "messageKey": "pseudoContent",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a pseudo element"
+  },
+  {
+    "target": [
+      ".user-menu > form[action=\"\"][enctype=\"multipart/form-data\"][method=\"POST\"] > button"
+    ],
+    "html": "<button class=\"button secondary\" type=\"submit\">Sign out</button>",
+    "data": {
+      "fontSize": "12.0pt (16px)",
+      "fontWeight": "normal",
+      "messageKey": "pseudoContent",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a pseudo element"
+  },
+  {
+    "target": [
+      ".context > span:nth-child(1)"
+    ],
+    "html": "<span>Organisation: <!-- -->Maison Doclar</span>",
+    "data": {
+      "contrastRatio": 0,
+      "fontSize": "10.5pt (14px)",
+      "fontWeight": "normal",
+      "messageKey": "bgGradient",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a background gradient"
+  },
+  {
+    "target": [
+      ".context > span:nth-child(2)"
+    ],
+    "html": "<span>Event: <!-- -->Alpha One</span>",
+    "data": {
+      "contrastRatio": 0,
+      "fontSize": "10.5pt (14px)",
+      "fontWeight": "normal",
+      "messageKey": "bgGradient",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a background gradient"
+  },
+  {
+    "target": [
+      ".event-crumb > a[href$=\"events\"]"
+    ],
+    "html": "<a href=\"/app/events\">Events</a>",
+    "data": {
+      "contrastRatio": 0,
+      "fontSize": "11.0pt (14.72px)",
+      "fontWeight": "normal",
+      "messageKey": "bgGradient",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a background gradient"
+  },
+  {
+    "target": [
+      ".event-crumb > a:nth-child(3)"
+    ],
+    "html": "<a href=\"/app/events/00000000-0000-4000-8000-000000000021\">Event overview</a>",
+    "data": {
+      "contrastRatio": 0,
+      "fontSize": "11.0pt (14.72px)",
+      "fontWeight": "normal",
+      "messageKey": "bgGradient",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a background gradient"
+  },
+  {
+    "target": [
+      ".event-crumb-name"
+    ],
+    "html": "<span class=\"event-crumb-name\"> · <!-- -->Alpha One</span>",
+    "data": {
+      "contrastRatio": 0,
+      "fontSize": "11.0pt (14.72px)",
+      "fontWeight": "normal",
+      "messageKey": "bgGradient",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a background gradient"
+  },
+  {
+    "target": [
+      ".eyebrow"
+    ],
+    "html": "<p class=\"eyebrow\">Atelier Command · Alpha One</p>",
+    "data": {
+      "contrastRatio": 0,
+      "fontSize": "8.6pt (11.52px)",
+      "fontWeight": "normal",
+      "messageKey": "bgGradient",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a background gradient"
+  },
+  {
+    "target": [
+      "h1"
+    ],
+    "html": "<h1 title=\"Atelier Command\">Atelier Command</h1>",
+    "data": {
+      "contrastRatio": 0,
+      "fontSize": "40.8pt (54.4px)",
+      "fontWeight": "normal",
+      "messageKey": "bgGradient",
+      "expectedContrastRatio": "3:1"
+    },
+    "message": "Element's background color could not be determined due to a background gradient"
+  },
+  {
+    "target": [
+      ".lede"
+    ],
+    "html": "<p class=\"lede\">Governed intelligence, native execution and browser-assisted work — always inside the selected event. The conversation is human; the control plane is deterministic.</p>",
+    "data": {
+      "contrastRatio": 0,
+      "fontSize": "12.0pt (16px)",
+      "fontWeight": "normal",
+      "messageKey": "bgGradient",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a background gradient"
+  },
+  {
+    "target": [
+      ".md-status"
+    ],
+    "html": "<span class=\"md-status\" data-tone=\"brass\">Event-scoped</span>",
+    "data": {
+      "contrastRatio": 0,
+      "fontSize": "9.0pt (12px)",
+      "fontWeight": "normal",
+      "messageKey": "bgGradient",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a background gradient"
+  },
+  {
+    "target": [
+      ".atelier-command-context > p:nth-child(1) > strong"
+    ],
+    "html": "<strong>Alpha One</strong>",
+    "data": {
+      "contrastRatio": 0,
+      "fontSize": "12.0pt (16px)",
+      "fontWeight": "bold",
+      "messageKey": "bgGradient",
+      "expectedContrastRatio": "4.5:1"
+    },
+    "message": "Element's background color could not be determined due to a background gradient"
+  }
+]
