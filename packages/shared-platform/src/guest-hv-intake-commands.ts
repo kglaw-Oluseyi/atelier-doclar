@@ -621,7 +621,11 @@ export function advanceGuestIntakePromotionCore(
       job.status = hasExceptions ? "COMPLETED_WITH_EXCEPTIONS" : "COMPLETED";
       // drop raw file content after completion to reduce retention surface
       const source = snap.guestIntakeSources.find((item) => item.id === job.sourceId);
-      if (source) delete source.contentBase64;
+      if (source?.contentBase64) {
+        delete source.contentBase64;
+        source.version += 1;
+        source.updatedAt = ctx.now;
+      }
       bumpJob(job, ctx.now);
       void didWork;
       return { job, receipt };

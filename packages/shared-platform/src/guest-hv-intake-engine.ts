@@ -478,6 +478,7 @@ export function promoteCandidateChunk(input: {
   chunk.status = "COMMITTED";
   chunk.committedAt = input.now;
   chunk.updatedAt = input.now;
+  chunk.version += 1;
   input.snap.guestPromotionChunks.push(chunk);
   return {
     chunk,
