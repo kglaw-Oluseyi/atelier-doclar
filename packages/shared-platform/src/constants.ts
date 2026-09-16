@@ -253,6 +253,9 @@ export const PERMISSION_KEYS = [
   "guest.reference.register",
   "guest.directory.view",
   "guest.intake.create",
+  "guest.intake.approve",
+  "guest.intake.cancel",
+  "guest.intake.export",
   "guest.record.amend",
   "guest.duplicate.resolve",
   "guest.person.link",
@@ -721,6 +724,12 @@ export const S06A_SENSITIVE_PERMISSIONS = [
   "atelierCommand.execute",
   "atelierCommand.approve",
   "atelierCommand.browser",
+] as const;
+
+export const S06C_SENSITIVE_PERMISSIONS = [
+  "guest.intake.approve",
+  "guest.intake.cancel",
+  "guest.intake.export",
 ] as const;
 
 export const ASSERTION_KINDS = [

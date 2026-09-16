@@ -22,6 +22,22 @@ import { lineageFixtureMark } from "./fixtures.js";
 import { emptyMasterEventFile } from "./mef.js";
 import { authorize, canSeeClient, canSeeEvent, singleCoveringRoleKey, type ActorSnapshot, type PolicyDecision } from "./policy.js";
 import { parseCanonicalCsv, rowToIntakeFields } from "./guest-intake.js";
+import {
+  advanceGuestIntakePromotionCore,
+  applyGuestIntakeDecisionsCore,
+  approveGuestIntakeCore,
+  cancelGuestIntakeCore,
+  canonicalTemplateCsv,
+  confirmGuestIntakeMappingCore,
+  correctionCsv,
+  createGuestIntakeJobCore,
+  getGuestIntakeJobBundle,
+  listGuestIntakeJobsFromSnap,
+  submitGuestIntakeCore,
+  uploadGuestIntakeSourceCore,
+  validateGuestIntakeCore,
+} from "./guest-hv-intake-commands.js";
+import type { GuestIntakeJob, GuestIntakeReceipt, GuestMappingEdition } from "./guest-hv-intake-schemas.js";
 import { dateOfBirthForbidden, requiresResponsibleAdult } from "./addressing.js";
 import { RETAINED_SALUTATION_INVARIANT, retainedSalutationInvariant } from "./addressing-invariant.js";
 import { attentionRequiredFor, operationalDisplayName } from "./guest-matching.js";
@@ -2273,6 +2289,74 @@ export class PlatformService {
         return batch;
       },
     });
+  }
+
+  createGuestIntakeJob(actor: ActorContext, raw: unknown): GuestIntakeJob {
+    return createGuestIntakeJobCore(
+      this.mutate.bind(this) as never,
+      parseStrict as never,
+      this.requireEvent.bind(this),
+      actor,
+      raw,
+    );
+  }
+
+  uploadGuestIntakeSource(actor: ActorContext, raw: unknown) {
+    return uploadGuestIntakeSourceCore(
+      this.mutate.bind(this) as never,
+      parseStrict as never,
+      this.requireEvent.bind(this),
+      actor,
+      raw,
+    );
+  }
+
+  confirmGuestIntakeMapping(actor: ActorContext, raw: unknown): GuestMappingEdition {
+    return confirmGuestIntakeMappingCore(this.mutate.bind(this) as never, parseStrict as never, actor, raw);
+  }
+
+  validateGuestIntake(actor: ActorContext, raw: unknown): GuestIntakeJob {
+    return validateGuestIntakeCore(this.mutate.bind(this) as never, parseStrict as never, actor, raw);
+  }
+
+  applyGuestIntakeDecisions(actor: ActorContext, raw: unknown): GuestIntakeJob {
+    return applyGuestIntakeDecisionsCore(this.mutate.bind(this) as never, parseStrict as never, actor, raw);
+  }
+
+  submitGuestIntake(actor: ActorContext, raw: unknown): GuestIntakeJob {
+    return submitGuestIntakeCore(this.mutate.bind(this) as never, parseStrict as never, actor, raw);
+  }
+
+  approveGuestIntake(actor: ActorContext, raw: unknown): GuestIntakeJob {
+    return approveGuestIntakeCore(this.mutate.bind(this) as never, parseStrict as never, actor, raw);
+  }
+
+  advanceGuestIntakePromotion(actor: ActorContext, raw: unknown): { job: GuestIntakeJob; receipt?: GuestIntakeReceipt } {
+    return advanceGuestIntakePromotionCore(this.mutate.bind(this) as never, parseStrict as never, actor, raw);
+  }
+
+  cancelGuestIntake(actor: ActorContext, raw: unknown): GuestIntakeJob {
+    return cancelGuestIntakeCore(this.mutate.bind(this) as never, parseStrict as never, actor, raw);
+  }
+
+  guestIntakeTemplateCsv(): string {
+    return canonicalTemplateCsv();
+  }
+
+  exportGuestIntakeCorrectionCsv(actor: ActorContext, organisationId: string, eventId: string, jobId: string): string {
+    const { snap } = this.authorizeViewQuery(actor, "guest.intake.export", { organisationId, eventId });
+    const bundle = getGuestIntakeJobBundle(snap, organisationId, eventId, jobId);
+    return correctionCsv(bundle.candidates);
+  }
+
+  listGuestIntakeJobs(actor: ActorContext, organisationId: string, eventId: string): GuestIntakeJob[] {
+    const { snap } = this.authorizeViewQuery(actor, "guest.directory.view", { organisationId, eventId });
+    return listGuestIntakeJobsFromSnap(snap, organisationId, eventId);
+  }
+
+  getGuestIntakeJob(actor: ActorContext, organisationId: string, eventId: string, jobId: string) {
+    const { snap } = this.authorizeViewQuery(actor, "guest.directory.view", { organisationId, eventId });
+    return getGuestIntakeJobBundle(snap, organisationId, eventId, jobId);
   }
 
   listGuests(actor: ActorContext, raw: unknown): OperationalGuest[] {
@@ -8881,6 +8965,35 @@ export class PlatformService {
         occurredAt: now,
       });
       this.store.replace(snap);
+      throw this.denyError(decision.reason);
+    }
+    return { snap, ctx: { now, actor: actorSnap, decision } };
+  }
+
+  /** Scoped TDR-S06-006 remediation: intake progress/list reads avoid full snapshot clone. */
+  private authorizeViewQuery(actor: ActorContext, permission: PermissionKey, scope: ScopeInput): {
+    snap: PlatformSnapshot;
+    ctx: { now: string; actor: ActorSnapshot; decision: Extract<PolicyDecision, { allow: true }> };
+  } {
+    const snap = this.store.viewSnapshot();
+    const now = actor.now ?? new Date().toISOString();
+    const actorSnap = this.actorSnapshot(actor);
+    const decision = this.decide(actorSnap, permission, scope, { type: permission, organisationId: scope.organisationId, clientId: scope.clientId, eventId: scope.eventId }, actor);
+    if (!decision.allow) {
+      const writable = this.store.snapshot();
+      this.writeAudit(writable, {
+        action: permission,
+        outcome: "DENIED",
+        actorPersonId: actor.personId,
+        organisationId: scope.organisationId,
+        clientId: scope.clientId,
+        eventId: scope.eventId,
+        resourceType: permission.split(".")[0] ?? "resource",
+        correlationId: actor.correlationId,
+        reason: decision.reason,
+        occurredAt: now,
+      });
+      this.store.replace(writable);
       throw this.denyError(decision.reason);
     }
     return { snap, ctx: { now, actor: actorSnap, decision } };

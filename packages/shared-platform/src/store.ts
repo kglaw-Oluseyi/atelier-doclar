@@ -316,6 +316,13 @@ export interface PlatformSnapshot {
   guestDuplicateCandidates: GuestDuplicateCandidate[];
   guestIntakeBatches: GuestIntakeBatch[];
   guestIntakeRows: GuestIntakeRow[];
+  guestIntakeSources: import("./guest-hv-intake-schemas.js").GuestIntakeSource[];
+  guestIntakeJobs: import("./guest-hv-intake-schemas.js").GuestIntakeJob[];
+  guestMappingEditions: import("./guest-hv-intake-schemas.js").GuestMappingEdition[];
+  guestIntakeCandidates: import("./guest-hv-intake-schemas.js").GuestIntakeCandidate[];
+  guestPromotionChunks: import("./guest-hv-intake-schemas.js").GuestPromotionChunk[];
+  guestIntakeReceipts: import("./guest-hv-intake-schemas.js").GuestIntakeReceipt[];
+  guestIntakeOutboxEvents: import("./guest-hv-intake-schemas.js").GuestIntakeOutboxEvent[];
   guestParties: GuestParty[];
   guestPartyMembers: GuestPartyMember[];
   guestRelationships: GuestRelationship[];
@@ -611,6 +618,13 @@ export function emptySnapshot(): PlatformSnapshot {
     guestDuplicateCandidates: [],
     guestIntakeBatches: [],
     guestIntakeRows: [],
+    guestIntakeSources: [],
+    guestIntakeJobs: [],
+    guestMappingEditions: [],
+    guestIntakeCandidates: [],
+    guestPromotionChunks: [],
+    guestIntakeReceipts: [],
+    guestIntakeOutboxEvents: [],
     guestParties: [],
     guestPartyMembers: [],
     guestRelationships: [],
@@ -863,6 +877,13 @@ export function normalizeSnapshot(input: PlatformSnapshot): PlatformSnapshot {
     guestDuplicateCandidates: input.guestDuplicateCandidates ?? [],
     guestIntakeBatches: input.guestIntakeBatches ?? [],
     guestIntakeRows: input.guestIntakeRows ?? [],
+    guestIntakeSources: input.guestIntakeSources ?? [],
+    guestIntakeJobs: input.guestIntakeJobs ?? [],
+    guestMappingEditions: input.guestMappingEditions ?? [],
+    guestIntakeCandidates: input.guestIntakeCandidates ?? [],
+    guestPromotionChunks: input.guestPromotionChunks ?? [],
+    guestIntakeReceipts: input.guestIntakeReceipts ?? [],
+    guestIntakeOutboxEvents: input.guestIntakeOutboxEvents ?? [],
     guestParties: input.guestParties ?? [],
     guestPartyMembers: input.guestPartyMembers ?? [],
     guestRelationships: input.guestRelationships ?? [],

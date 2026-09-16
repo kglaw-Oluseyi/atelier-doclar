@@ -226,6 +226,17 @@ export {
   addressingAlreadyApplied,
 } from "./mutation-replay.js";
 export { parseCanonicalCsv, CANONICAL_CSV_COLUMNS } from "./guest-intake.js";
+export {
+  HV_INTAKE_CHUNK_SIZE,
+  HV_INTAKE_MAX_BYTES,
+  HV_INTAKE_MAX_ROWS,
+  GuestIntakeJobSchema,
+  type GuestIntakeJob,
+  type GuestIntakeCandidate,
+  type GuestIntakeReceipt,
+} from "./guest-hv-intake-schemas.js";
+export { parseHvCsv, parseHvXlsx, detectFormulaInjection, canonicalTemplateCsv, autoMapHeaders } from "./guest-hv-intake-parse.js";
+export { correctionCsv } from "./guest-hv-intake-engine.js";
 export { seededPermissions, seededRoles, permissionsForRole, roleIdForKey, roleKeyForId } from "./catalog.js";
 export {
   authorize,
