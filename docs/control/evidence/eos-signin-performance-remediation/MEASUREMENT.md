@@ -2,42 +2,42 @@
 
 ## Baseline (pre-correction)
 
-- Application SHA deployed: `0a0be803f123e8326fb893db1e3562c724b70dd0`
+- Application SHA stamp: `0a0be803f123e8326fb893db1e3562c724b70dd0`
 - Repo HEAD at diagnosis: `e6622677d5b38986bf64412466d5add02065143c`
 - Production `platform_documents`: 10,386 rows (~12 MB relation)
 - Production `platform_audit`: 7,913 rows (~4.9 MB bodies)
-- Heaviest collections include `layoutRevisions` (~7.3 MB), `operationalGuests` (933), `staffSessions` (1,855)
+- Heaviest collections include `layoutRevisions` (~7.3 MB), `operationalGuests` (933), `staffSessions` (1,855), ~71 events
 
 ## Root cause (measured)
 
-Authentication used `PlatformStore.snapshot()` + `replace()`, which:
+Two amplifying paths:
 
-1. `structuredClone`s the full in-memory platform snapshot (guests, layouts, RSVP, audit, …)
-2. On Postgres, runs `persistTransactional` comparing **every** collection with `JSON.stringify` same-body checks
-3. `withDurable` awaits that flush on the sign-in request path
-
-Auth does **not** need guests, layouts, seating, or evidence. Query amplification scales with CAP600/CAP1000 volume.
+1. **Sign-in write path** used `PlatformStore.snapshot()` + `replace()`, cloning and scanning the full platform (guests, layouts, RSVP, audit, …) on every authentication.
+2. **Protected `/app` landing** called `listGuests` once per assigned event (N+1), and each call cloned the full snapshot again (~71 clones).
 
 ## Live browser timings before correction
 
 Host: `https://event-os-production-bc8d.up.railway.app`
 
-| sample | get /sign-in | submit→nav | landed |
-|--------|--------------|------------|--------|
+| sample | get /sign-in | submit→nav (incl. /app) | landed |
+|--------|--------------|-------------------------|--------|
 | 1 | 1000 ms | **36056 ms** | /app |
 | 2 | 1133 ms | **34044 ms** | /app |
 | 3 | 667 ms | **32127 ms** | /app |
 
-Warm submit p50 ≈ 34 s (hard ceiling 3 s — failed).
+## After bounded auth write (04438ca), separated timing
+
+| sample | auth HTTP (POST /sign-in) | nav commit (incl. /app RSC) |
+|--------|---------------------------|-----------------------------|
+| warm | **295–354 ms** | ~33–37 s (home N+1 clones) |
+| cold/outlier | ~35 s | ~35 s |
 
 ## Correction
 
-Bounded `StaffAuthCapableStore.applyStaffAuthMutation` on Memory + Postgres:
-
-- reads: matching person / session only
-- writes: person update, staff session insert/update, one audit row
-- Postgres: single transaction, O(1) document queries (no full-collection scan)
+1. Bounded `StaffAuthCapableStore.applyStaffAuthMutation` (Memory + Postgres): person, session, audit only.
+2. Read-only `viewSnapshot()` for identity resolution; `/app` guest counts use one view instead of N `listGuests` clones.
+3. Sign-in form pending UX (`PendingSubmit`, `aria-live`, disabled inputs).
 
 ## Security invariants preserved
 
-Server-side token verification, HMAC session binding, HttpOnly cookie path, audit on issue/deny/revoke, generic failure copy, no credential logging, no role grants, fixtures adapter unchanged for non-Postgres file store compatibility.
+Server-side token verification, HMAC session binding, HttpOnly cookie path, audit on issue/deny/revoke, generic failure copy, no credential logging, no role grants, fixtures adapter compatible.
