@@ -1,10 +1,12 @@
 import type { GuestIntakeJob } from "@maison-doclar/shared-platform";
+import { validationCounterDisplay } from "../server/hv-intake-validation-counters";
 
 export function HvIntakeProgress({ job }: { job: GuestIntakeJob }) {
   const p = job.progress;
   const total = Math.max(p.rowsTotal, 1);
   const settled = p.rowsPromoted + p.rowsUpdated + p.rowsUnchanged + p.rowsSkipped + p.rowsFailed;
   const pct = Math.min(100, Math.round((settled / total) * 100));
+  const validation = validationCounterDisplay(p, job.status);
   return (
     <section className="atelier-progress" aria-labelledby="hv-intake-progress-title">
       <h2 id="hv-intake-progress-title">Progress</h2>
@@ -26,9 +28,15 @@ export function HvIntakeProgress({ job }: { job: GuestIntakeJob }) {
       </div>
       <ul className="atelier-progress-counts">
         <li>Total {p.rowsTotal}</li>
-        <li>Valid {p.rowsValid}</li>
-        <li>Warnings {p.rowsWarning}</li>
-        <li>Invalid {p.rowsInvalid}</li>
+        {validation.mode === "counts" ? (
+          <>
+            <li>Valid {validation.valid}</li>
+            <li>Warnings {validation.warnings}</li>
+            <li>Invalid {validation.invalid}</li>
+          </>
+        ) : (
+          <li data-testid="hv-validation-counters-unavailable">{validation.reason}</li>
+        )}
         <li>Duplicates {p.rowsDuplicate}</li>
         <li>Conflicts {p.rowsConflict}</li>
         <li>Promoted {p.rowsPromoted}</li>

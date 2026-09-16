@@ -40,15 +40,16 @@ describe("event search filter", () => {
 });
 
 describe("programme posture", () => {
-  it("renders accepted S06/S06A/Gate 1 without false S06A not-accepted", () => {
+  it("renders accepted S06/S06A/Gate 1 and truthful S06B/C/D/S07 governance", () => {
     const line = formatProgrammePostureLine();
     assert.match(line, /EOS-S06 ACCEPTED \(MD-PR-S077\)/);
     assert.match(line, /EOS-S06A ACCEPTED \(MD-PR-S079\)/);
     assert.match(line, /Gate 1 ACCEPTED \(MD-PR-S080\)/);
-    assert.match(line, /EOS-S06B CEO RATIFICATION DRAFT/);
-    assert.match(line, /EOS-S06C CEO RATIFICATION DRAFT/);
+    assert.match(line, /EOS-S06B CEO RATIFIED — PLANNING ONLY/);
+    assert.match(line, /EOS-S06C IMPLEMENTED — AWAITING AI CTO ACCEPTANCE/);
+    assert.match(line, /EOS-S06D CEO RATIFIED — PLANNING ONLY/);
     assert.match(line, /EOS-S07 NOT_STARTED/);
-    assert.doesNotMatch(line, /IMPLEMENTED \(not accepted\)/);
+    assert.doesNotMatch(line, /CEO RATIFICATION DRAFT/);
     assert.equal(EVENT_OS_PROGRAMME_POSTURE.productionAuthorised, false);
   });
 });

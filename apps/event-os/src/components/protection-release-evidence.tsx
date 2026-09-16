@@ -96,7 +96,7 @@ export function ProtectionReleaseEvidence({
   const adapters = evaluation.adapters ?? {};
   return (
     <section className="atelier-panel protection-release-evidence" data-testid="protection-release-evidence">
-      <h3>Release evidence</h3>
+      <h2>Release evidence</h2>
       <p>
         Fixture assurance is not production authorisation. A current complete pass only means the synthetic corpus is ready; live operations remain unauthorised. Evidence commits are not application SHAs.
       </p>
@@ -140,7 +140,7 @@ export function ProtectionReleaseEvidence({
           <dd data-testid="release-production-authorised">{String(productionAuthorised)}</dd>
         </div>
       </dl>
-      <h4 data-testid="release-historical-heading">Historical S05A / S05B evaluation evidence</h4>
+      <h3 data-testid="release-historical-heading">Historical S05A / S05B evaluation evidence</h3>
       <p className="atelier-command-muted">
         Preserved corpus evidence from prior gates. This section is not the current EOS-S06A application or Task Bank identity.
       </p>

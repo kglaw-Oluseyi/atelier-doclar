@@ -142,9 +142,16 @@ export default async function GuestDirectoryPage({
             Search
             <input name="q" defaultValue={query.q ?? ""} type="search" />
           </label>
-          <label className="check">
-            <input className="at-switch" type="checkbox" name="attention" value="1" defaultChecked={query.attention === "1"} />
-            Attention only
+          <label className="check guestbook-attention-filter" htmlFor="guestbook-attention-only">
+            <input
+              id="guestbook-attention-only"
+              className="at-switch"
+              type="checkbox"
+              name="attention"
+              value="1"
+              defaultChecked={query.attention === "1"}
+            />
+            <span>Attention only</span>
           </label>
           <label>
             RSVP
@@ -205,48 +212,85 @@ export default async function GuestDirectoryPage({
                   return (
                     <tr key={guest.id} className="atelier-guest-row">
                       <td data-label="Name">
-                        <Link className="guest-name" href={`/app/events/${scoped.event.id}/guests/${guest.id}`}>
+                        <Link
+                          className="guest-name guestbook-cell-clip"
+                          href={`/app/events/${scoped.event.id}/guests/${guest.id}`}
+                          title={names.primary}
+                        >
                           {names.primary}
                         </Link>
                       </td>
                       <td data-label="Formal addressing">
-                        <span className="guest-name">
+                        <span
+                          className="guest-name guestbook-cell-clip"
+                          title={
+                            names.showFormal
+                              ? names.formal
+                              : names.formalKind === "SAFE_FALLBACK"
+                                ? names.formal
+                                : "Safe fallback"
+                          }
+                        >
                           {names.showFormal ? names.formal : names.formalKind === "SAFE_FALLBACK" ? names.formal : "Safe fallback"}
                         </span>
                       </td>
                       <td data-label="Identity">
-                        <span className="md-status" data-tone={guest.identityResolution === "DUPLICATE_RISK" ? "warn" : undefined}>
+                        <span
+                          className="md-status guestbook-cell-clip"
+                          data-tone={guest.identityResolution === "DUPLICATE_RISK" ? "warn" : undefined}
+                          title={guest.identityResolution.replaceAll("_", " ")}
+                        >
                           {guest.identityResolution.replaceAll("_", " ")}
                         </span>
                       </td>
                       <td data-label="Attention">
                         <span
-                          className="md-status"
+                          className="md-status guestbook-cell-clip"
                           data-tone={guest.attentionRequired ? "warn" : "ok"}
                           data-testid="directory-attention"
+                          title={guest.attentionRequired ? "Attention required" : "No attention flag"}
                         >
                           {guest.attentionRequired ? "Attention required" : "No attention flag"}
                         </span>
                       </td>
                       <td data-label="Email quality">
-                        <span className="md-status" data-tone={qualityTone(guest.email.quality)}>
+                        <span
+                          className="md-status guestbook-cell-clip"
+                          data-tone={qualityTone(guest.email.quality)}
+                          title={guest.email.quality.replaceAll("_", " ")}
+                        >
                           {guest.email.quality.replaceAll("_", " ")}
                         </span>
                       </td>
                       <td data-label="RSVP">
-                        <span className="md-status">
+                        <span
+                          className="md-status guestbook-cell-clip"
+                          title={(rsvpByGuest.get(guest.id)?.attendanceIntent ?? "NOT_SUPPLIED").replaceAll("_", " ")}
+                        >
                           {(rsvpByGuest.get(guest.id)?.attendanceIntent ?? "NOT_SUPPLIED").replaceAll("_", " ")}
                         </span>
                       </td>
                       <td data-label="Merchandise">
-                        <span className="md-status" data-tone={merchByGuest.get(guest.id)?.risk ? "warn" : undefined}>
+                        <span
+                          className="md-status guestbook-cell-clip"
+                          data-tone={merchByGuest.get(guest.id)?.risk ? "warn" : undefined}
+                          title={
+                            merchByGuest.get(guest.id)?.offerCount
+                              ? `${merchByGuest.get(guest.id)?.offerCount} offer${merchByGuest.get(guest.id)?.offerCount === 1 ? "" : "s"}`
+                              : "No offer"
+                          }
+                        >
                           {merchByGuest.get(guest.id)?.offerCount
                             ? `${merchByGuest.get(guest.id)?.offerCount} offer${merchByGuest.get(guest.id)?.offerCount === 1 ? "" : "s"}`
                             : "No offer"}
                         </span>
                       </td>
-                      <td data-label="Source">{guest.intakeSource.replaceAll("_", " ")}</td>
-                      <td data-label="State">{guest.lifecycle}</td>
+                      <td data-label="Source" title={guest.intakeSource.replaceAll("_", " ")}>
+                        <span className="guestbook-cell-clip">{guest.intakeSource.replaceAll("_", " ")}</span>
+                      </td>
+                      <td data-label="State" title={guest.lifecycle}>
+                        <span className="guestbook-cell-clip">{guest.lifecycle}</span>
+                      </td>
                     </tr>
                   );
                 })}

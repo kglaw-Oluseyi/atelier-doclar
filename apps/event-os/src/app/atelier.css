@@ -383,7 +383,7 @@ body.atelier {
 
 .atelier-guestbook .table-wrap {
   padding: 0;
-  overflow: hidden;
+  overflow-x: auto;
   background: var(--at-porcelain);
   border-color: var(--at-line);
   box-shadow: var(--at-shadow-soft);
@@ -392,6 +392,9 @@ body.atelier {
 .atelier-guestbook .data-table {
   border-collapse: separate;
   border-spacing: 0;
+  table-layout: fixed;
+  width: 100%;
+  min-width: 52rem;
 }
 
 .atelier-guestbook .data-table caption {
@@ -401,21 +404,68 @@ body.atelier {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   font-size: 0.72rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+  word-break: normal;
+  white-space: normal;
+  hyphens: manual;
 }
 
 .atelier-guestbook .data-table th {
-  padding: 14px 16px 10px;
+  padding: 14px 10px 10px;
   color: var(--at-umber);
   font-size: 0.72rem;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   border-bottom: 1px solid var(--at-line);
   background: #f8f3eb;
+  vertical-align: bottom;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: normal;
+  line-height: 1.25;
 }
 
 .atelier-guestbook .data-table td {
-  padding: 14px 16px;
+  padding: 14px 10px;
   border-bottom: 1px solid var(--at-line);
+  vertical-align: top;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.atelier-guestbook .guestbook-cell-clip {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.atelier-guestbook .guestbook-attention-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: var(--md-touch, 44px);
+  padding: 0.15rem 0;
+  cursor: pointer;
+}
+
+.atelier-guestbook .guestbook-attention-filter .at-switch {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.atelier-guestbook .guestbook-attention-filter > span {
+  flex: 1 1 auto;
+  min-width: 0;
+  line-height: 1.3;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .atelier-guest-row {
@@ -592,6 +642,23 @@ body.atelier {
     padding: 28px 20px;
   }
 
+  .atelier-guestbook .data-table {
+    min-width: 0;
+    width: 100%;
+    table-layout: auto;
+  }
+
+  .atelier-guestbook .data-table caption {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    padding: 12px 14px 4px;
+    letter-spacing: 0.06em;
+    overflow-wrap: break-word;
+    word-break: normal;
+    white-space: normal;
+  }
+
   .atelier-guestbook .data-table tr.atelier-guest-row {
     display: grid;
     gap: 8px;
@@ -608,6 +675,12 @@ body.atelier {
     padding: 0;
   }
 
+  .atelier-guestbook .guestbook-cell-clip {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+  }
+
   .atelier-guestbook .data-table td[data-label]::before {
     content: attr(data-label);
     display: block;
@@ -616,6 +689,8 @@ body.atelier {
     letter-spacing: 0.08em;
     text-transform: uppercase;
     font-size: 0.68rem;
+    overflow-wrap: break-word;
+    word-break: normal;
   }
 
   .atelier-guest-row:hover,
@@ -2022,6 +2097,20 @@ body.atelier {
   word-break: break-word;
 }
 
+/* Guestbook: prefer word wraps; avoid caption/header character staircases from overflow-wrap:anywhere */
+.atelier-guestbook,
+.atelier-guestbook .data-table,
+.atelier-guestbook .data-table caption,
+.atelier-guestbook .data-table th,
+.atelier-guestbook .data-table td,
+.atelier-guestbook .data-table a,
+.atelier-guestbook .table-wrap,
+.atelier-guestbook .filter-bar,
+.atelier-guestbook .guestbook-attention-filter {
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
 .atelier-folio {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
 }
@@ -2103,9 +2192,11 @@ body.atelier {
 }
 
 @media (min-width: 861px) {
-  .atelier-guestbook .data-table thead th,
-  .atelier-guestbook .data-table .guest-name,
-  .atelier-guestbook thead th {
+  .atelier-guestbook .data-table thead th {
+    white-space: normal;
+  }
+
+  .atelier-guestbook .data-table .guest-name.guestbook-cell-clip {
     white-space: nowrap;
   }
 }
