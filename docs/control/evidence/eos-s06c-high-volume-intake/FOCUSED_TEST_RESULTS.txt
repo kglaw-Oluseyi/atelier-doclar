@@ -61,3 +61,13 @@ ok 2 - EOS-S06C high-volume guest intake
 # skipped 0
 # todo 0
 # duration_ms 1751.506333
+
+=== Pre-Claude closure focused regressions 2026-09-16T21:17:01Z ===
+eos-s06c-exact-cap1000-browser.spec.ts LIVE vs 04d5607… : 1 passed (36.3s)
+guests.spec.ts (create/search/amend + auditor + a11y): 3 passed (29.6s)
+sign-in submit-to-ready (warm x3, from BROWSER_CLOSURE_RESULTS.json):
+  sample1 totalMs=1204 submitToNav=1164 navToReady=40
+  sample2 totalMs=1176 submitToNav=1158 navToReady=18
+  sample3 totalMs=1260 submitToNav=1244 navToReady=16
+axe serious/critical on intake receipt: 0
+CAP600 API count: 600 unchanged; old partial CAP1000: 125 quarantined; mixed: 1050

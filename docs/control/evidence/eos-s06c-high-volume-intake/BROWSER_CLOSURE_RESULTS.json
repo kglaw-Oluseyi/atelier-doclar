@@ -1,0 +1,37 @@
+{
+  "createdAt": "2026-09-16T21:14:35.553Z",
+  "applicationSha": "04d5607125e6806078a2b496665bf9fe11e57234",
+  "productionAuthorised": false,
+  "adapters": {
+    "OBJECT_STORE": "INACTIVE",
+    "SCAN": "INACTIVE",
+    "OCR": "INACTIVE",
+    "SOURCE_MONITOR": "INACTIVE",
+    "COMMUNICATIONS": "INACTIVE"
+  },
+  "exactEventId": "add41e21-9618-44f9-896a-fecd54badca5",
+  "exactJobId": "28a5370a-6700-4ac0-88a8-a716026ed860",
+  "exactGuestCountApi": 1000,
+  "signInTimings": [
+    {
+      "submitToNavMs": 1164,
+      "navToReadyMs": 40,
+      "totalMs": 1204
+    },
+    {
+      "submitToNavMs": 1158,
+      "navToReadyMs": 18,
+      "totalMs": 1176
+    },
+    {
+      "submitToNavMs": 1244,
+      "navToReadyMs": 16,
+      "totalMs": 1260
+    }
+  ],
+  "axeSeriousCritical": 0,
+  "mixedEventName": "[SYNTHETIC QUALIFICATION] EOS-S06C MIXED INTAKE 50+1000 — NOT EXACT CAP1000",
+  "cap600Present": true,
+  "oldCap1000Present": true,
+  "pass": true
+}

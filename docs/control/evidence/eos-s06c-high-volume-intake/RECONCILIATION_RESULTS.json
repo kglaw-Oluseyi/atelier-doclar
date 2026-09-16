@@ -1,12 +1,17 @@
 {
-  "S06C-050": { "created": 50, "note": "unit path covered by 50-row maker-checker test" },
+  "note": "Local automated corpora remain; live Railway results distinguish job throughput vs event population.",
+  "S06C-050": {
+    "created": 50,
+    "note": "unit path covered by 50-row maker-checker test"
+  },
   "S06C-1000-TYPICAL": {
     "sourceRows": 1000,
     "createdGuests": 1000,
     "guestTotalBefore": 0,
     "guestTotalAfter": 1000,
     "status": "COMPLETED",
-    "reconciled": true
+    "reconciled": true,
+    "environment": "local-memory automated"
   },
   "S06C-2000-SCALE": {
     "sourceRows": 2000,
@@ -16,5 +21,75 @@
     "status": "COMPLETED",
     "reconciled": true
   },
-  "S06C-600-MIXED": { "status": "corpus-ready", "note": "file generated; exercise via product UI/dirty path" }
+  "S06C-600-MIXED": {
+    "status": "corpus-ready",
+    "note": "file generated; exercise via product UI/dirty path"
+  },
+  "LIVE_MIXED_EVENT_af4a6b7e": {
+    "eventId": "af4a6b7e-0424-46d5-b9e5-d0a26845173e",
+    "disposition": "MIXED_INTAKE_QUALIFICATION — NOT exact CAP1000",
+    "authoritativeGuests": 1050,
+    "arithmetic": "0 + 50 + 1000 = 1050",
+    "jobs": [
+      {
+        "corpus": "S06C-050-CLEAN",
+        "jobId": "a8c6a24d-bb7f-4f93-8689-7d48a673e549",
+        "sourceRows": 50,
+        "created": 50,
+        "updated": 0,
+        "unchanged": 0,
+        "rejected": 0,
+        "guestBefore": 0,
+        "guestAfter": 50,
+        "duplicates": 0
+      },
+      {
+        "corpus": "S06C-1000-TYPICAL",
+        "jobId": "d39e9bde-9cdd-415c-b8eb-f586f6623bdc",
+        "sourceRows": 1000,
+        "created": 1000,
+        "updated": 0,
+        "unchanged": 0,
+        "rejected": 0,
+        "guestBefore": 50,
+        "guestAfter": 1050,
+        "duplicates": 0,
+        "claim": "1,000-row intake job qualified on this event; event population is 1050"
+      }
+    ]
+  },
+  "LIVE_EXACT_CAP1000_add41e21": {
+    "eventId": "add41e21-9618-44f9-896a-fecd54badca5",
+    "eventCode": "S06C1KMU4LD5",
+    "disposition": "EXACT CAP1000 fixture",
+    "jobId": "28a5370a-6700-4ac0-88a8-a716026ed860",
+    "edition": 1,
+    "corpus": "S06C-1000-TYPICAL",
+    "corpusSeed": "eos-s06c-1000-typical-v1",
+    "sourceHash": "67b0e96e98f81f9a4da7fe40eb44752cb68cdd5d9045a4ef3329e245535f68eb",
+    "sourceRows": 1000,
+    "createdGuests": 1000,
+    "updatedGuests": 0,
+    "unchangedGuests": 0,
+    "rejectedRows": 0,
+    "failedRows": 0,
+    "guestTotalBefore": 0,
+    "guestTotalAfter": 1000,
+    "duplicates": 0,
+    "missingGuests": 0,
+    "chunksCommitted": 4,
+    "status": "COMPLETED",
+    "reconciled": true,
+    "replay": { "mutation": false, "guestCount": 1000 }
+  },
+  "CAP600_INTEGRITY": {
+    "eventId": "053fa686-124e-49b3-b8a8-d0497c0a1668",
+    "guestCount": 600,
+    "unchanged": true
+  },
+  "OLD_PARTIAL_CAP1000_QUARANTINE": {
+    "eventId": "3d212906-529e-4bd8-b13f-b0c2a24e5fba",
+    "guestCount": 125,
+    "unchanged": true
+  }
 }

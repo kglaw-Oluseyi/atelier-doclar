@@ -769,7 +769,9 @@ No assignment, posture, identity-field, findability, or seating mutations under 
 **Live deployment ID:** `df909000-d78c-46c1-8b9d-798883546691`
 **Documentation HEAD (unchanged lag):** `0a0be803f123e8326fb893db1e3562c724b70dd0`
 **Pack archive SHA-256:** `2b104b17dbad3a44dae8947c6250fad11629e0fe91df6c87b39ca8a0c77c74f4`
-**Status:** Implemented + Event OS deployed + live synthetic intake COMPLETED — READY FOR CLAUDE / **not accepted**
+**Status:** Exact CAP1000 fixture + deployed browser closure complete — READY FOR CLAUDE / **not accepted**
+**Exact CAP1000 event:** `add41e21-9618-44f9-896a-fecd54badca5` (`S06C1KMU4LD5`) / job `28a5370a-6700-4ac0-88a8-a716026ed860` — 0→1000
+**Mixed qualification event (NOT exact CAP1000):** `af4a6b7e-0424-46d5-b9e5-d0a26845173e` — 1,050 guests (50+1000)
 **EOS-S06B / S06D / S07:** not started
 **productionAuthorised:** false · Providers: INACTIVE · Real data: NOT AUTHORISED
 
@@ -777,6 +779,8 @@ No assignment, posture, identity-field, findability, or seating mutations under 
 |-------------|------|---------|------|
 | EV-EOS-S06C-IMPL | DOCUMENT | Implementation evidence pack | `docs/control/evidence/eos-s06c-high-volume-intake/` |
 | EV-EOS-S06C-ADR | DOCUMENT | Architecture decision record | `docs/control/ADR_EOS_S06C_HIGH_VOLUME_GUEST_INTAKE.md` |
-| EV-EOS-S06C-CLAUDE | DOCUMENT | Independent verification prompt | `docs/control/evidence/eos-s06c-high-volume-intake/CLAUDE_VERIFICATION_PROMPT.md` |
-| EV-EOS-S06C-LIVE | DOCUMENT | Live fixture manifest (50+1000 product intake) | `docs/control/evidence/eos-s06c-high-volume-intake/LIVE_FIXTURE_MANIFEST.json` |
+| EV-EOS-S06C-CLAUDE | DOCUMENT | Independent verification prompt (exact CAP1000) | `docs/control/evidence/eos-s06c-high-volume-intake/CLAUDE_VERIFICATION_PROMPT.md` |
+| EV-EOS-S06C-LIVE | DOCUMENT | Live fixture manifest (mixed + exact CAP1000) | `docs/control/evidence/eos-s06c-high-volume-intake/LIVE_FIXTURE_MANIFEST.json` |
+| EV-EOS-S06C-EXACT | DOCUMENT | Exact CAP1000 fixture stamp | `docs/control/evidence/eos-s06c-high-volume-intake/EXACT_CAP1000_FIXTURE.json` |
+| EV-EOS-S06C-BROWSER | DOCUMENT | Deployed browser closure results | `docs/control/evidence/eos-s06c-high-volume-intake/BROWSER_CLOSURE_RESULTS.json` |
 
