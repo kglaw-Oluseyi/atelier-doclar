@@ -2447,7 +2447,8 @@ body.atelier {
 
 .atelier-command-panel {
   padding: 1.25rem 1.35rem;
-  background: rgba(255, 252, 247, 0.72);
+  /* Opaque porcelain — translucent panel + alpha muted text failed Task Bank AA contrast. */
+  background: var(--at-porcelain, #fcfaf7);
   border: 1px solid rgba(17, 16, 15, 0.08);
 }
 
@@ -2482,7 +2483,8 @@ body.atelier {
 }
 
 .atelier-command-muted {
-  color: rgba(28, 25, 22, 0.72);
+  /* Solid warm umber (onyx family) — replaces alpha ink that failed WCAG AA on Task Bank metadata. */
+  color: var(--at-umber, #5a534b);
 }
 
 .atelier-command-simulated {

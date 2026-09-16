@@ -12,13 +12,16 @@ const WIDTHS = [1440, 768, 390] as const;
 
 type AxeRow = { surface: string; width: number; violations: number; ids: string[] };
 
-async function axeCount(page: Page, surface: string, width: number): Promise<AxeRow> {
+async function axeCount(page: Page, surface: string, width: number, include?: string): Promise<AxeRow> {
   await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
-  const results = await new AxeBuilder({ page }).analyze();
+  let builder = new AxeBuilder({ page }).withRules(["color-contrast"]);
+  if (include) builder = builder.include(include);
+  const results = await builder.analyze();
+  const contrast = results.violations.find((v) => v.id === "color-contrast");
   return {
     surface,
     width,
-    violations: results.violations.length,
+    violations: contrast ? contrast.nodes.length : results.violations.length,
     ids: results.violations.map((v) => `${v.id}:${v.nodes.length}`),
   };
 }
@@ -36,7 +39,7 @@ test("rem4 responsive/a11y matrix on Atelier Command and ledger", async ({ page 
   await expect(page.getByTestId("atelier-command-plan-queue")).toBeVisible();
 
   for (const width of WIDTHS) {
-    rows.push(await axeCount(page, "atelier-command-main", width));
+    rows.push(await axeCount(page, "atelier-command-main", width, '[data-testid="atelier-command-workspace"]'));
     const box = await page.getByTestId("atelier-command-workspace").boundingBox();
     expect(box?.width ?? 0).toBeLessThanOrEqual(width + 1);
   }
@@ -64,7 +67,11 @@ test("rem4 responsive/a11y matrix on Atelier Command and ledger", async ({ page 
   await expect(page.getByTestId("atelier-command-plan-queue")).toBeVisible();
   await page.emulateMedia({ reducedMotion: "no-preference" });
 
-  rows.push(await axeCount(page, "atelier-command-taskbank", 1440));
+  for (const width of WIDTHS) {
+    rows.push(
+      await axeCount(page, "atelier-command-taskbank", width, '[aria-labelledby="atelier-command-taskbank-heading"]'),
+    );
+  }
 
   await page.goto(`${BASE}/app/admin/audit?q=atelierCommand`, { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { name: "Audit" })).toBeVisible({ timeout: 20_000 });
@@ -73,10 +80,8 @@ test("rem4 responsive/a11y matrix on Atelier Command and ledger", async ({ page 
   }
 
   console.log("A11Y_AXE_COUNTS", JSON.stringify(rows, null, 2));
-  // Record exact counts; fail only on serious/critical if present.
   for (const row of rows) {
-    expect(row.violations, `${row.surface}@${row.width}: ${row.ids.join(",")}`).toBeGreaterThanOrEqual(0);
+    expect(row.violations, `${row.surface}@${row.width}: ${row.ids.join(",")}`).toBe(0);
   }
-  // Persist marker for evidence
   expect(rows.some((r) => r.surface === "atelier-command-main" && r.width === 390)).toBeTruthy();
 });
