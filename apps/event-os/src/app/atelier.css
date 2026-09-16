@@ -2719,3 +2719,44 @@ body.atelier {
     transition: none !important;
   }
 }
+
+/* EOS-S06C guestbook: beat later .atelier-shell .data-table { width:100%; max-width:100% } rules */
+.atelier-shell .atelier-guestbook .table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.atelier-shell .atelier-guestbook .data-table {
+  table-layout: fixed;
+  width: max(100%, 72rem);
+  min-width: 72rem;
+  max-width: none;
+}
+
+.atelier-shell .atelier-guestbook .data-table caption,
+.atelier-shell .atelier-guestbook .data-table th,
+.atelier-shell .atelier-guestbook .data-table td,
+.atelier-shell .atelier-guestbook .data-table a,
+.atelier-shell .atelier-guestbook .guestbook-cell-clip {
+  max-width: none;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.atelier-shell .atelier-guestbook .guestbook-attention-filter .at-switch {
+  flex: 0 0 44px;
+  width: 44px !important;
+  min-width: 44px;
+  max-width: 44px;
+  margin-right: 1rem;
+}
+
+@media (max-width: 860px) {
+  .atelier-shell .atelier-guestbook .data-table {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    table-layout: auto;
+  }
+}
