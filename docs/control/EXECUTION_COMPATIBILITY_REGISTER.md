@@ -439,3 +439,38 @@ Milestone 4 is authorised on the Milestone 1–3 contracts. Historic S5-01–S5-
 | Auth remediation closes full-clone query debt | REJECTED. `TDR-S06-006` remains OPEN. |
 | EOS-S07 authorised | RETAINED false. `NOT_STARTED / NOT_AUTHORISED`. |
 | `productionAuthorised` | RETAINED false. Providers/communications inactive. |
+
+## Addendum — 2026-09-16 EOS-S06B/S06C CEO ratification and governance prep (`MD-PR-S080` items 1–4)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| EOS-S06B / EOS-S06C remain `CEO RATIFICATION DRAFT` only | SUPERSEDED for programme ratification status. Both are `CEO RATIFIED` under `docs/control/EOS_S06B_S06C_RATIFICATION.md`. Placement-era DRAFT wording in pack inventories remains historical evidence and is not rewritten. |
+| Ratification equals implementation authority | REJECTED. Ratification permits controlled successor planning only. Bounded S06B implementation authority is a separate next gate. |
+| Ratification authorises production / providers / real data | REJECTED. `productionAuthorised:false`; providers inactive; real data not authorised. |
+| EOS-S06C may execute before EOS-S06B without further control | REJECTED for execution order. Controlling sequence is S06B acceptance before S06C implementation. |
+| EOS-S06D / Dining Command / EOS-S07 started by ratification | REJECTED. S06D follows accepted S06C; Dining Command follows approved S06D docs; S07 remains `NOT_STARTED / NOT_AUTHORISED`. |
+| Documentation head may be silently updated to chronology tip | REJECTED. Mismatch dispositioned as UNRESOLVED / OWNER REVIEW; live env vars not modified. |
+| CT0 validator FAIL may be deleted or claimed PASS | REJECTED. Failure retained; requires control-owner review; production blocked until dispositioned. |
+| Open TDRs closed by classification register | REJECTED. Classification register records OPEN debts only. |
+
+## Addendum — 2026-09-16 EOS-S06D Dining Service Command pack registration (`MD-PR-S080` continuation)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| EOS-S06D pack placement equals CEO ratification | REJECTED. Status is `CEO RATIFICATION DRAFT` only. Not ratified. Not canonical programme authority until explicit CEO ratification and subsequent governance update. |
+| EOS-S06D implementation / deployment / vendor / provider / real-event use authorised by placement | REJECTED. All remain unauthorised. Providers inactive. Synthetic data only. `productionAuthorised:false`. |
+| EOS-S06D sequencing settled before/after S06B or S06C by placement | REJECTED. Exact sequencing remains subject to CEO decision. Proposed pre-S07 milestone only. |
+| EOS-S06D registration closes docs-head / CT0 / TDR blockers or closes MD-PR-S080 | REJECTED. Blockers retained. S080 is not programme closure. |
+| EOS-S07 authorised by S06D draft registration | REJECTED. `NOT_STARTED / NOT_AUTHORISED`. |
+
+## Addendum — 2026-09-16 EOS-S06B/S06C/S06D CEO ratification finalisation (`MD-PR-S080`)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| EOS-S06D remains `CEO RATIFICATION DRAFT` / not ratified | SUPERSEDED for programme ratification status. EOS-S06D is `CEO RATIFIED — PLANNING ONLY` under `docs/control/EOS_S06B_S06C_RATIFICATION.md`. Pack-internal DRAFT wording retained as historical artefact. |
+| Controlling sequence is S06B then S06C | SUPERSEDED for roadmap order. Controlling sequence is `EOS-S06C → EOS-S06B → EOS-S06D → EOS-S07`. |
+| Separate “Dining Command” after S06D documentation | SUPERSEDED. EOS-S06D Dining Service Command is one complete-product milestone; no duplicate Dining Command milestone. |
+| Ratification of B/C/D equals implementation authority | REJECTED. Planning only. Bounded implementation authority is a separate gate per milestone. |
+| Next gate is bounded EOS-S06B | SUPERSEDED for next-authority recommendation. Recommended next is **bounded EOS-S06C implementation**. |
+| Sequence authorises implementation of C/B/D/S07 | REJECTED. Sequence is roadmap only. S07 remains `NOT_STARTED / NOT_AUTHORISED`. |
+| Docs-head / CT0 / open TDRs closed by this finalisation | REJECTED. All remain unresolved / retained / OPEN. |

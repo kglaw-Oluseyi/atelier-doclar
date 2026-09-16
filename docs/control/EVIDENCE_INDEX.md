@@ -702,3 +702,60 @@ No assignment, posture, identity-field, findability, or seating mutations under 
 | EV-EOS-S06C-PACK | DOCUMENT | EOS-S06C draft pack registration | `docs/control/eos-s06c/ratification-pack/` |
 | EV-EOS-S06-G1-DEBT | DOCUMENT | New controlled debts `TDR-S06-004`–`TDR-S06-008` | `docs/control/CUMULATIVE_TECHNICAL_DEBT_AND_REGRESSION_REGISTER.md` |
 
+## EOS-S06B/S06C CEO ratification + governance prep (`MD-PR-S080` items 1–4)
+
+**Date:** 2026-09-16
+**Prompt Control ID:** `MD-PR-S080`
+**Decision authority:** ChatGPT / AI CTO recording CEO ratification
+**Accepted application SHA (unchanged):** `71317881384e38671295c3fda32d533c71c3f559`
+**Chronology tip at prep:** `b6a452cde5e4b51a49d13aa47b7b89672fcffffa`
+**EOS-S06B / EOS-S06C:** CEO RATIFIED — implementation not authorised
+**EOS-S07:** NOT_STARTED / NOT_AUTHORISED
+**productionAuthorised:** false · Providers: INACTIVE · Real data: NOT AUTHORISED
+
+| Evidence ID | Type | Summary | Path |
+|-------------|------|---------|------|
+| EV-EOS-S06BC-RATIFY | DOCUMENT | CEO ratification acceptance record | `docs/control/EOS_S06B_S06C_RATIFICATION.md` |
+| EV-EOS-S080-DEBT-CLASS | DOCUMENT | Technical-debt classification register (all OPEN) | `docs/control/evidence/eos-s06-s080-governance-prep/TECHNICAL_DEBT_CLASSIFICATION_REGISTER.md` |
+| EV-EOS-S080-DOCS-HEAD | DOCUMENT | Documentation-head mismatch disposition | `docs/control/evidence/eos-s06-s080-governance-prep/DOCUMENTATION_HEAD_MISMATCH_DISPOSITION.md` |
+| EV-EOS-S080-CT0 | DOCUMENT | CT0 historical validator failure disposition | `docs/control/evidence/eos-s06-s080-governance-prep/CT0_HISTORICAL_VALIDATOR_FAILURE_DISPOSITION.md` |
+| EV-EOS-S080-SEQ | DOCUMENT | Successor sequence control | `docs/control/evidence/eos-s06-s080-governance-prep/SUCCESSOR_SEQUENCE_CONTROL.md` |
+| EV-EOS-S080-GOV-PREP | DOCUMENT | Governance-prep evidence directory | `docs/control/evidence/eos-s06-s080-governance-prep/` |
+
+## EOS-S06D Dining Service Command pack registration (`MD-PR-S080` continuation)
+
+**Date:** 2026-09-16
+**Prompt Control ID:** `MD-PR-S080`
+**Placement status (historical):** `CEO RATIFICATION DRAFT` at registration
+**Programme status after finalisation:** `CEO RATIFIED — PLANNING ONLY` (see addendum below)
+**Archive SHA-256:** `c06d2597d5e11acc8ba4ce5da69f0e963df8b478503716cf15855de364ec967b`
+**EOS-S07:** NOT_STARTED / NOT_AUTHORISED
+**productionAuthorised:** false · Providers: INACTIVE · Real data: NOT AUTHORISED
+
+| Evidence ID | Type | Summary | Path |
+|-------------|------|---------|------|
+| EV-EOS-S06D-PACK | DOCUMENT | EOS-S06D pack (controlling planning specification) | `docs/control/eos-s06d/ratification-pack/` |
+| EV-EOS-S06D-PACK-REG | DOCUMENT | Pack registration control record (placement history) | `docs/control/evidence/eos-s06-s080-governance-prep/EOS_S06D_PACK_REGISTRATION.md` |
+
+## EOS-S06B/S06C/S06D CEO ratification finalisation (`MD-PR-S080`)
+
+**Date:** 2026-09-16
+**Prompt Control ID:** `MD-PR-S080`
+**Decision authority:** ChatGPT / AI CTO recording CEO ratification
+**Accepted application SHA (unchanged):** `71317881384e38671295c3fda32d533c71c3f559`
+**Chronology tip at finalisation start:** `b6a452cde5e4b51a49d13aa47b7b89672fcffffa`
+**EOS-S06B / EOS-S06C / EOS-S06D:** CEO RATIFIED — PLANNING ONLY — implementation not authorised
+**Canonical sequence:** `EOS-S06C → EOS-S06B → EOS-S06D → EOS-S07` (roadmap only)
+**Dining Command split:** SUPERSEDED — EOS-S06D is the complete-product milestone
+**EOS-S07:** NOT_STARTED / NOT_AUTHORISED
+**Docs-head disposition:** UNRESOLVED / OWNER REVIEW / production BLOCKING UNTIL DISPOSITIONED
+**CT0 disposition:** REQUIRES CONTROL OWNER REVIEW / FAILURE RETAINED
+**Open TDRs:** `TDR-S06A-001`, `TDR-S06-002`…`TDR-S06-008` remain OPEN
+**productionAuthorised:** false · Providers: INACTIVE · Real data: NOT AUTHORISED
+
+| Evidence ID | Type | Summary | Path |
+|-------------|------|---------|------|
+| EV-EOS-S06BCD-RATIFY | DOCUMENT | CEO ratification acceptance record (B/C/D planning only) | `docs/control/EOS_S06B_S06C_RATIFICATION.md` |
+| EV-EOS-S080-SEQ | DOCUMENT | Successor sequence control (C→B→D→S07) | `docs/control/evidence/eos-s06-s080-governance-prep/SUCCESSOR_SEQUENCE_CONTROL.md` |
+| EV-EOS-S080-GOV-PREP | DOCUMENT | Governance-prep / finalisation evidence directory | `docs/control/evidence/eos-s06-s080-governance-prep/` |
+

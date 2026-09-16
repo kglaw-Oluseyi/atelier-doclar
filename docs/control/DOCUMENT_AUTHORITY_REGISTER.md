@@ -418,3 +418,41 @@ This addendum does not rewrite the B0 row set or earlier addenda. Catalogue acce
 | Gate 1 / auth closure evidence | `docs/control/evidence/eos-s06-gate1-auth-closure/` | CLOSURE EVIDENCE | Includes Claude archival (both attempts), identity/watch chronology. |
 | Cumulative debt register | `docs/control/CUMULATIVE_TECHNICAL_DEBT_AND_REGRESSION_REGISTER.md` | CONTROLLED DEBT | Entered `TDR-S06-004`–`TDR-S06-008`; retained `TDR-S06A-001`. |
 | Successor prompt register | `docs/control/SUCCESSOR_PROMPT_REGISTER.json` | SUCCESSOR ACCOUNTABILITY | Added `MD-PR-S080`. |
+
+## Addendum — 2026-09-16 EOS-S06B/S06C CEO ratification and governance prep (`MD-PR-S080` items 1–4)
+
+This addendum does not rewrite the B0 row set or earlier addenda. Catalogue accepted-slice count remains 6. Gate 1 and auth remediation remain ACCEPTED. Accepted application SHA remains `71317881384e38671295c3fda32d533c71c3f559`. EOS-S06B and EOS-S06C are **CEO RATIFIED** for successor planning only. Implementation, production, providers and real data remain unauthorised. EOS-S07 remains NOT_STARTED / NOT_AUTHORISED. Original pack DOCX/ZIP contents are preserved.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| EOS-S06B/S06C ratification record | `docs/control/EOS_S06B_S06C_RATIFICATION.md` | CANONICAL CEO RATIFICATION ACCEPTANCE | Overlay; packs preserved as historical artefacts. |
+| Technical-debt classification register | `docs/control/evidence/eos-s06-s080-governance-prep/TECHNICAL_DEBT_CLASSIFICATION_REGISTER.md` | CONTROLLED DEBT CLASSIFICATION | All listed debts OPEN; none closed. |
+| Documentation-head mismatch disposition | `docs/control/evidence/eos-s06-s080-governance-prep/DOCUMENTATION_HEAD_MISMATCH_DISPOSITION.md` | DISPOSITION — UNRESOLVED / OWNER REVIEW | Production BLOCKING UNTIL DISPOSITIONED. Live env vars not modified. |
+| CT0 historical validator failure disposition | `docs/control/evidence/eos-s06-s080-governance-prep/CT0_HISTORICAL_VALIDATOR_FAILURE_DISPOSITION.md` | DISPOSITION — REQUIRES CONTROL OWNER REVIEW | Failure RETAINED. |
+| Successor sequence control | `docs/control/evidence/eos-s06-s080-governance-prep/SUCCESSOR_SEQUENCE_CONTROL.md` | SUCCESSOR SEQUENCE | Next: bounded S06B implementation authority. |
+| Governance-prep evidence | `docs/control/evidence/eos-s06-s080-governance-prep/` | GOVERNANCE PREP EVIDENCE | Manifest includes SHA-256 hashes. |
+| EOS-S06B ratification pack | `docs/control/eos-s06b/ratification-pack/` | CEO RATIFIED (overlay) — IMPLEMENTATION NOT AUTHORISED | Placement-era DRAFT wording retained inside pack inventories. |
+| EOS-S06C ratification pack | `docs/control/eos-s06c/ratification-pack/` | CEO RATIFIED (overlay) — IMPLEMENTATION NOT AUTHORISED | Sequenced after S06B acceptance. |
+
+## Addendum — 2026-09-16 EOS-S06D Dining Service Command pack registration (`MD-PR-S080` continuation)
+
+This addendum does not rewrite earlier addenda. Catalogue accepted-slice count remains 6. EOS-S06B and EOS-S06C remain **CEO RATIFIED** for successor planning only. EOS-S06D is registered as **`CEO RATIFICATION DRAFT` only** — not ratified, not canonical programme authority, not implementation-authorised. Exact sequencing of EOS-S06D relative to EOS-S06B/S06C remains subject to CEO decision. EOS-S07 remains NOT_STARTED / NOT_AUTHORISED. Documentation-head disposition, CT0 retained failure and open TDRs remain unresolved. Production remains unauthorised.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| EOS-S06D ratification pack | `docs/control/eos-s06d/ratification-pack/` | CEO RATIFICATION DRAFT — NOT RATIFIED — NOT AUTHORISED | Archive SHA-256 `c06d2597d5e11acc8ba4ce5da69f0e963df8b478503716cf15855de364ec967b`. Placement ≠ ratification ≠ implementation. |
+| EOS-S06D pack registration record | `docs/control/evidence/eos-s06-s080-governance-prep/EOS_S06D_PACK_REGISTRATION.md` | DRAFT PACK REGISTRATION EVIDENCE | Does not close S080 blockers. |
+| EOS-S06B/S06C ratification record | `docs/control/EOS_S06B_S06C_RATIFICATION.md` | CANONICAL CEO RATIFICATION ACCEPTANCE (S06B/S06C only) | Meaning unchanged; S06D draft noted without converting this file into S06D ratification. |
+
+## Addendum — 2026-09-16 EOS-S06B/S06C/S06D CEO ratification finalisation (`MD-PR-S080`)
+
+This addendum does not rewrite the B0 row set or earlier addenda. Catalogue accepted-slice count remains 6. Gate 1 and auth remediation remain ACCEPTED. Accepted application SHA remains `71317881384e38671295c3fda32d533c71c3f559`. EOS-S06B, EOS-S06C and EOS-S06D are **CEO RATIFIED — PLANNING ONLY**. Implementation and deployment remain unauthorised. Canonical sequence: `EOS-S06C → EOS-S06B → EOS-S06D → EOS-S07` (roadmap only). EOS-S06D — Dining Service Command is the complete-product milestone; the earlier documentation/Dining Command split is superseded. EOS-S07 remains NOT_STARTED / NOT_AUTHORISED. Documentation-head disposition, CT0 retained failure and open TDRs remain unresolved. Production remains unauthorised. Supplied S06D DOCX/`MANIFEST.json`/ZIP remain byte-identical.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| EOS-S06B/S06C/S06D ratification record | `docs/control/EOS_S06B_S06C_RATIFICATION.md` | CANONICAL CEO RATIFICATION ACCEPTANCE (B/C/D planning only) | Filename retained; content covers S06D ratification addendum. |
+| EOS-S06B ratification pack | `docs/control/eos-s06b/ratification-pack/` | CEO RATIFIED — PLANNING ONLY — IMPLEMENTATION NOT AUTHORISED | Pack-internal DRAFT wording retained. |
+| EOS-S06C ratification pack | `docs/control/eos-s06c/ratification-pack/` | CEO RATIFIED — PLANNING ONLY — IMPLEMENTATION NOT AUTHORISED | Next implementation candidate. |
+| EOS-S06D ratification pack | `docs/control/eos-s06d/ratification-pack/` | CEO RATIFIED — PLANNING ONLY — IMPLEMENTATION NOT AUTHORISED | Controlling planning specification; archive SHA-256 `c06d2597…`. |
+| Successor sequence control | `docs/control/evidence/eos-s06-s080-governance-prep/SUCCESSOR_SEQUENCE_CONTROL.md` | SUCCESSOR SEQUENCE | Next: bounded S06C implementation authority. |
+| EOS-S06D pack registration (placement history) | `docs/control/evidence/eos-s06-s080-governance-prep/EOS_S06D_PACK_REGISTRATION.md` | PLACEMENT HISTORY | Draft-registration record retained; programme status superseded by ratification overlay. |

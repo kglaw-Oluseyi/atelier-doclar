@@ -352,8 +352,8 @@
       "native_id": "S06-G1-AUTH-CLOSURE",
       "slice_id": "EOS-S06",
       "product": "EVENT_OS",
-      "title": "EOS-S06 Gate 1 Acceptance, Authentication Remediation Acceptance, Identity Maintenance and Successor Pack Registration",
-      "authorising_instruction": "Accept Pre-Production Gate 1 PASS WITH CONTROLLED OBSERVATIONS and authentication performance remediation at application SHA 71317881384e38671295c3fda32d533c71c3f559; register EOS-S06B/S06C CEO RATIFICATION DRAFT packs only; maintain Event OS EVENT_OS_GIT_SHA identity; do not start EOS-S06B, EOS-S06C or EOS-S07 implementation; do not authorise production or activate providers"
+      "title": "EOS-S06 Gate 1 Acceptance, Authentication Remediation Acceptance, Identity Maintenance, Successor Pack Registration, Governance Prep, and EOS-S06B/S06C/S06D CEO Ratification Finalisation",
+      "authorising_instruction": "Accept Pre-Production Gate 1 PASS WITH CONTROLLED OBSERVATIONS and authentication performance remediation at application SHA 71317881384e38671295c3fda32d533c71c3f559; register then record CEO ratification of EOS-S06B, EOS-S06C and EOS-S06D for planning only; record canonical sequence EOS-S06C then EOS-S06B then EOS-S06D then EOS-S07 without granting implementation authority; supersede earlier Dining Command split in favour of complete-product EOS-S06D Dining Service Command; create technical-debt classification register without closing debts; disposition documentationHead mismatch and CT0 historical validator failure as unresolved/retained; do not start EOS-S06B, EOS-S06C, EOS-S06D or EOS-S07 implementation; do not authorise production, activate providers, introduce real data, or modify live environment variables"
     }
   ]
 }
