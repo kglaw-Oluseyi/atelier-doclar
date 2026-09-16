@@ -112,7 +112,7 @@ export default async function GuestIntakeJobPage({
                 File
                 <input name="file" type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required />
               </label>
-              <PendingSubmit label="Upload and stage" pendingLabel="Uploading…" />
+              <PendingSubmit pendingLabel="Uploading…">Upload and stage</PendingSubmit>
             </fieldset>
           </form>
         ) : null}
@@ -158,7 +158,7 @@ export default async function GuestIntakeJobPage({
                   ))}
                 </tbody>
               </table>
-              <PendingSubmit label="Confirm mapping and validate" pendingLabel="Validating…" />
+              <PendingSubmit pendingLabel="Validating…">Confirm mapping and validate</PendingSubmit>
             </fieldset>
           </form>
         ) : null}
@@ -221,7 +221,7 @@ export default async function GuestIntakeJobPage({
                   </tbody>
                 </table>
               </div>
-              <PendingSubmit label="Save decisions" pendingLabel="Saving…" />
+              <PendingSubmit pendingLabel="Saving…">Save decisions</PendingSubmit>
             </fieldset>
           </form>
         ) : null}
@@ -239,7 +239,7 @@ export default async function GuestIntakeJobPage({
                 Reason
                 <input name="reason" defaultValue="Submit frozen intake edition for approval" required />
               </label>
-              <PendingSubmit label="Submit edition" pendingLabel="Submitting…" />
+              <PendingSubmit pendingLabel="Submitting…">Submit edition</PendingSubmit>
             </fieldset>
           </form>
         ) : null}
@@ -257,7 +257,7 @@ export default async function GuestIntakeJobPage({
                 Reason
                 <input name="reason" defaultValue="Approve promotion of frozen intake edition" required />
               </label>
-              <PendingSubmit label="Approve promotion" pendingLabel="Approving…" />
+              <PendingSubmit pendingLabel="Approving…">Approve promotion</PendingSubmit>
             </fieldset>
           </form>
         ) : null}
@@ -268,7 +268,7 @@ export default async function GuestIntakeJobPage({
             <input type="hidden" name="jobId" value={job.id} />
             <input type="hidden" name="expectedVersion" value={job.version} />
             <IdempotencyField />
-            <PendingSubmit label="Promote / continue" pendingLabel="Promoting…" />
+            <PendingSubmit pendingLabel="Promoting…">Promote / continue</PendingSubmit>
           </form>
         ) : null}
 
@@ -282,7 +282,7 @@ export default async function GuestIntakeJobPage({
               Cancellation reason
               <input name="reason" required defaultValue="Cancel intake at safe boundary" />
             </label>
-            <PendingSubmit label="Cancel intake" pendingLabel="Cancelling…" />
+            <PendingSubmit pendingLabel="Cancelling…">Cancel intake</PendingSubmit>
           </form>
         ) : null}
 

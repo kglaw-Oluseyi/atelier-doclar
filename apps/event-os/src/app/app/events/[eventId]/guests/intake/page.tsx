@@ -84,7 +84,7 @@ export default async function GuestIntakeCommandPage({
                 Expected scale (optional)
                 <input name="expectedScale" type="number" min={1} max={5000} placeholder="1000" />
               </label>
-              <PendingSubmit label="Create intake" pendingLabel="Creating…" />
+              <PendingSubmit pendingLabel="Creating…">Create intake</PendingSubmit>
             </fieldset>
           </form>
         )}

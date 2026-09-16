@@ -330,8 +330,8 @@ export function jobNeedsReview(candidates: readonly GuestIntakeCandidate[]): boo
     (item) =>
       item.status === "DUPLICATE_REVIEW" ||
       item.status === "CONFLICT_REVIEW" ||
-      (item.status === "INVALID" && !item.decision) ||
-      (item.status === "DUPLICATE_REVIEW" && !item.decision),
+      item.status === "WARNING" ||
+      (item.status === "INVALID" && !item.decision),
   );
 }
 
