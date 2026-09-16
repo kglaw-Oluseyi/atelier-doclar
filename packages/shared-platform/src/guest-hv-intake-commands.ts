@@ -326,6 +326,7 @@ export function validateGuestIntakeCore(
         mapping.confirmed = true;
         mapping.confirmedByPersonId = actor.personId;
         mapping.confirmedAt = ctx.now;
+        mapping.version += 1;
         mapping.updatedAt = ctx.now;
       }
       bumpJob(job, ctx.now);
@@ -376,6 +377,7 @@ export function applyGuestIntakeDecisionsCore(
           candidate.status = "DUPLICATE_REVIEW";
         }
         candidate.updatedAt = ctx.now;
+        candidate.version += 1;
       }
       job.decisionHash = fingerprintParts(candidates.map((item) => ({ id: item.id, decision: item.decision ?? item.proposedAction })));
       job.edition += 1;

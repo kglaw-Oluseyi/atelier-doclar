@@ -22,10 +22,23 @@ import {
 
 const CAP600_ID = "053fa686-124e-49b3-b8a8-d0497c0a1668";
 const OLD_CAP1000_ID = "3d212906-529e-4bd8-b13f-b0c2a24e5fba";
-const EVIDENCE_DIR = join(
-  process.cwd(),
-  "docs/control/evidence/eos-s06c-high-volume-intake",
-);
+const EVIDENCE_DIR_CANDIDATES = [
+  join(process.cwd(), "docs/control/evidence/eos-s06c-high-volume-intake"),
+  join(process.cwd(), "../../docs/control/evidence/eos-s06c-high-volume-intake"),
+  "/app/docs/control/evidence/eos-s06c-high-volume-intake",
+];
+
+function evidenceDir(): string {
+  for (const candidate of EVIDENCE_DIR_CANDIDATES) {
+    try {
+      readFileSync(join(candidate, "corpora/S06C-050-CLEAN.csv"));
+      return candidate;
+    } catch {
+      /* try next */
+    }
+  }
+  throw new Error("EOS-S06C evidence corpora not found");
+}
 
 type Args = { confirm: boolean; also1000: boolean };
 
@@ -323,13 +336,15 @@ try {
   }
   await flush(store);
 
+  const evidence = evidenceDir();
+
   const fifty = await runIntake({
     service,
     store,
     organisationId: org,
     eventId: event.id,
     name: "S06C-050-CLEAN-LIVE",
-    csvPath: join(EVIDENCE_DIR, "corpora/S06C-050-CLEAN.csv"),
+    csvPath: join(evidence, "corpora/S06C-050-CLEAN.csv"),
     started,
     estimateMs,
   });
@@ -343,7 +358,7 @@ try {
       organisationId: org,
       eventId: event.id,
       name: "S06C-1000-TYPICAL-LIVE",
-      csvPath: join(EVIDENCE_DIR, "corpora/S06C-1000-TYPICAL.csv"),
+      csvPath: join(evidence, "corpora/S06C-1000-TYPICAL.csv"),
       started,
       estimateMs,
     });
@@ -383,8 +398,14 @@ try {
     providersNote: "No communications or external providers invoked by this script",
   };
 
-  mkdirSync(EVIDENCE_DIR, { recursive: true });
-  writeFileSync(join(EVIDENCE_DIR, "LIVE_FIXTURE_MANIFEST.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+  for (const outDir of [evidence, "/tmp"]) {
+    try {
+      mkdirSync(outDir, { recursive: true });
+      writeFileSync(join(outDir, "LIVE_FIXTURE_MANIFEST.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+    } catch {
+      /* read-only image paths are fine; /tmp is required */
+    }
+  }
   console.log(JSON.stringify(manifest, null, 2));
   progress(`wrote LIVE_FIXTURE_MANIFEST.json auditorBlocked=${auditorBlocked}`, started);
 } finally {
