@@ -101,7 +101,7 @@ test("EOS-S06C UX remediation surfaces", async ({ browser }) => {
       if (!input || !span) return -1;
       return span.getBoundingClientRect().left - input.getBoundingClientRect().right;
     });
-    expect(gap).toBeGreaterThanOrEqual(8);
+    expect(gap).toBeGreaterThanOrEqual(12);
     const before = await attention.isChecked();
     await attentionLabel.click();
     await expect(attention).toBeChecked({ checked: !before });

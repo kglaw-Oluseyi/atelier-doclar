@@ -193,6 +193,17 @@ export default async function GuestDirectoryPage({
           <div className="table-wrap">
             <table className="data-table">
               <caption>Event-scoped operational guest records</caption>
+              <colgroup>
+                <col className="guestbook-col-name" />
+                <col className="guestbook-col-formal" />
+                <col className="guestbook-col-identity" />
+                <col className="guestbook-col-attention" />
+                <col className="guestbook-col-email" />
+                <col className="guestbook-col-rsvp" />
+                <col className="guestbook-col-merch" />
+                <col className="guestbook-col-source" />
+                <col className="guestbook-col-state" />
+              </colgroup>
               <thead>
                 <tr>
                   <th scope="col">Name</th>
