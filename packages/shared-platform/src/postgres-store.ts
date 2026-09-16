@@ -334,6 +334,10 @@ export class PostgresPlatformStore implements PlatformStore, StaffAuthCapableSto
     return structuredClone(this.state);
   }
 
+  viewSnapshot(): PlatformSnapshot {
+    return this.state;
+  }
+
   findPersonsByNormalizedEmail(email: string): Person[] {
     const normalized = normalizeStaffEmail(email);
     return structuredClone(

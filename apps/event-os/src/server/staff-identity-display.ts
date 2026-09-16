@@ -12,7 +12,7 @@ export function presentStaffIdentity(person: Person, eventId?: string): StaffIde
     displayName: person.displayName,
     assignments: resolved.assignments,
     roles: resolved.roles,
-    events: runtime.service.currentSnapshot().events,
+    events: runtime.service.viewSnapshot().events,
     ...(eventId ? { eventId } : {}),
     now: new Date().toISOString(),
   });

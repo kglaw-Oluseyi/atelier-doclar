@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { authorize } from "@maison-doclar/shared-platform";
+import { authorize, attentionRequiredFor } from "@maison-doclar/shared-platform";
 import { AppShell } from "../../components/shell";
 import { guardedActor } from "../../server/guard";
 import { getRuntime } from "../../server/runtime";
@@ -27,25 +27,18 @@ export default async function HomeAppPage() {
     events = [];
     clients = [];
   }
+  // One read-only view for guest counts — avoid N full-snapshot clones via listGuests.
+  const view = runtime.service.viewSnapshot();
   const briefs = events.map((event) => {
-    let guestCount = 0;
-    let attention = 0;
-    try {
-      const guests = runtime.service.listGuests(actor, {
-        organisationId: organisation?.id ?? event.organisationId,
-        eventId: event.id,
-      });
-      guestCount = guests.length;
-      attention = guests.filter((item) => item.attentionRequired).length;
-    } catch {
-      guestCount = 0;
-      attention = 0;
-    }
+    const orgId = organisation?.id ?? event.organisationId;
+    const guests = view.operationalGuests.filter(
+      (item) => item.organisationId === orgId && item.eventId === event.id,
+    );
     return {
       event,
       client: clients.find((item) => item.id === event.clientId)?.displayName ?? "Client not provided",
-      guestCount,
-      attention,
+      guestCount: guests.length,
+      attention: guests.filter((item) => attentionRequiredFor(item)).length,
     };
   });
   const featured = briefs[0];

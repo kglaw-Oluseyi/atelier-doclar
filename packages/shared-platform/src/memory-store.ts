@@ -30,6 +30,10 @@ export class MemoryPlatformStore implements PlatformStore, StaffAuthCapableStore
     return clone(this.state);
   }
 
+  viewSnapshot(): PlatformSnapshot {
+    return this.state;
+  }
+
   findPersonsByNormalizedEmail(email: string): Person[] {
     const normalized = normalizeStaffEmail(email);
     return clone(

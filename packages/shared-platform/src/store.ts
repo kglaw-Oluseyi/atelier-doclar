@@ -560,6 +560,12 @@ export interface PlatformSnapshot {
 export interface PlatformStore {
   readonly productionStatus: StoreProductionStatus;
   snapshot(): PlatformSnapshot;
+  /**
+   * Read-only view of durable state without cloning.
+   * Callers must not mutate the returned object; use snapshot()+replace or a
+   * bounded mutation helper for writes.
+   */
+  viewSnapshot(): PlatformSnapshot;
   replace(next: PlatformSnapshot): void;
   loadEventById(eventId: string): EventRecord | undefined;
   loadLayoutPublicationById(

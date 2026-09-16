@@ -1160,8 +1160,13 @@ export class PlatformService {
     return this.store.snapshot();
   }
 
+  /** Read-only platform view; must not be mutated by callers. */
+  viewSnapshot(): PlatformSnapshot {
+    return this.store.viewSnapshot();
+  }
+
   resolveActor(personId: string): ActorSnapshot {
-    const snap = this.store.snapshot();
+    const snap = this.store.viewSnapshot();
     const person = snap.persons.find((item) => item.id === personId);
     if (!person) throw new PlatformError("AUTH_REQUIRED", "person is not provisioned");
     return {
@@ -1172,7 +1177,7 @@ export class PlatformService {
   }
 
   findPersonByIdentity(input: { externalSubject?: string; email?: string }): Person | undefined {
-    const snap = this.store.snapshot();
+    const snap = this.store.viewSnapshot();
     if (input.externalSubject) {
       const bySubject = snap.persons.find((item) => item.externalSubject === input.externalSubject);
       if (bySubject) return bySubject;
