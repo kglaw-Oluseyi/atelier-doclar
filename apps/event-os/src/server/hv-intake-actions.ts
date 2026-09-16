@@ -11,6 +11,19 @@ function actionError(error: unknown): string {
   return "The action could not be completed.";
 }
 
+function isNextRedirect(error: unknown): boolean {
+  return Boolean(
+    error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      String((error as { digest: unknown }).digest).startsWith("NEXT_REDIRECT"),
+  );
+}
+
+function rethrowRedirect(error: unknown): void {
+  if (isNextRedirect(error)) throw error;
+}
+
 function orgFor(actor: Awaited<ReturnType<typeof requireActor>>["actor"]) {
   return getRuntime().service.listOrganisations(actor)[0];
 }
@@ -39,6 +52,7 @@ export async function createHvIntakeJobAction(formData: FormData): Promise<void>
       });
       redirect(jobPath(eventId, job.id));
     } catch (error) {
+      rethrowRedirect(error);
       redirect(`${fail}${encodeURIComponent(actionError(error))}`);
     }
   });
@@ -86,6 +100,7 @@ export async function uploadHvIntakeSourceAction(formData: FormData): Promise<vo
       }
       redirect(jobPath(eventId, jobId, "?ok=uploaded"));
     } catch (error) {
+      rethrowRedirect(error);
       redirect(`${fail}${encodeURIComponent(actionError(error))}`);
     }
   });
@@ -138,6 +153,7 @@ export async function confirmHvMappingAction(formData: FormData): Promise<void> 
       void mapping;
       redirect(jobPath(eventId, jobId, "?ok=mapped"));
     } catch (error) {
+      rethrowRedirect(error);
       redirect(`${fail}${encodeURIComponent(actionError(error))}`);
     }
   });
@@ -176,6 +192,7 @@ export async function applyHvDecisionsAction(formData: FormData): Promise<void> 
       });
       redirect(jobPath(eventId, jobId, "?ok=decisions"));
     } catch (error) {
+      rethrowRedirect(error);
       redirect(`${fail}${encodeURIComponent(actionError(error))}`);
     }
   });
@@ -201,6 +218,7 @@ export async function submitHvIntakeAction(formData: FormData): Promise<void> {
       });
       redirect(jobPath(eventId, jobId, "?ok=submitted"));
     } catch (error) {
+      rethrowRedirect(error);
       redirect(`${fail}${encodeURIComponent(actionError(error))}`);
     }
   });
@@ -226,6 +244,7 @@ export async function approveHvIntakeAction(formData: FormData): Promise<void> {
       });
       redirect(jobPath(eventId, jobId, "?ok=approved"));
     } catch (error) {
+      rethrowRedirect(error);
       redirect(`${fail}${encodeURIComponent(actionError(error))}`);
     }
   });
@@ -264,6 +283,7 @@ export async function advanceHvIntakeAction(formData: FormData): Promise<void> {
       }
       redirect(jobPath(eventId, jobId, "?ok=advanced"));
     } catch (error) {
+      rethrowRedirect(error);
       redirect(`${fail}${encodeURIComponent(actionError(error))}`);
     }
   });
@@ -289,6 +309,7 @@ export async function cancelHvIntakeAction(formData: FormData): Promise<void> {
       });
       redirect(jobPath(eventId, jobId, "?ok=cancelled"));
     } catch (error) {
+      rethrowRedirect(error);
       redirect(`${fail}${encodeURIComponent(actionError(error))}`);
     }
   });
