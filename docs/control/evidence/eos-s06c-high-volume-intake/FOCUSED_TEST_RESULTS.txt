@@ -71,3 +71,5 @@ sign-in submit-to-ready (warm x3, from BROWSER_CLOSURE_RESULTS.json):
   sample3 totalMs=1260 submitToNav=1244 navToReady=16
 axe serious/critical on intake receipt: 0
 CAP600 API count: 600 unchanged; old partial CAP1000: 125 quarantined; mixed: 1050
+
+Post watch/restore config-rebuild re-verify 2026-09-16T21:22:45Z: eos-s06c-exact-cap1000-browser.spec.ts 1 passed (35.5s) vs applicationSha 04d5607 deploymentSourceSha ae59707

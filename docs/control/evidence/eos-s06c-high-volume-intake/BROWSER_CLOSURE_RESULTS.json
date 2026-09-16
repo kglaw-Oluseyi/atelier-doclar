@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-09-16T21:14:35.553Z",
+  "createdAt": "2026-09-16T21:22:27.238Z",
   "applicationSha": "04d5607125e6806078a2b496665bf9fe11e57234",
   "productionAuthorised": false,
   "adapters": {
@@ -14,19 +14,19 @@
   "exactGuestCountApi": 1000,
   "signInTimings": [
     {
-      "submitToNavMs": 1164,
-      "navToReadyMs": 40,
-      "totalMs": 1204
+      "submitToNavMs": 1212,
+      "navToReadyMs": 38,
+      "totalMs": 1250
     },
     {
-      "submitToNavMs": 1158,
-      "navToReadyMs": 18,
-      "totalMs": 1176
+      "submitToNavMs": 1184,
+      "navToReadyMs": 22,
+      "totalMs": 1206
     },
     {
-      "submitToNavMs": 1244,
-      "navToReadyMs": 16,
-      "totalMs": 1260
+      "submitToNavMs": 1183,
+      "navToReadyMs": 17,
+      "totalMs": 1200
     }
   ],
   "axeSeriousCritical": 0,
