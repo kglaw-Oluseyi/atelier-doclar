@@ -160,6 +160,7 @@ export const GuestIntakeCandidateSchema = z
     promotedGuestId: UuidSchema.optional(),
     promoteIdempotencyKey: NonEmptySchema.max(180),
     schemaVersion: z.literal(SCHEMA_VERSION),
+    version: z.number().int().positive(),
     createdAt: IsoDatetimeSchema,
     updatedAt: IsoDatetimeSchema,
   })

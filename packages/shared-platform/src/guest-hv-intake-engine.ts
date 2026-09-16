@@ -273,6 +273,7 @@ export function stageCandidates(input: {
       fieldConflicts,
       promoteIdempotencyKey: `${input.job.id}:row:${rowNumber}:edition:${input.job.edition}`,
       schemaVersion: SCHEMA_VERSION,
+      version: 1,
       createdAt: input.now,
       updatedAt: input.now,
     });
@@ -395,6 +396,7 @@ export function promoteCandidateChunk(input: {
       if (action === "UNCHANGED") {
         candidate.status = "UNCHANGED";
         candidate.updatedAt = input.now;
+        candidate.version += 1;
         chunk.unchangedCount += 1;
         continue;
       }
@@ -428,6 +430,7 @@ export function promoteCandidateChunk(input: {
         candidate.status = "UPDATED";
         candidate.promotedGuestId = guest.id;
         candidate.updatedAt = input.now;
+        candidate.version += 1;
         chunk.updatedCount += 1;
         continue;
       }
@@ -462,10 +465,12 @@ export function promoteCandidateChunk(input: {
       candidate.status = "PROMOTED";
       candidate.promotedGuestId = guest.id;
       candidate.updatedAt = input.now;
+      candidate.version += 1;
       chunk.createdCount += 1;
     } catch {
       candidate.status = "FAILED";
       candidate.updatedAt = input.now;
+      candidate.version += 1;
       chunk.failedCount += 1;
     }
   }
