@@ -259,6 +259,13 @@ export { FIXTURE_IDS, fixturePersons, isFixtureId, lineageFixtureMark } from "./
 export { emptyMasterEventFile } from "./mef.js";
 export { emptySnapshot, normalizeSnapshot, type PlatformStore, type PlatformSnapshot } from "./store.js";
 export {
+  isStaffAuthCapableStore,
+  normalizeStaffEmail,
+  type StaffAuthCapableStore,
+  type StaffAuthMutation,
+  type StaffAuthPerfMark,
+} from "./staff-auth-store.js";
+export {
   migrateEosS04A,
   rollbackEosS04A,
   compatibleLegacySnapshot,

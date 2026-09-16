@@ -587,6 +587,7 @@ import {
   type UpdateMefSlotInput,
 } from "./schemas.js";
 import type { PlatformSnapshot, PlatformStore } from "./store.js";
+import { isStaffAuthCapableStore } from "./staff-auth-store.js";
 import { eventStatusAfterPhase, assertPhaseTransition } from "./transitions.js";
 import {
   applySyntheticCallbackOnSnap,
@@ -1183,6 +1184,34 @@ export class PlatformService {
   }
 
   recordAuthentication(personId: string, now: string, correlationId: string, outcome: "SUCCESS" | "DENIED"): void {
+    if (isStaffAuthCapableStore(this.store)) {
+      const person = this.store.findPersonById(personId);
+      let updated: Person | undefined;
+      let expectedVersion: number | undefined;
+      if (person && outcome === "SUCCESS") {
+        expectedVersion = person.version;
+        updated = {
+          ...person,
+          lastAuthenticatedAt: now,
+          updatedAt: now,
+          version: person.version + 1,
+        };
+      }
+      const audit = this.buildAuditEntry({
+        action: "auth.session",
+        outcome,
+        actorPersonId: personId,
+        resourceType: "person",
+        resourceId: personId,
+        correlationId,
+        occurredAt: now,
+      });
+      this.store.applyStaffAuthMutation({
+        ...(updated ? { person: updated, personExpectedVersion: expectedVersion } : {}),
+        audit,
+      });
+      return;
+    }
     const snap = this.store.snapshot();
     const person = snap.persons.find((item) => item.id === personId);
     if (person && outcome === "SUCCESS") {
@@ -1209,8 +1238,99 @@ export class PlatformService {
   ): { person: Person; token: string; session: StaffSession } {
     const input = parseStrict<AuthenticateStaffInput>(AuthenticateStaffInputSchema, raw);
     const config = this.staffSessionConfig();
-    const snap = this.store.snapshot();
     const email = input.email.trim().toLowerCase();
+
+    if (isStaffAuthCapableStore(this.store)) {
+      const matches = this.store.findPersonsByNormalizedEmail(email);
+      if (matches.length > 1) {
+        this.store.applyStaffAuthMutation({
+          audit: this.buildAuditEntry({
+            action: "auth.session.denied",
+            outcome: "DENIED",
+            resourceType: "staff_session",
+            correlationId,
+            occurredAt: now,
+            reason: "ambiguous identity",
+          }),
+        });
+        throw new PlatformError("VALIDATION_FAILED", "identity is ambiguous", {
+          publicMessage: "Sign in failed. Check the named identity and access token.",
+        });
+      }
+      const person = matches[0];
+      if (!person || person.status !== "ACTIVE") {
+        this.store.applyStaffAuthMutation({
+          audit: this.buildAuditEntry({
+            action: "auth.session.denied",
+            outcome: "DENIED",
+            resourceType: "staff_session",
+            correlationId,
+            occurredAt: now,
+            reason: "unrecognised or inactive identity",
+          }),
+        });
+        throw new PlatformError("AUTH_REQUIRED", "unrecognised identity", {
+          publicMessage: "Sign in failed. Check the named identity and access token.",
+        });
+      }
+      const sessionId = randomUUID();
+      let issued: ReturnType<typeof issueSession>;
+      try {
+        issued = issueSession(
+          { personId: person.id, accessToken: input.accessToken, sessionId, now },
+          config,
+        );
+      } catch (error) {
+        this.store.applyStaffAuthMutation({
+          audit: this.buildAuditEntry({
+            action: "auth.session.denied",
+            outcome: "DENIED",
+            resourceType: "staff_session",
+            correlationId,
+            occurredAt: now,
+            reason: "authentication failed",
+          }),
+        });
+        throw error;
+      }
+      const record: StaffSession = {
+        id: sessionId,
+        personId: person.id,
+        issuedAt: issued.actor.issuedAt,
+        expiresAt: issued.actor.expiresAt,
+        tokenBindingHash: hashStaffSessionToken(issued.token, config),
+        lastSeenAt: now,
+        schemaVersion: SCHEMA_VERSION,
+        version: 1,
+        createdAt: now,
+        updatedAt: now,
+        ...lineageFixtureMark(person),
+      };
+      const expectedVersion = person.version;
+      const updatedPerson: Person = {
+        ...person,
+        lastAuthenticatedAt: now,
+        updatedAt: now,
+        version: person.version + 1,
+      };
+      this.store.applyStaffAuthMutation({
+        person: updatedPerson,
+        personExpectedVersion: expectedVersion,
+        sessionInsert: record,
+        audit: this.buildAuditEntry({
+          action: "auth.session.issued",
+          outcome: "SUCCESS",
+          actorPersonId: person.id,
+          resourceType: "staff_session",
+          resourceId: sessionId,
+          correlationId,
+          occurredAt: now,
+        }),
+      });
+      return { person: updatedPerson, token: issued.token, session: record };
+    }
+
+    const snap = this.store.snapshot();
     const matches = snap.persons.filter((item) => item.email.trim().toLowerCase() === email);
     if (matches.length > 1) {
       this.writeAudit(snap, {
@@ -1293,6 +1413,41 @@ export class PlatformService {
   requireStaffSession(token: string | undefined, now = new Date().toISOString()) {
     const config = this.staffSessionConfig();
     const actor = readSession(token, config, now);
+    if (isStaffAuthCapableStore(this.store)) {
+      const record = this.store.findStaffSessionById(actor.sessionId);
+      if (!record) {
+        throw new PlatformError("AUTH_REQUIRED", "session is no longer valid", {
+          publicMessage: "Sign in is required.",
+          details: ["legacy"],
+        });
+      }
+      if (record.revokedAt) {
+        throw new PlatformError("AUTH_REQUIRED", "session is no longer valid", {
+          publicMessage: "Sign in is required.",
+          details: ["revoked"],
+        });
+      }
+      if (record.personId !== actor.personId || !token || record.tokenBindingHash !== hashStaffSessionToken(token, config)) {
+        throw new PlatformError("AUTH_REQUIRED", "session is no longer valid", {
+          publicMessage: "Sign in is required.",
+          details: ["revoked"],
+        });
+      }
+      if (Date.parse(record.expiresAt) <= Date.parse(now)) {
+        throw new PlatformError("AUTH_REQUIRED", "session has expired", {
+          publicMessage: "Sign in is required.",
+          details: ["expired"],
+        });
+      }
+      const person = this.store.findPersonById(record.personId);
+      if (!person || person.status !== "ACTIVE") {
+        throw new PlatformError("AUTH_REQUIRED", "identity is inactive", {
+          publicMessage: "Sign in is required.",
+          details: ["inactive"],
+        });
+      }
+      return { actor, session: record, person };
+    }
     const snap = this.store.snapshot();
     const record = snap.staffSessions.find((item) => item.id === actor.sessionId);
     if (!record) {
@@ -1335,6 +1490,33 @@ export class PlatformService {
     now = new Date().toISOString(),
     correlationId = randomUUID(),
   ): { revoked: boolean } {
+    if (isStaffAuthCapableStore(this.store)) {
+      const record = this.store.findStaffSessionById(sessionId);
+      if (!record || record.revokedAt) return { revoked: false };
+      const expectedVersion = record.version;
+      const updated: StaffSession = {
+        ...record,
+        revokedAt: now,
+        revocationReason: reason,
+        version: record.version + 1,
+        updatedAt: now,
+      };
+      this.store.applyStaffAuthMutation({
+        sessionUpdate: updated,
+        sessionExpectedVersion: expectedVersion,
+        audit: this.buildAuditEntry({
+          action: "auth.session.revoked",
+          outcome: "SUCCESS",
+          actorPersonId: record.personId,
+          resourceType: "staff_session",
+          resourceId: record.id,
+          correlationId,
+          reason,
+          occurredAt: now,
+        }),
+      });
+      return { revoked: true };
+    }
     const snap = this.store.snapshot();
     const record = snap.staffSessions.find((item) => item.id === sessionId);
     if (!record || record.revokedAt) return { revoked: false };
@@ -1367,6 +1549,34 @@ export class PlatformService {
       actor = readSession(token, this.staffSessionConfig(), now);
     } catch {
       return { revoked: false };
+    }
+    if (isStaffAuthCapableStore(this.store)) {
+      const record = this.store.findStaffSessionById(actor.sessionId);
+      if (!record || record.revokedAt) return { revoked: false };
+      if (record.personId !== actor.personId) return { revoked: false };
+      const expectedVersion = record.version;
+      const updated: StaffSession = {
+        ...record,
+        revokedAt: now,
+        revocationReason: "LOGOUT",
+        version: record.version + 1,
+        updatedAt: now,
+      };
+      this.store.applyStaffAuthMutation({
+        sessionUpdate: updated,
+        sessionExpectedVersion: expectedVersion,
+        audit: this.buildAuditEntry({
+          action: "auth.session.revoked",
+          outcome: "SUCCESS",
+          actorPersonId: record.personId,
+          resourceType: "staff_session",
+          resourceId: record.id,
+          correlationId,
+          reason: "LOGOUT",
+          occurredAt: now,
+        }),
+      });
+      return { revoked: true };
     }
     const snap = this.store.snapshot();
     const record = snap.staffSessions.find((item) => item.id === actor.sessionId);
@@ -9571,27 +9781,24 @@ export class PlatformService {
     return name ? name : fallback;
   }
 
-  private writeAudit(
-    snap: PlatformSnapshot,
-    input: {
-      action: string;
-      outcome: AuditEvent["outcome"];
-      actorPersonId?: string;
-      organisationId?: string;
-      clientId?: string;
-      eventId?: string;
-      resourceType: string;
-      resourceId?: string;
-      correlationId: string;
-      idempotencyKey?: string;
-      reason?: string;
-      beforeHash?: string;
-      afterHash?: string;
-      occurredAt: string;
-      actorType?: AuditEvent["actorType"];
-    },
-  ): void {
-    const entry: AuditEvent = {
+  private buildAuditEntry(input: {
+    action: string;
+    outcome: AuditEvent["outcome"];
+    actorPersonId?: string;
+    organisationId?: string;
+    clientId?: string;
+    eventId?: string;
+    resourceType: string;
+    resourceId?: string;
+    correlationId: string;
+    idempotencyKey?: string;
+    reason?: string;
+    beforeHash?: string;
+    afterHash?: string;
+    occurredAt: string;
+    actorType?: AuditEvent["actorType"];
+  }): AuditEvent {
+    return {
       id: randomUUID(),
       occurredAt: input.occurredAt,
       actorType: input.actorType ?? "USER",
@@ -9612,7 +9819,29 @@ export class PlatformService {
       metadata: redactValue({ schemaVersion: SCHEMA_VERSION }) as Record<string, unknown>,
       schemaVersion: SCHEMA_VERSION,
     };
-    snap.audit.push(entry);
+  }
+
+  private writeAudit(
+    snap: PlatformSnapshot,
+    input: {
+      action: string;
+      outcome: AuditEvent["outcome"];
+      actorPersonId?: string;
+      organisationId?: string;
+      clientId?: string;
+      eventId?: string;
+      resourceType: string;
+      resourceId?: string;
+      correlationId: string;
+      idempotencyKey?: string;
+      reason?: string;
+      beforeHash?: string;
+      afterHash?: string;
+      occurredAt: string;
+      actorType?: AuditEvent["actorType"];
+    },
+  ): void {
+    snap.audit.push(this.buildAuditEntry(input));
   }
 
 

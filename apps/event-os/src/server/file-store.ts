@@ -36,4 +36,15 @@ export class FileBackedPlatformStore extends MemoryPlatformStore {
     mkdirSync(dirname(this.filePath), { recursive: true });
     writeFileSync(this.filePath, JSON.stringify(next));
   }
+
+  override applyStaffAuthMutation(
+    mutation: Parameters<MemoryPlatformStore["applyStaffAuthMutation"]>[0],
+  ): void {
+    super.applyStaffAuthMutation(mutation);
+    if (this.hydrating) return;
+    // Non-production file adapter remains compatible; it still serialises the
+    // working snapshot after a bounded in-memory auth write.
+    mkdirSync(dirname(this.filePath), { recursive: true });
+    writeFileSync(this.filePath, JSON.stringify(this.snapshot()));
+  }
 }

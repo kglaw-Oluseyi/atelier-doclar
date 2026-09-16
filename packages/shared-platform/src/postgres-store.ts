@@ -1,7 +1,13 @@
 import { PlatformError } from "./errors.js";
 import { runPlatformMigrations } from "./migrations.js";
 import { PRODUCTION_STORE_STATUS, type StoreProductionStatus } from "./constants.js";
-import type { AuditEvent } from "./schemas.js";
+import type { AuditEvent, Person, StaffSession } from "./schemas.js";
+import {
+  normalizeStaffEmail,
+  type StaffAuthCapableStore,
+  type StaffAuthMutation,
+  type StaffAuthPerfMark,
+} from "./staff-auth-store.js";
 import { emptySnapshot, normalizeSnapshot, type IdempotencyRecord, type PlatformSnapshot, type PlatformStore } from "./store.js";
 import { validateS04APersistedCollections } from "./addressing-persistence.js";
 import { validateS04BPersistedCollections } from "./programme-persistence.js";
@@ -303,11 +309,12 @@ function hasTransaction(client: PgQueryable): client is PgTransactor {
   return typeof (client as PgTransactor).transaction === "function";
 }
 
-export class PostgresPlatformStore implements PlatformStore {
+export class PostgresPlatformStore implements PlatformStore, StaffAuthCapableStore {
   readonly productionStatus: StoreProductionStatus = PRODUCTION_STORE_STATUS;
   private state: PlatformSnapshot = emptySnapshot();
   private pending: Promise<void> = Promise.resolve();
   private riskNormalized = false;
+  private readonly authPerfMarks: StaffAuthPerfMark[] = [];
 
   constructor(private readonly client: PgQueryable) {}
 
@@ -325,6 +332,178 @@ export class PostgresPlatformStore implements PlatformStore {
 
   snapshot(): PlatformSnapshot {
     return structuredClone(this.state);
+  }
+
+  findPersonsByNormalizedEmail(email: string): Person[] {
+    const normalized = normalizeStaffEmail(email);
+    return structuredClone(
+      this.state.persons.filter((item) => normalizeStaffEmail(item.email) === normalized),
+    );
+  }
+
+  findPersonById(id: string): Person | undefined {
+    const hit = this.state.persons.find((item) => item.id === id);
+    return hit ? structuredClone(hit) : undefined;
+  }
+
+  findStaffSessionById(id: string): StaffSession | undefined {
+    const hit = this.state.staffSessions.find((item) => item.id === id);
+    return hit ? structuredClone(hit) : undefined;
+  }
+
+  applyStaffAuthMutation(mutation: StaffAuthMutation): void {
+    const started = Date.now();
+    let rowsTouched = 0;
+    if (mutation.person) {
+      const idx = this.state.persons.findIndex((item) => item.id === mutation.person!.id);
+      if (idx >= 0) this.state.persons[idx] = structuredClone(mutation.person);
+      else this.state.persons.push(structuredClone(mutation.person));
+      rowsTouched += 1;
+    }
+    if (mutation.sessionInsert) {
+      this.state.staffSessions.push(structuredClone(mutation.sessionInsert));
+      rowsTouched += 1;
+    }
+    if (mutation.sessionUpdate) {
+      const idx = this.state.staffSessions.findIndex((item) => item.id === mutation.sessionUpdate!.id);
+      if (idx >= 0) this.state.staffSessions[idx] = structuredClone(mutation.sessionUpdate);
+      else this.state.staffSessions.push(structuredClone(mutation.sessionUpdate));
+      rowsTouched += 1;
+    }
+    this.state.audit.push(structuredClone(mutation.audit));
+    rowsTouched += 1;
+    this.recordStaffAuthPerf({
+      correlationId: mutation.audit.correlationId,
+      phase: "postgres.applyStaffAuthMutation.memory",
+      durationMs: Date.now() - started,
+      rowsTouched,
+    });
+    this.pending = this.pending
+      .catch(() => undefined)
+      .then(() => this.persistStaffAuthMutation(mutation))
+      .catch(async (error) => {
+        await this.hydrate();
+        throw error;
+      });
+  }
+
+  recordStaffAuthPerf(mark: StaffAuthPerfMark): void {
+    this.authPerfMarks.push(mark);
+  }
+
+  drainStaffAuthPerf(): StaffAuthPerfMark[] {
+    return this.authPerfMarks.splice(0, this.authPerfMarks.length);
+  }
+
+  private async persistStaffAuthMutation(mutation: StaffAuthMutation): Promise<void> {
+    const started = Date.now();
+    let queryCount = 0;
+    const run = async (tx: PgQueryable) => {
+      if (mutation.person) {
+        const record = mutation.person as unknown as Record<string, unknown>;
+        const expected =
+          mutation.personExpectedVersion ?? Math.max(1, Number(mutation.person.version ?? 1) - 1);
+        const existing = await tx.query<{ version: number }>(
+          "SELECT version FROM platform_documents WHERE collection=$1 AND id=$2",
+          ["persons", mutation.person.id],
+        );
+        queryCount += 1;
+        if ((existing.rowCount ?? 0) === 0) {
+          await tx.query(
+            "INSERT INTO platform_documents (collection, id, organisation_id, client_id, event_id, version, body) VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)",
+            [
+              "persons",
+              mutation.person.id,
+              record.organisationId ?? null,
+              record.clientId ?? null,
+              record.eventId ?? null,
+              Number(mutation.person.version ?? 1),
+              JSON.stringify(mutation.person),
+            ],
+          );
+          queryCount += 1;
+        } else {
+          const result = await tx.query(
+            "UPDATE platform_documents SET organisation_id=$3, client_id=$4, event_id=$5, version=$6, body=$7::jsonb WHERE collection=$1 AND id=$2 AND version=$8",
+            [
+              "persons",
+              mutation.person.id,
+              record.organisationId ?? null,
+              record.clientId ?? null,
+              record.eventId ?? null,
+              Number(mutation.person.version ?? 1),
+              JSON.stringify(mutation.person),
+              expected,
+            ],
+          );
+          queryCount += 1;
+          if ((result.rowCount ?? 0) === 0) {
+            throw new PlatformError("VERSION_CONFLICT", "persisted version conflict", {
+              publicMessage: "This record changed while you were editing. Reload before saving.",
+            });
+          }
+        }
+      }
+      if (mutation.sessionInsert) {
+        const record = mutation.sessionInsert as unknown as Record<string, unknown>;
+        await tx.query(
+          "INSERT INTO platform_documents (collection, id, organisation_id, client_id, event_id, version, body) VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)",
+          [
+            "staffSessions",
+            mutation.sessionInsert.id,
+            record.organisationId ?? null,
+            record.clientId ?? null,
+            record.eventId ?? null,
+            Number(mutation.sessionInsert.version ?? 1),
+            JSON.stringify(mutation.sessionInsert),
+          ],
+        );
+        queryCount += 1;
+      }
+      if (mutation.sessionUpdate) {
+        const record = mutation.sessionUpdate as unknown as Record<string, unknown>;
+        const expected =
+          mutation.sessionExpectedVersion ?? Math.max(1, Number(mutation.sessionUpdate.version ?? 1) - 1);
+        const result = await tx.query(
+          "UPDATE platform_documents SET organisation_id=$3, client_id=$4, event_id=$5, version=$6, body=$7::jsonb WHERE collection=$1 AND id=$2 AND version=$8",
+          [
+            "staffSessions",
+            mutation.sessionUpdate.id,
+            record.organisationId ?? null,
+            record.clientId ?? null,
+            record.eventId ?? null,
+            Number(mutation.sessionUpdate.version ?? 1),
+            JSON.stringify(mutation.sessionUpdate),
+            expected,
+          ],
+        );
+        queryCount += 1;
+        if ((result.rowCount ?? 0) === 0) {
+          throw new PlatformError("VERSION_CONFLICT", "persisted version conflict", {
+            publicMessage: "This record changed while you were editing. Reload before saving.",
+          });
+        }
+      }
+      const riskTx = new PostgresRiskTransaction(tx);
+      await riskTx.appendAudit(mutation.audit);
+      queryCount += 1;
+    };
+    if (hasTransaction(this.client)) {
+      await this.client.transaction(run);
+    } else {
+      await run(this.client);
+    }
+    this.recordStaffAuthPerf({
+      correlationId: mutation.audit.correlationId,
+      phase: "postgres.persistStaffAuthMutation",
+      durationMs: Date.now() - started,
+      queryCount,
+      rowsTouched:
+        (mutation.person ? 1 : 0) +
+        (mutation.sessionInsert ? 1 : 0) +
+        (mutation.sessionUpdate ? 1 : 0) +
+        1,
+    });
   }
 
   loadEventById(eventId: string) {
