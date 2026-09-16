@@ -1,0 +1,63 @@
+TAP version 13
+# S06C-1000 start; expected duration <= 120s target / 240s ceiling
+# {"corpus":"S06C-1000-TYPICAL","hash":"6c9169b9862eb8fff65bb9a58eb8006ee6e9f6ca26658971fb25ea9fd138f066","status":"COMPLETED","created":1000,"guestTotalAfter":1000,"uploadMs":29,"validateMs":38,"promoteMs":230,"totalMs":339}
+# S06C-2000 start; expected duration <= 240s target / 480s ceiling
+# {"corpus":"S06C-2000-SCALE","hash":"0786394a397c360d04e614e526b55ff24c20d6a6ef8f33d3ed6e5690a76bdaaa","status":"COMPLETED","created":2000,"guestTotalAfter":2000,"uploadMs":25,"validateMs":54,"promoteMs":749,"totalMs":881}
+# Subtest: EOS-S06C scale qualification
+    # Subtest: promotes 1000 clean synthetic rows within hard ceiling
+    ok 1 - promotes 1000 clean synthetic rows within hard ceiling
+      ---
+      duration_ms: 415.543541
+      ...
+    # Subtest: promotes 2000 clean synthetic rows within hard ceiling
+    ok 2 - promotes 2000 clean synthetic rows within hard ceiling
+      ---
+      duration_ms: 929.87475
+      ...
+    1..2
+ok 1 - EOS-S06C scale qualification
+  ---
+  duration_ms: 1345.9165
+  type: 'suite'
+  ...
+# Subtest: EOS-S06C high-volume guest intake
+    # Subtest: parses unicode, quotes and detects formula injection
+    ok 1 - parses unicode, quotes and detects formula injection
+      ---
+      duration_ms: 1.075416
+      ...
+    # Subtest: rejects empty files
+    ok 2 - rejects empty files
+      ---
+      duration_ms: 0.286666
+      ...
+    # Subtest: stages without mutating guests until approve and promote
+    ok 3 - stages without mutating guests until approve and promote
+      ---
+      duration_ms: 109.255833
+      ...
+    # Subtest: enforces maker-checker and promotes with exact reconciliation
+    ok 4 - enforces maker-checker and promotes with exact reconciliation
+      ---
+      duration_ms: 143.017208
+      ...
+    # Subtest: keeps two events isolated
+    ok 5 - keeps two events isolated
+      ---
+      duration_ms: 104.355167
+      ...
+    1..5
+ok 2 - EOS-S06C high-volume guest intake
+  ---
+  duration_ms: 358.736292
+  type: 'suite'
+  ...
+1..2
+# tests 7
+# suites 2
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1751.506333

@@ -759,3 +759,20 @@ No assignment, posture, identity-field, findability, or seating mutations under 
 | EV-EOS-S080-SEQ | DOCUMENT | Successor sequence control (C→B→D→S07) | `docs/control/evidence/eos-s06-s080-governance-prep/SUCCESSOR_SEQUENCE_CONTROL.md` |
 | EV-EOS-S080-GOV-PREP | DOCUMENT | Governance-prep / finalisation evidence directory | `docs/control/evidence/eos-s06-s080-governance-prep/` |
 
+## EOS-S06C High Volume Guest List Intake — implementation (bounded authority)
+
+**Date:** 2026-09-16
+**Authority:** Explicit CEO bounded implementation command after MD-PR-S080 ratification
+**Starting Git HEAD:** `275ff754cd75ef728051564b9b266e103185548f`
+**Entry accepted application SHA:** `71317881384e38671295c3fda32d533c71c3f559`
+**Pack archive SHA-256:** `2b104b17dbad3a44dae8947c6250fad11629e0fe91df6c87b39ca8a0c77c74f4`
+**Status:** Implemented — READY FOR CLAUDE / **not accepted**
+**EOS-S06B / S06D / S07:** not started
+**productionAuthorised:** false · Providers: INACTIVE · Real data: NOT AUTHORISED
+
+| Evidence ID | Type | Summary | Path |
+|-------------|------|---------|------|
+| EV-EOS-S06C-IMPL | DOCUMENT | Implementation evidence pack | `docs/control/evidence/eos-s06c-high-volume-intake/` |
+| EV-EOS-S06C-ADR | DOCUMENT | Architecture decision record | `docs/control/ADR_EOS_S06C_HIGH_VOLUME_GUEST_INTAKE.md` |
+| EV-EOS-S06C-CLAUDE | DOCUMENT | Independent verification prompt | `docs/control/evidence/eos-s06c-high-volume-intake/CLAUDE_VERIFICATION_PROMPT.md` |
+

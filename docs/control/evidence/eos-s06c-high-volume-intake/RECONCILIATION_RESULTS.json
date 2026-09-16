@@ -1,0 +1,20 @@
+{
+  "S06C-050": { "created": 50, "note": "unit path covered by 50-row maker-checker test" },
+  "S06C-1000-TYPICAL": {
+    "sourceRows": 1000,
+    "createdGuests": 1000,
+    "guestTotalBefore": 0,
+    "guestTotalAfter": 1000,
+    "status": "COMPLETED",
+    "reconciled": true
+  },
+  "S06C-2000-SCALE": {
+    "sourceRows": 2000,
+    "createdGuests": 2000,
+    "guestTotalBefore": 0,
+    "guestTotalAfter": 2000,
+    "status": "COMPLETED",
+    "reconciled": true
+  },
+  "S06C-600-MIXED": { "status": "corpus-ready", "note": "file generated; exercise via product UI/dirty path" }
+}

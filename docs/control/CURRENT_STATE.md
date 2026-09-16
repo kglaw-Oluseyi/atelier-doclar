@@ -1,8 +1,8 @@
 # Current State
 
-**Updated:** MD-PR-S080 finalisation — EOS-S06B/S06C/S06D CEO RATIFIED — PLANNING ONLY; canonical sequence S06C → S06B → S06D → S07 (2026-09-16)
-**Prompt Control ID:** MD-PR-S080 (governance finalisation after Gate 1 + auth remediation + pack registration); prior EOS-S06A acceptance MD-PR-S079; prior EOS-S06 acceptance MD-PR-S077
-**Milestone:** `EOS-S05` ACCEPTED; `EOS-S05A` ACCEPTED (not catalogue); `EOS-S05B` ACCEPTED (not catalogue); `EOS-S06` ACCEPTED; `EOS-S06A` ACCEPTED — PASS WITH ONE CONTROLLED MINOR OBSERVATION; **EOS-S06 Gate 1 ACCEPTED — PASS WITH CONTROLLED OBSERVATIONS**; authentication performance remediation **ACCEPTED — SIGN-IN PERFORMANCE RESTORED**; catalogue accepted-slice count 6 (unchanged); accepted application SHA `71317881384e38671295c3fda32d533c71c3f559`; `TDR-S06A-001` and `TDR-S06-002`–`TDR-S06-008` OPEN (classification register created; none closed); EOS-S06B/S06C/S06D **CEO RATIFIED — PLANNING ONLY** — implementation not authorised; EOS-S07 `NOT_STARTED / NOT_AUTHORISED`
+**Updated:** EOS-S06C high-volume guest intake implemented under bounded authority — READY FOR CLAUDE / not accepted (2026-09-16)
+**Prompt Control ID:** EOS-S06C bounded implementation (post MD-PR-S080 ratification); prior MD-PR-S080 governance finalisation; prior EOS-S06A acceptance MD-PR-S079; prior EOS-S06 acceptance MD-PR-S077
+**Milestone:** `EOS-S05` ACCEPTED; `EOS-S05A` ACCEPTED (not catalogue); `EOS-S05B` ACCEPTED (not catalogue); `EOS-S06` ACCEPTED; `EOS-S06A` ACCEPTED — PASS WITH ONE CONTROLLED MINOR OBSERVATION; **EOS-S06 Gate 1 ACCEPTED — PASS WITH CONTROLLED OBSERVATIONS**; authentication performance remediation **ACCEPTED — SIGN-IN PERFORMANCE RESTORED**; catalogue accepted-slice count 6 (unchanged); accepted application SHA `71317881384e38671295c3fda32d533c71c3f559` (entry); `TDR-S06A-001` and `TDR-S06-002`–`TDR-S06-008` OPEN; **EOS-S06C IMPLEMENTATION COMPLETE — NOT ACCEPTED**; EOS-S06B/S06D **CEO RATIFIED — PLANNING ONLY** — implementation not authorised; EOS-S07 `NOT_STARTED / NOT_AUTHORISED`
 
 MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is ACCEPTED. EOS-S02 is ACCEPTED. EOS-S03 is ACCEPTED. EOS-S04 is CLOSED / ACCEPTED (`PASS WITH OBSERVATIONS`). EOS-S05 is ACCEPTED. EOS-S06 is ACCEPTED. Catalogue accepted-slice count is 6. Native coverage is 62/62. S4-61 is satisfied for technical review only. S4-62 is satisfied for controlled technical acceptance/handover only. Independent, specialist and CEO production gates remain unsigned.
 
@@ -148,20 +148,21 @@ MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is A
 **CURRENT ACCEPTED APPLICATION SHA: 71317881384e38671295c3fda32d533c71c3f559**
 **PRIOR GATE 1 REVIEWED APPLICATION BASELINE: 0a0be803f123e8326fb893db1e3562c724b70dd0**
 **EOS-S06B STATUS: CEO RATIFIED — PLANNING ONLY — IMPLEMENTATION NOT AUTHORISED — NOT STARTED**
-**EOS-S06C STATUS: CEO RATIFIED — PLANNING ONLY — IMPLEMENTATION NOT AUTHORISED — NOT STARTED**
+**EOS-S06C STATUS: IMPLEMENTATION COMPLETE — READY FOR INDEPENDENT VERIFICATION — NOT ACCEPTED**
 **EOS-S06D STATUS: CEO RATIFIED — PLANNING ONLY — IMPLEMENTATION NOT AUTHORISED — NOT STARTED**
-**EOS-S06B/S06C/S06D SEQUENCING: controlling order is EOS-S06C → EOS-S06B → EOS-S06D → EOS-S07 (roadmap only; does not authorise implementation)**
+**EOS-S06B/S06C/S06D SEQUENCING: controlling order is EOS-S06C → EOS-S06B → EOS-S06D → EOS-S07**
 **EOS-S06B/S06C/S06D RATIFICATION RECORD:** `docs/control/EOS_S06B_S06C_RATIFICATION.md`
-**EOS-S06D PACK:** `docs/control/eos-s06d/ratification-pack/` — controlling planning specification (archive SHA-256 `c06d2597d5e11acc8ba4ce5da69f0e963df8b478503716cf15855de364ec967b`)
+**EOS-S06C IMPLEMENTATION EVIDENCE:** `docs/control/evidence/eos-s06c-high-volume-intake/`
+**EOS-S06C ADR:** `docs/control/ADR_EOS_S06C_HIGH_VOLUME_GUEST_INTAKE.md`
 **DINING COMMAND / S06D RELATIONSHIP: SUPERSEDED — EOS-S06D Dining Service Command is the complete-product milestone; earlier “S06D documentation” vs standalone “Dining Command” split is superseded**
 **EOS-S07 STATUS: NOT_STARTED / NOT_AUTHORISED**
 **DOCUMENTATION HEAD DISPOSITION:** `UNRESOLVED` / `OWNER REVIEW` / production `BLOCKING UNTIL DISPOSITIONED` — `docs/control/evidence/eos-s06-s080-governance-prep/DOCUMENTATION_HEAD_MISMATCH_DISPOSITION.md`
 **CT0 HISTORICAL VALIDATOR FAILURE DISPOSITION:** `REQUIRES CONTROL OWNER REVIEW` / failure `RETAINED` / production `BLOCKED UNTIL DISPOSITIONED` — `docs/control/evidence/eos-s06-s080-governance-prep/CT0_HISTORICAL_VALIDATOR_FAILURE_DISPOSITION.md`
-**TECHNICAL DEBT CLASSIFICATION REGISTER:** `docs/control/evidence/eos-s06-s080-governance-prep/TECHNICAL_DEBT_CLASSIFICATION_REGISTER.md` (all listed debts OPEN)
+**TECHNICAL DEBT CLASSIFICATION REGISTER:** `docs/control/evidence/eos-s06-s080-governance-prep/TECHNICAL_DEBT_CLASSIFICATION_REGISTER.md` (all listed debts OPEN; S06C scoped `viewSnapshot` intake-read remediation does not close `TDR-S06-006`)
 **EOS-S06 CONTROLLING ACCEPTANCE AUTHORITY:** `docs/control/EOS_S06_ACCEPTANCE.md` (`MD-PR-S077`)
 **EOS-S06 HISTORICAL IMPLEMENTATION AUTHORITIES:** `docs/control/eos-s06/MD_PR_S075_EOS_S06_V2_TABLE_IDENTITY_COMPILER_AND_FEASIBILITY_TRUTH.md` (parents `MD_PR_S073` / `MD_PR_S072`) — dated implementation history; acceptance is MD-PR-S077
 **MD-PR-S036 IMPLEMENTATION AUTHORITY: NO — not consumed; historical recommended ID only**
-**RECOMMENDED NEXT: Issue bounded EOS-S06C implementation authority; do not start S06B/S06D/S07 implementation; do not authorise production; do not activate providers; do not introduce real data; do not deploy Control Tower for product mutation; docs-head and CT0 dispositions remain unresolved**
+**RECOMMENDED NEXT: Independent Claude verification of EOS-S06C; do not accept S06C in this step; do not start S06B/S06D/S07; do not authorise production; do not activate providers; do not introduce real data; do not deploy Control Tower for product mutation; docs-head and CT0 dispositions remain unresolved**
 **CROSS-SLICE UX CONTROL ID: MD-PR-UX001**
 **MD-PR-UX001 IMPLEMENTATION AUTHORITY: EXECUTED — awaiting focused human UX reverification**
 **EVENT OS S01-S03 LIVE DEPLOYED: YES**
