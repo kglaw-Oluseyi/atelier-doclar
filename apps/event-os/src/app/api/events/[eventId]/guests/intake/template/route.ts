@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { requireActor } from "../../../../../server/with-session";
-import { getRuntime } from "../../../../../server/runtime";
+import { requireActor } from "../../../../../../../server/with-session";
+import { getRuntime } from "../../../../../../../server/runtime";
 
 export async function GET(_request: Request, context: { params: Promise<{ eventId: string }> }) {
   const { eventId } = await context.params;
