@@ -28,6 +28,9 @@ export function guestPermissions(person: Person, actor: ActorContext, organisati
   return {
     view: authorize({ actor: actorSnap, permission: "guest.directory.view", scope }).allow,
     intake: authorize({ actor: actorSnap, permission: "guest.intake.create", scope }).allow,
+    intakeApprove: authorize({ actor: actorSnap, permission: "guest.intake.approve", scope }).allow,
+    intakeCancel: authorize({ actor: actorSnap, permission: "guest.intake.cancel", scope }).allow,
+    intakeExport: authorize({ actor: actorSnap, permission: "guest.intake.export", scope }).allow,
     amend: authorize({ actor: actorSnap, permission: "guest.record.amend", scope }).allow,
     resolveDuplicate: authorize({ actor: actorSnap, permission: "guest.duplicate.resolve", scope }).allow,
     linkPerson: authorize({ actor: actorSnap, permission: "guest.person.link", scope }).allow,

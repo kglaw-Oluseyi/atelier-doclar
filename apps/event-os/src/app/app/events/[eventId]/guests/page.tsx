@@ -107,7 +107,10 @@ export default async function GuestDirectoryPage({
           <span className="at-thread" aria-hidden="true" />
           <h1>Guest directory</h1>
           <p className="lede">
-            Operational records for {scoped.event.name}. Names use structured addressing. Titles are never guessed.
+            Operational records for {scoped.event.name}. Names use structured addressing. Titles are never guessed.{" "}
+            {permissions.intake ? (
+              <Link href={`/app/events/${scoped.event.id}/guests/intake`}>Open high-volume guest list intake</Link>
+            ) : null}
           </p>
           <AtelierRecordRefresh />
         </header>
