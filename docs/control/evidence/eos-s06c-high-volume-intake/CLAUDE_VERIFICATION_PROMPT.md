@@ -2,16 +2,21 @@
 
 **Copy-ready. Do not remediate. Do not accept. Return PASS / PASS WITH CONTROLLED OBSERVATIONS / FAIL / BLOCKED.**
 
-## Identities (fill after deploy)
+## Identities
 
-- Application SHA: `<DEPLOYED_APPLICATION_SHA>`
-- Deployment ID: `<RAILWAY_DEPLOYMENT_ID>`
-- Documentation HEAD: `<GIT_DOCS_HEAD>` (may differ; do not conflate)
-- Synthetic S06C event ID: `<NEW_S06C_EVENT_ID>`
-- Intake job ID: `<INTAKE_JOB_ID>`
+- Application SHA: `04d5607125e6806078a2b496665bf9fe11e57234`
+- Deployment ID: `df909000-d78c-46c1-8b9d-798883546691`
+- Deployment source SHA: `04d5607125e6806078a2b496665bf9fe11e57234`
+- Documentation HEAD: `0a0be803f123e8326fb893db1e3562c724b70dd0` (intentional lag; do not conflate with application SHA)
+- Git HEAD at implementation tip: `04d5607125e6806078a2b496665bf9fe11e57234` (plus any later evidence-only commits)
+- Synthetic S06C event ID: `af4a6b7e-0424-46d5-b9e5-d0a26845173e`
+- Event name: `[SYNTHETIC QUALIFICATION] EOS-S06C High-Volume Intake 2026-09-16`
+- Intake job ID (50-row): `a8c6a24d-bb7f-4f93-8689-7d48a673e549`
+- Intake job ID (1000-row): `d39e9bde-9cdd-415c-b8eb-f586f6623bdc`
 - Live URL: `https://event-os-production-bc8d.up.railway.app`
 - `productionAuthorised`: false
 - Providers / communications: inactive
+- Prior automated live product intake: see `LIVE_FIXTURE_MANIFEST.json` (50 + 1000 rows COMPLETED; CAP1000 **awaiting independent verification**)
 
 ## Hard exclusions
 
@@ -23,13 +28,13 @@
 
 ## Journeys
 
-1. Discover the synthetic S06C qualification event (search conspicuous label).
+1. Discover the synthetic S06C qualification event (search conspicuous label / event ID above).
 2. Open Guest directory → High-volume guest list intake; download CSV template.
-3. Create a named intake; note immutable intake ID / edition.
-4. Upload a prepared synthetic CSV (small browser-verifiable set first).
+3. Create a named intake; note immutable intake ID / edition (or open existing 50-row / 1000-row jobs).
+4. Upload a prepared synthetic CSV (small browser-verifiable set first) if creating a fresh job.
 5. Review mapping; confirm destinations.
 6. Observe validation totals (valid/warning/invalid/duplicate).
-7. Correct at least one representative row decision.
+7. Correct at least one representative row decision when review is required.
 8. Submit as maker; sign in as a different authorised checker and approve (self-approve must fail).
 9. Promote; observe honest progress (phase, counts, last update, safe-to-leave).
 10. Confirm reconciliation receipt arithmetic.

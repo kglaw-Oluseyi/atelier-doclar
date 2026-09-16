@@ -4,7 +4,8 @@
 **Starting Git HEAD:** `275ff754cd75ef728051564b9b266e103185548f`
 **Accepted application SHA (entry):** `71317881384e38671295c3fda32d533c71c3f559`
 **Pack archive SHA-256:** `2b104b17dbad3a44dae8947c6250fad11629e0fe91df6c87b39ca8a0c77c74f4`
-**Disposition:** Implementation complete for independent verification — **not accepted**
+**Disposition:** Implementation + Event OS deploy + live synthetic intake complete — READY FOR CLAUDE — **not accepted**
+**Live application SHA:** `04d5607125e6806078a2b496665bf9fe11e57234`
 
 ## SHA-256 inventory
 
@@ -28,6 +29,7 @@ Computed at evidence freeze; regenerate with `shasum -a 256` on commit stamp if 
 | `KNOWN_LIMITATIONS.md` | Honest gaps |
 | `CLAUDE_VERIFICATION_PROMPT.md` | Independent browser prompt |
 | `CAP1000_TREATMENT_PROPOSAL.md` | Old partial fixture disposition |
+| `LIVE_FIXTURE_MANIFEST.json` | Live product intake identities |
 
 ## Protected / unrelated (not staged)
 

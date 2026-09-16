@@ -765,8 +765,11 @@ No assignment, posture, identity-field, findability, or seating mutations under 
 **Authority:** Explicit CEO bounded implementation command after MD-PR-S080 ratification
 **Starting Git HEAD:** `275ff754cd75ef728051564b9b266e103185548f`
 **Entry accepted application SHA:** `71317881384e38671295c3fda32d533c71c3f559`
+**Live application SHA (Event OS):** `04d5607125e6806078a2b496665bf9fe11e57234`
+**Live deployment ID:** `df909000-d78c-46c1-8b9d-798883546691`
+**Documentation HEAD (unchanged lag):** `0a0be803f123e8326fb893db1e3562c724b70dd0`
 **Pack archive SHA-256:** `2b104b17dbad3a44dae8947c6250fad11629e0fe91df6c87b39ca8a0c77c74f4`
-**Status:** Implemented — READY FOR CLAUDE / **not accepted**
+**Status:** Implemented + Event OS deployed + live synthetic intake COMPLETED — READY FOR CLAUDE / **not accepted**
 **EOS-S06B / S06D / S07:** not started
 **productionAuthorised:** false · Providers: INACTIVE · Real data: NOT AUTHORISED
 
@@ -775,4 +778,5 @@ No assignment, posture, identity-field, findability, or seating mutations under 
 | EV-EOS-S06C-IMPL | DOCUMENT | Implementation evidence pack | `docs/control/evidence/eos-s06c-high-volume-intake/` |
 | EV-EOS-S06C-ADR | DOCUMENT | Architecture decision record | `docs/control/ADR_EOS_S06C_HIGH_VOLUME_GUEST_INTAKE.md` |
 | EV-EOS-S06C-CLAUDE | DOCUMENT | Independent verification prompt | `docs/control/evidence/eos-s06c-high-volume-intake/CLAUDE_VERIFICATION_PROMPT.md` |
+| EV-EOS-S06C-LIVE | DOCUMENT | Live fixture manifest (50+1000 product intake) | `docs/control/evidence/eos-s06c-high-volume-intake/LIVE_FIXTURE_MANIFEST.json` |
 

@@ -1,0 +1,92 @@
+{
+  "createdAt": "2026-09-16T20:54:33.838Z",
+  "applicationShaHint": "04d5607125e6806078a2b496665bf9fe11e57234",
+  "eventId": "af4a6b7e-0424-46d5-b9e5-d0a26845173e",
+  "eventName": "[SYNTHETIC QUALIFICATION] EOS-S06C High-Volume Intake 2026-09-16",
+  "cap600": {
+    "eventId": "053fa686-124e-49b3-b8a8-d0497c0a1668",
+    "present": true,
+    "guestCount": 600,
+    "name": "[SYNTHETIC QUALIFICATION] Capacity Qualification 600"
+  },
+  "oldCap1000": {
+    "eventId": "3d212906-529e-4bd8-b13f-b0c2a24e5fba",
+    "present": true,
+    "guestCount": 125,
+    "name": "[SYNTHETIC STRETCH QUALIFICATION] Capacity Stretch 1000",
+    "disposition": "QUARANTINED — historical incomplete fixture; not mutated; not for verification"
+  },
+  "intake050": {
+    "jobId": "a8c6a24d-bb7f-4f93-8689-7d48a673e549",
+    "status": "COMPLETED",
+    "receipt": {
+      "id": "6296d3ab-c4aa-4022-bf7d-8801fa8b7d0b",
+      "jobId": "a8c6a24d-bb7f-4f93-8689-7d48a673e549",
+      "organisationId": "00000000-0000-4000-8000-000000000001",
+      "eventId": "af4a6b7e-0424-46d5-b9e5-d0a26845173e",
+      "edition": 1,
+      "sourceHash": "d4a61f9df329907b40d84b370acf366dab3c128f6d64f9f43745d28fb2724044",
+      "totals": {
+        "sourceRows": 50,
+        "excludedRows": 0,
+        "rejectedRows": 0,
+        "createdGuests": 50,
+        "updatedGuests": 0,
+        "unchangedGuests": 0,
+        "skippedRows": 0,
+        "failedRows": 0,
+        "chunksCommitted": 1,
+        "guestTotalBefore": 0,
+        "guestTotalAfter": 50
+      },
+      "timings": {
+        "machineMs": 1456
+      },
+      "createdAt": "2026-09-16T20:54:29.269Z",
+      "schemaVersion": 1
+    },
+    "guestBefore": 0,
+    "guestAfter": 50,
+    "guestReplay": 50,
+    "machineMs": 1456,
+    "sourceHash": "d4a61f9df329907b40d84b370acf366dab3c128f6d64f9f43745d28fb2724044"
+  },
+  "intake1000": {
+    "jobId": "d39e9bde-9cdd-415c-b8eb-f586f6623bdc",
+    "status": "COMPLETED",
+    "receipt": {
+      "id": "5ae2c4d2-db1e-4258-8104-bdf52a02fe3b",
+      "jobId": "d39e9bde-9cdd-415c-b8eb-f586f6623bdc",
+      "organisationId": "00000000-0000-4000-8000-000000000001",
+      "eventId": "af4a6b7e-0424-46d5-b9e5-d0a26845173e",
+      "edition": 1,
+      "sourceHash": "67b0e96e98f81f9a4da7fe40eb44752cb68cdd5d9045a4ef3329e245535f68eb",
+      "totals": {
+        "sourceRows": 1000,
+        "excludedRows": 0,
+        "rejectedRows": 0,
+        "createdGuests": 1000,
+        "updatedGuests": 0,
+        "unchangedGuests": 0,
+        "skippedRows": 0,
+        "failedRows": 0,
+        "chunksCommitted": 4,
+        "guestTotalBefore": 50,
+        "guestTotalAfter": 1050
+      },
+      "timings": {
+        "machineMs": 1644
+      },
+      "createdAt": "2026-09-16T20:54:32.054Z",
+      "schemaVersion": 1
+    },
+    "guestBefore": 50,
+    "guestAfter": 1050,
+    "guestReplay": 1050,
+    "machineMs": 1644,
+    "sourceHash": "67b0e96e98f81f9a4da7fe40eb44752cb68cdd5d9045a4ef3329e245535f68eb"
+  },
+  "auditorBlocked": true,
+  "elapsedMs": 13949,
+  "providersNote": "No communications or external providers invoked by this script"
+}

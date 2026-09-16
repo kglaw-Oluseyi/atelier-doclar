@@ -408,6 +408,7 @@ try {
   }
   console.log(JSON.stringify(manifest, null, 2));
   progress(`wrote LIVE_FIXTURE_MANIFEST.json auditorBlocked=${auditorBlocked}`, started);
+  await flush(store);
 } finally {
-  await pool.end();
+  try { await pool.end(); } catch { /* ignore */ }
 }
