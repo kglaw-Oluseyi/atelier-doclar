@@ -1015,6 +1015,25 @@ export {
   seatingImpossibleLocks,
   seatingImpossibleCapability,
 } from "./seating-solver-fixtures.js";
+export {
+  buildCapacityCorpus,
+  capacityBrowserGuestNames,
+  capacityCorpusHash,
+  capacityCorpusManifest,
+  capacityScenarioMeta,
+  CAPACITY_CORPUS_EDITION,
+  CAPACITY_SCENARIO_IDS,
+  CAPACITY_SCENARIO_SEEDS,
+  type CapacityScenarioId,
+} from "./seating-capacity-corpus.js";
+export {
+  applyCapacity600SeatingLayout,
+  CAPACITY_LAYOUT_TABLE_CAPACITIES,
+  CAPACITY_LAYOUT_PUBLISH_BATCH_SIZE,
+  CAPACITY_REALISTIC_LAYOUT_JUSTIFICATION,
+  CAPACITY_REALISTIC_TABLE_SPECS,
+  type CapacityTableSpec,
+} from "./seating-capacity-layout-fixture.js";
 export { EOS_S06_SEATING_MIGRATION_ID, EOS_S06_SEATING_RECEIPT_ID, SEATING_SQL_TABLES } from "./seating-postgres-schema.js";
 export { emptySeatingState, SEATING_COLLECTIONS } from "./seating-schemas.js";
 export {

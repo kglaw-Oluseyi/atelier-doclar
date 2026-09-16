@@ -580,6 +580,24 @@ RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S037`. Canonical corpus p
 | EV-EOS-S06-S075-P8-MATRIX | TEST | §8.2 trusted-boundary live matrix P8-0 preflight + P8-1–P8-9 | `docs/control/evidence/eos-s06-s075-packet8/trusted-boundary-matrix.jsonl` |
 | EV-EOS-S06-S075-P8-HARNESS | TEST | Live Packet G / Packet 8 / Section 13 harness | `apps/event-os/e2e/s075-layout-binding-live.spec.ts`, `apps/event-os/e2e/s075-packet8-trusted-boundary-live.spec.ts`, `apps/event-os/e2e/s075-section-13*.spec.ts` |
 
+## EOS-S06 Pre-Production Gate 1 — 600-Guest Capacity Qualification
+
+**Status:** Qualification claim — awaiting independent verification (not gate acceptance)  
+**Approved synthetic layout:** 63 tables / 600 seats (42×10 + 18×8 + 3×12) — not a production default  
+**Accepted application SHA:** `7f139a556f7c023efa98daccd7bfd29481a05775` (unchanged)
+
+| ID | Kind | Summary | Location |
+|----|------|---------|----------|
+| EV-EOS-S06-CAP600-MANIFEST | DOCUMENT | Corpus, timing, identity, multi-batch layout and deployment truth | `docs/control/evidence/eos-s06-capacity-600/MANIFEST.md` |
+| EV-EOS-S06-CAP600-TIMING | TEST | Solver timing JSONL (11 samples × 4 scenarios) | `docs/control/evidence/eos-s06-capacity-600/timing.jsonl` |
+| EV-EOS-S06-CAP600-CONCURRENCY | TEST | Disaggregated two-event concurrency timings | `docs/control/evidence/eos-s06-capacity-600/concurrency-timing.jsonl` |
+| EV-EOS-S06-CAP600-HEAVY | DOCUMENT | Heavy-scenario first-run timeout + adjusted corpus provenance | `docs/control/evidence/eos-s06-capacity-600/HEAVY_SCENARIO_PROVENANCE.md` |
+| EV-EOS-S06-CAP600-CORPUS | TEST | Deterministic A/B/C/D corpus + 63-table product-path suite (15/15) | `packages/shared-platform/src/seating-capacity-corpus.ts`, `packages/shared-platform/src/seating-capacity-layout-fixture.ts`, `packages/shared-platform/test/seating-capacity-600-qualification.test.ts` |
+| EV-EOS-S06-CAP600-RUNNER | TEST | Timing evidence runner | `packages/shared-platform/scripts/seating-capacity-qualification-runner.ts` |
+| EV-EOS-S06-CAP600-BROWSER | TEST | 600-guest browser journeys retained 5/5 (CI Postgres + seed) | `apps/event-os/e2e/s06-capacity-600-browser.spec.ts`, `apps/event-os/scripts/s06-capacity-600-seed.ts`, `docs/control/evidence/eos-s06-capacity-600/browser/browser-action-timing.jsonl` |
+| EV-EOS-S06-CAP600-ASSURANCE | DOCUMENT | Focused command results and scan outcomes | `docs/control/evidence/eos-s06-capacity-600/test-results.txt` |
+| EV-EOS-S06-CAP600-CLAUDE | DOCUMENT | Independent verification handoff (not executed) | `docs/control/evidence/eos-s06-capacity-600/CLAUDE_VERIFICATION_PROMPT.md` |
+
 ## EOS-S06 MD-PR-S077 formal acceptance
 
 **Date:** 2026-09-15

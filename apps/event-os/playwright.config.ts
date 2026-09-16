@@ -68,8 +68,11 @@ function webServerEnv(preserveDatabaseUrl: boolean) {
   return env;
 }
 
+const capacity600 = process.env.EVENT_OS_CAPACITY_600 === "1";
+
 export default defineConfig({
   testDir: "./e2e",
+  globalSetup: capacity600 ? "./e2e/s06-capacity-600-global-setup.ts" : undefined,
   fullyParallel: false,
   workers: 1,
   retries: 0,
