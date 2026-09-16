@@ -233,7 +233,7 @@ async function runIntake(input: {
   }).length;
 
   // Replay must not duplicate
-  const replay = input.service.advanceGuestIntakePromotion(checker, {
+  input.service.advanceGuestIntakePromotion(checker, {
     organisationId: input.organisationId,
     eventId: input.eventId,
     jobId: job.id,
@@ -276,7 +276,6 @@ try {
   const org = FIXTURE_IDS.orgMaison;
   const ceo = actor(FIXTURE_IDS.personCeo);
   const admin = actor(FIXTURE_IDS.personAdmin);
-  const director = actor(FIXTURE_IDS.personDirector);
 
   const snap = store.snapshot();
   const cap600 = snap.events.find((item) => item.id === CAP600_ID);
