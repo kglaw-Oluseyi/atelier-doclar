@@ -72,8 +72,9 @@ export async function submitAtelierInstructionAction(formData: FormData): Promis
       rawText,
       dryRun,
     });
+    const dest = result.plan ? `${path}?planId=${result.plan.id}` : path;
     return finish({
-      path,
+      path: dest,
       actorPersonId: person.id,
       correlationId: result.receipt?.correlationId ?? correlationId,
       actionType: "atelierCommand.instruct",
@@ -119,14 +120,15 @@ export async function invokeAtelierTaskAction(formData: FormData): Promise<void>
   const { actor, person } = await requireActor();
   const correlationId = actor.correlationId || randomUUID();
   try {
-    await getRuntime().service.invokeAtelierCommandTask(actor, organisationId, eventId, {
+    const result = await getRuntime().service.invokeAtelierCommandTask(actor, organisationId, eventId, {
       sessionId,
       taskId,
       operatorEdits: notes ? { notes } : {},
       dryRun,
     });
+    const dest = result.plan ? `${path}?planId=${result.plan.id}` : path;
     return finish({
-      path,
+      path: dest,
       actorPersonId: person.id,
       correlationId,
       actionType: "atelierCommand.task",
@@ -136,6 +138,7 @@ export async function invokeAtelierTaskAction(formData: FormData): Promise<void>
       code: "SUCCESS",
       message: "Task Bank item compiled into an event-scoped plan.",
       didDataChange: true,
+      createdRecordIds: result.plan ? [result.plan.id] : undefined,
     });
   } catch (error) {
     if (isNextRedirect(error)) throw error;
@@ -165,7 +168,7 @@ export async function confirmAtelierPlanAction(formData: FormData): Promise<void
   try {
     await getRuntime().service.confirmAtelierCommandPlan(actor, organisationId, eventId, planId);
     return finish({
-      path,
+      path: `${path}?planId=${planId}`,
       actorPersonId: person.id,
       correlationId,
       actionType: "atelierCommand.confirm",
@@ -174,7 +177,7 @@ export async function confirmAtelierPlanAction(formData: FormData): Promise<void
       status: "SUCCESS",
       code: "SUCCESS",
       message: "Plan confirmed. Ready for execution.",
-      didDataChange: true,
+      didDataChange: false,
     });
   } catch (error) {
     if (isNextRedirect(error)) throw error;
@@ -202,18 +205,18 @@ export async function approveAtelierPlanAction(formData: FormData): Promise<void
   const { actor, person } = await requireActor();
   const correlationId = actor.correlationId || randomUUID();
   try {
-    await getRuntime().service.approveAtelierCommandPlan(actor, organisationId, eventId, planId);
+    const plan = await getRuntime().service.approveAtelierCommandPlan(actor, organisationId, eventId, planId);
     return finish({
-      path,
+      path: `${path}?planId=${planId}`,
       actorPersonId: person.id,
-      correlationId,
+      correlationId: plan.approvalCorrelationId ?? correlationId,
       actionType: "atelierCommand.approve",
       eventId,
       organisationId,
       status: "SUCCESS",
       code: "SUCCESS",
       message: "Independent approval recorded.",
-      didDataChange: true,
+      didDataChange: false,
     });
   } catch (error) {
     if (isNextRedirect(error)) throw error;
@@ -243,7 +246,7 @@ export async function executeAtelierPlanAction(formData: FormData): Promise<void
   try {
     const result = await getRuntime().service.executeAtelierCommandPlan(actor, organisationId, eventId, planId);
     return finish({
-      path,
+      path: `${path}?planId=${planId}`,
       actorPersonId: person.id,
       correlationId: result.receipt.correlationId,
       actionType: "atelierCommand.execute",
@@ -252,7 +255,7 @@ export async function executeAtelierPlanAction(formData: FormData): Promise<void
       status: "SUCCESS",
       code: "SUCCESS",
       message: result.receipt.summary,
-      didDataChange: result.receipt.changedRecordIds.length > 0,
+      didDataChange: Boolean(result.receipt.dataChanged),
       createdRecordIds: result.receipt.changedRecordIds,
     });
   } catch (error) {

@@ -26,6 +26,7 @@ import {
   type AtelierCommandLedger,
   type AtelierCommandLedgerDocument,
   type AtelierCommandReceipt,
+  type AtelierCommandRiskTier,
   type AtelierCommandSession,
   type AtelierConfirmation,
   type AtelierInstruction,
@@ -72,11 +73,49 @@ function activeAssignment(actor: ActorSnapshot, organisationId: string, eventId:
   return assignment;
 }
 
+export type AtelierPlanQueueGroup =
+  | "NEEDS_YOUR_ACTION"
+  | "PENDING_CONFIRMATION"
+  | "PENDING_APPROVAL"
+  | "APPROVED_READY"
+  | "EXECUTING"
+  | "HISTORY";
+
+export type AtelierPlanSummary = {
+  planId: string;
+  planVersion: number;
+  status: AtelierPlan["status"];
+  riskSummary: AtelierCommandRiskTier;
+  effectLabel: string;
+  instructionId: string;
+  intendedOutcome: string;
+  makerPersonId: string;
+  makerLabel: string;
+  checkerPersonId?: string;
+  checkerLabel?: string;
+  approvalIdentityId?: string;
+  approvalCorrelationId?: string;
+  settlementCorrelationId?: string;
+  taskDefinitionId?: string;
+  taskVersion?: number;
+  createdAt: string;
+  updatedAt: string;
+  approvedAt?: string;
+  settledAt?: string;
+  dryRun: boolean;
+  approvalRequirement: boolean;
+  queueGroup: AtelierPlanQueueGroup;
+  availableActions: Array<"CONFIRM" | "APPROVE" | "EXECUTE" | "VIEW">;
+};
+
 export type AtelierWorkspaceView = {
   session: AtelierCommandSession;
   instructions: AtelierInstruction[];
+  eventInstructions: AtelierInstruction[];
   plans: AtelierPlan[];
   planSteps: AtelierPlanStep[];
+  planSummaries: AtelierPlanSummary[];
+  selectedPlanId: string | null;
   runs: AtelierRun[];
   stepExecutions: AtelierStepExecution[];
   confirmations: AtelierConfirmation[];
@@ -90,6 +129,141 @@ export type AtelierWorkspaceView = {
   context: ReturnType<typeof buildEventContextProjection>;
   posture: RuntimePosture;
 };
+
+function personLabel(snap: PlatformSnapshot, personId: string | undefined): string {
+  if (!personId) return "Unknown";
+  const person = snap.persons.find((p) => p.id === personId);
+  return person?.displayName ?? personId;
+}
+
+function effectLabelForPlan(risk: AtelierCommandRiskTier, browser: boolean): string {
+  if (browser) return "SIMULATED_BROWSER";
+  if (risk === "R4" || risk === "R5") return "External effect";
+  if (risk === "R0") return "Read-only";
+  if (risk === "R1") return "Preparatory / draft";
+  if (risk === "R3") return "Maker-checker";
+  if (risk === "R2") return "Confirm before act";
+  return risk;
+}
+
+function queueGroupFor(
+  plan: AtelierPlan,
+  actorPersonId: string,
+  makerPersonId: string,
+  canApprove: boolean,
+  canExecute: boolean,
+): AtelierPlanQueueGroup {
+  if (plan.status === "AWAITING_APPROVAL") {
+    if (canApprove && makerPersonId !== actorPersonId) return "NEEDS_YOUR_ACTION";
+    return "PENDING_APPROVAL";
+  }
+  if (plan.status === "AWAITING_CONFIRMATION" || (plan.status === "READY" && (plan.riskSummary === "R2" || plan.riskSummary === "R4" || plan.riskSummary === "R5"))) {
+    if (canExecute) return "NEEDS_YOUR_ACTION";
+    return "PENDING_CONFIRMATION";
+  }
+  if (plan.status === "APPROVED" || (plan.status === "READY" && (plan.riskSummary === "R0" || plan.riskSummary === "R1"))) {
+    if (canExecute) return "NEEDS_YOUR_ACTION";
+    return "APPROVED_READY";
+  }
+  if (plan.status === "EXECUTING") return "EXECUTING";
+  return "HISTORY";
+}
+
+function buildPlanSummaries(input: {
+  snap: PlatformSnapshot;
+  ledger: AtelierCommandLedger;
+  eventId: string;
+  organisationId: string;
+  actor: ActorSnapshot;
+}): AtelierPlanSummary[] {
+  const canApprove = (() => {
+    try {
+      assertAtelierPermission(input.actor, "atelierCommand.approve", input.organisationId, input.eventId);
+      return true;
+    } catch {
+      return false;
+    }
+  })();
+  const canExecute = (() => {
+    try {
+      assertAtelierPermission(input.actor, "atelierCommand.execute", input.organisationId, input.eventId);
+      return true;
+    } catch {
+      return false;
+    }
+  })();
+  const canInstruct = (() => {
+    try {
+      assertAtelierPermission(input.actor, "atelierCommand.instruct", input.organisationId, input.eventId);
+      return true;
+    } catch {
+      return false;
+    }
+  })();
+
+  return input.ledger.plans
+    .filter((p) => p.eventId === input.eventId && p.organisationId === input.organisationId)
+    .map((plan) => {
+      const instruction = input.ledger.instructions.find((i) => i.id === plan.instructionId);
+      const steps = input.ledger.planSteps.filter((s) => s.planId === plan.id);
+      const taskInv = instruction?.taskInvocationId
+        ? input.ledger.taskInvocations.find((t) => t.id === instruction.taskInvocationId)
+        : undefined;
+      const makerId = plan.makerPersonId ?? instruction?.authorPersonId ?? "";
+      const browser = steps.some((s) => s.executionRoute === "BROWSER");
+      const approvalRequirement = steps.some((s) => s.approvalRequirement) || plan.riskSummary === "R3";
+      const actions: AtelierPlanSummary["availableActions"] = ["VIEW"];
+      if (canExecute && (plan.status === "AWAITING_CONFIRMATION" || (plan.status === "READY" && plan.riskSummary !== "R0" && plan.riskSummary !== "R1" && plan.riskSummary !== "R3"))) {
+        actions.push("CONFIRM");
+      }
+      if (canApprove && plan.status === "AWAITING_APPROVAL" && makerId !== input.actor.person.id) {
+        actions.push("APPROVE");
+      }
+      if (
+        canExecute &&
+        (plan.status === "APPROVED" ||
+          ((plan.riskSummary === "R0" || plan.riskSummary === "R1") && plan.status === "READY"))
+      ) {
+        actions.push("EXECUTE");
+      }
+      // Auditor / non-mutating roles: VIEW only
+      if (!canInstruct && !canExecute && !canApprove) {
+        return {
+          ...baseSummary(),
+          availableActions: ["VIEW"] as AtelierPlanSummary["availableActions"],
+        };
+      }
+      function baseSummary(): Omit<AtelierPlanSummary, "availableActions"> & { availableActions?: AtelierPlanSummary["availableActions"] } {
+        return {
+          planId: plan.id,
+          planVersion: plan.planVersion,
+          status: plan.status,
+          riskSummary: plan.riskSummary,
+          effectLabel: effectLabelForPlan(plan.riskSummary, browser),
+          instructionId: plan.instructionId,
+          intendedOutcome: (instruction?.rawText ?? "").trim().slice(0, 200) || "Plan",
+          makerPersonId: makerId,
+          makerLabel: personLabel(input.snap, makerId),
+          checkerPersonId: plan.checkerPersonId,
+          checkerLabel: plan.checkerPersonId ? personLabel(input.snap, plan.checkerPersonId) : undefined,
+          approvalIdentityId: plan.approvalIdentityId,
+          approvalCorrelationId: plan.approvalCorrelationId,
+          settlementCorrelationId: plan.settlementCorrelationId,
+          taskDefinitionId: taskInv?.taskDefinitionId,
+          taskVersion: taskInv?.taskVersion,
+          createdAt: plan.createdAt,
+          updatedAt: plan.updatedAt ?? plan.approvedAt ?? plan.settledAt ?? plan.createdAt,
+          approvedAt: plan.approvedAt,
+          settledAt: plan.settledAt,
+          dryRun: plan.dryRun,
+          approvalRequirement,
+          queueGroup: queueGroupFor(plan, input.actor.person.id, makerId, canApprove, canExecute),
+        };
+      }
+      return { ...baseSummary(), availableActions: actions };
+    })
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt) || b.planId.localeCompare(a.planId));
+}
 
 export function openOrGetSession(input: {
   snap: PlatformSnapshot;
@@ -140,6 +314,7 @@ export function getAtelierWorkspace(input: {
   taskQuery?: string;
   taskDomain?: string;
   roleKey?: string;
+  selectedPlanId?: string | null;
   now?: string;
 }): AtelierWorkspaceView {
   const session = openOrGetSession(input);
@@ -154,14 +329,33 @@ export function getAtelierWorkspace(input: {
     now,
   });
   const posture = resolveAtelierRuntimePosture();
+  const plans = ledger.plans.filter((p) => p.eventId === input.eventId && p.organisationId === input.organisationId);
+  const eventInstructions = ledger.instructions.filter(
+    (i) => i.eventId === input.eventId && i.organisationId === input.organisationId,
+  );
+  const planSummaries = buildPlanSummaries({
+    snap: input.snap,
+    ledger,
+    eventId: input.eventId,
+    organisationId: input.organisationId,
+    actor: input.actor,
+  });
+  const selectedPlanId =
+    (input.selectedPlanId && plans.some((p) => p.id === input.selectedPlanId) ? input.selectedPlanId : null) ??
+    planSummaries.find((p) => p.queueGroup === "NEEDS_YOUR_ACTION")?.planId ??
+    planSummaries[0]?.planId ??
+    null;
   return {
     session,
     instructions: ledger.instructions.filter((i) => i.sessionId === session.id),
-    plans: ledger.plans.filter((p) => p.eventId === input.eventId && p.organisationId === input.organisationId),
+    eventInstructions,
+    plans,
     planSteps: ledger.planSteps.filter((s) => {
       const plan = ledger.plans.find((p) => p.id === s.planId);
       return plan?.eventId === input.eventId;
     }),
+    planSummaries,
+    selectedPlanId,
     runs: ledger.runs.filter((r) => r.eventId === input.eventId),
     stepExecutions: ledger.stepExecutions.filter((s) => s.eventId === input.eventId),
     confirmations: ledger.confirmations.filter((c) => c.eventId === input.eventId),
@@ -474,6 +668,8 @@ export function confirmPlan(input: {
   plan.makerPersonId = instruction?.authorPersonId ?? input.actor.person.id;
   plan.approvalIdentityId = `confirm:${plan.id}:v${plan.planVersion}:${plan.approvedPlanHash ?? "none"}`;
   plan.approvedAt = now;
+  plan.updatedAt = now;
+  plan.approvalCorrelationId = plan.approvalCorrelationId ?? randomUUID();
   plan.version += 1;
   return plan;
 }
@@ -499,12 +695,49 @@ export function approvePlan(input: {
   if (!instruction) throw new PlatformError("NOT_FOUND", "Instruction missing for plan");
   assertMakerChecker(instruction.authorPersonId, input.actor.person.id, "approve");
   const now = nowIso(input.now);
+  const approvalCorrelationId = randomUUID();
   plan.status = "APPROVED";
   plan.makerPersonId = instruction.authorPersonId;
   plan.checkerPersonId = input.actor.person.id;
   plan.approvalIdentityId = `approve:${plan.id}:v${plan.planVersion}:${plan.approvedPlanHash ?? "none"}:${input.actor.person.id}`;
   plan.approvedAt = now;
+  plan.updatedAt = now;
+  plan.approvalCorrelationId = approvalCorrelationId;
   plan.version += 1;
+  const receipt: AtelierCommandReceipt = {
+    id: randomUUID(),
+    organisationId: input.organisationId,
+    eventId: input.eventId,
+    sessionId: instruction.sessionId,
+    instructionId: instruction.id,
+    planId: plan.id,
+    correlationId: approvalCorrelationId,
+    kind: "PLAN_APPROVAL",
+    summary: `Maker-checker approval recorded for plan ${plan.id} v${plan.planVersion}`,
+    changedRecordIds: [],
+    unchangedReasons: [
+      "Approval is a governance decision; business data unchanged.",
+      `Maker: ${instruction.authorPersonId}`,
+      `Checker: ${input.actor.person.id}`,
+      `Hash: ${plan.approvedPlanHash ?? "none"}`,
+      `Approval identity: ${plan.approvalIdentityId}`,
+    ],
+    evidenceRefs: [],
+    createdAt: now,
+    effectClass: "NONE",
+    dataChanged: false,
+    settlementStatus: "EXECUTED",
+    riskSummary: plan.riskSummary,
+    taskDefinitionId: instruction.taskInvocationId
+      ? ledger.taskInvocations.find((t) => t.id === instruction.taskInvocationId)?.taskDefinitionId
+      : undefined,
+    taskVersion: instruction.taskInvocationId
+      ? ledger.taskInvocations.find((t) => t.id === instruction.taskInvocationId)?.taskVersion
+      : undefined,
+    originalRequestedIntent: instruction.rawText,
+    actualAction: "checker approval recorded",
+  };
+  ledger.receipts.push(receipt);
   return plan;
 }
 

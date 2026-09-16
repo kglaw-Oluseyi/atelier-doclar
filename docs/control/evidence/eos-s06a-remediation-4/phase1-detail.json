@@ -1,0 +1,307 @@
+Using SSH key from file /Users/maisondoclar/.ssh/id_ed25519.pub: railway-agent@maison-doclar
+{
+  "whitfieldDisplaced": {
+    "plan": {
+      "id": "af38a175-62ac-4df7-8301-0c7ff82760f2",
+      "dryRun": false,
+      "status": "AWAITING_APPROVAL",
+      "eventId": "00000000-0000-4000-8000-000000000021",
+      "version": 1,
+      "createdAt": "2026-09-16T00:18:47.537Z",
+      "planVersion": 1,
+      "riskSummary": "R3",
+      "estimatedCost": 0,
+      "instructionId": "404be30f-41f3-49d3-a78d-52df537ed75c",
+      "policyVersion": "eos-s06a-pdp-v1",
+      "scopeSnapshot": {
+        "eventId": "00000000-0000-4000-8000-000000000021",
+        "eventName": "Alpha One",
+        "crossEvent": false,
+        "organisationId": "00000000-0000-4000-8000-000000000001",
+        "organisationName": "Maison Doclar"
+      },
+      "organisationId": "00000000-0000-4000-8000-000000000001",
+      "approvedPlanHash": "157920fc25cb0631107f20d7851f29939b14366224e5252cd8a0b93e7279fe02",
+      "estimatedDurationMs": 1500
+    },
+    "instruction": {
+      "id": "404be30f-41f3-49d3-a78d-52df537ed75c",
+      "status": "INTERPRETED",
+      "eventId": "00000000-0000-4000-8000-000000000021",
+      "rawText": "Prepare decision or approval packet Synthetic/test only: prepare a draft decision packet recommending a placeholder vendor shortlist for Alpha One (NEW-3 maker-checker test, no real vendor or spend).",
+      "version": 1,
+      "sequence": 67,
+      "createdAt": "2026-09-16T00:18:47.537Z",
+      "sessionId": "65b997fa-6784-4d43-96b9-425190077423",
+      "attachmentRefs": [],
+      "authorPersonId": "00000000-0000-4000-8000-000000000043",
+      "organisationId": "00000000-0000-4000-8000-000000000001",
+      "taskInvocationId": "7acead28-a74d-4f82-8db9-e84b57446c37",
+      "authorAssignmentId": "00000000-0000-4000-8000-000000000063"
+    },
+    "steps": [
+      {
+        "id": "69c413df-8abe-4b0c-bab3-3b8cc96f6a1d",
+        "input": {
+          "dryRun": false,
+          "eventId": "00000000-0000-4000-8000-000000000021",
+          "instruction": "Prepare decision or approval packet Synthetic/test only: prepare a draft decision packet recommending a placeholder vendor shortlist for Alpha One (NEW-3 maker-checker test, no real vendor or spend).",
+          "organisationId": "00000000-0000-4000-8000-000000000001"
+        },
+        "planId": "af38a175-62ac-4df7-8301-0c7ff82760f2",
+        "status": "PENDING",
+        "ordinal": 1,
+        "riskTier": "R3",
+        "toolName": "publication.submit",
+        "targetRefs": [
+          "event:00000000-0000-4000-8000-000000000021"
+        ],
+        "toolVersion": "1.0.0",
+        "preconditions": [
+          "EVENT_SCOPE",
+          "PERMISSION"
+        ],
+        "executionRoute": "NATIVE",
+        "confirmationMode": "MAKER_CHECKER",
+        "dependsOnStepIds": [],
+        "expectedEvidence": [
+          "step-receipt"
+        ],
+        "compensationPolicy": "supersession-only",
+        "approvalRequirement": true
+      }
+    ],
+    "task": {
+      "id": "7acead28-a74d-4f82-8db9-e84b57446c37",
+      "status": "COMPILED",
+      "eventId": "00000000-0000-4000-8000-000000000021",
+      "createdAt": "2026-09-16T00:18:47.537Z",
+      "taskVersion": 1,
+      "riskSnapshot": "R3",
+      "operatorEdits": {
+        "notes": "Synthetic/test only: prepare a draft decision packet recommending a placeholder vendor shortlist for Alpha One (NEW-3 maker-checker test, no real vendor or spend)."
+      },
+      "compiledPlanId": "af38a175-62ac-4df7-8301-0c7ff82760f2",
+      "organisationId": "00000000-0000-4000-8000-000000000001",
+      "taskDefinitionId": "tb.supplier.decision",
+      "invokedByPersonId": "00000000-0000-4000-8000-000000000043",
+      "invokedByAssignmentId": "00000000-0000-4000-8000-000000000063"
+    },
+    "runs": [],
+    "receipts": [],
+    "stillInLedger": true,
+    "whyHidden": "UI sorts workspace.plans by createdAt and renders only latestPlan[0]; later Planner Task Bank compiles superseded the visible slot without mutating this plan."
+  },
+  "amaraGeorge": {
+    "plan": {
+      "id": "54b9f6f7-f2af-42ae-ba7e-d470676f0d65",
+      "dryRun": false,
+      "status": "COMPLETED",
+      "eventId": "00000000-0000-4000-8000-000000000021",
+      "version": 3,
+      "createdAt": "2026-09-16T03:25:51.478Z",
+      "settledAt": "2026-09-16T03:42:44.857Z",
+      "approvedAt": "2026-09-16T03:42:17.243Z",
+      "planVersion": 1,
+      "riskSummary": "R3",
+      "estimatedCost": 0,
+      "instructionId": "f4fc4421-7d11-4338-8e4f-f9ff7982956f",
+      "makerPersonId": "00000000-0000-4000-8000-000000000042",
+      "policyVersion": "eos-s06a-pdp-v1",
+      "scopeSnapshot": {
+        "eventId": "00000000-0000-4000-8000-000000000021",
+        "eventName": "Alpha One",
+        "crossEvent": false,
+        "organisationId": "00000000-0000-4000-8000-000000000001",
+        "organisationName": "Maison Doclar"
+      },
+      "organisationId": "00000000-0000-4000-8000-000000000001",
+      "checkerPersonId": "00000000-0000-4000-8000-000000000041",
+      "approvedPlanHash": "157920fc25cb0631107f20d7851f29939b14366224e5252cd8a0b93e7279fe02",
+      "approvalIdentityId": "approve:54b9f6f7-f2af-42ae-ba7e-d470676f0d65:v1:157920fc25cb0631107f20d7851f29939b14366224e5252cd8a0b93e7279fe02:00000000-0000-4000-8000-000000000041",
+      "estimatedDurationMs": 1500,
+      "settlementReceiptId": "5b3162b7-ebd5-4b14-9884-2bb7930564a0",
+      "settlementCorrelationId": "16e1b6c8-c7f4-437d-83b4-f0def38e5aac"
+    },
+    "instruction": {
+      "id": "f4fc4421-7d11-4338-8e4f-f9ff7982956f",
+      "status": "INTERPRETED",
+      "eventId": "00000000-0000-4000-8000-000000000021",
+      "rawText": "Prepare decision or approval packet Synthetic/test only: prepare a draft decision packet recommending a placeholder vendor shortlist for Alpha One (NEW-3 maker-checker test, no real vendor or spend).",
+      "version": 1,
+      "sequence": 76,
+      "createdAt": "2026-09-16T03:25:51.478Z",
+      "sessionId": "65b997fa-6784-4d43-96b9-425190077423",
+      "attachmentRefs": [],
+      "authorPersonId": "00000000-0000-4000-8000-000000000042",
+      "organisationId": "00000000-0000-4000-8000-000000000001",
+      "taskInvocationId": "a83a72bc-eb31-4ddb-8ad7-869ff388edcf",
+      "authorAssignmentId": "00000000-0000-4000-8000-000000000062"
+    },
+    "steps": [
+      {
+        "id": "4819da6e-e940-46e7-b774-5c3f3e75ea8e",
+        "input": {
+          "dryRun": false,
+          "eventId": "00000000-0000-4000-8000-000000000021",
+          "instruction": "Prepare decision or approval packet Synthetic/test only: prepare a draft decision packet recommending a placeholder vendor shortlist for Alpha One (NEW-3 maker-checker test, no real vendor or spend).",
+          "organisationId": "00000000-0000-4000-8000-000000000001"
+        },
+        "planId": "54b9f6f7-f2af-42ae-ba7e-d470676f0d65",
+        "status": "SUCCEEDED",
+        "ordinal": 1,
+        "riskTier": "R3",
+        "toolName": "publication.submit",
+        "targetRefs": [
+          "event:00000000-0000-4000-8000-000000000021"
+        ],
+        "toolVersion": "1.0.0",
+        "preconditions": [
+          "EVENT_SCOPE",
+          "PERMISSION"
+        ],
+        "executionRoute": "NATIVE",
+        "confirmationMode": "MAKER_CHECKER",
+        "dependsOnStepIds": [],
+        "expectedEvidence": [
+          "step-receipt"
+        ],
+        "compensationPolicy": "supersession-only",
+        "approvalRequirement": true
+      }
+    ],
+    "task": {
+      "id": "a83a72bc-eb31-4ddb-8ad7-869ff388edcf",
+      "status": "COMPILED",
+      "eventId": "00000000-0000-4000-8000-000000000021",
+      "createdAt": "2026-09-16T03:25:51.478Z",
+      "taskVersion": 1,
+      "riskSnapshot": "R3",
+      "operatorEdits": {
+        "notes": "Synthetic/test only: prepare a draft decision packet recommending a placeholder vendor shortlist for Alpha One (NEW-3 maker-checker test, no real vendor or spend)."
+      },
+      "compiledPlanId": "54b9f6f7-f2af-42ae-ba7e-d470676f0d65",
+      "organisationId": "00000000-0000-4000-8000-000000000001",
+      "taskDefinitionId": "tb.supplier.decision",
+      "invokedByPersonId": "00000000-0000-4000-8000-000000000042",
+      "invokedByAssignmentId": "00000000-0000-4000-8000-000000000062"
+    },
+    "runs": [
+      {
+        "id": "f4656806-141a-4ca0-9b13-440389742445",
+        "planId": "54b9f6f7-f2af-42ae-ba7e-d470676f0d65",
+        "status": "COMPLETED",
+        "endedAt": "2026-09-16T03:42:44.857Z",
+        "eventId": "00000000-0000-4000-8000-000000000021",
+        "version": 1,
+        "startedAt": "2026-09-16T03:42:44.857Z",
+        "actualCost": 0,
+        "costBudget": 1,
+        "organisationId": "00000000-0000-4000-8000-000000000001",
+        "agentIdentityId": "agent:atelier-command:00000000-0000-4000-8000-000000000061",
+        "lastHeartbeatAt": "2026-09-16T03:42:44.857Z",
+        "completionSummary": "Executed 1 step(s); status COMPLETED",
+        "initiatedByPersonId": "00000000-0000-4000-8000-000000000041",
+        "modelPolicySnapshot": "fixture-v1",
+        "initiatedByAssignmentId": "00000000-0000-4000-8000-000000000061"
+      }
+    ],
+    "receipts": [
+      {
+        "id": "5b3162b7-ebd5-4b14-9884-2bb7930564a0",
+        "kind": "RUN_RECEIPT",
+        "runId": "f4656806-141a-4ca0-9b13-440389742445",
+        "planId": "54b9f6f7-f2af-42ae-ba7e-d470676f0d65",
+        "eventId": "00000000-0000-4000-8000-000000000021",
+        "summary": "Executed 1 step(s); status COMPLETED",
+        "createdAt": "2026-09-16T03:42:44.857Z",
+        "sessionId": "65b997fa-6784-4d43-96b9-425190077423",
+        "dataChanged": true,
+        "effectClass": "DRAFT",
+        "riskSummary": "R3",
+        "taskVersion": 1,
+        "actualAction": "SUCCEEDED:publication.submit",
+        "evidenceRefs": [
+          "d04d34c1-684b-4310-8354-0c78d07d6c9b"
+        ],
+        "correlationId": "16e1b6c8-c7f4-437d-83b4-f0def38e5aac",
+        "instructionId": "f4fc4421-7d11-4338-8e4f-f9ff7982956f",
+        "organisationId": "00000000-0000-4000-8000-000000000001",
+        "changedRecordIds": [
+          "af67d69a-41d7-4466-8ce0-5d1e6bcf662f"
+        ],
+        "settlementStatus": "EXECUTED",
+        "taskDefinitionId": "tb.supplier.decision",
+        "unchangedReasons": [],
+        "originalRequestedIntent": "Prepare decision or approval packet Synthetic/test only: prepare a draft decision packet recommending a placeholder vendor shortlist for Alpha One (NEW-3 maker-checker test, no real vendor or spend)."
+      }
+    ],
+    "executions": [
+      {
+        "id": "d04d34c1-684b-4310-8354-0c78d07d6c9b",
+        "status": "SUCCEEDED",
+        "corr": "16e1b6c8-c7f4-437d-83b4-f0def38e5aac",
+        "summary": "Native draft/command applied within event 00000000-0000-4000-8000-000000000021 v"
+      }
+    ]
+  },
+  "approveAuditCount": 3,
+  "approveActions": [
+    {
+      "at": "2026-09-15T17:50:19.420Z",
+      "action": "layout.approval.approved",
+      "outcome": "SUCCESS",
+      "corr": "b3e842d3-eee0-4b7e-8276-dd87d079940d",
+      "res": "layout_approval",
+      "resId": "5711c7bf-838d-4633-a1d6-087bbe122723",
+      "reason": "Maker/checker decision"
+    },
+    {
+      "at": "2026-09-15T17:47:11.012Z",
+      "action": "seatingV2.approvePlan",
+      "outcome": "SUCCESS",
+      "corr": "6faefa60-7602-44e0-be3b-93a9a4088f75",
+      "res": "seating_v2",
+      "resId": "6a04fb0e-76f1-4756-b574-439d2cea4dba",
+      "reason": ""
+    },
+    {
+      "at": "2026-09-15T17:42:03.224Z",
+      "action": "layout.approval.approved",
+      "outcome": "SUCCESS",
+      "corr": "9f94f021-b244-476e-a67f-eb6a015b251e",
+      "res": "layout_approval",
+      "resId": "7c154abb-253f-44f3-9175-c00591c90a56",
+      "reason": "Maker/checker decision"
+    }
+  ],
+  "relatedAudit": [
+    {
+      "at": "2026-09-16T03:42:44.858Z",
+      "action": "atelierCommand.execute",
+      "outcome": "SUCCESS",
+      "corr": "16e1b6c8-c7f4-437d-83b4-f0def38e5aac",
+      "res": "atelier_run",
+      "resId": "f4656806-141a-4ca0-9b13-440389742445",
+      "reason": "plan=54b9f6f7-f2af-42ae-ba7e-d470676f0d65; run=f4656806-141a-4ca0-9b13-440389742445; status=COMPLETED; settlement=EXECUTED; risk=R3; effect="
+    },
+    {
+      "at": "2026-09-16T03:25:51.481Z",
+      "action": "atelierCommand.task",
+      "outcome": "SUCCESS",
+      "corr": "a83a72bc-eb31-4ddb-8ad7-869ff388edcf",
+      "res": "atelier_task_invocation",
+      "resId": "a83a72bc-eb31-4ddb-8ad7-869ff388edcf",
+      "reason": "task=tb.supplier.decision; taskVersion=1; risk=R3; plan=54b9f6f7-f2af-42ae-ba7e-d470676f0d65; mode=MAKER_CHECKER"
+    },
+    {
+      "at": "2026-09-16T00:18:47.540Z",
+      "action": "atelierCommand.task",
+      "outcome": "SUCCESS",
+      "corr": "7acead28-a74d-4f82-8db9-e84b57446c37",
+      "res": "atelier_task_invocation",
+      "resId": "7acead28-a74d-4f82-8db9-e84b57446c37",
+      "reason": "task=tb.supplier.decision; taskVersion=1; risk=R3; plan=af38a175-62ac-4df7-8301-0c7ff82760f2; mode=MAKER_CHECKER"
+    }
+  ]
+}

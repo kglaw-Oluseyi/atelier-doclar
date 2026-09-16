@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { AtelierWorkspaceView } from "@maison-doclar/shared-platform";
+import type { AtelierPlanSummary, AtelierWorkspaceView } from "@maison-doclar/shared-platform";
 import {
   approveAtelierPlanAction,
   confirmAtelierPlanAction,
@@ -17,6 +17,24 @@ function effectLabel(mode: string, risk: string): string {
   return mode;
 }
 
+const QUEUE_ORDER: AtelierPlanSummary["queueGroup"][] = [
+  "NEEDS_YOUR_ACTION",
+  "PENDING_CONFIRMATION",
+  "PENDING_APPROVAL",
+  "APPROVED_READY",
+  "EXECUTING",
+  "HISTORY",
+];
+
+const QUEUE_LABEL: Record<AtelierPlanSummary["queueGroup"], string> = {
+  NEEDS_YOUR_ACTION: "Needs your action",
+  PENDING_CONFIRMATION: "Pending confirmation",
+  PENDING_APPROVAL: "Pending approval",
+  APPROVED_READY: "Approved / ready",
+  EXECUTING: "Executing",
+  HISTORY: "Recently settled / history",
+};
+
 export function AtelierCommandWorkspace({
   organisationId,
   eventId,
@@ -29,6 +47,7 @@ export function AtelierCommandWorkspace({
   assignmentLabel,
   taskQuery,
   taskDomain,
+  selectedPlanId,
 }: {
   organisationId: string;
   eventId: string;
@@ -41,24 +60,31 @@ export function AtelierCommandWorkspace({
   assignmentLabel: string;
   taskQuery: string;
   taskDomain: string;
+  selectedPlanId: string | null;
 }) {
-  const latestPlan = [...workspace.plans].sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))[0];
-  const latestSteps = latestPlan
-    ? workspace.planSteps.filter((step) => step.planId === latestPlan.id).sort((a, b) => a.ordinal - b.ordinal)
+  const activePlanId = selectedPlanId ?? workspace.selectedPlanId;
+  const selectedPlan =
+    workspace.plans.find((plan) => plan.id === activePlanId) ??
+    [...workspace.plans].sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+  const selectedSteps = selectedPlan
+    ? workspace.planSteps.filter((step) => step.planId === selectedPlan.id).sort((a, b) => a.ordinal - b.ordinal)
     : [];
-  const latestInstruction = [...workspace.instructions].sort(
-    (a, b) => b.sequence - a.sequence || b.createdAt.localeCompare(a.createdAt),
-  )[0];
+  const selectedInstruction =
+    workspace.eventInstructions.find((item) => item.id === selectedPlan?.instructionId) ??
+    workspace.instructions.find((item) => item.id === selectedPlan?.instructionId) ??
+    [...workspace.instructions].sort((a, b) => b.sequence - a.sequence || b.createdAt.localeCompare(a.createdAt))[0];
+  const selectedSummary = workspace.planSummaries.find((item) => item.planId === selectedPlan?.id);
   const latestReceipt = [...workspace.receipts]
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))
-    .find((receipt) => !latestPlan || !receipt.planId || receipt.planId === latestPlan.id || receipt.instructionId === latestInstruction?.id)
+    .find((receipt) => !selectedPlan || !receipt.planId || receipt.planId === selectedPlan.id)
     ?? [...workspace.receipts].sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))[0];
-  // Prefer the newest intelligence-bearing receipt so a later answer is never masked by an older one.
   const intelligenceReceipt = [...workspace.receipts]
     .filter((receipt) => receipt.intelligenceResult?.answer)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))[0];
   const intelligence = intelligenceReceipt?.intelligenceResult ?? latestReceipt?.intelligenceResult;
   const settlements = [...workspace.receipts].sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id)).slice(0, 12);
+  const planCount = workspace.planSummaries.length;
+  const needsActionCount = workspace.planSummaries.filter((item) => item.queueGroup === "NEEDS_YOUR_ACTION").length;
 
   return (
     <div className="atelier-command" data-testid="atelier-command-workspace">
@@ -77,6 +103,70 @@ export function AtelierCommandWorkspace({
           Production authorised: {String(workspace.posture.productionAuthorised)} · Providers active:{" "}
           {String(workspace.posture.providersActive)} · Model posture: fixture / inactive
         </p>
+        <p className="atelier-command-muted" data-testid="atelier-command-plan-counts">
+          Plans on this event: {planCount} · Needs your action: {needsActionCount}
+        </p>
+      </section>
+
+      <section
+        className="atelier-command-panel"
+        aria-labelledby="atelier-command-queue-heading"
+        data-testid="atelier-command-plan-queue"
+      >
+        <h2 id="atelier-command-queue-heading">Plan queue and history</h2>
+        <p className="atelier-command-muted">
+          Multiple plans may coexist on this event. Compiling a new instruction does not remove earlier pending work.
+        </p>
+        {planCount === 0 ? (
+          <p className="empty" data-testid="atelier-command-queue-empty">
+            No plans yet for this event. Interpret an instruction or use a Task Bank entry to create the first plan.
+          </p>
+        ) : (
+          QUEUE_ORDER.map((group) => {
+            const items = workspace.planSummaries.filter((item) => item.queueGroup === group);
+            if (items.length === 0) return null;
+            return (
+              <div key={group} className="atelier-command-queue-group" data-testid={`atelier-queue-${group}`}>
+                <h3>
+                  {QUEUE_LABEL[group]} <span className="atelier-command-muted">({items.length})</span>
+                </h3>
+                <ul className="atelier-command-queue-list">
+                  {items.map((item) => {
+                    const selected = item.planId === selectedPlan?.id;
+                    return (
+                      <li key={item.planId} data-testid={`atelier-plan-card-${item.planId}`}>
+                        <article className={selected ? "atelier-plan-card is-selected" : "atelier-plan-card"}>
+                          <p>
+                            <Link
+                              href={`/app/events/${eventId}/atelier-command?planId=${item.planId}`}
+                              data-testid={`atelier-plan-open-${item.planId}`}
+                            >
+                              {item.taskDefinitionId ?? "Instruction plan"} · v{item.planVersion}
+                            </Link>
+                            {" · "}
+                            <strong>{item.status}</strong> · {item.riskSummary} · {item.effectLabel}
+                          </p>
+                          <p className="atelier-command-muted">
+                            Maker: {item.makerLabel}
+                            {item.checkerLabel ? ` · Checker: ${item.checkerLabel}` : ""}
+                            {" · "}
+                            Created {item.createdAt}
+                          </p>
+                          <p>{item.intendedOutcome}</p>
+                          <p className="atelier-command-muted">
+                            Actions: {item.availableActions.join(", ")}
+                            {item.approvalCorrelationId ? ` · Approval corr ${item.approvalCorrelationId}` : ""}
+                            {item.settlementCorrelationId ? ` · Settlement ${item.settlementCorrelationId}` : ""}
+                          </p>
+                        </article>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            );
+          })
+        )}
       </section>
 
       <div className="atelier-command-grid">
@@ -109,28 +199,38 @@ export function AtelierCommandWorkspace({
             <p className="empty">This role can review Atelier Command evidence but cannot issue instructions.</p>
           )}
 
-          {latestInstruction ? (
+          {selectedInstruction ? (
             <div className="atelier-command-block" data-testid="atelier-command-interpretation">
-              <h3>Latest instruction</h3>
-              <p>{latestInstruction.rawText}</p>
-              <p className="atelier-command-muted">Status: {latestInstruction.status}</p>
+              <h3>Selected instruction</h3>
+              <p>{selectedInstruction.rawText}</p>
+              <p className="atelier-command-muted">Status: {selectedInstruction.status}</p>
             </div>
           ) : null}
 
-          {latestPlan ? (
-            <div className="atelier-command-block" data-testid="atelier-command-plan">
-              <h3>Plan preview</h3>
+          {selectedPlan ? (
+            <div className="atelier-command-block" data-testid="atelier-command-plan" data-plan-id={selectedPlan.id}>
+              <h3>Plan detail</h3>
               <p>
-                Version {latestPlan.planVersion} · Risk {latestPlan.riskSummary} · Status {latestPlan.status}
-                {latestPlan.dryRun ? " · Dry run" : ""}
+                Plan {selectedPlan.id} · Version {selectedPlan.planVersion} · Risk {selectedPlan.riskSummary} · Status{" "}
+                {selectedPlan.status}
+                {selectedPlan.dryRun ? " · Dry run" : ""}
               </p>
-              {latestSteps.some((step) => step.executionRoute === "BROWSER") ? (
+              {selectedSummary ? (
+                <p className="atelier-command-muted" data-testid="atelier-command-plan-maker">
+                  Maker: {selectedSummary.makerLabel}
+                  {selectedSummary.checkerLabel ? ` · Checker: ${selectedSummary.checkerLabel}` : ""}
+                  {selectedSummary.taskDefinitionId
+                    ? ` · Task: ${selectedSummary.taskDefinitionId} v${selectedSummary.taskVersion ?? 1}`
+                    : ""}
+                </p>
+              ) : null}
+              {selectedSteps.some((step) => step.executionRoute === "BROWSER") ? (
                 <p data-testid="atelier-command-simulated-banner" className="atelier-command-simulated">
                   SIMULATED · effect class SIMULATED_BROWSER · no real browser, provider, or external system will change
                 </p>
               ) : null}
               <ol>
-                {latestSteps.map((step) => (
+                {selectedSteps.map((step) => (
                   <li key={step.id}>
                     <strong>{step.toolName}</strong> · {step.executionRoute} · {step.riskTier}
                     {step.executionRoute === "BROWSER" ? " · SIMULATED" : ""}
@@ -140,61 +240,48 @@ export function AtelierCommandWorkspace({
               </ol>
               <div className="actions">
                 {canExecute &&
-                (latestPlan.status === "AWAITING_CONFIRMATION" || latestPlan.status === "READY") &&
-                latestPlan.riskSummary !== "R3" ? (
+                selectedSummary?.availableActions.includes("CONFIRM") ? (
                   <form action={confirmAtelierPlanAction}>
                     <input type="hidden" name="organisationId" value={organisationId} />
                     <input type="hidden" name="eventId" value={eventId} />
-                    <input type="hidden" name="planId" value={latestPlan.id} />
+                    <input type="hidden" name="planId" value={selectedPlan.id} />
                     <button type="submit" className="button secondary">
                       Confirm plan
                     </button>
                   </form>
                 ) : null}
-                {canApprove && latestPlan.status === "AWAITING_APPROVAL" ? (
+                {canApprove && selectedSummary?.availableActions.includes("APPROVE") ? (
                   <form action={approveAtelierPlanAction}>
                     <input type="hidden" name="organisationId" value={organisationId} />
                     <input type="hidden" name="eventId" value={eventId} />
-                    <input type="hidden" name="planId" value={latestPlan.id} />
-                    <button type="submit" className="button secondary">
+                    <input type="hidden" name="planId" value={selectedPlan.id} />
+                    <button type="submit" className="button secondary" data-testid="atelier-command-approve">
                       Approve as checker
                     </button>
                   </form>
                 ) : null}
-                {canExecute && latestPlan.status === "APPROVED" ? (
+                {canExecute && selectedSummary?.availableActions.includes("EXECUTE") ? (
                   <form action={executeAtelierPlanAction}>
                     <input type="hidden" name="organisationId" value={organisationId} />
                     <input type="hidden" name="eventId" value={eventId} />
-                    <input type="hidden" name="planId" value={latestPlan.id} />
+                    <input type="hidden" name="planId" value={selectedPlan.id} />
                     <button type="submit" className="button" data-testid="atelier-command-execute">
                       Execute plan
                     </button>
                   </form>
                 ) : null}
-                {canExecute &&
-                (latestPlan.riskSummary === "R0" || latestPlan.riskSummary === "R1") &&
-                latestPlan.status === "READY" ? (
-                  <form action={executeAtelierPlanAction}>
-                    <input type="hidden" name="organisationId" value={organisationId} />
-                    <input type="hidden" name="eventId" value={eventId} />
-                    <input type="hidden" name="planId" value={latestPlan.id} />
-                    <button type="submit" className="button" data-testid="atelier-command-execute">
-                      Execute plan
-                    </button>
-                  </form>
-                ) : null}
-                {latestPlan.status === "COMPLETED" ||
-                latestPlan.status === "BLOCKED" ||
-                latestPlan.status === "REFUSED" ||
-                latestPlan.status === "CANCELLED" ||
-                latestPlan.status === "SUPERSEDED" ||
-                latestPlan.status === "FAILED" ||
-                latestPlan.status === "REJECTED" ||
-                latestPlan.status === "STALE" ? (
+                {selectedPlan.status === "COMPLETED" ||
+                selectedPlan.status === "BLOCKED" ||
+                selectedPlan.status === "REFUSED" ||
+                selectedPlan.status === "CANCELLED" ||
+                selectedPlan.status === "SUPERSEDED" ||
+                selectedPlan.status === "FAILED" ||
+                selectedPlan.status === "REJECTED" ||
+                selectedPlan.status === "STALE" ? (
                   <p data-testid="atelier-command-settled-state" className="atelier-command-muted">
-                    Settled · {latestPlan.status}
-                    {latestPlan.settlementCorrelationId
-                      ? ` · receipt ${latestPlan.settlementCorrelationId}`
+                    Settled · {selectedPlan.status}
+                    {selectedPlan.settlementCorrelationId
+                      ? ` · receipt ${selectedPlan.settlementCorrelationId}`
                       : ""}{" "}
                     · Execute is not available
                   </p>
@@ -269,6 +356,11 @@ export function AtelierCommandWorkspace({
                   new effect
                 </p>
               ) : null}
+              {latestReceipt.kind === "PLAN_APPROVAL" ? (
+                <p data-testid="atelier-command-receipt-approval">
+                  Approval recorded · correlation {latestReceipt.correlationId} · business data unchanged
+                </p>
+              ) : null}
               <p>{latestReceipt.summary}</p>
               <p className="atelier-command-muted">
                 Correlation: {latestReceipt.correlationId}
@@ -312,6 +404,7 @@ export function AtelierCommandWorkspace({
             {workspace.taskBank.count} canonical tasks · {workspace.taskBank.version}
           </p>
           <form method="get" className="atelier-command-form atelier-command-filter">
+            {activePlanId ? <input type="hidden" name="planId" value={activePlanId} /> : null}
             <label htmlFor="atelier-command-q">
               Search tasks
               <input id="atelier-command-q" name="q" defaultValue={taskQuery} placeholder="Outcome, domain or phrase" />

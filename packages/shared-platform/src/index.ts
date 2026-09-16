@@ -1210,5 +1210,7 @@ export type {
   AtelierTaskDefinition,
   AtelierCommandRiskTier,
   AtelierWorkspaceView,
+  AtelierPlanSummary,
+  AtelierPlanQueueGroup,
   RuntimePosture,
 } from "./atelier-command/index.js";

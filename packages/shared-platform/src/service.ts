@@ -9639,7 +9639,14 @@ export class PlatformService {
     actor: ActorContext,
     organisationId: string,
     eventId: string,
-    options?: { taskQuery?: string; taskDomain?: string; roleKey?: string; eventName?: string; organisationName?: string },
+    options?: {
+      taskQuery?: string;
+      taskDomain?: string;
+      roleKey?: string;
+      eventName?: string;
+      organisationName?: string;
+      selectedPlanId?: string | null;
+    },
   ) {
     const { snap } = this.authorizeQuery(actor, "atelierCommand.view", { organisationId, eventId });
     const actorSnap = this.resolveActor(actor.personId);
@@ -9654,6 +9661,7 @@ export class PlatformService {
       taskQuery: options?.taskQuery,
       taskDomain: options?.taskDomain,
       roleKey: options?.roleKey,
+      selectedPlanId: options?.selectedPlanId,
       now: this.tokenNow(actor),
     });
     const after = JSON.stringify(snap.atelierCommandLedgers ?? []);
@@ -9757,31 +9765,141 @@ export class PlatformService {
   async confirmAtelierCommandPlan(actor: ActorContext, organisationId: string, eventId: string, planId: string) {
     const { snap } = this.authorizeQuery(actor, "atelierCommand.execute", { organisationId, eventId });
     const actorSnap = this.resolveActor(actor.personId);
-    const plan = AtelierCommand.confirmPlan({
-      snap,
-      actor: actorSnap,
-      organisationId,
-      eventId,
-      planId,
-      now: this.tokenNow(actor),
-    });
-    await this.persistAtelierSnapshot(snap);
-    return plan;
+    const now = this.tokenNow(actor);
+    try {
+      const plan = AtelierCommand.confirmPlan({
+        snap,
+        actor: actorSnap,
+        organisationId,
+        eventId,
+        planId,
+        now,
+      });
+      const corr = plan.approvalCorrelationId ?? randomUUID();
+      this.writeAudit(snap, {
+        action: "atelierCommand.confirm",
+        outcome: "SUCCESS",
+        actorPersonId: actor.personId,
+        organisationId,
+        eventId,
+        resourceType: "atelier_plan",
+        resourceId: plan.id,
+        correlationId: corr,
+        reason: [
+          `plan=${plan.id}`,
+          `planVersion=${plan.planVersion}`,
+          `hash=${plan.approvedPlanHash ?? "none"}`,
+          `risk=${plan.riskSummary}`,
+          `maker=${plan.makerPersonId ?? ""}`,
+          `decision=CONFIRMED`,
+          `dataChanged=false`,
+          `approvalIdentity=${plan.approvalIdentityId ?? ""}`,
+          `resultingStatus=${plan.status}`,
+        ].join("; "),
+        occurredAt: now,
+      });
+      await this.persistAtelierSnapshot(snap);
+      return plan;
+    } catch (error) {
+      const corr = randomUUID();
+      this.writeAudit(snap, {
+        action: "atelierCommand.confirm",
+        outcome: "DENIED",
+        actorPersonId: actor.personId,
+        organisationId,
+        eventId,
+        resourceType: "atelier_plan",
+        resourceId: planId,
+        correlationId: corr,
+        reason: error instanceof PlatformError ? `${error.code}: ${error.message}` : "confirm refused",
+        occurredAt: now,
+      });
+      await this.persistAtelierSnapshot(snap);
+      throw error;
+    }
   }
 
   async approveAtelierCommandPlan(actor: ActorContext, organisationId: string, eventId: string, planId: string) {
     const { snap } = this.authorizeQuery(actor, "atelierCommand.approve", { organisationId, eventId });
     const actorSnap = this.resolveActor(actor.personId);
-    const plan = AtelierCommand.approvePlan({
-      snap,
-      actor: actorSnap,
-      organisationId,
-      eventId,
-      planId,
-      now: this.tokenNow(actor),
-    });
-    await this.persistAtelierSnapshot(snap);
-    return plan;
+    const now = this.tokenNow(actor);
+    const ledger = AtelierCommand.ensureAtelierLedger(snap);
+    const existing = ledger.plans.find((p) => p.id === planId);
+    const instruction = existing ? ledger.instructions.find((i) => i.id === existing.instructionId) : undefined;
+    const taskInv = instruction?.taskInvocationId
+      ? ledger.taskInvocations.find((t) => t.id === instruction.taskInvocationId)
+      : undefined;
+    try {
+      const plan = AtelierCommand.approvePlan({
+        snap,
+        actor: actorSnap,
+        organisationId,
+        eventId,
+        planId,
+        now,
+      });
+      const corr = plan.approvalCorrelationId ?? randomUUID();
+      this.writeAudit(snap, {
+        action: "atelierCommand.approve",
+        outcome: "SUCCESS",
+        actorPersonId: actor.personId,
+        organisationId,
+        eventId,
+        resourceType: "atelier_plan",
+        resourceId: plan.id,
+        correlationId: corr,
+        reason: [
+          `plan=${plan.id}`,
+          `planVersion=${plan.planVersion}`,
+          `hash=${plan.approvedPlanHash ?? "none"}`,
+          `task=${taskInv?.taskDefinitionId ?? "none"}`,
+          `taskVersion=${taskInv?.taskVersion ?? ""}`,
+          `risk=${plan.riskSummary}`,
+          `maker=${plan.makerPersonId ?? ""}`,
+          `checker=${plan.checkerPersonId ?? actor.personId}`,
+          `decision=APPROVED`,
+          `dataChanged=false`,
+          `approvalIdentity=${plan.approvalIdentityId ?? ""}`,
+          `resultingStatus=${plan.status}`,
+        ].join("; "),
+        occurredAt: now,
+      });
+      await this.persistAtelierSnapshot(snap);
+      return plan;
+    } catch (error) {
+      const corr = randomUUID();
+      const selfApprove =
+        instruction && instruction.authorPersonId === actor.personId
+          ? "self-approval refused"
+          : error instanceof PlatformError
+            ? `${error.code}: ${error.message}`
+            : "approval refused";
+      this.writeAudit(snap, {
+        action: "atelierCommand.approve",
+        outcome: "DENIED",
+        actorPersonId: actor.personId,
+        organisationId,
+        eventId,
+        resourceType: "atelier_plan",
+        resourceId: planId,
+        correlationId: corr,
+        reason: [
+          `plan=${planId}`,
+          `planVersion=${existing?.planVersion ?? ""}`,
+          `hash=${existing?.approvedPlanHash ?? "none"}`,
+          `task=${taskInv?.taskDefinitionId ?? "none"}`,
+          `risk=${existing?.riskSummary ?? ""}`,
+          `maker=${instruction?.authorPersonId ?? ""}`,
+          `checker=${actor.personId}`,
+          `decision=REFUSED`,
+          `dataChanged=false`,
+          selfApprove,
+        ].join("; "),
+        occurredAt: now,
+      });
+      await this.persistAtelierSnapshot(snap);
+      throw error;
+    }
   }
 
   async executeAtelierCommandPlan(

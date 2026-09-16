@@ -60,6 +60,7 @@ export default async function AtelierCommandPage({
 
   const taskQuery = typeof query.q === "string" ? query.q : undefined;
   const taskDomain = typeof query.domain === "string" ? query.domain : undefined;
+  const selectedPlanId = typeof query.planId === "string" ? query.planId : null;
   const roleKey = actorSnap.roles.find((role) =>
     actorSnap.assignments.some((assignment) => assignment.roleId === role.id && assignment.status === "ACTIVE"),
   )?.key;
@@ -72,6 +73,7 @@ export default async function AtelierCommandPage({
       taskQuery,
       taskDomain,
       roleKey,
+      selectedPlanId,
     });
   } catch (error) {
     const message = error instanceof PlatformError ? error.publicMessage : "Atelier Command could not be loaded.";
@@ -150,6 +152,7 @@ export default async function AtelierCommandPage({
         assignmentLabel={assignmentLabel}
         taskQuery={taskQuery ?? ""}
         taskDomain={taskDomain ?? ""}
+        selectedPlanId={selectedPlanId}
       />
     </AppShell>
   );

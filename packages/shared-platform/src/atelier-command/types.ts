@@ -251,10 +251,13 @@ export type AtelierPlan = {
   checkerPersonId?: string;
   approvalIdentityId?: string;
   approvedAt?: string;
+  /** Independently searchable approval audit correlation. */
+  approvalCorrelationId?: string;
   /** First authoritative settlement correlation for this plan version. */
   settlementCorrelationId?: string;
   settlementReceiptId?: string;
   settledAt?: string;
+  updatedAt?: string;
   dryRun: boolean;
   createdAt: string;
   version: number;
