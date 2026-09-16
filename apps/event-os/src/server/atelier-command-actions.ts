@@ -262,7 +262,7 @@ export async function executeAtelierPlanAction(formData: FormData): Promise<void
     if (isNextRedirect(error)) throw error;
     const classified = classifyActionError(error);
     return finish({
-      path,
+      path: `${path}?planId=${planId}`,
       actorPersonId: person.id,
       correlationId,
       actionType: "atelierCommand.execute",

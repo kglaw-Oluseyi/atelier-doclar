@@ -691,6 +691,10 @@ export function approvePlan(input: {
   if (isPlanTerminal(plan.status)) {
     throw new PlatformError("FORBIDDEN", `Plan is terminal (${plan.status}) and cannot be approved again`);
   }
+  if (plan.status === "APPROVED" && plan.approvalCorrelationId) {
+    // Concurrent/CAS-retry approval: durable approval already recorded — settle once.
+    return plan;
+  }
   const instruction = ledger.instructions.find((i) => i.id === plan.instructionId);
   if (!instruction) throw new PlatformError("NOT_FOUND", "Instruction missing for plan");
   assertMakerChecker(instruction.authorPersonId, input.actor.person.id, "approve");
