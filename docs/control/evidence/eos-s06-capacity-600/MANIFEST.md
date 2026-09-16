@@ -12,7 +12,7 @@
 |-------|-------|
 | Governance baseline | `4963082f1b669d085dc91c85f0d95f6a5fa7e6ee` |
 | Repository HEAD before qualification commit | `5f7c519b1492f56df48438add483d618c2f38f01` |
-| Qualification evidence commit | `8f10ec25c1075759f30225fb77a46b1ef88a67a6` |
+| Qualification evidence commit | `5561171261f3c193136a0b3be5dbd504a2ed8f70` |
 | Accepted Event OS application SHA | `7f139a556f7c023efa98daccd7bfd29481a05775` |
 | New deployed application SHA | **None** — no application correction |
 | `productionAuthorised` | `false` |

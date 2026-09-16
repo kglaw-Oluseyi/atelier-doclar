@@ -7,7 +7,7 @@ You are verifying Cursor's qualification claim for Event OS seating at productio
 ## Identities to confirm separately
 
 - Accepted application SHA: `7f139a556f7c023efa98daccd7bfd29481a05775`
-- Qualification repository/docs tip: `8f10ec25c1075759f30225fb77a46b1ef88a67a6`
+- Qualification repository/docs tip: `5561171261f3c193136a0b3be5dbd504a2ed8f70`
 - Do not conflate documentation commits with deployed application identity.
 
 ## Approved qualification layout (synthetic only)
