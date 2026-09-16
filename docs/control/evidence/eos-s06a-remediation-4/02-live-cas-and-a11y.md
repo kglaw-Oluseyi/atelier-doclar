@@ -35,4 +35,17 @@ Fix: load seating before claim; claim+execute+persist without intervening await;
 | executive-ledger | 768 | 0 | — |
 | executive-ledger | 390 | 0 | — |
 
-Genuine contrast finding on Task Bank @ 1440 retained (not silenced).
+## Action-result flash (post CAS-fix diagnosis)
+
+Execute click after `02dc6f1` surfaced page error:
+
+- `Error: action result payload was refused`
+- Flash: “The requested record is not available”
+
+Cause: rem4 redirects passed `scopePath` as `/app/events/…/atelier-command?planId=…`. Signed action-result `SCOPE_PATH` rejects query strings, so `buildActionResult` threw after (or instead of) a clean redirect—hiding the real execute outcome.
+
+Fix: keep `scopePath` query-free; pass `planId` via `resultHref` extras (`?result=…&planId=…`).
+
+## Action-result flash (post CAS-fix diagnosis)
+
+Execute click after `02dc6f1` surfaced page error `action result payload was refused` because rem4 put `?planId=` into signed action-result `scopePath` (SCOPE_PATH rejects query strings). Fix: query-free scopePath; pass planId via resultHref extras.

@@ -25,7 +25,9 @@ function isNextRedirect(error: unknown): boolean {
 }
 
 async function finish(input: {
+  /** Canonical path without query — required by signed action-result scopePath. */
   path: string;
+  planId?: string;
   actorPersonId: string;
   correlationId: string;
   actionType: string;
@@ -54,7 +56,9 @@ async function finish(input: {
     }),
   );
   revalidatePath(input.path);
-  redirect(resultHref(input.path, input.correlationId));
+  redirect(
+    resultHref(input.path, input.correlationId, input.planId ? { planId: input.planId } : undefined),
+  );
 }
 
 export async function submitAtelierInstructionAction(formData: FormData): Promise<void> {
@@ -72,9 +76,9 @@ export async function submitAtelierInstructionAction(formData: FormData): Promis
       rawText,
       dryRun,
     });
-    const dest = result.plan ? `${path}?planId=${result.plan.id}` : path;
     return finish({
-      path: dest,
+      path,
+      planId: result.plan?.id,
       actorPersonId: person.id,
       correlationId: result.receipt?.correlationId ?? correlationId,
       actionType: "atelierCommand.instruct",
@@ -126,9 +130,9 @@ export async function invokeAtelierTaskAction(formData: FormData): Promise<void>
       operatorEdits: notes ? { notes } : {},
       dryRun,
     });
-    const dest = result.plan ? `${path}?planId=${result.plan.id}` : path;
     return finish({
-      path: dest,
+      path,
+      planId: result.plan?.id,
       actorPersonId: person.id,
       correlationId,
       actionType: "atelierCommand.task",
@@ -168,7 +172,8 @@ export async function confirmAtelierPlanAction(formData: FormData): Promise<void
   try {
     await getRuntime().service.confirmAtelierCommandPlan(actor, organisationId, eventId, planId);
     return finish({
-      path: `${path}?planId=${planId}`,
+      path,
+      planId,
       actorPersonId: person.id,
       correlationId,
       actionType: "atelierCommand.confirm",
@@ -184,6 +189,7 @@ export async function confirmAtelierPlanAction(formData: FormData): Promise<void
     const classified = classifyActionError(error);
     return finish({
       path,
+      planId,
       actorPersonId: person.id,
       correlationId,
       actionType: "atelierCommand.confirm",
@@ -207,7 +213,8 @@ export async function approveAtelierPlanAction(formData: FormData): Promise<void
   try {
     const plan = await getRuntime().service.approveAtelierCommandPlan(actor, organisationId, eventId, planId);
     return finish({
-      path: `${path}?planId=${planId}`,
+      path,
+      planId,
       actorPersonId: person.id,
       correlationId: plan.approvalCorrelationId ?? correlationId,
       actionType: "atelierCommand.approve",
@@ -223,6 +230,7 @@ export async function approveAtelierPlanAction(formData: FormData): Promise<void
     const classified = classifyActionError(error);
     return finish({
       path,
+      planId,
       actorPersonId: person.id,
       correlationId,
       actionType: "atelierCommand.approve",
@@ -246,7 +254,8 @@ export async function executeAtelierPlanAction(formData: FormData): Promise<void
   try {
     const result = await getRuntime().service.executeAtelierCommandPlan(actor, organisationId, eventId, planId);
     return finish({
-      path: `${path}?planId=${planId}`,
+      path,
+      planId,
       actorPersonId: person.id,
       correlationId: result.receipt.correlationId,
       actionType: "atelierCommand.execute",
@@ -254,7 +263,7 @@ export async function executeAtelierPlanAction(formData: FormData): Promise<void
       organisationId,
       status: "SUCCESS",
       code: "SUCCESS",
-      message: result.receipt.summary,
+      message: result.receipt.summary ?? "Plan executed.",
       didDataChange: Boolean(result.receipt.dataChanged),
       createdRecordIds: result.receipt.changedRecordIds,
     });
@@ -262,7 +271,8 @@ export async function executeAtelierPlanAction(formData: FormData): Promise<void
     if (isNextRedirect(error)) throw error;
     const classified = classifyActionError(error);
     return finish({
-      path: `${path}?planId=${planId}`,
+      path,
+      planId,
       actorPersonId: person.id,
       correlationId,
       actionType: "atelierCommand.execute",
