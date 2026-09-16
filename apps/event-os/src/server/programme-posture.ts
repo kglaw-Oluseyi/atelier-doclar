@@ -23,8 +23,8 @@ export function formatProgrammePostureLine(): string {
 }
 
 export const CAP600_QUALIFICATION_EVIDENCE_COMMIT = "5561171261f3c193136a0b3be5dbd504a2ed8f70";
-/** Populated when CAP1000 stretch evidence commit lands; null until then. */
-export const CAP1000_STRETCH_EVIDENCE_COMMIT: string | null = null;
+/** CAP1000 stretch evidence commit (corpus + live bridge product surfaces). */
+export const CAP1000_STRETCH_EVIDENCE_COMMIT: string | null = "f05841e446d8838d016269d617f3c453ec94f7db";
 
 export const IDENTITY_FIELD_HELP = {
   applicationSha: "Commit identity of the deployed Event OS application bundle.",

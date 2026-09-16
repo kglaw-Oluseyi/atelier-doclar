@@ -2,7 +2,8 @@
 
 **Edition:** `eos-s06-capacity-1000-v1`  
 **Status:** Stretch qualification claim — not a Gate 1 substitute  
-**Date:** 2026-09-16
+**Date:** 2026-09-16  
+**Stretch evidence commit:** `f05841e446d8838d016269d617f3c453ec94f7db`
 
 ## Profile (qualification-only; not a production default)
 
