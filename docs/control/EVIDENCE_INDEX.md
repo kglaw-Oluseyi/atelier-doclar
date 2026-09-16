@@ -582,9 +582,10 @@ RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S037`. Canonical corpus p
 
 ## EOS-S06 Pre-Production Gate 1 — 600-Guest Capacity Qualification
 
-**Status:** Qualification claim — awaiting independent verification (not gate acceptance)
+**Status:** Qualification evidence retained; programme acceptance recorded under `MD-PR-S080` (see addendum below)
 **Approved synthetic layout:** 63 tables / 600 seats (42×10 + 18×8 + 3×12) — not a production default
-**Accepted application SHA:** `7f139a556f7c023efa98daccd7bfd29481a05775` (unchanged)
+**Prior reviewed Gate 1 application baseline:** `0a0be803f123e8326fb893db1e3562c724b70dd0` (historical; not rewritten)
+**Current accepted application SHA after MD-PR-S080:** `71317881384e38671295c3fda32d533c71c3f559`
 
 | ID | Kind | Summary | Location |
 |----|------|---------|----------|
@@ -675,4 +676,29 @@ No assignment, posture, identity-field, findability, or seating mutations under 
 | EV-EOS-S06A-DEBT | DOCUMENT | Controlled minor observation register entry | `docs/control/CUMULATIVE_TECHNICAL_DEBT_AND_REGRESSION_REGISTER.md` (`TDR-S06A-001`) |
 
 `MD-PR-S079` records independent AI CTO acceptance of EOS-S06A Atelier Command at application SHA `7f139a556f7c023efa98daccd7bfd29481a05775` after original implementation, Remediation 1–4, deployment-identity correction, Task Bank contrast addendum, independent Claude verification rounds, and final focused multi-role confirmation. Not a catalogue slice. Documentation-only acceptance commit does not redeploy Event OS or Control Tower. Historical “not accepted” evidence rows remain dated history.
+
+## EOS-S06 Gate 1 + authentication remediation closure (`MD-PR-S080`)
+
+**Date:** 2026-09-16
+**Milestone:** EOS-S06 Pre-Production Gate 1 ACCEPTED — PASS WITH CONTROLLED OBSERVATIONS; authentication performance remediation ACCEPTED — SIGN-IN PERFORMANCE RESTORED
+**Prompt Control ID:** `MD-PR-S080`
+**Decision authority:** ChatGPT / AI CTO
+**Prior Gate 1 reviewed application baseline:** `0a0be803f123e8326fb893db1e3562c724b70dd0`
+**Accepted authentication-remediation application SHA:** `71317881384e38671295c3fda32d533c71c3f559`
+**CAP600 event:** `053fa686-124e-49b3-b8a8-d0497c0a1668` (600/63/600)
+**Claude attempts:** first BLOCKED (preserved); second PASS WITH CONTROLLED OBSERVATIONS
+**EOS-S06B / EOS-S06C:** CEO RATIFICATION DRAFT registered only
+**EOS-S07:** NOT_STARTED / NOT_AUTHORISED
+**productionAuthorised:** false · Providers/communications: INACTIVE · CAP1000: incomplete / outside Gate 1
+
+| Evidence ID | Type | Summary | Path |
+|-------------|------|---------|------|
+| EV-EOS-S06-G1-ACCEPT | DOCUMENT | Formal Gate 1 acceptance | `docs/control/EOS_S06_GATE1_ACCEPTANCE.md` |
+| EV-EOS-AUTH-PERF-ACCEPT | DOCUMENT | Authentication remediation acceptance | `docs/control/EOS_AUTH_PERFORMANCE_REMEDIATION_ACCEPTANCE.md` |
+| EV-EOS-S06-G1-CLAUDE-ARCHIVE | DOCUMENT | Claude Gate 1 both-attempt archival | `docs/control/evidence/eos-s06-gate1-auth-closure/CLAUDE_GATE1_INDEPENDENT_VERIFICATION.md` |
+| EV-EOS-S06-G1-CLOSURE | DOCUMENT | Closure evidence directory | `docs/control/evidence/eos-s06-gate1-auth-closure/` |
+| EV-EOS-SIGNIN-MEASURE | DOCUMENT | Sign-in measurement evidence | `docs/control/evidence/eos-signin-performance-remediation/MEASUREMENT.md` |
+| EV-EOS-S06B-PACK | DOCUMENT | EOS-S06B draft pack registration | `docs/control/eos-s06b/ratification-pack/` |
+| EV-EOS-S06C-PACK | DOCUMENT | EOS-S06C draft pack registration | `docs/control/eos-s06c/ratification-pack/` |
+| EV-EOS-S06-G1-DEBT | DOCUMENT | New controlled debts `TDR-S06-004`–`TDR-S06-008` | `docs/control/CUMULATIVE_TECHNICAL_DEBT_AND_REGRESSION_REGISTER.md` |
 

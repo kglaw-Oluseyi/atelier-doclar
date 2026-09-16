@@ -1,0 +1,47 @@
+{
+  "pack": "Maison Doclar EOS-S06C High Volume Guest List Intake Ratification Pack",
+  "status": "CEO RATIFICATION DRAFT",
+  "repositoryStudy": {
+    "repository": "kglaw-Oluseyi/atelier-doclar",
+    "branch": "main",
+    "sha": "0a0be803f123e8326fb893db1e3562c724b70dd0",
+    "mode": "read-only"
+  },
+  "documents": [
+    {
+      "file": "00_EOS_S06C_Ratification_and_Authority.docx",
+      "sha256": "dac9eac9c0ee3b02fa570d066ce4af27faa35560ee7460bf6f58a776e217e5b9",
+      "bytes": 39977
+    },
+    {
+      "file": "01_EOS_S06C_Current_Intake_Compatibility.docx",
+      "sha256": "e497df9996e4ac666959db41c787f6aa65d31b838a421136dfb000eaab392f75",
+      "bytes": 41150
+    },
+    {
+      "file": "02_EOS_S06C_Canonical_Product_Specification.docx",
+      "sha256": "696ddf445aaafdc223dc1a70ce3276e031ee151f8c1e0fff6a4e9339a8f20cdd",
+      "bytes": 41498
+    },
+    {
+      "file": "03_EOS_S06C_Data_Security_and_Operating_Workflow.docx",
+      "sha256": "e8aea2c45d8e45af79c671445ee94c45ec7d05a37daa4776efc1de7941adb52b",
+      "bytes": 41336
+    },
+    {
+      "file": "04_EOS_S06C_Assurance_and_Acceptance.docx",
+      "sha256": "aaa10cef75c7b3efcf74598986e73d6955e32cdd83873c8426c22a6618e67dbb",
+      "bytes": 40969
+    },
+    {
+      "file": "05_EOS_S06C_Detailed_Cursor_Execution_Programme.docx",
+      "sha256": "03d73bb0bf5ce070cf998a175d28337cc5718fe7b8e10d6402c54e606d3701f2",
+      "bytes": 43862
+    },
+    {
+      "file": "06_EOS_S06C_Traceability_and_Independent_Verification.docx",
+      "sha256": "95bd12a5f63efd10e0e3d61b28e59606cd7fb7997da7bf0a5761eb73329805a7",
+      "bytes": 40355
+    }
+  ]
+}

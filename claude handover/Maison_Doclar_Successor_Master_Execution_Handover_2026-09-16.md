@@ -1,7 +1,22 @@
 # Maison Doclar — Successor Master Execution Handover
 
-**Handover date:** 16 September 2026  
+**Handover date:** 16 September 2026
 **Purpose:** Continue the Maison Doclar master execution programme in a fresh ChatGPT thread from the formally accepted EOS-S06/EOS-S06A boundary.
+
+## Supersession — MD-PR-S080 (2026-09-16)
+
+This addendum does not rewrite the historical identities below. Current controlling status after MD-PR-S080:
+
+| Identity | Current value |
+|---|---|
+| Gate 1 | ACCEPTED — PASS WITH CONTROLLED OBSERVATIONS (`docs/control/EOS_S06_GATE1_ACCEPTANCE.md`) |
+| Authentication remediation | ACCEPTED — SIGN-IN PERFORMANCE RESTORED (`docs/control/EOS_AUTH_PERFORMANCE_REMEDIATION_ACCEPTANCE.md`) |
+| Current accepted application SHA | `71317881384e38671295c3fda32d533c71c3f559` |
+| Prior Gate 1 reviewed baseline | `0a0be803f123e8326fb893db1e3562c724b70dd0` (historical) |
+| EOS-S06B / EOS-S06C | CEO RATIFICATION DRAFT registered; not ratified; not authorised |
+| Proposed sequencing | CEO planning direction prefers EOS-S06C next; requires explicit sequencing ratification |
+| EOS-S07 | `NOT_STARTED / NOT_AUTHORISED` |
+| Production | `productionAuthorised:false`; providers inactive |
 
 ## 1. Mandatory scope
 

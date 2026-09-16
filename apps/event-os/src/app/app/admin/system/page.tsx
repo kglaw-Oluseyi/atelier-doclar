@@ -54,7 +54,7 @@ export default async function SystemPage() {
           CAP1000 stretch evidence commit: {CAP1000_STRETCH_EVIDENCE_COMMIT ?? "pending commit"}
         </li>
         <li data-testid="system-acceptance-controls" title={IDENTITY_FIELD_HELP.acceptanceControl}>
-          Acceptance controls: MD-PR-S077 (EOS-S06) · MD-PR-S079 (EOS-S06A) · Gate 1 not accepted
+          Acceptance controls: MD-PR-S077 (EOS-S06) · MD-PR-S079 (EOS-S06A) · MD-PR-S080 (Gate 1 + auth remediation)
         </li>
         <li>Build identity source: {identity.buildIdentitySource}</li>
         <li>Production authorised: {String(productionAuthorised())}</li>

@@ -1,12 +1,13 @@
 /**
  * Canonical Event OS System Health programme posture copy.
- * Gate 1 must not be marked accepted here.
+ * Gate 1 accepted under MD-PR-S080. EOS-S06B/S06C remain unauthorised drafts only.
  */
 export const EVENT_OS_PROGRAMME_POSTURE = {
   eosS06: "EOS-S06 ACCEPTED (MD-PR-S077)",
   eosS06A: "EOS-S06A ACCEPTED (MD-PR-S079)",
-  gate1: "EOS-S06 Gate 1: qualification awaiting independent verification and AI CTO acceptance",
-  eosS06B: "EOS-S06B NOT_STARTED / NOT_AUTHORISED",
+  gate1: "EOS-S06 Gate 1 ACCEPTED (MD-PR-S080) — PASS WITH CONTROLLED OBSERVATIONS",
+  eosS06B: "EOS-S06B CEO RATIFICATION DRAFT — NOT AUTHORISED",
+  eosS06C: "EOS-S06C CEO RATIFICATION DRAFT — NOT AUTHORISED",
   eosS07: "EOS-S07 NOT_STARTED / NOT_AUTHORISED",
   productionAuthorised: false,
 } as const;
@@ -17,6 +18,7 @@ export function formatProgrammePostureLine(): string {
     EVENT_OS_PROGRAMME_POSTURE.eosS06A,
     EVENT_OS_PROGRAMME_POSTURE.gate1,
     EVENT_OS_PROGRAMME_POSTURE.eosS06B,
+    EVENT_OS_PROGRAMME_POSTURE.eosS06C,
     EVENT_OS_PROGRAMME_POSTURE.eosS07,
     `productionAuthorised ${String(EVENT_OS_PROGRAMME_POSTURE.productionAuthorised)}`,
   ].join(" · ");

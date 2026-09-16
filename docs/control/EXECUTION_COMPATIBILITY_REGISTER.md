@@ -1,6 +1,6 @@
 # Execution Compatibility Register
 
-**Slice:** MD-CT0  
+**Slice:** MD-CT0
 **Purpose:** Map historical wording to current execution authority without rewriting source documents.
 
 ## Programme roles
@@ -425,3 +425,17 @@ Milestone 4 is authorised on the Milestone 1–3 contracts. Historic S5-01–S5-
 | EOS-S07 authorised by EOS-S06A acceptance | REJECTED. `NOT_STARTED / NOT_AUTHORISED`. |
 | Control Tower deploy for acceptance | REJECTED. Compatibility-only; not deployed / untouched. |
 | Accepted application SHA vs reviewed tip vs acceptance commit | Accepted application SHA is `7f139a556f7c023efa98daccd7bfd29481a05775`. Reviewed pre-acceptance documentation/evidence tip is `8e8a6a02e797a4c9cedceb7748667d1a934cbc1a`. Acceptance governance commit is separate. Do not conflate. |
+
+## Addendum — 2026-09-16 EOS-S06 Gate 1 + authentication remediation closure (`MD-PR-S080`)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| Gate 1 awaiting independent verification / not accepted | SUPERSEDED for programme status. Gate 1 is ACCEPTED — PASS WITH CONTROLLED OBSERVATIONS under `MD-PR-S080`. |
+| Claude Gate 1 first attempt BLOCKED | RETAINED as history. Not rewritten. Second attempt PASS WITH CONTROLLED OBSERVATIONS accepted by AI CTO. |
+| Current accepted application SHA remains `0a0be80…` / `7f139a55…` | SUPERSEDED for current application identity. Accepted authentication-remediation application SHA is `71317881384e38671295c3fda32d533c71c3f559`. Prior Gate 1 reviewed baseline `0a0be80…` retained historically. |
+| EOS-S06B / EOS-S06C started or authorised by pack placement | REJECTED. Packs are `CEO RATIFICATION DRAFT` only. Placement ≠ ratification ≠ implementation. |
+| EOS-S06C before EOS-S06B automatically authorised | REJECTED. CEO planning direction is recorded; executing S06C before S06B requires explicit ratification and sequencing control. |
+| CAP1000 accepted with Gate 1 | REJECTED. CAP1000 remains incomplete and outside Gate 1 acceptance. |
+| Auth remediation closes full-clone query debt | REJECTED. `TDR-S06-006` remains OPEN. |
+| EOS-S07 authorised | RETAINED false. `NOT_STARTED / NOT_AUTHORISED`. |
+| `productionAuthorised` | RETAINED false. Providers/communications inactive. |

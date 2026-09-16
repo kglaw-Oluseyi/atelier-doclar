@@ -983,6 +983,96 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 | Latest safe remediation milestone | Before production authorisation; not closed by `MD-PR-S079` |
 | Current status | OPEN |
 
+### TDR-S06-004 — Rule-save pending state can remain stuck on Saving…
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S06-004` |
+| Source slice | EOS-S06 / Gate 1 controlled observation |
+| Description | A rule can save successfully server-side while the button remains disabled at `Saving…`. Manual refresh reveals the successful save. No demonstrated data-integrity failure. |
+| Classification | MEDIUM UX |
+| Severity | MEDIUM |
+| Evidence | AI CTO Gate 1 acceptance under `MD-PR-S080`; `docs/control/EOS_S06_GATE1_ACCEPTANCE.md` |
+| Affected surface or contract | Seating / rule lifecycle UI pending state |
+| Reason for deferral | Not a Gate 1 capacity correctness failure. Required before broader operator rollout or production authorisation. |
+| Blocking | NON_BLOCKING for Gate 1 acceptance; BLOCKING before production authorisation / broader operator rollout |
+| Current owner | Event OS / AI CTO |
+| Required regression coverage | Successful rule save clears pending state without refresh; failure paths re-enable controls |
+| Latest safe remediation milestone | Next relevant Event OS frontend batch |
+| Current status | OPEN |
+
+### TDR-S06-005 — Consequential-action blank transition
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S06-005` |
+| Source slice | EOS-S06 / Gate 1 controlled observation |
+| Description | Run launch, adoption and rule lifecycle actions may briefly display a blank page without progress feedback. |
+| Classification | LOW UX |
+| Severity | LOW |
+| Evidence | AI CTO Gate 1 acceptance under `MD-PR-S080`; `docs/control/EOS_S06_GATE1_ACCEPTANCE.md` |
+| Affected surface or contract | Seating consequential-action navigation / pending UX |
+| Reason for deferral | Not a Gate 1 capacity correctness failure. Required before production authorisation. |
+| Blocking | NON_BLOCKING for Gate 1 acceptance; BLOCKING before production authorisation |
+| Current owner | Event OS / AI CTO |
+| Required regression coverage | Launch/adopt/rule lifecycle show explicit progress or retained surface until settlement |
+| Latest safe remediation milestone | Same pending/action-result frontend batch as `TDR-S06-004` |
+| Current status | OPEN |
+
+### TDR-S06-006 — Full-clone query paths remain outside authentication
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S06-006` |
+| Source slice | EOS-S06 / scale architecture |
+| Description | `authorizeQuery` and related list paths still clone the complete snapshot. This creates volume-dependent latency risk. Authentication remediation bounded the sign-in write path and home guest-count path only. |
+| Classification | MEDIUM PERFORMANCE / ARCHITECTURE |
+| Severity | MEDIUM |
+| Evidence | Sign-in remediation measurement; AI CTO acceptance under `MD-PR-S080`; `docs/control/EOS_AUTH_PERFORMANCE_REMEDIATION_ACCEPTANCE.md` |
+| Affected surface or contract | Query authorization and list paths |
+| Reason for deferral | Authentication correction must not be treated as closing this debt. Required part of EOS-S06C architecture and scale qualification. |
+| Blocking | NON_BLOCKING for Gate 1 / auth remediation acceptance; required for EOS-S06C scale qualification |
+| Current owner | Event OS / AI CTO |
+| Required regression coverage | Bounded query/list paths without full-snapshot clone; volume latency budgets |
+| Latest safe remediation milestone | EOS-S06C architecture and scale qualification |
+| Current status | OPEN |
+
+### TDR-S06-007 — Staff-session accumulation without governed expiry
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S06-007` |
+| Source slice | EOS-S06 / operational hygiene |
+| Description | Approximately 1,859 synthetic staff sessions were observed. Governed expiry, retention and cleanup are not defined. Valid audit history must be preserved. Sessions must not be deleted during documentation-only tasks. |
+| Classification | MEDIUM OPERATIONAL HYGIENE / PERFORMANCE |
+| Severity | MEDIUM |
+| Evidence | `docs/control/evidence/eos-signin-performance-remediation/MEASUREMENT.md`; AI CTO acceptance under `MD-PR-S080` |
+| Affected surface or contract | `staffSessions` retention / cleanup |
+| Reason for deferral | Observed during authentication performance work; cleanup was intentionally not performed during documentation/acceptance. |
+| Blocking | NON_BLOCKING for Gate 1 / auth remediation acceptance |
+| Current owner | Event OS / AI CTO |
+| Required regression coverage | Governed expiry/retention policy; cleanup preserves required audit history; no silent mass deletion |
+| Latest safe remediation milestone | Operational hygiene / scale batch |
+| Current status | OPEN |
+
+### TDR-S06-008 — Cold boot full-snapshot hydration latency
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S06-008` |
+| Source slice | EOS-S06 / resilience |
+| Description | First readiness can take approximately nine seconds because the service hydrates the complete snapshot. |
+| Classification | MEDIUM RESILIENCE / PERFORMANCE |
+| Severity | MEDIUM |
+| Evidence | AI CTO Gate 1 / auth remediation closure under `MD-PR-S080` |
+| Affected surface or contract | Event OS cold-start readiness / snapshot hydration |
+| Reason for deferral | Carry into scale, resilience, recovery and EOS-S06C qualification. Must not be marked closed merely because authentication was corrected. |
+| Blocking | NON_BLOCKING for Gate 1 / auth remediation acceptance |
+| Current owner | Event OS / AI CTO |
+| Required regression coverage | Cold-start readiness budget; bounded hydration or progressive readiness |
+| Latest safe remediation milestone | Scale / resilience / EOS-S06C qualification |
+| Current status | OPEN |
+
 ### TDR-S05A-001 — Discovery source binaries are not implemented
 
 | Field | Value |
@@ -1115,3 +1205,4 @@ These do not reopen EOS-S04A and do not create new blocking IDs.
 | EOS-S06 formal technical acceptance MD-PR-S077 2026-09-15 | ChatGPT / AI CTO accepted EOS-S06 at application SHA `42b0bb3f0976ca2b745a09f3952680afef69a1b9`, deployment `bb0f03d1-81fb-4fba-bf86-206f92a5953d`, after reviewing pre-acceptance tip `48cb593813a448c50bb506bd4cbc72e679cfb404`. Catalogue accepted-slice count is 6. Current product gate green; current-product blocking defects zero. Entered TDR-S06-003 (non-blocking): extended historical browser-contract regression from programme-validate run `35001426000` (shard 0 current acceptance passed; overall run not globally green). TDR-S06-002 remains OPEN / NON_BLOCKING. EOS-S06A is RATIFIED / ELIGIBLE / NOT STARTED. EOS-S07 remains NOT_STARTED / NOT_AUTHORISED. Production remains unauthorised. Documentation-only commit does not redeploy Event OS or Control Tower. |
 | EOS-S06A formal technical acceptance MD-PR-S079 2026-09-16 | ChatGPT / AI CTO accepted EOS-S06A Atelier Command at application SHA `7f139a556f7c023efa98daccd7bfd29481a05775`, deployment `7023da83-72dc-4f99-91c1-b3d7aa634087`, after reviewing pre-acceptance documentation/evidence tip `8e8a6a02e797a4c9cedceb7748667d1a934cbc1a`. Decision: PASS WITH ONE CONTROLLED MINOR OBSERVATION. Not a catalogue slice. Catalogue accepted-slice count remains 6. Current-product blocking defects zero. Entered TDR-S06A-001 (non-blocking for acceptance; blocking before production authorisation): cross-event named request safe-deflect with irrelevant communications copy instead of explicit named-event refusal. TDR-S06-002 and TDR-S06-003 remain OPEN / NON_BLOCKING. EOS-S07 remains NOT_STARTED / NOT_AUTHORISED. Production remains unauthorised. Documentation-only commit does not redeploy Event OS or Control Tower. |
 | EOS-S06 Gate 1 live bridge + CAP1000 stretch 2026-09-16 | CEO-authorised CAP600 live verification bridge and CAP1000 stretch qualification. Prior Claude Gate 1 attempt remains BLOCKED (identity). System Health programme posture corrected to EOS-S06/S06A ACCEPTED with Gate 1 awaiting verification. CAP1000 solver completes A/B/C FEASIBLE within accepted targets under focused runs; 1,000-guest product install is multi-minute by design. TDR-S06A-001 remains OPEN. EOS-S06B/S07 not started. Production remains unauthorised. |
+| EOS-S06 Gate 1 + auth remediation closure MD-PR-S080 2026-09-16 | ChatGPT / AI CTO accepted Pre-Production Gate 1 — PASS WITH CONTROLLED OBSERVATIONS — on exact CAP600 `053fa686-…` after Claude second-attempt PASS WITH CONTROLLED OBSERVATIONS. Authentication performance remediation ACCEPTED — SIGN-IN PERFORMANCE RESTORED at application SHA `71317881384e38671295c3fda32d533c71c3f559`. Entered TDR-S06-004…TDR-S06-008. TDR-S06A-001 remains OPEN. EOS-S06B/S06C packs registered as CEO RATIFICATION DRAFT only. EOS-S07 remains NOT_STARTED / NOT_AUTHORISED. Production remains unauthorised. |

@@ -1,0 +1,41 @@
+{
+  "pack": "Maison Doclar EOS-S06B VIP Intelligence and Protocol Command Ratification Pack",
+  "status": "CEO RATIFICATION DRAFT",
+  "documents": [
+    {
+      "file": "00_EOS_S06B_Ratification_and_Authority.docx",
+      "sha256": "9ae30c45f1ed5a21c6cb9dfa9248756b0eb2b2f30c0328dfd126dd64ecd88b6c",
+      "bytes": 40176
+    },
+    {
+      "file": "01_EOS_S06B_Canonical_Product_Specification.docx",
+      "sha256": "cfb7b5691bf4043a90d953daa7ca79e3596f11668eaf1b2392c695ea5ad71e09",
+      "bytes": 42707
+    },
+    {
+      "file": "02_EOS_S06B_Intelligence_Data_Permissions_and_Safeguards.docx",
+      "sha256": "f48e0aab485f77e7987de1e216b582eee0eb147d0cf6525bdb5dd1e8a073143b",
+      "bytes": 42112
+    },
+    {
+      "file": "03_EOS_S06B_Experience_and_Operating_Workflows.docx",
+      "sha256": "9d4619636ebae10765a194ab115dadfd73d30142287d8e80e84b85b37a5b80a5",
+      "bytes": 41685
+    },
+    {
+      "file": "04_EOS_S06B_Assurance_and_Acceptance.docx",
+      "sha256": "377568984efb7bec3ba908677557843c9712bfda96ff93abd2b8f0b7e754353f",
+      "bytes": 42116
+    },
+    {
+      "file": "05_EOS_S06B_Traceability_and_Data_Dictionary.docx",
+      "sha256": "c4474ac6a3a70340525fd5ff0971dd487e195dfa44a7723e423a73d8effd757d",
+      "bytes": 41421
+    },
+    {
+      "file": "06_EOS_S06B_Detailed_Cursor_Execution_Programme.docx",
+      "sha256": "820b372224deec751fba9658a5d71ac31efe45c684403a753dd7cfcf1ff1a851",
+      "bytes": 46143
+    }
+  ]
+}

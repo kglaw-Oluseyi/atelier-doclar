@@ -1,7 +1,7 @@
 # Document Authority Register
 
-**Slice:** MD-B0  
-**Date:** 2026-09-05  
+**Slice:** MD-B0
+**Date:** 2026-09-05
 
 Significant documents only. Embedded historical status is recorded separately from current programme authority. Supersession is recorded only where a source document explicitly states it. Version numbers alone are not treated as supersession.
 
@@ -404,3 +404,17 @@ This addendum does not rewrite the B0 row set or earlier addenda. Catalogue acce
 | EOS-S06A acceptance record | `docs/control/EOS_S06A_ACCEPTANCE.md` | CANONICAL ACCEPTANCE RECORD | Independent AI CTO acceptance under `MD-PR-S079`. Not a catalogue slice. Status `ACCEPTED — PASS WITH ONE CONTROLLED MINOR OBSERVATION` at application SHA `7f139a556f7c023efa98daccd7bfd29481a05775`. Reviewed pre-acceptance tip `8e8a6a02e797a4c9cedceb7748667d1a934cbc1a`. Deployment `7023da83-72dc-4f99-91c1-b3d7aa634087`. |
 | EOS-S06A implementation ledger | `docs/control/eos-s06a/EOS_S06A_IMPLEMENTATION_LEDGER.md` | IMPLEMENTATION EVIDENCE + ACCEPTANCE STAMP | Historical NOT ACCEPTED rows retained; current status ACCEPTED under S079. |
 | Cumulative debt register | `docs/control/CUMULATIVE_TECHNICAL_DEBT_AND_REGRESSION_REGISTER.md` | CONTROLLED DEBT | Entered `TDR-S06A-001` for cross-event named-request refusal UX. OPEN; not closed by acceptance. |
+
+## Addendum — 2026-09-16 EOS-S06 Gate 1 + authentication remediation closure (`MD-PR-S080`)
+
+This addendum does not rewrite the B0 row set or earlier addenda. Catalogue accepted-slice count remains 6. EOS-S06 remains ACCEPTED. EOS-S06A remains ACCEPTED. Pre-Production Gate 1 is ACCEPTED — PASS WITH CONTROLLED OBSERVATIONS. Authentication performance remediation is ACCEPTED — SIGN-IN PERFORMANCE RESTORED. Current accepted application SHA is `71317881384e38671295c3fda32d533c71c3f559`. Prior Gate 1 reviewed baseline `0a0be803…` remains historical evidence and is not rewritten. EOS-S06B and EOS-S06C are registered as `CEO RATIFICATION DRAFT` only. EOS-S07 remains NOT_STARTED / NOT_AUTHORISED. Production remains unauthorised.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| EOS-S06 Gate 1 acceptance record | `docs/control/EOS_S06_GATE1_ACCEPTANCE.md` | CANONICAL GATE 1 ACCEPTANCE RECORD | AI CTO acceptance under `MD-PR-S080`. CAP600 `053fa686-…`. |
+| Authentication remediation acceptance | `docs/control/EOS_AUTH_PERFORMANCE_REMEDIATION_ACCEPTANCE.md` | CANONICAL AUTH REMEDIATION ACCEPTANCE | Accepted application SHA `7131788…`. |
+| EOS-S06B ratification pack | `docs/control/eos-s06b/ratification-pack/` | CEO RATIFICATION DRAFT — NOT RATIFIED — NOT AUTHORISED | Placement ≠ ratification ≠ implementation. |
+| EOS-S06C ratification pack | `docs/control/eos-s06c/ratification-pack/` | CEO RATIFICATION DRAFT — NOT RATIFIED — NOT AUTHORISED | Placement ≠ ratification ≠ implementation. Sequencing decision pending. |
+| Gate 1 / auth closure evidence | `docs/control/evidence/eos-s06-gate1-auth-closure/` | CLOSURE EVIDENCE | Includes Claude archival (both attempts), identity/watch chronology. |
+| Cumulative debt register | `docs/control/CUMULATIVE_TECHNICAL_DEBT_AND_REGRESSION_REGISTER.md` | CONTROLLED DEBT | Entered `TDR-S06-004`–`TDR-S06-008`; retained `TDR-S06A-001`. |
+| Successor prompt register | `docs/control/SUCCESSOR_PROMPT_REGISTER.json` | SUCCESSOR ACCOUNTABILITY | Added `MD-PR-S080`. |
