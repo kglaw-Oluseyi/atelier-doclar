@@ -413,3 +413,15 @@ Milestone 4 is authorised on the Milestone 1–3 contracts. Historic S5-01–S5-
 | `productionAuthorised` | RETAINED false. Not changed. |
 | Control Tower deploy for acceptance | REJECTED. Compatibility-only; not deployed. |
 | Accepted application SHA vs docs tip | Accepted/deployed application SHA is `42b0bb3f0976ca2b745a09f3952680afef69a1b9`. Reviewed pre-acceptance tip is `48cb593813a448c50bb506bd4cbc72e679cfb404`. Do not conflate. |
+
+## Addendum — 2026-09-16 EOS-S06A formal technical acceptance (`MD-PR-S079`)
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| EOS-S06A `IMPLEMENTED BUT NOT ACCEPTED` / pending verification | SUPERSEDED for programme status only. Formal acceptance is `MD-PR-S079` on 2026-09-16 — PASS WITH ONE CONTROLLED MINOR OBSERVATION. Historical NOT ACCEPTED rows remain dated history. |
+| EOS-S06A execution started by EOS-S06 acceptance | REJECTED. EOS-S06A execution was authorised under `MD-PR-S078` and is now ACCEPTED under `MD-PR-S079`. |
+| EOS-S06A acceptance equals production authorisation | REJECTED. `productionAuthorised` remains false. Pre-production gates remain unsigned. `TDR-S06A-001` must be corrected before production authorisation. |
+| Real provider / communication activation | REJECTED. Providers and communications remain INACTIVE. Browser-assisted execution remains simulated. |
+| EOS-S07 authorised by EOS-S06A acceptance | REJECTED. `NOT_STARTED / NOT_AUTHORISED`. |
+| Control Tower deploy for acceptance | REJECTED. Compatibility-only; not deployed / untouched. |
+| Accepted application SHA vs reviewed tip vs acceptance commit | Accepted application SHA is `7f139a556f7c023efa98daccd7bfd29481a05775`. Reviewed pre-acceptance documentation/evidence tip is `8e8a6a02e797a4c9cedceb7748667d1a934cbc1a`. Acceptance governance commit is separate. Do not conflate. |

@@ -338,6 +338,14 @@
       "product": "EVENT_OS",
       "title": "EOS-S06A Atelier Command Implementation Authority and Delivery",
       "authorising_instruction": "Implement the ratified EOS-S06A Atelier Command pack including three capabilities and Task Bank on repository kglaw-Oluseyi/atelier-doclar main; Railway atelier-doclar production event-os only; keep productionAuthorised:false; do not deploy Control Tower; do not start EOS-S07; do not accept EOS-S06A without independent verification"
+    },
+    {
+      "prompt_control_id": "MD-PR-S079",
+      "native_id": "S06A-ACCEPT",
+      "slice_id": "EOS-S06A",
+      "product": "EVENT_OS",
+      "title": "EOS-S06A Formal Technical Acceptance Record",
+      "authorising_instruction": "Record independent AI CTO acceptance of EOS-S06A Atelier Command at application SHA 7f139a556f7c023efa98daccd7bfd29481a05775; PASS WITH ONE CONTROLLED MINOR OBSERVATION; documentation/governance only; do not change application or test code, mutate data, redeploy Event OS or Control Tower, start EOS-S07, or authorise production"
     }
   ]
 }

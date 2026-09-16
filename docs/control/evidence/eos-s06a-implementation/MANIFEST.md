@@ -40,3 +40,20 @@ Command: `PLAYWRIGHT_LIVE=1` Playwright `e2e/eos-s06a-live-smoke.spec.ts` via `r
 - 3 passed / 0 failed
 
 Synthetic data only. No provider activation.
+
+## Acceptance disposition addendum — 2026-09-16 (`MD-PR-S079`)
+
+Formal acceptance is recorded in `docs/control/EOS_S06A_ACCEPTANCE.md`. This MANIFEST remains implementation evidence, not the acceptance decision itself.
+
+| Field | Value |
+|-------|-------|
+| Acceptance Prompt Control ID | `MD-PR-S079` |
+| Decision | PASS WITH ONE CONTROLLED MINOR OBSERVATION |
+| Accepted application SHA | `7f139a556f7c023efa98daccd7bfd29481a05775` |
+| Reviewed pre-acceptance documentation/evidence tip | `8e8a6a02e797a4c9cedceb7748667d1a934cbc1a` |
+| Railway deployment at acceptance | `7023da83-72dc-4f99-91c1-b3d7aa634087` SUCCESS |
+| Controlled minor observation | `TDR-S06A-001` OPEN — not closed |
+| EOS-S07 | NOT_STARTED / NOT_AUTHORISED |
+| `productionAuthorised` | false |
+
+Historical deployed application SHA rows above remain dated implementation history and are not rewritten.

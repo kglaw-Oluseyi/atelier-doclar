@@ -1,8 +1,8 @@
 # Current State
 
-**Updated:** MD-PR-S077 EOS-S06 formal technical acceptance (2026-09-15)
-**Prompt Control ID:** MD-PR-S077 (acceptance); prior implementation lineage MD-PR-S072 / MD-PR-S073 / MD-PR-S075 and remediations remain dated history
-**Milestone:** `EOS-S05` ACCEPTED; `EOS-S05A` ACCEPTED (not catalogue); `EOS-S05B` ACCEPTED (not catalogue); `EOS-S06` ACCEPTED — catalogue accepted-slice count 6; current product gate green; extended historical regression retained as controlled debt (`TDR-S06-003`)
+**Updated:** MD-PR-S079 EOS-S06A formal technical acceptance (2026-09-16)
+**Prompt Control ID:** MD-PR-S079 (acceptance); prior implementation MD-PR-S078; EOS-S06 acceptance MD-PR-S077; prior S06 implementation lineage remains dated history
+**Milestone:** `EOS-S05` ACCEPTED; `EOS-S05A` ACCEPTED (not catalogue); `EOS-S05B` ACCEPTED (not catalogue); `EOS-S06` ACCEPTED; `EOS-S06A` ACCEPTED — PASS WITH ONE CONTROLLED MINOR OBSERVATION; catalogue accepted-slice count 6 (unchanged); `TDR-S06A-001` OPEN (non-blocking for acceptance; blocking before production)
 
 MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is ACCEPTED. EOS-S02 is ACCEPTED. EOS-S03 is ACCEPTED. EOS-S04 is CLOSED / ACCEPTED (`PASS WITH OBSERVATIONS`). EOS-S05 is ACCEPTED. EOS-S06 is ACCEPTED. Catalogue accepted-slice count is 6. Native coverage is 62/62. S4-61 is satisfied for technical review only. S4-62 is satisfied for controlled technical acceptance/handover only. Independent, specialist and CEO production gates remain unsigned.
 
@@ -132,12 +132,18 @@ MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is A
 **EOS-S06 PERSISTENCE: POSTGRES**
 **EOS-S06 MIGRATIONS: APPLIED**
 **EOS-S06 PROVIDERS: INACTIVE**
-**EOS-S06A STATUS: IMPLEMENTED BUT NOT ACCEPTED (pending independent verification and AI CTO review)**
+**EOS-S06A STATUS: ACCEPTED — PASS WITH ONE CONTROLLED MINOR OBSERVATION**
+**EOS-S06A ACCEPTANCE PROMPT CONTROL ID: MD-PR-S079**
+**EOS-S06A ACCEPTANCE RECORD: docs/control/EOS_S06A_ACCEPTANCE.md**
+**EOS-S06A ACCEPTED APPLICATION SHA: 7f139a556f7c023efa98daccd7bfd29481a05775**
+**EOS-S06A REVIEWED PRE-ACCEPTANCE DOCUMENTATION/EVIDENCE TIP: 8e8a6a02e797a4c9cedceb7748667d1a934cbc1a**
+**EOS-S06A LIVE DEPLOYMENT: 7023da83-72dc-4f99-91c1-b3d7aa634087 SUCCESS**
+**EOS-S06A CATALOGUE SLICE: NO**
 **EOS-S07 STATUS: NOT_STARTED / NOT_AUTHORISED**
 **EOS-S06 CONTROLLING ACCEPTANCE AUTHORITY:** `docs/control/EOS_S06_ACCEPTANCE.md` (`MD-PR-S077`)
 **EOS-S06 HISTORICAL IMPLEMENTATION AUTHORITIES:** `docs/control/eos-s06/MD_PR_S075_EOS_S06_V2_TABLE_IDENTITY_COMPILER_AND_FEASIBILITY_TRUTH.md` (parents `MD_PR_S073` / `MD_PR_S072`) — dated implementation history; acceptance is MD-PR-S077
 **MD-PR-S036 IMPLEMENTATION AUTHORITY: NO — not consumed; historical recommended ID only**
-**RECOMMENDED NEXT: Independent Claude browser verification of EOS-S06A then AI CTO review; do not start EOS-S07; do not authorise production; do not deploy Control Tower**
+**RECOMMENDED NEXT: Do not start EOS-S07; do not authorise production; do not deploy Control Tower; complete pre-production gates; remediate TDR-S06A-001 before production authorisation**
 **CROSS-SLICE UX CONTROL ID: MD-PR-UX001**
 **MD-PR-UX001 IMPLEMENTATION AUTHORITY: EXECUTED — awaiting focused human UX reverification**
 **EVENT OS S01-S03 LIVE DEPLOYED: YES**  
@@ -182,7 +188,9 @@ Event OS S01–S03 remain formally accepted. EOS-S04 is CLOSED / ACCEPTED after 
 
 **EOS-S06 MD-PR-S075:** Historical 2026-09-13 implementation progress remains dated history (Sections 1–11, solver-claim honesty addendum, `s06-eval-v4`, NOT READY FOR CLAUDE at that date). Those rows are not rewritten as though they were acceptance. Formal acceptance is the 2026-09-15 `MD-PR-S077` record below.
 
-**EOS-S06:** `ACCEPTED` on `2026-09-15` by `ChatGPT / AI CTO` under `MD-PR-S077` at accepted / deployed application SHA `42b0bb3f0976ca2b745a09f3952680afef69a1b9`, Railway deployment `bb0f03d1-81fb-4fba-bf86-206f92a5953d` SUCCESS. Pre-acceptance repository/docs tip reviewed: `48cb593813a448c50bb506bd4cbc72e679cfb404`. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised: false`. Providers `INACTIVE`. Control Tower not deployed. Catalogue accepted-slice count is 6. Decision: **ACCEPTED — CURRENT PRODUCT GATE GREEN / EXTENDED HISTORICAL REGRESSION RETAINED AS CONTROLLED DEBT**. Current-product blocking defects: zero. Overall programme-validate run `35001426000` is not globally green; canonical current acceptance shard 0 passed; extended historical regression retained as `TDR-S06-003` and must not be represented as green, deleted, or silently waived. EOS-S06A is `IMPLEMENTED BUT NOT ACCEPTED` under `MD-PR-S078` (pending independent verification and AI CTO review). EOS-S07 remains `NOT_STARTED / NOT_AUTHORISED`. Production remains unauthorised. This documentation-only acceptance commit does not redeploy Event OS or Control Tower. Acceptance record: `docs/control/EOS_S06_ACCEPTANCE.md`.
+**EOS-S06:** `ACCEPTED` on `2026-09-15` by `ChatGPT / AI CTO` under `MD-PR-S077` at accepted / deployed application SHA `42b0bb3f0976ca2b745a09f3952680afef69a1b9`, Railway deployment `bb0f03d1-81fb-4fba-bf86-206f92a5953d` SUCCESS. Pre-acceptance repository/docs tip reviewed: `48cb593813a448c50bb506bd4cbc72e679cfb404`. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised: false`. Providers `INACTIVE`. Control Tower not deployed. Catalogue accepted-slice count is 6. Decision: **ACCEPTED — CURRENT PRODUCT GATE GREEN / EXTENDED HISTORICAL REGRESSION RETAINED AS CONTROLLED DEBT**. Current-product blocking defects: zero. Overall programme-validate run `35001426000` is not globally green; canonical current acceptance shard 0 passed; extended historical regression retained as `TDR-S06-003` and must not be represented as green, deleted, or silently waived. Acceptance record: `docs/control/EOS_S06_ACCEPTANCE.md`.
+
+**EOS-S06A:** `ACCEPTED` on `2026-09-16` by `ChatGPT / AI CTO` under `MD-PR-S079` at accepted application SHA `7f139a556f7c023efa98daccd7bfd29481a05775`, Railway deployment `7023da83-72dc-4f99-91c1-b3d7aa634087` SUCCESS. Reviewed pre-acceptance documentation/evidence tip: `8e8a6a02e797a4c9cedceb7748667d1a934cbc1a`. Not a catalogue slice. Catalogue accepted-slice count remains 6. Persistence `POSTGRES`. Migrations `APPLIED`. `productionAuthorised: false`. Providers `INACTIVE`. Communications `INACTIVE`. Control Tower not deployed / untouched. Decision: **ACCEPTED — PASS WITH ONE CONTROLLED MINOR OBSERVATION**. Current-product blocking defects: zero. Controlled minor observation `TDR-S06A-001` is OPEN (non-blocking for acceptance; blocking before production authorisation). Pre-production gates remain unsigned. EOS-S07 remains `NOT_STARTED / NOT_AUTHORISED`. Production remains unauthorised. This documentation-only acceptance commit does not redeploy Event OS or Control Tower. Acceptance record: `docs/control/EOS_S06A_ACCEPTANCE.md`. Historical `IMPLEMENTED BUT NOT ACCEPTED` rows under `MD-PR-S078` remain dated history.
 
 Historical sentence “Implementation of EOS-S04A–F is not authorised as a product slice” applied before CEO S04A–S04F implementation authority. For S04A–S04F that sentence is superseded. The EOS-S04E and EOS-S04F controlled slice pack filenames still contain `DRAFT`. Current programme status for S04E is `ACCEPTED`. Current programme status for S04F is `ACCEPTED`. Historical `IN_REVIEW / NOT READY` on 2026-09-08 remains dated history.
 

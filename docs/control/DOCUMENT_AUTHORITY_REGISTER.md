@@ -394,3 +394,13 @@ This addendum does not rewrite the B0 row set or earlier addenda. Catalogue acce
 | EOS-S06 build ledger | `docs/control/eos-s06/EOS_S06_BUILD_LEDGER.md` | IMPLEMENTATION LEDGER + ACCEPTANCE STAMP | First-run failures retained. S077 acceptance stamp. |
 | Successor-layout staleness evidence | `docs/control/evidence/eos-s06-successor-layout-staleness/MANIFEST.md` | IMPLEMENTATION EVIDENCE | Tip vs accepted application SHA wording corrected. |
 | Cumulative debt register | `docs/control/CUMULATIVE_TECHNICAL_DEBT_AND_REGRESSION_REGISTER.md` | CONTROLLED DEBT | Entered `TDR-S06-003` for extended historical regression. |
+
+## Addendum — 2026-09-16 EOS-S06A formal technical acceptance (`MD-PR-S079`)
+
+This addendum does not rewrite the B0 row set or earlier addenda. Catalogue accepted-slice count remains 6. EOS-S06 remains ACCEPTED. EOS-S06A is ACCEPTED — PASS WITH ONE CONTROLLED MINOR OBSERVATION. EOS-S07 remains NOT_STARTED / NOT_AUTHORISED. Production remains unauthorised. Event OS and Control Tower are not redeployed for this documentation-only acceptance.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| EOS-S06A acceptance record | `docs/control/EOS_S06A_ACCEPTANCE.md` | CANONICAL ACCEPTANCE RECORD | Independent AI CTO acceptance under `MD-PR-S079`. Not a catalogue slice. Status `ACCEPTED — PASS WITH ONE CONTROLLED MINOR OBSERVATION` at application SHA `7f139a556f7c023efa98daccd7bfd29481a05775`. Reviewed pre-acceptance tip `8e8a6a02e797a4c9cedceb7748667d1a934cbc1a`. Deployment `7023da83-72dc-4f99-91c1-b3d7aa634087`. |
+| EOS-S06A implementation ledger | `docs/control/eos-s06a/EOS_S06A_IMPLEMENTATION_LEDGER.md` | IMPLEMENTATION EVIDENCE + ACCEPTANCE STAMP | Historical NOT ACCEPTED rows retained; current status ACCEPTED under S079. |
+| Cumulative debt register | `docs/control/CUMULATIVE_TECHNICAL_DEBT_AND_REGRESSION_REGISTER.md` | CONTROLLED DEBT | Entered `TDR-S06A-001` for cross-event named-request refusal UX. OPEN; not closed by acceptance. |

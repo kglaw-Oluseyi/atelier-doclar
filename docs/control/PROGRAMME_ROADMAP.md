@@ -73,15 +73,15 @@ Each slice has canonical references. No slice is `ACCEPTED`.
 | EOS-S05A | ACCEPTED — Discovery, Investment & Executive Event Command; not a catalogue slice; SHA `50322fa5fdf7b46437dc9d62579e2e2ad918e762`; `MD-PR-S053` |
 | EOS-S05B | ACCEPTED — Risk, Protection & Continuity Command; not a catalogue slice; SHA `84d58dd4590fb7d2087b436d10c0b2ae992b1621`; `MD-PR-S069` |
 | EOS-S06 | ACCEPTED — Seating allocation; catalogue slice; accepted/deployed application SHA `42b0bb3f0976ca2b745a09f3952680afef69a1b9`; deployment `bb0f03d1-81fb-4fba-bf86-206f92a5953d`; acceptance `MD-PR-S077` on 2026-09-15; current product gate green; extended historical regression retained as controlled debt (`TDR-S06-003`); historical `IMPLEMENTED / NOT ACCEPTED` and `NOT_STARTED / NOT_AUTHORISED` rows remain dated history |
-| EOS-S06A | IMPLEMENTED BUT NOT ACCEPTED — Atelier Command delivered under MD-PR-S078; pending independent verification and AI CTO review |
+| EOS-S06A | ACCEPTED — Atelier Command; PASS WITH ONE CONTROLLED MINOR OBSERVATION; accepted application SHA `7f139a556f7c023efa98daccd7bfd29481a05775`; reviewed pre-acceptance tip `8e8a6a02e797a4c9cedceb7748667d1a934cbc1a`; deployment `7023da83-72dc-4f99-91c1-b3d7aa634087`; acceptance `MD-PR-S079` on 2026-09-16; not a catalogue slice; `TDR-S06A-001` OPEN; historical `IMPLEMENTED BUT NOT ACCEPTED` rows remain dated history |
 | All others | NOT_STARTED, READY, or BLOCKED only by valid Event OS / Event-Day dependencies |
 
 ## Now / next / later
 
 | Band | Content |
 |------|---------|
-| Now | Event OS S01–S06 accepted (catalogue count 6); EOS-S04A–F ACCEPTED (not catalogue); EOS-S05A ACCEPTED (not catalogue); EOS-S05B ACCEPTED (not catalogue); EOS-S06A IMPLEMENTED BUT NOT ACCEPTED; production unsigned; no real communication or translation provider |
-| Next | Independent Claude browser verification of EOS-S06A then AI CTO review; do not start EOS-S07; distinguish current-product gates from extended historical regression (`TDR-S06-003`) |
+| Now | Event OS S01–S06 accepted (catalogue count 6); EOS-S04A–F ACCEPTED (not catalogue); EOS-S05A ACCEPTED (not catalogue); EOS-S05B ACCEPTED (not catalogue); EOS-S06A ACCEPTED — PASS WITH ONE CONTROLLED MINOR OBSERVATION; production unsigned; no real communication or translation provider |
+| Next | Do not start EOS-S07; complete pre-production gates; remediate `TDR-S06A-001` before production authorisation; distinguish current-product gates from extended historical regression (`TDR-S06-003`) |
 | Later | Event OS S01 after a new authorised instruction; Runtime after Event OS foundations |
 | Held | All 693 product/recon prompts except CT0/CT1 wrappers; EOS-S07; production authorisation |
 | External | Independent, specialist, venue, CEO gates — unsigned |

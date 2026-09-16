@@ -591,7 +591,7 @@ RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S037`. Canonical corpus p
 **Pre-acceptance repository/docs tip reviewed:** `48cb593813a448c50bb506bd4cbc72e679cfb404`
 **Persistence:** POSTGRES · Migrations: APPLIED · `productionAuthorised`: false · Providers: INACTIVE · Control Tower: not deployed
 **Catalogue accepted-slice count:** 6
-**EOS-S06A:** RATIFIED / ELIGIBLE / NOT STARTED · **EOS-S07:** NOT_STARTED / NOT_AUTHORISED
+**EOS-S06A:** ACCEPTED — PASS WITH ONE CONTROLLED MINOR OBSERVATION · **EOS-S07:** NOT_STARTED / NOT_AUTHORISED
 
 | Evidence ID | Type | Summary | Path |
 |-------------|------|---------|------|
@@ -601,4 +601,31 @@ RATIFIED on `2026-09-08` by George Lawson under `MD-PR-S037`. Canonical corpus p
 | EV-EOS-S06-CI-BOUNDARY | DOCUMENT | Overall run `35001426000` not globally green; historical corpus retained as `TDR-S06-003` | `docs/control/EOS_S06_ACCEPTANCE.md`, `docs/control/CUMULATIVE_TECHNICAL_DEBT_AND_REGRESSION_REGISTER.md` |
 
 `MD-PR-S077` records independent AI CTO acceptance of EOS-S06 at application SHA `42b0bb3f0976ca2b745a09f3952680afef69a1b9` after Packet 8 / Section 13, focused seating gates, Claude verification/remediation, layout maker-checker, security/role-boundary, canonical A–J current gate, and successor-layout staleness remediation. Catalogue accepted-slice count is 6. Documentation-only acceptance commit does not redeploy Event OS or Control Tower. Historical “not accepted” evidence rows above remain dated history.
+
+## EOS-S06A MD-PR-S079 formal acceptance
+
+**Date:** 2026-09-16
+**Milestone:** `EOS-S06A` — ACCEPTED — PASS WITH ONE CONTROLLED MINOR OBSERVATION
+**Prompt Control ID:** `MD-PR-S079`
+**Decision authority:** ChatGPT / AI CTO
+**Accepted application SHA:** `7f139a556f7c023efa98daccd7bfd29481a05775`
+**Reviewed pre-acceptance documentation/evidence tip:** `8e8a6a02e797a4c9cedceb7748667d1a934cbc1a`
+**Railway deployment:** `7023da83-72dc-4f99-91c1-b3d7aa634087` SUCCESS
+**Persistence:** POSTGRES · Migrations: APPLIED · `productionAuthorised`: false · Providers: INACTIVE · Communications: INACTIVE · Control Tower: not deployed / untouched
+**Catalogue accepted-slice count:** 6 (unchanged; not a catalogue slice)
+**Controlled minor observation:** `TDR-S06A-001` OPEN
+**EOS-S07:** NOT_STARTED / NOT_AUTHORISED
+
+| Evidence ID | Type | Summary | Path |
+|-------------|------|---------|------|
+| EV-EOS-S06A-ACCEPT | DOCUMENT | Formal AI CTO acceptance record | `docs/control/EOS_S06A_ACCEPTANCE.md` |
+| EV-EOS-S06A-IMPL | DOCUMENT | Original implementation evidence | `docs/control/evidence/eos-s06a-implementation/MANIFEST.md` |
+| EV-EOS-S06A-REM1 | DOCUMENT | Remediation 1 evidence | `docs/control/evidence/eos-s06a-remediation-1/MANIFEST.md` |
+| EV-EOS-S06A-REM2 | DOCUMENT | Remediation 2 evidence | `docs/control/evidence/eos-s06a-remediation-2/MANIFEST.md` |
+| EV-EOS-S06A-REM3 | DOCUMENT | Remediation 3 evidence | `docs/control/evidence/eos-s06a-remediation-3/` |
+| EV-EOS-S06A-REM4 | DOCUMENT | Remediation 4 evidence | `docs/control/evidence/eos-s06a-remediation-4/` |
+| EV-EOS-S06A-CONTRAST | DOCUMENT | Task Bank contrast addendum | `docs/control/evidence/eos-s06a-remediation-4/04-taskbank-contrast.md` |
+| EV-EOS-S06A-DEBT | DOCUMENT | Controlled minor observation register entry | `docs/control/CUMULATIVE_TECHNICAL_DEBT_AND_REGRESSION_REGISTER.md` (`TDR-S06A-001`) |
+
+`MD-PR-S079` records independent AI CTO acceptance of EOS-S06A Atelier Command at application SHA `7f139a556f7c023efa98daccd7bfd29481a05775` after original implementation, Remediation 1–4, deployment-identity correction, Task Bank contrast addendum, independent Claude verification rounds, and final focused multi-role confirmation. Not a catalogue slice. Documentation-only acceptance commit does not redeploy Event OS or Control Tower. Historical “not accepted” evidence rows remain dated history.
 

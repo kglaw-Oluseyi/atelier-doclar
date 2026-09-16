@@ -61,3 +61,19 @@ See `PACK_DISPOSITION.md`. Archive remains untracked and protected.
 - EOS-S06A: **IMPLEMENTED BUT NOT ACCEPTED** — pending independent verification and AI CTO review
 - EOS-S07: **NOT_STARTED / NOT_AUTHORISED**
 - `productionAuthorised`: **false**
+
+## Addendum — 2026-09-16 formal acceptance (`MD-PR-S079`)
+
+This ledger previously recorded implementation without acceptance. Those dated “NOT ACCEPTED” / “pending independent verification” states remain historical and are not rewritten. Formal acceptance is `MD-PR-S079` on 2026-09-16. This acceptance commit does not redeploy Event OS or Control Tower.
+
+| Field | Value |
+|-------|-------|
+| Acceptance Prompt Control ID | `MD-PR-S079` |
+| Decision | PASS WITH ONE CONTROLLED MINOR OBSERVATION |
+| Accepted application SHA | `7f139a556f7c023efa98daccd7bfd29481a05775` |
+| Reviewed pre-acceptance documentation/evidence tip | `8e8a6a02e797a4c9cedceb7748667d1a934cbc1a` |
+| Railway deployment | `7023da83-72dc-4f99-91c1-b3d7aa634087` SUCCESS |
+| Acceptance record | `docs/control/EOS_S06A_ACCEPTANCE.md` |
+| Controlled minor observation | `TDR-S06A-001` OPEN — not closed by acceptance |
+
+**Current status:** ACCEPTED — PASS WITH ONE CONTROLLED MINOR OBSERVATION. EOS-S07 remains NOT_STARTED / NOT_AUTHORISED. `productionAuthorised` remains false.
