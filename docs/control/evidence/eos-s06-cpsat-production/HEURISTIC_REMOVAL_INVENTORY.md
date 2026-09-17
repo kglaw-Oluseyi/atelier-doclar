@@ -1,80 +1,84 @@
-# Heuristic retirement inventory (Checkpoint 2)
-
-Checkpoint 3 path only — **do not remove from production runtime in Checkpoint 2**.
+# Heuristic retirement inventory (Milestone 5 — final disposition)
 
 Classification key:
 
-- `REMOVE` — delete at authority switch
-- `REPLACE WITH CP-SAT` — retarget to CP-SAT API
-- `RETAIN AS HISTORICAL TEST EVIDENCE` — keep read-only
-- `RETAIN AS NON-AUTHORITATIVE COMPARATOR` — temporary until switch
-- `REQUIRES OWNER DECISION` — needs explicit Checkpoint 3 call
+- `production authoritative` — must remain on the product path
+- `production fallback` — prohibited; remove
+- `production in-process CP-SAT` — prohibited on Event OS product path
+- `historical evidence` — retain read-only evidence trees
+- `explicit test comparator` — importable only via explicit non-product path
+- `qualification-only` — scripts/harnesses outside production package commands
+- `dead/unreachable` — leave or delete only if safe
+- `package-export leakage` — remove from public barrel
 
-## Imports / modules
+## Environment / flags
 
-| Item | Path | Class |
+| Item | Path | Disposition |
 |---|---|---|
-| `solveSeatingV1` | `packages/shared-platform/src/seating-solver-v1.ts` | REMOVE |
-| `compareLexicographic` / `assertSolverRequest` / `defaultSolverConfig` | `seating-solver-v1.ts` | REMOVE (or retain types only if still used by evidence scripts → RETAIN AS HISTORICAL) |
-| Export barrel | `packages/shared-platform/src/index.ts` (`solveSeatingV1`, …) | REMOVE |
-| `solveSeatingV2CompiledHeuristic` | `seating-v2-solver-adapter.ts` | REMOVE |
-| `SEATING_ENGINE=heuristic` branch in `solveSeatingV2Compiled` | `seating-v2-solver-adapter.ts` | REMOVE — must become hard reject / no fallback |
-| Heuristic types in `seating-solver-types.ts` | shared-platform | REMOVE unless historical scripts need them → REQUIRES OWNER DECISION |
+| `SOLVER_QUEUE_ENABLED` | `seating-v2-flag.ts`, command service, Event OS UI/actions | **REMOVED from product decision-making** — queue is sole entry |
+| `SEATING_ENGINE=heuristic` | `seating-v2-solver-adapter.ts` | **REMOVED** — no env/engine selector |
+| Operator engine selector UI | Event OS seating page / panels | **absent / keep absent** |
 
-## Service methods / API routes / queue consumers / commands
+## Product launch graph
 
-| Item | Path | Class |
+| Item | Path | Disposition |
 |---|---|---|
-| Event OS seating solve command path | adapter → currently CP-SAT authoritative | REPLACE WITH CP-SAT (already); remove heuristic env escape |
-| Queue consumer for seating | CP-SAT queue schema `011_cpsat_solver_queue` | REPLACE WITH CP-SAT (already) — no heuristic consumer found |
-| API route exposing heuristic authority | none found | — (keep absent) |
-| CLI / scripts invoking `solveSeatingV1` | `b-typical-feasibility-diagnosis*.ts`, `b-typical-global-feasibility-witness.ts`, `seating-capacity-1000-*` | RETAIN AS HISTORICAL TEST EVIDENCE (freeze; do not use as authority) |
-| event-os `s06-capacity-1000-*` scripts | `apps/event-os/scripts/` | RETAIN AS HISTORICAL TEST EVIDENCE |
+| `SeatingV2CommandService.launchRun` durable enqueue | `seating-v2-command-service.ts` | **production authoritative** — always `enqueueCpsatSeatingRun` after admission |
+| In-process `solveSeatingV2Compiled` after launch | `seating-v2-command-service.ts` | **production in-process CP-SAT → removed** |
+| `launchSeatingRunAction` | `apps/event-os/src/server/seating-actions.ts` | **production authoritative** — queue only |
+| Cancel/stop gated on `isSolverQueueEnabled` | `seating-actions.ts` | **removed gate** — always durable lifecycle |
+| UI “solves with CP-SAT” vs queue copy | `seating/page.tsx` | **queue-only wording** |
 
-## Tests / fixtures
+## Solver symbols
 
-| Item | Path | Class |
+| Item | Path | Disposition |
 |---|---|---|
-| `seating-v2-s075-*.test.ts` heuristic calls | shared-platform/test | REPLACE WITH CP-SAT or RETAIN AS HISTORICAL TEST EVIDENCE |
-| `seating-capacity-1000-qualification.test.ts` | shared-platform/test | RETAIN AS HISTORICAL TEST EVIDENCE |
-| `cpsat-core.test.ts` comparator vs heuristic timeout | shared-platform/test | RETAIN AS NON-AUTHORITATIVE COMPARATOR until switch, then REMOVE comparator leg |
-| CAP1000 fixtures / corpus | `seating-capacity-1000-corpus.ts` | RETAIN AS HISTORICAL TEST EVIDENCE (immutable B_TYPICAL hash) |
+| `solveSeatingV1` | `seating-solver-v1.ts` | **explicit test comparator / historical** — not public barrel |
+| `solveSeatingV2CompiledHeuristic` | `seating-v2-solver-adapter.ts` | **explicit test comparator** — deep import only |
+| `solveSeatingV2Compiled` | `seating-v2-solver-adapter.ts` | **qualification-only / local harness** — not Event OS product path; no heuristic branch |
+| `solveSeatingV2CompiledCpSat` / `local-solve.ts` | `cpsat/local-solve.ts` | **qualification-only / worker-adjacent harness** — not Event OS product path; not public barrel |
+| Worker `runSolverChild` | `apps/event-os-solver-worker/src/child-runner.ts` | **production authoritative** — sole production Python spawn |
+| Diagnostics real child probe | `cpsat/diagnostics/real-child-probe.ts` | **production authoritative** inside worker settlement only |
 
-## UI labels / status mapping
+## Package exports (`packages/shared-platform/src/index.ts`)
 
-| Item | Class |
+| Export | Disposition |
 |---|---|
-| No heuristic engine selector in Event OS UI | keep absent |
-| `CpsatRunStatusPanel` / `cpsat/ui-model.ts` | REPLACE WITH CP-SAT (already) |
-| Any “heuristic” copy in operator UI | none found — REMOVE if introduced |
+| `solveSeatingV1`, `compareLexicographic`, `assertSolverRequest`, `defaultSolverConfig` | **package-export leakage → removed** |
+| `solveSeatingV2CompiledCpSat` | **package-export leakage → removed** |
+| `isSolverQueueEnabled` | **removed from product API** (deprecated stub may remain for tests until cleaned) |
+| Capacity corpora / evaluation runners | **qualification-only** — retain; not seating launch authority |
+| Durable queue / worker / review APIs | **production authoritative** |
 
-## Feature flags / fallbacks
+## Fallback / catch
 
-| Item | Class |
-|---|---|
-| `SEATING_ENGINE=heuristic` | REMOVE at switch; until then RETAIN AS NON-AUTHORITATIVE COMPARATOR for harness only |
-| Catch/retry falling back to heuristic after CP-SAT fault | PROHIBITED — REMOVE if present (none found) |
-| Dual-authority mode | PROHIBITED — REMOVE |
+| Item | Path | Disposition |
+|---|---|---|
+| Catch after CP-SAT → heuristic | none found historically; re-verify | **PROHIBITED** |
+| Worker unavailable → heuristic / local solve | admission path | **PROHIBITED** — typed `DEPENDENCY_UNAVAILABLE` |
+| Dual-authority / rollback via engine toggle | — | **PROHIBITED** — deployment versioning only |
 
-## Evidence / operational / deployment
+## Historical evidence (immutable)
 
-| Item | Class |
-|---|---|
-| `COMPARATOR_REPORT.md`, legacy defect provenance, B_TYPICAL witness | RETAIN AS HISTORICAL TEST EVIDENCE |
-| Heuristic 1000-seat qualification evidence under eos-s06-capacity-1000 | RETAIN AS HISTORICAL TEST EVIDENCE |
-| Railway / deployment depending on heuristic solver | none — CP-SAT worker not yet deployed (Checkpoint 2) |
-| Ops runbooks mentioning heuristic seating | REQUIRES OWNER DECISION to rewrite at Checkpoint 3 |
+| Item | Path | Disposition |
+|---|---|---|
+| B_TYPICAL / CAP1000 evidence | `docs/control/evidence/eos-s06-capacity-1000/` | **historical evidence** |
+| Legacy defect provenance | `eos-s06-cpsat-production/legacy-defect-provenance/` | **historical evidence** |
+| Comparator reports | `COMPARATOR_REPORT.md` | **historical evidence** |
+| Qualification scripts (dirty tree) | `packages/shared-platform/scripts/*`, capacity runners | **qualification-only** — untouched in M5 |
 
-## Unresolved owner decisions
+## Tests / architectural gates
 
-1. Whether S075 heuristic tests are deleted vs archived under `test/historical/`.
-2. Whether `solveSeatingV1` remains importable behind `md.historical` namespace for evidence replay.
-3. Exact CI grep-fail patterns for post-switch (`SEATING_ENGINE=heuristic`, `solveSeatingV2CompiledHeuristic`).
+| Item | Path | Disposition |
+|---|---|---|
+| Heuristic S075 / V1 unit tests | `test/seating-*.test.ts` | **explicit test comparator** via deep imports |
+| M5 architectural product-path test | `test/cpsat-m5-authority-packaging.test.ts` | **production authoritative** gate |
+| UI no engine selector | existing `cpsat-*-ui.test.ts` | retain / strengthen |
 
-## Bounded Checkpoint 3 path
+## Final CEO dispositions (Milestone 5)
 
-1. Make `solveSeatingV2Compiled` CP-SAT-only; delete `SEATING_ENGINE` branch; on worker unavailable → safe reject (`SOLVER_FAULT` / queue NACK), never heuristic.
-2. Remove heuristic exports from public barrel; move historical scripts to evidence-only package path.
-3. Rollback = prior deployment version (single authority), not dual-solver toggle.
-4. Keep historical evidence trees immutable; no executable production fallback.
-5. CI gate: fail if heuristic authority symbols appear outside archived paths.
+1. CP-SAT durable queue is the sole product seating launch authority.
+2. Heuristic is not an emergency fallback.
+3. Worker unavailability fails closed with honest operator wording.
+4. Rollback = prior deployment version, not dual solver authority.
+5. Historical evidence and explicit test comparators preserved, unreachable from product runtime.
