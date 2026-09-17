@@ -44,6 +44,8 @@ describe("CPSAT Milestone 5A production hook removal", () => {
     const dockerignore = readFileSync(join(workerRoot, ".dockerignore"), "utf8");
     assert.doesNotMatch(dockerfile, /ENV[^\n]*CPSAT_ALLOW_TEST_HOOKS/);
     assert.match(dockerfile, /if grep -R "CPSAT_ALLOW_TEST_HOOKS"/);
+    assert.match(dockerfile, /--build-context worker=/);
+    assert.match(dockerfile, /file:\.\/vendor\/shared-platform/);
     assert.match(dockerignore, /^test-only$/m);
     assert.match(dockerignore, /fake_malformed_child/);
     assert.match(dockerignore, /crash_child/);

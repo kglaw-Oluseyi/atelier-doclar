@@ -1,6 +1,15 @@
 # syntax=docker/dockerfile:1.7
-# event-os-solver-worker — Milestone 5 hardened production image
+# event-os-solver-worker — Milestone 5/5A hardened production image
 # No public domain, no listening port instruction, non-root, hash-pinned OR-Tools, no test fixtures.
+#
+# Build from a clean worktree of the implementation commit (repository root):
+#   docker build --platform linux/amd64 \
+#     -f apps/event-os-solver-worker/Dockerfile \
+#     --build-context worker=apps/event-os-solver-worker \
+#     --build-context platform=packages/shared-platform \
+#     --build-arg SOURCE_SHA=<full-sha> \
+#     -t event-os-solver-worker:candidate-<shortSHA> \
+#     apps/event-os-solver-worker
 
 ARG PYTHON_IMAGE=python:3.12.14-slim-bookworm@sha256:9c47360a2a0355e2da18516d0b1c2126ec22c195d2185e97347c9d98398c5bef
 ARG NODE_VERSION=20.19.0
@@ -8,7 +17,7 @@ ARG NODE_TARBALL_SHA256=b4e336584d62abefad31baecff7af167268be9bb7dd11f1297112e6e
 
 FROM ${PYTHON_IMAGE} AS python-deps
 WORKDIR /opt/solver-python
-COPY python/requirements.linux.hashes.txt ./requirements.txt
+COPY --from=worker python/requirements.linux.hashes.txt ./requirements.txt
 RUN pip install --no-cache-dir --require-hashes -r requirements.txt \
   && python -c "import ortools,sys,platform; print(ortools.__version__, sys.version, platform.machine())"
 
@@ -43,13 +52,21 @@ RUN set -eux; \
 COPY --from=python-deps /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 
 WORKDIR /app
-COPY package.json tsconfig.json ./
-RUN npm install --omit=dev --no-fund --no-audit \
-  && npm cache clean --force
+COPY --from=worker package.json tsconfig.json ./
+# Replace monorepo workspace protocol with a vendored file dependency for the image.
+COPY --from=platform package.json /app/vendor/shared-platform/package.json
+COPY --from=platform src /app/vendor/shared-platform/src
+RUN node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('package.json','utf8')); p.dependencies['@maison-doclar/shared-platform']='file:./vendor/shared-platform'; fs.writeFileSync('package.json', JSON.stringify(p,null,2)+'\\n');" \
+  && npm install --omit=dev --no-fund --no-audit \
+  && npm cache clean --force \
+  && test -d /app/node_modules/@maison-doclar/shared-platform \
+  && test -d /app/node_modules/pg \
+  && test -d /app/node_modules/tsx \
+  && test -d /app/node_modules/zod
 
-COPY src ./src
-COPY python ./python
-COPY schemas ./schemas
+COPY --from=worker src ./src
+COPY --from=worker python ./python
+COPY --from=worker schemas ./schemas
 
 RUN useradd --create-home --uid 10001 --shell /usr/sbin/nologin solver \
   && mkdir -p /tmp/solver \
@@ -58,8 +75,11 @@ RUN useradd --create-home --uid 10001 --shell /usr/sbin/nologin solver \
   && test ! -f /app/python/crash_child.py \
   && test ! -d /app/test-only \
   && test ! -f /app/test-only/keep_best_timing_child.py \
-  && if grep -R "CPSAT_ALLOW_TEST_HOOKS" /app/python /app/src /app/schemas; then exit 1; fi \
-  && if grep -R "continueAfterIncumbentMs" /app/python /app/src /app/schemas; then exit 1; fi
+  && test ! -d /app/test \
+  && test ! -d /app/scripts \
+  && if grep -R "CPSAT_ALLOW_TEST_HOOKS" /app/python /app/src /app/schemas /app/vendor; then exit 1; fi \
+  && if grep -R "continueAfterIncumbentMs" /app/python /app/src /app/schemas /app/vendor; then exit 1; fi \
+  && if grep -R "CPSAT_ALLOW_TEST_HOOKS" /app/node_modules/@maison-doclar/shared-platform 2>/dev/null; then exit 1; fi
 
 LABEL org.opencontainers.image.source="https://github.com/kglaw-Oluseyi/atelier-doclar" \
       org.opencontainers.image.revision="${SOURCE_SHA}" \
