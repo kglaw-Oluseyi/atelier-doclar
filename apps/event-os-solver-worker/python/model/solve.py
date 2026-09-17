@@ -10,7 +10,7 @@ from typing import Any, Callable
 import ortools
 from ortools.sat.python import cp_model
 
-from .stage_a import build_stage_a, extract_unit_assignment, guest_table_assignment
+from .stage_a import build_stage_a, extract_unit_assignment, expand_guest_table_assignment, guest_table_assignment
 from .stage_b import solve_stage_b_for_table
 from .status import map_native_status, tier_record
 from .validate import MODEL_VERSION, RESPONSE_CONTRACT, InvalidInput, prepare_problem
@@ -101,6 +101,10 @@ def _final(
     }
     if diagnostics:
         payload["diagnostics"] = diagnostics
+    if problem.get("_model_stats"):
+        payload["modelStats"] = problem["_model_stats"]
+    if problem.get("_profile"):
+        payload["profile"] = problem["_profile"]
     return payload
 
 
@@ -224,8 +228,21 @@ def solve_request(
     tiers: list[dict[str, Any]] = []
 
     emit("model_build", f"units={len(problem['units'])} tables={len(problem['tables'])}")
+    t_build0 = time.perf_counter()
     model, ctx = build_stage_a(problem, maximise_seated=maximise)
+    build_seconds = time.perf_counter() - t_build0
     solver = cp_model.CpSolver()
+    model_stats = dict(ctx.get("model_stats") or {})
+    try:
+        proto = model.Proto()
+        model_stats["protoVariables"] = len(proto.variables)
+        model_stats["protoConstraints"] = len(proto.constraints)
+    except Exception:  # noqa: BLE001
+        pass
+    model_stats["buildSeconds"] = round(build_seconds, 6)
+    problem["_model_stats"] = model_stats
+    profile: dict[str, Any] = {"buildSeconds": build_seconds}
+    problem["_profile"] = profile
 
     if maximise:
         model.Maximize(ctx["seated_count_expr"])
@@ -260,7 +277,7 @@ def solve_request(
             return _final(problem, result, fault, tiers, [], status, det_spent, wall0)
 
         unit_to_table = extract_unit_assignment(solver, ctx)
-        guest_to_table = guest_table_assignment(problem, unit_to_table)
+        guest_to_table = expand_guest_table_assignment(problem, ctx, solver, unit_to_table)
         assign_payload, b_tiers, b_fault = _run_stage_b(
             problem, guest_to_table, emit, remaining_wall, det_budget, det_spent
         )
@@ -290,6 +307,15 @@ def solve_request(
     status = solver.Solve(model)
     dt = time.perf_counter() - t0
     det_spent += dt
+    profile["a1Seconds"] = dt
+    profile["a1Status"] = _native_name(status)
+    profile["a1Objective"] = int(solver.ObjectiveValue()) if status in (cp_model.OPTIMAL, cp_model.FEASIBLE) else None
+    profile["a1Bound"] = int(solver.BestObjectiveBound()) if status in (cp_model.OPTIMAL, cp_model.FEASIBLE) else None
+    try:
+        profile["a1Branches"] = int(solver.NumBranches())
+        profile["a1Conflicts"] = int(solver.NumConflicts())
+    except Exception:  # noqa: BLE001
+        pass
 
     if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
         tiers.append(
@@ -330,9 +356,12 @@ def solve_request(
     # Fix within movement tolerance → A2 preferences.
     tol = int(problem["movement_tolerance"])
     model.Add(ctx["movement_expr"] <= a1_val + tol)
+    domain_of = ctx.get("domain_of") or {}
     for u in ctx["unit_ids"]:
-        for t in ctx["table_ids"]:
-            model.AddHint(ctx["x"][u, t], solver.Value(ctx["x"][u, t]))
+        for t in domain_of.get(u, ctx["table_ids"]):
+            var = ctx["x"].get((u, t))
+            if var is not None:
+                model.AddHint(var, solver.Value(var))
         model.AddHint(ctx["seated"][u], solver.Value(ctx["seated"][u]))
 
     model.Minimize(ctx["preference_expr"])
@@ -343,6 +372,15 @@ def solve_request(
     status2 = solver.Solve(model)
     dt2 = time.perf_counter() - t0
     det_spent += dt2
+    profile["a2Seconds"] = dt2
+    profile["a2Status"] = _native_name(status2)
+    profile["a2Objective"] = int(solver.ObjectiveValue()) if status2 in (cp_model.OPTIMAL, cp_model.FEASIBLE) else None
+    profile["a2Bound"] = int(solver.BestObjectiveBound()) if status2 in (cp_model.OPTIMAL, cp_model.FEASIBLE) else None
+    try:
+        profile["a2Branches"] = int(solver.NumBranches())
+        profile["a2Conflicts"] = int(solver.NumConflicts())
+    except Exception:  # noqa: BLE001
+        pass
 
     if status2 not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
         tiers.append(
@@ -356,7 +394,7 @@ def solve_request(
                 stop_reason=_stop_reason(status2),
             )
         )
-        guest_to_table = guest_table_assignment(problem, a1_unit_to_table)
+        guest_to_table = expand_guest_table_assignment(problem, ctx, solver, a1_unit_to_table)
         assign_payload, b_tiers, b_fault = _run_stage_b(
             problem, guest_to_table, emit, remaining_wall, det_budget, det_spent
         )
@@ -380,7 +418,7 @@ def solve_request(
     )
 
     unit_to_table = extract_unit_assignment(solver, ctx)
-    guest_to_table = guest_table_assignment(problem, unit_to_table)
+    guest_to_table = expand_guest_table_assignment(problem, ctx, solver, unit_to_table)
     assign_payload, b_tiers, b_fault = _run_stage_b(
         problem, guest_to_table, emit, remaining_wall, det_budget, det_spent
     )

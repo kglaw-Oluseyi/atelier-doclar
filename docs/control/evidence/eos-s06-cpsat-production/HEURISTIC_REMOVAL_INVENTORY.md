@@ -1,39 +1,45 @@
-# Heuristic removal inventory (Checkpoint 2 preparation)
+# Heuristic retirement inventory (Checkpoint 2)
 
-Heuristic remains **comparator only**. Do not remove until Checkpoint 3 authority.
+## Entry points / runtime
 
-## Authoritative path (CP-SAT)
-
-| Call site | Path | Notes |
+| Item | Path | Class |
 |---|---|---|
-| `solveSeatingV2Compiled` | `packages/shared-platform/src/seating-v2-solver-adapter.ts` | Default → `solveSeatingV2CompiledCpSat` |
-| `launchRun` | `packages/shared-platform/src/seating-v2-command-service.ts` | Awaits async CP-SAT |
+| `solveSeatingV1` | `packages/shared-platform/src/seating-solver-v1.ts` | TEMPORARY COMPARATOR → REMOVE AT AUTHORITY SWITCH |
+| `solveSeatingV2CompiledHeuristic` | `packages/shared-platform/src/seating-v2-solver-adapter.ts` | TEMPORARY COMPARATOR → REMOVE AT AUTHORITY SWITCH |
+| `SEATING_ENGINE=heuristic` branch | `seating-v2-solver-adapter.ts` `solveSeatingV2Compiled` | PROHIBITED FALLBACK (must not exist in prod) |
+| `defaultSolverConfig` / heuristic types | `seating-solver-types.ts`, `seating-solver-v1.ts` | REMOVE AT AUTHORITY SWITCH |
+| Capacity-1000 heuristic runners | `seating-capacity-1000-*`, event-os `s06-capacity-1000-*` scripts | PRESERVE HISTORICAL READ ONLY (evidence) / REMOVE runtime authority |
+| S075 tests calling heuristic | `test/seating-v2-s075-*.test.ts` | TEMPORARY COMPARATOR → retarget CP-SAT or archive |
 
-## Comparator / legacy call sites (remove in Checkpoint 3)
+## UI / API / flags
 
-| Call site | Path | Action at removal |
-|---|---|---|
-| `solveSeatingV2CompiledHeuristic` | `seating-v2-solver-adapter.ts` | Delete export |
-| `solveSeatingV1` / `seating-solver-v1` | `seating-solver-v1.ts` | Delete module after comparator evidence archived |
-| `SEATING_ENGINE=heuristic` branch | `seating-v2-solver-adapter.ts` | Delete env switch |
-| S075 differential / claim / namespace tests | `test/seating-v2-s075-*.test.ts` | Retarget to CP-SAT or archive as historical |
-| Capacity-1000 heuristic qualification | `seating-capacity-1000-*`, event-os scripts | Replace with CP-SAT qualification evidence |
-| Any UI engine selector exposing heuristic | (none found for selectable engine) | Keep absent |
+| Item | Class |
+|---|---|
+| No selectable heuristic engine in Event OS UI | (none found) — keep absent |
+| Feature flag for heuristic as authority | PROHIBITED FALLBACK — do not add |
+| API route exposing heuristic solve | none for authority — REMOVE any if discovered at switch |
 
-## Fallback paths to eliminate
+## Scheduled / background
 
-1. Any catch/retry that re-invokes heuristic after CP-SAT fault — **must not exist**.
-2. Any adoption path that accepts heuristic `rawOutputHash` as authority — **must not exist**.
-3. Emergency `SEATING_ENGINE=heuristic` in production env — **forbid**.
+| Item | Class |
+|---|---|
+| None found scheduling heuristic seating | — |
 
-## Comparator evidence captured
+## Tests / evidence readers
 
-- B_TYPICAL: CP-SAT `FEASIBLE` 1000/1000; heuristic remains timed out / incomplete (legacy defect).
-- Tiny together: CP-SAT optimal/feasible with verifier + explanations.
+| Item | Class |
+|---|---|
+| CAP1000 qualification tests vs heuristic | PRESERVE HISTORICAL READ ONLY |
+| Comparator report `COMPARATOR_REPORT.md` | PRESERVE HISTORICAL READ ONLY |
+| B_TYPICAL global displacement witness | PRESERVE HISTORICAL READ ONLY |
 
-## Removal plan (Checkpoint 3)
+## Fallback branches
 
-1. Freeze comparator report JSON under evidence.
-2. Delete heuristic exports and `seating-solver-v1` if unused elsewhere.
-3. Grep CI for `solveSeatingV1|SEATING_ENGINE=heuristic|solveSeatingV2CompiledHeuristic`.
-4. Fail CI if any match outside archived evidence.
+| Item | Class |
+|---|---|
+| Catch/retry that falls back to heuristic after CP-SAT fault | PROHIBITED FALLBACK — must not exist |
+| Adoption of heuristic `rawOutputHash` as authority | PROHIBITED FALLBACK |
+
+## Final retirement rule
+
+At Checkpoint 3 authority switch: delete comparator exports, env switch, and CI-fail on `solveSeatingV1|SEATING_ENGINE=heuristic|solveSeatingV2CompiledHeuristic` outside archived evidence.
