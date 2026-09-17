@@ -1,0 +1,24 @@
+{
+  "tag": "event-os-solver-worker:candidate-4caaa44",
+  "imageId": "sha256:8ce066bcf1987f648b2263f069062ec37e0538ad7f7d2adc3f8968a91a73ff16",
+  "configDigest": "sha256:dbbc8c88045e52239b569be04f116844e8208022f0754520e8681c67e6b79c4b",
+  "manifestListDigest": "sha256:8ce066bcf1987f648b2263f069062ec37e0538ad7f7d2adc3f8968a91a73ff16",
+  "architecture": "amd64",
+  "os": "linux",
+  "user": "solver (uid 10001)",
+  "entrypoint": ["node", "dist/supervisor.js"],
+  "exposedPorts": null,
+  "labels": {
+    "org.opencontainers.image.source": "https://github.com/kglaw-Oluseyi/atelier-doclar",
+    "org.opencontainers.image.revision": "4caaa44eb0be2c2eeb7a7d63ccb23bcedbcc0df3",
+    "md.solver.model": "cpsat-model-v1",
+    "md.solver.dependency": "ortools-9.15.6755",
+    "md.solver.ingress": "none"
+  },
+  "basePythonDigest": "sha256:9c47360a2a0355e2da18516d0b1c2126ec22c195d2185e97347c9d98398c5bef",
+  "nodeVersion": "20.19.0",
+  "pythonVersion": "3.12.14",
+  "ortoolsVersion": "9.15.6755",
+  "buildContext": "clean worktree /tmp/atelier-doclar-m5a-4caaa44 @ 4caaa44eb0be2c2eeb7a7d63ccb23bcedbcc0df3",
+  "buildCommand": "docker build --platform linux/amd64 -f apps/event-os-solver-worker/Dockerfile --build-context worker=apps/event-os-solver-worker --build-context platform=packages/shared-platform --build-arg SOURCE_SHA=4caaa44eb0be2c2eeb7a7d63ccb23bcedbcc0df3 -t event-os-solver-worker:candidate-4caaa44 apps/event-os-solver-worker"
+}

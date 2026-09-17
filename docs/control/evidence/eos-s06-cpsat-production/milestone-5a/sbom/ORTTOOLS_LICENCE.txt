@@ -1,0 +1,4 @@
+OR-Tools 9.15.6755
+Licence: Apache License 2.0
+Upstream: https://github.com/google/or-tools
+Confirmation: production pin matches ratified Checkpoint dependency; Apache-2.0 applies to OR-Tools.

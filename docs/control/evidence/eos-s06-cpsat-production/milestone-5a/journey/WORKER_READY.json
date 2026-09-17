@@ -1,0 +1,16 @@
+{
+  "error": "error: column \"last_heartbeat_at\" does not exist\n    at /Users/maisondoclar/Desktop/atelier-doclar/node_modules/.pnpm/pg-pool@3.14.0_pg@8.23.0/node_modules/pg-pool/index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async <anonymous> (/Users/maisondoclar/Desktop/atelier-doclar/docs/control/evidence/eos-s06-cpsat-production/milestone-5a/run-hardened-image-journey.mjs:120:23)",
+  "partial": {
+    "mode": "wait-ready",
+    "migrations": false,
+    "workerReady": false,
+    "admissionOk": false,
+    "enqueuedRunId": null,
+    "terminalLifecycle": null,
+    "sealed": null,
+    "productResult": null,
+    "workerLifecycleFinal": null,
+    "leaseOwnerNull": null,
+    "evidence": {}
+  }
+}

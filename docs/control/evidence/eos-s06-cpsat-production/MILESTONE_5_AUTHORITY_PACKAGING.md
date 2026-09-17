@@ -154,3 +154,99 @@ Real CP-SAT child executions this milestone: **1** (cap 2).
 - `productionAuthorised` unchanged (false)
 - CAP1000/qualification dirty paths untouched
 - No Control Tower / S06B / S06D / S07
+
+---
+
+# Milestone 5A closure — production-hook removal and real image proof
+
+- **Disposition:** MILESTONE 5A COMPLETE — VULNERABILITY SCAN BLOCKED
+- **Date:** 2026-09-17
+- **Original M5 product commit (unchanged):** `5f1f6ee64367cbfcc6e64f8185bae1a80047b63b`
+- **Original M5 evidence commit (unchanged):** `9e639a5f89ee3f98d4c19131668a7b733c5302b8`
+- **M5A hook-removal commit:** `96e235a` (`fix(cpsat): remove production test-hook paths`)
+- **M5A Dockerfile curl-check commit:** `b5010cb`
+- **M5A monorepo image-context commit:** `ba4a215`
+- **M5A final implementation commit (image source):** `4caaa44eb0be2c2eeb7a7d63ccb23bcedbcc0df3` (`fix(cpsat): bundle worker supervisor for production image`)
+
+## Production hook removal
+
+- `CPSAT_ALLOW_TEST_HOOKS` deleted from production behaviour (Python child + solve path).
+- Production request schema sets `testHooks: false` (rejected).
+- `toChildPayload` always rejects `testHooks` (no allow option).
+- Supervisor does not forward test hooks.
+- KEEP_BEST timing preserved via test-only child `apps/event-os-solver-worker/test-only/keep_best_timing_child.py` (outside Docker context; real CP-SAT incumbent only; timing delay only).
+- Architectural suite: `packages/shared-platform/test/cpsat-m5a-production-hooks.test.ts` (8/8).
+
+## Clean image build
+
+- Built from clean detached worktree pinned to `4caaa44…`, not the dirty primary worktree.
+- Tag: `event-os-solver-worker:candidate-4caaa44`
+- Final image id / digest: `sha256:8ce066bcf1987f648b2263f069062ec37e0538ad7f7d2adc3f8968a91a73ff16`
+- Label `org.opencontainers.image.revision` = implementation SHA above.
+- Build uses BuildKit named contexts (`worker`, `platform`); supervisor bundled to `dist/supervisor.js`; runtime installs only `pg`.
+
+Evidence: `milestone-5a/image/`
+
+## Dependency pinning
+
+- `pip install --require-hashes` from `python/requirements.linux.hashes.txt`
+- OR-Tools exactly `9.15.6755`
+- Python `3.12.14`; Node `20.19.0` (tarball SHA verified)
+- No unpinned Python deps; no dev/test requirements in final image
+- Base: `python:3.12.14-slim-bookworm@sha256:9c47360a2a0355e2da18516d0b1c2126ec22c195d2185e97347c9d98398c5bef`
+
+## Final image inspection
+
+- Non-root `solver` uid/gid `10001`
+- No `EXPOSE`; no app listen port; no HTTP server; no git/curl/wget/gcc
+- No tests, fake/malformed/crash child, test-only child, qualification fixtures, debug scripts, or `CPSAT_ALLOW_TEST_HOOKS`
+- Expected entrypoint `node dist/supervisor.js`; production `solver_child.py` + schemas present
+- Writable runtime area `/tmp/solver` only (empty after journey)
+
+## Non-root / no-ingress proof
+
+See `milestone-5a/journey/NO_INGRESS_AND_NONROOT.txt`. Observed only Docker DNS listen (uid 0) and outbound PostgreSQL ESTABLISHED (uid 10001).
+
+## Real hardened journey (one child)
+
+Ephemeral Postgres on private Docker network (`m5a-net`); worker concurrency 1; host driver on `127.0.0.1:55433` only for synthetic enqueue.
+
+1. Migrations applied
+2. Worker registered → READY (heartbeat observed)
+3. Admit → enqueue → claim → real `solver_child.py` (1 invocation)
+4. Outcome `READY_FOR_REVIEW` / product `OPTIMAL` / candidate sealed / lease cleared
+5. `docker stop` → `supervisor_drain_begin` → lifecycle `DRAINING` → exit 0
+6. No partial lease after settle; `/tmp/solver` empty
+
+Run id: `a871187c-0ba7-49f5-a18b-f1d5ca8b089c`
+Evidence: `milestone-5a/journey/HARDENED_JOURNEY.json`
+
+Real tiny CP-SAT child executions this milestone: **1** (cap 2).
+
+## SBOM / licence / vulnerability
+
+| Artefact | Path / status |
+|---|---|
+| Filesystem inventory | `milestone-5a/sbom/FILESYSTEM_INVENTORY.txt` |
+| Python packages | `milestone-5a/sbom/PYTHON_PACKAGE_INVENTORY.json` |
+| Node runtime | `milestone-5a/sbom/NODE_PACKAGE_INVENTORY.txt` + inventory JSON |
+| Licence (OR-Tools) | `milestone-5a/sbom/ORTTOOLS_LICENCE.txt` |
+| Vulnerability scan | **BLOCKER** — `VULNERABILITY SCAN BLOCKED — NO APPROVED SCANNER` (`milestone-5a/sbom/VULNERABILITY_SCAN.txt`) |
+
+## Claims not made
+
+- No Railway deployment / mutation
+- No signed image
+- No formal qualification
+- No production authorisation
+
+## Exact remaining deployment blockers
+
+1. Approved vulnerability scanner run on the candidate image
+2. Railway worker creation/deployment using exact candidate source/image identity (not `latest`)
+3. Event OS deployment + migrations 011–016 in production
+4. Runtime variables/secrets wiring
+5. Signed-image procedure execution
+6. Frozen-candidate qualification
+7. Stronger verified deployment-control mechanism (watchPatterns not durable)
+8. Claude browser verification / rollback drill / CP-SAT + S06C acceptance

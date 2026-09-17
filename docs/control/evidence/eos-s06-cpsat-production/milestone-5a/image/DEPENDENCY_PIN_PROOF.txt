@@ -1,0 +1,1 @@
+63:#17 [python-deps 4/4] RUN pip install --no-cache-dir --require-hashes -r requirements.txt   && python -c "import ortools,sys,platform; print(ortools.__version__, sys.version, platform.machine())"

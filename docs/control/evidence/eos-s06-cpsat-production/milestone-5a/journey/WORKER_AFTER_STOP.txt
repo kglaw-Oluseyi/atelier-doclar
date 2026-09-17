@@ -1,0 +1,4 @@
+      worker_id       | lifecycle | active_jobs |       last_heartbeat
+----------------------+-----------+-------------+----------------------------
+ m5a-candidate-worker | DRAINING  |           0 | 2026-09-17 10:23:51.214+00
+(1 row)

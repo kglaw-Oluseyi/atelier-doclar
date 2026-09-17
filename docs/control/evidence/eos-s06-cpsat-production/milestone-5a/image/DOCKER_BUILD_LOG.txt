@@ -1,0 +1,116 @@
+# Milestone 5A docker build excerpt (whitespace-normalised)
+# Full local log retained at /tmp/m5a-docker-build4.log (not committed)
+
+## head
+#0 building with "colima" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 5.89kB done
+#1 DONE 0.0s
+
+#2 resolve image config for docker-image://docker.io/docker/dockerfile:1.7
+#2 DONE 1.3s
+
+#3 docker-image://docker.io/docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
+#3 resolve docker.io/docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e done
+#3 CACHED
+
+#4 [context platform] load .dockerignore
+#4 transferring platform: 270B done
+#4 DONE 0.0s
+
+#5 [context worker] load .dockerignore
+#5 transferring worker: 371B done
+#5 DONE 0.0s
+
+#6 [internal] load metadata for docker.io/library/python:3.12.14-slim-bookworm@sha256:9c47360a2a0355e2da18516d0b1c2126ec22c195d2185e97347c9d98398c5bef
+#6 DONE 1.1s
+
+#7 [internal] load .dockerignore
+#7 transferring context: 371B done
+#7 DONE 0.0s
+
+#8 [node-bundle 1/8] FROM docker.io/library/python:3.12.14-slim-bookworm@sha256:9c47360a2a0355e2da18516d0b1c2126ec22c195d2185e97347c9d98398c5bef
+#8 resolve docker.io/library/python:3.12.14-slim-bookworm@sha256:9c47360a2a0355e2da18516d0b1c2126ec22c195d2185e97347c9d98398c5bef done
+
+## selected proof lines
+#1 DONE 0.0s
+#2 DONE 1.3s
+#4 DONE 0.0s
+#5 DONE 0.0s
+#6 DONE 1.1s
+#7 DONE 0.0s
+#9 DONE 0.0s
+#10 DONE 0.0s
+#11 DONE 0.0s
+#12 DONE 0.0s
+#13 DONE 0.1s
+#14 DONE 0.1s
+#17 [python-deps 4/4] RUN pip install --no-cache-dir --require-hashes -r requirements.txt   && python -c "import ortools,sys,platform; print(ortools.__version__, sys.version, platform.machine())"
+#18 DONE 0.1s
+#20 DONE 52.4s
+#21 DONE 1.1s
+#22 DONE 0.0s
+#19 DONE 61.5s
+#23 DONE 0.1s
+#24 DONE 0.0s
+#25 DONE 0.0s
+#26 DONE 0.0s
+#27 DONE 0.1s
+#28 [node-bundle 8/8] RUN node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('package.json','utf8')); p.dependencies['@maison-doclar/shared-platform']='file:./vendor/shared-platform'; fs.writeFileSync('package.json', JSON.stringify(p,null,2)+'\n');"   && npm install --no-fund --no-audit   && npx esbuild src/supervisor.ts --bundle --platform=node --format=esm --outfile=dist/supervisor.js --external:pg   && test -f dist/supervisor.js   && node -e "const fs=require('fs'); fs.writeFileSync('package.runtime.json', JSON.stringify({name:'@maison-doclar/event-os-solver-worker',private:true,type:'module',dependencies:{pg:'^8.23.0'}},null,2)+'\n');"
+#28 21.49   dist/supervisor.js  1.0mb ⚠️
+#28 DONE 22.0s
+#29 DONE 0.0s
+#30 [runtime  6/11] COPY --from=node-bundle /bundle/dist/supervisor.js ./dist/supervisor.js
+#30 DONE 0.0s
+#31 5.871 added 14 packages in 5s
+#31 DONE 8.0s
+#32 DONE 0.0s
+#33 DONE 0.0s
+#34 DONE 0.4s
+#35 DONE 0.0s
+#36 exporting manifest list sha256:8ce066bcf1987f648b2263f069062ec37e0538ad7f7d2adc3f8968a91a73ff16 done
+#36 naming to docker.io/library/event-os-solver-worker:candidate-4caaa44 done
+#36 DONE 6.5s
+
+## tail
+#28 DONE 22.0s
+
+#29 [runtime  5/11] COPY --from=node-bundle /bundle/package.runtime.json ./package.json
+#29 DONE 0.0s
+
+#30 [runtime  6/11] COPY --from=node-bundle /bundle/dist/supervisor.js ./dist/supervisor.js
+#30 DONE 0.0s
+
+#31 [runtime  7/11] RUN npm install --omit=dev --no-fund --no-audit   && npm cache clean --force   && test -d /app/node_modules/pg   && test ! -d /app/node_modules/tsx   && test ! -d /app/node_modules/esbuild
+#31 5.871
+#31 5.871 added 14 packages in 5s
+#31 5.883 npm notice
+#31 5.883 npm notice New major version of npm available! 10.8.2 -> 12.0.2
+#31 5.883 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.0.2
+#31 5.883 npm notice To update run: npm install -g npm@12.0.2
+#31 5.883 npm notice
+#31 6.989 npm warn using --force Recommended protections disabled.
+#31 DONE 8.0s
+
+#32 [runtime  8/11] COPY --from=worker python ./python
+#32 DONE 0.0s
+
+#33 [runtime  9/11] COPY --from=worker schemas ./schemas
+#33 DONE 0.0s
+
+#34 [runtime 10/11] RUN useradd --create-home --uid 10001 --shell /usr/sbin/nologin solver   && mkdir -p /tmp/solver   && chown -R solver:solver /app /tmp/solver   && test ! -f /app/python/fake_malformed_child.py   && test ! -f /app/python/crash_child.py   && test ! -d /app/test-only   && test ! -f /app/test-only/keep_best_timing_child.py   && test ! -d /app/test   && test ! -d /app/scripts   && test ! -d /app/src   && test ! -d /app/vendor   && if grep -R "CPSAT_ALLOW_TEST_HOOKS" /app/python /app/schemas /app/dist; then exit 1; fi   && if grep -R "continueAfterIncumbentMs" /app/python /app/schemas /app/dist; then exit 1; fi
+#34 DONE 0.4s
+
+#35 [runtime 11/11] WORKDIR /app
+#35 DONE 0.0s
+
+#36 exporting to image
+#36 exporting layers
+#36 exporting layers 6.4s done
+#36 exporting manifest sha256:95a8bb880cde7da0c5427cfd745fb6383091819752dc705a696a8db345a78d4a done
+#36 exporting config sha256:dbbc8c88045e52239b569be04f116844e8208022f0754520e8681c67e6b79c4b done
+#36 exporting attestation manifest sha256:857f07c3fd31a06fe1e8a4cb486596cdde3aef40e3540a3f776c304e06a0f693 done
+#36 exporting manifest list sha256:8ce066bcf1987f648b2263f069062ec37e0538ad7f7d2adc3f8968a91a73ff16 done
+#36 naming to docker.io/library/event-os-solver-worker:candidate-4caaa44 done
+#36 DONE 6.5s

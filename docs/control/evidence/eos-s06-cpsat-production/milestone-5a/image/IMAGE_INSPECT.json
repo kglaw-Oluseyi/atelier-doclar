@@ -1,0 +1,88 @@
+[
+    {
+        "Id": "sha256:8ce066bcf1987f648b2263f069062ec37e0538ad7f7d2adc3f8968a91a73ff16",
+        "RepoTags": [
+            "event-os-solver-worker:candidate-4caaa44"
+        ],
+        "RepoDigests": [
+            "event-os-solver-worker@sha256:8ce066bcf1987f648b2263f069062ec37e0538ad7f7d2adc3f8968a91a73ff16"
+        ],
+        "Comment": "buildkit.dockerfile.v0",
+        "Created": "2026-09-17T11:20:45.775701487+01:00",
+        "Config": {
+            "User": "solver",
+            "Env": [
+                "PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "LANG=C.UTF-8",
+                "GPG_KEY=7169605F62C751356D054A26A821E680E5FA6305",
+                "PYTHON_VERSION=3.12.14",
+                "PYTHON_SHA256=5c8462af5790baf43a321a1559dbe0db06d1be4300fb85fb53c40060668e548a",
+                "NODE_VERSION=20.19.0",
+                "NODE_ENV=production",
+                "PYTHONUNBUFFERED=1",
+                "PYTHONDONTWRITEBYTECODE=1",
+                "SOLVER_PYTHON=/usr/local/bin/python3",
+                "SOLVER_CHILD_SCRIPT=/app/python/solver_child.py",
+                "SOLVER_INGRESS=none",
+                "SOLVER_TMP=/tmp/solver",
+                "HOME=/home/solver",
+                "CPSAT_ALLOW_SYNTHETIC_WORKER=0"
+            ],
+            "Entrypoint": [
+                "node",
+                "dist/supervisor.js"
+            ],
+            "WorkingDir": "/app",
+            "Labels": {
+                "md.solver.dependency": "ortools-9.15.6755",
+                "md.solver.ingress": "none",
+                "md.solver.model": "cpsat-model-v1",
+                "org.opencontainers.image.revision": "4caaa44eb0be2c2eeb7a7d63ccb23bcedbcc0df3",
+                "org.opencontainers.image.source": "https://github.com/kglaw-Oluseyi/atelier-doclar"
+            },
+            "Healthcheck": {
+                "Test": [
+                    "NONE"
+                ]
+            }
+        },
+        "Architecture": "amd64",
+        "Os": "linux",
+        "Size": 169407284,
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:1d69a5fd31932841d7825ef4780c06f008eea65aaa9f3110fe09d5832ed5c7d8",
+                "sha256:32488c65fb2595aaf67371142ffe3ffdc39660ab83b4cfb35ebd9fdf751997ff",
+                "sha256:4a3d4f8d9fbb21dbb593489962d9f6a77bb0086315a5d3c66e67738fdf27029b",
+                "sha256:38ed9d88ee80c1d99e220af90592650b2b4126bd5bcfa2612df3fdeb42e8844c",
+                "sha256:90936bf37794152bc780f13a14f33febc9a05f907af2cfd470245970f45a2197",
+                "sha256:998ae100a69c4b8a0fb535bb56d3bde64c8eff0319322c0de4cf5436e4a9576b",
+                "sha256:1b8ff7d8a6deac04575fd64f093d35c72b5d199142ccab190502451dcab30931",
+                "sha256:89329c2a2449661207f10fb4a0dfa88e88d84f7ed02cc7319ae5c64d5d265c6a",
+                "sha256:f91489b23f0723a4df156dac1aef70b72feaafdb9e349a29126803f0f7bf8bfb",
+                "sha256:8d94fe3ec036ff67b1e33401491a16cf02a179ce6701f616cecda3fe94cb4fa9",
+                "sha256:af00cee0d7d996f417e145494205218f6bf67c245545512716d80a9d1267ca27",
+                "sha256:f74b42ba12c3aac707d393b898d22e4c87b7b3b8a971e56caceed0108b95dd60",
+                "sha256:31ced74226c7f82e452a4446fced00af742df42f484bb8800d16b0655ea77b95",
+                "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "2026-09-17T10:20:52.235940046Z"
+        },
+        "Descriptor": {
+            "mediaType": "application/vnd.oci.image.index.v1+json",
+            "digest": "sha256:8ce066bcf1987f648b2263f069062ec37e0538ad7f7d2adc3f8968a91a73ff16",
+            "size": 856
+        },
+        "Identity": {
+            "Build": [
+                {
+                    "Ref": "mzz4eaxfspavrh3qei2y9bi1q",
+                    "CreatedAt": "2026-09-17T11:20:52.240835266+01:00"
+                }
+            ]
+        }
+    }
+]

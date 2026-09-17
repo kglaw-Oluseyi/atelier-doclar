@@ -1,0 +1,64 @@
+{
+  "mode": "enqueue",
+  "migrations": false,
+  "workerReady": true,
+  "admissionOk": true,
+  "enqueuedRunId": "a871187c-0ba7-49f5-a18b-f1d5ca8b089c",
+  "terminalLifecycle": "READY_FOR_REVIEW",
+  "sealed": true,
+  "productResult": "OPTIMAL",
+  "workerLifecycleFinal": "READY",
+  "leaseOwnerNull": true,
+  "evidence": {
+    "readyWorker": {
+      "worker_id": "m5a-candidate-worker",
+      "lifecycle": "READY",
+      "last_heartbeat": "2026-09-17T10:23:25.024Z",
+      "image_identity": "event-os-solver-worker:candidate-4caaa44",
+      "image_digest": "sha256:8ce066bcf1987f648b2263f069062ec37e0538ad7f7d2adc3f8968a91a73ff16",
+      "build_source_identity": "4caaa44eb0be2c2eeb7a7d63ccb23bcedbcc0df3",
+      "ortools_version": "9.15.6755",
+      "python_version": "3.12.14",
+      "model_versions": [
+        "cpsat-model-v1"
+      ],
+      "contract_versions": [
+        "md.seating.solve.request/1"
+      ],
+      "active_jobs": 0
+    },
+    "admission": {
+      "ok": true,
+      "compatibleWorkerIds": [
+        "m5a-candidate-worker"
+      ]
+    },
+    "enqueuedLifecycle": "READY_FOR_REVIEW",
+    "run": {
+      "id": "a871187c-0ba7-49f5-a18b-f1d5ca8b089c",
+      "status": "READY_FOR_REVIEW",
+      "product_result": "OPTIMAL",
+      "fault_code": null,
+      "lease_owner": null,
+      "lease_epoch": "1",
+      "progress_phase": "sealed",
+      "sealed_at": "2026-09-17T10:23:10.803Z",
+      "candidate_sealed": true,
+      "assignment_count": 2
+    },
+    "workersFinal": [
+      {
+        "worker_id": "m5a-candidate-worker",
+        "lifecycle": "READY",
+        "active_jobs": 0,
+        "last_heartbeat": "2026-09-17T10:23:25.024Z"
+      }
+    ],
+    "contract": {
+      "CPSAT_MODEL_VERSION": "cpsat-model-v1",
+      "CPSAT_ORTOOLS_VERSION": "9.15.6755",
+      "CPSAT_PYTHON_VERSION": "3.12.14",
+      "CPSAT_REQUEST_CONTRACT": "md.seating.solve.request/1"
+    }
+  }
+}
