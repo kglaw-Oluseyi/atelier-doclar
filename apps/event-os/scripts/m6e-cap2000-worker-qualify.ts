@@ -27,8 +27,8 @@ import {
   SEATING_V2_SOLVER_VERSION,
 } from "@maison-doclar/shared-platform";
 
-/** Fresh synthetic event id for this authorised CAP2000 run only. */
-const EVENT_ID = "c2a0a001-2026-0917-a2fx-cap2000auth01";
+/** Fresh synthetic event id for this authorised CAP2000 run only (real UUID via randomUUID()). */
+const EVENT_ID = "22c2befc-f728-4e3b-bfb1-fc8820c72a3c";
 const ORG = "00000000-0000-4000-8000-000000000001";
 const BASELINE_ADOPTION = "3b771ad9-c4c9-401b-87df-0371f9eee840";
 /** Permanently inadmissible prior session run — must never be reused. */

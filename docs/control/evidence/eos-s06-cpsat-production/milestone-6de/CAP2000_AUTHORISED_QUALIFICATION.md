@@ -17,7 +17,7 @@ fresh event id and a fresh run id. The inadmissible run was not reused.
 
 | | Inadmissible prior | This authorised run |
 |---|---|---|
-| Event | `92909476-…` | `c2a0a001-2026-0917-a2fx-cap2000auth01` |
+| Event | `92909476-…` | `22c2befc-f728-4e3b-bfb1-fc8820c72a3c` |
 | Run | `384950a6-…` | `4c7c4f5e-576e-40a0-85c4-d6831cc79d3d` |
 | Disposition | INADMISSIBLE | PASS — STRESS/CONTAINMENT (new) |
 
@@ -50,3 +50,10 @@ remains **unqualified**. This CAP2000 evidence is **solver-path-only**.
 - Seated: 2000/2000 unique guests and positions
 - Solve wall ≈ 3s (within doc 08 typical ≤60s / hard ≤180s)
 - Baseline adoption `3b771ad9-…` unchanged (`CURRENT`); candidate not adopted
+
+**A2_preferences not exercised:** this `scale-2000` / `tinyFixture` corpus configures
+zero preferences (one hard `KEEP_TOGETHER` only), so `requiredObjectiveTiers().preferences`
+is false and the `A2_preferences` verification path is skipped entirely. CAP2000 PASS
+does **not** re-validate the A2 polarity fix under load. The A2 fix’s only load-bearing
+evidence remains CAP1000 (24 preferences) plus the unit test in
+`cpsat-required-tiers.test.ts`.
