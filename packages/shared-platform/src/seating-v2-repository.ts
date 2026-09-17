@@ -109,6 +109,14 @@ export interface SeatingV2Transaction {
     ids: Partial<Record<SeatingV2Collection, string[]>>,
     confirmation: "CONFIRM_SEATING_V2_SYNTHETIC_PURGE",
   ): Promise<number>;
+  /**
+   * Optional raw SQL on the same connection as this transaction.
+   * Used for event-scoped CP-SAT evaluation persistence so audit and insert share one commit.
+   */
+  executeSql?<T extends Record<string, unknown> = Record<string, unknown>>(
+    sql: string,
+    params?: unknown[],
+  ): Promise<{ rows: T[]; rowCount: number }>;
   snapshot(): SeatingV2State;
 }
 

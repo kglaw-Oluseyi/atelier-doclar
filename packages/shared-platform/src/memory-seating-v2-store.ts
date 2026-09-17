@@ -236,6 +236,15 @@ export class MemorySeatingV2Transaction implements SeatingV2Transaction {
     this.store.audit.push(structuredClone(record));
   }
 
+  async executeSql<T extends Record<string, unknown> = Record<string, unknown>>(
+    _sql: string,
+    _params: unknown[] = [],
+  ): Promise<{ rows: T[]; rowCount: number }> {
+    throw new PlatformError("CAPABILITY_NOT_ENABLED", "durable CP-SAT evaluation requires PostgreSQL", {
+      publicMessage: "Seating evaluation persistence requires PostgreSQL.",
+    });
+  }
+
   async getIdempotency(scope: SeatingV2Scope, action: string, key: string): Promise<SeatingV2IdempotencyReceipt | undefined> {
     return this.store.collection("idempotencyReceipts").find(
       (item) =>

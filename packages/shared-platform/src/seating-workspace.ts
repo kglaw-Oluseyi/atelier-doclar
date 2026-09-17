@@ -99,7 +99,17 @@ export type SeatingWorkspaceView = SeatingWorkspaceProjection & {
   capacityLedger: { total: number; reservedMin: number; reservedMax: number; generallyAvailable: number; overbooked: boolean };
   attention: Array<{ kind: "blocker" | "stale" | "review" | "warning"; message: string; href: string }>;
   nextAction: string;
-  evaluation?: { caseCount: number; status?: string; corpusEdition?: string };
+  evaluation?: {
+    caseCount: number;
+    status?: string;
+    corpusEdition?: string;
+    readinessResult?: string;
+    passedCount?: number;
+    failedCount?: number;
+    safeFailureCodes?: string[];
+    evaluationId?: string;
+    evaluatedAt?: string;
+  };
   seatingLayoutBinding?: {
     status: "BOUND" | "ABSENT" | "AMBIGUOUS" | "STALE" | "MISMATCH";
     layoutLabel?: string;

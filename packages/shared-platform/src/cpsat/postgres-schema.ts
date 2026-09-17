@@ -9,6 +9,7 @@ export const EOS_S06_CPSAT_SOLVER_REVIEW_ADOPTION_MIGRATION_ID = "014_cpsat_solv
 export const EOS_S06_CPSAT_SOLVER_DIAGNOSTICS_MIGRATION_ID = "015_cpsat_solver_diagnostics" as const;
 export const EOS_S06_CPSAT_SOLVER_WORKER_REGISTRY_MIGRATION_ID = "016_cpsat_solver_worker_registry" as const;
 export const EOS_S06_CPSAT_CANONICAL_SEATING_CUTOVER_MIGRATION_ID = "017_cpsat_canonical_seating_cutover" as const;
+export const EOS_S06_CPSAT_DURABLE_SEATING_EVALUATION_MIGRATION_ID = "018_cpsat_durable_seating_evaluation" as const;
 
 export const CPSAT_SOLVER_QUEUE_POSTGRES_SCHEMA = `
 CREATE TABLE IF NOT EXISTS cpsat_solver_runs (
@@ -389,4 +390,62 @@ COMMENT ON TABLE seating_v2_runs IS
 
 COMMENT ON TABLE seating_v2_publications IS
   'HISTORICAL EVIDENCE — RETAIN READ-ONLY after M6C; operational publication is cpsat_solver_adoptions + authority pointer.';
+`;
+
+/**
+ * M6D — event-scoped durable CP-SAT seating evaluation (operational).
+ * Additive and idempotent. Does not reuse retired seating_v2_evaluation_* as authority.
+ */
+export const CPSAT_DURABLE_SEATING_EVALUATION_POSTGRES_SCHEMA = `
+CREATE TABLE IF NOT EXISTS cpsat_seating_evaluations (
+  id TEXT PRIMARY KEY,
+  organisation_id TEXT NOT NULL,
+  event_id TEXT NOT NULL,
+  authority_input_hash TEXT NOT NULL,
+  evaluation_version TEXT NOT NULL,
+  actor_person_id TEXT NOT NULL,
+  actor_role_key TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('PASSED','FAILED','ERROR')),
+  case_count INTEGER NOT NULL,
+  passed_count INTEGER NOT NULL DEFAULT 0,
+  failed_count INTEGER NOT NULL DEFAULT 0,
+  safe_failure_codes JSONB NOT NULL DEFAULT '[]'::jsonb,
+  readiness_result TEXT NOT NULL CHECK (readiness_result IN ('RELEASE_READY','NOT_RELEASE_READY','BLOCKED')),
+  correlation_id TEXT NOT NULL,
+  idempotency_key TEXT,
+  adoption_id TEXT,
+  run_id TEXT,
+  worker_ready_count INTEGER NOT NULL DEFAULT 0,
+  evaluated_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS cpsat_seating_evaluations_event_created_idx
+  ON cpsat_seating_evaluations (event_id, created_at DESC, id DESC);
+
+CREATE UNIQUE INDEX IF NOT EXISTS cpsat_seating_evaluations_event_idempotency_uidx
+  ON cpsat_seating_evaluations (event_id, idempotency_key)
+  WHERE idempotency_key IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS cpsat_seating_evaluation_cases (
+  id TEXT PRIMARY KEY,
+  evaluation_id TEXT NOT NULL REFERENCES cpsat_seating_evaluations(id),
+  organisation_id TEXT NOT NULL,
+  event_id TEXT NOT NULL,
+  case_id TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('PASSED','FAILED','ERROR')),
+  safe_failure_code TEXT,
+  detail JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (evaluation_id, case_id)
+);
+
+CREATE INDEX IF NOT EXISTS cpsat_seating_evaluation_cases_event_idx
+  ON cpsat_seating_evaluation_cases (event_id, created_at DESC);
+
+COMMENT ON TABLE cpsat_seating_evaluations IS
+  'Canonical event-scoped CP-SAT seating evaluation; operational Overview/reload authority after M6D.';
+
+COMMENT ON TABLE seating_v2_evaluation_runs IS
+  'HISTORICAL EVIDENCE — RETAIN READ-ONLY after M6D; org-scoped corpus runs are not event operational authority.';
 `;

@@ -698,6 +698,10 @@ export async function runS06EvaluationAction(
         failedCount: Number((result.value as { failedCount?: number }).failedCount ?? 0),
         passedCount: Number((result.value as { passedCount?: number }).passedCount ?? 0),
         caseCount: Number((result.value as { caseCount?: number }).caseCount ?? 0),
+        readinessResult: String((result.value as { readinessResult?: string }).readinessResult ?? ""),
+        safeFailureCodes: Array.isArray((result.value as { safeFailureCodes?: string[] }).safeFailureCodes)
+          ? ((result.value as { safeFailureCodes?: string[] }).safeFailureCodes as string[])
+          : [],
       };
     },
   });

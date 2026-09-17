@@ -310,7 +310,14 @@ export default async function EventSeatingPage({
         ) : null}
         {workspace.evaluation ? (
           <p data-testid="seating-evaluation-status">
-            Last evaluation {workspace.evaluation.corpusEdition}: {workspace.evaluation.status} · {workspace.evaluation.caseCount} cases
+            Last evaluation {workspace.evaluation.corpusEdition}: {workspace.evaluation.status}
+            {typeof workspace.evaluation.passedCount === "number"
+              ? ` · ${workspace.evaluation.passedCount}/${workspace.evaluation.caseCount} passed`
+              : ` · ${workspace.evaluation.caseCount} cases`}
+            {workspace.evaluation.readinessResult ? ` · ${workspace.evaluation.readinessResult}` : ""}
+            {workspace.evaluation.safeFailureCodes?.length
+              ? ` · codes ${workspace.evaluation.safeFailureCodes.join(", ")}`
+              : ""}
           </p>
         ) : null}
         {verifyAs ? (

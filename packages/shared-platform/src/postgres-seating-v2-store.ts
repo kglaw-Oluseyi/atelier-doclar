@@ -290,6 +290,14 @@ export class PostgresSeatingV2Transaction implements SeatingV2Transaction {
     );
   }
 
+  async executeSql<T extends Record<string, unknown> = Record<string, unknown>>(
+    sql: string,
+    params: unknown[] = [],
+  ): Promise<{ rows: T[]; rowCount: number }> {
+    const result = await this.client.query<T>(sql, params);
+    return { rows: result.rows, rowCount: result.rowCount ?? result.rows.length };
+  }
+
   async getIdempotency(scope: SeatingV2Scope, action: string, key: string): Promise<SeatingV2IdempotencyReceipt | undefined> {
     const result = await this.client.query<Record<string, unknown>>(
       `SELECT * FROM seating_v2_idempotency_receipts WHERE organisation_id = $1 AND event_id = $2 AND action = $3 AND idempotency_key = $4`,

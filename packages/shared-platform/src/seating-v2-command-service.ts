@@ -33,6 +33,10 @@ import {
   applyCanonicalCpsatAuthorityToWorkspace,
   loadCanonicalCpsatAuthority,
 } from "./cpsat/canonical-workspace.js";
+import {
+  CPSAT_SEATING_EVALUATION_CORPUS_EDITION,
+  runAndPersistCpsatSeatingEvaluation,
+} from "./cpsat/durable-evaluation.js";
 import { SYSTEM_ROLE_KEYS } from "./constants.js";
 import {
   activeSeatingLayoutBindings,
@@ -368,13 +372,25 @@ export class SeatingV2CommandService {
         outcome: "SUCCESS",
         organisationId: canonical.organisationId,
         eventId: canonical.eventId,
-        resourceType: "seating_v2",
+        resourceType: action === "seatingV2.runEvaluation" ? "cpsat_seating_evaluation" : "seating_v2",
         resourceId: value.id,
         correlationId: actor.correlationId,
         idempotencyKey: canonical.idempotencyKey,
         metadata: {
           replayed,
           ...(replayReason ? { reason: replayReason, authoritativeEditionId: value.id } : {}),
+          ...(action === "seatingV2.runEvaluation"
+            ? {
+                status: (value as { status?: string }).status,
+                caseCount: (value as { caseCount?: number }).caseCount,
+                passedCount: (value as { passedCount?: number }).passedCount,
+                failedCount: (value as { failedCount?: number }).failedCount,
+                readinessResult: (value as { readinessResult?: string }).readinessResult,
+                safeFailureCodes: (value as { safeFailureCodes?: string[] }).safeFailureCodes ?? [],
+                evaluationVersion: (value as { evaluationVersion?: string }).evaluationVersion,
+                authorityInputHash: (value as { authorityInputHash?: string }).authorityInputHash,
+              }
+            : {}),
         },
         schemaVersion: 1,
       });
@@ -2196,42 +2212,52 @@ export class SeatingV2CommandService {
 
   async runS06EvaluationV2(actor: SeatingV2Actor, envelope: SeatingV2CommandEnvelope) {
     this.guard(actor, "seating.evaluate", envelope, envelope.actorAssignmentId);
-    const { executeS06EvaluationV2 } = await import("./seating-evaluation-v2-runner.js");
-    const result = await executeS06EvaluationV2();
+    const people = this.deps.resolveActor(actor.personId);
+    const event = this.deps.loadEventById(envelope.eventId);
+    if (!event) throw new PlatformError("NOT_FOUND", "event was not found");
+    const assignment = resolveTrustedSeatingAssignment(people, event, nowOf(actor));
+    const roleKey = roleKeyForId(assignment.roleId) ?? "PLANNER";
     return this.mutate(actor, envelope, "seating.evaluate", "seatingV2.runEvaluation", async (tx) => {
-      const run = {
-        id: randomUUID(),
-        organisationId: envelope.organisationId,
-        schemaVersion: SEATING_V2_SCHEMA_VERSION,
-        corpusEdition: result.corpusEdition,
-        corpusHash: result.corpusHash,
-        contractVersion: result.contractVersion,
-        solverVersion: result.solverVersion,
-        configHash: result.configHash,
-        validatorVersion: result.validatorVersion,
-        projectionVersion: result.projectionVersion,
-        status: result.failedCount === 0 ? "PASSED" : "FAILED",
-        caseCount: result.caseCount,
-        passedCount: result.passedCount,
-        failedCount: result.failedCount,
-        createdBy: actor.personId,
-        createdAt: nowOf(actor),
-      } as const;
-      await tx.insert("evaluationRuns", run);
-      for (const item of result.cases) {
-        await tx.insert("evaluationCaseResults", {
-          id: randomUUID(),
-          organisationId: envelope.organisationId,
-          schemaVersion: SEATING_V2_SCHEMA_VERSION,
-          runId: run.id,
-          caseId: item.caseId,
-          observations: item.observations,
-          assertions: item.assertions,
-          status: item.status,
-          createdAt: nowOf(actor),
+      if (!tx.executeSql) {
+        throw new PlatformError("CAPABILITY_NOT_ENABLED", "durable CP-SAT evaluation requires PostgreSQL", {
+          publicMessage: "Seating evaluation persistence requires PostgreSQL.",
         });
       }
-      return run;
+      const sqlClient: PgQueryable = {
+        query: async <T extends object = Record<string, unknown>>(sql: string, params?: unknown[]) => {
+          const result = await tx.executeSql!(sql, params ?? []);
+          return { rows: result.rows as T[], rowCount: result.rowCount };
+        },
+      };
+      const bindings = await tx.list<SeatingV2LayoutBinding>("layoutBindings", {
+        organisationId: envelope.organisationId,
+        eventId: envelope.eventId,
+      });
+      const active = activeSeatingLayoutBindings(bindings, envelope.organisationId, envelope.eventId);
+      const record = await runAndPersistCpsatSeatingEvaluation(sqlClient, {
+        organisationId: envelope.organisationId,
+        eventId: envelope.eventId,
+        actorPersonId: actor.personId,
+        actorRoleKey: roleKey,
+        correlationId: actor.correlationId,
+        idempotencyKey: envelope.idempotencyKey,
+        evaluatedAt: nowOf(actor),
+        layoutBindingActive: active.length === 1,
+        layoutBindingCount: active.length,
+      });
+      return {
+        id: record.id,
+        status: record.status,
+        caseCount: record.caseCount,
+        passedCount: record.passedCount,
+        failedCount: record.failedCount,
+        readinessResult: record.readinessResult,
+        safeFailureCodes: record.safeFailureCodes,
+        evaluationVersion: record.evaluationVersion,
+        authorityInputHash: record.authorityInputHash,
+        corpusEdition: CPSAT_SEATING_EVALUATION_CORPUS_EDITION,
+        correlationId: record.correlationId,
+      };
     });
   }
 

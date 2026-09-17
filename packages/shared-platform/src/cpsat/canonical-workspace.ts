@@ -8,6 +8,7 @@ import type { SeatingWorkspaceView } from "../seating-workspace.js";
 import { CPSAT_MODEL_VERSION, CPSAT_REQUEST_CONTRACT } from "./contract.js";
 import { findCompatibleReadyWorkers } from "./worker-registry.js";
 import { listCpsatSeatingRuns, type CpsatSeatingRunSummary } from "./durable-launch.js";
+import { loadLatestCpsatSeatingEvaluation, type CpsatSeatingEvaluationRecord } from "./durable-evaluation.js";
 
 export type CanonicalCpsatOperationalPublication = {
   id: string;
@@ -36,6 +37,7 @@ export type CanonicalCpsatAuthoritySnapshot = {
     state: string;
     reasonCode: string | null;
   }>;
+  latestEvaluation?: CpsatSeatingEvaluationRecord | null;
 };
 
 export async function loadCanonicalCpsatAuthority(
@@ -117,11 +119,19 @@ export async function loadCanonicalCpsatAuthority(
     workerReadyCount = 0;
   }
 
+  let latestEvaluation: CpsatSeatingEvaluationRecord | null = null;
+  try {
+    latestEvaluation = await loadLatestCpsatSeatingEvaluation(client, eventId);
+  } catch {
+    latestEvaluation = null;
+  }
+
   return {
     currentAdoption,
     runs: listed.runs,
     workerReadyCount,
     assignments,
+    latestEvaluation,
   };
 }
 
@@ -288,6 +298,20 @@ export function applyCanonicalCpsatAuthorityToWorkspace(
       ? "Submit a sealed CP-SAT candidate for maker-checker approval, then adopt."
       : workspace.nextAction;
 
+  const evaluation = authority.latestEvaluation
+    ? {
+        caseCount: authority.latestEvaluation.caseCount,
+        status: authority.latestEvaluation.status,
+        corpusEdition: authority.latestEvaluation.corpusEdition,
+        readinessResult: authority.latestEvaluation.readinessResult,
+        passedCount: authority.latestEvaluation.passedCount,
+        failedCount: authority.latestEvaluation.failedCount,
+        safeFailureCodes: authority.latestEvaluation.safeFailureCodes,
+        evaluationId: authority.latestEvaluation.id,
+        evaluatedAt: authority.latestEvaluation.evaluatedAt,
+      }
+    : undefined;
+
   return {
     ...workspace,
     currentPublication,
@@ -300,6 +324,7 @@ export function applyCanonicalCpsatAuthorityToWorkspace(
     tables,
     attention,
     nextAction,
+    evaluation,
     cpsatWorkerReadyCount: authority.workerReadyCount,
     cpsatAuthoritySource: "CPSAT" as const,
   } as SeatingWorkspaceView & {

@@ -115,14 +115,27 @@ export async function runProtectionFormAction(input: {
                 : input.actionType === "seating.evaluate"
                   ? (() => {
                       const r = outcome.result as
-                        | { status?: string; failedCount?: number; passedCount?: number; caseCount?: number }
+                        | {
+                            status?: string;
+                            failedCount?: number;
+                            passedCount?: number;
+                            caseCount?: number;
+                            readinessResult?: string;
+                            safeFailureCodes?: string[];
+                          }
                         | void;
                       if (r && typeof r === "object" && r.status) {
+                        const codes =
+                          Array.isArray(r.safeFailureCodes) && r.safeFailureCodes.length
+                            ? ` Codes: ${r.safeFailureCodes.join(", ")}.`
+                            : "";
                         const next =
-                          r.status === "PASSED"
-                            ? "Review the evaluation ledger, then continue seating cutover verification."
-                            : "Inspect failed evaluation cases before treating seating as release-ready.";
-                        return `Seating evaluation completed · ${r.status} · ${r.passedCount ?? 0}/${r.caseCount ?? 0} passed. ${next}`;
+                          r.readinessResult === "RELEASE_READY"
+                            ? "Seating is release-ready under the current CP-SAT authority. Continue cutover verification."
+                            : r.status === "PASSED"
+                              ? "Seating evaluation passed but is not release-ready yet. Complete adoption or resolve readiness blockers."
+                              : "Seating is not release-ready. Inspect failure codes before treating seating as ready.";
+                        return `Seating evaluation completed · ${r.status} · ${r.passedCount ?? 0}/${r.caseCount ?? 0} passed · ${r.readinessResult ?? "BLOCKED"}.${codes} ${next}`;
                       }
                       return "Seating evaluation completed.";
                     })()

@@ -7,6 +7,7 @@ import {
   applyCanonicalCpsatAuthorityToWorkspace,
   type CanonicalCpsatAuthoritySnapshot,
 } from "../src/cpsat/canonical-workspace.js";
+import { PLATFORM_MIGRATIONS } from "../src/migrations.js";
 import type { SeatingWorkspaceView } from "../src/seating-workspace.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -204,5 +205,10 @@ describe("M6C canonical CP-SAT cutover", () => {
     assert.match(actions, /Legacy seating publish is retired/);
     const protection = readFileSync(join(root, "../../apps/event-os/src/server/protection-form-action.ts"), "utf8");
     assert.match(protection, /Seating evaluation completed/);
+    assert.match(protection, /readinessResult/);
+    assert.ok(
+      PLATFORM_MIGRATIONS.some((m) => m.id === "018_cpsat_durable_seating_evaluation"),
+      "migration 018 must be registered",
+    );
   });
 });
