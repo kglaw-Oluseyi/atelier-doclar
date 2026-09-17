@@ -1,0 +1,9 @@
+{
+  "image": "ghcr.io/kglaw-oluseyi/atelier-doclar-solver-worker:m6e-worker-8c8d922",
+  "digest": "sha256:276c685860981d139f554548ed55f701253530808a0f914de848d1fa08fe788f",
+  "scanner": "Aqua Security Trivy v0.74.0",
+  "scannedAt": "2026-09-17T21:35:25.302723Z",
+  "high": 44,
+  "critical": 0,
+  "secrets": 0
+}

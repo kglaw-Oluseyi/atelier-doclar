@@ -1,0 +1,103 @@
+{
+  "digest": "sha256:276c685860981d139f554548ed55f701253530808a0f914de848d1fa08fe788f",
+  "scannedAt": "2026-09-17T22:35:20.816685+01:00",
+  "highRows": 44,
+  "highFixable": 0,
+  "highUnfixed": 44,
+  "critical": 0,
+  "uniqueHighCves": 8,
+  "cves": {
+    "CVE-2025-69720": {
+      "fixedVersion": null,
+      "packages": [
+        "libncursesw6",
+        "libtinfo6",
+        "ncurses-base",
+        "ncurses-bin"
+      ],
+      "title": "ncurses: ncurses: Buffer overflow vulnerability may lead to arbitrary code execution."
+    },
+    "CVE-2026-16742": {
+      "fixedVersion": null,
+      "packages": [
+        "libsystemd0",
+        "libudev1"
+      ],
+      "title": "systemd: systemd-homed: Local privilege escalation via missing home-record signature verification"
+    },
+    "CVE-2026-54369": {
+      "fixedVersion": null,
+      "packages": [
+        "libacl1"
+      ],
+      "title": "acl: Symlink traversal privilege escalation via libacl functions"
+    },
+    "CVE-2026-76642": {
+      "fixedVersion": null,
+      "packages": [
+        "bsdutils",
+        "libblkid1",
+        "liblastlog2-2",
+        "libmount1",
+        "libsmartcols1",
+        "libuuid1",
+        "login",
+        "mount",
+        "util-linux"
+      ],
+      "title": "util-linux: util-linux: failed external mount helper still runs privileged X-mount post-hooks"
+    },
+    "CVE-2026-78408": {
+      "fixedVersion": null,
+      "packages": [
+        "bsdutils",
+        "libblkid1",
+        "liblastlog2-2",
+        "libmount1",
+        "libsmartcols1",
+        "libuuid1",
+        "login",
+        "mount",
+        "util-linux"
+      ],
+      "title": "util-linux: util-linux: nsenter --join-cgroup leaks root cgroup migration authority"
+    },
+    "CVE-2026-78409": {
+      "fixedVersion": null,
+      "packages": [
+        "bsdutils",
+        "libblkid1",
+        "liblastlog2-2",
+        "libmount1",
+        "libsmartcols1",
+        "libuuid1",
+        "login",
+        "mount",
+        "util-linux"
+      ],
+      "title": "util-linux: util-linux: X-mount.subdir detached-tree resolution can escape via intermediate symlinks"
+    },
+    "CVE-2026-78410": {
+      "fixedVersion": null,
+      "packages": [
+        "bsdutils",
+        "libblkid1",
+        "liblastlog2-2",
+        "libmount1",
+        "libsmartcols1",
+        "libuuid1",
+        "login",
+        "mount",
+        "util-linux"
+      ],
+      "title": "util-linux: util-linux: restricted bind mounts do not pin the source, allowing X-mount.owner/group/mode redirection"
+    },
+    "CVE-2026-9538": {
+      "fixedVersion": null,
+      "packages": [
+        "perl-base"
+      ],
+      "title": "perl-Archive-Tar: perl-Archive-Tar: Denial of Service via crafted tar header with large entry size"
+    }
+  }
+}

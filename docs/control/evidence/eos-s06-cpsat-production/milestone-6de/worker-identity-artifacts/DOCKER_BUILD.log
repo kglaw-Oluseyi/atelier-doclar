@@ -1,0 +1,452 @@
+#0 building with "colima" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 6.88kB 0.0s done
+#1 DONE 0.0s
+
+#2 resolve image config for docker-image://docker.io/docker/dockerfile:1.7
+#2 DONE 1.4s
+
+#3 docker-image://docker.io/docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
+#3 resolve docker.io/docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e 0.0s done
+#3 CACHED
+
+#4 [context worker] load .dockerignore
+#4 transferring worker: 371B done
+#4 DONE 0.0s
+
+#5 [context platform] load .dockerignore
+#5 transferring platform: 270B done
+#5 DONE 0.0s
+
+#6 [internal] load metadata for docker.io/library/python:3.12.14-slim-trixie@sha256:2fe5997d249a808b8eeea52c58a1dbffbba28754dc11699ef5c029f2d818ce79
+#6 DONE 1.0s
+
+#7 [internal] load .dockerignore
+#7 transferring context: 371B done
+#7 DONE 0.0s
+
+#8 [context worker] load from client
+#8 DONE 0.0s
+
+#9 [context worker] load from client
+#9 DONE 0.0s
+
+#10 [context platform] load from client
+#10 DONE 0.0s
+
+#11 [python-deps 1/4] FROM docker.io/library/python:3.12.14-slim-trixie@sha256:2fe5997d249a808b8eeea52c58a1dbffbba28754dc11699ef5c029f2d818ce79
+#11 resolve docker.io/library/python:3.12.14-slim-trixie@sha256:2fe5997d249a808b8eeea52c58a1dbffbba28754dc11699ef5c029f2d818ce79 done
+#11 CACHED
+
+#12 [context worker] load from client
+#12 transferring worker: 141B done
+#12 DONE 0.0s
+
+#13 [context worker] load from client
+#13 transferring worker: 11.55kB 0.0s done
+#13 DONE 0.1s
+
+#14 [context platform] load from client
+#14 ...
+
+#9 [context worker] load from client
+#9 transferring worker: 23.02kB 0.1s done
+#9 DONE 0.1s
+
+#8 [context worker] load from client
+#8 transferring worker: 97.08kB 0.1s done
+#8 DONE 0.2s
+
+#15 [context worker] load from client
+#15 transferring worker: 158B 0.1s done
+#15 DONE 0.2s
+
+#16 [python-deps 2/4] WORKDIR /opt/solver-python
+#16 CACHED
+
+#17 [python-deps 3/4] COPY --from=worker python/requirements.linux.hashes.txt ./requirements.txt
+#17 CACHED
+
+#18 [python-deps 4/4] RUN pip install --no-cache-dir --require-hashes -r requirements.txt   && python -c "import ortools,sys,platform; print(ortools.__version__, sys.version, platform.machine())"
+#18 CACHED
+
+#14 [context platform] load from client
+#14 transferring platform: 4.10MB 0.3s done
+#14 DONE 0.3s
+
+#10 [context platform] load from client
+#10 transferring platform: 650B 0.4s done
+#10 DONE 0.4s
+
+#19 [node-bundle 2/8] RUN set -eux;   apt-get update;   apt-get install -y --no-install-recommends ca-certificates curl xz-utils;   curl -fsSL "https://nodejs.org/dist/v20.19.0/node-v20.19.0-linux-x64.tar.xz" -o /tmp/node.tar.xz;   echo "b4e336584d62abefad31baecff7af167268be9bb7dd11f1297112e6eed3ca0d5  /tmp/node.tar.xz" | sha256sum -c -;   tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1;   rm -f /tmp/node.tar.xz;   apt-get purge -y curl xz-utils;   apt-get autoremove -y;   rm -rf /var/lib/apt/lists/*
+#19 CACHED
+
+#20 [node-bundle 4/8] COPY --from=worker package.json tsconfig.json ./
+#20 CACHED
+
+#21 [node-bundle 5/8] COPY --from=worker src ./src
+#21 CACHED
+
+#22 [node-bundle 3/8] WORKDIR /bundle
+#22 CACHED
+
+#23 [node-bundle 6/8] COPY --from=platform package.json /bundle/vendor/shared-platform/package.json
+#23 CACHED
+
+#24 [node-bundle 7/8] COPY --from=platform src /bundle/vendor/shared-platform/src
+#24 DONE 0.5s
+
+#25 [runtime  2/11] RUN set -eux;   apt-get update;   apt-get install -y --no-install-recommends ca-certificates curl xz-utils;   curl -fsSL "https://nodejs.org/dist/v20.19.0/node-v20.19.0-linux-x64.tar.xz" -o /tmp/node.tar.xz;   echo "b4e336584d62abefad31baecff7af167268be9bb7dd11f1297112e6eed3ca0d5  /tmp/node.tar.xz" | sha256sum -c -;   tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1;   rm -f /tmp/node.tar.xz;   node --version;   npm --version;   apt-get purge -y curl xz-utils;   apt-get autoremove -y;   rm -rf /var/lib/apt/lists/*;   rm -f /usr/bin/curl /usr/local/bin/curl /bin/curl;   hash -r;   if command -v gcc >/dev/null 2>&1; then echo "gcc_present" >&2; exit 1; fi;   if command -v git >/dev/null 2>&1; then echo "git_present" >&2; exit 1; fi;   if command -v curl >/dev/null 2>&1; then echo "curl_present" >&2; exit 1; fi;   if command -v wget >/dev/null 2>&1; then echo "wget_present" >&2; exit 1; fi
+#25 1.406 + apt-get update
+#25 2.276 Get:1 http://deb.debian.org/debian trixie InRelease [140 kB]
+#25 2.440 Get:2 http://deb.debian.org/debian trixie-updates InRelease [47.3 kB]
+#25 2.476 Get:3 http://deb.debian.org/debian-security trixie-security InRelease [43.4 kB]
+#25 2.990 Get:4 http://deb.debian.org/debian trixie/main amd64 Packages [9678 kB]
+#25 7.340 Get:5 http://deb.debian.org/debian trixie-updates/main amd64 Packages [4412 B]
+#25 7.349 Get:6 http://deb.debian.org/debian-security trixie-security/main amd64 Packages [262 kB]
+#25 ...
+
+#26 [node-bundle 8/8] RUN node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('package.json','utf8')); p.dependencies['@maison-doclar/shared-platform']='file:./vendor/shared-platform'; fs.writeFileSync('package.json', JSON.stringify(p,null,2)+'\n');"   && npm install --no-fund --no-audit   && npx esbuild src/supervisor.ts --bundle --platform=node --format=esm --outfile=dist/supervisor.js --external:pg   && test -f dist/supervisor.js   && node -e "const fs=require('fs'); fs.writeFileSync('package.runtime.json', JSON.stringify({name:'@maison-doclar/event-os-solver-worker',private:true,type:'module',dependencies:{pg:'^8.23.0'}},null,2)+'\n');"
+#26 ...
+
+#25 [runtime  2/11] RUN set -eux;   apt-get update;   apt-get install -y --no-install-recommends ca-certificates curl xz-utils;   curl -fsSL "https://nodejs.org/dist/v20.19.0/node-v20.19.0-linux-x64.tar.xz" -o /tmp/node.tar.xz;   echo "b4e336584d62abefad31baecff7af167268be9bb7dd11f1297112e6eed3ca0d5  /tmp/node.tar.xz" | sha256sum -c -;   tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1;   rm -f /tmp/node.tar.xz;   node --version;   npm --version;   apt-get purge -y curl xz-utils;   apt-get autoremove -y;   rm -rf /var/lib/apt/lists/*;   rm -f /usr/bin/curl /usr/local/bin/curl /bin/curl;   hash -r;   if command -v gcc >/dev/null 2>&1; then echo "gcc_present" >&2; exit 1; fi;   if command -v git >/dev/null 2>&1; then echo "git_present" >&2; exit 1; fi;   if command -v curl >/dev/null 2>&1; then echo "curl_present" >&2; exit 1; fi;   if command -v wget >/dev/null 2>&1; then echo "wget_present" >&2; exit 1; fi
+#25 13.59 Fetched 10.2 MB in 12s (876 kB/s)
+#25 13.59 Reading package lists...
+#25 18.29 + apt-get install -y --no-install-recommends ca-certificates curl xz-utils
+#25 18.40 Reading package lists...
+#25 22.60 Building dependency tree...
+#25 23.45 Reading state information...
+#25 24.60 ca-certificates is already the newest version (20250419).
+#25 24.60 The following additional packages will be installed:
+#25 24.60   libbrotli1 libcom-err2 libcurl4t64 libgnutls30t64 libgssapi-krb5-2 libidn2-0
+#25 24.60   libk5crypto3 libkeyutils1 libkrb5-3 libkrb5support0 libldap2 libnghttp2-14
+#25 24.60   libnghttp3-9 libp11-kit0 libpsl5t64 librtmp1 libsasl2-2 libsasl2-modules-db
+#25 24.61   libssh2-1t64 libtasn1-6 libunistring5
+#25 24.62 Suggested packages:
+#25 24.62   gnutls-bin krb5-doc krb5-user
+#25 24.62 Recommended packages:
+#25 24.62   bash-completion krb5-locales libldap-common publicsuffix libsasl2-modules
+#25 25.48 The following NEW packages will be installed:
+#25 25.48   curl libbrotli1 libcom-err2 libcurl4t64 libgnutls30t64 libgssapi-krb5-2
+#25 25.48   libidn2-0 libk5crypto3 libkeyutils1 libkrb5-3 libkrb5support0 libldap2
+#25 25.48   libnghttp2-14 libnghttp3-9 libp11-kit0 libpsl5t64 librtmp1 libsasl2-2
+#25 25.48   libsasl2-modules-db libssh2-1t64 libtasn1-6 libunistring5 xz-utils
+#25 25.90 0 upgraded, 23 newly installed, 0 to remove and 12 not upgraded.
+#25 25.90 Need to get 5547 kB of archives.
+#25 25.90 After this operation, 16.2 MB of additional disk space will be used.
+#25 25.90 Get:1 http://deb.debian.org/debian trixie/main amd64 xz-utils amd64 5.8.1-1+deb13u1 [659 kB]
+#25 26.28 Get:2 http://deb.debian.org/debian trixie/main amd64 libbrotli1 amd64 1.1.0-2+b7 [307 kB]
+#25 26.55 Get:3 http://deb.debian.org/debian trixie/main amd64 libkrb5support0 amd64 1.21.3-5+deb13u1 [33.1 kB]
+#25 26.56 Get:4 http://deb.debian.org/debian trixie/main amd64 libcom-err2 amd64 1.47.2-3+b12 [25.0 kB]
+#25 26.56 Get:5 http://deb.debian.org/debian trixie/main amd64 libk5crypto3 amd64 1.21.3-5+deb13u1 [81.2 kB]
+#25 26.58 Get:6 http://deb.debian.org/debian trixie/main amd64 libkeyutils1 amd64 1.6.3-6 [9456 B]
+#25 26.59 Get:7 http://deb.debian.org/debian trixie/main amd64 libkrb5-3 amd64 1.21.3-5+deb13u1 [326 kB]
+#25 26.61 Get:8 http://deb.debian.org/debian trixie/main amd64 libgssapi-krb5-2 amd64 1.21.3-5+deb13u1 [138 kB]
+#25 26.63 Get:9 http://deb.debian.org/debian trixie/main amd64 libunistring5 amd64 1.3-2 [477 kB]
+#25 ...
+
+#26 [node-bundle 8/8] RUN node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('package.json','utf8')); p.dependencies['@maison-doclar/shared-platform']='file:./vendor/shared-platform'; fs.writeFileSync('package.json', JSON.stringify(p,null,2)+'\n');"   && npm install --no-fund --no-audit   && npx esbuild src/supervisor.ts --bundle --platform=node --format=esm --outfile=dist/supervisor.js --external:pg   && test -f dist/supervisor.js   && node -e "const fs=require('fs'); fs.writeFileSync('package.runtime.json', JSON.stringify({name:'@maison-doclar/event-os-solver-worker',private:true,type:'module',dependencies:{pg:'^8.23.0'}},null,2)+'\n');"
+#26 26.13 
+#26 26.13 added 22 packages in 22s
+#26 26.14 npm notice
+#26 26.14 npm notice New major version of npm available! 10.8.2 -> 12.0.2
+#26 26.14 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.0.2
+#26 26.14 npm notice To update run: npm install -g npm@12.0.2
+#26 26.14 npm notice
+#26 29.91 
+#26 29.91   dist/supervisor.js  1.0mb ⚠️
+#26 29.91 
+#26 29.91 ⚡ Done in 836ms
+#26 DONE 30.6s
+
+#25 [runtime  2/11] RUN set -eux;   apt-get update;   apt-get install -y --no-install-recommends ca-certificates curl xz-utils;   curl -fsSL "https://nodejs.org/dist/v20.19.0/node-v20.19.0-linux-x64.tar.xz" -o /tmp/node.tar.xz;   echo "b4e336584d62abefad31baecff7af167268be9bb7dd11f1297112e6eed3ca0d5  /tmp/node.tar.xz" | sha256sum -c -;   tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1;   rm -f /tmp/node.tar.xz;   node --version;   npm --version;   apt-get purge -y curl xz-utils;   apt-get autoremove -y;   rm -rf /var/lib/apt/lists/*;   rm -f /usr/bin/curl /usr/local/bin/curl /bin/curl;   hash -r;   if command -v gcc >/dev/null 2>&1; then echo "gcc_present" >&2; exit 1; fi;   if command -v git >/dev/null 2>&1; then echo "git_present" >&2; exit 1; fi;   if command -v curl >/dev/null 2>&1; then echo "curl_present" >&2; exit 1; fi;   if command -v wget >/dev/null 2>&1; then echo "wget_present" >&2; exit 1; fi
+#25 27.13 Get:10 http://deb.debian.org/debian trixie/main amd64 libidn2-0 amd64 2.3.8-2 [109 kB]
+#25 27.13 Get:11 http://deb.debian.org/debian trixie/main amd64 libsasl2-modules-db amd64 2.1.28+dfsg1-9 [19.8 kB]
+#25 27.14 Get:12 http://deb.debian.org/debian trixie/main amd64 libsasl2-2 amd64 2.1.28+dfsg1-9 [57.5 kB]
+#25 27.14 Get:13 http://deb.debian.org/debian trixie/main amd64 libldap2 amd64 2.6.10+dfsg-1 [194 kB]
+#25 27.20 Get:14 http://deb.debian.org/debian trixie/main amd64 libnghttp2-14 amd64 1.64.0-1.1+deb13u1 [76.2 kB]
+#25 27.21 Get:15 http://deb.debian.org/debian trixie/main amd64 libnghttp3-9 amd64 1.8.0-1 [67.7 kB]
+#25 27.21 Get:16 http://deb.debian.org/debian trixie/main amd64 libpsl5t64 amd64 0.21.2-1.1+b1 [57.2 kB]
+#25 27.22 Get:17 http://deb.debian.org/debian trixie/main amd64 libp11-kit0 amd64 0.25.5-3 [425 kB]
+#25 27.63 Get:18 http://deb.debian.org/debian trixie/main amd64 libtasn1-6 amd64 4.20.0-2+deb13u1 [50.1 kB]
+#25 27.68 Get:19 http://deb.debian.org/debian trixie/main amd64 libgnutls30t64 amd64 3.8.9-3+deb13u4 [1469 kB]
+#25 28.14 Get:20 http://deb.debian.org/debian trixie/main amd64 librtmp1 amd64 2.4+20151223.gitfa8646d.1-2+b5 [58.8 kB]
+#25 28.15 Get:21 http://deb.debian.org/debian trixie/main amd64 libssh2-1t64 amd64 1.11.1-1+deb13u2 [245 kB]
+#25 28.20 Get:22 http://deb.debian.org/debian trixie/main amd64 libcurl4t64 amd64 8.14.1-2+deb13u5 [391 kB]
+#25 28.29 Get:23 http://deb.debian.org/debian trixie/main amd64 curl amd64 8.14.1-2+deb13u5 [270 kB]
+#25 29.36 debconf: unable to initialize frontend: Dialog
+#25 29.36 debconf: (TERM is not set, so the dialog frontend is not usable.)
+#25 29.36 debconf: falling back to frontend: Readline
+#25 29.36 debconf: unable to initialize frontend: Readline
+#25 29.36 debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC entries checked: /etc/perl /usr/local/lib/x86_64-linux-gnu/perl/5.40.1 /usr/local/share/perl/5.40.1 /usr/lib/x86_64-linux-gnu/perl5/5.40 /usr/share/perl5 /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl/5.40 /usr/share/perl/5.40 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 8, <STDIN> line 23.)
+#25 29.36 debconf: falling back to frontend: Teletype
+#25 29.44 debconf: unable to initialize frontend: Teletype
+#25 29.44 debconf: (This frontend requires a controlling tty.)
+#25 29.44 debconf: falling back to frontend: Noninteractive
+#25 33.67 Fetched 5547 kB in 3s (2014 kB/s)
+#25 33.81 Selecting previously unselected package xz-utils.
+#25 33.81 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 5652 files and directories currently installed.)
+#25 33.84 Preparing to unpack .../00-xz-utils_5.8.1-1+deb13u1_amd64.deb ...
+#25 33.84 Unpacking xz-utils (5.8.1-1+deb13u1) ...
+#25 34.05 Selecting previously unselected package libbrotli1:amd64.
+#25 34.05 Preparing to unpack .../01-libbrotli1_1.1.0-2+b7_amd64.deb ...
+#25 34.05 Unpacking libbrotli1:amd64 (1.1.0-2+b7) ...
+#25 34.23 Selecting previously unselected package libkrb5support0:amd64.
+#25 34.24 Preparing to unpack .../02-libkrb5support0_1.21.3-5+deb13u1_amd64.deb ...
+#25 34.24 Unpacking libkrb5support0:amd64 (1.21.3-5+deb13u1) ...
+#25 34.38 Selecting previously unselected package libcom-err2:amd64.
+#25 34.39 Preparing to unpack .../03-libcom-err2_1.47.2-3+b12_amd64.deb ...
+#25 34.39 Unpacking libcom-err2:amd64 (1.47.2-3+b12) ...
+#25 34.54 Selecting previously unselected package libk5crypto3:amd64.
+#25 34.54 Preparing to unpack .../04-libk5crypto3_1.21.3-5+deb13u1_amd64.deb ...
+#25 34.54 Unpacking libk5crypto3:amd64 (1.21.3-5+deb13u1) ...
+#25 34.71 Selecting previously unselected package libkeyutils1:amd64.
+#25 34.71 Preparing to unpack .../05-libkeyutils1_1.6.3-6_amd64.deb ...
+#25 34.71 Unpacking libkeyutils1:amd64 (1.6.3-6) ...
+#25 34.85 Selecting previously unselected package libkrb5-3:amd64.
+#25 34.85 Preparing to unpack .../06-libkrb5-3_1.21.3-5+deb13u1_amd64.deb ...
+#25 34.86 Unpacking libkrb5-3:amd64 (1.21.3-5+deb13u1) ...
+#25 35.04 Selecting previously unselected package libgssapi-krb5-2:amd64.
+#25 35.04 Preparing to unpack .../07-libgssapi-krb5-2_1.21.3-5+deb13u1_amd64.deb ...
+#25 35.04 Unpacking libgssapi-krb5-2:amd64 (1.21.3-5+deb13u1) ...
+#25 35.22 Selecting previously unselected package libunistring5:amd64.
+#25 35.22 Preparing to unpack .../08-libunistring5_1.3-2_amd64.deb ...
+#25 35.22 Unpacking libunistring5:amd64 (1.3-2) ...
+#25 35.44 Selecting previously unselected package libidn2-0:amd64.
+#25 35.45 Preparing to unpack .../09-libidn2-0_2.3.8-2_amd64.deb ...
+#25 35.45 Unpacking libidn2-0:amd64 (2.3.8-2) ...
+#25 35.61 Selecting previously unselected package libsasl2-modules-db:amd64.
+#25 35.61 Preparing to unpack .../10-libsasl2-modules-db_2.1.28+dfsg1-9_amd64.deb ...
+#25 35.61 Unpacking libsasl2-modules-db:amd64 (2.1.28+dfsg1-9) ...
+#25 35.76 Selecting previously unselected package libsasl2-2:amd64.
+#25 35.76 Preparing to unpack .../11-libsasl2-2_2.1.28+dfsg1-9_amd64.deb ...
+#25 35.76 Unpacking libsasl2-2:amd64 (2.1.28+dfsg1-9) ...
+#25 35.90 Selecting previously unselected package libldap2:amd64.
+#25 35.90 Preparing to unpack .../12-libldap2_2.6.10+dfsg-1_amd64.deb ...
+#25 35.91 Unpacking libldap2:amd64 (2.6.10+dfsg-1) ...
+#25 36.07 Selecting previously unselected package libnghttp2-14:amd64.
+#25 36.07 Preparing to unpack .../13-libnghttp2-14_1.64.0-1.1+deb13u1_amd64.deb ...
+#25 36.07 Unpacking libnghttp2-14:amd64 (1.64.0-1.1+deb13u1) ...
+#25 36.22 Selecting previously unselected package libnghttp3-9:amd64.
+#25 36.22 Preparing to unpack .../14-libnghttp3-9_1.8.0-1_amd64.deb ...
+#25 36.22 Unpacking libnghttp3-9:amd64 (1.8.0-1) ...
+#25 36.37 Selecting previously unselected package libpsl5t64:amd64.
+#25 36.37 Preparing to unpack .../15-libpsl5t64_0.21.2-1.1+b1_amd64.deb ...
+#25 36.37 Unpacking libpsl5t64:amd64 (0.21.2-1.1+b1) ...
+#25 36.51 Selecting previously unselected package libp11-kit0:amd64.
+#25 36.51 Preparing to unpack .../16-libp11-kit0_0.25.5-3_amd64.deb ...
+#25 36.52 Unpacking libp11-kit0:amd64 (0.25.5-3) ...
+#25 36.71 Selecting previously unselected package libtasn1-6:amd64.
+#25 36.71 Preparing to unpack .../17-libtasn1-6_4.20.0-2+deb13u1_amd64.deb ...
+#25 36.71 Unpacking libtasn1-6:amd64 (4.20.0-2+deb13u1) ...
+#25 36.86 Selecting previously unselected package libgnutls30t64:amd64.
+#25 36.86 Preparing to unpack .../18-libgnutls30t64_3.8.9-3+deb13u4_amd64.deb ...
+#25 36.86 Unpacking libgnutls30t64:amd64 (3.8.9-3+deb13u4) ...
+#25 37.13 Selecting previously unselected package librtmp1:amd64.
+#25 37.13 Preparing to unpack .../19-librtmp1_2.4+20151223.gitfa8646d.1-2+b5_amd64.deb ...
+#25 37.13 Unpacking librtmp1:amd64 (2.4+20151223.gitfa8646d.1-2+b5) ...
+#25 37.28 Selecting previously unselected package libssh2-1t64:amd64.
+#25 37.28 Preparing to unpack .../20-libssh2-1t64_1.11.1-1+deb13u2_amd64.deb ...
+#25 37.28 Unpacking libssh2-1t64:amd64 (1.11.1-1+deb13u2) ...
+#25 37.43 Selecting previously unselected package libcurl4t64:amd64.
+#25 37.44 Preparing to unpack .../21-libcurl4t64_8.14.1-2+deb13u5_amd64.deb ...
+#25 37.44 Unpacking libcurl4t64:amd64 (8.14.1-2+deb13u5) ...
+#25 37.63 Selecting previously unselected package curl.
+#25 37.63 Preparing to unpack .../22-curl_8.14.1-2+deb13u5_amd64.deb ...
+#25 37.63 Unpacking curl (8.14.1-2+deb13u5) ...
+#25 37.77 Setting up libkeyutils1:amd64 (1.6.3-6) ...
+#25 37.78 Setting up libbrotli1:amd64 (1.1.0-2+b7) ...
+#25 37.78 Setting up libnghttp2-14:amd64 (1.64.0-1.1+deb13u1) ...
+#25 37.79 Setting up libcom-err2:amd64 (1.47.2-3+b12) ...
+#25 37.79 Setting up libkrb5support0:amd64 (1.21.3-5+deb13u1) ...
+#25 37.80 Setting up libsasl2-modules-db:amd64 (2.1.28+dfsg1-9) ...
+#25 37.80 Setting up xz-utils (5.8.1-1+deb13u1) ...
+#25 37.85 update-alternatives: using /usr/bin/xz to provide /usr/bin/lzma (lzma) in auto mode
+#25 37.85 update-alternatives: warning: skip creation of /usr/share/man/man1/lzma.1.gz because associated file /usr/share/man/man1/xz.1.gz (of link group lzma) doesn't exist
+#25 37.85 update-alternatives: warning: skip creation of /usr/share/man/man1/unlzma.1.gz because associated file /usr/share/man/man1/unxz.1.gz (of link group lzma) doesn't exist
+#25 37.85 update-alternatives: warning: skip creation of /usr/share/man/man1/lzcat.1.gz because associated file /usr/share/man/man1/xzcat.1.gz (of link group lzma) doesn't exist
+#25 37.85 update-alternatives: warning: skip creation of /usr/share/man/man1/lzmore.1.gz because associated file /usr/share/man/man1/xzmore.1.gz (of link group lzma) doesn't exist
+#25 37.85 update-alternatives: warning: skip creation of /usr/share/man/man1/lzless.1.gz because associated file /usr/share/man/man1/xzless.1.gz (of link group lzma) doesn't exist
+#25 37.85 update-alternatives: warning: skip creation of /usr/share/man/man1/lzdiff.1.gz because associated file /usr/share/man/man1/xzdiff.1.gz (of link group lzma) doesn't exist
+#25 37.85 update-alternatives: warning: skip creation of /usr/share/man/man1/lzcmp.1.gz because associated file /usr/share/man/man1/xzcmp.1.gz (of link group lzma) doesn't exist
+#25 37.86 update-alternatives: warning: skip creation of /usr/share/man/man1/lzgrep.1.gz because associated file /usr/share/man/man1/xzgrep.1.gz (of link group lzma) doesn't exist
+#25 37.86 update-alternatives: warning: skip creation of /usr/share/man/man1/lzegrep.1.gz because associated file /usr/share/man/man1/xzegrep.1.gz (of link group lzma) doesn't exist
+#25 37.86 update-alternatives: warning: skip creation of /usr/share/man/man1/lzfgrep.1.gz because associated file /usr/share/man/man1/xzfgrep.1.gz (of link group lzma) doesn't exist
+#25 37.86 Setting up libp11-kit0:amd64 (0.25.5-3) ...
+#25 37.87 Setting up libunistring5:amd64 (1.3-2) ...
+#25 37.87 Setting up libk5crypto3:amd64 (1.21.3-5+deb13u1) ...
+#25 37.88 Setting up libsasl2-2:amd64 (2.1.28+dfsg1-9) ...
+#25 37.88 Setting up libnghttp3-9:amd64 (1.8.0-1) ...
+#25 37.89 Setting up libtasn1-6:amd64 (4.20.0-2+deb13u1) ...
+#25 37.89 Setting up libkrb5-3:amd64 (1.21.3-5+deb13u1) ...
+#25 37.90 Setting up libssh2-1t64:amd64 (1.11.1-1+deb13u2) ...
+#25 37.90 Setting up libldap2:amd64 (2.6.10+dfsg-1) ...
+#25 37.91 Setting up libidn2-0:amd64 (2.3.8-2) ...
+#25 37.91 Setting up libgssapi-krb5-2:amd64 (1.21.3-5+deb13u1) ...
+#25 37.93 Setting up libgnutls30t64:amd64 (3.8.9-3+deb13u4) ...
+#25 37.94 Setting up libpsl5t64:amd64 (0.21.2-1.1+b1) ...
+#25 37.94 Setting up librtmp1:amd64 (2.4+20151223.gitfa8646d.1-2+b5) ...
+#25 37.95 Setting up libcurl4t64:amd64 (8.14.1-2+deb13u5) ...
+#25 37.95 Setting up curl (8.14.1-2+deb13u5) ...
+#25 37.96 Processing triggers for libc-bin (2.41-12+deb13u3) ...
+#25 38.10 + curl -fsSL https://nodejs.org/dist/v20.19.0/node-v20.19.0-linux-x64.tar.xz -o /tmp/node.tar.xz
+#25 51.99 + echo b4e336584d62abefad31baecff7af167268be9bb7dd11f1297112e6eed3ca0d5  /tmp/node.tar.xz
+#25 51.99 + sha256sum -c -
+#25 53.40 /tmp/node.tar.xz: OK
+#25 53.40 + tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1
+#25 58.38 + rm -f /tmp/node.tar.xz
+#25 58.40 + node --version
+#25 58.46 v20.19.0
+#25 58.47 + npm --version
+#25 59.60 10.8.2
+#25 59.63 + apt-get purge -y curl xz-utils
+#25 59.72 Reading package lists...
+#25 63.29 Building dependency tree...
+#25 64.00 Reading state information...
+#25 64.95 The following packages were automatically installed and are no longer required:
+#25 64.95   libbrotli1 libcom-err2 libcurl4t64 libgnutls30t64 libgssapi-krb5-2
+#25 64.95   libk5crypto3 libkeyutils1 libkrb5-3 libkrb5support0 libldap2 libnghttp2-14
+#25 64.95   libnghttp3-9 libp11-kit0 libpsl5t64 librtmp1 libsasl2-2 libsasl2-modules-db
+#25 64.96   libssh2-1t64 libtasn1-6
+#25 64.96 Use 'apt autoremove' to remove them.
+#25 65.01 The following packages will be REMOVED:
+#25 65.02   curl* xz-utils*
+#25 65.91 0 upgraded, 0 newly installed, 2 to remove and 12 not upgraded.
+#25 65.91 After this operation, 1965 kB disk space will be freed.
+#25 65.96 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 6004 files and directories currently installed.)
+#25 65.97 Removing curl (8.14.1-2+deb13u5) ...
+#25 65.99 Removing xz-utils (5.8.1-1+deb13u1) ...
+#25 66.20 + apt-get autoremove -y
+#25 66.29 Reading package lists...
+#25 69.85 Building dependency tree...
+#25 70.57 Reading state information...
+#25 71.48 The following packages will be REMOVED:
+#25 71.48   libbrotli1 libcom-err2 libcurl4t64 libgnutls30t64 libgssapi-krb5-2
+#25 71.48   libk5crypto3 libkeyutils1 libkrb5-3 libkrb5support0 libldap2 libnghttp2-14
+#25 71.48   libnghttp3-9 libp11-kit0 libpsl5t64 librtmp1 libsasl2-2 libsasl2-modules-db
+#25 71.48   libssh2-1t64 libtasn1-6
+#25 72.28 0 upgraded, 0 newly installed, 19 to remove and 12 not upgraded.
+#25 72.28 After this operation, 11.6 MB disk space will be freed.
+#25 72.32 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 5861 files and directories currently installed.)
+#25 72.33 Removing libcurl4t64:amd64 (8.14.1-2+deb13u5) ...
+#25 72.35 Removing libbrotli1:amd64 (1.1.0-2+b7) ...
+#25 72.37 Removing libgssapi-krb5-2:amd64 (1.21.3-5+deb13u1) ...
+#25 72.40 Removing libkrb5-3:amd64 (1.21.3-5+deb13u1) ...
+#25 72.42 Removing libcom-err2:amd64 (1.47.2-3+b12) ...
+#25 72.43 Removing librtmp1:amd64 (2.4+20151223.gitfa8646d.1-2+b5) ...
+#25 72.45 Removing libgnutls30t64:amd64 (3.8.9-3+deb13u4) ...
+#25 72.47 Removing libk5crypto3:amd64 (1.21.3-5+deb13u1) ...
+#25 72.48 Removing libkeyutils1:amd64 (1.6.3-6) ...
+#25 72.50 Removing libkrb5support0:amd64 (1.21.3-5+deb13u1) ...
+#25 72.51 Removing libldap2:amd64 (2.6.10+dfsg-1) ...
+#25 72.53 Removing libnghttp2-14:amd64 (1.64.0-1.1+deb13u1) ...
+#25 72.54 Removing libnghttp3-9:amd64 (1.8.0-1) ...
+#25 72.56 Removing libp11-kit0:amd64 (0.25.5-3) ...
+#25 72.58 Removing libpsl5t64:amd64 (0.21.2-1.1+b1) ...
+#25 72.59 Removing libsasl2-2:amd64 (2.1.28+dfsg1-9) ...
+#25 72.61 Removing libsasl2-modules-db:amd64 (2.1.28+dfsg1-9) ...
+#25 72.62 Removing libssh2-1t64:amd64 (1.11.1-1+deb13u2) ...
+#25 72.64 Removing libtasn1-6:amd64 (4.20.0-2+deb13u1) ...
+#25 72.70 Processing triggers for libc-bin (2.41-12+deb13u3) ...
+#25 72.81 + rm -rf /var/lib/apt/lists/auxfiles /var/lib/apt/lists/deb.debian.org_debian-security_dists_trixie-security_InRelease /var/lib/apt/lists/deb.debian.org_debian-security_dists_trixie-security_main_binary-amd64_Packages.lz4 /var/lib/apt/lists/deb.debian.org_debian_dists_trixie-updates_InRelease /var/lib/apt/lists/deb.debian.org_debian_dists_trixie-updates_main_binary-amd64_Packages.lz4 /var/lib/apt/lists/deb.debian.org_debian_dists_trixie_InRelease /var/lib/apt/lists/deb.debian.org_debian_dists_trixie_main_binary-amd64_Packages.lz4 /var/lib/apt/lists/lock /var/lib/apt/lists/partial
+#25 72.83 + rm -f /usr/bin/curl /usr/local/bin/curl /bin/curl
+#25 72.85 + hash -r
+#25 72.85 + command -v gcc
+#25 72.85 + command -v git
+#25 72.85 + command -v curl
+#25 72.85 + command -v wget
+#25 DONE 73.0s
+
+#27 [runtime  3/11] COPY --from=python-deps /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+#27 DONE 4.7s
+
+#28 [runtime  4/11] WORKDIR /app
+#28 DONE 0.1s
+
+#29 [runtime  5/11] COPY --from=node-bundle /bundle/package.runtime.json ./package.json
+#29 DONE 0.0s
+
+#30 [runtime  6/11] COPY --from=node-bundle /bundle/dist/supervisor.js ./dist/supervisor.js
+#30 DONE 0.0s
+
+#31 [runtime  7/11] RUN npm install --omit=dev --no-fund --no-audit   && npm cache clean --force   && test -d /app/node_modules/pg   && test ! -d /app/node_modules/tsx   && test ! -d /app/node_modules/esbuild   && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack   && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack   && hash -r   && test ! -e /usr/local/bin/npm   && test ! -e /usr/local/bin/npx   && test ! -d /usr/local/lib/node_modules/npm   && rm -rf /var/cache/apt/archives /var/lib/apt/lists/*   && mkdir -p /var/cache/apt/archives/partial   && apt-get update   && apt-get install -y --no-install-recommends -o APT::Keep-Downloaded-Packages=false        --only-upgrade        libpcre2-8-0        perl-base        gzip        libsqlite3-0   && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+#31 7.114 
+#31 7.114 added 14 packages in 6s
+#31 7.128 npm notice
+#31 7.128 npm notice New major version of npm available! 10.8.2 -> 12.0.2
+#31 7.128 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.0.2
+#31 7.128 npm notice To update run: npm install -g npm@12.0.2
+#31 7.128 npm notice
+#31 8.397 npm warn using --force Recommended protections disabled.
+#31 10.65 Get:1 http://deb.debian.org/debian trixie InRelease [140 kB]
+#31 10.78 Get:2 http://deb.debian.org/debian trixie-updates InRelease [47.3 kB]
+#31 10.83 Get:3 http://deb.debian.org/debian-security trixie-security InRelease [43.4 kB]
+#31 11.00 Get:4 http://deb.debian.org/debian trixie/main amd64 Packages [9678 kB]
+#31 13.42 Get:5 http://deb.debian.org/debian trixie-updates/main amd64 Packages [4412 B]
+#31 13.43 Get:6 http://deb.debian.org/debian-security trixie-security/main amd64 Packages [262 kB]
+#31 18.78 Fetched 10.2 MB in 8s (1209 kB/s)
+#31 18.78 Reading package lists...
+#31 22.56 Reading package lists...
+#31 26.15 Building dependency tree...
+#31 26.88 Reading state information...
+#31 27.95 The following packages will be upgraded:
+#31 27.96   gzip libpcre2-8-0 libsqlite3-0 perl-base
+#31 28.23 4 upgraded, 0 newly installed, 0 to remove and 8 not upgraded.
+#31 28.23 Need to get 3018 kB of archives.
+#31 28.23 After this operation, 4096 B of additional disk space will be used.
+#31 28.23 Get:1 http://deb.debian.org/debian trixie/main amd64 gzip amd64 1.13-1+deb13u1 [139 kB]
+#31 28.38 Get:2 http://deb.debian.org/debian trixie/main amd64 perl-base amd64 5.40.1-6+deb13u1 [1666 kB]
+#31 30.43 Get:3 http://deb.debian.org/debian trixie/main amd64 libpcre2-8-0 amd64 10.46-1~deb13u2 [299 kB]
+#31 30.51 Get:4 http://deb.debian.org/debian trixie/main amd64 libsqlite3-0 amd64 3.46.1-7+deb13u2 [915 kB]
+#31 31.48 debconf: unable to initialize frontend: Dialog
+#31 31.48 debconf: (TERM is not set, so the dialog frontend is not usable.)
+#31 31.48 debconf: falling back to frontend: Readline
+#31 31.48 debconf: unable to initialize frontend: Readline
+#31 31.48 debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC entries checked: /etc/perl /usr/local/lib/x86_64-linux-gnu/perl/5.40.1 /usr/local/share/perl/5.40.1 /usr/lib/x86_64-linux-gnu/perl5/5.40 /usr/share/perl5 /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl/5.40 /usr/share/perl/5.40 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 8, <STDIN> line 4.)
+#31 31.48 debconf: falling back to frontend: Teletype
+#31 31.57 debconf: unable to initialize frontend: Teletype
+#31 31.57 debconf: (This frontend requires a controlling tty.)
+#31 31.57 debconf: falling back to frontend: Noninteractive
+#31 35.75 Fetched 3018 kB in 3s (1111 kB/s)
+#31 35.90 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 5695 files and directories currently installed.)
+#31 35.92 Preparing to unpack .../gzip_1.13-1+deb13u1_amd64.deb ...
+#31 36.15 Unpacking gzip (1.13-1+deb13u1) over (1.13-1) ...
+#31 36.29 Setting up gzip (1.13-1+deb13u1) ...
+#31 36.63 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 5695 files and directories currently installed.)
+#31 36.64 Preparing to unpack .../perl-base_5.40.1-6+deb13u1_amd64.deb ...
+#31 36.65 Unpacking perl-base (5.40.1-6+deb13u1) over (5.40.1-6) ...
+#31 37.73 Setting up perl-base (5.40.1-6+deb13u1) ...
+#31 37.87 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 5696 files and directories currently installed.)
+#31 37.88 Preparing to unpack .../libpcre2-8-0_10.46-1~deb13u2_amd64.deb ...
+#31 37.89 Unpacking libpcre2-8-0:amd64 (10.46-1~deb13u2) over (10.46-1~deb13u1) ...
+#31 38.04 Setting up libpcre2-8-0:amd64 (10.46-1~deb13u2) ...
+#31 38.17 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 5696 files and directories currently installed.)
+#31 38.19 Preparing to unpack .../libsqlite3-0_3.46.1-7+deb13u2_amd64.deb ...
+#31 38.19 Unpacking libsqlite3-0:amd64 (3.46.1-7+deb13u2) over (3.46.1-7+deb13u1) ...
+#31 38.41 Setting up libsqlite3-0:amd64 (3.46.1-7+deb13u2) ...
+#31 38.46 Processing triggers for libc-bin (2.41-12+deb13u3) ...
+#31 DONE 38.7s
+
+#32 [runtime  8/11] COPY --from=worker python ./python
+#32 DONE 0.1s
+
+#33 [runtime  9/11] COPY --from=worker schemas ./schemas
+#33 DONE 0.0s
+
+#34 [runtime 10/11] RUN useradd --create-home --uid 10001 --shell /usr/sbin/nologin solver   && mkdir -p /tmp/solver   && chown -R solver:solver /app /tmp/solver   && test ! -f /app/python/fake_malformed_child.py   && test ! -f /app/python/crash_child.py   && test ! -d /app/test-only   && test ! -f /app/test-only/keep_best_timing_child.py   && test ! -d /app/test   && test ! -d /app/scripts   && test ! -d /app/src   && test ! -d /app/vendor   && test ! -d /usr/local/lib/node_modules/npm   && if grep -R "CPSAT_ALLOW_TEST_HOOKS" /app/python /app/schemas /app/dist; then exit 1; fi   && if grep -R "continueAfterIncumbentMs" /app/python /app/schemas /app/dist; then exit 1; fi
+#34 DONE 0.5s
+
+#35 [runtime 11/11] WORKDIR /app
+#35 DONE 0.0s
+
+#36 exporting to image
+#36 exporting layers
+#36 exporting layers 7.2s done
+#36 exporting manifest sha256:f60472271aaa984c3c9e0e0efe1edfc4ab567f9b5009df1055ae779565e0ea46 done
+#36 exporting config sha256:574c3352730fae431c7b4f4db34f07191be240dd05961625faeedbc2173ad602 done
+#36 exporting attestation manifest sha256:4db9b4c6f92e5a52f4379835fd42d0d12b2d3a2980bd348a7f3993af1214d3bb done
+#36 exporting manifest list sha256:276c685860981d139f554548ed55f701253530808a0f914de848d1fa08fe788f done
+#36 naming to docker.io/library/event-os-solver-worker:m6e-worker-8c8d922 done
+#36 naming to ghcr.io/kglaw-oluseyi/atelier-doclar-solver-worker:m6e-worker-8c8d922 done
+#36 DONE 7.3s

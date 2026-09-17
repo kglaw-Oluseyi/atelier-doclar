@@ -1,0 +1,3 @@
+95e500b is ancestor of 8c8d922: YES
+95e500b is ancestor of HEAD: YES
+HEAD=8c8d92241a550348f3ba44192cb07f655ffe6d5d

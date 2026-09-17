@@ -1,0 +1,16 @@
+2026-09-17T22:35:15+01:00	INFO	[vuln] Vulnerability scanning is enabled
+2026-09-17T22:35:15+01:00	INFO	[secret] Secret scanning is enabled
+2026-09-17T22:35:15+01:00	INFO	[secret] If your scanning is slow, please try '--scanners vuln' to disable secret scanning
+2026-09-17T22:35:15+01:00	INFO	[secret] Please see https://trivy.dev/docs/v0.74/guide/scanner/secret#recommendation for faster secret detection
+2026-09-17T22:35:18+01:00	INFO	[python] Licenses acquired from one or more METADATA files may be subject to additional terms. Use `--debug` flag to see all affected packages.
+2026-09-17T22:35:20+01:00	INFO	Detected OS	family="debian" version="13.6"
+2026-09-17T22:35:20+01:00	INFO	[debian] Detecting vulnerabilities...	os_version="13" pkg_num=89
+2026-09-17T22:35:20+01:00	INFO	Number of language-specific files	num=2
+2026-09-17T22:35:20+01:00	INFO	[node-pkg] Detecting vulnerabilities...
+2026-09-17T22:35:20+01:00	INFO	[python-pkg] Detecting vulnerabilities...
+2026-09-17T22:35:20+01:00	WARN	Using severities from other vendors for some vulnerabilities. Read https://trivy.dev/docs/v0.74/guide/scanner/vulnerability#severity-selection for details.
+2026-09-17T22:35:20+01:00	INFO	[secret] Secret scanning is enabled
+2026-09-17T22:35:20+01:00	INFO	[secret] Please see https://trivy.dev/docs/v0.74/guide/scanner/secret#recommendation for faster secret detection
+2026-09-17T22:35:24+01:00	INFO	[python] Licenses acquired from one or more METADATA files may be subject to additional terms. Use `--debug` flag to see all affected packages.
+2026-09-17T22:35:25+01:00	INFO	Detected OS	family="debian" version="13.6"
+2026-09-17T22:35:25+01:00	INFO	Number of language-specific files	num=2
