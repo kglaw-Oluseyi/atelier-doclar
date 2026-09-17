@@ -96,7 +96,12 @@ RUN npm install --omit=dev --no-fund --no-audit \
   && rm -rf /var/cache/apt/archives /var/lib/apt/lists/* \
   && mkdir -p /var/cache/apt/archives/partial \
   && apt-get update \
-  && apt-get install -y --no-install-recommends -o APT::Keep-Downloaded-Packages=false --only-upgrade libpcre2-8-0 \
+  && apt-get install -y --no-install-recommends -o APT::Keep-Downloaded-Packages=false \
+       --only-upgrade \
+       libpcre2-8-0 \
+       perl-base \
+       gzip \
+       libsqlite3-0 \
   && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 
