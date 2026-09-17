@@ -33,10 +33,12 @@ RUN set -eux; \
   apt-get purge -y curl xz-utils; \
   apt-get autoremove -y; \
   rm -rf /var/lib/apt/lists/*; \
-  command -v gcc >/dev/null 2>&1 && exit 1 || true; \
-  command -v git >/dev/null 2>&1 && exit 1 || true; \
-  command -v curl >/dev/null 2>&1 && exit 1 || true; \
-  command -v wget >/dev/null 2>&1 && exit 1 || true
+  rm -f /usr/bin/curl /usr/local/bin/curl /bin/curl; \
+  hash -r; \
+  if command -v gcc >/dev/null 2>&1; then echo "gcc_present" >&2; exit 1; fi; \
+  if command -v git >/dev/null 2>&1; then echo "git_present" >&2; exit 1; fi; \
+  if command -v curl >/dev/null 2>&1; then echo "curl_present" >&2; exit 1; fi; \
+  if command -v wget >/dev/null 2>&1; then echo "wget_present" >&2; exit 1; fi
 
 COPY --from=python-deps /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 
