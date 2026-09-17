@@ -1,0 +1,31 @@
+{
+  "runId": "9ba506b1-dadc-478b-a857-051180307526",
+  "eventId": "92909476-d3f9-43f1-a5f7-7e1a83c92fbd",
+  "runStatus": "ADOPTED",
+  "productResult": "OPTIMAL",
+  "evidenceGrade": "OPTIMAL_PROOF",
+  "childInvocations": "1",
+  "candidateSealed": "true",
+  "assignmentHashPrefix": "cbaffd8eb266fc34",
+  "proposalId": "7f49a56e-2752-4c46-a6ed-1c0ff48058bf",
+  "proposalStatus": "APPROVED",
+  "makerActor": "00000000-0000-4000-8000-000000000043",
+  "checkerActor": "00000000-0000-4000-8000-000000000042",
+  "adoptionId": "3b771ad9-c4c9-401b-87df-0371f9eee840",
+  "adoptionStatus": "CURRENT",
+  "adoptingActor": "00000000-0000-4000-8000-000000000041",
+  "authorityPointer": "3b771ad9-c4c9-401b-87df-0371f9eee840",
+  "kind": "m6b-primary-synthetic-journey",
+  "at": "2026-09-17T14:51:00Z",
+  "baseUrl": "https://event-os-production-bc8d.up.railway.app",
+  "eventName": "[SYNTHETIC M6B] CP-SAT Journey 2026-09-17T14-29-48-325Z",
+  "roles": {
+    "submit": "planner",
+    "approve": "director",
+    "adopt": "ceo",
+    "auditor": "mutation-free-verified-in-prior-attempt"
+  },
+  "workerClaim": "confirmed via child_invocation_count=1 and READY_FOR_REVIEW/OPTIMAL",
+  "uiNote": "CP-SAT authority pointer CURRENT after CEO adopt. Seating V2 publication badge may still read none \u2014 CPSAT pointer is the governed operational pointer for this path.",
+  "deployedSha": "9746b1749e579a720c4f720c8f578d27166d0d39"
+}

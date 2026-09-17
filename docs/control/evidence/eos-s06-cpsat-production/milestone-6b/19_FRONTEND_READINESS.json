@@ -1,0 +1,273 @@
+{
+  "kind": "m6b-frontend-readiness",
+  "at": "2026-09-17T14:53:30.677Z",
+  "baseUrl": "https://event-os-production-bc8d.up.railway.app",
+  "eventId": "92909476-d3f9-43f1-a5f7-7e1a83c92fbd",
+  "findings": [
+    {
+      "viewport": {
+        "name": "desktop",
+        "width": 1440,
+        "height": 900
+      },
+      "overflowX": false,
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "pointerSample": [
+        {
+          "text": "Sign out",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Sign out",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Propose seating layout binding",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Freeze new input edition",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Save rule",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Save reservation",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Generate seating plan",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Copy exact value",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Exact time",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Clear all filters",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Back to run",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Return to Runs",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Return to Review",
+          "cursor": "pointer"
+        },
+        {
+          "text": "View operational plan",
+          "cursor": "pointer"
+        },
+        {
+          "text": "View approval history",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Return to seating overview",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Request export",
+          "cursor": "pointer"
+        }
+      ],
+      "screenshot": "frontend/seating-desktop.png",
+      "atelierPresent": true,
+      "runPanelPresent": true,
+      "reviewPanelPresent": true
+    },
+    {
+      "viewport": {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "overflowX": false,
+      "scrollWidth": 768,
+      "clientWidth": 768,
+      "pointerSample": [
+        {
+          "text": "Sign out",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Sign out",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Propose seating layout binding",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Freeze new input edition",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Save rule",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Save reservation",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Generate seating plan",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Copy exact value",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Exact time",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Clear all filters",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Back to run",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Return to Runs",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Return to Review",
+          "cursor": "pointer"
+        },
+        {
+          "text": "View operational plan",
+          "cursor": "pointer"
+        },
+        {
+          "text": "View approval history",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Return to seating overview",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Request export",
+          "cursor": "pointer"
+        }
+      ],
+      "screenshot": "frontend/seating-tablet.png",
+      "atelierPresent": true,
+      "runPanelPresent": true,
+      "reviewPanelPresent": true
+    },
+    {
+      "viewport": {
+        "name": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "overflowX": false,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "pointerSample": [
+        {
+          "text": "Sign out",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Sign out",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Propose seating layout binding",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Freeze new input edition",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Save rule",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Save reservation",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Generate seating plan",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Copy exact value",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Exact time",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Clear all filters",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Back to run",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Return to Runs",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Return to Review",
+          "cursor": "pointer"
+        },
+        {
+          "text": "View operational plan",
+          "cursor": "pointer"
+        },
+        {
+          "text": "View approval history",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Return to seating overview",
+          "cursor": "pointer"
+        },
+        {
+          "text": "Request export",
+          "cursor": "pointer"
+        }
+      ],
+      "screenshot": "frontend/seating-mobile.png",
+      "atelierPresent": true,
+      "runPanelPresent": true,
+      "reviewPanelPresent": true
+    },
+    {
+      "auditorMutationControls": {
+        "submit": 0,
+        "approve": 0,
+        "adopt": 0,
+        "generate": 0
+      }
+    }
+  ],
+  "defects": [
+    "seating-review-event / publication badge may read 'No current operational publication' after CP-SAT ADOPTED while cpsat_solver_authority_pointers.current_adoption_id is set \u2014 record for remediation; not a safety bypass"
+  ],
+  "disposition": "READY FOR CLAUDE",
+  "note": "No frontend fixes applied during M6B. Command Atelier panels present; auditor mutation-free. Publication-badge wording defect recorded for remediation; does not block safe maker-checker/adopt use."
+}

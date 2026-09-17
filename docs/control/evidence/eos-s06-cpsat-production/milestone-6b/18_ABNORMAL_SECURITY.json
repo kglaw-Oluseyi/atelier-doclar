@@ -1,0 +1,21 @@
+{
+  "kind": "m6b-abnormal-security",
+  "at": "2026-09-17T14:52:47.032Z",
+  "baseUrl": "https://event-os-production-bc8d.up.railway.app",
+  "crossEventStatus": 400,
+  "auditorMutationFree": true,
+  "makerCannotSelfApprove": true,
+  "adoptedSubmitControls": 0,
+  "cancelControlsOnAdopted": 0,
+  "health": {
+    "ready": true,
+    "productionAuthorised": false,
+    "deployedSha": "9746b1749e579a720c4f720c8f578d27166d0d39"
+  },
+  "cancelPathEventId": "93113015-5097-4c83-a0fd-5724a835f27b",
+  "generateAbsentWithoutFreeze": true,
+  "priorPublicationSurvives": {
+    "adoptedEventId": "92909476-d3f9-43f1-a5f7-7e1a83c92fbd",
+    "note": "Adopted event retained CURRENT adoption; cancel-path event created separately without mutating adopted pointer."
+  }
+}
