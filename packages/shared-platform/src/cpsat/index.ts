@@ -21,9 +21,11 @@ export {
   EOS_S06_CPSAT_SOLVER_QUEUE_MIGRATION_ID,
   EOS_S06_CPSAT_SOLVER_QUEUE_LAUNCH_MIGRATION_ID,
   EOS_S06_CPSAT_SOLVER_QUEUE_WORKER_MIGRATION_ID,
+  EOS_S06_CPSAT_SOLVER_REVIEW_ADOPTION_MIGRATION_ID,
   CPSAT_SOLVER_QUEUE_POSTGRES_SCHEMA,
   CPSAT_SOLVER_QUEUE_LAUNCH_POSTGRES_SCHEMA,
   CPSAT_SOLVER_QUEUE_WORKER_POSTGRES_SCHEMA,
+  CPSAT_SOLVER_REVIEW_ADOPTION_POSTGRES_SCHEMA,
 } from "./postgres-schema.js";
 export {
   CPSAT_CLAIM_SQL,
@@ -81,10 +83,26 @@ export {
   loadReviewableCandidate,
   isCandidateReviewable,
   prepareRunForExecution,
+  CPSAT_REVIEWABLE_LIFECYCLES,
 } from "./worker-settlement.js";
 export { executeClaimedCpsatRun } from "./execute-claimed-run.js";
 export { canonicalizeSymmetricAssignments } from "./canonicalize.js";
-export { recomputeObjectiveTiers, tiersMatchChildReport } from "./tiers.js";
+export {
+  recomputeObjectiveTiers,
+  tiersMatchChildReport,
+  requiredObjectiveTiers,
+  verifyRequiredObjectiveTiers,
+} from "./tiers.js";
+export {
+  getCpsatCandidateReview,
+  submitCpsatCandidateForApproval,
+  decideCpsatCandidateApproval,
+  adoptApprovedCpsatCandidate,
+  reevaluateCpsatFreshness,
+  type CpsatCandidateReviewModel,
+  type CpsatGovernanceActor,
+  type CpsatGovernedAuthoritySnapshot,
+} from "./review-adoption.js";
 export {
   toCpsatWireSeed,
   assertCpsatWireSeed,

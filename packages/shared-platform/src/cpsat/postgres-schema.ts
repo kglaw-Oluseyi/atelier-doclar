@@ -5,6 +5,7 @@
 export const EOS_S06_CPSAT_SOLVER_QUEUE_MIGRATION_ID = "011_cpsat_solver_queue" as const;
 export const EOS_S06_CPSAT_SOLVER_QUEUE_LAUNCH_MIGRATION_ID = "012_cpsat_solver_queue_launch" as const;
 export const EOS_S06_CPSAT_SOLVER_QUEUE_WORKER_MIGRATION_ID = "013_cpsat_solver_queue_worker" as const;
+export const EOS_S06_CPSAT_SOLVER_REVIEW_ADOPTION_MIGRATION_ID = "014_cpsat_solver_review_adoption" as const;
 
 export const CPSAT_SOLVER_QUEUE_POSTGRES_SCHEMA = `
 CREATE TABLE IF NOT EXISTS cpsat_solver_runs (
@@ -164,4 +165,61 @@ ALTER TABLE cpsat_solver_candidates
 CREATE INDEX IF NOT EXISTS cpsat_solver_runs_lease_reaper_idx
   ON cpsat_solver_runs (status, lease_until)
   WHERE status IN ('CLAIMED', 'RUNNING') AND lease_until IS NOT NULL;
+`;
+
+/**
+ * Milestone 3 — maker-checker proposals + immutable adoption / supersession columns.
+ * Reuses S06 permission semantics; cpsat_solver_runs remains lifecycle authority.
+ */
+export const CPSAT_SOLVER_REVIEW_ADOPTION_POSTGRES_SCHEMA = `
+CREATE TABLE IF NOT EXISTS cpsat_solver_proposals (
+  id TEXT PRIMARY KEY,
+  event_id TEXT NOT NULL,
+  organisation_id TEXT NOT NULL,
+  run_id TEXT NOT NULL REFERENCES cpsat_solver_runs(id),
+  candidate_id TEXT NOT NULL,
+  assignment_hash TEXT NOT NULL,
+  status TEXT NOT NULL,
+  maker_actor TEXT NOT NULL,
+  maker_at TIMESTAMPTZ NOT NULL,
+  checker_actor TEXT,
+  checker_at TIMESTAMPTZ,
+  decision TEXT,
+  rejection_reason TEXT,
+  layout_hash TEXT NOT NULL,
+  rules_hash TEXT NOT NULL,
+  guest_edition_hash TEXT NOT NULL,
+  objective_edition_hash TEXT NOT NULL,
+  baseline_plan_hash TEXT,
+  created_at TIMESTAMPTZ NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS cpsat_solver_proposals_active_uidx
+  ON cpsat_solver_proposals (run_id, assignment_hash)
+  WHERE status IN ('PENDING', 'APPROVED');
+
+CREATE INDEX IF NOT EXISTS cpsat_solver_proposals_event_idx
+  ON cpsat_solver_proposals (event_id, created_at DESC);
+
+ALTER TABLE cpsat_solver_adoptions
+  ADD COLUMN IF NOT EXISTS organisation_id TEXT,
+  ADD COLUMN IF NOT EXISTS candidate_id TEXT,
+  ADD COLUMN IF NOT EXISTS proposal_id TEXT,
+  ADD COLUMN IF NOT EXISTS approval_id TEXT,
+  ADD COLUMN IF NOT EXISTS adopting_actor TEXT,
+  ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'CURRENT',
+  ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS supersedes_adoption_id TEXT,
+  ADD COLUMN IF NOT EXISTS freshness_at_adoption TEXT,
+  ADD COLUMN IF NOT EXISTS product_result TEXT,
+  ADD COLUMN IF NOT EXISTS evidence_grade TEXT,
+  ADD COLUMN IF NOT EXISTS layout_hash TEXT,
+  ADD COLUMN IF NOT EXISTS rules_hash TEXT,
+  ADD COLUMN IF NOT EXISTS guest_edition_hash TEXT,
+  ADD COLUMN IF NOT EXISTS objective_edition_hash TEXT,
+  ADD COLUMN IF NOT EXISTS baseline_plan_hash TEXT;
+
+CREATE INDEX IF NOT EXISTS cpsat_solver_adoptions_event_idx
+  ON cpsat_solver_adoptions (event_id, adopted_at DESC);
 `;

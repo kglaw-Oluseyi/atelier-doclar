@@ -674,3 +674,77 @@ export async function runS06EvaluationAction(
     },
   });
 }
+
+export async function submitCpsatCandidateAction(
+  boundEventId: string,
+  prev: ProtectionFormState,
+  formData: FormData,
+): Promise<ProtectionFormState> {
+  return runTrustedSeatingAction({
+    boundEventId,
+    prev,
+    formData,
+    permission: "seating.plan.submit",
+    actionType: "seating.cpsat.submit",
+    execute: async ({ actor, envelope }) => {
+      requireV2Mutation();
+      const result = await getRuntime().service.seatingV2Commands().submitCpsatCandidateForApproval(actor, envelope, {
+        runId: field(formData, "runId"),
+        candidateId: field(formData, "candidateId"),
+        assignmentHash: field(formData, "assignmentHash"),
+      });
+      return { id: result.value.proposalId };
+    },
+  });
+}
+
+export async function decideCpsatCandidateAction(
+  boundEventId: string,
+  prev: ProtectionFormState,
+  formData: FormData,
+): Promise<ProtectionFormState> {
+  const decision = field(formData, "decision") === "REJECTED" ? "REJECTED" : "APPROVED";
+  return runTrustedSeatingAction({
+    boundEventId,
+    prev,
+    formData,
+    permission: "seating.plan.approve",
+    actionType: decision === "APPROVED" ? "seating.cpsat.approve" : "seating.cpsat.reject",
+    execute: async ({ actor, envelope }) => {
+      requireV2Mutation();
+      const result = await getRuntime().service.seatingV2Commands().decideCpsatCandidateApproval(actor, envelope, {
+        runId: field(formData, "runId"),
+        candidateId: field(formData, "candidateId"),
+        assignmentHash: field(formData, "assignmentHash"),
+        proposalId: field(formData, "proposalId"),
+        decision,
+        reason: field(formData, "reason") || undefined,
+      });
+      return { id: result.value.proposalId };
+    },
+  });
+}
+
+export async function adoptCpsatCandidateAction(
+  boundEventId: string,
+  prev: ProtectionFormState,
+  formData: FormData,
+): Promise<ProtectionFormState> {
+  return runTrustedSeatingAction({
+    boundEventId,
+    prev,
+    formData,
+    permission: "seating.plan.publish",
+    actionType: "seating.cpsat.adopt",
+    execute: async ({ actor, envelope }) => {
+      requireV2Mutation();
+      const result = await getRuntime().service.seatingV2Commands().adoptApprovedCpsatCandidate(actor, envelope, {
+        runId: field(formData, "runId"),
+        candidateId: field(formData, "candidateId"),
+        approvalId: field(formData, "approvalId"),
+        assignmentHash: field(formData, "assignmentHash") || undefined,
+      });
+      return { id: result.value.adoptionId };
+    },
+  });
+}

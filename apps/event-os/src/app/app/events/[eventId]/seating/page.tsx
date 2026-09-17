@@ -15,10 +15,12 @@ import { operationalStateFromCode } from "../../../../../server/operational-stat
 import {
   activateReservationBlockAction,
   adoptSeatingRunAction,
+  adoptCpsatCandidateAction,
   applySeatingChangeAction,
   cancelSeatingRunAction,
   createReservationBlockAction,
   createSeatingConstraintAction,
+  decideCpsatCandidateAction,
   decideSeatingApprovalAction,
   decideSeatingReviewAction,
   activateSeatingLayoutBindingAction,
@@ -31,6 +33,7 @@ import {
   requestSeatingExportAction,
   recallSeatingPlanAction,
   runS06EvaluationAction,
+  submitCpsatCandidateAction,
   submitSeatingPlanAction,
   withdrawSeatingLayoutBindingAction,
   supersedeReservationBlockAction,
@@ -38,10 +41,11 @@ import {
 } from "../../../../../server/seating-actions";
 import { switchSeatingVerifyAsAction } from "../../../../../server/seating-verify-as-action";
 import { eventOsVerifyAsAvailable } from "../../../../../server/seating-verify-as";
-import { emitSettlementStage, LEGACY_S06_PUBLICATION_LABEL, PlatformError, retryLockApplies, seatingV2ReplacementEnabled, buildCpsatRunUiModel, isSolverQueueEnabled } from "@maison-doclar/shared-platform";
+import { emitSettlementStage, LEGACY_S06_PUBLICATION_LABEL, PlatformError, retryLockApplies, seatingV2ReplacementEnabled, buildCpsatRunUiModel, isSolverQueueEnabled, type CpsatCandidateReviewModel } from "@maison-doclar/shared-platform";
 import { activateSeatingRuleAction, withdrawSeatingRuleAction } from "../../../../../server/seating-actions";
 import { CpsatRunStatusPanel } from "../../../../../components/cpsat-run-status-panel";
 import { CpsatRunLifecyclePoller } from "../../../../../components/cpsat-run-lifecycle-poller";
+import { CpsatCandidateReviewPanel } from "../../../../../components/cpsat-candidate-review-panel";
 
 function visibleSeatingRuns<T extends { id: string }>(runs: T[], currentRunId: string | undefined, limit = 12): T[] {
   if (runs.length <= limit) return runs;
@@ -193,6 +197,25 @@ export default async function EventSeatingPage({
     reasonClass: presented.correlationId ? "PRESENTED" : "ABSENT",
   });
   const envelopeFields = { organisationId: organisation.id, eventId: event.id, assignmentId };
+  const reviewableLifecycles = new Set([
+    "READY_FOR_REVIEW",
+    "PENDING_APPROVAL",
+    "APPROVED",
+    "REJECTED",
+    "ADOPTED",
+    "SUPERSEDED",
+  ]);
+  const cpsatReviewRun = workspace.runs.find((run) =>
+    reviewableLifecycles.has(String((run as { lifecycle?: string }).lifecycle ?? run.status ?? "")),
+  );
+  let cpsatReview: CpsatCandidateReviewModel | null = null;
+  if (isSolverQueueEnabled() && cpsatReviewRun && seatingV2ReplacementEnabled()) {
+    try {
+      cpsatReview = await runtime.service.seatingV2Commands().getCpsatCandidateReview(actor, event.id, cpsatReviewRun.id);
+    } catch {
+      cpsatReview = null;
+    }
+  }
   const working = workspace.workingEdition as {
     id?: string;
     contentHash?: string;
@@ -1045,6 +1068,105 @@ export default async function EventSeatingPage({
       <section id="review" className="atelier-panel" data-testid="seating-review">
         <h2>Review</h2>
         <p data-testid="seating-review-lineage">Package → Run → Validation → Plan edition</p>
+        {cpsatReview ? (
+          <>
+            <CpsatCandidateReviewPanel
+              review={cpsatReview}
+              runHref={`#runs`}
+              showMutationControls={Boolean(permissions.submit || permissions.approve || permissions.publish)}
+            />
+            {/* Role-accurate mutation controls: Auditor never sees these forms. */}
+            {permissions.submit && cpsatReview.actions.canSubmit && cpsatReview.freshness !== "STALE" ? (
+              <ProtectionMutationForm
+                action={submitCpsatCandidateAction.bind(null, event.id)}
+                className="actions"
+                testId="cpsat-submit-for-approval"
+              >
+                <Envelope
+                  fields={{
+                    ...envelopeFields,
+                    runId: cpsatReview.runId,
+                    candidateId: cpsatReview.candidateId,
+                    assignmentHash: cpsatReview.assignmentHash,
+                  }}
+                />
+                <IdempotencyField />
+                <button type="submit" className="button primary" style={{ cursor: "pointer" }}>
+                  Submit for approval
+                </button>
+              </ProtectionMutationForm>
+            ) : null}
+            {permissions.approve && cpsatReview.actions.canApprove && cpsatReview.approvalHistory.proposalId && cpsatReview.freshness !== "STALE" ? (
+              <ProtectionMutationForm
+                action={decideCpsatCandidateAction.bind(null, event.id)}
+                className="actions"
+                testId="cpsat-approve-candidate"
+              >
+                <Envelope
+                  fields={{
+                    ...envelopeFields,
+                    runId: cpsatReview.runId,
+                    candidateId: cpsatReview.candidateId,
+                    assignmentHash: cpsatReview.assignmentHash,
+                    proposalId: cpsatReview.approvalHistory.proposalId,
+                    decision: "APPROVED",
+                  }}
+                />
+                <IdempotencyField />
+                <button type="submit" className="button primary" style={{ cursor: "pointer" }}>
+                  Approve seating plan
+                </button>
+              </ProtectionMutationForm>
+            ) : null}
+            {permissions.approve && cpsatReview.actions.canReject && cpsatReview.approvalHistory.proposalId ? (
+              <ProtectionMutationForm
+                action={decideCpsatCandidateAction.bind(null, event.id)}
+                className="actions"
+                testId="cpsat-reject-candidate"
+              >
+                <Envelope
+                  fields={{
+                    ...envelopeFields,
+                    runId: cpsatReview.runId,
+                    candidateId: cpsatReview.candidateId,
+                    assignmentHash: cpsatReview.assignmentHash,
+                    proposalId: cpsatReview.approvalHistory.proposalId,
+                    decision: "REJECTED",
+                  }}
+                />
+                <IdempotencyField />
+                <label>
+                  Rejection reason
+                  <input name="reason" required minLength={3} data-testid="cpsat-reject-reason" />
+                </label>
+                <button type="submit" className="button secondary" style={{ cursor: "pointer" }}>
+                  Reject seating plan
+                </button>
+              </ProtectionMutationForm>
+            ) : null}
+            {permissions.publish && cpsatReview.actions.canAdopt && cpsatReview.approvalHistory.proposalId && cpsatReview.freshness !== "STALE" ? (
+              <ProtectionMutationForm
+                action={adoptCpsatCandidateAction.bind(null, event.id)}
+                className="actions"
+                testId="cpsat-adopt-candidate"
+              >
+                <Envelope
+                  fields={{
+                    ...envelopeFields,
+                    runId: cpsatReview.runId,
+                    candidateId: cpsatReview.candidateId,
+                    assignmentHash: cpsatReview.assignmentHash,
+                    approvalId: cpsatReview.approvalHistory.proposalId,
+                  }}
+                />
+                <IdempotencyField />
+                <button type="submit" className="button primary" style={{ cursor: "pointer" }}>
+                  Adopt seating plan
+                </button>
+              </ProtectionMutationForm>
+            ) : null}
+          </>
+        ) : null}
         <p data-testid="seating-review-event">
           {event.name}
           {" · "}

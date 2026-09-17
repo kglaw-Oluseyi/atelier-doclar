@@ -21,9 +21,19 @@ import { CPSAT_ENGINE_EXPECTATION } from "./durable-launch.js";
 import { buildExplanations, CPSAT_EXPLANATION_EDITION } from "./explanations.js";
 import { verifyExplanations } from "./explanation-verifier.js";
 import { canonicalizeSymmetricAssignments } from "./canonicalize.js";
-import { recomputeObjectiveTiers, tiersMatchChildReport } from "./tiers.js";
+import { recomputeObjectiveTiers, verifyRequiredObjectiveTiers } from "./tiers.js";
 import { parseAuthoredAuthority, parseFrozenCpsatRequest } from "./authority-snapshot.js";
 import { fencedSettleCpsatRun } from "./worker-lifecycle.js";
+
+/** Lifecycles that may open a sealed candidate for review / history (Milestone 3). */
+export const CPSAT_REVIEWABLE_LIFECYCLES = [
+  "READY_FOR_REVIEW",
+  "PENDING_APPROVAL",
+  "APPROVED",
+  "REJECTED",
+  "ADOPTED",
+  "SUPERSEDED",
+] as const;
 
 function hasTransaction(client: PgQueryable): client is PgTransactor {
   return typeof (client as PgTransactor).transaction === "function";
@@ -155,9 +165,14 @@ export function processVerifiedCandidate(input: {
     return { kind: "fault", faultCode: "SOLVER_FAULT(CHILD_RESPONSE):empty_assignment", stopReason: "EMPTY_ASSIGNMENT" };
   }
 
-  const recomputed = recomputeObjectiveTiers(input.request, input.childAssignments);
-  if (!tiersMatchChildReport(recomputed, input.childTiers)) {
-    return { kind: "fault", faultCode: "SOLVER_FAULT(VERIFICATION_FAILED):tier_mismatch", stopReason: "TIER_MISMATCH" };
+  const tierEvidence = verifyRequiredObjectiveTiers(input.request, input.childAssignments, input.childTiers);
+  const recomputed = tierEvidence.recomputed;
+  if (!tierEvidence.ok) {
+    return {
+      kind: "fault",
+      faultCode: `SOLVER_FAULT(VERIFICATION_FAILED):${tierEvidence.fault ?? "tier_mismatch"}`,
+      stopReason: "TIER_MISMATCH",
+    };
   }
 
   const expl = buildExplanations(input.request, input.childAssignments);
@@ -223,6 +238,7 @@ export function processVerifiedCandidate(input: {
         seatedEligible: second.seatedEligible,
         eligibleCount: second.eligibleCount,
         tiers: canonicalTiers,
+        tierVerification: verifyRequiredObjectiveTiers(input.request, canonicalChild, input.childTiers),
         engineExpectation: CPSAT_ENGINE_EXPECTATION,
       },
     },
@@ -380,7 +396,7 @@ export function isCandidateReviewable(clientRow: {
   sealed: boolean | null | undefined;
   lifecycle: string;
 }): boolean {
-  return Boolean(clientRow.sealed) && clientRow.lifecycle === "READY_FOR_REVIEW";
+  return Boolean(clientRow.sealed) && (CPSAT_REVIEWABLE_LIFECYCLES as readonly string[]).includes(clientRow.lifecycle);
 }
 
 export async function loadReviewableCandidate(

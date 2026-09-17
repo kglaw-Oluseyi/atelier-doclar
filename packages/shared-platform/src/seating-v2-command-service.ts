@@ -5,7 +5,7 @@ import { PlatformError } from "./errors.js";
 import type { OperationalGuest } from "./guest-schemas.js";
 import { authorize, canSeeEvent, type ActorSnapshot } from "./policy.js";
 import { resolveTrustedSeatingAssignment, seatingAssignmentAllowsPermission } from "./seating-v2-trusted-assignment.js";
-import { roleKeyForId } from "./catalog.js";
+import { permissionsForRole, roleKeyForId } from "./catalog.js";
 import { seatingDisclosureForRole } from "./seating-workspace.js";
 import { buildSeatingV2Workspace } from "./seating-v2-workspace.js";
 import { emptySeatingV2State, SEATING_V2_WORKSPACE_COLLECTIONS, type SeatingV2State } from "./seating-v2-state.js";
@@ -20,6 +20,15 @@ import {
   requestCpsatRunCancellation,
   type CpsatSeatingRunSummary,
 } from "./cpsat/durable-launch.js";
+import {
+  adoptApprovedCpsatCandidate,
+  decideCpsatCandidateApproval,
+  getCpsatCandidateReview,
+  submitCpsatCandidateForApproval,
+  type CpsatCandidateReviewModel,
+  type CpsatGovernedAuthoritySnapshot,
+} from "./cpsat/review-adoption.js";
+import { SYSTEM_ROLE_KEYS } from "./constants.js";
 import {
   activeSeatingLayoutBindings,
   boundLayoutFromLoadedPublication,
@@ -1234,7 +1243,7 @@ export class SeatingV2CommandService {
       const bindings = await this.repo.transaction(async (tx) =>
         tx.list<SeatingV2LayoutBinding>("layoutBindings", canonical),
       );
-      const activeBinding = activeSeatingLayoutBindings(bindings)[0];
+      const activeBinding = activeSeatingLayoutBindings(bindings, canonical.organisationId, canonical.eventId)[0];
       const frozen = freezeCpsatSeatingAuthority({
         organisationId: canonical.organisationId,
         eventId: canonical.eventId,
@@ -1995,6 +2004,190 @@ export class SeatingV2CommandService {
       id: summary.runId,
       cancelRequested: summary.cancelRequested,
       lifecycle: summary.lifecycle,
+    }));
+  }
+
+  private cpsatGovernanceActor(actor: SeatingV2Actor, eventId: string): {
+    actor: { personId: string; roleKey: string; permissions: readonly string[] };
+    organisationId: string;
+    currentAuthority: CpsatGovernedAuthoritySnapshot;
+  } {
+    const people = this.deps.resolveActor(actor.personId);
+    const event = this.deps.loadEventById(eventId);
+    if (!event) throw new PlatformError("NOT_FOUND", "event was not found");
+    if (!canSeeEvent(people, event, nowOf(actor))) throw new PlatformError("NOT_FOUND", "event was not found");
+    const assignment = resolveTrustedSeatingAssignment(people, event, nowOf(actor));
+    const roleKey = roleKeyForId(assignment.roleId);
+    const permissions =
+      roleKey && (SYSTEM_ROLE_KEYS as readonly string[]).includes(roleKey)
+        ? permissionsForRole(roleKey as (typeof SYSTEM_ROLE_KEYS)[number])
+        : [];
+    return {
+      actor: { personId: actor.personId, roleKey: roleKey ?? "PLANNER", permissions },
+      organisationId: event.organisationId,
+      currentAuthority: {
+        layoutHash: "",
+        rulesHash: "",
+        guestEditionHash: "",
+        objectiveEditionHash: "",
+        baselinePlanHash: null,
+      },
+    };
+  }
+
+  private async resolveCpsatCurrentAuthority(
+    organisationId: string,
+    eventId: string,
+  ): Promise<CpsatGovernedAuthoritySnapshot> {
+    return this.repo.transaction(async (tx) => {
+      const packages = await tx.list<{
+        contentHash: string;
+        layoutContentHash: string;
+        cohortHash: string;
+        solverConfigHash: string;
+      }>("inputPackages", { organisationId, eventId });
+      const pkg = packages[packages.length - 1];
+      const bindings = await tx.list<SeatingV2LayoutBinding>("layoutBindings", { organisationId, eventId });
+      const active = activeSeatingLayoutBindings(bindings, organisationId, eventId)[0];
+      return {
+        layoutHash: active?.layoutContentHash ?? pkg?.layoutContentHash ?? "",
+        rulesHash: pkg?.contentHash ?? "",
+        guestEditionHash: pkg?.cohortHash ?? "",
+        objectiveEditionHash: pkg?.solverConfigHash ?? "",
+        baselinePlanHash: null,
+      };
+    });
+  }
+
+  async getCpsatCandidateReview(
+    actor: SeatingV2Actor,
+    eventId: string,
+    runId: string,
+  ): Promise<CpsatCandidateReviewModel> {
+    const people = this.deps.resolveActor(actor.personId);
+    const event = this.deps.loadEventById(eventId);
+    if (!event) throw new PlatformError("NOT_FOUND", "event was not found");
+    if (!canSeeEvent(people, event, nowOf(actor))) throw new PlatformError("NOT_FOUND", "event was not found");
+    const assignment = resolveTrustedSeatingAssignment(people, event, nowOf(actor));
+    this.guard(actor, "seating.view", { organisationId: event.organisationId, eventId }, assignment.id);
+    const roleKey = roleKeyForId(assignment.roleId);
+    const permissions =
+      roleKey && (SYSTEM_ROLE_KEYS as readonly string[]).includes(roleKey)
+        ? permissionsForRole(roleKey as (typeof SYSTEM_ROLE_KEYS)[number])
+        : [];
+    const currentAuthority = await this.resolveCpsatCurrentAuthority(event.organisationId, eventId);
+    return getCpsatCandidateReview(this.requireCpsatQueueClient(), {
+      eventId,
+      runId,
+      actor: { personId: actor.personId, roleKey: roleKey ?? "PLANNER", permissions },
+      guestDisplayNames: {},
+      currentAuthority,
+    });
+  }
+
+  async submitCpsatCandidateForApproval(
+    actor: SeatingV2Actor,
+    envelope: SeatingV2CommandEnvelope,
+    input: { runId: string; candidateId: string; assignmentHash: string },
+  ): Promise<SeatingV2CommandResult<{ id: string; proposalId: string; lifecycle: string }>> {
+    requireKey(envelope.idempotencyKey);
+    const trusted = this.trustedEnvelope(actor, envelope, "seating.plan.submit");
+    const canonical = trusted.envelope;
+    const gov = this.cpsatGovernanceActor(actor, canonical.eventId);
+    const currentAuthority = await this.resolveCpsatCurrentAuthority(canonical.organisationId, canonical.eventId);
+    const result = await submitCpsatCandidateForApproval(this.requireCpsatQueueClient(), {
+      eventId: canonical.eventId,
+      runId: input.runId,
+      candidateId: input.candidateId,
+      assignmentHash: input.assignmentHash,
+      actor: gov.actor,
+      organisationId: canonical.organisationId,
+      currentAuthority,
+    });
+    return this.mutate(actor, canonical, "seating.plan.submit", "seatingV2.submitCpsatCandidate", async () => ({
+      id: result.proposalId,
+      proposalId: result.proposalId,
+      lifecycle: result.lifecycle,
+      application: result.application,
+    }));
+  }
+
+  async decideCpsatCandidateApproval(
+    actor: SeatingV2Actor,
+    envelope: SeatingV2CommandEnvelope,
+    input: {
+      runId: string;
+      candidateId: string;
+      assignmentHash: string;
+      proposalId: string;
+      decision: "APPROVED" | "REJECTED";
+      reason?: string;
+    },
+  ): Promise<SeatingV2CommandResult<{ id: string; proposalId: string; lifecycle: string; decision: string }>> {
+    requireKey(envelope.idempotencyKey);
+    const trusted = this.trustedEnvelope(actor, envelope, "seating.plan.approve");
+    const canonical = trusted.envelope;
+    const gov = this.cpsatGovernanceActor(actor, canonical.eventId);
+    const currentAuthority = await this.resolveCpsatCurrentAuthority(canonical.organisationId, canonical.eventId);
+    const result = await decideCpsatCandidateApproval(this.requireCpsatQueueClient(), {
+      eventId: canonical.eventId,
+      runId: input.runId,
+      candidateId: input.candidateId,
+      assignmentHash: input.assignmentHash,
+      proposalId: input.proposalId,
+      decision: input.decision,
+      reason: input.reason,
+      actor: gov.actor,
+      currentAuthority,
+    });
+    return this.mutate(actor, canonical, "seating.plan.approve", "seatingV2.decideCpsatCandidate", async () => ({
+      id: result.proposalId,
+      ...result,
+    }));
+  }
+
+  async adoptApprovedCpsatCandidate(
+    actor: SeatingV2Actor,
+    envelope: SeatingV2CommandEnvelope,
+    input: { runId: string; candidateId: string; approvalId: string; assignmentHash?: string },
+  ): Promise<
+    SeatingV2CommandResult<{
+      id: string;
+      adoptionId: string;
+      version: number;
+      assignmentHash: string;
+      adoptedAt: string;
+    }>
+  > {
+    requireKey(envelope.idempotencyKey);
+    const trusted = this.trustedEnvelope(actor, envelope, "seating.plan.publish");
+    const canonical = trusted.envelope;
+    const gov = this.cpsatGovernanceActor(actor, canonical.eventId);
+    const currentAuthority = await this.resolveCpsatCurrentAuthority(canonical.organisationId, canonical.eventId);
+    const result = await adoptApprovedCpsatCandidate(this.requireCpsatQueueClient(), {
+      eventId: canonical.eventId,
+      runId: input.runId,
+      candidateId: input.candidateId,
+      approvalId: input.approvalId,
+      assignmentHash: input.assignmentHash,
+      actor: gov.actor,
+      organisationId: canonical.organisationId,
+      currentAuthority,
+    });
+    return this.mutate(actor, canonical, "seating.plan.publish", "seatingV2.adoptCpsatCandidate", async () => ({
+      id: result.adoptionId,
+      adoptionId: result.adoptionId,
+      version: result.version,
+      assignmentHash: result.assignmentHash,
+      adoptedAt: result.adoptedAt,
+      makerActor: result.makerActor,
+      checkerActor: result.checkerActor,
+      adoptingActor: result.adoptingActor,
+      supersededAdoptionId: result.supersededAdoptionId,
+      freshnessAtAdoption: result.freshnessAtAdoption,
+      productResult: result.productResult,
+      evidenceGrade: result.evidenceGrade,
+      application: result.application,
     }));
   }
 

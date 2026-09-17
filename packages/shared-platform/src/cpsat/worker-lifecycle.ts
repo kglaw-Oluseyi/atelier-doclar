@@ -48,6 +48,11 @@ export function mapLifecycleToProjectionStatus(
     case "PERSISTING":
       return "RUNNING";
     case "READY_FOR_REVIEW":
+    case "PENDING_APPROVAL":
+    case "APPROVED":
+    case "REJECTED":
+    case "ADOPTED":
+    case "SUPERSEDED":
       return "FEASIBLE";
     case "CANCELLED":
       return "CANCELLED";

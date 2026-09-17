@@ -15,6 +15,10 @@ export type CpsatOperatorLifecycle =
   | "VERIFYING"
   | "EXPLAINING"
   | "READY_FOR_REVIEW"
+  | "PENDING_APPROVAL"
+  | "APPROVED"
+  | "REJECTED"
+  | "ADOPTED"
   | "CANCELLED"
   | "INFEASIBLE"
   | "SEARCH_INCOMPLETE"
@@ -105,6 +109,10 @@ function deriveOperatorLifecycle(input: {
   if (lifecycle === "CLAIMED") return "CLAIMED";
   if (lifecycle === "CANCELLED" || product === "CANCELLED") return "CANCELLED";
   if (lifecycle === "READY_FOR_REVIEW") return "READY_FOR_REVIEW";
+  if (lifecycle === "PENDING_APPROVAL") return "PENDING_APPROVAL";
+  if (lifecycle === "APPROVED") return "APPROVED";
+  if (lifecycle === "REJECTED") return "REJECTED";
+  if (lifecycle === "ADOPTED") return "ADOPTED";
   if (product === "INFEASIBLE" || lifecycle === "CLOSED_NO_PLAN" && product === "INFEASIBLE") return "INFEASIBLE";
   if (product === "SEARCH_INCOMPLETE") return "SEARCH_INCOMPLETE";
   if (product === "TIMED_OUT") return "TIMED_OUT";
@@ -213,6 +221,26 @@ export function buildCpsatRunUiModel(input: {
       supportingMessage = "All eligible guests are seated under verified HARD rules. Adoption is not available yet.";
       reviewActionLabel = "Review seating plan";
       break;
+    case "PENDING_APPROVAL":
+      primaryMessage = "Seating plan awaiting approval";
+      supportingMessage = "A maker submitted this sealed candidate. A different authorised checker must decide.";
+      reviewActionLabel = "Open approval review";
+      break;
+    case "APPROVED":
+      primaryMessage = "Seating plan approved";
+      supportingMessage = "An authorised checker approved the exact sealed candidate. Adoption publishes it operationally.";
+      reviewActionLabel = "Adopt seating plan";
+      break;
+    case "REJECTED":
+      primaryMessage = "Seating plan rejected";
+      supportingMessage = "The sealed candidate is preserved. A governed resubmission is allowed when authority remains current.";
+      reviewActionLabel = "Review rejected plan";
+      break;
+    case "ADOPTED":
+      primaryMessage = "Seating plan adopted";
+      supportingMessage = "This sealed candidate is the current operational seating publication.";
+      reviewActionLabel = "View operational plan";
+      break;
     case "CANCELLED":
       primaryMessage = "Seating run cancelled";
       supportingMessage = "No seating candidate was published. You can launch a new run when ready.";
@@ -259,7 +287,13 @@ export function buildCpsatRunUiModel(input: {
       supportingMessage = "Safe to leave and return — progress is durable on the run record.";
   }
 
-  if (input.freshness === "STALE" && (operatorLifecycle === "READY_FOR_REVIEW" || operatorLifecycle === "SETTLED")) {
+  if (
+    input.freshness === "STALE" &&
+    (operatorLifecycle === "READY_FOR_REVIEW" ||
+      operatorLifecycle === "PENDING_APPROVAL" ||
+      operatorLifecycle === "APPROVED" ||
+      operatorLifecycle === "SETTLED")
+  ) {
     supportingMessage = `${supportingMessage} Authority is now stale; the sealed result status remains ${productResult || "unchanged"}.`;
   }
 
