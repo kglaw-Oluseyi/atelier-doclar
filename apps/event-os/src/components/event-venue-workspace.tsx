@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { EventVenueWorkspace } from "@maison-doclar/shared-platform";
+import type { EventVenueWorkspace } from "@maison-doclar/shared-platform/client-types";
 import { adoptVenueAction, recordEventVenueOverrideAction } from "../server/actions";
 import { IdempotencyField, PendingSubmit } from "./atelier-pending-submit";
 

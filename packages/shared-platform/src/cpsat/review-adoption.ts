@@ -32,7 +32,13 @@ import { projectSeatingV2Lifecycle } from "./worker-lifecycle.js";
 import { CPSAT_REVIEWABLE_LIFECYCLES } from "./worker-settlement.js";
 import { recomputeObjectiveTiers, requiredObjectiveTiers, verifyRequiredObjectiveTiers } from "./tiers.js";
 import type { CpsatSolveRequest } from "./compiler.js";
+import type {
+  CpsatCandidateReviewModel,
+  CpsatPlacementMovement,
+  CpsatTierVerificationView,
+} from "./client-contract.js";
 
+export type { CpsatCandidateReviewModel, CpsatPlacementMovement, CpsatTierVerificationView } from "./client-contract.js";
 export { CPSAT_REVIEWABLE_LIFECYCLES };
 
 function hasTransaction(client: PgQueryable): client is PgTransactor {
@@ -64,90 +70,6 @@ export type CpsatGovernedAuthoritySnapshot = {
   objectiveEditionHash: string;
   baselinePlanHash: string | null;
   holderEpoch?: number;
-};
-
-export type CpsatPlacementMovement = "RETAINED" | "MOVED" | "NEW" | "RELEASED" | "UNSEATED";
-
-export type CpsatCandidateReviewModel = {
-  runId: string;
-  candidateId: string;
-  assignmentHash: string;
-  engineIdentity: string;
-  modelVersion: string;
-  resultStatus: string | null;
-  lifecycle: string;
-  freshness: string;
-  evidenceGrade: string | null;
-  eligibleGuestCount: number;
-  seatedGuestCount: number;
-  unseatedGuestCount: number;
-  hardRuleVerification: "PASS" | "FAIL" | "UNKNOWN";
-  movementTier: { value: number | null; required: boolean; proofStatus: string };
-  preferenceTier: { value: number | null; required: boolean; proofStatus: string };
-  tierVerification: ReturnType<typeof verifyRequiredObjectiveTiers> | null;
-  createdAt: string | null;
-  startedAt: string | null;
-  completedAt: string | null;
-  sealedAt: string | null;
-  tables: Array<{
-    tableToken: string;
-    capacity: number;
-    occupied: number;
-    available: number;
-    reserved: boolean;
-    locked: boolean;
-    guestTokens: string[];
-  }>;
-  placements: Array<{
-    guestToken: string;
-    displayName: string | null;
-    partyContext: string | null;
-    tableToken: string | null;
-    seatToken: string | null;
-    reasonCode: string;
-    reasonText: string;
-    movement: CpsatPlacementMovement;
-    warning: string | null;
-  }>;
-  changeComparison: {
-    retained: number;
-    moved: number;
-    newlySeated: number;
-    released: number;
-    tableChanges: Array<{ tableToken: string; delta: number }>;
-  };
-  ruleAssurance: {
-    hardRulesSatisfied: boolean;
-    categories: Array<{ category: string; status: string }>;
-  };
-  approvalHistory: {
-    proposalId: string | null;
-    submission: { makerActor: string; at: string } | null;
-    decision: {
-      checkerActor: string;
-      at: string;
-      decision: string;
-      reason: string | null;
-    } | null;
-    adoption: {
-      adoptionId: string;
-      version: number;
-      at: string;
-      status: string;
-      supersedesAdoptionId: string | null;
-    } | null;
-  };
-  operationalComparison: {
-    currentAdoptionId: string | null;
-    currentAssignmentHash: string | null;
-    differsFromCandidate: boolean | null;
-  };
-  actions: {
-    canSubmit: boolean;
-    canApprove: boolean;
-    canReject: boolean;
-    canAdopt: boolean;
-  };
 };
 
 function hasPermission(actor: CpsatGovernanceActor, key: PermissionKey): boolean {
@@ -387,7 +309,7 @@ export async function getCpsatCandidateReview(
   const required = request
     ? requiredObjectiveTiers(request)
     : { movement: false, preferences: false };
-  let tierVerification: ReturnType<typeof verifyRequiredObjectiveTiers> | null = null;
+  let tierVerification: CpsatTierVerificationView | null = null;
   if (request) {
     const childLike = [
       candidateRow.movement_tier != null

@@ -1,77 +1,14 @@
 /**
- * CP-SAT run status presentation helpers.
+ * CP-SAT run status presentation helpers (server-side model builders).
  * Never claims percentage-complete, ETA-to-optimality, or "best possible" without OPTIMAL.
  * Milestone 2 adds claim/running/verify/ready-for-review and fault wording.
+ *
+ * Browser-safe types live in `./client-contract.ts` (`@maison-doclar/shared-platform/cpsat-client`).
  */
 import { CPSAT_ORTOOLS_VERSION, CPSAT_PYTHON_VERSION, CPSAT_SHORT_REASON_TEXT, type CpsatShortReasonCode } from "./contract.js";
+import type { CpsatOperatorLifecycle, CpsatRunUiModel } from "./client-contract.js";
 
-export type CpsatOperatorLifecycle =
-  | "NONE"
-  | "LAUNCHING"
-  | "QUEUED"
-  | "CLAIMED"
-  | "CANCELLATION_REQUESTED"
-  | "RUNNING"
-  | "VERIFYING"
-  | "EXPLAINING"
-  | "READY_FOR_REVIEW"
-  | "PENDING_APPROVAL"
-  | "APPROVED"
-  | "REJECTED"
-  | "ADOPTED"
-  | "CANCELLED"
-  | "INFEASIBLE"
-  | "SEARCH_INCOMPLETE"
-  | "TIMED_OUT"
-  | "INVALID_INPUT"
-  | "SOLVER_FAULT"
-  | "SETTLED"
-  | "VALIDATION_FAILED"
-  | "ACCESS_DENIED";
-
-export type CpsatRunUiModel = {
-  engineLabel: string;
-  phase: string;
-  elapsedMs: number;
-  deterministicBudgetSeconds: number | null;
-  firstSolutionFound: boolean;
-  currentObjective: string | null;
-  currentBound: string | null;
-  proofStatus: "PROVEN" | "NOT_PROVEN" | "N_A";
-  guestTotals: { seated: number; eligible: number };
-  tableTotals: { occupied: number; capacity: number };
-  hardResult: "PASS" | "FAIL" | "UNKNOWN";
-  movementResult: string | null;
-  preferenceResult: string | null;
-  /** Terminal solver product result — separate from lifecycle. */
-  productResult: string;
-  /** Authority freshness — separate from lifecycle and result. */
-  freshness: "CURRENT" | "FRESH" | "STALE";
-  /** Evidence grade — separate; empty while queued. */
-  evidenceGrade: string | null;
-  /** Durable lifecycle (QUEUED, RUNNING, …). */
-  lifecycle: string;
-  /** Result status — null/empty while queued with no terminal result. */
-  resultStatus: string | null;
-  purposeLabel: string;
-  modeLabel: string;
-  createdAtLabel: string | null;
-  completedAtLabel: string | null;
-  cancelRequested: boolean;
-  faultCode: string | null;
-  safeToLeaveAndReturn: boolean;
-  cancelAllowed: boolean;
-  stopAndKeepBestAllowed: boolean;
-  retrySafe: boolean;
-  assignmentHashShort: string | null;
-  reviewActionLabel: string | null;
-  operatorLifecycle: CpsatOperatorLifecycle;
-  primaryMessage: string;
-  supportingMessage: string;
-  validationMessage: string | null;
-  showPercentComplete: false;
-  showHeuristicFallback: false;
-};
+export type { CpsatOperatorLifecycle, CpsatRunUiModel } from "./client-contract.js";
 
 function purposeLabel(purpose: string | undefined): string {
   switch (purpose) {

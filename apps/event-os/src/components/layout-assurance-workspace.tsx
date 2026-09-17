@@ -1,6 +1,6 @@
 "use client";
 
-import type { LayoutSetupWorkspace } from "@maison-doclar/shared-platform";
+import type { LayoutSetupWorkspace } from "@maison-doclar/shared-platform/client-types";
 import {
   acknowledgeLayoutFindingAction,
   calibrateFloorPlanAction,

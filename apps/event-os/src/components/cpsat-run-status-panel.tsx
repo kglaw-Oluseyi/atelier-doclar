@@ -1,10 +1,7 @@
 "use client";
 
-import type { CpsatRunUiModel } from "@maison-doclar/shared-platform";
-import {
-  cancelConfirmCopy,
-  keepBestConfirmCopy,
-} from "@maison-doclar/shared-platform";
+import type { CpsatRunUiModel } from "@maison-doclar/shared-platform/cpsat-client";
+import { cancelConfirmCopy, keepBestConfirmCopy } from "@maison-doclar/shared-platform/cpsat-client";
 
 /**
  * CP-SAT run status panel — durable lifecycle (Milestone 2+) + stop-keep-best (Milestone 4).

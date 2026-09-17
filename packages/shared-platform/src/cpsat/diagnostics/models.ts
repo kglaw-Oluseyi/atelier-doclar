@@ -345,11 +345,12 @@ export async function runDiagMcs(input: {
       (probe.diagnostics.relaxedRuleRefs || probe.status === "FEASIBLE" || probe.status === "OPTIMAL")
     ) {
       const relaxed = mapRefsToRules(probe.diagnostics.relaxedRuleRefs ?? [], relaxable);
+      const probeAssignments = "assignments" in probe ? (probe.assignments ?? []) : [];
       const verified =
-        (probe.status === "FEASIBLE" || probe.status === "OPTIMAL") && (probe.assignments?.length ?? 0) > 0;
+        (probe.status === "FEASIBLE" || probe.status === "OPTIMAL") && probeAssignments.length > 0;
       const eligibleCount = input.authored.guests.filter((g) => g.eligible).length;
       const verifiedCompletePlan =
-        verified && (probe.assignments?.length ?? 0) >= eligibleCount && relaxed.every((r) =>
+        verified && probeAssignments.length >= eligibleCount && relaxed.every((r) =>
           relaxable.some((x) => x.contentHash === r.contentHash),
         );
       return {
@@ -362,7 +363,7 @@ export async function runDiagMcs(input: {
             : "BUDGET_EXHAUSTED",
         verifiedCompletePlan,
         diagnosticAssignmentHash: createHash("sha256")
-          .update(JSON.stringify(probe.assignments ?? []))
+          .update(JSON.stringify(probeAssignments))
           .digest("hex"),
         diagnosticOnly: true,
       };

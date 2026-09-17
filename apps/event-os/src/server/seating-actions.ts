@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import {
   executeS06Evaluation,
   formDataToRecord,
-  PlatformError,
   requireSeatingV2Writable,
   safeAttemptedValues,
   transportFailureFormState,

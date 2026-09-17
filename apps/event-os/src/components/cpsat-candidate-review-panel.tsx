@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { CpsatCandidateReviewModel } from "@maison-doclar/shared-platform";
+import type { CpsatCandidateReviewModel } from "@maison-doclar/shared-platform/cpsat-client";
 
 type FilterState = {
   query: string;

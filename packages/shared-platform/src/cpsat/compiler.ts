@@ -48,11 +48,15 @@ export type CpsatSolveRequest = {
 function unionFind(pairs: number[][], n: number): number[] {
   const parent = Array.from({ length: n }, (_, i) => i);
   const find = (x: number): number => {
-    while (parent[x] !== x) {
-      parent[x] = parent[parent[x]]!;
-      x = parent[x]!;
+    let cur = x;
+    while (parent[cur] !== cur) {
+      const next = parent[cur];
+      if (next == null) break;
+      const grand = parent[next];
+      parent[cur] = grand == null ? next : grand;
+      cur = next;
     }
-    return x;
+    return cur;
   };
   for (const [a, b] of pairs) {
     if (a == null || b == null) continue;

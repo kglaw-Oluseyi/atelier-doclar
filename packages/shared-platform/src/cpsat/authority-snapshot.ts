@@ -51,14 +51,15 @@ export function authoredAuthorityFromCpsatRequest(request: CpsatSolveRequest): S
     if (g.lockedSeat != null) {
       const seat = request.seats[g.lockedSeat];
       if (seat) {
+        const table = request.tables[seat.table];
         rules.push({
           contentHash: exactHash({ kind: "LOCK_ASSIGNMENT", g: g.token, seat: seat.token }),
           kind: "LOCK_ASSIGNMENT",
           hardness: "HARD",
           weight: null,
-          scope: "POSITION",
+          scope: "TABLE",
           subjectTokens: [g.token],
-          tableTokens: [],
+          tableTokens: table ? [table.token] : [],
           zoneCodes: [],
           capabilityCodes: [],
           positionToken: seat.token,

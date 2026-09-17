@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
-import type { LayoutSetupWorkspace, SpatialObject } from "@maison-doclar/shared-platform";
+import type { LayoutSetupWorkspace, SpatialObject } from "@maison-doclar/shared-platform/client-types";
 import { acquireLayoutLeaseAction, applyLayoutCommandAction } from "../server/actions";
 import { IdempotencyField } from "./atelier-pending-submit";
 

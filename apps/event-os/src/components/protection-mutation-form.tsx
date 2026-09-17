@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, type ReactNode } from "react";
-import type { ProtectionFormState } from "@maison-doclar/shared-platform";
+import type { ProtectionFormState } from "@maison-doclar/shared-platform/client-types";
 
 const idleProtectionFormState: ProtectionFormState = {
   status: "idle",

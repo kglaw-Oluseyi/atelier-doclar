@@ -116,6 +116,6 @@ export async function confirmFullModelInfeasibility(input: {
     confirmationRequestHash,
     confirmationResponseHash,
     confirmationResult: probeResult.status,
-    limitation: probeResult.detail ?? probeResult.status,
+    limitation: "detail" in probeResult ? (probeResult.detail ?? probeResult.status) : probeResult.status,
   };
 }

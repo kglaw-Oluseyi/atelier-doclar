@@ -42,7 +42,6 @@ import {
 import { assertSeatingV2RuleAuthoring } from "./seating-v2-authoring.js";
 import { assertSeatingV2CompiledRequest, compileSeatingV2Request } from "./seating-v2-compiler.js";
 import {
-  seatingV2AssignmentsHash,
   seatingV2ManualDecisionLogHash,
   seatingV2PlanContentHash,
   seatingV2ReservationContentHash,

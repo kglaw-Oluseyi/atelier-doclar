@@ -1,6 +1,6 @@
 "use client";
 
-import type { HostAtelierProjection } from "@maison-doclar/shared-platform";
+import type { HostAtelierProjection } from "@maison-doclar/shared-platform/client-types";
 import { submitHostAtelierDecisionAction } from "../server/actions";
 import { IdempotencyField, PendingSubmit } from "./atelier-pending-submit";
 

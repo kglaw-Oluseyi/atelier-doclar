@@ -24,7 +24,6 @@ import { settleAbnormalInfeasibility } from "./diagnostics/pipeline.js";
 import { observeStopRequest, recordIncumbentProgress } from "./diagnostics/stop-modes.js";
 import type { FeasibilityProbe } from "./diagnostics/models.js";
 import { createRealChildFeasibilityProbe } from "./diagnostics/real-child-probe.js";
-import { toChildPayload } from "./child-payload.js";
 
 export type ChildExecutor = (input: {
   request: Record<string, unknown>;

@@ -83,6 +83,11 @@ export type SeatingWorkspaceView = SeatingWorkspaceProjection & {
     evidenceGrade?: string | null;
     purpose?: string;
     mode?: string;
+    /** Worker progress phase for operator presentation (Milestone 2+). */
+    progressPhase?: string | null;
+    completedAt?: string;
+    assignmentsHash?: string;
+    faultCode?: string | null;
   }>;
   reviews: Array<{ id: string; domain: string; decision: string; reviewerLabel: string; reason: string; createdAt: string }>;
   approvals: Array<{ id: string; decision: string; createdAt: string }>;

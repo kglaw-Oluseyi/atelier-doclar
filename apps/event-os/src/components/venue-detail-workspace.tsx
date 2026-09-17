@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { VenueDetailWorkspace } from "@maison-doclar/shared-platform";
+import type { VenueDetailWorkspace } from "@maison-doclar/shared-platform/client-types";
 import { recordVenueFactAction, verifyVenueFactAction } from "../server/actions";
 import { IdempotencyField, PendingSubmit } from "./atelier-pending-submit";
 

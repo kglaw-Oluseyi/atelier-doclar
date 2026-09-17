@@ -181,10 +181,4 @@ export function stoppingSafelyCopy(): string {
   return "Stopping safely and checking the best complete plan…";
 }
 
-export function cancelConfirmCopy(): string {
-  return "Stop this run and discard its current search result.";
-}
-
-export function keepBestConfirmCopy(): string {
-  return "Stop searching and keep the best complete plan found so far. It will still be checked before review.";
-}
+export { cancelConfirmCopy, keepBestConfirmCopy } from "../client-contract.js";
