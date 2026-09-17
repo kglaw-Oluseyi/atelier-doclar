@@ -1,0 +1,10 @@
+{"at":"2026-09-17T20:19:30Z","msg":"CAP2000 AUTHORISED qualification start — post A2 fix; prior 384950a6 remains INADMISSIBLE","path":"durable-enqueue-after-product-install-refused"}
+{"at":"2026-09-17T20:19:33.795Z","msg":"preflight OK seed=scale-2000 event=c2a0a001-2026-0917-a2fx-cap2000auth01 compiledHash=2cc7617db7c6 worker=worker:5ae954ed26b9:09cd436d","elapsedMs":935}
+{"at":"2026-09-17T20:19:34.933Z","msg":"admission OK","elapsedMs":2073}
+{"at":"2026-09-17T20:19:40.213Z","msg":"enqueued run=4c7c4f5e-576e-40a0-85c4-d6831cc79d3d queueMs=5279 duplicate=false","elapsedMs":7353}
+{"at":"2026-09-17T20:19:40.434Z","msg":"poll status=QUEUED phase=null product=-","elapsedMs":7574}
+{"at":"2026-09-17T20:19:43.654Z","msg":"poll status=RUNNING phase=accepted product=-","elapsedMs":10794}
+{"at":"2026-09-17T20:19:46.884Z","msg":"poll status=RUNNING phase=sealing candidate product=-","elapsedMs":14024}
+{"at":"2026-09-17T20:19:50.114Z","msg":"poll status=RUNNING phase=sealing candidate product=-","elapsedMs":17254}
+{"at":"2026-09-17T20:19:53.354Z","msg":"poll status=RUNNING phase=sealing candidate product=-","elapsedMs":20494}
+{"at":"2026-09-17T20:19:56.574Z","msg":"poll status=READY_FOR_REVIEW phase=sealed product=OPTIMAL","elapsedMs":23714}
