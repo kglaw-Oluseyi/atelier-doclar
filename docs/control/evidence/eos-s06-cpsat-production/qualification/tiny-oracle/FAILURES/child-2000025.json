@@ -1,0 +1,193 @@
+{
+  "contractVersion": "md.seating.solve.request/1",
+  "modelVersion": "cpsat-model-v1",
+  "runId": "diag-2000025",
+  "mode": "REPLAY",
+  "seed": 2000025,
+  "purpose": "PLANNING",
+  "tables": [
+    {
+      "i": 0,
+      "capacity": 5
+    },
+    {
+      "i": 1,
+      "capacity": 5
+    }
+  ],
+  "seats": [
+    {
+      "i": 0,
+      "table": 0,
+      "attrs": []
+    },
+    {
+      "i": 1,
+      "table": 0,
+      "attrs": []
+    },
+    {
+      "i": 2,
+      "table": 0,
+      "attrs": []
+    },
+    {
+      "i": 3,
+      "table": 0,
+      "attrs": []
+    },
+    {
+      "i": 4,
+      "table": 0,
+      "attrs": []
+    },
+    {
+      "i": 5,
+      "table": 1,
+      "attrs": []
+    },
+    {
+      "i": 6,
+      "table": 1,
+      "attrs": []
+    },
+    {
+      "i": 7,
+      "table": 1,
+      "attrs": []
+    },
+    {
+      "i": 8,
+      "table": 1,
+      "attrs": []
+    },
+    {
+      "i": 9,
+      "table": 1,
+      "attrs": []
+    }
+  ],
+  "guests": [
+    {
+      "i": 0,
+      "eligible": true,
+      "attrs": [],
+      "lockedSeat": null,
+      "lockedTable": null
+    },
+    {
+      "i": 1,
+      "eligible": true,
+      "attrs": [],
+      "lockedSeat": null,
+      "lockedTable": null
+    },
+    {
+      "i": 2,
+      "eligible": true,
+      "attrs": [],
+      "lockedSeat": null,
+      "lockedTable": null
+    },
+    {
+      "i": 3,
+      "eligible": true,
+      "attrs": [],
+      "lockedSeat": null,
+      "lockedTable": null
+    },
+    {
+      "i": 4,
+      "eligible": true,
+      "attrs": [],
+      "lockedSeat": null,
+      "lockedTable": null
+    },
+    {
+      "i": 5,
+      "eligible": true,
+      "attrs": [],
+      "lockedSeat": null,
+      "lockedTable": null
+    }
+  ],
+  "units": [
+    {
+      "i": 0,
+      "members": [
+        0
+      ],
+      "domainTables": [
+        0
+      ]
+    },
+    {
+      "i": 1,
+      "members": [
+        1
+      ],
+      "domainTables": [
+        0,
+        1
+      ]
+    },
+    {
+      "i": 2,
+      "members": [
+        2
+      ],
+      "domainTables": [
+        0
+      ]
+    },
+    {
+      "i": 3,
+      "members": [
+        3
+      ],
+      "domainTables": [
+        0,
+        1
+      ]
+    },
+    {
+      "i": 4,
+      "members": [
+        4
+      ],
+      "domainTables": [
+        0,
+        1
+      ]
+    },
+    {
+      "i": 5,
+      "members": [
+        5
+      ],
+      "domainTables": [
+        0,
+        1
+      ]
+    }
+  ],
+  "togetherPairs": [],
+  "apartPairs": [
+    [
+      0,
+      2
+    ]
+  ],
+  "requireTable": [],
+  "forbidTable": [],
+  "reservations": [],
+  "preferences": [],
+  "baseline": [],
+  "limits": {
+    "maxTimeSeconds": 5,
+    "workers": 1,
+    "wallSeconds": 90
+  },
+  "movementTolerance": 0,
+  "closureHash": "a844600669f75d6d329f9e3f0c8ecc9e5c6a668f8528ce538efd2162192fea1d"
+}

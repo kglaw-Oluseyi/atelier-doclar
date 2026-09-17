@@ -1,0 +1,36 @@
+{
+  "runner": "cpsat-checkpoint2-matrices-v1",
+  "suite": "latency",
+  "generatedAt": "2026-09-17T02:00:37.622Z",
+  "note": "Local path has no PG queue; queue wait/claim/persistence are schema-proven separately. Child startup measured in CHILD_STARTUP_IN_RUNNING_WORKER.json (~4–4.5s). Warm spare: one-shot destroy-after-use contract in architecture docs.",
+  "observed": {
+    "operatorVisibleWallMs": 319.900833,
+    "localSolveElapsedMs": 320,
+    "productResult": "OPTIMAL"
+  },
+  "accounting": {
+    "queueWaitMs": null,
+    "workerClaimMs": null,
+    "pythonChildStartupMs": {
+      "alreadyRunningWorker": "4.0–4.5s (evidence)",
+      "freshChild": "included in localSolveElapsed first spawn",
+      "warmSpare": "one-shot; destroyed after solve",
+      "newRailwayContainer": "see COLD_START_BREAKDOWN.json"
+    },
+    "requestModelDecodingMs": "included in child",
+    "modelConstructionMs": "see B_TYPICAL_PHASE_PROFILE.json",
+    "solveMs": "see B_TYPICAL_PHASE_PROFILE.json / CLOSURE_GATE",
+    "independentVerificationMs": "TS verifier in-process after child",
+    "explanationGenerationMs": "buildExplanations in-process",
+    "serializationMs": "framed JSON encode/decode",
+    "persistencePublicationMs": null,
+    "completeOperatorVisibleWallMs": 319.900833
+  },
+  "warmSpareContract": {
+    "maxSolves": 1,
+    "previousEventData": "none",
+    "destroyedAfterSolve": true,
+    "replacedIndependently": true,
+    "reusableMultiJob": false
+  }
+}

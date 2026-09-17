@@ -1,0 +1,25 @@
+{
+  "runner": "cpsat-checkpoint2-matrices-v1",
+  "suite": "replay",
+  "generatedAt": "2026-09-17T02:00:27.920Z",
+  "deterministicWorkers": 1,
+  "note": "Production REPLAY mode forces workers=1; determinism is not claimed from seed alone under PERFORMANCE parallelism.",
+  "identicalReplay": true,
+  "guestReorderCanonical": true,
+  "tableReorderCanonical": true,
+  "ruleReorderCanonical": true,
+  "hashes": {
+    "a": "9e3f2b29312592300ae3da5bec21541346808702939f8c136b06bd2ffadf90c7",
+    "b": "9e3f2b29312592300ae3da5bec21541346808702939f8c136b06bd2ffadf90c7",
+    "g": "9e3f2b29312592300ae3da5bec21541346808702939f8c136b06bd2ffadf90c7",
+    "t": "9e3f2b29312592300ae3da5bec21541346808702939f8c136b06bd2ffadf90c7",
+    "r": "9e3f2b29312592300ae3da5bec21541346808702939f8c136b06bd2ffadf90c7"
+  },
+  "results": {
+    "a": "OPTIMAL",
+    "b": "OPTIMAL",
+    "g": "OPTIMAL",
+    "t": "OPTIMAL",
+    "r": "OPTIMAL"
+  }
+}

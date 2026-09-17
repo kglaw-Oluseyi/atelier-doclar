@@ -1,0 +1,108 @@
+{
+  "runner": "cpsat-checkpoint2-matrices-v1",
+  "suite": "concurrency",
+  "generatedAt": "2026-09-17T02:06:46.051Z",
+  "maxParallelChildren": 2,
+  "note": "Bounded to 2 concurrent Python children to respect proposed Railway memory/CPU envelope.",
+  "wallMs": 5213.088333,
+  "peakRssBytesApproxNode": 100401152,
+  "results": [
+    {
+      "id": "ev-2000",
+      "kind": "solve",
+      "productResult": "OPTIMAL",
+      "verifierOk": true,
+      "explanationsOk": true,
+      "seated": 2000,
+      "eligible": 2000,
+      "assignmentHash": "882ea1eb9c73eda2d1a8e9137331c498be303673f4171065cfda894d14e14b22",
+      "publishedUnchecked": false,
+      "wallMs": 2087.537167
+    },
+    {
+      "id": "ev-infeasible",
+      "kind": "solve",
+      "productResult": "INFEASIBLE",
+      "verifierOk": false,
+      "explanationsOk": false,
+      "seated": 0,
+      "eligible": 6,
+      "assignmentHash": "ace00401b669dfacb61767401f9682e296dd4532dc02d0c15a50db12d4c54302",
+      "publishedUnchecked": false,
+      "wallMs": 490.92724999999973
+    },
+    {
+      "id": "ev-small-a",
+      "kind": "solve",
+      "productResult": "OPTIMAL",
+      "verifierOk": true,
+      "explanationsOk": true,
+      "seated": 20,
+      "eligible": 20,
+      "assignmentHash": "1b80f79593a190cc7f3ef9a3cf8fa5801800543f595085fe5605be4918bdb213",
+      "publishedUnchecked": false,
+      "wallMs": 513.0340419999998
+    },
+    {
+      "id": "ev-small-b",
+      "kind": "solve",
+      "productResult": "OPTIMAL",
+      "verifierOk": true,
+      "explanationsOk": true,
+      "seated": 30,
+      "eligible": 30,
+      "assignmentHash": "4f79e3ab346683923ddabcb03c1998e27710d367f916137fbfee13158182c542",
+      "publishedUnchecked": false,
+      "wallMs": 549.9224589999999
+    },
+    {
+      "id": "ev-medium",
+      "kind": "solve",
+      "productResult": "OPTIMAL",
+      "verifierOk": true,
+      "explanationsOk": true,
+      "seated": 80,
+      "eligible": 80,
+      "assignmentHash": "5ae849a5e9c11311f102a4dd1cc6260bf49490d56f64ea837ee058b587dac5b1",
+      "publishedUnchecked": false,
+      "wallMs": 577.9300000000003
+    },
+    {
+      "id": "ev-1000-typical",
+      "kind": "solve",
+      "productResult": "OPTIMAL",
+      "verifierOk": true,
+      "explanationsOk": true,
+      "seated": 1000,
+      "eligible": 1000,
+      "assignmentHash": "9836e43c3e6eed53d2fd1da5422c99c51e75d2430cea4777b6d380c9ec06982c",
+      "publishedUnchecked": false,
+      "wallMs": 4728.188625000001
+    },
+    {
+      "id": "ev-cancel-target",
+      "kind": "cancel",
+      "productResult": "OPTIMAL",
+      "verifierOk": true,
+      "seated": 40,
+      "publishedUnchecked": false,
+      "wallMs": 538.4836249999998
+    },
+    {
+      "id": "ev-crash-inject",
+      "kind": "crash-inject",
+      "productResult": "OPTIMAL",
+      "verifierOk": true,
+      "publishedUnchecked": false,
+      "wallMs": 484.7901659999998
+    }
+  ],
+  "isolation": {
+    "uniqueAssignmentHashes": 6,
+    "noUncheckedPublish": true
+  },
+  "summary": {
+    "total": 8,
+    "ok": true
+  }
+}

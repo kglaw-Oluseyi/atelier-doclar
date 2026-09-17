@@ -1,0 +1,35 @@
+TAP version 13
+# Subtest: aggregation: identical interchangeable guests seat completely under REPLAY
+ok 1 - aggregation: identical interchangeable guests seat completely under REPLAY
+  ---
+  duration_ms: 884.876625
+  ...
+# Subtest: aggregation negative: lock forces distinct placement honour
+ok 2 - aggregation negative: lock forces distinct placement honour
+  ---
+  duration_ms: 558.784834
+  ...
+# Subtest: aggregation negative: require-table cannot be swapped with unrestricted peer
+ok 3 - aggregation negative: require-table cannot be swapped with unrestricted peer
+  ---
+  duration_ms: 297.14175
+  ...
+# Subtest: aggregation negative: keep-apart endpoints remain separated
+ok 4 - aggregation negative: keep-apart endpoints remain separated
+  ---
+  duration_ms: 307.040208
+  ...
+# Subtest: aggregation expansion: no duplicate seats or missing eligible guests
+ok 5 - aggregation expansion: no duplicate seats or missing eligible guests
+  ---
+  duration_ms: 289.488291
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2516.814208

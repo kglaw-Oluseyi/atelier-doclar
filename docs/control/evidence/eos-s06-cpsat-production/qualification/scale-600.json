@@ -1,12 +1,12 @@
 {
   "shard": "scale-600",
-  "generatedAt": "2026-09-17T01:07:38.233Z",
+  "generatedAt": "2026-09-17T02:16:35.073Z",
   "cases": [
     {
       "name": "scale-600",
       "productResult": "OPTIMAL",
       "fault": null,
-      "elapsedMs": 3528,
+      "elapsedMs": 785,
       "seated": 600,
       "eligible": 600,
       "explanationsOk": true,

@@ -1,0 +1,158 @@
+{
+  "contractVersion": "md.seating.solve.request/1",
+  "modelVersion": "cpsat-model-v1",
+  "runId": "diag-2000114",
+  "mode": "REPLAY",
+  "seed": 2000114,
+  "purpose": "PLANNING",
+  "tables": [
+    {
+      "i": 0,
+      "capacity": 2
+    },
+    {
+      "i": 1,
+      "capacity": 2
+    },
+    {
+      "i": 2,
+      "capacity": 2
+    }
+  ],
+  "seats": [
+    {
+      "i": 0,
+      "table": 0,
+      "attrs": []
+    },
+    {
+      "i": 1,
+      "table": 0,
+      "attrs": []
+    },
+    {
+      "i": 2,
+      "table": 1,
+      "attrs": []
+    },
+    {
+      "i": 3,
+      "table": 1,
+      "attrs": []
+    },
+    {
+      "i": 4,
+      "table": 2,
+      "attrs": []
+    },
+    {
+      "i": 5,
+      "table": 2,
+      "attrs": []
+    }
+  ],
+  "guests": [
+    {
+      "i": 0,
+      "eligible": true,
+      "attrs": [],
+      "lockedSeat": null,
+      "lockedTable": null
+    },
+    {
+      "i": 1,
+      "eligible": true,
+      "attrs": [],
+      "lockedSeat": null,
+      "lockedTable": null
+    },
+    {
+      "i": 2,
+      "eligible": true,
+      "attrs": [],
+      "lockedSeat": null,
+      "lockedTable": null
+    },
+    {
+      "i": 3,
+      "eligible": true,
+      "attrs": [],
+      "lockedSeat": null,
+      "lockedTable": null
+    },
+    {
+      "i": 4,
+      "eligible": true,
+      "attrs": [],
+      "lockedSeat": 0,
+      "lockedTable": 0
+    }
+  ],
+  "units": [
+    {
+      "i": 0,
+      "members": [
+        0,
+        1
+      ],
+      "domainTables": [
+        0
+      ]
+    },
+    {
+      "i": 1,
+      "members": [
+        2
+      ],
+      "domainTables": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "i": 2,
+      "members": [
+        3
+      ],
+      "domainTables": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "i": 3,
+      "members": [
+        4
+      ],
+      "domainTables": [
+        0
+      ]
+    }
+  ],
+  "togetherPairs": [
+    [
+      0,
+      1
+    ]
+  ],
+  "apartPairs": [
+    [
+      0,
+      2
+    ]
+  ],
+  "requireTable": [],
+  "forbidTable": [],
+  "reservations": [],
+  "preferences": [],
+  "baseline": [],
+  "limits": {
+    "maxTimeSeconds": 5,
+    "workers": 1,
+    "wallSeconds": 90
+  },
+  "movementTolerance": 0,
+  "closureHash": "65f2c51427a0576ea5d6c1fbc9a62d1846fcdd0f078e28581d3fcfae09526f95"
+}

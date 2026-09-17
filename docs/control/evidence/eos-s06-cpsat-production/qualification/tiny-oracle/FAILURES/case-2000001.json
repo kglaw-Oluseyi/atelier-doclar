@@ -1,0 +1,354 @@
+{
+  "seed": 2000001,
+  "oracle": {
+    "feasible": false,
+    "witness": [],
+    "enumeratedLeaves": 0
+  },
+  "compileErr": null,
+  "childPayload": {
+    "contractVersion": "md.seating.solve.request/1",
+    "modelVersion": "cpsat-model-v1",
+    "runId": "diag-2000001",
+    "mode": "REPLAY",
+    "seed": 2000001,
+    "purpose": "PLANNING",
+    "tables": [
+      {
+        "i": 0,
+        "capacity": 3
+      },
+      {
+        "i": 1,
+        "capacity": 3
+      },
+      {
+        "i": 2,
+        "capacity": 3
+      }
+    ],
+    "seats": [
+      {
+        "i": 0,
+        "table": 0,
+        "attrs": [
+          "A11Y_WHEELCHAIR"
+        ]
+      },
+      {
+        "i": 1,
+        "table": 0,
+        "attrs": []
+      },
+      {
+        "i": 2,
+        "table": 0,
+        "attrs": []
+      },
+      {
+        "i": 3,
+        "table": 1,
+        "attrs": []
+      },
+      {
+        "i": 4,
+        "table": 1,
+        "attrs": []
+      },
+      {
+        "i": 5,
+        "table": 1,
+        "attrs": []
+      },
+      {
+        "i": 6,
+        "table": 2,
+        "attrs": []
+      },
+      {
+        "i": 7,
+        "table": 2,
+        "attrs": []
+      },
+      {
+        "i": 8,
+        "table": 2,
+        "attrs": []
+      }
+    ],
+    "guests": [
+      {
+        "i": 0,
+        "eligible": true,
+        "attrs": [
+          "A11Y_WHEELCHAIR"
+        ],
+        "lockedSeat": null,
+        "lockedTable": null
+      },
+      {
+        "i": 1,
+        "eligible": true,
+        "attrs": [],
+        "lockedSeat": null,
+        "lockedTable": null
+      },
+      {
+        "i": 2,
+        "eligible": true,
+        "attrs": [],
+        "lockedSeat": null,
+        "lockedTable": null
+      },
+      {
+        "i": 3,
+        "eligible": true,
+        "attrs": [],
+        "lockedSeat": 0,
+        "lockedTable": 0
+      }
+    ],
+    "units": [
+      {
+        "i": 0,
+        "members": [
+          0,
+          1
+        ],
+        "domainTables": [
+          0
+        ]
+      },
+      {
+        "i": 1,
+        "members": [
+          2
+        ],
+        "domainTables": [
+          0,
+          1,
+          2
+        ]
+      },
+      {
+        "i": 2,
+        "members": [
+          3
+        ],
+        "domainTables": [
+          0
+        ]
+      }
+    ],
+    "togetherPairs": [
+      [
+        0,
+        1
+      ]
+    ],
+    "apartPairs": [],
+    "requireTable": [],
+    "forbidTable": [],
+    "reservations": [],
+    "preferences": [
+      {
+        "guest": 0,
+        "table": 0,
+        "band": "HIGH",
+        "weight": 10
+      }
+    ],
+    "baseline": [],
+    "limits": {
+      "maxTimeSeconds": 5,
+      "workers": 1,
+      "wallSeconds": 90
+    },
+    "movementTolerance": 0,
+    "closureHash": "0288694fd72e93563b4dc1d379f70ac1be1d9e7b65d25c099b7c772dc700dfac"
+  },
+  "units": [
+    {
+      "i": 0,
+      "members": [
+        0,
+        1
+      ],
+      "domainTables": [
+        0
+      ]
+    },
+    {
+      "i": 1,
+      "members": [
+        2
+      ],
+      "domainTables": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "i": 2,
+      "members": [
+        3
+      ],
+      "domainTables": [
+        0
+      ]
+    }
+  ],
+  "guests": [
+    {
+      "i": 0,
+      "token": "g0001",
+      "attrs": [
+        "A11Y_WHEELCHAIR"
+      ],
+      "lockedSeat": null
+    },
+    {
+      "i": 1,
+      "token": "g0002",
+      "attrs": [],
+      "lockedSeat": null
+    },
+    {
+      "i": 2,
+      "token": "g0003",
+      "attrs": [],
+      "lockedSeat": null
+    },
+    {
+      "i": 3,
+      "token": "g0004",
+      "attrs": [],
+      "lockedSeat": 0
+    }
+  ],
+  "domains": [
+    {
+      "i": 0,
+      "members": [
+        0,
+        1
+      ],
+      "domain": [
+        0
+      ]
+    },
+    {
+      "i": 1,
+      "members": [
+        2
+      ],
+      "domain": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "i": 2,
+      "members": [
+        3
+      ],
+      "domain": [
+        0
+      ]
+    }
+  ],
+  "productResult": "INFEASIBLE",
+  "seated": 0,
+  "rules": [
+    {
+      "kind": "PREFER_TABLE",
+      "subjects": [
+        "g0001"
+      ],
+      "tables": [
+        "t0001"
+      ],
+      "pos": null
+    },
+    {
+      "kind": "LOCK_ASSIGNMENT",
+      "subjects": [
+        "g0004"
+      ],
+      "tables": [],
+      "pos": "t0001:01"
+    },
+    {
+      "kind": "KEEP_TOGETHER",
+      "subjects": [
+        "g0001",
+        "g0002"
+      ],
+      "tables": [],
+      "pos": null
+    }
+  ],
+  "positions": [
+    {
+      "token": "t0003:03",
+      "caps": []
+    },
+    {
+      "token": "t0003:02",
+      "caps": []
+    },
+    {
+      "token": "t0003:01",
+      "caps": []
+    },
+    {
+      "token": "t0002:03",
+      "caps": []
+    },
+    {
+      "token": "t0002:02",
+      "caps": []
+    },
+    {
+      "token": "t0002:01",
+      "caps": []
+    },
+    {
+      "token": "t0001:03",
+      "caps": []
+    },
+    {
+      "token": "t0001:02",
+      "caps": []
+    },
+    {
+      "token": "t0001:01",
+      "caps": [
+        "A11Y_WHEELCHAIR"
+      ]
+    }
+  ],
+  "guestCaps": [
+    {
+      "token": "g0004",
+      "caps": []
+    },
+    {
+      "token": "g0003",
+      "caps": []
+    },
+    {
+      "token": "g0002",
+      "caps": []
+    },
+    {
+      "token": "g0001",
+      "caps": [
+        "A11Y_WHEELCHAIR"
+      ]
+    }
+  ],
+  "witness": []
+}
