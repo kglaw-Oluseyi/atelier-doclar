@@ -128,3 +128,48 @@ Synthetic IDs only (`cpsat_m4_*` / `cpsat_m4j_*` ephemeral DBs).
 - S06C acceptance
 - S06B/S06D later
 - Verified Event OS deployment guard before any GitHub push
+
+---
+
+## Milestone 4A — Real execution closure (2026-09-17)
+
+**Disposition of this correction:** MILESTONE 4 REAL EXECUTION COMPLETE (local synthetic proof; not formal qualification)
+
+**Truth retained from original Milestone 4 evidence:** the product/UI commits below shipped with **mocked diagnostic probes**. That remains accurate for commits `0d9f6da` and `879fe89`. This section records the additive real-execution closure that followed; those commits were **not** amended.
+
+| Item | Value |
+|------|--------|
+| Original product commit | `0d9f6da3410300a1b57a791211158e2515e9f8e8` — diagnostics/stop product |
+| Original evidence commit | `879fe89f830ec0da942af930421304153b3e0c90` — diagnostics/stop evidence |
+| Real-execution correction commit | `43d5d20` — `fix(cpsat): complete real diagnostic and stop execution` |
+| Real-execution evidence commit | *(this evidence commit)* `docs(cpsat): close milestone 4 real execution evidence` |
+| Real tiny CP-SAT child executions (local proof) | **8** (cap 10) |
+
+### What was proven with the real Python child
+
+1. **Full-model confirmation** — genuine second Replay solve with a different signed-int32 seed; dual `INFEASIBLE` → `SOLVER_PROOF`.
+2. **DIAG_CORE** — OR-Tools `AddAssumptions` + `SufficientAssumptionsForInfeasibility` (literal `Index()` mapped to rule refs) + deletion minimisation re-solves; TypeScript maps refs and rechecks.
+3. **DIAG_MCS** — genuine priority-weighted correction-set maximisation; diagnostic assignment returned; `diagnostic_only`.
+4. **DIAG_MAXSEAT** — genuine maximum-seating Stage A; seated count ≤1 on apart/single-table fixture; non-adoptable.
+5. **Counterfactual** — `COUNTERFACTUAL` purpose + forced `guestIndex`/`tableIndex` on the child request; candidate unchanged.
+6. **KEEP_BEST** — real stop frame (`type=stop`, `mode=KEEP_BEST`) while child runs; stdin kept open; `StopSearch`; incumbent → verify/seal → `FEASIBLE` + `OPERATOR_STOP` + `READY_FOR_REVIEW`.
+7. **Production default** — `executeClaimedCpsatRun` binds `createRealChildFeasibilityProbe`; no env-var mock selection.
+
+### Focused regression
+
+```text
+cd packages/shared-platform
+npx tsx --test test/cpsat-m4a-real-execution.test.ts
+npx tsx --test test/cpsat-diagnostics-stop.test.ts test/cpsat-m4-journeys.test.ts
+npx tsx --test test/cpsat-worker-settlement.test.ts
+```
+
+Results (local 2026-09-17): M4A 6/6; prior M4 mocked suites 21/21; M2 settlement 13/13.
+
+### Remaining limitations (honest)
+
+- Not formal qualification; no CAP1000 / 600–2000 fixtures.
+- MCS independent verification uses assignment completeness + relaxable-set membership (no second planning child in the budgeted journey).
+- `testHooks.continueAfterIncumbentMs` is test-only timing control; it does not fabricate incumbents.
+- OR-Tools `StopSearch` from the stdin-control thread is supported on installed 9.15.6755; confirmed before KEEP_BEST proof.
+- Railway / production PostgreSQL / push / deploy still out of scope.
