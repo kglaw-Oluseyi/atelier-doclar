@@ -66,14 +66,30 @@ export async function solveSeatingV2CompiledCpSat(
 ): Promise<CpsatLocalSolveResult> {
   const started = Date.now();
   const runId = options?.runId ?? `cpsat-${Date.now()}`;
-  const request = compileV2ToCpsatRequest(compiled, {
-    runId,
-    mode: options?.mode ?? "REPLAY",
-    purpose: "PLANNING",
-    maxTimeSeconds: options?.maxTimeSeconds ?? 30,
-    wallSeconds: (options?.maxTimeSeconds ?? 30) * 3,
-    workers: 1,
-  });
+  let request;
+  try {
+    request = compileV2ToCpsatRequest(compiled, {
+      runId,
+      mode: options?.mode ?? "REPLAY",
+      purpose: "PLANNING",
+      maxTimeSeconds: options?.maxTimeSeconds ?? 30,
+      wallSeconds: (options?.maxTimeSeconds ?? 30) * 3,
+      workers: 1,
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return {
+      productResult: "INVALID_INPUT",
+      solverClaim: "SOLVER_FAULT",
+      assignments: [],
+      rawOutputHash: exactHash({ fault: msg }),
+      explanationsOk: false,
+      verifierOk: false,
+      engine: { ortools: CPSAT_ORTOOLS_VERSION, python: CPSAT_PYTHON_VERSION },
+      elapsedMs: Date.now() - started,
+      fault: `INVALID_INPUT(${msg})`,
+    };
+  }
   const childPayload = toChildPayload(request);
   const { python, script } = defaultPaths();
   const messages: unknown[] = [];

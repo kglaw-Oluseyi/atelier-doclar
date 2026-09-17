@@ -18,12 +18,36 @@ def _guest_has_preference(guest: int, preferences: list[dict[str, Any]]) -> bool
     return any(int(p["guest"]) == guest for p in preferences)
 
 
+def _guest_has_baseline(guest: int, baseline_by_guest: dict[int, dict[str, int]]) -> bool:
+    return int(guest) in baseline_by_guest
+
+
+def _guest_is_reservation_holder(guest: int, reservations: list[dict[str, Any]]) -> bool:
+    return any(int(r.get("holderGuest", -1)) == int(guest) for r in reservations)
+
+
+def aggregation_equivalence_key(
+    *,
+    domain: tuple[int, ...],
+    attrs: tuple[str, ...],
+) -> tuple[Any, ...]:
+    """
+    Equivalence key for interchangeable singleton aggregation.
+
+    Guests sharing a key must be interchangeable for Stage A capacity/domain
+    decisions. See AGGREGATION_EQUIVALENCE.md for fields that force core
+    (non-aggregated) treatment instead of appearing in this key.
+    """
+    return (domain, attrs)
+
+
 def _partition_units(problem: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """
     Split units into core (boolean assignment) and aggregation classes.
 
-    A singleton unit is aggregatable when it has no lock, no preference, and
-    participates in no apart pair. Classes are keyed by (domain, attrs).
+    A singleton unit is aggregatable only when it has no material distinguishing
+    solver characteristic (see AGGREGATION_EQUIVALENCE.md). Classes are keyed by
+    aggregation_equivalence_key(domain, attrs).
     """
     units: list[dict[str, Any]] = problem["units"]
     unit_domains: dict[int, set[int]] = problem["unit_domains"]
@@ -31,6 +55,8 @@ def _partition_units(problem: dict[str, Any]) -> tuple[list[dict[str, Any]], lis
     locked_seat: dict[int, int] = problem.get("locked_seat") or {}
     locked_table: dict[int, int] = problem.get("locked_table") or {}
     preferences = problem.get("preferences") or []
+    reservations = problem.get("reservations") or []
+    baseline_by_guest: dict[int, dict[str, int]] = problem.get("baseline_by_guest") or {}
     apart_unit_pairs = problem.get("apart_unit_pairs") or set()
 
     apart_units: set[int] = set()
@@ -44,6 +70,7 @@ def _partition_units(problem: dict[str, Any]) -> tuple[list[dict[str, Any]], lis
     for u in units:
         ui = int(u["i"])
         members = [int(m) for m in u["members"]]
+        # Multi-member together-units are never aggregated.
         if len(members) != 1:
             core.append(u)
             continue
@@ -52,17 +79,21 @@ def _partition_units(problem: dict[str, Any]) -> tuple[list[dict[str, Any]], lis
             g in locked_seat
             or g in locked_table
             or _guest_has_preference(g, preferences)
+            or _guest_has_baseline(g, baseline_by_guest)
+            or _guest_is_reservation_holder(g, reservations)
             or ui in apart_units
         ):
             core.append(u)
             continue
         domain = tuple(sorted(unit_domains[ui]))
         attrs = tuple(sorted(guest_attrs.get(g, set())))
-        key = (domain, attrs)
+        key = aggregation_equivalence_key(domain=domain, attrs=attrs)
         buckets.setdefault(key, []).append(u)
 
     classes: list[dict[str, Any]] = []
-    for idx, ((domain, attrs), members_units) in enumerate(sorted(buckets.items(), key=lambda kv: (kv[0][0], kv[0][1]))):
+    for idx, ((domain, attrs), members_units) in enumerate(
+        sorted(buckets.items(), key=lambda kv: (kv[0][0], kv[0][1]))
+    ):
         if len(members_units) == 1:
             # No gain — keep as core bool unit.
             core.append(members_units[0])
@@ -76,6 +107,7 @@ def _partition_units(problem: dict[str, Any]) -> tuple[list[dict[str, Any]], lis
                 "guests": guest_ids,
                 "size": len(guest_ids),
                 "sourceUnits": [int(u["i"]) for u in members_units],
+                "equivalenceKey": ["domain", "attrs"],
             }
         )
     # Stable core order by unit index
@@ -159,16 +191,32 @@ def build_stage_a(
             model.Add(sum(load_terms) + sum(unclaimed) <= usable[t])
 
     # Hall-family on attributes (core + classes).
+    # Locked seats are exclusive to their holder unit — they must not count as free
+    # supply for other units (prevents Stage A feasible / Stage B DECOMPOSITION_GAP).
     guest_attrs: dict[int, set[str]] = problem.get("guest_attrs") or {}
     seat_attrs: dict[int, set[str]] = problem.get("seat_attrs") or {}
     seats_per_table: dict[int, list[int]] = problem.get("seats_per_table") or {}
-    attr_supply: dict[tuple[int, str], int] = {}
+    locked_seat: dict[int, int] = problem.get("locked_seat") or {}
+    seat_to_guest_lock: dict[int, int] = {int(sid): int(g) for g, sid in locked_seat.items()}
+    guest_to_unit_idx: dict[int, int] = problem.get("guest_to_unit") or {}
+
+    free_attr_supply: dict[tuple[int, str], int] = {}
+    locked_attr_bonus: dict[tuple[int, int, str], int] = {}  # (unit, table, attr) → count
     all_attrs: set[str] = set()
     for t, seat_ids in seats_per_table.items():
         for sid in seat_ids:
-            for attr in seat_attrs.get(int(sid), set()):
+            sid_i = int(sid)
+            attrs = seat_attrs.get(sid_i, set())
+            for attr in attrs:
                 all_attrs.add(attr)
-                attr_supply[(int(t), attr)] = attr_supply.get((int(t), attr), 0) + 1
+                if sid_i in seat_to_guest_lock:
+                    holder = seat_to_guest_lock[sid_i]
+                    hu = guest_to_unit_idx.get(holder)
+                    if hu is not None:
+                        key = (int(hu), int(t), attr)
+                        locked_attr_bonus[key] = locked_attr_bonus.get(key, 0) + 1
+                else:
+                    free_attr_supply[(int(t), attr)] = free_attr_supply.get((int(t), attr), 0) + 1
 
     core_attr_demand: dict[int, dict[str, int]] = {}
     for u in core_units:
@@ -182,17 +230,19 @@ def build_stage_a(
 
     for t in table_ids:
         for attr in sorted(all_attrs):
-            supply = attr_supply.get((t, attr), 0)
+            supply = free_attr_supply.get((t, attr), 0)
             terms = []
             for u in core_ids:
                 need = core_attr_demand.get(u, {}).get(attr, 0)
-                if need and (u, t) in x:
-                    terms.append(need * x[u, t])
+                bonus = locked_attr_bonus.get((u, t, attr), 0)
+                # Locked seats only satisfy the holder unit's own demand — never free supply.
+                net = max(0, need - bonus)
+                if net > 0 and (u, t) in x:
+                    terms.append(net * x[u, t])
             for c in agg_classes:
                 ci = int(c["i"])
                 if attr in c["attrs"] and (ci, t) in n:
-                    # Each aggregated guest has the class attrs.
-                    terms.append(n[ci, t])  # one attr demand per guest
+                    terms.append(n[ci, t])
             if terms:
                 model.Add(sum(terms) <= supply)
 

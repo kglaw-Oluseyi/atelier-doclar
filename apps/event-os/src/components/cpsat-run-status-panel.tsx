@@ -38,7 +38,9 @@ export function CpsatRunStatusPanel({
         <dt>Engine</dt>
         <dd style={{ margin: 0 }}>{model.engineLabel}</dd>
         <dt>Phase</dt>
-        <dd style={{ margin: 0 }}>{model.phase}</dd>
+        <dd style={{ margin: 0 }} role="status" aria-live="polite">
+          {model.phase}
+        </dd>
         <dt>Elapsed</dt>
         <dd style={{ margin: 0 }}>{(model.elapsedMs / 1000).toFixed(1)}s</dd>
         <dt>Deterministic budget</dt>
@@ -69,14 +71,14 @@ export function CpsatRunStatusPanel({
         <dt>Preferences</dt>
         <dd style={{ margin: 0 }}>{model.preferenceResult ?? "—"}</dd>
         <dt>Product result</dt>
-        <dd style={{ margin: 0 }}>
+        <dd style={{ margin: 0 }} role="status" aria-live="polite">
           <strong>{model.productResult}</strong>
           {model.freshness === "STALE" ? " · stale authority" : ""}
         </dd>
         {model.faultCode ? (
           <>
             <dt>Fault</dt>
-            <dd style={{ margin: 0 }} role="status">
+            <dd style={{ margin: 0 }} role="alert" aria-live="assertive">
               {model.faultCode}
             </dd>
           </>

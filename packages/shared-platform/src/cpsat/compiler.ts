@@ -115,16 +115,24 @@ export function compileV2ToCpsatRequest(
     baseline?: Array<{ guestToken: string; positionToken: string }>;
   },
 ): CpsatSolveRequest {
+  // Canonical index assignment: sort by token so input permutation cannot change
+  // integer indices, aggregation expansion order, or REPLAY assignment identity.
+  const positionsCanonical = [...compiled.positions].sort((a, b) =>
+    a.token < b.token ? -1 : a.token > b.token ? 1 : 0,
+  );
+  const guestsCanonical = [...compiled.guests].sort((a, b) =>
+    a.token < b.token ? -1 : a.token > b.token ? 1 : 0,
+  );
+
   const tableTokenToIndex = new Map<string, number>();
   const tables: CpsatSolveRequest["tables"] = [];
-  for (const position of compiled.positions) {
-    if (!tableTokenToIndex.has(position.tableToken)) {
-      const i = tableTokenToIndex.size;
-      tableTokenToIndex.set(position.tableToken, i);
-      tables.push({ i, capacity: 0, token: position.tableToken });
-    }
+  const tableTokensSorted = [...new Set(positionsCanonical.map((p) => p.tableToken))].sort();
+  for (const tableToken of tableTokensSorted) {
+    const i = tableTokenToIndex.size;
+    tableTokenToIndex.set(tableToken, i);
+    tables.push({ i, capacity: 0, token: tableToken });
   }
-  const seats: CpsatSolveRequest["seats"] = compiled.positions.map((position, i) => {
+  const seats: CpsatSolveRequest["seats"] = positionsCanonical.map((position, i) => {
     const table = tableTokenToIndex.get(position.tableToken)!;
     tables[table]!.capacity += 1;
     return {
@@ -135,8 +143,8 @@ export function compileV2ToCpsatRequest(
     };
   });
   const seatTokenToIndex = new Map(seats.map((s) => [s.token, s.i]));
-  const guestTokenToIndex = new Map(compiled.guests.map((g, i) => [g.token, i]));
-  const guests: CpsatSolveRequest["guests"] = compiled.guests.map((g, i) => ({
+  const guestTokenToIndex = new Map(guestsCanonical.map((g, i) => [g.token, i]));
+  const guests: CpsatSolveRequest["guests"] = guestsCanonical.map((g, i) => ({
     i,
     token: g.token,
     eligible: g.eligible,
@@ -153,7 +161,7 @@ export function compileV2ToCpsatRequest(
   const guestForbid = new Map<number, Set<number>>();
 
   const tablesByZone = new Map<string, Set<number>>();
-  for (const position of compiled.positions) {
+  for (const position of positionsCanonical) {
     const ti = tableTokenToIndex.get(position.tableToken)!;
     for (const zone of position.zoneCodes ?? []) {
       const set = tablesByZone.get(zone) ?? new Set<number>();
@@ -172,7 +180,9 @@ export function compileV2ToCpsatRequest(
     attrSeatCountByTable.set(seat.table, byAttr);
   }
 
-  for (const rule of compiled.rules as SeatingV2CompiledRule[]) {
+  for (const rule of [...(compiled.rules as SeatingV2CompiledRule[])].sort((a, b) =>
+    a.contentHash < b.contentHash ? -1 : a.contentHash > b.contentHash ? 1 : 0,
+  )) {
     if (rule.hardness === "INFORMATIONAL") continue;
     if (rule.hardness === "HARD" && SEAT_RELATIONAL_HARD.has(rule.kind)) {
       unsupportedHardRules.push(rule.kind);
