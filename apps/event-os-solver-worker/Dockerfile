@@ -93,9 +93,12 @@ RUN npm install --omit=dev --no-fund --no-audit \
   && test ! -e /usr/local/bin/npm \
   && test ! -e /usr/local/bin/npx \
   && test ! -d /usr/local/lib/node_modules/npm \
+  && rm -rf /var/cache/apt/archives /var/lib/apt/lists/* \
+  && mkdir -p /var/cache/apt/archives/partial \
   && apt-get update \
-  && apt-get install -y --no-install-recommends --only-upgrade libpcre2-8-0 \
-  && rm -rf /var/lib/apt/lists/*
+  && apt-get install -y --no-install-recommends -o APT::Keep-Downloaded-Packages=false --only-upgrade libpcre2-8-0 \
+  && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+
 
 COPY --from=worker python ./python
 COPY --from=worker schemas ./schemas
