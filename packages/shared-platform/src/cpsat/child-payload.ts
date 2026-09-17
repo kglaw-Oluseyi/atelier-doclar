@@ -3,14 +3,16 @@
  * Index maps remain in TypeScript / PostgreSQL only.
  */
 import type { CpsatSolveRequest } from "./compiler.js";
+import { assertCpsatWireSeed } from "./seed.js";
 
 export function toChildPayload(request: CpsatSolveRequest): Record<string, unknown> {
+  const seed = assertCpsatWireSeed(request.seed);
   return {
     contractVersion: request.contractVersion,
     modelVersion: request.modelVersion,
     runId: request.runId,
     mode: request.mode,
-    seed: request.seed,
+    seed,
     purpose: request.purpose,
     tables: request.tables.map(({ i, capacity }) => ({ i, capacity })),
     seats: request.seats.map(({ i, table, attrs }) => ({ i, table, attrs })),

@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from .closure import ClosureError, verify_or_build_units
+from .seed import SeedError, assert_wire_seed
 
 CONTRACT_VERSION = "md.seating.solve.request/1"
 MODEL_VERSION = "cpsat-model-v1"
@@ -221,7 +222,12 @@ def prepare_problem(request: dict[str, Any]) -> dict[str, Any]:
         if mode != "SLEEP":
             raise InvalidInput("BAD_MODE", f"unsupported mode {mode}")
     purpose = str(request.get("purpose", "PLANNING"))
-    seed = int(request.get("seed", 1))
+    try:
+        seed = assert_wire_seed(int(request.get("seed", 1)))
+    except (TypeError, ValueError) as exc:
+        raise InvalidInput("SEED_NOT_INT32", f"seed must be signed int32 positive: {exc}") from exc
+    except SeedError as exc:
+        raise InvalidInput(exc.code, exc.message) from exc
 
     guest_attrs = {int(g["i"]): set(str(a) for a in (g.get("attrs") or [])) for g in guests}
     seat_attrs = {int(s["i"]): set(str(a) for a in (s.get("attrs") or [])) for s in seats}

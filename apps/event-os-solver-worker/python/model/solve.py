@@ -35,9 +35,9 @@ def _engine() -> dict[str, Any]:
 
 
 def _configure_solver(solver: cp_model.CpSolver, problem: dict[str, Any], budget: float) -> None:
-    seed = int(problem["seed"]) % 2147483647
-    if seed <= 0:
-        seed = 1
+    from .seed import assert_wire_seed
+
+    seed = assert_wire_seed(int(problem["seed"]))
     solver.parameters.random_seed = seed
     solver.parameters.num_search_workers = int(problem["workers"])
     solver.parameters.max_time_in_seconds = float(max(0.01, budget))

@@ -33,3 +33,16 @@ export {
 } from "./queue.js";
 export { buildCpsatRunUiModel, productResultCopy, shortReasonText, type CpsatRunUiModel } from "./ui-model.js";
 export { buildExplanations, redactExplanationForOrdinaryRole, CPSAT_EXPLANATION_EDITION } from "./explanations.js";
+export {
+  toCpsatWireSeed,
+  assertCpsatWireSeed,
+  foldToPositiveInt32,
+  fnv1a32Unsigned,
+  SEED_OVERFLOW_DEFECT,
+  CPSAT_SEED_INT32_MIN,
+  CPSAT_SEED_INT32_MAX,
+  CPSAT_SEED_POSITIVE_MIN,
+  CPSAT_SEED_POSITIVE_MAX,
+  CpsatSeedError,
+  type CpsatSeedConversion,
+} from "./seed.js";

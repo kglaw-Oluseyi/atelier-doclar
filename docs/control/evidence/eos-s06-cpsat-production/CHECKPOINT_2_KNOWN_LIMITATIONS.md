@@ -10,3 +10,5 @@
 8. **Proof rate at 1k** — B_TYPICAL returned `FEASIBLE` (not all tiers proven OPTIMAL) under 120s deterministic budget — matches pack: do not promise optimality at this scale.
 9. **Heuristic still present** — intentional comparator; removal deferred to Checkpoint 3.
 10. **Seat-relational HARD** — correctly rejected with model-v2 trigger; not implemented in v1.
+11. **Seed overflow defect** — `CPSAT-SEED-OVERFLOW-UINT32` (failing seed `3959095606`) preserved in `SEED_OVERFLOW_DEFECT.md`; corrected by signed-int32 wire contract; permanent tests green.
+12. **B_TYPICAL budget sensitivity** — at 90s deterministic budget the product was `FEASIBLE`; at 120s exact remeasure all tiers proved `OPTIMAL`. Both retained; FEASIBLE not rewritten.

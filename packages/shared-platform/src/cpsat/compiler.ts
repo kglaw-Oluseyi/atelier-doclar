@@ -11,6 +11,7 @@ import {
   CPSAT_REQUEST_CONTRACT,
   type CpsatPreferenceBand,
 } from "./contract.js";
+import { toCpsatWireSeed } from "./seed.js";
 
 export type CpsatSolveRequest = {
   contractVersion: typeof CPSAT_REQUEST_CONTRACT;
@@ -100,26 +101,6 @@ function bandFromWeight(weight: number | undefined): CpsatPreferenceBand {
 }
 
 const SEAT_RELATIONAL_HARD = new Set(["PROTOCOL_SEAT_ORDER", "ADJACENCY", "SEAT_ORDER"]);
-
-function seedFromCompiled(seed: string | number | undefined): number {
-  let n: number;
-  if (typeof seed === "number" && Number.isFinite(seed)) n = Math.trunc(seed);
-  else if (typeof seed === "string" && /^\d+$/.test(seed)) n = Number(seed);
-  else if (typeof seed === "string" && seed.length) {
-    let h = 2166136261;
-    for (let i = 0; i < seed.length; i++) {
-      h ^= seed.charCodeAt(i);
-      h = Math.imul(h, 16777619);
-    }
-    n = h >>> 0;
-  } else {
-    n = 1;
-  }
-  // OR-Tools random_seed is a signed int32.
-  const INT32_MAX = 0x7fffffff;
-  n = ((n % INT32_MAX) + INT32_MAX) % INT32_MAX;
-  return n === 0 ? 1 : n;
-}
 
 export function compileV2ToCpsatRequest(
   compiled: SeatingV2CompiledRequest,
@@ -339,7 +320,7 @@ export function compileV2ToCpsatRequest(
     modelVersion: CPSAT_MODEL_VERSION,
     runId: options.runId,
     mode: options.mode ?? "REPLAY",
-    seed: seedFromCompiled(compiled.seed),
+    seed: toCpsatWireSeed(compiled.seed).seed,
     purpose: options.purpose ?? "PLANNING",
     tables: tables.map(({ i, capacity, token }) => ({ i, capacity, token })),
     seats: seats.map(({ i, table, token, attrs }) => ({ i, table, token, attrs })),

@@ -754,6 +754,8 @@ export {
   CPSAT_FAIR_CLAIM_SQL,
   solveSeatingV2CompiledCpSat,
   solverRequestToV2Compiled,
+  toCpsatWireSeed,
+  SEED_OVERFLOW_DEFECT,
 } from "./cpsat/index.js";
 export {
   SYNTHETIC_SEED_ID,
