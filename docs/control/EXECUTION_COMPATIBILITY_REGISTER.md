@@ -474,3 +474,17 @@ Milestone 4 is authorised on the Milestone 1–3 contracts. Historic S5-01–S5-
 | Next gate is bounded EOS-S06B | SUPERSEDED for next-authority recommendation. Recommended next is **bounded EOS-S06C implementation**. |
 | Sequence authorises implementation of C/B/D/S07 | REJECTED. Sequence is roadmap only. S07 remains `NOT_STARTED / NOT_AUTHORISED`. |
 | Docs-head / CT0 / open TDRs closed by this finalisation | REJECTED. All remain unresolved / retained / OPEN. |
+
+## Addendum — 2026-09-17 EOS-S06 CP-SAT Production Seating Correction Programme
+
+| Historical / pack wording | Current execution meaning |
+|---------------------------|---------------------------|
+| Heuristic seating engine remains authoritative production path | SUPERSEDED prospectively by CP-SAT correction programme. Historical EOS-S06 acceptance retained; solver implementation is being replaced. |
+| Heuristic remains emergency fallback | REJECTED. CEO decision: no authoritative heuristic fallback after authority switch; temporary comparator/hint roles only before retirement. |
+| 1,000-seat heuristic qualification remains the acceptance route | SUPERSEDED as acceptance route. Defect evidence preserved; B_TYPICAL corpus hash `13125f90267e3a78207c02f292d3f948afe22b23e60b58b0ef474f5f2b3d0668` immutable. |
+| CP-SAT ratification equals production / real-data authority | REJECTED. `PRODUCTION AUTHORITY NOT GRANTED`; `REAL DATA NOT AUTHORISED`; `productionAuthorised:false`. |
+| CP-SAT registration accepts the programme | REJECTED. Status is `NOT ACCEPTED` until AI CTO acceptance after Definition of Done. |
+| Create additional/ differently named solver services | REJECTED. Exactly one authorised service: `event-os-solver-worker`. |
+| Start EOS-S06B / EOS-S06D / EOS-S07 under this programme | REJECTED. S06B/S06D planning-only; S07 `NOT_STARTED / NOT_AUTHORISED`. CP-SAT must finish before S06B implementation or S07. |
+| EOS-S06C accepted by CP-SAT registration | REJECTED. S06C acceptance remains pending focused Claude UX recheck / AI CTO decision. |
+| Docs-head / CT0 / prior TDRs closed | REJECTED. Remain unresolved / retained / OPEN. New `TDR-S06-CPSAT-001`–`006` entered OPEN. |

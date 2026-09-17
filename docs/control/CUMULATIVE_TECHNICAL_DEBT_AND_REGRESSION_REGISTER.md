@@ -1073,6 +1073,115 @@ These are new non-blocking related observations found during EOS-S04A-P00 reconn
 | Latest safe remediation milestone | Scale / resilience / EOS-S06C qualification |
 | Current status | OPEN |
 
+
+### TDR-S06-CPSAT-001 — Heuristic non-atomic together-group construction
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S06-CPSAT-001` |
+| Source slice | EOS-S06 CP-SAT / CAP1000 B_TYPICAL |
+| Description | Heuristic together-group construction is non-atomic: KEEP_TOGETHER members can be seated without jointly placing the closure as one unit, allowing partial seating of required pairs (observed with `cap1k-b-together-24` / `g0146`+`g0147`). |
+| Classification | Product solver defect — correctness |
+| Severity | CRITICAL |
+| Evidence | `docs/control/evidence/eos-s06-cpsat-production/legacy-defect-provenance/` (`B_TYPICAL_DIAGNOSIS.json`, corpus hash `13125f90…`) |
+| Affected surface or contract | Heuristic seating solver / together-rule construction |
+| Reason for deferral | Accepted historical EOS-S06 remains; defect is corrected by CP-SAT replacement programme rather than silent heuristic patch of the locked corpus |
+| Blocking | BLOCKING for heuristic 1000-seat acceptance route (superseded); BLOCKING until CP-SAT proves atomic together-units |
+| Current owner | EOS-S06 CP-SAT programme |
+| Required regression coverage | Locked B_TYPICAL planted-feasible under CP-SAT; together-closure golden fixtures |
+| Latest safe remediation milestone | EOS-S06 CP-SAT P3–P7 / Checkpoint 2 |
+| Current status | OPEN |
+
+### TDR-S06-CPSAT-002 — Capacity-coupled repair-neighbourhood failure
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S06-CPSAT-002` |
+| Source slice | EOS-S06 CP-SAT / CAP1000 B_TYPICAL |
+| Description | Heuristic repair neighbourhoods coupled to local capacity fail to find globally available seats even when a full HARD-valid assignment exists (global witness seats pair on `t0008` after displacing unconstrained guests). |
+| Classification | Product solver defect — search incompleteness |
+| Severity | CRITICAL |
+| Evidence | `B_TYPICAL_GLOBAL_WITNESS.json`; diagnosis `independentFeasibility` false under bounded neighbourhood while `globalWitnessFound` true |
+| Affected surface or contract | Heuristic repair / neighbourhood search |
+| Reason for deferral | Corrected by full-model CP-SAT; corpus must not be weakened |
+| Blocking | BLOCKING for heuristic authority at 1000 seats |
+| Current owner | EOS-S06 CP-SAT programme |
+| Required regression coverage | Full-model feasibility on locked B_TYPICAL; neighbourhood failure must never map to INFEASIBLE |
+| Latest safe remediation milestone | EOS-S06 CP-SAT P3–P7 / Checkpoint 2 |
+| Current status | OPEN |
+
+### TDR-S06-CPSAT-003 — False TIMED_OUT classification
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S06-CPSAT-003` |
+| Source slice | EOS-S06 CP-SAT / CAP1000 B_TYPICAL |
+| Description | Solver reported `TIMED_OUT` with ~8–9s elapsed and one unseated guest while search incompleteness / neighbourhood failure was the true condition. Product rule: `TIMED_OUT` only for genuine wall-clock limit without incumbent; deterministic allowance exhaustion is `SEARCH_INCOMPLETE`. |
+| Classification | Product solver defect — status honesty |
+| Severity | HIGH |
+| Evidence | `SOLVER_TIMING.jsonl` B_TYPICAL samples; `B_TYPICAL_DIAGNOSIS.json` reproduction status |
+| Affected surface or contract | Status mapping / operator wording |
+| Reason for deferral | Status model replaced under CP-SAT contract |
+| Blocking | BLOCKING for truthful adoption/UI until CP-SAT status mapping ships |
+| Current owner | EOS-S06 CP-SAT programme |
+| Required regression coverage | Status-mapping golden fixtures; no TIMED_OUT without wall-clock stop reason |
+| Latest safe remediation milestone | EOS-S06 CP-SAT P1–P5 / Checkpoint 2 |
+| Current status | OPEN |
+
+### TDR-S06-CPSAT-004 — Possible vacuous together-rule satisfaction
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S06-CPSAT-004` |
+| Source slice | EOS-S06 CP-SAT / CAP1000 B_TYPICAL |
+| Description | Incomplete scoring reported zero hard violations while an eligible guest remained unseated and a KEEP_TOGETHER rule applied — risk that together-rules are treated satisfied without both members seated (vacuous satisfaction). |
+| Classification | Product solver defect — rule evaluation |
+| Severity | CRITICAL |
+| Evidence | `B_TYPICAL_DIAGNOSIS.json` `hardDetailsIncompleteScoring` vs `hardDetailsCompleteScoring` |
+| Affected surface or contract | Hard-rule scoring / verification |
+| Reason for deferral | Independent verifier + primitive together checks under CP-SAT |
+| Blocking | BLOCKING for verifier honesty |
+| Current owner | EOS-S06 CP-SAT programme |
+| Required regression coverage | Verifier mutation tests for together completeness; no vacuous KEEP_TOGETHER pass |
+| Latest safe remediation milestone | EOS-S06 CP-SAT P1 / Checkpoint 2 |
+| Current status | OPEN |
+
+### TDR-S06-CPSAT-005 — Missing proof-quality infeasibility
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S06-CPSAT-005` |
+| Source slice | EOS-S06 CP-SAT |
+| Description | Heuristic path can imply impossibility from restricted search without proof-grade full-model infeasibility evidence (certificates/cores). Product rule: `INFEASIBLE` requires full model + proof-grade evidence. |
+| Classification | Product solver defect — evidence grade |
+| Severity | HIGH |
+| Evidence | Pack `04`/`06`; B_TYPICAL neighbourhood “infeasible” contrast with global witness |
+| Affected surface or contract | Infeasibility reporting / diagnostics |
+| Reason for deferral | CP-SAT certificates + confirmation re-solve |
+| Blocking | BLOCKING for any INFEASIBLE adoption/UI claim |
+| Current owner | EOS-S06 CP-SAT programme |
+| Required regression coverage | Deliberate infeasibility by certificate type; confirmation re-solve |
+| Latest safe remediation milestone | EOS-S06 CP-SAT P3/P6 / Checkpoint 2 |
+| Current status | OPEN |
+
+### TDR-S06-CPSAT-006 — Missing complete placement explanations
+
+| Field | Value |
+|-------|-------|
+| ID | `TDR-S06-CPSAT-006` |
+| Source slice | EOS-S06 CP-SAT |
+| Description | Heuristic seating does not provide every seated guest with exactly one verified short placement reason backed by stored evidence and explanation-verifier pass. |
+| Classification | Product capability gap — explainability |
+| Severity | HIGH |
+| Evidence | Pack `06`/`07`; current heuristic authority path |
+| Affected surface or contract | Review/adoption UI and explanation verifier |
+| Reason for deferral | Delivered under CP-SAT P5; explanation failure blocks adoption |
+| Blocking | BLOCKING for CP-SAT acceptance (Definition of Done) |
+| Current owner | EOS-S06 CP-SAT programme |
+| Required regression coverage | Explanation completeness + redaction leak scans |
+| Latest safe remediation milestone | EOS-S06 CP-SAT P5 / Checkpoint 2 |
+| Current status | OPEN |
+
 ### TDR-S05A-001 — Discovery source binaries are not implemented
 
 | Field | Value |
@@ -1208,3 +1317,4 @@ These do not reopen EOS-S04A and do not create new blocking IDs.
 | EOS-S06 Gate 1 + auth remediation closure MD-PR-S080 2026-09-16 | ChatGPT / AI CTO accepted Pre-Production Gate 1 — PASS WITH CONTROLLED OBSERVATIONS — on exact CAP600 `053fa686-…` after Claude second-attempt PASS WITH CONTROLLED OBSERVATIONS. Authentication performance remediation ACCEPTED — SIGN-IN PERFORMANCE RESTORED at application SHA `71317881384e38671295c3fda32d533c71c3f559`. Entered TDR-S06-004…TDR-S06-008. TDR-S06A-001 remains OPEN. EOS-S06B/S06C packs registered as CEO RATIFICATION DRAFT only. EOS-S07 remains NOT_STARTED / NOT_AUTHORISED. Production remains unauthorised. |
 | EOS-S06B/S06C ratification + governance prep MD-PR-S080 items 1–4 2026-09-16 | CEO ratification of EOS-S06B and EOS-S06C recorded under `EOS_S06B_S06C_RATIFICATION.md` for successor planning only. Technical-debt classification register created for TDR-S06A-001 and TDR-S06-002…008 — all remain OPEN; none closed/waived. Documentation-head mismatch dispositioned UNRESOLVED / OWNER REVIEW / production BLOCKING UNTIL DISPOSITIONED. CT0 historical validator failure dispositioned REQUIRES CONTROL OWNER REVIEW / FAILURE RETAINED / production BLOCKED UNTIL DISPOSITIONED. Implementation of S06B/S06C/S06D/Dining Command/S07 did not begin. Production remains unauthorised. Providers inactive. |
 | EOS-S06B/S06C/S06D CEO ratification finalisation MD-PR-S080 2026-09-16 | CEO ratified EOS-S06B, EOS-S06C and EOS-S06D as CEO RATIFIED — PLANNING ONLY. Canonical sequence EOS-S06C → EOS-S06B → EOS-S06D → EOS-S07 recorded as roadmap only (does not authorise implementation). EOS-S06D Dining Service Command subsumes earlier S06D-documentation / Dining Command split. TDR-S06A-001 and TDR-S06-002…008 remain OPEN. Docs-head UNRESOLVED / OWNER REVIEW. CT0 failure RETAINED / REQUIRES CONTROL OWNER REVIEW. EOS-S07 NOT_STARTED / NOT_AUTHORISED. Production remains unauthorised. Documentation-only governance commit; no implementation. |
+| EOS-S06 CP-SAT ratification + registration 2026-09-17 | CEO ratified CP-SAT production seating correction programme. Pack registered (archive SHA-256 `9d414478…`). Status CEO RATIFIED / IMPLEMENTATION AUTHORISED / NOT ACCEPTED / PRODUCTION AUTHORITY NOT GRANTED / REAL DATA NOT AUTHORISED. Entered TDR-S06-CPSAT-001…006. Heuristic 1000-seat acceptance route superseded; B_TYPICAL defect preserved. Prior TDRs remain OPEN. Docs-head and CT0 remain unresolved. EOS-S06B/S06D planning-only; EOS-S07 NOT_STARTED / NOT_AUTHORISED. Governance registration commit only at this step. |

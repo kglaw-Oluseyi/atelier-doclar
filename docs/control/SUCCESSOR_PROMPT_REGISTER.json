@@ -1,6 +1,6 @@
 {
   "scheme": "MD-PR-SNNN successor accountability IDs; historical MD-PR-NNNN remain intact",
-  "generated_at": "2026-09-07T00:00:00Z",
+  "generated_at": "2026-09-17T00:00:00Z",
   "notes": "Do not impersonate historical Control Tower prompt IDs. MD-PR-0011 is already used. Historical authorising_instruction values that say do not deploy or no Railway remain slice history. Current deploy-by-default rule is docs/control/DEPLOYMENT_AND_PRODUCTION_REALISM_POLICY.md (6 September 2026). Real operations and other Railway projects remain gated.",
   "entries": [
     {
@@ -354,6 +354,14 @@
       "product": "EVENT_OS",
       "title": "EOS-S06 Gate 1 Acceptance, Authentication Remediation Acceptance, Identity Maintenance, Successor Pack Registration, Governance Prep, and EOS-S06B/S06C/S06D CEO Ratification Finalisation",
       "authorising_instruction": "Accept Pre-Production Gate 1 PASS WITH CONTROLLED OBSERVATIONS and authentication performance remediation at application SHA 71317881384e38671295c3fda32d533c71c3f559; register then record CEO ratification of EOS-S06B, EOS-S06C and EOS-S06D for planning only; record canonical sequence EOS-S06C then EOS-S06B then EOS-S06D then EOS-S07 without granting implementation authority; supersede earlier Dining Command split in favour of complete-product EOS-S06D Dining Service Command; create technical-debt classification register without closing debts; disposition documentationHead mismatch and CT0 historical validator failure as unresolved/retained; do not start EOS-S06B, EOS-S06C, EOS-S06D or EOS-S07 implementation; do not authorise production, activate providers, introduce real data, or modify live environment variables"
+    },
+    {
+      "prompt_control_id": "EOS-S06-CPSAT",
+      "native_id": "S06-CPSAT-RATIFY-EXEC",
+      "slice_id": "EOS-S06-CPSAT",
+      "product": "EVENT_OS",
+      "title": "EOS-S06 CP-SAT Production Seating Correction Programme \u2014 Ratification and Execution Authority",
+      "authorising_instruction": "CEO ratifies complete replacement and retirement of the heuristic seating solver with production CP-SAT; register pack at docs/control/eos-s06-cpsat/ratification-pack/ (archive SHA-256 9d41447846109a55ee95c641686d3aa239188801bfcc5c19d0656e3470870c74); implement event-os-solver-worker with no ingress inside atelier-doclar production; preserve B_TYPICAL defect evidence hash 13125f90267e3a78207c02f292d3f948afe22b23e60b58b0ef474f5f2b3d0668; stop at material checkpoints for AI CTO; do not accept the programme here; do not grant productionAuthorised; do not introduce real data; do not activate providers; do not start EOS-S06B, EOS-S06D or EOS-S07; do not mutate Control Tower; keep EOS-S06C acceptance pending Claude UX recheck"
     }
   ]
 }

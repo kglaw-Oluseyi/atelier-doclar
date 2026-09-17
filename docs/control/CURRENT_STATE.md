@@ -1,8 +1,8 @@
 # Current State
 
-**Updated:** EOS-S06C pre-Claude exact CAP1000 fixture + browser closure — READY FOR CLAUDE / not accepted (2026-09-16)
-**Prompt Control ID:** EOS-S06C bounded implementation (post MD-PR-S080 ratification); prior MD-PR-S080 governance finalisation; prior EOS-S06A acceptance MD-PR-S079; prior EOS-S06 acceptance MD-PR-S077
-**Milestone:** `EOS-S05` ACCEPTED; `EOS-S05A` ACCEPTED (not catalogue); `EOS-S05B` ACCEPTED (not catalogue); `EOS-S06` ACCEPTED; `EOS-S06A` ACCEPTED — PASS WITH ONE CONTROLLED MINOR OBSERVATION; **EOS-S06 Gate 1 ACCEPTED — PASS WITH CONTROLLED OBSERVATIONS**; authentication performance remediation **ACCEPTED — SIGN-IN PERFORMANCE RESTORED**; catalogue accepted-slice count 6 (unchanged); accepted application SHA `71317881384e38671295c3fda32d533c71c3f559` (entry); `TDR-S06A-001` and `TDR-S06-002`–`TDR-S06-008` OPEN; **EOS-S06C IMPLEMENTATION COMPLETE — NOT ACCEPTED**; EOS-S06B/S06D **CEO RATIFIED — PLANNING ONLY** — implementation not authorised; EOS-S07 `NOT_STARTED / NOT_AUTHORISED`
+**Updated:** EOS-S06 CP-SAT Production Seating Correction Programme — CEO RATIFIED / IMPLEMENTATION AUTHORISED / NOT ACCEPTED (2026-09-17)
+**Prompt Control ID:** EOS-S06 CP-SAT ratification + execution (pack v1.0); prior EOS-S06C UX remediation awaiting Claude recheck; prior MD-PR-S080 governance finalisation; prior EOS-S06A acceptance MD-PR-S079; prior EOS-S06 acceptance MD-PR-S077
+**Milestone:** `EOS-S05` ACCEPTED; `EOS-S05A` ACCEPTED (not catalogue); `EOS-S05B` ACCEPTED (not catalogue); `EOS-S06` ACCEPTED; `EOS-S06A` ACCEPTED — PASS WITH ONE CONTROLLED MINOR OBSERVATION; **EOS-S06 Gate 1 ACCEPTED — PASS WITH CONTROLLED OBSERVATIONS**; authentication performance remediation **ACCEPTED — SIGN-IN PERFORMANCE RESTORED**; catalogue accepted-slice count 6 (unchanged); accepted application SHA `71317881384e38671295c3fda32d533c71c3f559` (entry); `TDR-S06A-001` and `TDR-S06-002`–`TDR-S06-008` OPEN; **new `TDR-S06-CPSAT-001`–`006` OPEN**; **EOS-S06 CP-SAT `CEO RATIFIED` / `IMPLEMENTATION AUTHORISED` / `NOT ACCEPTED` / `PRODUCTION AUTHORITY NOT GRANTED` / `REAL DATA NOT AUTHORISED`**; **EOS-S06C IMPLEMENTATION COMPLETE — NOT ACCEPTED** (Claude UX recheck pending); EOS-S06B/S06D **CEO RATIFIED — PLANNING ONLY** — implementation not authorised; EOS-S07 `NOT_STARTED / NOT_AUTHORISED`
 
 MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is ACCEPTED. EOS-S02 is ACCEPTED. EOS-S03 is ACCEPTED. EOS-S04 is CLOSED / ACCEPTED (`PASS WITH OBSERVATIONS`). EOS-S05 is ACCEPTED. EOS-S06 is ACCEPTED. Catalogue accepted-slice count is 6. Native coverage is 62/62. S4-61 is satisfied for technical review only. S4-62 is satisfied for controlled technical acceptance/handover only. Independent, specialist and CEO production gates remain unsigned.
 
@@ -147,14 +147,20 @@ MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is A
 **AUTHENTICATION REMEDIATION ACCEPTANCE RECORD: docs/control/EOS_AUTH_PERFORMANCE_REMEDIATION_ACCEPTANCE.md**
 **CURRENT ACCEPTED APPLICATION SHA: 71317881384e38671295c3fda32d533c71c3f559**
 **PRIOR GATE 1 REVIEWED APPLICATION BASELINE: 0a0be803f123e8326fb893db1e3562c724b70dd0**
-**EOS-S06B STATUS: CEO RATIFIED — PLANNING ONLY — IMPLEMENTATION NOT AUTHORISED — NOT STARTED**
-**EOS-S06C STATUS: EXACT CAP1000 FIXTURE + DEPLOYED BROWSER CLOSURE COMPLETE — READY FOR INDEPENDENT VERIFICATION — NOT ACCEPTED**
+**EOS-S06 CP-SAT STATUS: CEO RATIFIED — IMPLEMENTATION AUTHORISED — NOT ACCEPTED — PRODUCTION AUTHORITY NOT GRANTED — REAL DATA NOT AUTHORISED**
+**EOS-S06 CP-SAT REGISTRATION:** `docs/control/EOS_S06_CP_SAT_PRODUCTION_SEATING_REGISTRATION.md`
+**EOS-S06 CP-SAT PACK:** `docs/control/eos-s06-cpsat/ratification-pack/` · archive SHA-256 `9d41447846109a55ee95c641686d3aa239188801bfcc5c19d0656e3470870c74`
+**EOS-S06 CP-SAT EVIDENCE:** `docs/control/evidence/eos-s06-cpsat-production/`
+**EOS-S06 CP-SAT AUTHORISED NEW SERVICE:** `event-os-solver-worker` (atelier-doclar / production; no ingress; not yet created at registration)
+**HEURISTIC 1000-SEAT QUALIFICATION:** superseded as acceptance route by CP-SAT correction; B_TYPICAL defect preserved (`datasetHash` `13125f90267e3a78207c02f292d3f948afe22b23e60b58b0ef474f5f2b3d0668`; guest `g0147`; rule `cap1k-b-together-24`)
+**EOS-S06B STATUS: CEO RATIFIED — PLANNING ONLY — IMPLEMENTATION NOT AUTHORISED — NOT STARTED** (blocked behind CP-SAT correction/qualification)
+**EOS-S06C STATUS: EXACT CAP1000 FIXTURE + DEPLOYED BROWSER CLOSURE COMPLETE — READY FOR INDEPENDENT VERIFICATION / FOCUSED CLAUDE UX RECHECK — NOT ACCEPTED**
 **EOS-S06C LIVE APPLICATION SHA:** `04d5607125e6806078a2b496665bf9fe11e57234`
 **EOS-S06C EXACT CAP1000 EVENT:** `add41e21-9618-44f9-896a-fecd54badca5` (`S06C1KMU4LD5`) / job `28a5370a-6700-4ac0-88a8-a716026ed860` — authoritative guests exactly 1000
 **EOS-S06C MIXED QUALIFICATION EVENT (NOT exact CAP1000):** `af4a6b7e-0424-46d5-b9e5-d0a26845173e` — 1,050 guests (50+1000 jobs)
 **EOS-S06C LIVE DEPLOYMENT:** `df909000-d78c-46c1-8b9d-798883546691`
 **EOS-S06D STATUS: CEO RATIFIED — PLANNING ONLY — IMPLEMENTATION NOT AUTHORISED — NOT STARTED**
-**EOS-S06B/S06C/S06D SEQUENCING: controlling order is EOS-S06C → EOS-S06B → EOS-S06D → EOS-S07**
+**EOS-S06B/S06C/S06D SEQUENCING: roadmap order remains EOS-S06C → EOS-S06B → EOS-S06D → EOS-S07; CP-SAT correction and qualification must finish before S06B implementation or EOS-S07**
 **EOS-S06B/S06C/S06D RATIFICATION RECORD:** `docs/control/EOS_S06B_S06C_RATIFICATION.md`
 **EOS-S06C IMPLEMENTATION EVIDENCE:** `docs/control/evidence/eos-s06c-high-volume-intake/`
 **EOS-S06C ADR:** `docs/control/ADR_EOS_S06C_HIGH_VOLUME_GUEST_INTAKE.md`
@@ -163,10 +169,10 @@ MD-B0–MD-CT9, MD-FC1, MD-LV1, MD-HV1 and MD-GR1 remain IN_REVIEW. EOS-S01 is A
 **DOCUMENTATION HEAD DISPOSITION:** `UNRESOLVED` / `OWNER REVIEW` / production `BLOCKING UNTIL DISPOSITIONED` — `docs/control/evidence/eos-s06-s080-governance-prep/DOCUMENTATION_HEAD_MISMATCH_DISPOSITION.md`
 **CT0 HISTORICAL VALIDATOR FAILURE DISPOSITION:** `REQUIRES CONTROL OWNER REVIEW` / failure `RETAINED` / production `BLOCKED UNTIL DISPOSITIONED` — `docs/control/evidence/eos-s06-s080-governance-prep/CT0_HISTORICAL_VALIDATOR_FAILURE_DISPOSITION.md`
 **TECHNICAL DEBT CLASSIFICATION REGISTER:** `docs/control/evidence/eos-s06-s080-governance-prep/TECHNICAL_DEBT_CLASSIFICATION_REGISTER.md` (all listed debts OPEN; S06C scoped `viewSnapshot` intake-read remediation does not close `TDR-S06-006`)
-**EOS-S06 CONTROLLING ACCEPTANCE AUTHORITY:** `docs/control/EOS_S06_ACCEPTANCE.md` (`MD-PR-S077`)
+**EOS-S06 CONTROLLING ACCEPTANCE AUTHORITY:** `docs/control/EOS_S06_ACCEPTANCE.md` (`MD-PR-S077`) — historical acceptance retained; CP-SAT does not revoke it
 **EOS-S06 HISTORICAL IMPLEMENTATION AUTHORITIES:** `docs/control/eos-s06/MD_PR_S075_EOS_S06_V2_TABLE_IDENTITY_COMPILER_AND_FEASIBILITY_TRUTH.md` (parents `MD_PR_S073` / `MD_PR_S072`) — dated implementation history; acceptance is MD-PR-S077
 **MD-PR-S036 IMPLEMENTATION AUTHORITY: NO — not consumed; historical recommended ID only**
-**RECOMMENDED NEXT: Independent Claude verification of EOS-S06C; do not accept S06C in this step; do not start S06B/S06D/S07; do not authorise production; do not activate providers; do not introduce real data; do not deploy Control Tower for product mutation; docs-head and CT0 dispositions remain unresolved**
+**RECOMMENDED NEXT: Execute CP-SAT Checkpoint 1 architecture proof; keep EOS-S06C Claude UX recheck pending without accepting S06C here; do not start S06B/S06D/S07; do not authorise production; do not activate providers; do not introduce real data; do not deploy Control Tower for product mutation; docs-head and CT0 dispositions remain unresolved**
 **CROSS-SLICE UX CONTROL ID: MD-PR-UX001**
 **MD-PR-UX001 IMPLEMENTATION AUTHORITY: EXECUTED — awaiting focused human UX reverification**
 **EVENT OS S01-S03 LIVE DEPLOYED: YES**
@@ -222,6 +228,8 @@ Event OS S01–S03 remain formally accepted. EOS-S04 is CLOSED / ACCEPTED after 
 **EOS-S06D pack registration (`MD-PR-S080` continuation):** On `2026-09-16`, the EOS-S06D Dining Service Command ratification pack was registered under `docs/control/eos-s06d/ratification-pack/` (archive SHA-256 `c06d2597…`). Placement-era status was `CEO RATIFICATION DRAFT`. That draft-only programme status is superseded by the finalisation record below. Registration evidence retained: `docs/control/evidence/eos-s06-s080-governance-prep/EOS_S06D_PACK_REGISTRATION.md`.
 
 **MD-PR-S080 governance finalisation (16 September 2026):** CEO ratification now covers EOS-S06B, EOS-S06C and EOS-S06D as `CEO RATIFIED — PLANNING ONLY`. Implementation and deployment remain NOT AUTHORISED for all three. Canonical successor sequence: `EOS-S06C → EOS-S06B → EOS-S06D → EOS-S07`. EOS-S06D — Dining Service Command is the complete-product milestone; the earlier “S06D documentation” vs standalone “Dining Command” split is superseded. EOS-S07 remains `NOT_STARTED / NOT_AUTHORISED`. Sequence is a roadmap decision and does not authorise implementation. Recommended next authority: bounded EOS-S06C implementation. Docs-head and CT0 dispositions remain unresolved; open TDRs remain OPEN. Controlling record: `docs/control/EOS_S06B_S06C_RATIFICATION.md`.
+
+**EOS-S06 CP-SAT Production Seating Correction Programme (17 September 2026):** CEO ratified complete replacement and retirement of the heuristic seating solver with production CP-SAT (`event-os-solver-worker`, no ingress). Programme status: `CEO RATIFIED` / `IMPLEMENTATION AUTHORISED` / `NOT ACCEPTED` / `PRODUCTION AUTHORITY NOT GRANTED` / `REAL DATA NOT AUTHORISED`. Pack registered at `docs/control/eos-s06-cpsat/ratification-pack/` (archive SHA-256 `9d414478…`). Heuristic 1,000-seat qualification is superseded as an acceptance route; B_TYPICAL failure evidence is preserved as mandatory CP-SAT regression (`13125f90…`). EOS-S06C acceptance remains pending focused Claude UX recheck / AI CTO decision. EOS-S06B/S06D remain planning-only; EOS-S07 remains `NOT_STARTED / NOT_AUTHORISED`. CP-SAT correction and qualification must finish before S06B implementation or EOS-S07. Docs-head and CT0 blockers remain unresolved. Open TDRs remain OPEN; new `TDR-S06-CPSAT-001`–`006` entered. Controlling registration: `docs/control/EOS_S06_CP_SAT_PRODUCTION_SEATING_REGISTRATION.md`.
 
 Historical sentence “Implementation of EOS-S04A–F is not authorised as a product slice” applied before CEO S04A–S04F implementation authority. For S04A–S04F that sentence is superseded. The EOS-S04E and EOS-S04F controlled slice pack filenames still contain `DRAFT`. Current programme status for S04E is `ACCEPTED`. Current programme status for S04F is `ACCEPTED`. Historical `IN_REVIEW / NOT READY` on 2026-09-08 remains dated history.
 

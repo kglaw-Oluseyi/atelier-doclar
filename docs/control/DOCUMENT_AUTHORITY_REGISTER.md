@@ -456,3 +456,15 @@ This addendum does not rewrite the B0 row set or earlier addenda. Catalogue acce
 | EOS-S06D ratification pack | `docs/control/eos-s06d/ratification-pack/` | CEO RATIFIED — PLANNING ONLY — IMPLEMENTATION NOT AUTHORISED | Controlling planning specification; archive SHA-256 `c06d2597…`. |
 | Successor sequence control | `docs/control/evidence/eos-s06-s080-governance-prep/SUCCESSOR_SEQUENCE_CONTROL.md` | SUCCESSOR SEQUENCE | Next: bounded S06C implementation authority. |
 | EOS-S06D pack registration (placement history) | `docs/control/evidence/eos-s06-s080-governance-prep/EOS_S06D_PACK_REGISTRATION.md` | PLACEMENT HISTORY | Draft-registration record retained; programme status superseded by ratification overlay. |
+
+## Addendum — 2026-09-17 EOS-S06 CP-SAT Production Seating Correction Programme
+
+This addendum does not rewrite the B0 row set or earlier addenda. Catalogue accepted-slice count remains 6. Gate 1 and auth remediation remain ACCEPTED. Accepted application SHA remains `71317881384e38671295c3fda32d533c71c3f559`. EOS-S06 historical acceptance (`MD-PR-S077`) is retained. EOS-S06C remains NOT ACCEPTED pending focused Claude UX recheck / AI CTO decision. EOS-S06B/S06D remain CEO RATIFIED — PLANNING ONLY. EOS-S07 remains NOT_STARTED / NOT_AUTHORISED. Documentation-head disposition, CT0 retained failure and prior open TDRs remain unresolved / OPEN. Production remains unauthorised. Real data not authorised. Supplied CP-SAT pack ZIP/DOCX/`MANIFEST.json` remain byte-identical.
+
+| Title | Path | Current programme status | Notes |
+|-------|------|--------------------------|-------|
+| EOS-S06 CP-SAT registration | `docs/control/EOS_S06_CP_SAT_PRODUCTION_SEATING_REGISTRATION.md` | CANONICAL CEO RATIFICATION + IMPLEMENTATION AUTHORITY | `CEO RATIFIED` / `IMPLEMENTATION AUTHORISED` / `NOT ACCEPTED` / `PRODUCTION AUTHORITY NOT GRANTED` / `REAL DATA NOT AUTHORISED` |
+| EOS-S06 CP-SAT ratification pack | `docs/control/eos-s06-cpsat/ratification-pack/` | CONTROLLING ARCHITECTURE AND EXECUTION BASIS | Archive SHA-256 `9d41447846109a55ee95c641686d3aa239188801bfcc5c19d0656e3470870c74` |
+| EOS-S06 CP-SAT evidence | `docs/control/evidence/eos-s06-cpsat-production/` | PROGRAMME EVIDENCE ROOT | Includes immutable `legacy-defect-provenance/` |
+| Authorised Railway service | `event-os-solver-worker` | AUTHORISED — NOT YET CREATED AT REGISTRATION | atelier-doclar / production; no ingress |
+| Heuristic 1000-seat qualification | CAP1000 stretch evidence | SUPERSEDED AS ACCEPTANCE ROUTE | Defect evidence preserved; corpus hash `13125f90…` locked |

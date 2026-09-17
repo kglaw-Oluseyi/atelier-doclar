@@ -1,0 +1,239 @@
+{
+  "at": "2026-09-16T22:52:35.178Z",
+  "datasetHash": "13125f90267e3a78207c02f292d3f948afe22b23e60b58b0ef474f5f2b3d0668",
+  "seed": "eos-s06-cap-B-typical-1000-v2",
+  "reproduction": {
+    "status": "TIMED_OUT",
+    "elapsedMs": 9124,
+    "hardViolations": 1,
+    "nodes": 1011,
+    "components": 937,
+    "seated": 999,
+    "unseated": [
+      "g0147"
+    ],
+    "findings": []
+  },
+  "unseatedGuest": "g0147",
+  "constraintsAffectingUnseated": [
+    {
+      "id": "cap1k-b-together-24",
+      "kind": "HARD",
+      "predicateType": "KEEP_TOGETHER",
+      "payload": {
+        "predicateType": "KEEP_TOGETHER",
+        "guestTokens": [
+          "g0146",
+          "g0147"
+        ]
+      }
+    }
+  ],
+  "hardDetailsIncompleteScoring": {
+    "hardViolations": 0,
+    "details": []
+  },
+  "hardDetailsCompleteScoring": {
+    "hardViolations": 1,
+    "details": [
+      {
+        "id": "unseated-required:g0147",
+        "reason": "eligible unseated"
+      }
+    ]
+  },
+  "exactViolatedHardRules": [
+    {
+      "id": "unseated-required:g0147",
+      "reason": "eligible unseated"
+    }
+  ],
+  "component": {
+    "size": 2,
+    "members": [
+      "g0146",
+      "g0147"
+    ],
+    "exceedsSearchLimit8": false,
+    "constraints": [
+      {
+        "id": "cap1k-b-together-24",
+        "kind": "HARD",
+        "predicateType": "KEEP_TOGETHER",
+        "guests": [
+          "g0146",
+          "g0147"
+        ],
+        "tables": []
+      }
+    ],
+    "reservations": [],
+    "a11yMembers": [],
+    "relevantTableCaps": {}
+  },
+  "staticCorpusValidation": [],
+  "contradictionLikely": false,
+  "independentFeasibility": {
+    "feasible": false,
+    "reason": "no HARD-valid seating found in bounded independent search",
+    "explored": 3,
+    "timedOut": false
+  },
+  "comparisonBC": {
+    "B": {
+      "hard": 52,
+      "components": 937,
+      "maxComponent": 13,
+      "componentsGt8": [
+        {
+          "size": 13,
+          "sample": [
+            "g0001",
+            "g0002",
+            "g0003",
+            "g0004",
+            "g0005",
+            "g0006",
+            "g0007",
+            "g0008",
+            "g0009",
+            "g0010",
+            "g0011",
+            "g0012"
+          ]
+        },
+        {
+          "size": 12,
+          "sample": [
+            "g0346",
+            "g0569",
+            "g0597",
+            "g0613",
+            "g0620",
+            "g0652",
+            "g0701",
+            "g0773",
+            "g0836",
+            "g0913",
+            "g0930",
+            "g0937"
+          ]
+        }
+      ],
+      "sizeHist": [
+        [
+          1,
+          900
+        ],
+        [
+          2,
+          32
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          12,
+          1
+        ],
+        [
+          13,
+          1
+        ]
+      ],
+      "reservations": [
+        {
+          "id": "res-banquet-1000",
+          "eligible": 12,
+          "tables": 2,
+          "min": 10,
+          "max": 12
+        },
+        {
+          "id": "res-access-1000",
+          "eligible": 12,
+          "tables": 10,
+          "min": 12,
+          "max": 12
+        }
+      ]
+    },
+    "C": {
+      "hard": 29,
+      "components": 963,
+      "maxComponent": 12,
+      "componentsGt8": [
+        {
+          "size": 12,
+          "sample": [
+            "g0001",
+            "g0002",
+            "g0003",
+            "g0004",
+            "g0005",
+            "g0006",
+            "g0007",
+            "g0008",
+            "g0009",
+            "g0010",
+            "g0011",
+            "g0012"
+          ]
+        }
+      ],
+      "sizeHist": [
+        [
+          1,
+          946
+        ],
+        [
+          2,
+          9
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          12,
+          1
+        ]
+      ],
+      "reservations": [
+        {
+          "id": "res-banquet-1000",
+          "eligible": 12,
+          "tables": 2,
+          "min": 10,
+          "max": 12
+        },
+        {
+          "id": "res-companion-1000",
+          "eligible": 4,
+          "tables": 1
+        }
+      ]
+    }
+  },
+  "timedOutMeaning": {
+    "configuredTimeLimitMs": 20000,
+    "observedElapsedMs": 9124,
+    "wallUnderLimit": true,
+    "productRule": "Outside exhaustive bounds, status TIMED_OUT when final hardViolations>0 and not certifiedInfeasible. searchIncomplete is set when any connected component has >8 members while seed still has HARD violations — those components are skipped without search, forcing TIMED_OUT even if wall clock << timeLimitMs.",
+    "largeComponentsSkipped": [
+      13,
+      12
+    ],
+    "classification": "search/iteration incompleteness (component size >8 skip → searchIncomplete → TIMED_OUT), not elapsed-time exhaustion"
+  },
+  "wallMs": 9188
+}

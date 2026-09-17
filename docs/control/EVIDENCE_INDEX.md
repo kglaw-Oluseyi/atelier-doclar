@@ -797,3 +797,18 @@ No assignment, posture, identity-field, findability, or seating mutations under 
 | EV-EOS-S06C-UX | DOCUMENT | UX remediation evidence pack | `docs/control/evidence/eos-s06c-ux-remediation/` |
 | EV-EOS-S06C-UX-CLAUDE | DOCUMENT | Focused Claude UX recheck prompt | `docs/control/evidence/eos-s06c-ux-remediation/CLAUDE_UX_RECHECK_PROMPT.md` |
 
+## EOS-S06 CP-SAT Production Seating Correction Programme
+
+**Date:** 2026-09-17
+**Status:** `CEO RATIFIED` / `IMPLEMENTATION AUTHORISED` / `NOT ACCEPTED` / `PRODUCTION AUTHORITY NOT GRANTED` / `REAL DATA NOT AUTHORISED`
+**Pack archive SHA-256:** `9d41447846109a55ee95c641686d3aa239188801bfcc5c19d0656e3470870c74`
+**Authorised service:** `event-os-solver-worker` (not yet created at registration)
+**productionAuthorised:** false · Providers: INACTIVE · Control Tower: untouched
+
+| Evidence ID | Type | Summary | Path |
+|-------------|------|---------|------|
+| EV-EOS-S06-CPSAT-REG | DOCUMENT | Canonical registration record | `docs/control/EOS_S06_CP_SAT_PRODUCTION_SEATING_REGISTRATION.md` |
+| EV-EOS-S06-CPSAT-PACK | DOCUMENT | Controlling ratification pack | `docs/control/eos-s06-cpsat/ratification-pack/` |
+| EV-EOS-S06-CPSAT-EV | DOCUMENT | Programme evidence root | `docs/control/evidence/eos-s06-cpsat-production/` |
+| EV-EOS-S06-CPSAT-LEGACY | DOCUMENT | Immutable B_TYPICAL defect provenance | `docs/control/evidence/eos-s06-cpsat-production/legacy-defect-provenance/` |
+

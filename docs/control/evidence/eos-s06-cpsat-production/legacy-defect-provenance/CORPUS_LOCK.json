@@ -1,0 +1,34 @@
+{
+  "corpusId": "B_TYPICAL",
+  "edition": "eos-s06-capacity-1000-v2",
+  "seed": "eos-s06-cap-B-typical-1000-v2",
+  "datasetHash": "13125f90267e3a78207c02f292d3f948afe22b23e60b58b0ef474f5f2b3d0668",
+  "immutable": true,
+  "mandatoryCpSatRegressionFixture": true,
+  "doNotFixCorpus": true,
+  "unseatedGuest": "g0147",
+  "togetherRuleId": "cap1k-b-together-24",
+  "togetherGuests": [
+    "g0146",
+    "g0147"
+  ],
+  "heuristicReportedStatus": "TIMED_OUT",
+  "falseTimedOutExplanation": "Heuristic reported TIMED_OUT with hardViolations=1 (g0147 unseated) while a globally valid HARD assignment exists (globalWitnessFound=true). Restricted/neighbourhood repair failure and incomplete search were misclassified as wall-clock timeout / incomplete seating rather than SEARCH_INCOMPLETE or solver incompleteness. TIMED_OUT must only mean a genuine wall-clock limit without incumbent under product status rules.",
+  "globalWitness": {
+    "source": "B_TYPICAL_GLOBAL_WITNESS.json",
+    "globalWitnessFound": true,
+    "strategy": "displace-two-unconstrained-guests-then-seat-pair",
+    "table": "t0008",
+    "afterHard": 0,
+    "seated": 1000
+  },
+  "sourceEvidencePaths": [
+    "docs/control/evidence/eos-s06-capacity-1000/B_TYPICAL_DIAGNOSIS.json",
+    "docs/control/evidence/eos-s06-capacity-1000/B_TYPICAL_DIAGNOSIS_TRACE.json",
+    "docs/control/evidence/eos-s06-capacity-1000/B_TYPICAL_GLOBAL_WITNESS.json",
+    "docs/control/evidence/eos-s06-capacity-1000/SOLVER_TIMING.jsonl",
+    "docs/control/evidence/eos-s06-capacity-1000/RULE_PROFILE.json",
+    "packages/shared-platform/src/seating-capacity-1000-corpus.ts"
+  ],
+  "generatorSeedBinding": "CAPACITY_1000_SCENARIO_SEEDS.B_TYPICAL == eos-s06-cap-B-typical-1000-v2"
+}
