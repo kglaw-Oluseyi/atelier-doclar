@@ -1,0 +1,158 @@
+{
+  "scale": "CAP1000",
+  "disposition": "PASS",
+  "path": "durable-enqueue-frozen-B_TYPICAL-frozen-worker-rerun",
+  "git": {
+    "repo": "kglaw-Oluseyi/atelier-doclar",
+    "branch": "main",
+    "headAtEnqueue": "b08d68b14d0f6b2401b1c0fa983e46231b69de94"
+  },
+  "eventId": "e1376606-8c7e-4891-9fc4-28ad2c67eb12",
+  "runId": "35e40c93-cc74-483b-8c57-dc02846d288b",
+  "application": "APPLIED",
+  "priorHistoricalUntouched": {
+    "eventId": "add41e21-9618-44f9-896a-fecd54badca5",
+    "runId": "96aa065d-6318-44ea-87b0-60f33ada020b",
+    "statusAfter": "READY_FOR_REVIEW"
+  },
+  "corpusSeed": "eos-s06-cap-B-typical-1000-v2",
+  "corpusHash": "13125f90267e3a78207c02f292d3f948afe22b23e60b58b0ef474f5f2b3d0668",
+  "corpusLock": "13125f90267e3a78207c02f292d3f948afe22b23e60b58b0ef474f5f2b3d0668",
+  "guestCount": 1000,
+  "preferenceCount": 24,
+  "requiredObjectiveTiers": {
+    "movement": false,
+    "preferences": true
+  },
+  "typicalTargetMs": 30000,
+  "hardCeilingMs": 90000,
+  "wallStopLossMs": 90000,
+  "railway": {
+    "project": "atelier-doclar",
+    "environment": "production",
+    "service": "solver-worker",
+    "serviceId": "32f09234-9295-4a6c-8b8d-952d61d08706",
+    "deploymentId": "57b5c9fb-4538-44ef-ad90-7d731a7db948",
+    "imageIdentity": "event-os-solver-worker:m6e-worker-8c8d922",
+    "imageDigest": "sha256:276c685860981d139f554548ed55f701253530808a0f914de848d1fa08fe788f",
+    "sourceSha": "8c8d92241a550348f3ba44192cb07f655ffe6d5d"
+  },
+  "worker": {
+    "workerId": "worker:6515380f7ebc:1ec6b6ae",
+    "claimedBy": "worker:6515380f7ebc:1ec6b6ae",
+    "imageIdentity": "event-os-solver-worker:m6e-worker-8c8d922",
+    "imageDigest": "sha256:276c685860981d139f554548ed55f701253530808a0f914de848d1fa08fe788f",
+    "sourceSha": "8c8d92241a550348f3ba44192cb07f655ffe6d5d",
+    "deploymentId": "57b5c9fb-4538-44ef-ad90-7d731a7db948",
+    "qualifiedMaxGuests": 10000,
+    "concurrency": 1
+  },
+  "terminal": {
+    "status": "READY_FOR_REVIEW",
+    "productResult": "OPTIMAL",
+    "evidenceGrade": "OPTIMAL_PROOF",
+    "progressPhase": "sealed",
+    "faultCode": null,
+    "stopReason": "VERIFIED_SEALED",
+    "attemptCount": 1,
+    "childInvocationCount": 1,
+    "solutionsFound": 1,
+    "queuedAt": "2026-09-17T22:04:49.322Z",
+    "startedAt": "2026-09-17T22:04:54.311Z",
+    "sealedAt": "2026-09-17T22:04:59.292Z"
+  },
+  "a2": {
+    "childReported": 0,
+    "independentlyRecomputed": 0,
+    "settlementRecomputed": 0,
+    "present": true,
+    "match": true,
+    "noTierMismatch": true,
+    "candidateMovementTier": 0,
+    "candidatePreferenceTier": 0
+  },
+  "correctness": {
+    "seated": 1000,
+    "uniqueGuests": 1000,
+    "uniquePositions": 1000,
+    "expectedSeated": 1000,
+    "candidateSealed": true,
+    "candidateAssignmentCount": 1000
+  },
+  "timings": {
+    "queueMs": 2819,
+    "claimLatencyMs": 5000,
+    "solveWallMs": 5000,
+    "solveWallMsObserved": 5000,
+    "totalWallMs": 19873,
+    "withinTypicalTarget": true
+  },
+  "containment": {
+    "queueAndLeaseClear": true,
+    "leaseCleared": true,
+    "queueEmpty": true,
+    "notAdopted": true,
+    "workerReadyAfter": true,
+    "noAutomaticRetry": true,
+    "baselineBefore": {
+      "id": "3b771ad9-c4c9-401b-87df-0371f9eee840",
+      "status": "CURRENT",
+      "assignmentHash": "cbaffd8eb266fc34316d0f82ba935a852e2effeb7c06d029c17921c2d3b46f3d"
+    },
+    "baselineAfter": {
+      "id": "3b771ad9-c4c9-401b-87df-0371f9eee840",
+      "status": "CURRENT",
+      "assignmentHash": "cbaffd8eb266fc34316d0f82ba935a852e2effeb7c06d029c17921c2d3b46f3d"
+    },
+    "baselineUnchanged": true
+  },
+  "runToDigestBinding": {
+    "method": "CORRELATED FROM WORKER REGISTRY + RAILWAY DEPLOYMENT + TIMESTAMPS",
+    "note": "Run claim/seal timestamps correlated with READY worker image_identity and pre-verified Railway deployment digest; digest is not durably written on the run row.",
+    "runStartedAt": "2026-09-17T22:04:54.311Z",
+    "runSealedAt": "2026-09-17T22:04:59.292Z",
+    "workerId": "worker:6515380f7ebc:1ec6b6ae",
+    "workerRegistryImageIdentity": "event-os-solver-worker:m6e-worker-8c8d922",
+    "railwayDeploymentId": "57b5c9fb-4538-44ef-ad90-7d731a7db948",
+    "railwayImageTag": "event-os-solver-worker:m6e-worker-8c8d922",
+    "immutableDigest": "sha256:276c685860981d139f554548ed55f701253530808a0f914de848d1fa08fe788f",
+    "sourceSha": "8c8d92241a550348f3ba44192cb07f655ffe6d5d",
+    "workerLogLines": [
+      "2026-09-17T21:34:42.352790175Z service=\"event-os-solver-worker\" workerId=\"worker:6515380f7ebc:1ec6b6ae\" concurrency=1 imageIdentity=\"event-os-solver-worker:m6e-worker-8c8d922\"",
+      "2026-09-17T22:05:13.102636950Z event=\"job_finished\" runId=\"35e40c93-cc74-483b-8c57-dc02846d288b\" workerId=\"worker:6515380f7ebc:1ec6b6ae\" outcome=\"READY_FOR_REVIEW\" settled=true childInvocations=1"
+    ],
+    "durableRunEvents": [
+      {
+        "kind": "RUN_QUEUED",
+        "at": "2026-09-17T22:04:49.322Z"
+      },
+      {
+        "kind": "RUN_CLAIMED",
+        "at": "2026-09-17T22:04:54.31166Z",
+        "leaseOwner": "worker:6515380f7ebc:1ec6b6ae"
+      },
+      {
+        "kind": "RUN_RUNNING",
+        "at": "2026-09-17T22:04:54.444606Z"
+      },
+      {
+        "kind": "RUN_SETTLED",
+        "at": "2026-09-17T22:04:59.292061Z",
+        "lifecycle": "READY_FOR_REVIEW",
+        "productResult": "OPTIMAL"
+      }
+    ]
+  },
+  "note": "Product layout install on exact CAP1000 OOM'd locally; qualification uses locked corpus via durable worker enqueue (same CP-SAT child path).",
+  "at": "2026-09-17T22:05:06.882Z",
+  "filesCreated": [
+    "docs/control/evidence/eos-s06-cpsat-production/milestone-6de/CAP1000_FROZEN_WORKER_RERUN.md",
+    "docs/control/evidence/eos-s06-cpsat-production/milestone-6de/CAP1000_FROZEN_WORKER_REPORT.json",
+    "docs/control/evidence/eos-s06-cpsat-production/milestone-6de/CAP1000_FROZEN_WORKER_TELEMETRY.jsonl",
+    "apps/event-os/scripts/m6e-cap1000-worker-qualify.ts"
+  ],
+  "filesNotModified": [
+    "docs/control/evidence/eos-s06-cpsat-production/milestone-6de/CAP1000_REPORT.json",
+    "docs/control/evidence/eos-s06-cpsat-production/milestone-6de/CAP1000_TELEMETRY.jsonl"
+  ]
+}
