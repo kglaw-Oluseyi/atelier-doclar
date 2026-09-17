@@ -87,8 +87,10 @@ RUN npm install --omit=dev --no-fund --no-audit \
   && test ! -d /app/node_modules/esbuild \
   && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
   && rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
-  && if command -v npm >/dev/null 2>&1; then echo "npm_present" >&2; exit 1; fi \
-  && if command -v npx >/dev/null 2>&1; then echo "npx_present" >&2; exit 1; fi \
+  && hash -r \
+  && test ! -e /usr/local/bin/npm \
+  && test ! -e /usr/local/bin/npx \
+  && test ! -d /usr/local/lib/node_modules/npm \
   && apt-get update \
   && apt-get install -y --no-install-recommends --only-upgrade libpcre2-8-0 \
   && rm -rf /var/lib/apt/lists/*
