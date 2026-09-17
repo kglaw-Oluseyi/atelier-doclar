@@ -32,12 +32,14 @@ export {
   EOS_S06_CPSAT_SOLVER_REVIEW_ADOPTION_MIGRATION_ID,
   EOS_S06_CPSAT_SOLVER_DIAGNOSTICS_MIGRATION_ID,
   EOS_S06_CPSAT_SOLVER_WORKER_REGISTRY_MIGRATION_ID,
+  EOS_S06_CPSAT_CANONICAL_SEATING_CUTOVER_MIGRATION_ID,
   CPSAT_SOLVER_QUEUE_POSTGRES_SCHEMA,
   CPSAT_SOLVER_QUEUE_LAUNCH_POSTGRES_SCHEMA,
   CPSAT_SOLVER_QUEUE_WORKER_POSTGRES_SCHEMA,
   CPSAT_SOLVER_REVIEW_ADOPTION_POSTGRES_SCHEMA,
   CPSAT_SOLVER_DIAGNOSTICS_POSTGRES_SCHEMA,
   CPSAT_SOLVER_WORKER_REGISTRY_POSTGRES_SCHEMA,
+  CPSAT_CANONICAL_SEATING_CUTOVER_POSTGRES_SCHEMA,
 } from "./postgres-schema.js";
 export {
   CPSAT_CLAIM_SQL,
@@ -137,6 +139,13 @@ export {
   type CpsatGovernanceActor,
   type CpsatGovernedAuthoritySnapshot,
 } from "./review-adoption.js";
+export {
+  loadCanonicalCpsatAuthority,
+  applyCanonicalCpsatAuthorityToWorkspace,
+  recordCanonicalCutoverRepairReceipt,
+  type CanonicalCpsatAuthoritySnapshot,
+  type CanonicalCpsatOperationalPublication,
+} from "./canonical-workspace.js";
 export {
   toCpsatWireSeed,
   assertCpsatWireSeed,

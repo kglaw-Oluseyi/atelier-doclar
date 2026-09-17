@@ -72,12 +72,11 @@ export function mapLifecycleToProjectionStatus(
 }
 
 /**
- * Update seating_v2 projection in the same transaction as an authoritative transition.
- * Missing projection row is tolerated (authoritative-only synthetic tests).
- * Projection write failure must roll back the caller transaction.
+ * M6C: dual-write into seating_v2_runs is retired.
+ * Kept as a no-op so historical call sites compile; CP-SAT tables are sole authority.
  */
 export async function projectSeatingV2Lifecycle(
-  client: PgQueryable,
+  _client: PgQueryable,
   input: {
     runId: string;
     lifecycle: string;
@@ -88,30 +87,9 @@ export async function projectSeatingV2Lifecycle(
     completed?: boolean;
   },
 ): Promise<{ projected: boolean; projectionStatus: string }> {
+  void _client;
   const projectionStatus = mapLifecycleToProjectionStatus(input.lifecycle, input.productResult);
-  const result = await client.query<{ id: string }>(
-    `UPDATE seating_v2_runs
-     SET status = $2,
-         solver_claim = $3,
-         lease_owner = $4,
-         lease_until = $5::timestamptz,
-         assignments_hash = COALESCE($6, assignments_hash),
-         started_at = COALESCE(started_at, NOW()),
-         completed_at = CASE WHEN $7 THEN NOW() ELSE completed_at END,
-         generated_at = CASE WHEN $7 THEN NOW() ELSE generated_at END
-     WHERE id = $1
-     RETURNING id`,
-    [
-      input.runId,
-      projectionStatus,
-      input.productResult,
-      input.leaseOwner,
-      input.leaseUntil,
-      input.assignmentsHash ?? null,
-      Boolean(input.completed),
-    ],
-  );
-  return { projected: (result.rowCount ?? 0) > 0, projectionStatus };
+  return { projected: false, projectionStatus };
 }
 
 export async function assertAuthorityProjectionAligned(
@@ -124,27 +102,13 @@ export async function assertAuthorityProjectionAligned(
   );
   const row = auth.rows[0];
   if (!row) return { ok: false, reason: "missing_authority" };
-  const proj = await client.query<Record<string, unknown>>(
-    `SELECT id, status FROM seating_v2_runs WHERE id = $1`,
-    [runId],
-  );
-  if (!proj.rows[0]) {
-    // Projection optional only when seating_v2 table has no mirror row.
-    return {
-      ok: true,
-      lifecycle: String(row.status),
-      projectionStatus: "(none)",
-    };
-  }
-  const expected = mapLifecycleToProjectionStatus(
-    String(row.status),
-    row.product_result == null ? null : String(row.product_result),
-  );
-  const actual = String(proj.rows[0].status);
-  if (actual !== expected) {
-    return { ok: false, reason: `projection_mismatch expected=${expected} actual=${actual}` };
-  }
-  return { ok: true, lifecycle: String(row.status), projectionStatus: actual };
+  // M6C: seating_v2_runs is historical only — alignment to legacy projection is not required.
+  void client;
+  return {
+    ok: true,
+    lifecycle: String(row.status),
+    projectionStatus: "(retired-mirror)",
+  };
 }
 
 export type ClaimedRunRow = CpsatClaimableRun & {

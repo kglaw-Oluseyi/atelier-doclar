@@ -109,8 +109,24 @@ export async function runProtectionFormAction(input: {
                   ? "No data changed. An equivalent ACTIVE rule already governs this scope."
                   : input.actionType === "seating.export"
                     ? "No new export was created. The existing READY export was reused."
-                    : "No change. This command was already applied."
-                : "Protection command applied."
+                    : input.actionType === "seating.evaluate"
+                      ? "No change. This seating evaluation was already applied."
+                      : "No change. This command was already applied."
+                : input.actionType === "seating.evaluate"
+                  ? (() => {
+                      const r = outcome.result as
+                        | { status?: string; failedCount?: number; passedCount?: number; caseCount?: number }
+                        | void;
+                      if (r && typeof r === "object" && r.status) {
+                        const next =
+                          r.status === "PASSED"
+                            ? "Review the evaluation ledger, then continue seating cutover verification."
+                            : "Inspect failed evaluation cases before treating seating as release-ready.";
+                        return `Seating evaluation completed · ${r.status} · ${r.passedCount ?? 0}/${r.caseCount ?? 0} passed. ${next}`;
+                      }
+                      return "Seating evaluation completed.";
+                    })()
+                  : "Protection command applied."
               ).slice(0, 400),
               application: outcome.application,
               didDataChange: outcome.didDataChange,

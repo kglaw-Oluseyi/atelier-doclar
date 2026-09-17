@@ -29,6 +29,10 @@ import {
   type CpsatCandidateReviewModel,
   type CpsatGovernedAuthoritySnapshot,
 } from "./cpsat/review-adoption.js";
+import {
+  applyCanonicalCpsatAuthorityToWorkspace,
+  loadCanonicalCpsatAuthority,
+} from "./cpsat/canonical-workspace.js";
 import { SYSTEM_ROLE_KEYS } from "./constants.js";
 import {
   activeSeatingLayoutBindings,
@@ -70,7 +74,6 @@ import {
 } from "./seating-v2-package.js";
 import type { SeatingV2Repository, SeatingV2Scope, SeatingV2Transaction } from "./seating-v2-repository.js";
 import {
-  findSeatingV2ReusableRun,
   seatingV2PackageIdentityIsBound,
   seatingV2RequestedRunReuseIdentity,
   seatingV2RunUsesCurrentCompiler,
@@ -1211,8 +1214,39 @@ export class SeatingV2CommandService {
         if (receipt.requestHash !== requestHash) {
           throw new PlatformError("IDEMPOTENCY_CONFLICT", "idempotency key was reused with a different payload");
         }
-        const run = await this.requireOwned<SeatingV2Run>(tx, "runs", receipt.resultIdentity, canonical, "run");
-        return { kind: "replay" as const, value: run };
+        // M6C: launches no longer mirror into seating_v2_runs; synthesise from receipt identity.
+        const mirrored = await tx.load<SeatingV2Run>("runs", receipt.resultIdentity, canonical);
+        if (mirrored && mirrored.eventId === canonical.eventId) {
+          return { kind: "replay" as const, value: mirrored };
+        }
+        return {
+          kind: "replay" as const,
+          value: {
+            id: receipt.resultIdentity,
+            organisationId: canonical.organisationId,
+            eventId: canonical.eventId,
+            schemaVersion: SEATING_V2_SCHEMA_VERSION,
+            packageId: input.packageId,
+            packageHash: "",
+            semanticHash: "",
+            compiledRequestHash: "",
+            compilerVersion: "",
+            solverVersion: "cpsat",
+            solverConfigHash: "",
+            validatorVersion: "",
+            deterministicSeed: "",
+            status: "QUEUED",
+            solverClaim: null,
+            rawOutputHash: null,
+            assignmentsHash: null,
+            leaseOwner: null,
+            leaseUntil: null,
+            startedAt: null,
+            completedAt: null,
+            generatedAt: null,
+            createdAt: nowOf(actor),
+          } satisfies SeatingV2Run,
+        };
       }
       const pkg = await this.requireOwned<SeatingV2InputPackage>(tx, "inputPackages", input.packageId, canonical, "input package");
       const compiled = await this.requireCompiled(tx, canonical, pkg.id);
@@ -1226,8 +1260,7 @@ export class SeatingV2CommandService {
         throw new PlatformError("VALIDATION_FAILED", "compiled solver request was not readable");
       }
       const identity = seatingV2RequestedRunReuseIdentity(pkg, compiled.compiledRequestHash);
-      const existing = findSeatingV2ReusableRun(await tx.list<SeatingV2Run>("runs", canonical), identity);
-      if (existing) return { kind: "replay" as const, value: existing.run };
+      // M6C: do not reuse via seating_v2_runs; CP-SAT queue idempotency is authoritative.
       return { kind: "execute" as const, pkg, compiled, identity };
     });
     if (prepared.kind === "replay") {
@@ -1258,9 +1291,8 @@ export class SeatingV2CommandService {
     if (!admission.ok) throwAdmissionRefusal(admission);
     const enqueued = await enqueueCpsatSeatingRun(queue, frozen, { actorPersonId: actor.personId });
     const now = nowOf(actor);
-    return this.mutate(actor, envelope, "seating.run.execute", "seatingV2.launchRun", async (tx) => {
-      const existingQueued = (await tx.list<SeatingV2Run>("runs", envelope)).find((item) => item.id === enqueued.run.runId);
-      if (existingQueued) return { replayed: true, value: existingQueued };
+    // M6C: CP-SAT queue is the sole operational run write — no seating_v2_runs mirror.
+    return this.mutate(actor, envelope, "seating.run.execute", "seatingV2.launchRun", async () => {
       const run: SeatingV2Run = {
         id: enqueued.run.runId,
         organisationId: envelope.organisationId,
@@ -1286,7 +1318,6 @@ export class SeatingV2CommandService {
         generatedAt: null,
         createdAt: now,
       };
-      await tx.insert("runs", run);
       emitSettlementStage({
         stage: "RUN_QUEUED",
         runId: run.id,
@@ -1353,6 +1384,7 @@ export class SeatingV2CommandService {
       });
     });
   }
+
 
   async assignUnseated(
     actor: SeatingV2Actor,
@@ -1712,6 +1744,7 @@ export class SeatingV2CommandService {
     });
   }
 
+
   async requestExport(
     actor: SeatingV2Actor,
     envelope: SeatingV2CommandEnvelope,
@@ -1778,37 +1811,47 @@ export class SeatingV2CommandService {
       return next as SeatingV2State;
     });
     const role = roleKeyForId(assignment.roleId);
-    const workspace = buildSeatingV2Workspace(this.deps.snapshot(), state, eventId, seatingDisclosureForRole(role));
+    // Strip legacy publication authority before CP-SAT overlay — operational current must not come from seating_v2.
+    const base = buildSeatingV2Workspace(this.deps.snapshot(), state, eventId, seatingDisclosureForRole(role));
+    const stripped: SeatingWorkspaceView = {
+      ...base,
+      currentPublication: undefined,
+      publications: (base.publications ?? []).map((item) => ({
+        ...item,
+        status: item.status === "CURRENT" ? "HISTORICAL" : item.status,
+      })),
+    };
     const queue = this.deps.cpsatQueueClient?.();
-    if (!queue) return workspace;
-    try {
-      const listed = await listCpsatSeatingRuns(queue, eventId, { limit: 50 });
-      const byId = new Map(listed.runs.map((run) => [run.runId, run]));
+    if (!queue) {
       return {
-        ...workspace,
-        runs: workspace.runs.map((run) => {
-          const cpsat = byId.get(run.id);
-          if (!cpsat) return run;
-          return {
-            ...run,
-            status: cpsat.lifecycle,
-            cancelRequested: cpsat.cancelRequested,
-            lifecycle: cpsat.lifecycle,
-            resultStatus: cpsat.resultStatus,
-            freshnessGrade: cpsat.freshness,
-            evidenceGrade: cpsat.evidenceGrade,
-            purpose: cpsat.purpose,
-            mode: cpsat.mode,
-            startedAt: cpsat.startedAt ?? cpsat.queuedAt ?? cpsat.createdAt,
-            completedAt: cpsat.sealedAt ?? run.completedAt,
-            progressPhase: cpsat.progressPhase,
-            assignmentsHash: run.assignmentsHash,
-            faultCode: null,
-          };
-        }),
+        ...stripped,
+        nextAction: "Solver queue is unavailable. Canonical CP-SAT seating cannot be projected.",
+        attention: [
+          {
+            kind: "warning" as const,
+            message: "No CP-SAT operational publication. Solver queue client is not configured.",
+            href: "#runs",
+          },
+          ...stripped.attention,
+        ],
       };
+    }
+    try {
+      const authority = await loadCanonicalCpsatAuthority(queue, eventId);
+      return applyCanonicalCpsatAuthorityToWorkspace(stripped, authority);
     } catch {
-      return workspace;
+      return {
+        ...stripped,
+        nextAction: "CP-SAT authority could not be loaded. Retry or check worker availability.",
+        attention: [
+          {
+            kind: "warning" as const,
+            message: "Canonical CP-SAT seating authority is temporarily unavailable.",
+            href: "#runs",
+          },
+          ...stripped.attention,
+        ],
+      };
     }
   }
 

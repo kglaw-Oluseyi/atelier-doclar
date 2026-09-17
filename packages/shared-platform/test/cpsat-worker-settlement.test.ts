@@ -29,7 +29,6 @@ import {
   fencedSettleCpsatRun,
   heartbeatCpsatRun,
   mapLifecycleToProjectionStatus,
-  projectSeatingV2Lifecycle,
   reapExpiredCpsatLeases,
 } from "../src/cpsat/worker-lifecycle.js";
 import {

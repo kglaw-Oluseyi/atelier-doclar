@@ -8,6 +8,7 @@ export const EOS_S06_CPSAT_SOLVER_QUEUE_WORKER_MIGRATION_ID = "013_cpsat_solver_
 export const EOS_S06_CPSAT_SOLVER_REVIEW_ADOPTION_MIGRATION_ID = "014_cpsat_solver_review_adoption" as const;
 export const EOS_S06_CPSAT_SOLVER_DIAGNOSTICS_MIGRATION_ID = "015_cpsat_solver_diagnostics" as const;
 export const EOS_S06_CPSAT_SOLVER_WORKER_REGISTRY_MIGRATION_ID = "016_cpsat_solver_worker_registry" as const;
+export const EOS_S06_CPSAT_CANONICAL_SEATING_CUTOVER_MIGRATION_ID = "017_cpsat_canonical_seating_cutover" as const;
 
 export const CPSAT_SOLVER_QUEUE_POSTGRES_SCHEMA = `
 CREATE TABLE IF NOT EXISTS cpsat_solver_runs (
@@ -359,4 +360,33 @@ CREATE TABLE IF NOT EXISTS cpsat_solver_admission_events (
 
 CREATE INDEX IF NOT EXISTS cpsat_solver_admission_events_at_idx
   ON cpsat_solver_admission_events (at DESC);
+`;
+
+/** M6C: cutover receipts + archive classification. Does not drop historical tables. */
+export const CPSAT_CANONICAL_SEATING_CUTOVER_POSTGRES_SCHEMA = `
+CREATE TABLE IF NOT EXISTS cpsat_cutover_repair_receipts (
+  id TEXT PRIMARY KEY,
+  organisation_id TEXT NOT NULL,
+  event_id TEXT NOT NULL,
+  adoption_id TEXT NOT NULL,
+  run_id TEXT NOT NULL,
+  correlation_id TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS cpsat_cutover_repair_event_adoption_uidx
+  ON cpsat_cutover_repair_receipts (event_id, adoption_id);
+
+CREATE INDEX IF NOT EXISTS cpsat_solver_authority_pointers_event_idx
+  ON cpsat_solver_authority_pointers (event_id);
+
+CREATE INDEX IF NOT EXISTS cpsat_solver_adoptions_event_status_idx
+  ON cpsat_solver_adoptions (event_id, status);
+
+COMMENT ON TABLE seating_v2_runs IS
+  'HISTORICAL EVIDENCE — RETAIN READ-ONLY after M6C; not operational seating authority.';
+
+COMMENT ON TABLE seating_v2_publications IS
+  'HISTORICAL EVIDENCE — RETAIN READ-ONLY after M6C; operational publication is cpsat_solver_adoptions + authority pointer.';
 `;

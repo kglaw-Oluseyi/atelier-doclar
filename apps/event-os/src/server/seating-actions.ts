@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import {
   executeS06Evaluation,
   formDataToRecord,
+  PlatformError,
   requireSeatingV2Writable,
   safeAttemptedValues,
   transportFailureFormState,
@@ -294,9 +295,12 @@ export async function adoptSeatingRunAction(
     formData,
     permission: "seating.plan.edit",
     actionType: "seating.run.adopt",
-    execute: async ({ actor, envelope }) => {
-      requireV2Mutation();
-      return asId(await getRuntime().service.seatingV2Commands().adoptRun(actor, envelope, { runId: field(formData, "runId") }));
+    execute: async () => {
+      throw new PlatformError(
+        "CAPABILITY_NOT_ENABLED",
+        "Legacy seating adopt is retired; use CP-SAT adopt",
+        { publicMessage: "Legacy seating adoption is retired. Adopt a sealed CP-SAT candidate instead." },
+      );
     },
   });
 }
@@ -426,13 +430,14 @@ export async function publishSeatingPlanAction(
     formData,
     permission: "seating.plan.publish",
     actionType: "seating.plan.publish",
-    execute: async ({ actor, envelope }) => {
-      requireV2Mutation();
-      return asId(
-        await getRuntime().service.seatingV2Commands().publishPlan(actor, envelope, {
-          editionId: field(formData, "editionId"),
-          editionHash: field(formData, "editionHash"),
-        }),
+    execute: async () => {
+      throw new PlatformError(
+        "CAPABILITY_NOT_ENABLED",
+        "Legacy seating publish is retired; use CP-SAT adopt",
+        {
+          publicMessage:
+            "Legacy seating publication is retired. Adopt a sealed CP-SAT candidate as the operational publication.",
+        },
       );
     },
   });
@@ -686,7 +691,14 @@ export async function runS06EvaluationAction(
     execute: async ({ actor, envelope }) => {
       requireV2Mutation();
       void executeS06Evaluation;
-      return asId(await getRuntime().service.seatingV2Commands().runS06EvaluationV2(actor, envelope));
+      const result = await getRuntime().service.seatingV2Commands().runS06EvaluationV2(actor, envelope);
+      return {
+        id: result.value.id,
+        status: String((result.value as { status?: string }).status ?? ""),
+        failedCount: Number((result.value as { failedCount?: number }).failedCount ?? 0),
+        passedCount: Number((result.value as { passedCount?: number }).passedCount ?? 0),
+        caseCount: Number((result.value as { caseCount?: number }).caseCount ?? 0),
+      };
     },
   });
 }

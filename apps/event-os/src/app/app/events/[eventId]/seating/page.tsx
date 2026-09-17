@@ -41,7 +41,7 @@ import {
 } from "../../../../../server/seating-actions";
 import { switchSeatingVerifyAsAction } from "../../../../../server/seating-verify-as-action";
 import { eventOsVerifyAsAvailable } from "../../../../../server/seating-verify-as";
-import { emitSettlementStage, LEGACY_S06_PUBLICATION_LABEL, PlatformError, retryLockApplies, seatingV2ReplacementEnabled, buildCpsatRunUiModel, WORKER_UNAVAILABLE_PUBLIC_MESSAGE, QUEUE_BUSY_PUBLIC_MESSAGE, type CpsatCandidateReviewModel } from "@maison-doclar/shared-platform";
+import { emitSettlementStage, PlatformError, retryLockApplies, seatingV2ReplacementEnabled, buildCpsatRunUiModel, WORKER_UNAVAILABLE_PUBLIC_MESSAGE, QUEUE_BUSY_PUBLIC_MESSAGE, type CpsatCandidateReviewModel } from "@maison-doclar/shared-platform";
 import { activateSeatingRuleAction, withdrawSeatingRuleAction } from "../../../../../server/seating-actions";
 import { CpsatRunStatusPanel } from "../../../../../components/cpsat-run-status-panel";
 import { CpsatRunLifecyclePoller } from "../../../../../components/cpsat-run-lifecycle-poller";
@@ -129,45 +129,18 @@ export default async function EventSeatingPage({
     );
   }
   let workspace;
-  let publicationSource: "V2" | "LEGACY" | "NONE" = "NONE";
+  let publicationSource: "CPSAT" | "NONE" = "NONE";
   const workspaceStarted = Date.now();
   try {
     if (seatingV2ReplacementEnabled()) {
       workspace = await runtime.service.seatingV2Commands().projectWorkspace(actor, event.id);
       if (workspace.currentPublication) {
-        publicationSource = "V2";
-      } else {
-        try {
-          const legacyPub = await runtime.service.seatingCommands().projectCurrentPublication(actor, event.id);
-          if (legacyPub?.id && legacyPub.publicationNumber && legacyPub.editionHash) {
-            workspace = {
-              ...workspace,
-              currentPublication: {
-                id: legacyPub.id,
-                publicationNumber: legacyPub.publicationNumber,
-                editionHash: legacyPub.editionHash,
-                status: "CURRENT",
-              },
-              publications: [
-                {
-                  id: legacyPub.id,
-                  status: "CURRENT",
-                  publicationNumber: legacyPub.publicationNumber,
-                  editionHash: legacyPub.editionHash,
-                  publishedAt: legacyPub.publishedAt,
-                },
-                ...workspace.publications,
-              ],
-            };
-            publicationSource = "LEGACY";
-          }
-        } catch {
-          publicationSource = "NONE";
-        }
+        publicationSource = "CPSAT";
       }
     } else {
       workspace = await runtime.service.seatingCommands().projectWorkspace(actor, event.id);
-      if (workspace.currentPublication) publicationSource = "V2";
+      // Legacy seating command path is not operational after M6C; treat as empty.
+      workspace = { ...workspace, currentPublication: undefined };
     }
   } catch (error) {
     const message = error instanceof PlatformError ? error.publicMessage ?? error.message : "This assignment cannot perform this seating action.";
@@ -226,8 +199,22 @@ export default async function EventSeatingPage({
     sourceRunId?: string;
   } | undefined;
   const input = workspace.inputEdition as { id?: string; contentHash?: string; layoutContentHash?: string } | undefined;
-  const publication = workspace.currentPublication as { id?: string; publicationNumber?: number; editionHash?: string } | undefined;
+  const publication = workspace.currentPublication as {
+    id?: string;
+    publicationNumber?: number;
+    editionHash?: string;
+    adoptionId?: string;
+    runId?: string;
+    productResult?: string | null;
+    evidenceGrade?: string | null;
+    seatedCount?: number;
+    unseatedCount?: number;
+    source?: string;
+  } | undefined;
   const verifyAs = eventOsVerifyAsAvailable() && permissions.fixtureVerifyAs;
+  const seatedDisplay = publication?.seatedCount ?? workspace.counts.seated;
+  const unseatedDisplay = publication?.unseatedCount ?? workspace.counts.unseated;
+  const eligibleDisplay = Math.max(workspace.counts.eligibleGuests, seatedDisplay + unseatedDisplay);
   return (
     <AppShell person={person} organisationName={organisation.displayName} eventName={event.name} eventId={event.id} current="/app/events">
       <AtelierPageHeader
@@ -237,14 +224,17 @@ export default async function EventSeatingPage({
       />
       <p data-testid="seating-publication-badge">
         {publication
-          ? `Current operational publication: Publication ${publication.publicationNumber}`
+          ? `Current operational publication: adoption ${(publication.adoptionId ?? publication.id ?? "").slice(0, 8)} · ${seatedDisplay}/${eligibleDisplay} seated`
           : "No current operational publication"}
-        {publicationSource === "LEGACY" ? ` · ${LEGACY_S06_PUBLICATION_LABEL}` : ""}
-        {publication && working && working.status !== "PUBLISHED"
-          ? ` · Current working edition: ${working.status} / unpublished${working.stale ? " · Stale" : ""}`
-          : ""}
+        {publication?.productResult ? ` · Solver result: ${publication.productResult}` : ""}
+        {publication?.evidenceGrade ? ` · Evidence: ${publication.evidenceGrade}` : ""}
       </p>
-      <p data-testid="seating-freshness-badge">{workspace.freshnessCopy}</p>
+      <p data-testid="seating-freshness-badge">Freshness: {workspace.freshnessCopy ?? workspace.inputFreshness}</p>
+      <p data-testid="seating-worker-badge">
+        Worker availability: {(workspace as { cpsatWorkerReadyCount?: number }).cpsatWorkerReadyCount != null
+          ? `${(workspace as { cpsatWorkerReadyCount?: number }).cpsatWorkerReadyCount} ready`
+          : "unknown"}
+      </p>
       <p
         data-testid="seating-settlement"
         data-workspace-ms={workspaceMs}
@@ -277,12 +267,17 @@ export default async function EventSeatingPage({
         <ul className="seating-metric-cards">
           <li><a href="#inputs">Input readiness · {workspace.inputFreshness}</a></li>
           <li><a href="#studio">Eligible guests · {workspace.counts.eligibleGuests}</a></li>
-          <li><a href="#studio">Seated · {workspace.counts.seated}</a></li>
-          <li><a href="#studio">Unseated · {workspace.counts.unseated}</a></li>
+          <li><a href="#studio">Seated · {seatedDisplay}</a></li>
+          <li><a href="#studio">Unseated · {unseatedDisplay}</a></li>
           <li><a href="#rules">Hard blockers · {workspace.counts.hardBlockers}</a></li>
           <li>
             <a href="#publication">
-              Current operational publication · {publication ? `No. ${publication.publicationNumber}` : "None"}
+              Current operational publication · {publication ? `adoption ${(publication.adoptionId ?? publication.id ?? "").slice(0, 8)}` : "None"}
+            </a>
+          </li>
+          <li>
+            <a href="#runs">
+              Workflow · {publicationSource === "CPSAT" ? "CP-SAT authority" : "No CP-SAT publication"}
             </a>
           </li>
           <li>
@@ -920,10 +915,9 @@ export default async function EventSeatingPage({
                   ) : null}
                   {run.violatedSummary ? <p>Violated: {run.violatedSummary}</p> : null}
                   {permissions.edit &&
+                  !seatingV2ReplacementEnabled() &&
                   !run.stale &&
-                  (seatingV2ReplacementEnabled()
-                    ? run.validatorVerdict === "FEASIBLE"
-                    : run.status === "FEASIBLE" || run.status === "INFEASIBLE") ? (
+                  (run.validatorVerdict === "FEASIBLE" || run.status === "FEASIBLE" || run.status === "INFEASIBLE") ? (
                     <ProtectionMutationForm action={adoptSeatingRunAction.bind(null, event.id)} className="actions">
                       <Envelope fields={{ ...envelopeFields, runId: run.id }} />
                       <IdempotencyField />
@@ -1186,7 +1180,7 @@ export default async function EventSeatingPage({
           {event.name}
           {" · "}
           {publication
-            ? `Current operational publication: Publication ${publication.publicationNumber}`
+            ? `Current operational publication: adoption ${(publication.adoptionId ?? publication.id ?? "").slice(0, 8)} · ${seatedDisplay}/${eligibleDisplay} seated`
             : "No current operational publication"}
           {" · "}
           {working ? `Current working edition: ${working.status}${working.status === "PUBLISHED" ? "" : " / unpublished"}` : "No working edition"}
@@ -1272,9 +1266,14 @@ export default async function EventSeatingPage({
           <h3>Current operational publication</h3>
           <p>
             {publication
-              ? `Publication ${publication.publicationNumber} remains the operational seating until a successor is published.${publicationSource === "LEGACY" ? ` ${LEGACY_S06_PUBLICATION_LABEL}` : ""}`
+              ? `CP-SAT adoption ${publication.adoptionId ?? publication.id} is the operational seating (${seatedDisplay}/${eligibleDisplay} seated). Solver result: ${publication.productResult ?? "n/a"}. Evidence: ${publication.evidenceGrade ?? "n/a"}.`
               : "No current operational publication."}
           </p>
+          {publication?.runId ? (
+            <p data-testid="seating-publication-run">
+              Adopted run <code>{publication.runId}</code>
+            </p>
+          ) : null}
         </article>
         <article data-testid="seating-working-edition">
           <h3>Current working edition</h3>
@@ -1287,7 +1286,7 @@ export default async function EventSeatingPage({
           </p>
           {publication && working && working.status !== "PUBLISHED" ? (
             <p data-testid="seating-publication-dual-truth">
-              Publication {publication.publicationNumber} remains operational while this working edition stays unpublished.
+              Operational publication remains current while this working edition stays unpublished.
             </p>
           ) : null}
         </article>
@@ -1299,7 +1298,7 @@ export default async function EventSeatingPage({
           <h3>History</h3>
           <ul>{workspace.publications.map((item) => <li key={item.id}>{item.status} · {item.publicationNumber} · {item.editionHash}</li>)}</ul>
         </article>
-        {permissions.publish && working?.status === "APPROVED" ? (
+        {permissions.publish && !seatingV2ReplacementEnabled() && working?.status === "APPROVED" ? (
           <ProtectionMutationForm action={publishSeatingPlanAction.bind(null, event.id)} className="actions" testId="seating-publish">
             <Envelope fields={{ ...envelopeFields, editionId: working.id ?? "", editionHash: working.contentHash ?? "", expectedVersion: working.version ?? 0, expectedContentHash: working.contentHash ?? "" }} />
             <IdempotencyField />
