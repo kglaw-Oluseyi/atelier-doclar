@@ -5,7 +5,7 @@ import { applyS06SeatingLayoutIfMissing, ensureS06SeatingLayoutBinding } from ".
 import { snapshotLayoutAdapter } from "../src/seating-adapters.js";
 import { defaultSolverConfig, solveSeatingV1 } from "../src/seating-solver-v1.js";
 import type { SolverRequest } from "../src/seating-solver-types.js";
-import { solveSeatingV2Compiled } from "../src/seating-v2-solver-adapter.js";
+import { solveSeatingV2CompiledHeuristic } from "../src/seating-v2-solver-adapter.js";
 import { validateSeatingV2 } from "../src/seating-v2-validator.js";
 import type { SeatingV2CompiledRequest, SeatingV2RuleContent } from "../src/seating-v2-schemas.js";
 import { actor, fixtureService, people } from "./helpers.js";
@@ -285,7 +285,7 @@ describe("S075 solver-claim honesty", () => {
   it("does not treat an empty compiled request as global INFEASIBLE", () => {
     assert.throws(
       () =>
-        solveSeatingV2Compiled({
+        solveSeatingV2CompiledHeuristic({
           guests: [],
           positions: [],
           rules: [],
@@ -330,7 +330,7 @@ describe("S075 solver-claim honesty", () => {
     });
     assert.ok(compiled);
     const request = compiled.compiledRequestJson as SeatingV2CompiledRequest;
-    const solved = solveSeatingV2Compiled(request);
+    const solved = solveSeatingV2CompiledHeuristic(request);
     assert.equal(solved.solverClaim, "FEASIBLE");
     assert.equal(solved.assignments.filter((item) => item.state === "SEATED").length, 4);
     const report = validateSeatingV2(

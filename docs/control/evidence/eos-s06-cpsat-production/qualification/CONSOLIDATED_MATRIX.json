@@ -1,0 +1,33 @@
+{
+  "edition": "eos-s06-cpsat-checkpoint-2",
+  "generatedAt": "2026-09-17T01:12:00Z",
+  "scales": {
+    "50": {
+      "shard": "scale-50.json",
+      "typical": "OPTIMAL",
+      "elapsedMs": 599
+    },
+    "600": {
+      "shard": "scale-600.json",
+      "typical": "OPTIMAL",
+      "elapsedMs": 3528
+    },
+    "1000": {
+      "shard": "b-typical.json",
+      "typical": "FEASIBLE",
+      "elapsedMs": 91657,
+      "corpus": "B_TYPICAL",
+      "corpusHash": "13125f90267e3a78207c02f292d3f948afe22b23e60b58b0ef474f5f2b3d0668"
+    },
+    "2000": {
+      "shard": "scale-2000.json",
+      "typical": "OPTIMAL",
+      "elapsedMs": 30358
+    }
+  },
+  "developmentGate": {
+    "cpsat-core.test.ts": "5/5 pass",
+    "cpsat-chaos.test.ts": "3/3 pass"
+  },
+  "fullMatrixStatus": "PARTIAL \u2014 resumable runner present; planted/oracle/mutation scores not fully executed in this environment"
+}

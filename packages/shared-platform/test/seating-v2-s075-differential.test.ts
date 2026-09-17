@@ -4,7 +4,7 @@ import { PlatformError } from "../src/errors.js";
 import { snapshotLayoutAdapter } from "../src/seating-adapters.js";
 import { seatingV2AssignmentsHash, seatingV2TableToken } from "../src/seating-v2-hash.js";
 import { SEATING_V2_VALIDATOR_VERSION, type SeatingV2Assignment, type SeatingV2CompiledRequest, type SeatingV2RuleContent } from "../src/seating-v2-schemas.js";
-import { solveSeatingV2Compiled } from "../src/seating-v2-solver-adapter.js";
+import { solveSeatingV2CompiledHeuristic } from "../src/seating-v2-solver-adapter.js";
 import { validateSeatingV2 } from "../src/seating-v2-validator.js";
 import { ensureSeatingLayoutBindingForLayout } from "../src/seating-fixtures.js";
 import { actor, fixtureService, people } from "./helpers.js";
@@ -226,7 +226,7 @@ async function buildInstance(spec: InstanceSpec) {
 }
 
 function compareBuilt(built: Awaited<ReturnType<typeof buildInstance>>) {
-  const solved = solveSeatingV2Compiled(built.compiled);
+  const solved = solveSeatingV2CompiledHeuristic(built.compiled);
   const report = validateSeatingV2(
     { contentHash: built.frozen.value.contentHash, compiledRequest: built.compiled },
     solved.assignments,
@@ -258,7 +258,7 @@ function observe(name: string, value: unknown, kind: S075DifferentialObservation
 describe("S075 differential oracle", () => {
   it("regresses the smallest Section 9 seed as certified INFEASIBLE", async () => {
     const built = await buildInstance(INSTANCES.find((item) => item.id === "capacity-infeasible")!);
-    const solved = solveSeatingV2Compiled(built.compiled);
+    const solved = solveSeatingV2CompiledHeuristic(built.compiled);
     const report = validateSeatingV2(
       { contentHash: built.frozen.value.contentHash, compiledRequest: built.compiled },
       solved.assignments,
@@ -288,7 +288,7 @@ describe("S075 differential oracle", () => {
       kinds.add(spec.rule ?? spec.reserve ? spec.rule ?? "RESERVE" : "OPEN");
       oracleKinds.add(compared.oracle.kind);
       if (spec.id === "open-feasible") {
-        const again = solveSeatingV2Compiled(built.compiled);
+        const again = solveSeatingV2CompiledHeuristic(built.compiled);
         assert.equal(again.rawOutputHash, compared.solved.rawOutputHash);
         assert.equal(seatingV2AssignmentsHash(again.assignments), seatingV2AssignmentsHash(compared.solved.assignments));
         firstHash = built.frozen.value.contentHash;
@@ -333,7 +333,7 @@ describe("S075 differential oracle", () => {
     );
 
     const solverWithoutReservation = { ...reserveBuilt.compiled, reservations: [] };
-    const reservedSolved = solveSeatingV2Compiled(solverWithoutReservation);
+    const reservedSolved = solveSeatingV2CompiledHeuristic(solverWithoutReservation);
     const reservedReport = validateSeatingV2(
       { contentHash: reserveBuilt.frozen.value.contentHash, compiledRequest: reserveBuilt.compiled },
       reservedSolved.assignments,
@@ -384,7 +384,7 @@ describe("S075 differential oracle", () => {
     const falseInfeasible = collectForcedClaim(apartBuilt, "INFEASIBLE", witness.witness ?? []);
     assert.equal(detectS075DifferentialMutation(falseInfeasible), "FALSE_INFEASIBLE_CLAIM");
 
-    const forbidOmitted = solveSeatingV2Compiled({ ...forbidBuilt.compiled, rules: [] });
+    const forbidOmitted = solveSeatingV2CompiledHeuristic({ ...forbidBuilt.compiled, rules: [] });
     const forbidTable = forbidBuilt.compiled.rules[0]!.tableTokens[0]!;
     const seatedOnForbidden = forbidOmitted.assignments.some((item) => {
       const table = forbidBuilt.compiled.positions.find((position) => position.token === item.positionToken)?.tableToken;
@@ -394,8 +394,8 @@ describe("S075 differential oracle", () => {
 
     const inverted = structuredClone(apartBuilt.compiled);
     inverted.rules = inverted.rules.map((item) => (item.kind === "KEEP_APART" ? { ...item, kind: "KEEP_TOGETHER" } : item));
-    const invertedSolved = solveSeatingV2Compiled(inverted);
-    const honest = solveSeatingV2Compiled(apartBuilt.compiled);
+    const invertedSolved = solveSeatingV2CompiledHeuristic(inverted);
+    const honest = solveSeatingV2CompiledHeuristic(apartBuilt.compiled);
     assert.equal(
       detectS075DifferentialMutation([
         observe("keepApartInverted", invertedSolved.rawOutputHash !== honest.rawOutputHash || inverted.rules[0]!.kind !== apartBuilt.compiled.rules[0]!.kind),

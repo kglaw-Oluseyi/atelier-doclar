@@ -2,6 +2,7 @@ import { PlatformError } from "./errors.js";
 import { defaultSolverConfig, solveSeatingV1 } from "./seating-solver-v1.js";
 import type { SolverConstraint, SolverRequest } from "./seating-solver-types.js";
 import type { SeatingV2Assignment, SeatingV2CompiledRequest, SeatingV2CompiledRule } from "./seating-v2-schemas.js";
+import { solveSeatingV2CompiledCpSat } from "./cpsat/local-solve.js";
 
 function v1Kind(hardness: SeatingV2CompiledRule["hardness"]): SolverConstraint["kind"] {
   if (hardness === "SOFT") return "WEIGHTED";
@@ -66,11 +67,15 @@ function v1Constraint(rule: SeatingV2CompiledRule): SolverConstraint {
   return {
     ...base,
     predicateType: rule.kind,
-    payload: { predicateType: rule.kind, guestTokens: rule.subjectTokens.length >= 2 ? rule.subjectTokens : [...rule.subjectTokens, ...rule.subjectTokens] },
+    payload: {
+      predicateType: rule.kind,
+      guestTokens: rule.subjectTokens.length >= 2 ? rule.subjectTokens : [...rule.subjectTokens, ...rule.subjectTokens],
+    },
   };
 }
 
-export function solveSeatingV2Compiled(request: SeatingV2CompiledRequest): {
+/** Heuristic comparator only — never authoritative after CP-SAT switch. */
+export function solveSeatingV2CompiledHeuristic(request: SeatingV2CompiledRequest): {
   solverClaim: "FEASIBLE" | "INFEASIBLE" | "TIMED_OUT";
   assignments: SeatingV2Assignment[];
   rawOutputHash: string;
@@ -119,5 +124,51 @@ export function solveSeatingV2Compiled(request: SeatingV2CompiledRequest): {
       typedReasonCodes: item.reasonCodes ?? [],
     })),
     rawOutputHash: solved.resultHash,
+  };
+}
+
+/**
+ * Authoritative solve path for Checkpoint 2: CP-SAT local child.
+ * Set SEATING_ENGINE=heuristic only for emergency comparator harnesses (non-authoritative tests).
+ */
+export async function solveSeatingV2Compiled(request: SeatingV2CompiledRequest): Promise<{
+  solverClaim: "FEASIBLE" | "INFEASIBLE" | "TIMED_OUT";
+  assignments: SeatingV2Assignment[];
+  rawOutputHash: string;
+  engine?: "cpsat" | "heuristic";
+  productResult?: string;
+  fault?: string;
+}> {
+  if (!request.guests?.length || !request.positions?.length) {
+    throw new PlatformError("VALIDATION_FAILED", "compiled solver request has no guests or positions", {
+      publicMessage: "The seating package could not be solved.",
+    });
+  }
+  if (process.env.SEATING_ENGINE === "heuristic") {
+    return { ...solveSeatingV2CompiledHeuristic(request), engine: "heuristic" };
+  }
+  const cpsat = await solveSeatingV2CompiledCpSat(request, {
+    runId: `v2-${request.seed ?? 0}`,
+    mode: "REPLAY",
+    maxTimeSeconds: Number(process.env.CPSAT_MAX_TIME_SECONDS ?? 45),
+  });
+  if (cpsat.fault || cpsat.productResult === "SOLVER_FAULT") {
+    throw new PlatformError("VALIDATION_FAILED", cpsat.fault ?? "CP-SAT solver fault", {
+      publicMessage: "The seating solver could not complete this package.",
+    });
+  }
+  const claim =
+    cpsat.solverClaim === "SEARCH_INCOMPLETE"
+      ? "TIMED_OUT"
+      : cpsat.solverClaim === "SOLVER_FAULT"
+        ? "TIMED_OUT"
+        : cpsat.solverClaim;
+  return {
+    solverClaim: claim,
+    assignments: cpsat.assignments,
+    rawOutputHash: cpsat.rawOutputHash,
+    engine: "cpsat",
+    productResult: cpsat.productResult,
+    fault: cpsat.fault,
   };
 }

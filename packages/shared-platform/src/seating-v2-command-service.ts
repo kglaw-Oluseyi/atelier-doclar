@@ -1220,7 +1220,7 @@ export class SeatingV2CommandService {
     try {
       emitSettlementStage({ stage: "SOLVER_START", commandType: "seating.run.launch", eventId: canonical.eventId });
       const solverStarted = Date.now();
-      solved = solveSeatingV2Compiled(prepared.compiled.request);
+      solved = await solveSeatingV2Compiled(prepared.compiled.request);
       emitSettlementStage({
         stage: "SOLVER_TERMINAL",
         commandType: "seating.run.launch",

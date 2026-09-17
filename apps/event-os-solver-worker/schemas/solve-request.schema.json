@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://maison-doclar.local/schemas/md.seating.solve.request/1",
+  "title": "md.seating.solve.request/1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["contractVersion", "modelVersion", "runId", "mode", "seed", "purpose", "tables", "seats", "guests"],
+  "properties": {
+    "contractVersion": {
+      "type": "string",
+      "const": "md.seating.solve.request/1"
+    },
+    "modelVersion": {
+      "type": "string",
+      "enum": ["cpsat-model-v1"]
+    },
+    "runId": { "type": "string", "minLength": 1 },
+    "mode": { "type": "string", "enum": ["REPLAY", "PERFORMANCE", "sleep"] },
+    "seed": { "type": "integer" },
+    "purpose": {
+      "type": "string",
+      "pattern": "^(PLANNING|QUALIFICATION|DIAG_MAXSEAT|DIAG_MCS|DIAG_CORE|DIAG_[A-Z0-9_]+)$"
+    },
+    "tables": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["i", "capacity"],
+        "additionalProperties": true,
+        "properties": {
+          "i": { "type": "integer", "minimum": 0 },
+          "capacity": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "seats": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["i", "table"],
+        "additionalProperties": true,
+        "properties": {
+          "i": { "type": "integer", "minimum": 0 },
+          "table": { "type": "integer", "minimum": 0 },
+          "attrs": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "guests": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["i", "eligible"],
+        "additionalProperties": true,
+        "properties": {
+          "i": { "type": "integer", "minimum": 0 },
+          "eligible": { "type": "boolean" },
+          "attrs": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "lockedSeat": { "type": ["integer", "null"], "minimum": 0 },
+          "lockedTable": { "type": ["integer", "null"], "minimum": 0 }
+        }
+      }
+    },
+    "units": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["i", "members"],
+        "additionalProperties": true,
+        "properties": {
+          "i": { "type": "integer", "minimum": 0 },
+          "members": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "integer", "minimum": 0 }
+          },
+          "domainTables": {
+            "type": ["array", "null"],
+            "items": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "togetherPairs": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "apartPairs": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "requireTable": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["guestOrUnit", "tables"],
+        "additionalProperties": true,
+        "properties": {
+          "guestOrUnit": { "type": "integer", "minimum": 0 },
+          "tables": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "forbidTable": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["guestOrUnit", "tables"],
+        "additionalProperties": true,
+        "properties": {
+          "guestOrUnit": { "type": "integer", "minimum": 0 },
+          "tables": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "reservations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "seat", "holderGuest"],
+        "additionalProperties": true,
+        "properties": {
+          "kind": { "type": "string", "enum": ["GUARANTEE", "HOLD"] },
+          "seat": { "type": "integer", "minimum": 0 },
+          "holderGuest": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "preferences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["guest", "table", "band"],
+        "additionalProperties": true,
+        "properties": {
+          "guest": { "type": "integer", "minimum": 0 },
+          "table": { "type": "integer", "minimum": 0 },
+          "band": { "type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "PRINCIPAL"] }
+        }
+      }
+    },
+    "baseline": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["guest", "table", "seat"],
+        "additionalProperties": true,
+        "properties": {
+          "guest": { "type": "integer", "minimum": 0 },
+          "table": { "type": "integer", "minimum": 0 },
+          "seat": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "maxTimeSeconds": { "type": "number", "exclusiveMinimum": 0 },
+        "workers": { "type": "integer", "minimum": 1 },
+        "wallSeconds": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "movementTolerance": { "type": "integer", "minimum": 0 },
+    "closureHash": { "type": "string", "pattern": "^[0-9a-fA-F]{64}$" },
+    "sleepSeconds": { "type": "number", "minimum": 0 }
+  }
+}

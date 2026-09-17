@@ -5,3 +5,8 @@
 {"at":"2026-09-17T00:22:06.826Z","kind":"crash_containment","supervisorAlive":true,"childExit":99,"signal":null}
 {"at":"2026-09-17T00:22:06.831Z","kind":"supervisor_rss","rssKb":85712,"note":"supervisor process RSS during spike"}
 {"at":"2026-09-17T00:22:06.831Z","kind":"summary","python":"/Users/maisondoclar/Desktop/atelier-doclar/apps/event-os-solver-worker/.venv/bin/python","ortoolsPin":"9.15.6755","coldMs":727,"warmP50Ms":282,"cancelOk":true,"crashContained":true,"frameOk":true}
+{"class": "tiny-together", "scale": 3, "product": "OPTIMAL", "elapsedMs": 608, "phase": "full_product"}
+{"class": "scale-50", "scale": 50, "product": "OPTIMAL", "elapsedMs": 599, "phase": "full_product"}
+{"class": "scale-600", "scale": 600, "product": "OPTIMAL", "elapsedMs": 3528, "phase": "full_product"}
+{"class": "B_TYPICAL", "scale": 1000, "product": "FEASIBLE", "elapsedMs": 91657, "phase": "full_product", "corpusHash": "13125f90267e3a78207c02f292d3f948afe22b23e60b58b0ef474f5f2b3d0668"}
+{"class": "scale-2000", "scale": 2000, "product": "OPTIMAL", "elapsedMs": 30358, "phase": "full_product"}

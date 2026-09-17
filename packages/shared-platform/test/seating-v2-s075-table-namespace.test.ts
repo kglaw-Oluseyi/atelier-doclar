@@ -5,7 +5,7 @@ import { PlatformError } from "../src/errors.js";
 import { applyS06SeatingLayoutIfMissing, ensureS06SeatingLayoutBinding } from "../src/seating-fixtures.js";
 import { snapshotLayoutAdapter } from "../src/seating-adapters.js";
 import { assertSeatingV2CompiledRequest } from "../src/seating-v2-compiler.js";
-import { solveSeatingV2Compiled } from "../src/seating-v2-solver-adapter.js";
+import { solveSeatingV2CompiledHeuristic } from "../src/seating-v2-solver-adapter.js";
 import { validateSeatingV2 } from "../src/seating-v2-validator.js";
 import type { SeatingV2CompiledRequest, SeatingV2RuleContent } from "../src/seating-v2-schemas.js";
 import { actor, fixtureService, people } from "./helpers.js";
@@ -241,7 +241,7 @@ describe("S075 corrected compiler contract", () => {
 
   it("production solver seats all four and the independent validator agrees", async () => {
     const { request, frozen } = await s074WitnessFixture("s075-fix-solver");
-    const solved = solveSeatingV2Compiled(request);
+    const solved = solveSeatingV2CompiledHeuristic(request);
     assert.equal(solved.solverClaim, "FEASIBLE");
     assert.equal(solved.assignments.filter((item) => item.state === "SEATED").length, 4);
     const report = validateSeatingV2({ contentHash: frozen.value.contentHash, compiledRequest: request }, solved.assignments, []);
@@ -273,7 +273,7 @@ describe("S075 corrected compiler contract", () => {
     const compiled = request.rules.find((rule) => rule.kind === "FORBID_TABLE");
     assert.ok(compiled);
     assert.deepEqual(compiled.tableTokens, [positionTableToken(t1)]);
-    const solved = solveSeatingV2Compiled(request);
+    const solved = solveSeatingV2CompiledHeuristic(request);
     const token = await guestToken(v2, frozen.value.id, guest.id);
     const seated = solved.assignments.find((item) => item.guestToken === token);
     const table = request.positions.find((item) => item.token === seated?.positionToken)?.tableToken;

@@ -1,0 +1,5 @@
+ortools 9.15.6755
+python 3.12.14 (main, Sep  1 2026, 00:10:15) [GCC 12.2.0]
+machine x86_64
+uid 10001
+euid 10001

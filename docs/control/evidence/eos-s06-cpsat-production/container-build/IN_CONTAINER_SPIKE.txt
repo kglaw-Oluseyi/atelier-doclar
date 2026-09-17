@@ -1,0 +1,12 @@
+{"at":"2026-09-17T00:42:45.900Z","kind":"frame_roundtrip","ok":true,"bytes":74,"hash":"0841f81d06b541e269b45477e99499b20bd9b59421e7e2761d16322eb13780d6"}
+{"at":"2026-09-17T00:42:51.172Z","kind":"cold_child","elapsedMs":5256,"exitCode":0,"finalOk":true,"result":"OPTIMAL","peakRssKbChild":{"peakRssKb":337272}}
+{"at":"2026-09-17T00:43:16.537Z","kind":"warm_child","samples":[4924,4939,4960,5155,5383],"p50Ms":4960,"maxMs":5383}
+{"at":"2026-09-17T00:43:16.972Z","kind":"cancellation","elapsedMs":429,"exitCode":null,"signal":"SIGTERM","stoppedUnder2s":true}
+{"at":"2026-09-17T00:43:17.193Z","kind":"crash_containment","supervisorAlive":true,"childExit":99,"signal":null}
+{"at":"2026-09-17T00:43:17.210Z","kind":"supervisor_rss","note":"supervisor process RSS during spike"}
+{"at":"2026-09-17T00:43:17.212Z","kind":"summary","python":"/usr/local/bin/python3","ortoolsPin":"9.15.6755","coldMs":5256,"warmP50Ms":4960,"cancelOk":true,"crashContained":true,"frameOk":true}
+npm notice
+npm notice New major version of npm available! 10.8.2 -> 12.0.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.0.2
+npm notice To update run: npm install -g npm@12.0.2
+npm notice

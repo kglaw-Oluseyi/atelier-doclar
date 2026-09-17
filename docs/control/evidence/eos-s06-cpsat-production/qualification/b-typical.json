@@ -1,0 +1,39 @@
+{
+  "shard": "b-typical",
+  "generatedAt": "2026-09-17T01:09:26.470Z",
+  "cases": [
+    {
+      "name": "tiny-50",
+      "productResult": "OPTIMAL",
+      "fault": null,
+      "elapsedMs": 605,
+      "seated": 50,
+      "eligible": 50,
+      "explanationsOk": true,
+      "verifierOk": true,
+      "engine": {
+        "ortools": "9.15.6755",
+        "python": "3.12.13"
+      }
+    },
+    {
+      "name": "B_TYPICAL",
+      "productResult": "FEASIBLE",
+      "fault": null,
+      "elapsedMs": 91657,
+      "seated": 1000,
+      "eligible": 1000,
+      "explanationsOk": true,
+      "verifierOk": true,
+      "engine": {
+        "ortools": "9.15.6755",
+        "python": "3.12.13"
+      },
+      "corpusHash": "13125f90267e3a78207c02f292d3f948afe22b23e60b58b0ef474f5f2b3d0668"
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "total": 2
+  }
+}

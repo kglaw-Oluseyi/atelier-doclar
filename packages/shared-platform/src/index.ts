@@ -739,6 +739,23 @@ export {
   type MigrationReport,
 } from "./migrations.js";
 export {
+  CPSAT_REQUEST_CONTRACT,
+  CPSAT_RESPONSE_CONTRACT,
+  CPSAT_MODEL_VERSION,
+  CPSAT_ORTOOLS_VERSION,
+  CPSAT_PYTHON_VERSION,
+  CPSAT_SHORT_REASON_TEXT,
+  buildCpsatRunUiModel,
+  productResultCopy,
+  shortReasonText,
+  EOS_S06_CPSAT_SOLVER_QUEUE_MIGRATION_ID,
+  CPSAT_SOLVER_QUEUE_POSTGRES_SCHEMA,
+  CPSAT_CLAIM_SQL,
+  CPSAT_FAIR_CLAIM_SQL,
+  solveSeatingV2CompiledCpSat,
+  solverRequestToV2Compiled,
+} from "./cpsat/index.js";
+export {
   SYNTHETIC_SEED_ID,
   SYNTHETIC_SEED_VERSION,
   applySyntheticSeedIfNeeded,
@@ -1058,6 +1075,7 @@ export {
   capacity1000CorpusHash,
   capacity1000CorpusManifest,
   capacity1000ProductTableSpecs,
+  capacity1000RuleProfile,
   CAPACITY_1000_CORPUS_EDITION,
   CAPACITY_1000_SCENARIO_IDS,
   CAPACITY_1000_SCENARIO_SEEDS,

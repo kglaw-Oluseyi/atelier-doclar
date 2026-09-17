@@ -1,0 +1,24 @@
+{
+  "shard": "scale-50",
+  "generatedAt": "2026-09-17T01:07:34.321Z",
+  "cases": [
+    {
+      "name": "scale-50",
+      "productResult": "OPTIMAL",
+      "fault": null,
+      "elapsedMs": 599,
+      "seated": 50,
+      "eligible": 50,
+      "explanationsOk": true,
+      "verifierOk": true,
+      "engine": {
+        "ortools": "9.15.6755",
+        "python": "3.12.13"
+      }
+    }
+  ],
+  "summary": {
+    "passed": 1,
+    "total": 1
+  }
+}

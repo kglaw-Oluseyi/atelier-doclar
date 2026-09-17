@@ -38,8 +38,9 @@ import {
 } from "../../../../../server/seating-actions";
 import { switchSeatingVerifyAsAction } from "../../../../../server/seating-verify-as-action";
 import { eventOsVerifyAsAvailable } from "../../../../../server/seating-verify-as";
-import { emitSettlementStage, LEGACY_S06_PUBLICATION_LABEL, PlatformError, retryLockApplies, seatingV2ReplacementEnabled } from "@maison-doclar/shared-platform";
+import { emitSettlementStage, LEGACY_S06_PUBLICATION_LABEL, PlatformError, retryLockApplies, seatingV2ReplacementEnabled, buildCpsatRunUiModel } from "@maison-doclar/shared-platform";
 import { activateSeatingRuleAction, withdrawSeatingRuleAction } from "../../../../../server/seating-actions";
+import { CpsatRunStatusPanel } from "../../../../../components/cpsat-run-status-panel";
 
 function visibleSeatingRuns<T extends { id: string }>(runs: T[], currentRunId: string | undefined, limit = 12): T[] {
   if (runs.length <= limit) return runs;
@@ -778,6 +779,21 @@ export default async function EventSeatingPage({
                   data-stale={run.stale ? "true" : "false"}
                   data-outcome={outcome}
                 >
+                  {isCurrent ? (
+                    <CpsatRunStatusPanel
+                      model={buildCpsatRunUiModel({
+                        productResult: String(outcome),
+                        phase: run.status === "RUNNING" ? "search" : run.status === "QUEUED" ? "queued" : "settled",
+                        elapsedMs: 0,
+                        seated: run.seated ?? 0,
+                        eligible: (run.seated ?? 0) + (run.unseated ?? 0),
+                        occupiedTables: 0,
+                        tableCapacity: 0,
+                        freshness: run.stale ? "STALE" : "FRESH",
+                        hasCompleteIncumbent: outcome === "FEASIBLE" || run.validatorVerdict === "FEASIBLE",
+                      })}
+                    />
+                  ) : null}
                   <p data-testid="seating-run-identity">
                     Run <code>{run.id.slice(0, 8)}</code>
                     {isCurrent ? " · Current" : " · Not current"}

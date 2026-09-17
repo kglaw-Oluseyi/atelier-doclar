@@ -19,10 +19,11 @@ mkdirSync(outDir, { recursive: true });
 const pythonPath = process.env.SOLVER_PYTHON ?? join(root, ".venv/bin/python");
 const childScript = join(root, "python/solver_child.py");
 const crashScript = join(root, "python/crash_child.py");
-const evidenceJsonl = join(
-  root,
-  "../../docs/control/evidence/eos-s06-cpsat-production/PERFORMANCE_AND_RESOURCES.jsonl",
-);
+const evidenceJsonlEnv = process.env.SOLVER_SPIKE_EVIDENCE_JSONL;
+const evidenceJsonl =
+  evidenceJsonlEnv && evidenceJsonlEnv.length > 0
+    ? evidenceJsonlEnv
+    : join(outDir, "PERFORMANCE_AND_RESOURCES.jsonl");
 
 function log(obj: Record<string, unknown>): void {
   const line = JSON.stringify({ at: new Date().toISOString(), ...obj });

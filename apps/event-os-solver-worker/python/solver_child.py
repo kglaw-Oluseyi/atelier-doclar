@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-EOS-S06 CP-SAT solver child (Checkpoint 1 spike / stub+minimal CP-SAT).
+EOS-S06 CP-SAT solver child (production Stage A + Stage B).
 
 - No database credentials
 - No guest names / contacts / rule prose
@@ -18,7 +18,13 @@ import resource
 import struct
 import sys
 import time
+from pathlib import Path
 from typing import Any
+
+# Allow `python solver_child.py` and package imports of model/
+_PYTHON_ROOT = Path(__file__).resolve().parent
+if str(_PYTHON_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PYTHON_ROOT))
 
 FRAME_MAX = 8 * 1024 * 1024
 FD_OUT = 3
@@ -54,15 +60,18 @@ def progress(phase: str, detail: str | None = None) -> None:
 
 def peak_rss_kb() -> int:
     usage = resource.getrusage(resource.RUSAGE_SELF)
-    # macOS returns bytes; Linux returns kilobytes
     rss = usage.ru_maxrss
     if sys.platform == "darwin":
         return int(rss / 1024)
     return int(rss)
 
 
-def solve_minimal(request: dict[str, Any]) -> dict[str, Any]:
-    """Minimal CP-SAT proof: assign each unit index to a table index under capacity."""
+def is_production_request(request: dict[str, Any]) -> bool:
+    return bool(request.get("tables") and request.get("seats") and request.get("guests"))
+
+
+def solve_spike_minimal(request: dict[str, Any]) -> dict[str, Any]:
+    """Checkpoint-1 spike path: unitCount/tableCount capacity assignment."""
     from ortools.sat.python import cp_model
     import ortools
 
@@ -87,8 +96,7 @@ def solve_minimal(request: dict[str, Any]) -> dict[str, Any]:
     solver.parameters.max_time_in_seconds = float(request.get("maxTimeSeconds", 2.0))
     solver.parameters.num_search_workers = 1
 
-    if mode == "sleep":
-        # Used by cancellation spike
+    if str(mode).lower() == "sleep":
         progress("sleep", "started")
         time.sleep(float(request.get("sleepSeconds", 5.0)))
         return {
@@ -137,12 +145,34 @@ def solve_minimal(request: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def solve(request: dict[str, Any]) -> dict[str, Any]:
+    mode = str(request.get("mode", "")).lower()
+    if mode == "sleep":
+        progress("sleep", "started")
+        time.sleep(float(request.get("sleepSeconds", 5.0)))
+        import ortools
+
+        return {
+            "result": "CANCELLED",
+            "engine": {
+                "ortools": ortools.__version__,
+                "python": sys.version.split()[0],
+                "model": "cpsat-model-v1",
+            },
+            "resources": {"peakRssKb": peak_rss_kb()},
+        }
+
+    if is_production_request(request):
+        from model.solve import solve_request
+
+        return solve_request(request, progress=progress)
+
+    return solve_spike_minimal(request)
+
+
 def main() -> int:
-    # Refuse network-ish env leakage for spike visibility
     for key in list(os.environ):
         if key.upper() in {"DATABASE_URL", "POSTGRES_URL", "RAILWAY_TOKEN"} or "SECRET" in key.upper():
-            # Child must not carry secrets; supervisor should have stripped them.
-            # Do not print values.
             write_frame({"type": "error", "message": f"forbidden_env_present:{key}"})
             return 2
 
@@ -154,11 +184,21 @@ def main() -> int:
 
     progress("accepted", str(request.get("runId")))
     try:
-        payload = solve_minimal(request)
+        payload = solve(request)
         write_frame({"type": "final", "ok": True, "payload": payload})
         return 0
     except Exception as exc:  # noqa: BLE001
-        write_frame({"type": "final", "ok": False, "payload": {"result": "SOLVER_FAULT", "error": type(exc).__name__}})
+        write_frame(
+            {
+                "type": "final",
+                "ok": False,
+                "payload": {
+                    "result": "SOLVER_FAULT",
+                    "error": type(exc).__name__,
+                    "resources": {"peakRssKb": peak_rss_kb()},
+                },
+            }
+        )
         return 1
 
 

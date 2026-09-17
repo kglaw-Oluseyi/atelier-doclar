@@ -10,6 +10,10 @@ import {
   SEATING_V2_REPLAY_IDENTITY_POSTGRES_SCHEMA,
   SEATING_V2_LAYOUT_BINDING_POSTGRES_SCHEMA,
 } from "./seating-v2-postgres-schema.js";
+import {
+  EOS_S06_CPSAT_SOLVER_QUEUE_MIGRATION_ID,
+  CPSAT_SOLVER_QUEUE_POSTGRES_SCHEMA,
+} from "./cpsat/postgres-schema.js";
 
 export const PLATFORM_MIGRATION_TABLE = `
 CREATE TABLE IF NOT EXISTS platform_schema_migrations (
@@ -85,6 +89,10 @@ export const PLATFORM_MIGRATIONS: readonly PlatformMigration[] = [
   {
     id: EOS_S06_SEATING_V2_LAYOUT_BINDING_MIGRATION_ID,
     sql: SEATING_V2_LAYOUT_BINDING_POSTGRES_SCHEMA,
+  },
+  {
+    id: EOS_S06_CPSAT_SOLVER_QUEUE_MIGRATION_ID,
+    sql: CPSAT_SOLVER_QUEUE_POSTGRES_SCHEMA,
   },
 ];
 
