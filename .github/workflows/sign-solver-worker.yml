@@ -1,0 +1,117 @@
+name: sign-solver-worker
+
+# Milestone 6A: sign an already-published GHCR digest only.
+# Must not build, rebuild, or push image layers.
+
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        description: GHCR image reference without digest
+        required: true
+        default: ghcr.io/kglaw-oluseyi/atelier-doclar-solver-worker
+      digest:
+        description: Registry manifest digest (sha256:...)
+        required: true
+      expected_revision:
+        description: Exact org.opencontainers.image.revision label
+        required: true
+        default: bbec476f0ca9959d7145853fc45461d10879fc01
+
+permissions:
+  id-token: write
+  packages: write
+  contents: read
+
+jobs:
+  sign:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.7.0
+
+      - name: Install crane
+        uses: imjasonh/setup-crane@v0.4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify published digest and revision label
+        env:
+          IMAGE: ${{ inputs.image }}
+          DIGEST: ${{ inputs.digest }}
+          EXPECTED_REVISION: ${{ inputs.expected_revision }}
+        run: |
+          set -euo pipefail
+          case "$DIGEST" in
+            sha256:*) ;;
+            *) echo "digest must start with sha256:"; exit 1 ;;
+          esac
+          REF="${IMAGE}@${DIGEST}"
+          echo "Verifying ${REF}"
+          crane manifest "$REF" >/tmp/manifest.json
+          python3 - <<'PY'
+          import json, os, subprocess, sys
+          image = os.environ["IMAGE"]
+          expected = os.environ["EXPECTED_REVISION"]
+          manifest = json.load(open("/tmp/manifest.json"))
+          mt = manifest.get("mediaType", "")
+          config_ref = None
+          if "index" in mt or "manifest.list" in mt:
+              amd = None
+              for m in manifest.get("manifests") or []:
+                  p = m.get("platform") or {}
+                  if p.get("os") == "linux" and p.get("architecture") == "amd64":
+                      amd = m
+                      break
+              if not amd:
+                  print("no linux/amd64 platform in index", file=sys.stderr)
+                  sys.exit(1)
+              child = amd["digest"]
+              print(f"index contains linux/amd64 child {child}")
+              config_ref = f"{image}@{child}"
+          else:
+              config_ref = f"{image}@{os.environ['DIGEST']}"
+          cfg = json.loads(subprocess.check_output(["crane", "config", config_ref], text=True))
+          labels = (cfg.get("config") or {}).get("Labels") or {}
+          rev = labels.get("org.opencontainers.image.revision")
+          arch = cfg.get("architecture")
+          os_name = cfg.get("os")
+          print(f"os/arch={os_name}/{arch}")
+          print(f"revision={rev}")
+          if rev != expected:
+              print(f"revision mismatch: got {rev!r} expected {expected!r}", file=sys.stderr)
+              sys.exit(1)
+          if os_name != "linux" or arch != "amd64":
+              print(f"platform mismatch: {os_name}/{arch}", file=sys.stderr)
+              sys.exit(1)
+          print("DIGEST_IDENTITY_OK")
+          PY
+
+      - name: Sign digest (keyless OIDC)
+        env:
+          IMAGE: ${{ inputs.image }}
+          DIGEST: ${{ inputs.digest }}
+        run: |
+          set -euo pipefail
+          REF="${IMAGE}@${DIGEST}"
+          cosign sign --yes "$REF"
+
+      - name: Verify signature
+        env:
+          IMAGE: ${{ inputs.image }}
+          DIGEST: ${{ inputs.digest }}
+        run: |
+          set -euo pipefail
+          REF="${IMAGE}@${DIGEST}"
+          cosign verify \
+            --certificate-identity-regexp "https://github.com/${{ github.repository }}/.github/workflows/sign-solver-worker.yml@.*" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+            "$REF" | tee /tmp/cosign-verify.json
+          cosign tree "$REF" | tee /tmp/cosign-tree.txt
+          echo "SIGNATURE_VERIFIED"
