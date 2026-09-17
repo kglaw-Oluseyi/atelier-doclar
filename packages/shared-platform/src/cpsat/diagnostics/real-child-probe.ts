@@ -74,19 +74,21 @@ export function createRealChildFeasibilityProbe(input: {
         : request.diagnostic;
 
     const counterfactual = (request as CpsatSolveRequest & { counterfactual?: unknown }).counterfactual;
+    const allowTestHooks = process.env.CPSAT_ALLOW_TEST_HOOKS === "1";
+    const hooks = (request as { testHooks?: unknown }).testHooks;
     const childRequest: Record<string, unknown> = {
-      ...toChildPayload({ ...request, purpose }),
+      ...toChildPayload({ ...request, purpose }, { allowTestHooks: allowTestHooks && hooks != null }),
       purpose,
       diagnostic,
       ...(counterfactual ? { counterfactual } : {}),
-      ...((request as { testHooks?: unknown }).testHooks
-        ? { testHooks: (request as { testHooks?: unknown }).testHooks }
-        : {}),
       limits: {
         ...request.limits,
         maxTimeSeconds: Math.min(request.limits.maxTimeSeconds, maxTimeSeconds),
       },
     };
+    if (allowTestHooks && hooks != null) {
+      childRequest.testHooks = hooks;
+    }
 
     const child = await input.childExecutor({
       request: childRequest,

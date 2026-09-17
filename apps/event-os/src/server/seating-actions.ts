@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import {
   executeS06Evaluation,
   formDataToRecord,
-  isSolverQueueEnabled,
   PlatformError,
   requireSeatingV2Writable,
   safeAttemptedValues,
@@ -253,11 +252,6 @@ export async function cancelSeatingRunAction(
     actionType: "seating.run.cancel",
     execute: async ({ actor, envelope }) => {
       requireV2Mutation();
-      if (!isSolverQueueEnabled()) {
-        throw new PlatformError("CAPABILITY_NOT_ENABLED", "seating run cancel is not available on the V2 command path", {
-          publicMessage: "Seating run cancel is not available.",
-        });
-      }
       return asId(
         await getRuntime().service.seatingV2Commands().requestCpsatCancellation(actor, envelope, {
           runId: field(formData, "runId"),
@@ -280,11 +274,6 @@ export async function stopSeatingRunKeepBestAction(
     actionType: "seating.run.stop_keep_best",
     execute: async ({ actor, envelope }) => {
       requireV2Mutation();
-      if (!isSolverQueueEnabled()) {
-        throw new PlatformError("CAPABILITY_NOT_ENABLED", "seating run stop is not available on the V2 command path", {
-          publicMessage: "Seating run stop is not available.",
-        });
-      }
       return asId(
         await getRuntime().service.seatingV2Commands().requestCpsatStop(actor, envelope, {
           runId: field(formData, "runId"),

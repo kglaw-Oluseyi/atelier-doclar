@@ -1,0 +1,16 @@
+# Production worker image context — exclude test fixtures, spike artefacts, caches.
+.git
+.gitignore
+.venv
+node_modules
+.pytest_cache
+__pycache__
+*.pyc
+spike
+scripts
+test
+python/fake_malformed_child.py
+python/crash_child.py
+python/model/test_aggregation.py
+**/__pycache__
+**/*.pyc

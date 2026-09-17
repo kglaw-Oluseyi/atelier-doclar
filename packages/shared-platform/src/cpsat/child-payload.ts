@@ -12,6 +12,7 @@ export function toChildPayload(
     testHooks?: unknown;
     confirmation?: unknown;
   },
+  options: { allowTestHooks?: boolean } = {},
 ): Record<string, unknown> {
   const seed = assertCpsatWireSeed(request.seed);
   const mapGuestOrUnit = (items: Array<{ unit?: number; guestOrUnit?: number; tables: number[] }>) =>
@@ -19,6 +20,9 @@ export function toChildPayload(
       guestOrUnit: item.guestOrUnit ?? item.unit ?? 0,
       tables: item.tables,
     }));
+  if (request.testHooks != null && !options.allowTestHooks) {
+    throw new Error("production_request_rejects_testHooks");
+  }
   return {
     contractVersion: request.contractVersion,
     modelVersion: request.modelVersion,
@@ -48,7 +52,7 @@ export function toChildPayload(
     closureHash: request.closureHash,
     ...(request.diagnostic ? { diagnostic: request.diagnostic } : {}),
     ...(request.counterfactual ? { counterfactual: request.counterfactual } : {}),
-    ...(request.testHooks ? { testHooks: request.testHooks } : {}),
+    ...(options.allowTestHooks && request.testHooks ? { testHooks: request.testHooks } : {}),
     ...(request.confirmation ? { confirmation: request.confirmation } : {}),
   };
 }

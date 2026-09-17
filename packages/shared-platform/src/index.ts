@@ -753,14 +753,15 @@ export {
   EOS_S06_CPSAT_SOLVER_QUEUE_WORKER_MIGRATION_ID,
   EOS_S06_CPSAT_SOLVER_REVIEW_ADOPTION_MIGRATION_ID,
   EOS_S06_CPSAT_SOLVER_DIAGNOSTICS_MIGRATION_ID,
+  EOS_S06_CPSAT_SOLVER_WORKER_REGISTRY_MIGRATION_ID,
   CPSAT_SOLVER_QUEUE_POSTGRES_SCHEMA,
   CPSAT_SOLVER_QUEUE_LAUNCH_POSTGRES_SCHEMA,
   CPSAT_SOLVER_QUEUE_WORKER_POSTGRES_SCHEMA,
   CPSAT_SOLVER_REVIEW_ADOPTION_POSTGRES_SCHEMA,
   CPSAT_SOLVER_DIAGNOSTICS_POSTGRES_SCHEMA,
+  CPSAT_SOLVER_WORKER_REGISTRY_POSTGRES_SCHEMA,
   CPSAT_CLAIM_SQL,
   CPSAT_FAIR_CLAIM_SQL,
-  solveSeatingV2CompiledCpSat,
   solverRequestToV2Compiled,
   toCpsatWireSeed,
   SEED_OVERFLOW_DEFECT,
@@ -806,10 +807,20 @@ export {
   executeCounterfactualWhyNot,
   redactCounterfactualForRole,
   loadInfeasibilityEvidence,
+  admitCpsatSeatingLaunch,
+  throwAdmissionRefusal,
+  WORKER_UNAVAILABLE_PUBLIC_MESSAGE,
+  QUEUE_BUSY_PUBLIC_MESSAGE,
+  registerCpsatWorker,
+  heartbeatCpsatWorker,
+  setCpsatWorkerLifecycle,
+  findCompatibleReadyWorkers,
+  registerSyntheticCpsatWorkerForTests,
   type CpsatCandidateReviewModel,
   type CpsatGovernanceActor,
   type CpsatGovernedAuthoritySnapshot,
   type CpsatRunUiModel,
+  type CpsatWorkerRegistration,
 } from "./cpsat/index.js";
 export {
   SYNTHETIC_SEED_ID,
@@ -1097,7 +1108,6 @@ export {
   type SolverResult,
   type LexicographicScore,
 } from "./seating-solver-types.js";
-export { solveSeatingV1, compareLexicographic, assertSolverRequest, defaultSolverConfig } from "./seating-solver-v1.js";
 export {
   seatingCorpus50,
   seatingCorpus200,
@@ -1230,7 +1240,7 @@ export {
   withSettlementTransaction,
 } from "./seating-settlement-trace.js";
 export type { SeatingSettlementStage, SeatingSettlementTrace } from "./seating-settlement-trace.js";
-export { requireSeatingV2Writable, seatingV2ReplacementEnabled, isSolverQueueEnabled } from "./seating-v2-flag.js";
+export { requireSeatingV2Writable, seatingV2ReplacementEnabled } from "./seating-v2-flag.js";
 export {
   LEGACY_DUPLICATE_RECONCILIATION_REASON,
   ruleLifecycleStamp,

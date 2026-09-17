@@ -46,6 +46,7 @@ function buildCleanEnv(): NodeJS.ProcessEnv {
     HOME: process.env.HOME ?? "/tmp",
     LANG: "C.UTF-8",
     PYTHONUNBUFFERED: "1",
+    TMPDIR: process.env.SOLVER_TMP ?? "/tmp/solver",
   };
 }
 

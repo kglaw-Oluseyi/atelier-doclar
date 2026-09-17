@@ -7,6 +7,7 @@ export const EOS_S06_CPSAT_SOLVER_QUEUE_LAUNCH_MIGRATION_ID = "012_cpsat_solver_
 export const EOS_S06_CPSAT_SOLVER_QUEUE_WORKER_MIGRATION_ID = "013_cpsat_solver_queue_worker" as const;
 export const EOS_S06_CPSAT_SOLVER_REVIEW_ADOPTION_MIGRATION_ID = "014_cpsat_solver_review_adoption" as const;
 export const EOS_S06_CPSAT_SOLVER_DIAGNOSTICS_MIGRATION_ID = "015_cpsat_solver_diagnostics" as const;
+export const EOS_S06_CPSAT_SOLVER_WORKER_REGISTRY_MIGRATION_ID = "016_cpsat_solver_worker_registry" as const;
 
 export const CPSAT_SOLVER_QUEUE_POSTGRES_SCHEMA = `
 CREATE TABLE IF NOT EXISTS cpsat_solver_runs (
@@ -311,4 +312,51 @@ CREATE INDEX IF NOT EXISTS cpsat_solver_counterfactuals_run_idx
 CREATE INDEX IF NOT EXISTS cpsat_solver_runs_stop_mode_idx
   ON cpsat_solver_runs (status, stop_mode)
   WHERE stop_mode IS NOT NULL;
+`;
+
+/** Milestone 5 — worker registration / heartbeat / compatibility (no guest data). */
+export const CPSAT_SOLVER_WORKER_REGISTRY_POSTGRES_SCHEMA = `
+CREATE TABLE IF NOT EXISTS cpsat_solver_workers (
+  worker_id TEXT PRIMARY KEY,
+  image_identity TEXT NOT NULL,
+  image_digest TEXT,
+  model_versions JSONB NOT NULL DEFAULT '[]'::jsonb,
+  contract_versions JSONB NOT NULL DEFAULT '[]'::jsonb,
+  ortools_version TEXT NOT NULL,
+  python_version TEXT NOT NULL,
+  cpu_arch TEXT NOT NULL,
+  cpu_feature_hash TEXT,
+  qualified_max_guests INTEGER,
+  qualified_max_tables INTEGER,
+  lifecycle TEXT NOT NULL,
+  concurrency_capacity INTEGER NOT NULL DEFAULT 1,
+  active_jobs INTEGER NOT NULL DEFAULT 0,
+  last_heartbeat TIMESTAMPTZ NOT NULL,
+  started_at TIMESTAMPTZ NOT NULL,
+  build_source_identity TEXT,
+  created_at TIMESTAMPTZ NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL,
+  CONSTRAINT cpsat_solver_workers_lifecycle_chk
+    CHECK (lifecycle IN ('STARTING', 'READY', 'DRAINING', 'UNAVAILABLE'))
+);
+
+CREATE INDEX IF NOT EXISTS cpsat_solver_workers_ready_idx
+  ON cpsat_solver_workers (lifecycle, last_heartbeat DESC);
+
+CREATE TABLE IF NOT EXISTS cpsat_solver_admission_events (
+  id TEXT PRIMARY KEY,
+  at TIMESTAMPTZ NOT NULL,
+  event_id TEXT NOT NULL,
+  organisation_id TEXT NOT NULL,
+  outcome TEXT NOT NULL,
+  reason_code TEXT NOT NULL,
+  purpose TEXT,
+  guest_count INTEGER,
+  table_count INTEGER,
+  actor_person_id TEXT,
+  detail JSONB
+);
+
+CREATE INDEX IF NOT EXISTS cpsat_solver_admission_events_at_idx
+  ON cpsat_solver_admission_events (at DESC);
 `;

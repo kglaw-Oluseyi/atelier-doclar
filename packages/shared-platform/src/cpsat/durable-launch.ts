@@ -113,9 +113,9 @@ const TERMINAL_PRODUCT = new Set([
   "CANCELLED",
 ]);
 
-/** Temporary migration seam — remove during later authority-removal milestone. */
+/** Milestone 5 — durable queue is sole product entry; SOLVER_QUEUE_ENABLED is ignored. */
 export function solverQueueEnabledNote(): string {
-  return "SOLVER_QUEUE_ENABLED is a temporary migration seam; remove during authority-removal milestone.";
+  return "Durable CP-SAT queue is the sole product seating entry; SOLVER_QUEUE_ENABLED and SEATING_ENGINE are retired.";
 }
 
 function hasTransaction(client: PgQueryable): client is PgTransactor {

@@ -31,6 +31,34 @@ FRAME_MAX = 8 * 1024 * 1024
 FD_OUT = 3
 
 
+def install_socket_guard() -> None:
+    """Reject intentional socket creation in the child (best-effort userspace guard).
+    Does not claim kernel-level network isolation on Railway/containers.
+    """
+    import socket as _socket
+
+    def _blocked(*_a: Any, **_k: Any) -> Any:
+        raise OSError("cpsat_child_socket_forbidden")
+
+    _socket.socket = _blocked  # type: ignore[method-assign, assignment]
+    _socket.create_connection = _blocked  # type: ignore[assignment]
+    _socket.create_server = _blocked  # type: ignore[attr-defined, assignment]
+
+
+def assert_clean_child_env() -> None:
+    forbidden = []
+    for key, value in os.environ.items():
+        upper = key.upper()
+        if upper in {"DATABASE_URL", "POSTGRES_URL", "RAILWAY_TOKEN", "CPSAT_DATABASE_URL"}:
+            forbidden.append(key)
+        elif "SECRET" in upper or upper.endswith("_KEY") or "PASSWORD" in upper:
+            forbidden.append(key)
+    if forbidden:
+        raise SystemExit(f"forbidden_env:{','.join(sorted(forbidden)[:8])}")
+    if "testHooks" in (os.environ.get("CPSAT_INJECT") or ""):
+        raise SystemExit("forbidden_test_hook_env")
+
+
 def read_frame(stream) -> dict[str, Any] | None:
     header = stream.buffer.read(4)
     if not header or len(header) < 4:
@@ -246,8 +274,11 @@ def solve(request: dict[str, Any], controller: StopController) -> dict[str, Any]
 
 
 def main() -> int:
+    install_socket_guard()
+    assert_clean_child_env()
+
     for key in list(os.environ):
-        if key.upper() in {"DATABASE_URL", "POSTGRES_URL", "RAILWAY_TOKEN"} or "SECRET" in key.upper():
+        if key.upper() in {"DATABASE_URL", "POSTGRES_URL", "RAILWAY_TOKEN", "CPSAT_DATABASE_URL"} or "SECRET" in key.upper():
             write_frame({"type": "error", "message": f"forbidden_env_present:{key}"})
             return 2
 
@@ -259,6 +290,10 @@ def main() -> int:
     except Exception as exc:  # noqa: BLE001
         write_frame({"type": "error", "message": f"invalid_input:{type(exc).__name__}"})
         return 1
+
+    if request.get("testHooks") is not None and os.environ.get("CPSAT_ALLOW_TEST_HOOKS") != "1":
+        write_frame({"type": "error", "message": "production_child_rejects_testHooks"})
+        return 2
 
     controller = StopController()
     reader = threading.Thread(target=_stdin_stop_reader, args=(controller,), daemon=True)

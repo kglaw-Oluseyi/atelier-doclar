@@ -261,9 +261,9 @@ describe("CPSAT Milestone 1 durable launch", () => {
     );
   });
 
-  it("queue feature switch defaults off; enabled only for SOLVER_QUEUE_ENABLED=1", () => {
-    assert.equal(isSolverQueueEnabled({}), false);
-    assert.equal(isSolverQueueEnabled({ SOLVER_QUEUE_ENABLED: "0" }), false);
+  it("queue is always authoritative; SOLVER_QUEUE_ENABLED env is ignored", () => {
+    assert.equal(isSolverQueueEnabled({}), true);
+    assert.equal(isSolverQueueEnabled({ SOLVER_QUEUE_ENABLED: "0" }), true);
     assert.equal(isSolverQueueEnabled({ SOLVER_QUEUE_ENABLED: "1" }), true);
   });
 

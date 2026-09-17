@@ -11,7 +11,6 @@ import { buildSeatingV2Workspace } from "./seating-v2-workspace.js";
 import { emptySeatingV2State, SEATING_V2_WORKSPACE_COLLECTIONS, type SeatingV2State } from "./seating-v2-state.js";
 import type { SeatingWorkspaceView } from "./seating-workspace.js";
 import type { PgQueryable } from "./postgres-schema.js";
-import { isSolverQueueEnabled } from "./seating-v2-flag.js";
 import {
   enqueueCpsatSeatingRun,
   freezeCpsatSeatingAuthority,
@@ -20,6 +19,7 @@ import {
   requestCpsatRunCancellation,
   type CpsatSeatingRunSummary,
 } from "./cpsat/durable-launch.js";
+import { admitCpsatSeatingLaunch, throwAdmissionRefusal } from "./cpsat/admission.js";
 import { requestCpsatRunStop } from "./cpsat/diagnostics/stop-modes.js";
 import {
   adoptApprovedCpsatCandidate,
@@ -83,7 +83,6 @@ import {
   type SeatingV2RuleContent,
 } from "./seating-v2-schemas.js";
 import { emitSettlementStage } from "./seating-settlement-trace.js";
-import { solveSeatingV2Compiled } from "./seating-v2-solver-adapter.js";
 import type {
   SeatingV2CompiledRequestRecord,
   SeatingV2ExportJob,
@@ -1239,108 +1238,36 @@ export class SeatingV2CommandService {
       }));
     }
 
-    if (isSolverQueueEnabled()) {
-      const queue = this.requireCpsatQueueClient();
-      const bindings = await this.repo.transaction(async (tx) =>
-        tx.list<SeatingV2LayoutBinding>("layoutBindings", canonical),
-      );
-      const activeBinding = activeSeatingLayoutBindings(bindings, canonical.organisationId, canonical.eventId)[0];
-      const frozen = freezeCpsatSeatingAuthority({
-        organisationId: canonical.organisationId,
-        eventId: canonical.eventId,
-        correlationId: actor.correlationId,
-        package: prepared.pkg,
-        compiled: prepared.compiled.request,
-        activeLayoutContentHash: activeBinding?.layoutContentHash ?? prepared.pkg.layoutContentHash,
-        rulesHash: prepared.pkg.contentHash,
-        rulesEditionId: prepared.pkg.id,
-        objectiveEditionHash: prepared.pkg.solverConfigHash,
-        baselinePlanHash: null,
-      });
-      const enqueued = await enqueueCpsatSeatingRun(queue, frozen, { actorPersonId: actor.personId });
-      const now = nowOf(actor);
-      return this.mutate(actor, envelope, "seating.run.execute", "seatingV2.launchRun", async (tx) => {
-        const existingQueued = (await tx.list<SeatingV2Run>("runs", envelope)).find((item) => item.id === enqueued.run.runId);
-        if (existingQueued) return { replayed: true, value: existingQueued };
-        const run: SeatingV2Run = {
-          id: enqueued.run.runId,
-          organisationId: envelope.organisationId,
-          eventId: envelope.eventId,
-          schemaVersion: SEATING_V2_SCHEMA_VERSION,
-          packageId: prepared.pkg.id,
-          packageHash: prepared.identity.packageContentHash,
-          semanticHash: prepared.identity.semanticHash,
-          compiledRequestHash: prepared.identity.compiledRequestHash,
-          compilerVersion: prepared.identity.compilerVersion,
-          solverVersion: prepared.identity.solverVersion,
-          solverConfigHash: prepared.identity.solverConfigurationHash,
-          validatorVersion: prepared.identity.validatorVersion,
-          deterministicSeed: prepared.identity.seed,
-          status: "QUEUED",
-          solverClaim: null,
-          rawOutputHash: null,
-          assignmentsHash: null,
-          leaseOwner: null,
-          leaseUntil: null,
-          startedAt: null,
-          completedAt: null,
-          generatedAt: null,
-          createdAt: now,
-        };
-        await tx.insert("runs", run);
-        emitSettlementStage({
-          stage: "RUN_QUEUED",
-          runId: run.id,
-          commandType: "seating.run.launch",
-          eventId: envelope.eventId,
-          reasonClass: "QUEUED",
-          outcome: enqueued.application === "REPLAYED" ? "REPLAYED" : "APPLIED",
-        });
-        return enqueued.application === "REPLAYED" ? { replayed: true as const, value: run } : run;
-      });
-    }
-
-    let solved;
-    try {
-      emitSettlementStage({ stage: "SOLVER_START", commandType: "seating.run.launch", eventId: canonical.eventId });
-      const solverStarted = Date.now();
-      solved = await solveSeatingV2Compiled(prepared.compiled.request);
-      emitSettlementStage({
-        stage: "SOLVER_TERMINAL",
-        commandType: "seating.run.launch",
-        eventId: envelope.eventId,
-        durationMs: Date.now() - solverStarted,
-        reasonClass: solved.solverClaim,
-      });
-    } catch {
-      throw new PlatformError("VALIDATION_FAILED", "solver failed", {
-        publicMessage: "The seating solver could not complete this package.",
-      });
-    }
-    let report;
-    try {
-      report = validateSeatingV2(
-        { contentHash: prepared.pkg.contentHash, compiledRequest: prepared.compiled.request },
-        solved.assignments,
-        solved.assignments.filter((item) => item.state === "UNSEATED").map((item) => item.guestToken),
-        nowOf(actor),
-      );
-    } catch {
-      throw new PlatformError("SEATING_VALIDATION_REJECTED", "validator failed", {
-        publicMessage: "The independent validator could not complete this package.",
-      });
-    }
-    const pkg = prepared.pkg;
+    const queue = this.requireCpsatQueueClient();
+    const bindings = await this.repo.transaction(async (tx) =>
+      tx.list<SeatingV2LayoutBinding>("layoutBindings", canonical),
+    );
+    const activeBinding = activeSeatingLayoutBindings(bindings, canonical.organisationId, canonical.eventId)[0];
+    const frozen = freezeCpsatSeatingAuthority({
+      organisationId: canonical.organisationId,
+      eventId: canonical.eventId,
+      correlationId: actor.correlationId,
+      package: prepared.pkg,
+      compiled: prepared.compiled.request,
+      activeLayoutContentHash: activeBinding?.layoutContentHash ?? prepared.pkg.layoutContentHash,
+      rulesHash: prepared.pkg.contentHash,
+      rulesEditionId: prepared.pkg.id,
+      objectiveEditionHash: prepared.pkg.solverConfigHash,
+      baselinePlanHash: null,
+    });
+    const admission = await admitCpsatSeatingLaunch(queue, frozen, { actorPersonId: actor.personId });
+    if (!admission.ok) throwAdmissionRefusal(admission);
+    const enqueued = await enqueueCpsatSeatingRun(queue, frozen, { actorPersonId: actor.personId });
     const now = nowOf(actor);
     return this.mutate(actor, envelope, "seating.run.execute", "seatingV2.launchRun", async (tx) => {
-      const existing = findSeatingV2ReusableRun(await tx.list<SeatingV2Run>("runs", envelope), prepared.identity);
-      if (existing) return { replayed: true, value: existing.run };
+      const existingQueued = (await tx.list<SeatingV2Run>("runs", envelope)).find((item) => item.id === enqueued.run.runId);
+      if (existingQueued) return { replayed: true, value: existingQueued };
       const run: SeatingV2Run = {
-        id: randomUUID(),
+        id: enqueued.run.runId,
         organisationId: envelope.organisationId,
         eventId: envelope.eventId,
         schemaVersion: SEATING_V2_SCHEMA_VERSION,
-        packageId: pkg.id,
+        packageId: prepared.pkg.id,
         packageHash: prepared.identity.packageContentHash,
         semanticHash: prepared.identity.semanticHash,
         compiledRequestHash: prepared.identity.compiledRequestHash,
@@ -1349,99 +1276,27 @@ export class SeatingV2CommandService {
         solverConfigHash: prepared.identity.solverConfigurationHash,
         validatorVersion: prepared.identity.validatorVersion,
         deterministicSeed: prepared.identity.seed,
-        status: solved.solverClaim === "TIMED_OUT" ? "TIMED_OUT" : report.verdict,
-        solverClaim: solved.solverClaim,
-        rawOutputHash: solved.rawOutputHash,
-        assignmentsHash: seatingV2AssignmentsHash(solved.assignments),
-        startedAt: now,
-        completedAt: now,
-        generatedAt: now,
+        status: "QUEUED",
+        solverClaim: null,
+        rawOutputHash: null,
+        assignmentsHash: null,
+        leaseOwner: null,
+        leaseUntil: null,
+        startedAt: null,
+        completedAt: null,
+        generatedAt: null,
         createdAt: now,
       };
-      try {
       await tx.insert("runs", run);
       emitSettlementStage({
         stage: "RUN_QUEUED",
         runId: run.id,
         commandType: "seating.run.launch",
         eventId: envelope.eventId,
-        reasonClass: run.status,
-        outcome: "APPLIED",
+        reasonClass: "QUEUED",
+        outcome: enqueued.application === "REPLAYED" ? "REPLAYED" : "APPLIED",
       });
-      for (const assignment of solved.assignments) {
-        await tx.insert("runAssignments", {
-          id: randomUUID(),
-          organisationId: envelope.organisationId,
-          eventId: envelope.eventId,
-          schemaVersion: SEATING_V2_SCHEMA_VERSION,
-          runId: run.id,
-          guestToken: assignment.guestToken,
-          state: assignment.state,
-          positionToken: assignment.positionToken,
-          typedReasonCodes: assignment.typedReasonCodes ?? [],
-          createdAt: now,
-        });
-      }
-      const reportRow = {
-        id: randomUUID(),
-        organisationId: envelope.organisationId,
-        eventId: envelope.eventId,
-        schemaVersion: SEATING_V2_SCHEMA_VERSION,
-        packageId: pkg.id,
-        packageHash: pkg.contentHash,
-        assignmentsHash: report.assignmentsHash,
-        validatorVersion: SEATING_V2_VALIDATOR_VERSION,
-        verdict: report.verdict,
-        reportHash: report.reportHash,
-        producedAt: report.producedAt,
-        createdAt: now,
-      };
-      await tx.insert("validationReports", reportRow);
-      const packageRuleRows = (await tx.list<{ packageId: string; ruleEditionId: string; ruleContentHash: string }>(
-        "packageRules",
-        envelope,
-      )).filter((item) => item.packageId === pkg.id);
-      const unusedPackageRules = [...packageRuleRows];
-      for (const outcome of report.ruleOutcomes) {
-        const matchedIndex = unusedPackageRules.findIndex((item) => item.ruleContentHash === outcome.ruleContentHash);
-        const matched = matchedIndex >= 0 ? unusedPackageRules.splice(matchedIndex, 1)[0] : undefined;
-        await tx.insert("validationRuleOutcomes", {
-          id: randomUUID(),
-          organisationId: envelope.organisationId,
-          eventId: envelope.eventId,
-          schemaVersion: SEATING_V2_SCHEMA_VERSION,
-          reportId: reportRow.id,
-          ruleEditionId: matched?.ruleEditionId ?? randomUUID(),
-          ruleContentHash: outcome.ruleContentHash,
-          outcome: outcome.outcome,
-          typedReasonCodes: outcome.typedReasonCodes ?? [],
-          affectedGuestTokens: outcome.affectedGuestTokens ?? [],
-          createdAt: now,
-        });
-      }
-      const seenStructural = new Set<string>();
-      for (const outcome of report.structuralOutcomes) {
-        if (seenStructural.has(outcome.checkCode)) continue;
-        seenStructural.add(outcome.checkCode);
-        await tx.insert("validationStructuralOutcomes", {
-          id: randomUUID(),
-          organisationId: envelope.organisationId,
-          eventId: envelope.eventId,
-          schemaVersion: SEATING_V2_SCHEMA_VERSION,
-          reportId: reportRow.id,
-          checkCode: outcome.checkCode,
-          outcome: outcome.outcome,
-          typedDetail: outcome.typedDetail,
-          createdAt: now,
-        });
-      }
-      } catch (error) {
-        if (error instanceof PlatformError) throw error;
-        throw new PlatformError("INTERNAL_ERROR", error instanceof Error ? error.message : "run persist failed", {
-          publicMessage: "The seating run could not be stored.",
-        });
-      }
-      return run;
+      return enqueued.application === "REPLAYED" ? { replayed: true as const, value: run } : run;
     });
   }
 
@@ -1925,7 +1780,6 @@ export class SeatingV2CommandService {
     });
     const role = roleKeyForId(assignment.roleId);
     const workspace = buildSeatingV2Workspace(this.deps.snapshot(), state, eventId, seatingDisclosureForRole(role));
-    if (!isSolverQueueEnabled()) return workspace;
     const queue = this.deps.cpsatQueueClient?.();
     if (!queue) return workspace;
     try {

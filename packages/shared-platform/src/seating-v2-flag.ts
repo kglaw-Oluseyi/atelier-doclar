@@ -1,12 +1,11 @@
 import { PlatformError } from "./errors.js";
 
 /**
- * Temporary CP-SAT durable-queue migration seam.
- * When `SOLVER_QUEUE_ENABLED=1`, seating launch enqueues to PostgreSQL and does not solve in-process.
- * Must be removed during the later authority-removal milestone. Not an operator-facing control.
+ * @deprecated Milestone 5 — durable queue is the sole product seating entry.
+ * Always returns true. `SOLVER_QUEUE_ENABLED` is ignored and must not select solvers.
  */
-export function isSolverQueueEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
-  return env.SOLVER_QUEUE_ENABLED === "1";
+export function isSolverQueueEnabled(_env: NodeJS.ProcessEnv = process.env): boolean {
+  return true;
 }
 
 /**

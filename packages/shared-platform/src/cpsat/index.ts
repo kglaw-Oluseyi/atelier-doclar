@@ -23,7 +23,7 @@ export {
   type CpsatCounterfactualResultCode,
 } from "./contract.js";
 export { buildTogetherUnits, compileV2ToCpsatRequest, type CpsatSolveRequest } from "./compiler.js";
-export { solveSeatingV2CompiledCpSat, type CpsatLocalSolveResult } from "./local-solve.js";
+// In-process CP-SAT adapter is intentionally withheld from this barrel.
 export { solverRequestToV2Compiled } from "./corpus-bridge.js";
 export {
   EOS_S06_CPSAT_SOLVER_QUEUE_MIGRATION_ID,
@@ -31,11 +31,13 @@ export {
   EOS_S06_CPSAT_SOLVER_QUEUE_WORKER_MIGRATION_ID,
   EOS_S06_CPSAT_SOLVER_REVIEW_ADOPTION_MIGRATION_ID,
   EOS_S06_CPSAT_SOLVER_DIAGNOSTICS_MIGRATION_ID,
+  EOS_S06_CPSAT_SOLVER_WORKER_REGISTRY_MIGRATION_ID,
   CPSAT_SOLVER_QUEUE_POSTGRES_SCHEMA,
   CPSAT_SOLVER_QUEUE_LAUNCH_POSTGRES_SCHEMA,
   CPSAT_SOLVER_QUEUE_WORKER_POSTGRES_SCHEMA,
   CPSAT_SOLVER_REVIEW_ADOPTION_POSTGRES_SCHEMA,
   CPSAT_SOLVER_DIAGNOSTICS_POSTGRES_SCHEMA,
+  CPSAT_SOLVER_WORKER_REGISTRY_POSTGRES_SCHEMA,
 } from "./postgres-schema.js";
 export {
   CPSAT_CLAIM_SQL,
@@ -66,7 +68,29 @@ export {
   type CpsatLaunchPurpose,
   type CpsatLaunchMode,
 } from "./durable-launch.js";
-export { isSolverQueueEnabled } from "../seating-v2-flag.js";
+export {
+  admitCpsatSeatingLaunch,
+  throwAdmissionRefusal,
+  recordCpsatAdmissionEvent,
+  WORKER_UNAVAILABLE_PUBLIC_MESSAGE,
+  QUEUE_BUSY_PUBLIC_MESSAGE,
+  CPSAT_DEFAULT_PER_EVENT_ACTIVE_RUN_LIMIT,
+  CPSAT_DEFAULT_GLOBAL_QUEUED_DEPTH_LIMIT,
+  type CpsatAdmissionOutcome,
+  type CpsatAdmissionLimits,
+} from "./admission.js";
+export {
+  registerCpsatWorker,
+  heartbeatCpsatWorker,
+  setCpsatWorkerLifecycle,
+  getCpsatWorker,
+  findCompatibleReadyWorkers,
+  workerSupportsCompatibility,
+  registerSyntheticCpsatWorkerForTests,
+  DEFAULT_WORKER_HEARTBEAT_FRESHNESS_MS,
+  type CpsatWorkerRegistration,
+  type CpsatWorkerLifecycle,
+} from "./worker-registry.js";
 export { buildCpsatRunUiModel, productResultCopy, shortReasonText, type CpsatRunUiModel } from "./ui-model.js";
 export { buildExplanations, redactExplanationForOrdinaryRole, CPSAT_EXPLANATION_EDITION } from "./explanations.js";
 export { verifyExplanations } from "./explanation-verifier.js";

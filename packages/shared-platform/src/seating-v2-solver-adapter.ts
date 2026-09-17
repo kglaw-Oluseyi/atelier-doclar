@@ -128,8 +128,9 @@ export function solveSeatingV2CompiledHeuristic(request: SeatingV2CompiledReques
 }
 
 /**
- * Authoritative solve path for Checkpoint 2: CP-SAT local child.
- * Set SEATING_ENGINE=heuristic only for emergency comparator harnesses (non-authoritative tests).
+ * Qualification / local harness only — never Event OS product authority.
+ * Heuristic cannot be selected via SEATING_ENGINE or any environment variable.
+ * Product launch must use durable queue admission + enqueue exclusively.
  */
 export async function solveSeatingV2Compiled(request: SeatingV2CompiledRequest): Promise<{
   solverClaim: "FEASIBLE" | "INFEASIBLE" | "TIMED_OUT";
@@ -145,7 +146,9 @@ export async function solveSeatingV2Compiled(request: SeatingV2CompiledRequest):
     });
   }
   if (process.env.SEATING_ENGINE === "heuristic") {
-    return { ...solveSeatingV2CompiledHeuristic(request), engine: "heuristic" };
+    throw new PlatformError("CAPABILITY_NOT_ENABLED", "SEATING_ENGINE=heuristic is retired", {
+      publicMessage: "Seating generation is temporarily unavailable. Your event data has not been changed. Please try again when the solver service is ready.",
+    });
   }
   const cpsat = await solveSeatingV2CompiledCpSat(request, {
     runId: `v2-${request.seed ?? 0}`,

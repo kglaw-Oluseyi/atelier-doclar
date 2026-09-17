@@ -10,8 +10,12 @@ const page = readFileSync(resolve(root, "apps/event-os/src/app/app/events/[event
 const poller = readFileSync(resolve(root, "apps/event-os/src/components/cpsat-run-lifecycle-poller.tsx"), "utf8");
 const uiModel = readFileSync(resolve(root, "packages/shared-platform/src/cpsat/ui-model.ts"), "utf8");
 const flag = readFileSync(resolve(root, "packages/shared-platform/src/seating-v2-flag.ts"), "utf8");
+const unavailable = readFileSync(
+  resolve(root, "apps/event-os/src/components/cpsat-worker-unavailable-panel.tsx"),
+  "utf8",
+);
 
-describe("CPSAT Milestone 1 operator lifecycle UI", () => {
+describe("CPSAT Milestone 5 operator lifecycle UI", () => {
   it("covers no-run, launching, queued and cancellation-request wording", () => {
     assert.match(uiModel, /Generate seating plan/);
     assert.match(uiModel, /Preparing the governed seating request/);
@@ -47,23 +51,33 @@ describe("CPSAT Milestone 1 operator lifecycle UI", () => {
     assert.match(panel, /cpsat-cancel-run|Cancel run/);
   });
 
-  it("documents temporary SOLVER_QUEUE_ENABLED seam for removal later", () => {
+  it("documents retired SOLVER_QUEUE_ENABLED seam; UI never exposes the env control", () => {
     assert.match(flag, /SOLVER_QUEUE_ENABLED/);
-    assert.match(flag, /authority-removal milestone/);
+    assert.match(flag, /ignored|sole product|Always returns true/i);
     assert.doesNotMatch(page, /name=\"SOLVER_QUEUE_ENABLED\"/);
   });
 
-  it("launch seam and cancel require server-side seating.run.execute; queue path skips in-process solve", () => {
+  it("product launch always durable-enqueues; never in-process solveSeatingV2Compiled", () => {
     const command = readFileSync(resolve(root, "packages/shared-platform/src/seating-v2-command-service.ts"), "utf8");
     const actions = readFileSync(resolve(root, "apps/event-os/src/server/seating-actions.ts"), "utf8");
-    assert.match(command, /isSolverQueueEnabled\(\)/);
     assert.match(command, /enqueueCpsatSeatingRun/);
     assert.match(command, /freezeCpsatSeatingAuthority/);
-    assert.match(command, /solveSeatingV2Compiled/);
+    assert.match(command, /admitCpsatSeatingLaunch/);
+    assert.doesNotMatch(command, /solveSeatingV2Compiled/);
     assert.match(command, /seating\.run\.execute/);
     assert.match(actions, /requestCpsatCancellation/);
-    assert.match(actions, /isSolverQueueEnabled\(\)/);
-    // Queue branch appears before the in-process solve call.
-    assert.ok(command.indexOf("enqueueCpsatSeatingRun") < command.indexOf("solved = await solveSeatingV2Compiled"));
+    assert.doesNotMatch(actions, /isSolverQueueEnabled/);
+    assert.match(page, /queues a durable CP-SAT run/);
+    assert.doesNotMatch(page, /then solves with CP-SAT/);
+  });
+
+  it("worker-unavailable panel uses required fail-closed wording without heuristic offers", () => {
+    assert.match(unavailable, /Seating generation temporarily unavailable/);
+    assert.match(unavailable, /solver service is not ready/);
+    assert.match(unavailable, /Check again/);
+    assert.match(unavailable, /Return to seating overview/);
+    assert.doesNotMatch(unavailable, /heuristic|local solve|force run|engine selector/i);
+    assert.match(page, /CpsatWorkerUnavailablePanel/);
+    assert.match(unavailable, /Seating generation is busy/);
   });
 });

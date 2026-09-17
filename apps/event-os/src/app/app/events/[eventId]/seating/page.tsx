@@ -41,11 +41,12 @@ import {
 } from "../../../../../server/seating-actions";
 import { switchSeatingVerifyAsAction } from "../../../../../server/seating-verify-as-action";
 import { eventOsVerifyAsAvailable } from "../../../../../server/seating-verify-as";
-import { emitSettlementStage, LEGACY_S06_PUBLICATION_LABEL, PlatformError, retryLockApplies, seatingV2ReplacementEnabled, buildCpsatRunUiModel, isSolverQueueEnabled, type CpsatCandidateReviewModel } from "@maison-doclar/shared-platform";
+import { emitSettlementStage, LEGACY_S06_PUBLICATION_LABEL, PlatformError, retryLockApplies, seatingV2ReplacementEnabled, buildCpsatRunUiModel, WORKER_UNAVAILABLE_PUBLIC_MESSAGE, QUEUE_BUSY_PUBLIC_MESSAGE, type CpsatCandidateReviewModel } from "@maison-doclar/shared-platform";
 import { activateSeatingRuleAction, withdrawSeatingRuleAction } from "../../../../../server/seating-actions";
 import { CpsatRunStatusPanel } from "../../../../../components/cpsat-run-status-panel";
 import { CpsatRunLifecyclePoller } from "../../../../../components/cpsat-run-lifecycle-poller";
 import { CpsatCandidateReviewPanel } from "../../../../../components/cpsat-candidate-review-panel";
+import { CpsatWorkerUnavailablePanel } from "../../../../../components/cpsat-worker-unavailable-panel";
 
 function visibleSeatingRuns<T extends { id: string }>(runs: T[], currentRunId: string | undefined, limit = 12): T[] {
   if (runs.length <= limit) return runs;
@@ -209,7 +210,7 @@ export default async function EventSeatingPage({
     reviewableLifecycles.has(String((run as { lifecycle?: string }).lifecycle ?? run.status ?? "")),
   );
   let cpsatReview: CpsatCandidateReviewModel | null = null;
-  if (isSolverQueueEnabled() && cpsatReviewRun && seatingV2ReplacementEnabled()) {
+  if (cpsatReviewRun && seatingV2ReplacementEnabled()) {
     try {
       cpsatReview = await runtime.service.seatingV2Commands().getCpsatCandidateReview(actor, event.id, cpsatReviewRun.id);
     } catch {
@@ -253,6 +254,20 @@ export default async function EventSeatingPage({
         Render {workspaceMs}ms · action result {actionResultMs}ms
       </p>
       <ActionResultBanner presented={presented} />
+      {(() => {
+        const msg = presented.view?.message ?? "";
+        if (msg === QUEUE_BUSY_PUBLIC_MESSAGE || msg.includes("No run was started")) {
+          return <CpsatWorkerUnavailablePanel reason="queue_busy" overviewHref="#overview" />;
+        }
+        if (
+          msg === WORKER_UNAVAILABLE_PUBLIC_MESSAGE ||
+          msg.includes("solver service is not ready") ||
+          msg.includes("temporarily unavailable")
+        ) {
+          return <CpsatWorkerUnavailablePanel reason="unavailable" overviewHref="#overview" />;
+        }
+        return null;
+      })()}
       <div className="seating-tabs">
         <AtelierSectionTabs label="Seating Command views" items={TABS} />
       </div>
@@ -781,8 +796,8 @@ export default async function EventSeatingPage({
             <fieldset>
               <legend>Launch a seating run</legend>
               <p className="help">
-                Generate seating plan freezes the current governed layout, rules, guests and objectives
-                {isSolverQueueEnabled() ? ", then queues a durable CP-SAT run." : ", then solves with CP-SAT."}
+                Generate seating plan freezes the current governed layout, rules, guests and objectives,
+                then queues a durable CP-SAT run for the solver service.
               </p>
               <label>
                 Deterministic seed
@@ -818,7 +833,7 @@ export default async function EventSeatingPage({
           const primary = pollTargets[0];
           return (
             <CpsatRunLifecyclePoller
-              active={isSolverQueueEnabled() && pollTargets.length > 0}
+              active={pollTargets.length > 0}
               lifecycle={primary ? String(primary.lifecycle ?? primary.status) : null}
               intervalMs={5_000}
             />
