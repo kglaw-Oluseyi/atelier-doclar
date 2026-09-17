@@ -1,0 +1,95 @@
+{
+  "severityCounts": {
+    "LOW": 101,
+    "HIGH": 55,
+    "MEDIUM": 105,
+    "UNKNOWN": 1,
+    "CRITICAL": 5
+  },
+  "byClassSeverity": {
+    "os-pkgs/debian": {
+      "LOW": 100,
+      "HIGH": 55,
+      "MEDIUM": 100,
+      "UNKNOWN": 1,
+      "CRITICAL": 5
+    },
+    "lang-pkgs/python-pkg": {
+      "MEDIUM": 5,
+      "LOW": 1
+    }
+  },
+  "fixedBreakdown": {
+    "LOW:unfixed": 100,
+    "HIGH:unfixed": 55,
+    "MEDIUM:unfixed": 100,
+    "UNKNOWN:unfixed": 1,
+    "CRITICAL:unfixed": 5,
+    "MEDIUM:fixed": 5,
+    "LOW:fixed": 1
+  },
+  "critical": [
+    {
+      "id": "CVE-2025-7458",
+      "pkg": "libsqlite3-0",
+      "installed": "3.40.1-2+deb12u2",
+      "fixed": null,
+      "sev": "CRITICAL",
+      "title": "sqlite: SQLite integer overflow",
+      "status": "affected",
+      "class": "os-pkgs",
+      "type": "debian"
+    },
+    {
+      "id": "CVE-2026-13221",
+      "pkg": "perl-base",
+      "installed": "5.36.0-7+deb12u3",
+      "fixed": null,
+      "sev": "CRITICAL",
+      "title": "perl: Perl: Incorrect regular expression processing via large regular expressions",
+      "status": "affected",
+      "class": "os-pkgs",
+      "type": "debian"
+    },
+    {
+      "id": "CVE-2026-42496",
+      "pkg": "perl-base",
+      "installed": "5.36.0-7+deb12u3",
+      "fixed": null,
+      "sev": "CRITICAL",
+      "title": "perl-archive-tar: perl-archive-tar: Path traversal via crafted symlinks allows arbitrary file access",
+      "status": "fix_deferred",
+      "class": "os-pkgs",
+      "type": "debian"
+    },
+    {
+      "id": "CVE-2026-8376",
+      "pkg": "perl-base",
+      "installed": "5.36.0-7+deb12u3",
+      "fixed": null,
+      "sev": "CRITICAL",
+      "title": "perl: Perl: Heap buffer overflow when compiling regular expressions on 32-bit builds",
+      "status": "affected",
+      "class": "os-pkgs",
+      "type": "debian"
+    },
+    {
+      "id": "CVE-2023-45853",
+      "pkg": "zlib1g",
+      "installed": "1:1.2.13.dfsg-1",
+      "fixed": null,
+      "sev": "CRITICAL",
+      "title": "zlib: integer overflow and resultant heap-based buffer overflow in zipOpenNewFileInZip4_6",
+      "status": "will_not_fix",
+      "class": "os-pkgs",
+      "type": "debian"
+    }
+  ],
+  "highFixable": [],
+  "highTotal": 55,
+  "highUnfixed": 55,
+  "secretCount": 0,
+  "imageTag": "event-os-solver-worker:candidate-c66df97",
+  "imageDigest": "sha256:49bddd285f8868aa9ef1f9d5b5087c5191564db2dc8bb9e0952a2f28ae5d4a52",
+  "sourceCommit": "c66df97629b471c6209d327aed8ffd8057134bc7"
+}

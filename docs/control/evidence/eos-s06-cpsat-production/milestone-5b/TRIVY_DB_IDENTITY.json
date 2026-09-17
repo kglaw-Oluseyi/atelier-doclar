@@ -1,0 +1,12 @@
+{
+  "source": "mirror.gcr.io/aquasec/trivy-db:2",
+  "metadata": {
+    "Version": 2,
+    "NextUpdate": "2026-09-18T07:06:17.880292303Z",
+    "UpdatedAt": "2026-09-17T07:06:17.880292764Z",
+    "DownloadedAt": "2026-09-17T10:30:14.09091Z"
+  },
+  "dbDownloadedAtUtc": "2026-09-17T10:30:14Z",
+  "dbFileMtimeUtc": "2026-09-17T07:11:39Z",
+  "observedAtUtc": "2026-09-17T10:30:35.210701Z"
+}

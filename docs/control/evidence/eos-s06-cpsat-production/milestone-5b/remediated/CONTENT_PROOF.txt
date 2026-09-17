@@ -1,0 +1,5 @@
+ok_no_npm
+ok_no_npm_tree
+Desired=Unknown/Install/Remove/Purge/Hold
+ii  libpcre2-8-0:amd64 10.42-1+deb12u1 amd64        New Perl Compatible Regular Expression Library- 8 bit runtime files
+pg_ok
