@@ -251,12 +251,13 @@ describe("CPSAT Milestone 5 authority packaging", () => {
     assert.ok(existsSync(resolve(root, "apps/event-os-solver-worker/python/requirements.linux.hashes.txt")));
   });
 
-  it("child socket guard and production testHooks rejection are present", () => {
+  it("child socket guard and production testHooks hard-reject are present", () => {
     const child = readFileSync(resolve(root, "apps/event-os-solver-worker/python/solver_child.py"), "utf8");
     assert.match(child, /install_socket_guard/);
     assert.match(child, /cpsat_child_socket_forbidden/);
     assert.match(child, /production_child_rejects_testHooks/);
     assert.match(child, /assert_clean_child_env/);
+    assert.doesNotMatch(child, /CPSAT_ALLOW_TEST_HOOKS/);
   });
 
   it("supervisor drain marks DRAINING and refuses new claims while draining", () => {

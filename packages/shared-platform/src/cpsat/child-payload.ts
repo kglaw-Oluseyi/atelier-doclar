@@ -1,6 +1,7 @@
 /**
  * Strip identity tokens before crossing the child boundary.
  * Index maps remain in TypeScript / PostgreSQL only.
+ * Production never emits or forwards testHooks.
  */
 import type { CpsatSolveRequest } from "./compiler.js";
 import { assertCpsatWireSeed } from "./seed.js";
@@ -12,7 +13,6 @@ export function toChildPayload(
     testHooks?: unknown;
     confirmation?: unknown;
   },
-  options: { allowTestHooks?: boolean } = {},
 ): Record<string, unknown> {
   const seed = assertCpsatWireSeed(request.seed);
   const mapGuestOrUnit = (items: Array<{ unit?: number; guestOrUnit?: number; tables: number[] }>) =>
@@ -20,7 +20,7 @@ export function toChildPayload(
       guestOrUnit: item.guestOrUnit ?? item.unit ?? 0,
       tables: item.tables,
     }));
-  if (request.testHooks != null && !options.allowTestHooks) {
+  if (request.testHooks != null) {
     throw new Error("production_request_rejects_testHooks");
   }
   return {
@@ -52,7 +52,6 @@ export function toChildPayload(
     closureHash: request.closureHash,
     ...(request.diagnostic ? { diagnostic: request.diagnostic } : {}),
     ...(request.counterfactual ? { counterfactual: request.counterfactual } : {}),
-    ...(options.allowTestHooks && request.testHooks ? { testHooks: request.testHooks } : {}),
     ...(request.confirmation ? { confirmation: request.confirmation } : {}),
   };
 }

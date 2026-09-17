@@ -258,13 +258,6 @@
         "originalSeed": { "type": "integer" }
       }
     },
-    "testHooks": {
-      "description": "REJECTED in production child and production request schema consumers. Test harnesses only.",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "continueAfterIncumbentMs": { "type": "number", "minimum": 0 }
-      }
-    }
+    "testHooks": false
   }
 }

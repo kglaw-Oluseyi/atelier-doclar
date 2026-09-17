@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 import resource
 import sys
 import time
@@ -339,24 +338,6 @@ def solve_request(
                 progress("incumbent", f"solutions={incumbent['solutions']}")
 
     def _solve_with_stop(mdl: cp_model.CpModel) -> int:
-        # Test-only delay hook — rejected unless CPSAT_ALLOW_TEST_HOOKS=1.
-        cont = (request.get("testHooks") or {}).get("continueAfterIncumbentMs")
-        if cont:
-            if os.environ.get("CPSAT_ALLOW_TEST_HOOKS") != "1":
-                raise RuntimeError("production_child_rejects_testHooks")
-
-            class _DelayCb(_IncumbentCb):
-                def __init__(self) -> None:
-                    cp_model.CpSolverSolutionCallback.__init__(self)
-                    self._hit = False
-
-                def on_solution_callback(self) -> None:  # noqa: N802
-                    super().on_solution_callback()
-                    if not self._hit:
-                        self._hit = True
-                        time.sleep(float(cont) / 1000.0)
-
-            return solver.Solve(mdl, _DelayCb())
         return solver.Solve(mdl, _IncumbentCb())
 
     if maximise:

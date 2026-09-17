@@ -55,8 +55,6 @@ def assert_clean_child_env() -> None:
             forbidden.append(key)
     if forbidden:
         raise SystemExit(f"forbidden_env:{','.join(sorted(forbidden)[:8])}")
-    if "testHooks" in (os.environ.get("CPSAT_INJECT") or ""):
-        raise SystemExit("forbidden_test_hook_env")
 
 
 def read_frame(stream) -> dict[str, Any] | None:
@@ -291,7 +289,7 @@ def main() -> int:
         write_frame({"type": "error", "message": f"invalid_input:{type(exc).__name__}"})
         return 1
 
-    if request.get("testHooks") is not None and os.environ.get("CPSAT_ALLOW_TEST_HOOKS") != "1":
+    if request.get("testHooks") is not None:
         write_frame({"type": "error", "message": "production_child_rejects_testHooks"})
         return 2
 

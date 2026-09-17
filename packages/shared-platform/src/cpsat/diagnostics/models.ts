@@ -46,7 +46,7 @@ export type FeasibilityProbeResult =
 export type FeasibilityProbe = (input: {
   purpose: "DIAG_CORE" | "DIAG_MCS" | "DIAG_MAXSEAT" | "PLANNING" | "COUNTERFACTUAL";
   authored: SeatingV2CompiledRequest;
-  request: CpsatSolveRequest & { diagnostic?: unknown; counterfactual?: unknown; testHooks?: unknown };
+    request: CpsatSolveRequest & { diagnostic?: unknown; counterfactual?: unknown };
   maxTimeSeconds: number;
 }) => Promise<FeasibilityProbeResult>;
 

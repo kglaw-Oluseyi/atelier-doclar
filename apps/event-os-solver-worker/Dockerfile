@@ -53,7 +53,11 @@ RUN useradd --create-home --uid 10001 --shell /usr/sbin/nologin solver \
   && mkdir -p /tmp/solver \
   && chown -R solver:solver /app /tmp/solver \
   && test ! -f /app/python/fake_malformed_child.py \
-  && test ! -f /app/python/crash_child.py
+  && test ! -f /app/python/crash_child.py \
+  && test ! -d /app/test-only \
+  && test ! -f /app/test-only/keep_best_timing_child.py \
+  && if grep -R "CPSAT_ALLOW_TEST_HOOKS" /app/python /app/src /app/schemas; then exit 1; fi \
+  && if grep -R "continueAfterIncumbentMs" /app/python /app/src /app/schemas; then exit 1; fi
 
 LABEL org.opencontainers.image.source="https://github.com/kglaw-Oluseyi/atelier-doclar" \
       org.opencontainers.image.revision="${SOURCE_SHA}" \
@@ -69,7 +73,6 @@ ENV NODE_ENV=production \
     SOLVER_INGRESS=none \
     SOLVER_TMP=/tmp/solver \
     HOME=/home/solver \
-    CPSAT_ALLOW_TEST_HOOKS=0 \
     CPSAT_ALLOW_SYNTHETIC_WORKER=0
 
 USER solver

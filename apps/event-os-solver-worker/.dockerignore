@@ -9,6 +9,7 @@ __pycache__
 spike
 scripts
 test
+test-only
 python/fake_malformed_child.py
 python/crash_child.py
 python/model/test_aggregation.py

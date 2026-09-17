@@ -377,7 +377,6 @@ describe("CPSAT Milestone 4A real child execution", () => {
   });
 
   it("F. KEEP_BEST stop frame seals FEASIBLE + OPERATOR_STOP", async () => {
-    const childExecutor = await makeChildExecutor();
     const authored = feasibleTinyAuthored();
     const frozen = freezeCpsatSeatingAuthority({
       organisationId: ORG,
@@ -401,9 +400,9 @@ describe("CPSAT Milestone 4A real child execution", () => {
       cancelGraceMs: 4_000,
       maxResponseBytes: 2 * 1024 * 1024,
       childExecutor: async (spawnInput) => {
+        assert.equal("testHooks" in spawnInput.request, false);
         const request = {
           ...spawnInput.request,
-          testHooks: { continueAfterIncumbentMs: 800 },
           limits: {
             ...(spawnInput.request.limits as object),
             maxTimeSeconds: 10,
@@ -433,11 +432,18 @@ describe("CPSAT Milestone 4A real child execution", () => {
             stopArmed = true;
           })();
         }, 200);
-        return childExecutor({
-          ...spawnInput,
+        const { runSolverChild } = await import(pathToFileURL(join(workerRoot, "src/child-runner.ts")).href);
+        childExecutions += 1;
+        return runSolverChild({
+          pythonPath,
+          scriptPath: join(workerRoot, "test-only/keep_best_timing_child.py"),
           request,
-          shouldCancel: spawnInput.shouldCancel,
+          wallMs: spawnInput.wallMs,
           cancelGraceMs: 4_000,
+          shouldCancel: spawnInput.shouldCancel,
+          onProgress: async (phase) => spawnInput.onProgress?.(phase),
+          keepStdinOpen: true,
+          cleanEnv: true,
         });
       },
     });
