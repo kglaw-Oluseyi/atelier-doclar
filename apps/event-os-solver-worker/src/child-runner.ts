@@ -19,8 +19,11 @@ export interface SpawnChildOptions {
   maxTotalResponseBytes?: number;
   cancelGraceMs?: number;
   onProgress?: (phase: string, detail?: string) => void | Promise<void>;
-  shouldCancel?: () => Promise<boolean>;
+  /** Return true/false, or `{ mode }` so the stop frame carries CANCEL|KEEP_BEST. */
+  shouldCancel?: () => Promise<boolean | { mode: "CANCEL" | "KEEP_BEST" }>;
   cancelPollMs?: number;
+  /** When set, stdin stays open for the full wall so late stop frames can land. */
+  keepStdinOpen?: boolean;
 }
 
 export interface ChildRunResult {
@@ -33,6 +36,8 @@ export interface ChildRunResult {
   truncated?: boolean;
   oversized?: boolean;
   childEnvKeys?: string[];
+  stopReason?: string;
+  stopMode?: "CANCEL" | "KEEP_BEST";
 }
 
 function buildCleanEnv(): NodeJS.ProcessEnv {
@@ -129,6 +134,8 @@ export async function runSolverChild(options: SpawnChildOptions): Promise<ChildR
   }, wallMs);
 
   let cancelTimer: NodeJS.Timeout | undefined;
+  let stopModeSent: "CANCEL" | "KEEP_BEST" | null = null;
+  const keepStdinOpen = options.keepStdinOpen === true || Boolean(options.shouldCancel);
   if (options.shouldCancel) {
     cancelTimer = setInterval(() => {
       void (async () => {
@@ -136,8 +143,13 @@ export async function runSolverChild(options: SpawnChildOptions): Promise<ChildR
         const stop = await options.shouldCancel!();
         if (!stop) return;
         cancelled = true;
+        const mode =
+          typeof stop === "object" && stop && "mode" in stop
+            ? stop.mode
+            : ("CANCEL" as const);
+        stopModeSent = mode;
         try {
-          child.stdin?.write(encodeFrame({ type: "stop" }));
+          child.stdin?.write(encodeFrame({ type: "stop", mode, stopMode: mode }));
         } catch {
           /* ignore */
         }
@@ -152,10 +164,12 @@ export async function runSolverChild(options: SpawnChildOptions): Promise<ChildR
     }, cancelPollMs);
   }
 
-  // Keep stdin open briefly so stop frames can be written; then end if not cancelled.
-  setTimeout(() => {
-    if (!cancelled) child.stdin?.end();
-  }, 50);
+  // Keep stdin open while cancellation may still arrive; otherwise close after request.
+  if (!keepStdinOpen) {
+    setTimeout(() => {
+      if (!cancelled) child.stdin?.end();
+    }, 50);
+  }
 
   const exit = await new Promise<{ code: number | null; signal: NodeJS.Signals | null }>((resolve) => {
     child.on("exit", (code, signal) => resolve({ code, signal }));
@@ -183,6 +197,7 @@ export async function runSolverChild(options: SpawnChildOptions): Promise<ChildR
     truncated,
     oversized,
     childEnvKeys,
+    ...(stopModeSent ? { stopReason: "STOP_REQUESTED" as const, stopMode: stopModeSent } : {}),
   };
 }
 

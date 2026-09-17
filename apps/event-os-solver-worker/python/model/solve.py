@@ -186,8 +186,9 @@ def solve_request(
     *,
     progress: ProgressCb | None = None,
     wall_deadline: float | None = None,
+    stop_controller: Any | None = None,
 ) -> dict[str, Any]:
-    """Run production Stage A + Stage B solve."""
+    """Run production Stage A + Stage B solve (or diagnostic purposes)."""
 
     def emit(phase: str, detail: str | None = None) -> None:
         if progress:
@@ -221,7 +222,82 @@ def solve_request(
             "proofState": {"allTiersProven": False, "tiers": {}},
         }
 
-    purpose = problem["purpose"]
+    # Preserve raw together/apart for diagnostic rule derivation.
+    problem["together_pairs"] = list(request.get("togetherPairs") or [])
+
+    purpose = str(problem.get("purpose") or request.get("purpose") or "PLANNING")
+    known = {
+        "PLANNING",
+        "QUALIFICATION",
+        "EVENT_DAY_REPAIR",
+        "SHADOW",
+        "COUNTERFACTUAL",
+        "DIAG_CORE",
+        "DIAG_MCS",
+        "DIAG_MAXSEAT",
+    }
+    if purpose.startswith("DIAG_") and purpose not in known:
+        return {
+            "contractVersion": RESPONSE_CONTRACT,
+            "modelVersion": MODEL_VERSION,
+            "runId": request.get("runId"),
+            "result": "INVALID_INPUT",
+            "faultCode": "UNKNOWN_DIAGNOSTIC_PURPOSE",
+            "error": f"unknown diagnostic purpose {purpose}",
+            "engine": _engine(),
+            "resources": {"peakRssKb": peak_rss_kb()},
+            "tiers": [],
+            "assignments": [],
+            "proofState": {"allTiersProven": False, "tiers": {}},
+        }
+
+    # Counterfactual: force unit onto table before any model build.
+    if purpose == "COUNTERFACTUAL" or request.get("counterfactual"):
+        from .diagnostic_models import apply_counterfactual_force
+
+        problem = apply_counterfactual_force(request, problem)
+        purpose = "PLANNING" if purpose == "COUNTERFACTUAL" else purpose
+        problem["purpose"] = purpose
+
+    if purpose == "DIAG_CORE":
+        from .diagnostic_models import solve_diag_core
+
+        emit("diag", "DIAG_CORE")
+        raw = solve_diag_core(problem, request, emit=emit, remaining_wall=remaining_wall)
+        return _final(
+            problem,
+            raw.get("result", "SOLVER_FAULT"),
+            None,
+            raw.get("tiers") or [],
+            raw.get("assignments") or [],
+            cp_model.INFEASIBLE if raw.get("result") == "INFEASIBLE" else cp_model.UNKNOWN,
+            float(raw.get("deterministicSeconds") or 0.0),
+            wall0,
+            diagnostics=raw.get("diagnostics"),
+        )
+
+    if purpose == "DIAG_MCS":
+        from .diagnostic_models import solve_diag_mcs
+
+        emit("diag", "DIAG_MCS")
+        raw = solve_diag_mcs(problem, request, emit=emit, remaining_wall=remaining_wall)
+        native = {
+            "OPTIMAL": cp_model.OPTIMAL,
+            "FEASIBLE": cp_model.FEASIBLE,
+            "INFEASIBLE": cp_model.INFEASIBLE,
+        }.get(str(raw.get("result")), cp_model.UNKNOWN)
+        return _final(
+            problem,
+            raw.get("result", "SOLVER_FAULT"),
+            None,
+            raw.get("tiers") or [],
+            raw.get("assignments") or [],
+            native,
+            float(raw.get("deterministicSeconds") or 0.0),
+            wall0,
+            diagnostics=raw.get("diagnostics"),
+        )
+
     maximise = purpose == "DIAG_MAXSEAT"
     det_budget = float(problem["max_time_seconds"])
     det_spent = 0.0
@@ -232,6 +308,8 @@ def solve_request(
     model, ctx = build_stage_a(problem, maximise_seated=maximise)
     build_seconds = time.perf_counter() - t_build0
     solver = cp_model.CpSolver()
+    if stop_controller is not None and hasattr(stop_controller, "bind_solver"):
+        stop_controller.bind_solver(solver)
     model_stats = dict(ctx.get("model_stats") or {})
     try:
         proto = model.Proto()
@@ -244,13 +322,47 @@ def solve_request(
     profile: dict[str, Any] = {"buildSeconds": build_seconds}
     problem["_profile"] = profile
 
+    # Incumbent capture for KEEP_BEST (complete Stage-A unit→table assignment).
+    incumbent: dict[str, Any] = {"unit_to_table": None, "solutions": 0}
+
+    class _IncumbentCb(cp_model.CpSolverSolutionCallback):
+        def on_solution_callback(self) -> None:  # noqa: N802
+            from .stage_a import extract_unit_assignment
+
+            incumbent["solutions"] = int(incumbent["solutions"]) + 1
+            try:
+                incumbent["unit_to_table"] = extract_unit_assignment(self, ctx)
+            except Exception:  # noqa: BLE001
+                pass
+            if progress:
+                progress("incumbent", f"solutions={incumbent['solutions']}")
+
+    def _solve_with_stop(mdl: cp_model.CpModel) -> int:
+        # Continuation hook for tests: delay after first incumbent so stop can land.
+        cont = (request.get("testHooks") or {}).get("continueAfterIncumbentMs")
+        if cont:
+
+            class _DelayCb(_IncumbentCb):
+                def __init__(self) -> None:
+                    cp_model.CpSolverSolutionCallback.__init__(self)
+                    self._hit = False
+
+                def on_solution_callback(self) -> None:  # noqa: N802
+                    super().on_solution_callback()
+                    if not self._hit:
+                        self._hit = True
+                        time.sleep(float(cont) / 1000.0)
+
+            return solver.Solve(mdl, _DelayCb())
+        return solver.Solve(mdl, _IncumbentCb())
+
     if maximise:
         model.Maximize(ctx["seated_count_expr"])
         budget = min(det_budget - det_spent, remaining_wall())
         _configure_solver(solver, problem, budget)
         emit("search", "DIAG_MAXSEAT")
         t0 = time.perf_counter()
-        status = solver.Solve(model)
+        status = _solve_with_stop(model)
         dt = time.perf_counter() - t0
         det_spent += dt
         proven = status == cp_model.OPTIMAL
@@ -304,7 +416,7 @@ def solve_request(
     _configure_solver(solver, problem, budget)
     emit("search", "A1_movement")
     t0 = time.perf_counter()
-    status = solver.Solve(model)
+    status = _solve_with_stop(model)
     dt = time.perf_counter() - t0
     det_spent += dt
     profile["a1Seconds"] = dt
@@ -317,41 +429,65 @@ def solve_request(
     except Exception:  # noqa: BLE001
         pass
 
+    stopped = bool(stop_controller and getattr(stop_controller, "stop_requested", False))
     if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
-        tiers.append(
-            tier_record(
-                name="A1_movement",
-                value=None,
-                bound=None,
-                proven=False,
-                deterministic_seconds=dt,
-                wall_seconds=time.perf_counter() - wall0,
-                stop_reason=_stop_reason(status),
+        # KEEP_BEST may have an incumbent via callback even if native status is UNKNOWN.
+        if stopped and incumbent.get("unit_to_table"):
+            status = cp_model.FEASIBLE
+        else:
+            tiers.append(
+                tier_record(
+                    name="A1_movement",
+                    value=None,
+                    bound=None,
+                    proven=False,
+                    deterministic_seconds=dt,
+                    wall_seconds=time.perf_counter() - wall0,
+                    stop_reason="STOP_REQUESTED" if stopped else _stop_reason(status),
+                )
             )
-        )
-        result, fault = map_native_status(
-            native=status,
-            has_incumbent=False,
-            all_tiers_proven=False,
-            wall_hit=wall_hit(),
-            deterministic_exhausted=det_spent >= det_budget or status == cp_model.UNKNOWN,
-        )
-        return _final(problem, result, fault, tiers, [], status, det_spent, wall0)
+            result, fault = map_native_status(
+                native=status,
+                has_incumbent=False,
+                all_tiers_proven=False,
+                wall_hit=wall_hit(),
+                deterministic_exhausted=det_spent >= det_budget or status == cp_model.UNKNOWN,
+            )
+            if stopped:
+                result = "CANCELLED"
+            out = _final(problem, result, fault, tiers, [], status, det_spent, wall0)
+            if stopped:
+                out["stopReason"] = "STOP_REQUESTED"
+            return out
 
-    a1_val = int(solver.ObjectiveValue())
-    a1_proven = status == cp_model.OPTIMAL
-    a1_unit_to_table = extract_unit_assignment(solver, ctx)
+    a1_val = int(solver.ObjectiveValue()) if status in (cp_model.OPTIMAL, cp_model.FEASIBLE) else 0
+    a1_proven = status == cp_model.OPTIMAL and not stopped
+    a1_unit_to_table = incumbent.get("unit_to_table") or extract_unit_assignment(solver, ctx)
     tiers.append(
         tier_record(
             name="A1_movement",
             value=a1_val,
-            bound=int(solver.BestObjectiveBound()),
+            bound=int(solver.BestObjectiveBound()) if status in (cp_model.OPTIMAL, cp_model.FEASIBLE) else a1_val,
             proven=a1_proven,
             deterministic_seconds=dt,
             wall_seconds=time.perf_counter() - wall0,
-            stop_reason=_stop_reason(status),
+            stop_reason="STOP_REQUESTED" if stopped else _stop_reason(status),
         )
     )
+
+    if stopped:
+        guest_to_table = expand_guest_table_assignment(problem, ctx, solver, a1_unit_to_table)
+        assign_payload, b_tiers, b_fault = _run_stage_b(
+            problem, guest_to_table, emit, remaining_wall, det_budget, det_spent
+        )
+        tiers.extend(b_tiers)
+        if b_fault or not assign_payload:
+            out = _final(problem, "CANCELLED", b_fault, tiers, [], status, det_spent, wall0)
+            out["stopReason"] = "STOP_REQUESTED"
+            return out
+        out = _final(problem, "FEASIBLE", None, tiers, assign_payload, status, det_spent, wall0)
+        out["stopReason"] = "STOP_REQUESTED"
+        return out
 
     # Fix within movement tolerance → A2 preferences.
     tol = int(problem["movement_tolerance"])
@@ -369,7 +505,7 @@ def solve_request(
     _configure_solver(solver, problem, budget)
     emit("search", "A2_preferences")
     t0 = time.perf_counter()
-    status2 = solver.Solve(model)
+    status2 = _solve_with_stop(model)
     dt2 = time.perf_counter() - t0
     det_spent += dt2
     profile["a2Seconds"] = dt2

@@ -5,8 +5,20 @@
 import type { CpsatSolveRequest } from "./compiler.js";
 import { assertCpsatWireSeed } from "./seed.js";
 
-export function toChildPayload(request: CpsatSolveRequest): Record<string, unknown> {
+export function toChildPayload(
+  request: CpsatSolveRequest & {
+    diagnostic?: unknown;
+    counterfactual?: unknown;
+    testHooks?: unknown;
+    confirmation?: unknown;
+  },
+): Record<string, unknown> {
   const seed = assertCpsatWireSeed(request.seed);
+  const mapGuestOrUnit = (items: Array<{ unit?: number; guestOrUnit?: number; tables: number[] }>) =>
+    items.map((item) => ({
+      guestOrUnit: item.guestOrUnit ?? item.unit ?? 0,
+      tables: item.tables,
+    }));
   return {
     contractVersion: request.contractVersion,
     modelVersion: request.modelVersion,
@@ -26,14 +38,18 @@ export function toChildPayload(request: CpsatSolveRequest): Record<string, unkno
     units: request.units,
     togetherPairs: request.togetherPairs,
     apartPairs: request.apartPairs,
-    requireTable: request.requireTable,
-    forbidTable: request.forbidTable,
+    requireTable: mapGuestOrUnit(request.requireTable as Array<{ unit?: number; guestOrUnit?: number; tables: number[] }>),
+    forbidTable: mapGuestOrUnit(request.forbidTable as Array<{ unit?: number; guestOrUnit?: number; tables: number[] }>),
     reservations: request.reservations,
     preferences: request.preferences,
     baseline: request.baseline,
     limits: request.limits,
     movementTolerance: request.movementTolerance,
     closureHash: request.closureHash,
+    ...(request.diagnostic ? { diagnostic: request.diagnostic } : {}),
+    ...(request.counterfactual ? { counterfactual: request.counterfactual } : {}),
+    ...(request.testHooks ? { testHooks: request.testHooks } : {}),
+    ...(request.confirmation ? { confirmation: request.confirmation } : {}),
   };
 }
 

@@ -19,7 +19,7 @@
     "seed": { "type": "integer" },
     "purpose": {
       "type": "string",
-      "pattern": "^(PLANNING|QUALIFICATION|DIAG_MAXSEAT|DIAG_MCS|DIAG_CORE|DIAG_[A-Z0-9_]+)$"
+      "pattern": "^(PLANNING|QUALIFICATION|EVENT_DAY_REPAIR|SHADOW|COUNTERFACTUAL|DIAG_MAXSEAT|DIAG_MCS|DIAG_CORE|DIAG_[A-Z0-9_]+)$"
     },
     "tables": {
       "type": "array",
@@ -190,6 +190,80 @@
     },
     "movementTolerance": { "type": "integer", "minimum": 0 },
     "closureHash": { "type": "string", "pattern": "^[0-9a-fA-F]{64}$" },
-    "sleepSeconds": { "type": "number", "minimum": 0 }
+    "sleepSeconds": { "type": "number", "minimum": 0 },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "purpose": {
+          "type": "string",
+          "enum": ["DIAG_CORE", "DIAG_MCS", "DIAG_MAXSEAT", "COUNTERFACTUAL"]
+        },
+        "parentRunId": { "type": "string" },
+        "budget": { "type": "number", "exclusiveMinimum": 0 },
+        "coreMinimisationBudget": { "type": "integer", "minimum": 0 },
+        "allowLockRelaxation": { "type": "boolean" },
+        "lockRelaxationPolicy": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": { "allow": { "type": "boolean" } }
+        },
+        "relaxableRules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["ref", "kind"],
+            "properties": {
+              "ref": { "type": "string", "minLength": 1 },
+              "contentHash": { "type": "string" },
+              "kind": { "type": "string" },
+              "priority": { "type": "integer" },
+              "guests": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+              "tables": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+              "guestOrUnit": { "type": "integer", "minimum": 0 },
+              "guest": { "type": "integer", "minimum": 0 },
+              "table": { "type": "integer", "minimum": 0 }
+            }
+          }
+        },
+        "togetherUnitsAtomic": { "type": "boolean" },
+        "proofBudget": { "type": "number", "exclusiveMinimum": 0 },
+        "rulePriorityWeights": {
+          "type": "object",
+          "additionalProperties": { "type": "number" }
+        },
+        "nonRelaxableConstraints": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "counterfactual": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "guestIndex": { "type": "integer", "minimum": 0 },
+        "tableIndex": { "type": "integer", "minimum": 0 },
+        "sealedCandidateHash": { "type": "string" },
+        "comparisonTier": { "type": "boolean" }
+      }
+    },
+    "confirmation": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "ofRequestHash": { "type": "string" },
+        "ofResponseHash": { "type": "string" },
+        "originalSeed": { "type": "integer" }
+      }
+    },
+    "testHooks": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "continueAfterIncumbentMs": { "type": "number", "minimum": 0 }
+      }
+    }
   }
 }

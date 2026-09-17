@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-EOS-S06 CP-SAT solver child (production Stage A + Stage B).
+EOS-S06 CP-SAT solver child (production Stage A + Stage B + diagnostics + stop).
 
 - No database credentials
 - No guest names / contacts / rule prose
 - No network calls
 - Receives run-local integer indices only
-- stdin: length-prefixed JSON request
+- stdin: length-prefixed JSON request, then optional stop frames
 - fd 3: length-prefixed JSON progress + final response
 - Exits after one solve
 """
@@ -17,9 +17,10 @@ import os
 import resource
 import struct
 import sys
+import threading
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 # Allow `python solver_child.py` and package imports of model/
 _PYTHON_ROOT = Path(__file__).resolve().parent
@@ -30,10 +31,10 @@ FRAME_MAX = 8 * 1024 * 1024
 FD_OUT = 3
 
 
-def read_frame(stream) -> dict[str, Any]:
+def read_frame(stream) -> dict[str, Any] | None:
     header = stream.buffer.read(4)
     if not header or len(header) < 4:
-        raise SystemExit("truncated_header")
+        return None
     (length,) = struct.unpack(">I", header)
     if length > FRAME_MAX:
         raise SystemExit("frame_too_large")
@@ -70,8 +71,53 @@ def is_production_request(request: dict[str, Any]) -> bool:
     return bool(request.get("tables") and request.get("seats") and request.get("guests"))
 
 
-def solve_spike_minimal(request: dict[str, Any]) -> dict[str, Any]:
-    """Checkpoint-1 spike path: unitCount/tableCount capacity assignment."""
+class StopController:
+    """Thread-safe stop request + optional CpSolver StopSearch binding."""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self.stop_requested = False
+        self.stop_mode: str | None = None
+        self._solver = None
+
+    def bind_solver(self, solver: Any) -> None:
+        with self._lock:
+            self._solver = solver
+            if self.stop_requested and solver is not None:
+                try:
+                    solver.StopSearch()
+                except Exception:  # noqa: BLE001
+                    pass
+
+    def request_stop(self, mode: str | None = None) -> None:
+        with self._lock:
+            self.stop_requested = True
+            if mode:
+                self.stop_mode = mode
+            if self._solver is not None:
+                try:
+                    self._solver.StopSearch()
+                except Exception:  # noqa: BLE001
+                    pass
+
+
+def _stdin_stop_reader(controller: StopController) -> None:
+    """Read optional control frames from stdin after the request frame."""
+    while True:
+        try:
+            frame = read_frame(sys.stdin)
+        except Exception:  # noqa: BLE001
+            return
+        if frame is None:
+            return
+        if frame.get("type") != "stop":
+            continue
+        mode = frame.get("mode") or frame.get("stopMode") or "CANCEL"
+        progress("stop_received", str(mode))
+        controller.request_stop(str(mode))
+
+
+def solve_spike_minimal(request: dict[str, Any], controller: StopController) -> dict[str, Any]:
     from ortools.sat.python import cp_model
     import ortools
 
@@ -92,13 +138,22 @@ def solve_spike_minimal(request: dict[str, Any]) -> dict[str, Any]:
         model.Add(sum(x[u, t] for u in range(units)) <= capacity)
 
     solver = cp_model.CpSolver()
+    controller.bind_solver(solver)
     solver.parameters.random_seed = seed
     solver.parameters.max_time_in_seconds = float(request.get("maxTimeSeconds", 2.0))
     solver.parameters.num_search_workers = 1
 
     if str(mode).lower() == "sleep":
         progress("sleep", "started")
-        time.sleep(float(request.get("sleepSeconds", 5.0)))
+        deadline = time.time() + float(request.get("sleepSeconds", 5.0))
+        while time.time() < deadline:
+            if controller.stop_requested:
+                return {
+                    "result": "CANCELLED",
+                    "stopReason": "STOP_REQUESTED",
+                    "engine": {"ortools": ortools.__version__, "python": sys.version.split()[0]},
+                }
+            time.sleep(0.05)
         return {
             "result": "CANCELLED",
             "engine": {"ortools": ortools.__version__, "python": sys.version.split()[0]},
@@ -125,8 +180,10 @@ def solve_spike_minimal(request: dict[str, Any]) -> dict[str, Any]:
         cp_model.MODEL_INVALID: "INVALID_INPUT",
         cp_model.UNKNOWN: "SEARCH_INCOMPLETE",
     }.get(status, "SOLVER_FAULT")
+    if controller.stop_requested and product in {"OPTIMAL", "FEASIBLE"}:
+        product = "FEASIBLE"
 
-    return {
+    out = {
         "result": product,
         "nativeStatus": name,
         "assignment": assignment,
@@ -143,13 +200,31 @@ def solve_spike_minimal(request: dict[str, Any]) -> dict[str, Any]:
             "tableCount": tables,
         },
     }
+    if controller.stop_requested:
+        out["stopReason"] = "STOP_REQUESTED"
+    return out
 
 
-def solve(request: dict[str, Any]) -> dict[str, Any]:
+def solve(request: dict[str, Any], controller: StopController) -> dict[str, Any]:
     mode = str(request.get("mode", "")).lower()
     if mode == "sleep":
         progress("sleep", "started")
-        time.sleep(float(request.get("sleepSeconds", 5.0)))
+        deadline = time.time() + float(request.get("sleepSeconds", 5.0))
+        while time.time() < deadline:
+            if controller.stop_requested:
+                import ortools
+
+                return {
+                    "result": "CANCELLED",
+                    "stopReason": "STOP_REQUESTED",
+                    "engine": {
+                        "ortools": ortools.__version__,
+                        "python": sys.version.split()[0],
+                        "model": "cpsat-model-v1",
+                    },
+                    "resources": {"peakRssKb": peak_rss_kb()},
+                }
+            time.sleep(0.05)
         import ortools
 
         return {
@@ -165,9 +240,9 @@ def solve(request: dict[str, Any]) -> dict[str, Any]:
     if is_production_request(request):
         from model.solve import solve_request
 
-        return solve_request(request, progress=progress)
+        return solve_request(request, progress=progress, stop_controller=controller)
 
-    return solve_spike_minimal(request)
+    return solve_spike_minimal(request, controller)
 
 
 def main() -> int:
@@ -178,13 +253,26 @@ def main() -> int:
 
     try:
         request = read_frame(sys.stdin)
+        if request is None:
+            write_frame({"type": "error", "message": "invalid_input:empty"})
+            return 1
     except Exception as exc:  # noqa: BLE001
         write_frame({"type": "error", "message": f"invalid_input:{type(exc).__name__}"})
         return 1
 
+    controller = StopController()
+    reader = threading.Thread(target=_stdin_stop_reader, args=(controller,), daemon=True)
+    reader.start()
+
     progress("accepted", str(request.get("runId")))
     try:
-        payload = solve(request)
+        payload = solve(request, controller)
+        if controller.stop_requested and payload.get("result") in {"OPTIMAL", "FEASIBLE"}:
+            payload["result"] = "FEASIBLE"
+            payload["stopReason"] = "STOP_REQUESTED"
+        elif controller.stop_requested and not payload.get("assignments") and not payload.get("assignment"):
+            payload["result"] = "CANCELLED"
+            payload["stopReason"] = "STOP_REQUESTED"
         write_frame({"type": "final", "ok": True, "payload": payload})
         return 0
     except Exception as exc:  # noqa: BLE001

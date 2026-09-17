@@ -23,13 +23,14 @@ import {
 import { settleAbnormalInfeasibility } from "./diagnostics/pipeline.js";
 import { observeStopRequest, recordIncumbentProgress } from "./diagnostics/stop-modes.js";
 import type { FeasibilityProbe } from "./diagnostics/models.js";
+import { createRealChildFeasibilityProbe } from "./diagnostics/real-child-probe.js";
 import { toChildPayload } from "./child-payload.js";
 
 export type ChildExecutor = (input: {
   request: Record<string, unknown>;
   wallMs: number;
   onProgress?: (phase: string) => void | Promise<void>;
-  shouldCancel?: () => Promise<boolean>;
+  shouldCancel?: () => Promise<boolean | { mode: "CANCEL" | "KEEP_BEST" }>;
   cancelGraceMs?: number;
   /** When true, prefer returning best incumbent instead of hard-abort discard. */
   keepBest?: boolean;
@@ -44,6 +45,7 @@ export type ChildExecutor = (input: {
   oversized?: boolean;
   childEnvKeys?: string[];
   stopReason?: string;
+  stopMode?: "CANCEL" | "KEEP_BEST";
 }>;
 
 export type ExecuteClaimedRunResult = {
@@ -143,28 +145,14 @@ export async function executeClaimedCpsatRun(
   }
 
   const noopProbe: FeasibilityProbe = async () => ({ status: "UNKNOWN", detail: "no_probe" });
+  // Production default: real Python child. Tests may inject diagnosticProbe explicitly.
   const probe: FeasibilityProbe =
     input.diagnosticProbe ??
-    (async ({ request, purpose }) => {
-      const child = await input.childExecutor({
-        request: toChildPayload({ ...request, purpose }),
-        wallMs: Math.min(input.wallMs, 20_000),
-        cancelGraceMs: input.cancelGraceMs,
-      });
-      const finalMsg = [...child.messages].reverse().find((m) => m.type === "final") as
-        | { payload?: ChildFinalPayload }
-        | undefined;
-      const result = String(finalMsg?.payload?.result ?? "SOLVER_FAULT");
-      if (result === "INFEASIBLE") return { status: "INFEASIBLE" };
-      if (result === "OPTIMAL" || result === "FEASIBLE") {
-        return {
-          status: result,
-          assignments: finalMsg?.payload?.assignments ?? [],
-          maxSeated: (finalMsg?.payload as { diagnostics?: { maxSeated?: number } } | undefined)?.diagnostics
-            ?.maxSeated,
-        };
-      }
-      return { status: result as "UNKNOWN", detail: result };
+    createRealChildFeasibilityProbe({
+      childExecutor: input.childExecutor,
+      wallMs: input.wallMs,
+      cancelGraceMs: input.cancelGraceMs,
+      allowLockRelaxation: input.allowLockRelaxation === true,
     });
 
   // L0–L1′ before search — no Python when certified.
@@ -270,12 +258,14 @@ export async function executeClaimedCpsatRun(
           leaseOwner: input.leaseOwner,
           leaseEpoch,
         });
+        if (!stop.cancelRequested) return false;
         if (stop.stopMode === "KEEP_BEST") preferKeepBest = true;
-        return observeCancellation(client, {
+        await observeCancellation(client, {
           runId: run.id,
           leaseOwner: input.leaseOwner,
           leaseEpoch,
         });
+        return { mode: (stop.stopMode === "KEEP_BEST" ? "KEEP_BEST" : "CANCEL") as "CANCEL" | "KEEP_BEST" };
       },
     });
   } catch (error) {

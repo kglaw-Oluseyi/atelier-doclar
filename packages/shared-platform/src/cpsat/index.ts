@@ -143,6 +143,10 @@ export {
   type McsDiagnosticResult,
   type MaxSeatDiagnosticResult,
 } from "./diagnostics/models.js";
+export {
+  createRealChildFeasibilityProbe,
+  PRODUCTION_FEASIBILITY_PROBE_FACTORY,
+} from "./diagnostics/real-child-probe.js";
 export { confirmFullModelInfeasibility, isDiagnosticOrRestrictedPurpose } from "./diagnostics/confirmation.js";
 export {
   executeCounterfactualWhyNot,

@@ -288,9 +288,18 @@ export async function executeCounterfactualWhyNot(
   }
 
   const probeResult = await probe({
-    purpose: "PLANNING",
+    purpose: "COUNTERFACTUAL",
     authored: forcedAuthored,
-    request: { ...request, purpose: "PLANNING" },
+    request: {
+      ...request,
+      purpose: "COUNTERFACTUAL",
+      counterfactual: {
+        guestIndex: request.guests.find((g) => g.token === input.guestToken)?.i,
+        tableIndex: request.tables.find((t) => t.token === input.tableToken)?.i,
+        sealedCandidateHash: input.candidateAssignmentHash,
+        comparisonTier: true,
+      },
+    },
     maxTimeSeconds: 5,
   });
 

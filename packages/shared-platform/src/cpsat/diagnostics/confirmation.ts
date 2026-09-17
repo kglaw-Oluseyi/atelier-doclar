@@ -64,12 +64,17 @@ export async function confirmFullModelInfeasibility(input: {
   }
 
   const confirmationSeed = differentSeed(input.request.seed);
-  const confirmationRequest: CpsatSolveRequest = {
+  const confirmationRequest: CpsatSolveRequest & { confirmation?: Record<string, unknown> } = {
     ...input.request,
     mode: "REPLAY",
     seed: confirmationSeed,
     purpose: input.request.purpose,
     runId: `${input.request.runId}:confirm`,
+    confirmation: {
+      ofRequestHash: exactHash((({ runId: _r, ...rest }) => rest)(input.request)),
+      ofResponseHash: input.initialResponseHash ?? null,
+      originalSeed: input.request.seed,
+    },
   };
   const confirmationRequestHash = exactHash((({ runId: _r, ...rest }) => rest)(confirmationRequest));
 
