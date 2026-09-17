@@ -267,6 +267,34 @@ export async function cancelSeatingRunAction(
   });
 }
 
+export async function stopSeatingRunKeepBestAction(
+  boundEventId: string,
+  prev: ProtectionFormState,
+  formData: FormData,
+): Promise<ProtectionFormState> {
+  return runTrustedSeatingAction({
+    boundEventId,
+    prev,
+    formData,
+    permission: "seating.run.execute",
+    actionType: "seating.run.stop_keep_best",
+    execute: async ({ actor, envelope }) => {
+      requireV2Mutation();
+      if (!isSolverQueueEnabled()) {
+        throw new PlatformError("CAPABILITY_NOT_ENABLED", "seating run stop is not available on the V2 command path", {
+          publicMessage: "Seating run stop is not available.",
+        });
+      }
+      return asId(
+        await getRuntime().service.seatingV2Commands().requestCpsatStop(actor, envelope, {
+          runId: field(formData, "runId"),
+          mode: "KEEP_BEST",
+        }),
+      );
+    },
+  });
+}
+
 export async function adoptSeatingRunAction(
   boundEventId: string,
   prev: ProtectionFormState,

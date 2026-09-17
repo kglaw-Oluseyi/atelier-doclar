@@ -20,6 +20,7 @@ import {
   requestCpsatRunCancellation,
   type CpsatSeatingRunSummary,
 } from "./cpsat/durable-launch.js";
+import { requestCpsatRunStop } from "./cpsat/diagnostics/stop-modes.js";
 import {
   adoptApprovedCpsatCandidate,
   decideCpsatCandidateApproval,
@@ -2004,6 +2005,42 @@ export class SeatingV2CommandService {
       id: summary.runId,
       cancelRequested: summary.cancelRequested,
       lifecycle: summary.lifecycle,
+    }));
+  }
+
+  async requestCpsatStop(
+    actor: SeatingV2Actor,
+    envelope: SeatingV2CommandEnvelope,
+    input: { runId: string; mode: "CANCEL" | "KEEP_BEST" },
+  ): Promise<SeatingV2CommandResult<{ id: string; cancelRequested: boolean; lifecycle: string; stopMode: string }>> {
+    requireKey(envelope.idempotencyKey);
+    const trusted = this.trustedEnvelope(actor, envelope, "seating.run.execute");
+    const canonical = trusted.envelope;
+    const queue = this.requireCpsatQueueClient();
+    const people = this.deps.resolveActor(actor.personId);
+    const event = this.deps.loadEventById(canonical.eventId);
+    if (!event) throw new PlatformError("NOT_FOUND", "event was not found");
+    const assignment = resolveTrustedSeatingAssignment(people, event, nowOf(actor));
+    const roleKey = roleKeyForId(assignment.roleId);
+    const permissions =
+      roleKey && (SYSTEM_ROLE_KEYS as readonly string[]).includes(roleKey)
+        ? permissionsForRole(roleKey as (typeof SYSTEM_ROLE_KEYS)[number])
+        : (["seating.run.execute"] as const);
+    const summary = await requestCpsatRunStop(queue, {
+      eventId: canonical.eventId,
+      runId: input.runId,
+      mode: input.mode,
+      actor: {
+        personId: actor.personId,
+        roleKey: roleKey ?? "PLANNER",
+        permissions,
+      },
+    });
+    return this.mutate(actor, canonical, "seating.run.execute", "seatingV2.requestCpsatStop", async () => ({
+      id: summary.runId,
+      cancelRequested: summary.cancelRequested,
+      lifecycle: summary.lifecycle,
+      stopMode: input.mode,
     }));
   }
 

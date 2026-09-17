@@ -563,9 +563,17 @@ describe("CPSAT Milestone 2 frontend states", () => {
     assert.equal(cancelled.operatorLifecycle, "CANCELLED");
 
     for (const [lifecycle, product, msg] of [
-      ["CLOSED_NO_PLAN", "INFEASIBLE", "No complete seating satisfies the mandatory rules"],
-      ["CLOSED_NO_PLAN", "SEARCH_INCOMPLETE", "Search finished without a complete plan"],
-      ["CLOSED_NO_PLAN", "TIMED_OUT", "Seating run stopped on the safety time limit"],
+      ["CLOSED_NO_PLAN", "INFEASIBLE", "No complete plan is possible with the current rules and layout. The specific conflict could not be isolated."],
+      [
+        "CLOSED_NO_PLAN",
+        "SEARCH_INCOMPLETE",
+        "No complete plan was found within the search allowance. This does not mean one is impossible.",
+      ],
+      [
+        "CLOSED_NO_PLAN",
+        "TIMED_OUT",
+        "The run reached its time limit without a complete plan. This does not mean one is impossible.",
+      ],
       ["CLOSED_NO_PLAN", "INVALID_INPUT", "The seating request could not be accepted"],
       ["FAILED", "SOLVER_FAULT", "Solver fault — do not treat as infeasibility"],
     ] as const) {

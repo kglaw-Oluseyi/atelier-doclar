@@ -20,6 +20,10 @@ import {
   validateChildResponse,
   type ChildFinalPayload,
 } from "./worker-settlement.js";
+import { settleAbnormalInfeasibility } from "./diagnostics/pipeline.js";
+import { observeStopRequest, recordIncumbentProgress } from "./diagnostics/stop-modes.js";
+import type { FeasibilityProbe } from "./diagnostics/models.js";
+import { toChildPayload } from "./child-payload.js";
 
 export type ChildExecutor = (input: {
   request: Record<string, unknown>;
@@ -27,6 +31,8 @@ export type ChildExecutor = (input: {
   onProgress?: (phase: string) => void | Promise<void>;
   shouldCancel?: () => Promise<boolean>;
   cancelGraceMs?: number;
+  /** When true, prefer returning best incumbent instead of hard-abort discard. */
+  keepBest?: boolean;
 }) => Promise<{
   messages: Array<{ type: string; phase?: string; detail?: string; ok?: boolean; payload?: Record<string, unknown>; message?: string }>;
   exitCode: number | null;
@@ -37,6 +43,7 @@ export type ChildExecutor = (input: {
   truncated?: boolean;
   oversized?: boolean;
   childEnvKeys?: string[];
+  stopReason?: string;
 }>;
 
 export type ExecuteClaimedRunResult = {
@@ -70,6 +77,9 @@ export async function executeClaimedCpsatRun(
     maxResponseBytes: number;
     governedAuthorityCurrent?: boolean;
     childExecutor: ChildExecutor;
+    /** Optional probe for confirmation / DIAG_* (defaults to childExecutor-backed). */
+    diagnosticProbe?: FeasibilityProbe;
+    allowLockRelaxation?: boolean;
   },
 ): Promise<ExecuteClaimedRunResult> {
   const run = (await loadClaimedRun(client, input.run.id)) ?? input.run;
@@ -77,11 +87,17 @@ export async function executeClaimedCpsatRun(
 
   // Reload + cancel-before-spawn
   if (run.cancelRequested) {
+    const stop = await observeStopRequest(client, {
+      runId: run.id,
+      leaseOwner: input.leaseOwner,
+      leaseEpoch,
+    });
     await observeCancellation(client, {
       runId: run.id,
       leaseOwner: input.leaseOwner,
       leaseEpoch,
     });
+    // KEEP_BEST before spawn with no incumbent → CANCELLED
     const settled = await settleFaultOrTerminal(client, {
       runId: run.id,
       leaseOwner: input.leaseOwner,
@@ -89,7 +105,7 @@ export async function executeClaimedCpsatRun(
       lifecycle: "CANCELLED",
       productResult: "CANCELLED",
       faultCode: null,
-      stopReason: "CANCEL_BEFORE_SPAWN",
+      stopReason: stop.stopMode === "KEEP_BEST" ? "KEEP_BEST_NO_INCUMBENT" : "CANCEL_BEFORE_SPAWN",
     });
     return {
       runId: run.id,
@@ -104,6 +120,10 @@ export async function executeClaimedCpsatRun(
     prepared = prepareRunForExecution(run.requestJson, run.authoredAuthorityJson);
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
+    // EMPTY_DOMAIN etc. from compile → treat via static certificate path when possible.
+    if (msg.startsWith("EMPTY_DOMAIN") || msg.startsWith("UNSUPPORTED")) {
+      // fall through after building authored-only path below
+    }
     const settled = await settleFaultOrTerminal(client, {
       runId: run.id,
       leaseOwner: input.leaseOwner,
@@ -120,6 +140,80 @@ export async function executeClaimedCpsatRun(
       childInvocations: run.childInvocationCount,
       detail: msg,
     };
+  }
+
+  const noopProbe: FeasibilityProbe = async () => ({ status: "UNKNOWN", detail: "no_probe" });
+  const probe: FeasibilityProbe =
+    input.diagnosticProbe ??
+    (async ({ request, purpose }) => {
+      const child = await input.childExecutor({
+        request: toChildPayload({ ...request, purpose }),
+        wallMs: Math.min(input.wallMs, 20_000),
+        cancelGraceMs: input.cancelGraceMs,
+      });
+      const finalMsg = [...child.messages].reverse().find((m) => m.type === "final") as
+        | { payload?: ChildFinalPayload }
+        | undefined;
+      const result = String(finalMsg?.payload?.result ?? "SOLVER_FAULT");
+      if (result === "INFEASIBLE") return { status: "INFEASIBLE" };
+      if (result === "OPTIMAL" || result === "FEASIBLE") {
+        return {
+          status: result,
+          assignments: finalMsg?.payload?.assignments ?? [],
+          maxSeated: (finalMsg?.payload as { diagnostics?: { maxSeated?: number } } | undefined)?.diagnostics
+            ?.maxSeated,
+        };
+      }
+      return { status: result as "UNKNOWN", detail: result };
+    });
+
+  // L0–L1′ before search — no Python when certified.
+  {
+    const staticSettle = await settleAbnormalInfeasibility({
+      client,
+      runId: run.id,
+      authored: prepared.authored,
+      request: prepared.request,
+      probe: noopProbe,
+      allowLockRelaxation: input.allowLockRelaxation === true,
+      staticOnly: true,
+    });
+    if (staticSettle.evidenceGrade === "CERTIFIED" && staticSettle.productResult === "INFEASIBLE") {
+      const settled = await settleFaultOrTerminal(client, {
+        runId: run.id,
+        leaseOwner: input.leaseOwner,
+        leaseEpoch,
+        lifecycle: staticSettle.lifecycle,
+        productResult: staticSettle.productResult,
+        faultCode: staticSettle.faultCode,
+        stopReason: staticSettle.stopReason,
+        evidenceGrade: staticSettle.evidenceGrade,
+      });
+      return {
+        runId: run.id,
+        outcome: "INFEASIBLE_CERTIFIED",
+        settled: settled.settled,
+        childInvocations: run.childInvocationCount,
+      };
+    }
+    if (staticSettle.productResult === "SOLVER_FAULT" && staticSettle.faultCode?.includes("INCONSISTENT_PROOF")) {
+      const settled = await settleFaultOrTerminal(client, {
+        runId: run.id,
+        leaseOwner: input.leaseOwner,
+        leaseEpoch,
+        lifecycle: "FAILED",
+        productResult: "SOLVER_FAULT",
+        faultCode: staticSettle.faultCode,
+        stopReason: staticSettle.stopReason,
+      });
+      return {
+        runId: run.id,
+        outcome: "CERTIFICATE_FAULT",
+        settled: settled.settled,
+        childInvocations: run.childInvocationCount,
+      };
+    }
+    // else: no static certificate — continue to child
   }
 
   const requestHash = exactHash(
@@ -146,12 +240,23 @@ export async function executeClaimedCpsatRun(
   });
 
   let childResult;
+  let preferKeepBest = false;
   try {
     childResult = await input.childExecutor({
       request: prepared.childPayload,
       wallMs: input.wallMs,
       cancelGraceMs: input.cancelGraceMs,
+      keepBest: false,
       onProgress: async (phase) => {
+        if (/solution|incumbent|feasible/i.test(phase)) {
+          await recordIncumbentProgress(client, {
+            runId: run.id,
+            leaseOwner: input.leaseOwner,
+            leaseEpoch,
+            solutionsFound: 1,
+            incumbentPresent: true,
+          });
+        }
         await updateCpsatProgressPhase(client, {
           runId: run.id,
           leaseOwner: input.leaseOwner,
@@ -159,12 +264,19 @@ export async function executeClaimedCpsatRun(
           phase: mapProgressPhase(phase),
         });
       },
-      shouldCancel: async () =>
-        observeCancellation(client, {
+      shouldCancel: async () => {
+        const stop = await observeStopRequest(client, {
           runId: run.id,
           leaseOwner: input.leaseOwner,
           leaseEpoch,
-        }),
+        });
+        if (stop.stopMode === "KEEP_BEST") preferKeepBest = true;
+        return observeCancellation(client, {
+          runId: run.id,
+          leaseOwner: input.leaseOwner,
+          leaseEpoch,
+        });
+      },
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
@@ -204,6 +316,81 @@ export async function executeClaimedCpsatRun(
     }
   }
 
+  // KEEP_BEST: if child returned a complete incumbent under stop, verify/seal as FEASIBLE.
+  const keepBestFinal =
+    (childResult.cancelled || childResult.stopReason === "STOP_REQUESTED" || preferKeepBest) &&
+    (() => {
+      const msg = [...childResult.messages].reverse().find((m) => m.type === "final") as
+        | { payload?: ChildFinalPayload }
+        | undefined;
+      const result = msg?.payload?.result;
+      return result === "FEASIBLE" || result === "OPTIMAL" ? msg?.payload : null;
+    })();
+
+  if (keepBestFinal) {
+    await updateCpsatProgressPhase(client, {
+      runId: run.id,
+      leaseOwner: input.leaseOwner,
+      leaseEpoch,
+      phase: "verifying result",
+    });
+    const processed = processVerifiedCandidate({
+      request: prepared.request,
+      authored: prepared.authored,
+      productResult: "FEASIBLE",
+      childAssignments: keepBestFinal.assignments ?? [],
+      childTiers: keepBestFinal.tiers,
+      governedAuthorityCurrent: input.governedAuthorityCurrent !== false,
+    });
+    if (processed.kind === "fault") {
+      await insertStopIncumbentIncident(client, run.id, processed.faultCode);
+      const settled = await settleFaultOrTerminal(client, {
+        runId: run.id,
+        leaseOwner: input.leaseOwner,
+        leaseEpoch,
+        lifecycle: "FAILED",
+        productResult: "SOLVER_FAULT",
+        faultCode: processed.faultCode,
+        stopReason: "KEEP_BEST_VERIFY_FAILED",
+      });
+      return { runId: run.id, outcome: "KEEP_BEST_VERIFY_FAILED", settled: settled.settled, childInvocations };
+    }
+    if (processed.kind === "ready") {
+      const seal = {
+        ...processed.seal,
+        productResult: "FEASIBLE" as const,
+        evidenceGrade: "FEASIBLE_VERIFIED",
+      };
+      const sealed = await sealAndSettleCandidate(client, {
+        runId: run.id,
+        leaseOwner: input.leaseOwner,
+        leaseEpoch,
+        request: prepared.request,
+        seal,
+        indexMap: {
+          guests: prepared.request.guests.map((g) => ({ i: g.i, token: g.token })),
+          seats: prepared.request.seats.map((s) => ({ i: s.i, token: s.token })),
+          tables: prepared.request.tables.map((t) => ({ i: t.i, token: t.token })),
+        },
+      });
+      if (sealed.settled) {
+        await client.query(
+          `UPDATE cpsat_solver_runs
+           SET stop_reason = $2, product_result = 'FEASIBLE', updated_at = NOW()
+           WHERE id = $1`,
+          [run.id, "OPERATOR_STOP"],
+        );
+      }
+      return {
+        runId: run.id,
+        outcome: sealed.settled ? "KEEP_BEST_READY_FOR_REVIEW" : `SETTLE_FAILED:${sealed.reason ?? "unknown"}`,
+        settled: sealed.settled,
+        childInvocations,
+        detail: sealed.reason,
+      };
+    }
+  }
+
   if (childResult.cancelled) {
     const settled = await settleFaultOrTerminal(client, {
       runId: run.id,
@@ -212,7 +399,7 @@ export async function executeClaimedCpsatRun(
       lifecycle: "CANCELLED",
       productResult: "CANCELLED",
       faultCode: null,
-      stopReason: "CANCEL_DURING_EXECUTION",
+      stopReason: preferKeepBest ? "KEEP_BEST_NO_INCUMBENT" : "CANCEL_DURING_EXECUTION",
     });
     return { runId: run.id, outcome: "CANCELLED_DURING_EXECUTION", settled: settled.settled, childInvocations };
   }
@@ -302,6 +489,58 @@ export async function executeClaimedCpsatRun(
   }
 
   if (validated.productResult !== "OPTIMAL" && validated.productResult !== "FEASIBLE") {
+    if (validated.productResult === "INFEASIBLE") {
+      const abnormal = await settleAbnormalInfeasibility({
+        client,
+        runId: run.id,
+        authored: prepared.authored,
+        request: prepared.request,
+        probe,
+        allowLockRelaxation: input.allowLockRelaxation === true,
+        staticOnly: false,
+      });
+      if (abnormal.recoveredAssignments?.length) {
+        const recovered = processVerifiedCandidate({
+          request: prepared.request,
+          authored: prepared.authored,
+          productResult: "FEASIBLE",
+          childAssignments: abnormal.recoveredAssignments,
+          governedAuthorityCurrent: input.governedAuthorityCurrent !== false,
+        });
+        if (recovered.kind === "ready") {
+          const sealed = await sealAndSettleCandidate(client, {
+            runId: run.id,
+            leaseOwner: input.leaseOwner,
+            leaseEpoch,
+            request: prepared.request,
+            seal: recovered.seal,
+            indexMap: {
+              guests: prepared.request.guests.map((g) => ({ i: g.i, token: g.token })),
+              seats: prepared.request.seats.map((s) => ({ i: s.i, token: s.token })),
+              tables: prepared.request.tables.map((t) => ({ i: t.i, token: t.token })),
+            },
+          });
+          return {
+            runId: run.id,
+            outcome: sealed.settled ? "RECOVERED_FROM_INCONSISTENT_PROOF" : `SETTLE_FAILED:${sealed.reason ?? "unknown"}`,
+            settled: sealed.settled,
+            childInvocations,
+          };
+        }
+      }
+      const settled = await settleFaultOrTerminal(client, {
+        runId: run.id,
+        leaseOwner: input.leaseOwner,
+        leaseEpoch,
+        lifecycle: abnormal.lifecycle,
+        productResult: abnormal.productResult,
+        faultCode: abnormal.faultCode,
+        stopReason: abnormal.stopReason,
+        evidenceGrade: abnormal.evidenceGrade,
+      });
+      return { runId: run.id, outcome: abnormal.productResult, settled: settled.settled, childInvocations };
+    }
+
     const processed = processVerifiedCandidate({
       request: prepared.request,
       authored: prepared.authored,
@@ -310,6 +549,9 @@ export async function executeClaimedCpsatRun(
       governedAuthorityCurrent: input.governedAuthorityCurrent !== false,
     });
     if (processed.kind === "terminal") {
+      // Never upgrade SEARCH_INCOMPLETE / TIMED_OUT to INFEASIBLE.
+      const evidenceGrade =
+        processed.productResult === "INFEASIBLE" ? null : processed.evidenceGrade;
       const settled = await settleFaultOrTerminal(client, {
         runId: run.id,
         leaseOwner: input.leaseOwner,
@@ -318,7 +560,7 @@ export async function executeClaimedCpsatRun(
         productResult: processed.productResult,
         faultCode: processed.faultCode,
         stopReason: processed.stopReason,
-        evidenceGrade: processed.evidenceGrade,
+        evidenceGrade,
       });
       return { runId: run.id, outcome: processed.productResult, settled: settled.settled, childInvocations };
     }
@@ -394,4 +636,13 @@ export async function executeClaimedCpsatRun(
     childInvocations,
     detail: sealed.reason,
   };
+}
+
+async function insertStopIncumbentIncident(client: PgQueryable, runId: string, detail: string): Promise<void> {
+  const { insertCpsatIncident } = await import("./diagnostics/persist.js");
+  await insertCpsatIncident(client, {
+    runId,
+    kind: "STOPPED_INCUMBENT_VERIFICATION_FAILURE",
+    detail: { fault: detail },
+  });
 }

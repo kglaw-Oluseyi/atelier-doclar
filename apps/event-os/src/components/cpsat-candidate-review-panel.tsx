@@ -126,6 +126,28 @@ export function CpsatCandidateReviewPanel({
         </ul>
       </section>
 
+      {showMutationControls ? (
+        <section
+          aria-labelledby="cpsat-why-not-heading"
+          data-testid="cpsat-counterfactual-panel"
+          className="cpsat-diag-panel"
+        >
+          <h4 id="cpsat-why-not-heading">Why not this table?</h4>
+          <p style={{ marginTop: 0 }}>
+            Ask why a guest was not placed at a selected table. The answer is diagnostic only — it never changes this
+            sealed candidate or governed rules.
+          </p>
+          <p data-testid="cpsat-counterfactual-states" style={{ fontSize: "0.9rem" }}>
+            Possible outcomes: prohibited by a visible mandatory rule; prohibited by a restricted mandatory rule;
+            would make complete seating impossible; feasible with tier deltas; search incomplete; candidate stale.
+          </p>
+        </section>
+      ) : (
+        <p data-testid="cpsat-counterfactual-auditor-blocked" style={{ fontSize: "0.9rem" }}>
+          Counterfactual diagnostics are not available for read-only auditor roles.
+        </p>
+      )}
+
       <section aria-labelledby="cpsat-review-tables-heading" data-testid="cpsat-review-tables">
         <h4 id="cpsat-review-tables-heading">Table review</h4>
         <div className="cpsat-scroll-table" tabIndex={0} role="region" aria-label="Tables">

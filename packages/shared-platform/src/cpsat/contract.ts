@@ -22,6 +22,54 @@ export const CPSAT_PRODUCT_RESULTS = [
 
 export type CpsatProductResult = (typeof CPSAT_PRODUCT_RESULTS)[number];
 
+/** Truthful evidence grades for abnormal / infeasible results. */
+export const CPSAT_EVIDENCE_GRADES = [
+  "CERTIFIED",
+  "SOLVER_PROOF",
+  "DIAGNOSTIC",
+  "OPTIMAL_PROOF",
+  "FEASIBLE_VERIFIED",
+  "PROOF",
+] as const;
+export type CpsatEvidenceGrade = (typeof CPSAT_EVIDENCE_GRADES)[number];
+
+export const CPSAT_CERTIFICATE_TYPES = [
+  "EMPTY_DOMAIN",
+  "LOCKS_SPLIT_UNIT",
+  "APART_WITHIN_UNIT",
+  "TOTAL_CAPACITY",
+  "HALL_VIOLATION",
+  "APART_PIGEONHOLE",
+] as const;
+export type CpsatCertificateType = (typeof CPSAT_CERTIFICATE_TYPES)[number];
+
+export const CPSAT_DIAGNOSTIC_LAYERS = [
+  "L0",
+  "L1",
+  "L1P",
+  "L2",
+  "L3",
+  "L4_CORE",
+  "L4_MCS",
+  "L4_MAXSEAT",
+] as const;
+export type CpsatDiagnosticLayer = (typeof CPSAT_DIAGNOSTIC_LAYERS)[number];
+
+export const CPSAT_STOP_MODES = ["CANCEL", "KEEP_BEST"] as const;
+export type CpsatStopMode = (typeof CPSAT_STOP_MODES)[number];
+
+export const CPSAT_COUNTERFACTUAL_RESULT_CODES = [
+  "PROHIBITED_VISIBLE_RULE",
+  "PROHIBITED_RESTRICTED_RULE",
+  "COMPLETE_SEATING_IMPOSSIBLE",
+  "FEASIBLE_WITH_TIER_DELTAS",
+  "SEARCH_INCOMPLETE",
+  "CANDIDATE_STALE",
+] as const;
+export type CpsatCounterfactualResultCode = (typeof CPSAT_COUNTERFACTUAL_RESULT_CODES)[number];
+
+export const CPSAT_DIAGNOSTIC_BUDGET_EDITION = "cpsat-diag-budget-v1" as const;
+
 export const CPSAT_PREFERENCE_BANDS = {
   LOW: 1,
   MEDIUM: 3,

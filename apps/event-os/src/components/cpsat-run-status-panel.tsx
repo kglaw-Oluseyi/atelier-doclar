@@ -1,26 +1,42 @@
 "use client";
 
 import type { CpsatRunUiModel } from "@maison-doclar/shared-platform";
+import {
+  cancelConfirmCopy,
+  keepBestConfirmCopy,
+} from "@maison-doclar/shared-platform";
 
 /**
- * CP-SAT run status panel — durable lifecycle (Milestone 2).
- * Forbidden: percent meters, ETA to optimality, "almost done", "best possible" without OPTIMAL,
+ * CP-SAT run status panel — durable lifecycle (Milestone 2+) + stop-keep-best (Milestone 4).
+ * Forbidden: percent meters, ETA to optimality, false impossibility claims, "best possible" without OPTIMAL,
  * and offering the retired seating engine as an alternative.
  */
 export function CpsatRunStatusPanel({
   model,
   shortReasons,
   onCancel,
+  onStopKeepBest,
   cancelDisabled,
   launching,
   onReview,
+  infeasibility,
+  auditorReadOnly,
 }: {
   model: CpsatRunUiModel;
   shortReasons?: Array<{ guestToken: string; text: string }>;
   onCancel?: () => void;
+  onStopKeepBest?: () => void;
   cancelDisabled?: boolean;
   launching?: boolean;
   onReview?: () => void;
+  infeasibility?: {
+    whatConflicts?: string;
+    plainExplanation?: string;
+    correctionOptions?: Array<{ ruleRef: string; kind: string; restricted: boolean }>;
+    maximumSeating?: string | null;
+    limitations?: string[];
+  } | null;
+  auditorReadOnly?: boolean;
 }) {
   const lifecycleLabel =
     model.operatorLifecycle === "CANCELLATION_REQUESTED"
@@ -60,6 +76,8 @@ export function CpsatRunStatusPanel({
     model.operatorLifecycle === "INVALID_INPUT" ||
     model.operatorLifecycle === "SOLVER_FAULT" ||
     model.operatorLifecycle === "CANCELLED";
+
+  const showMutationControls = !auditorReadOnly;
 
   return (
     <section
@@ -182,7 +200,6 @@ export function CpsatRunStatusPanel({
           </>
         ) : null}
       </dl>
-      {/* showPercentComplete is always false — no fake completion meter */}
       {model.showPercentComplete ? null : null}
       {model.showHeuristicFallback ? null : null}
       <p style={{ margin: 0, fontSize: "0.9rem" }} data-testid="cpsat-run-leave-return">
@@ -190,6 +207,50 @@ export function CpsatRunStatusPanel({
           ? "Safe to leave and return — this run is durable in PostgreSQL."
           : "Remain on this page until the run settles."}
       </p>
+
+      {model.operatorLifecycle === "INFEASIBLE" && infeasibility ? (
+        <section data-testid="cpsat-infeasibility-panel" className="cpsat-diag-panel" style={{ display: "grid", gap: "0.5rem" }}>
+          <h3 style={{ fontSize: "1rem", margin: 0 }}>Conflict guidance</h3>
+          {infeasibility.whatConflicts ? (
+            <p data-testid="cpsat-conflict-what" style={{ margin: 0 }}>
+              {infeasibility.whatConflicts}
+            </p>
+          ) : null}
+          {infeasibility.plainExplanation ? (
+            <p data-testid="cpsat-conflict-plain" style={{ margin: 0 }}>
+              {infeasibility.plainExplanation}
+            </p>
+          ) : null}
+          {infeasibility.correctionOptions && infeasibility.correctionOptions.length > 0 ? (
+            <div data-testid="cpsat-correction-options">
+              <h4 style={{ fontSize: "0.95rem", margin: "0 0 0.25rem" }}>Correction options</h4>
+              <ul style={{ margin: 0, paddingLeft: "1.25rem" }}>
+                {infeasibility.correctionOptions.map((opt) => (
+                  <li key={opt.ruleRef}>
+                    {opt.restricted ? "Restricted rule" : opt.kind} ({opt.ruleRef}…)
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {infeasibility.maximumSeating ? (
+            <p data-testid="cpsat-maxseat" style={{ margin: 0 }}>
+              {infeasibility.maximumSeating}
+            </p>
+          ) : null}
+          {infeasibility.limitations && infeasibility.limitations.length > 0 ? (
+            <ul data-testid="cpsat-diag-limitations" style={{ margin: 0, paddingLeft: "1.25rem" }}>
+              {infeasibility.limitations.map((l) => (
+                <li key={l}>{l}</li>
+              ))}
+            </ul>
+          ) : null}
+          <p style={{ margin: 0, fontSize: "0.9rem" }}>
+            No automatic relaxation. No heuristic fallback. Start a new run after an authorised change.
+          </p>
+        </section>
+      ) : null}
+
       {model.operatorLifecycle === "READY_FOR_REVIEW" && model.reviewActionLabel ? (
         <button
           type="button"
@@ -201,22 +262,44 @@ export function CpsatRunStatusPanel({
           {model.reviewActionLabel}
         </button>
       ) : null}
-      {model.cancelAllowed && onCancel && !model.cancelRequested ? (
+      {showMutationControls && model.cancelAllowed && onCancel && !model.cancelRequested ? (
         <button
           type="button"
           className="button secondary cpsat-interactive"
           data-testid="cpsat-cancel-run"
           disabled={cancelDisabled || launching}
           aria-disabled={cancelDisabled || launching}
-          onClick={onCancel}
+          title={cancelConfirmCopy()}
+          onClick={() => {
+            if (typeof window !== "undefined" && !window.confirm(cancelConfirmCopy())) return;
+            onCancel();
+          }}
           style={{ cursor: cancelDisabled || launching ? "not-allowed" : "pointer" }}
         >
           Cancel run
         </button>
       ) : null}
+      {showMutationControls && model.stopAndKeepBestAllowed && onStopKeepBest && !model.cancelRequested ? (
+        <button
+          type="button"
+          className="button secondary cpsat-interactive"
+          data-testid="cpsat-stop-keep-best"
+          disabled={cancelDisabled || launching}
+          title={keepBestConfirmCopy()}
+          onClick={() => {
+            if (typeof window !== "undefined" && !window.confirm(keepBestConfirmCopy())) return;
+            onStopKeepBest();
+          }}
+          style={{ cursor: cancelDisabled || launching ? "not-allowed" : "pointer" }}
+        >
+          Stop and keep best plan
+        </button>
+      ) : null}
       {model.cancelRequested && model.operatorLifecycle !== "CANCELLED" ? (
         <p data-testid="cpsat-cancel-requested" style={{ margin: 0, fontSize: "0.9rem" }}>
-          Cancellation request is recorded. Do not treat the run as cancelled until the worker acknowledges it.
+          {model.primaryMessage.includes("Stopping safely")
+            ? model.primaryMessage
+            : "Cancellation request is recorded. Do not treat the run as cancelled until the worker acknowledges it."}
         </p>
       ) : null}
       {shortReasons && shortReasons.length > 0 ? (
@@ -235,6 +318,7 @@ export function CpsatRunStatusPanel({
       <style>{`
         @media (max-width: 390px) {
           .cpsat-run-status dl { grid-template-columns: 1fr; }
+          .cpsat-diag-panel { max-width: 100%; }
         }
         @media (min-width: 768px) {
           .cpsat-run-status { max-width: 48rem; }

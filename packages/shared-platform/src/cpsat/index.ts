@@ -10,9 +10,17 @@ export {
   CPSAT_PREFERENCE_BANDS,
   CPSAT_SHORT_REASON_CODES,
   CPSAT_SHORT_REASON_TEXT,
+  CPSAT_EVIDENCE_GRADES,
+  CPSAT_CERTIFICATE_TYPES,
+  CPSAT_STOP_MODES,
+  CPSAT_DIAGNOSTIC_BUDGET_EDITION,
   type CpsatProductResult,
   type CpsatPreferenceBand,
   type CpsatShortReasonCode,
+  type CpsatEvidenceGrade,
+  type CpsatCertificateType,
+  type CpsatStopMode,
+  type CpsatCounterfactualResultCode,
 } from "./contract.js";
 export { buildTogetherUnits, compileV2ToCpsatRequest, type CpsatSolveRequest } from "./compiler.js";
 export { solveSeatingV2CompiledCpSat, type CpsatLocalSolveResult } from "./local-solve.js";
@@ -22,10 +30,12 @@ export {
   EOS_S06_CPSAT_SOLVER_QUEUE_LAUNCH_MIGRATION_ID,
   EOS_S06_CPSAT_SOLVER_QUEUE_WORKER_MIGRATION_ID,
   EOS_S06_CPSAT_SOLVER_REVIEW_ADOPTION_MIGRATION_ID,
+  EOS_S06_CPSAT_SOLVER_DIAGNOSTICS_MIGRATION_ID,
   CPSAT_SOLVER_QUEUE_POSTGRES_SCHEMA,
   CPSAT_SOLVER_QUEUE_LAUNCH_POSTGRES_SCHEMA,
   CPSAT_SOLVER_QUEUE_WORKER_POSTGRES_SCHEMA,
   CPSAT_SOLVER_REVIEW_ADOPTION_POSTGRES_SCHEMA,
+  CPSAT_SOLVER_DIAGNOSTICS_POSTGRES_SCHEMA,
 } from "./postgres-schema.js";
 export {
   CPSAT_CLAIM_SQL,
@@ -116,3 +126,41 @@ export {
   CpsatSeedError,
   type CpsatSeedConversion,
 } from "./seed.js";
+export {
+  detectStaticCertificates,
+  recheckStaticCertificate,
+  certifyOrFault,
+  type StaticCertificate,
+} from "./diagnostics/certificates.js";
+export {
+  runDiagCore,
+  runDiagMcs,
+  runDiagMaxSeat,
+  maxSeatOperatorWording,
+  listRelaxableRules,
+  type FeasibilityProbe,
+  type CoreDiagnosticResult,
+  type McsDiagnosticResult,
+  type MaxSeatDiagnosticResult,
+} from "./diagnostics/models.js";
+export { confirmFullModelInfeasibility, isDiagnosticOrRestrictedPurpose } from "./diagnostics/confirmation.js";
+export {
+  executeCounterfactualWhyNot,
+  redactCounterfactualForRole,
+  counterfactualCacheKey,
+} from "./diagnostics/counterfactual.js";
+export { requestCpsatRunStop, recordIncumbentProgress, observeStopRequest } from "./diagnostics/stop-modes.js";
+export {
+  buildInfeasibilityExperience,
+  keepBestSuccessCopy,
+  stoppingSafelyCopy,
+  cancelConfirmCopy,
+  keepBestConfirmCopy,
+} from "./diagnostics/experience.js";
+export { settleAbnormalInfeasibility } from "./diagnostics/pipeline.js";
+export {
+  insertCpsatIncident,
+  upsertInfeasibilityEvidence,
+  loadInfeasibilityEvidence,
+  persistCertifiedCertificate,
+} from "./diagnostics/persist.js";

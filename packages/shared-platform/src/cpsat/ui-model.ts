@@ -152,9 +152,13 @@ export function buildCpsatRunUiModel(input: {
   completedAt?: string | null;
   cancelRequested?: boolean;
   hasCompleteIncumbent?: boolean;
+  solutionsFound?: number;
+  stopMode?: string | null;
+  diagnosticOnly?: boolean;
   operatorLifecycle?: CpsatOperatorLifecycle;
   validationMessage?: string | null;
   assignmentHash?: string | null;
+  stopReason?: string | null;
 }): CpsatRunUiModel {
   const tiers = input.tiers ?? [];
   const allProven = tiers.length > 0 && tiers.every((t) => t.proven);
@@ -167,6 +171,8 @@ export function buildCpsatRunUiModel(input: {
   const isInfeasible = productResult === "INFEASIBLE";
   const seated = input.seated ?? 0;
   const eligible = input.eligible ?? 0;
+  const solutionsFound = input.solutionsFound ?? (input.hasCompleteIncumbent || input.firstSolutionFound ? 1 : 0);
+  const diagnosticOnly = Boolean(input.diagnosticOnly);
 
   const operatorLifecycle = deriveOperatorLifecycle({
     lifecycle,
@@ -175,6 +181,18 @@ export function buildCpsatRunUiModel(input: {
     phase: input.phase,
     operatorLifecycle: input.operatorLifecycle,
   });
+
+  // Operator stop-in-progress messaging
+  if (
+    cancelRequested &&
+    input.stopMode === "KEEP_BEST" &&
+    (operatorLifecycle === "RUNNING" ||
+      operatorLifecycle === "CLAIMED" ||
+      operatorLifecycle === "CANCELLATION_REQUESTED" ||
+      operatorLifecycle === "VERIFYING")
+  ) {
+    // fall through — primary overwritten below after switch
+  }
 
   let primaryMessage = "";
   let supportingMessage = "";
@@ -247,17 +265,25 @@ export function buildCpsatRunUiModel(input: {
       retrySafe = true;
       break;
     case "INFEASIBLE":
-      primaryMessage = "No complete seating satisfies the mandatory rules";
-      supportingMessage = "This is a solver proof of impossibility — not a temporary search failure.";
+      primaryMessage =
+        input.evidenceGrade === "CERTIFIED"
+          ? "No complete plan is possible with the current rules and layout. The conflict is shown below."
+          : "No complete plan is possible with the current rules and layout. The specific conflict could not be isolated.";
+      supportingMessage =
+        input.evidenceGrade === "CERTIFIED"
+          ? "Evidence grade: CERTIFIED."
+          : "Evidence grade: SOLVER_PROOF — not a temporary search failure.";
       retrySafe = false;
       break;
     case "SEARCH_INCOMPLETE":
-      primaryMessage = "Search finished without a complete plan";
+      primaryMessage =
+        "No complete plan was found within the search allowance. This does not mean one is impossible.";
       supportingMessage = "This is not a proof of impossibility. Retrying with the same authority may help.";
       retrySafe = true;
       break;
     case "TIMED_OUT":
-      primaryMessage = "Seating run stopped on the safety time limit";
+      primaryMessage =
+        "The run reached its time limit without a complete plan. This does not mean one is impossible.";
       supportingMessage = "No plan was sealed. Retry is safe with the same governed authority.";
       retrySafe = true;
       break;
@@ -297,7 +323,32 @@ export function buildCpsatRunUiModel(input: {
     supportingMessage = `${supportingMessage} Authority is now stale; the sealed result status remains ${productResult || "unchanged"}.`;
   }
 
+  if (
+    cancelRequested &&
+    input.stopMode === "KEEP_BEST" &&
+    operatorLifecycle !== "READY_FOR_REVIEW" &&
+    operatorLifecycle !== "CANCELLED" &&
+    operatorLifecycle !== "INFEASIBLE"
+  ) {
+    primaryMessage = "Stopping safely and checking the best complete plan…";
+    supportingMessage = "The best complete incumbent will be independently verified before review.";
+  }
+
+  if (operatorLifecycle === "READY_FOR_REVIEW" && input.stopReason === "OPERATOR_STOP") {
+    primaryMessage =
+      "Complete plan ready for review. Every guest is seated and every mandatory rule is met. The search stopped before proving that no better arrangement exists.";
+    supportingMessage = "Replay optimality is not claimed.";
+  }
+
   const assignmentHashShort = input.assignmentHash ? input.assignmentHash.slice(0, 12) : null;
+  const stopAndKeepBestAllowed =
+    !diagnosticOnly &&
+    !cancelRequested &&
+    solutionsFound > 0 &&
+    (operatorLifecycle === "RUNNING" ||
+      operatorLifecycle === "CLAIMED" ||
+      operatorLifecycle === "VERIFYING" ||
+      operatorLifecycle === "EXPLAINING");
 
   return {
     engineLabel: `OR-Tools CP-SAT ${CPSAT_ORTOOLS_VERSION} · Python ${CPSAT_PYTHON_VERSION}`,
@@ -326,13 +377,14 @@ export function buildCpsatRunUiModel(input: {
     faultCode: input.faultCode ?? null,
     safeToLeaveAndReturn: true,
     cancelAllowed:
-      operatorLifecycle === "QUEUED" ||
-      operatorLifecycle === "CLAIMED" ||
-      operatorLifecycle === "RUNNING" ||
-      operatorLifecycle === "VERIFYING" ||
-      operatorLifecycle === "EXPLAINING" ||
-      (!cancelRequested && lifecycle === "QUEUED"),
-    stopAndKeepBestAllowed: false,
+      !cancelRequested &&
+      (operatorLifecycle === "QUEUED" ||
+        operatorLifecycle === "CLAIMED" ||
+        operatorLifecycle === "RUNNING" ||
+        operatorLifecycle === "VERIFYING" ||
+        operatorLifecycle === "EXPLAINING" ||
+        lifecycle === "QUEUED"),
+    stopAndKeepBestAllowed,
     retrySafe,
     assignmentHashShort,
     reviewActionLabel,
@@ -360,7 +412,7 @@ export function productResultCopy(result: string, proofStatus: CpsatRunUiModel["
     case "FEASIBLE":
       return "Feasible plan found — optimisation proof incomplete";
     case "INFEASIBLE":
-      return "Infeasible — solver proof that no complete seating satisfies HARD rules";
+      return "Infeasible — no complete seating satisfies HARD rules";
     case "SEARCH_INCOMPLETE":
       return "Search incomplete under deterministic budget";
     case "TIMED_OUT":

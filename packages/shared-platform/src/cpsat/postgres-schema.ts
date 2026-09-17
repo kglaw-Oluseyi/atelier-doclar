@@ -6,6 +6,7 @@ export const EOS_S06_CPSAT_SOLVER_QUEUE_MIGRATION_ID = "011_cpsat_solver_queue" 
 export const EOS_S06_CPSAT_SOLVER_QUEUE_LAUNCH_MIGRATION_ID = "012_cpsat_solver_queue_launch" as const;
 export const EOS_S06_CPSAT_SOLVER_QUEUE_WORKER_MIGRATION_ID = "013_cpsat_solver_queue_worker" as const;
 export const EOS_S06_CPSAT_SOLVER_REVIEW_ADOPTION_MIGRATION_ID = "014_cpsat_solver_review_adoption" as const;
+export const EOS_S06_CPSAT_SOLVER_DIAGNOSTICS_MIGRATION_ID = "015_cpsat_solver_diagnostics" as const;
 
 export const CPSAT_SOLVER_QUEUE_POSTGRES_SCHEMA = `
 CREATE TABLE IF NOT EXISTS cpsat_solver_runs (
@@ -222,4 +223,92 @@ ALTER TABLE cpsat_solver_adoptions
 
 CREATE INDEX IF NOT EXISTS cpsat_solver_adoptions_event_idx
   ON cpsat_solver_adoptions (event_id, adopted_at DESC);
+`;
+
+/**
+ * Milestone 4 — stop modes, progress observability, infeasibility evidence,
+ * confirmation re-solve, and counterfactual persistence.
+ * Additive only; never rewrite 011–014.
+ */
+export const CPSAT_SOLVER_DIAGNOSTICS_POSTGRES_SCHEMA = `
+ALTER TABLE cpsat_solver_runs
+  ADD COLUMN IF NOT EXISTS stop_mode TEXT,
+  ADD COLUMN IF NOT EXISTS stop_requested_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS stop_observed_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS incumbent_present BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS solutions_found INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS current_tier TEXT,
+  ADD COLUMN IF NOT EXISTS best_objective_value BIGINT,
+  ADD COLUMN IF NOT EXISTS best_objective_bound BIGINT,
+  ADD COLUMN IF NOT EXISTS objective_gap BIGINT,
+  ADD COLUMN IF NOT EXISTS deterministic_ms_used BIGINT,
+  ADD COLUMN IF NOT EXISTS wall_ms_used BIGINT,
+  ADD COLUMN IF NOT EXISTS diagnostic_phase TEXT,
+  ADD COLUMN IF NOT EXISTS confirmation_seed BIGINT,
+  ADD COLUMN IF NOT EXISTS confirmation_request_hash TEXT,
+  ADD COLUMN IF NOT EXISTS confirmation_response_hash TEXT,
+  ADD COLUMN IF NOT EXISTS confirmation_result TEXT,
+  ADD COLUMN IF NOT EXISTS parent_run_id TEXT,
+  ADD COLUMN IF NOT EXISTS diagnostic_class TEXT,
+  ADD COLUMN IF NOT EXISTS diagnostic_only BOOLEAN NOT NULL DEFAULT FALSE;
+
+ALTER TABLE cpsat_solver_infeasibility
+  ADD COLUMN IF NOT EXISTS layer TEXT,
+  ADD COLUMN IF NOT EXISTS certificate_type_v2 TEXT,
+  ADD COLUMN IF NOT EXISTS evidence_grade TEXT,
+  ADD COLUMN IF NOT EXISTS certificate_payload JSONB,
+  ADD COLUMN IF NOT EXISTS typescript_check TEXT,
+  ADD COLUMN IF NOT EXISTS confirmation_seed BIGINT,
+  ADD COLUMN IF NOT EXISTS confirmation_result TEXT,
+  ADD COLUMN IF NOT EXISTS core_rule_refs JSONB,
+  ADD COLUMN IF NOT EXISTS core_minimality TEXT,
+  ADD COLUMN IF NOT EXISTS correction_rule_refs JSONB,
+  ADD COLUMN IF NOT EXISTS correction_optimality TEXT,
+  ADD COLUMN IF NOT EXISTS max_seat_count INTEGER,
+  ADD COLUMN IF NOT EXISTS eligible_total INTEGER,
+  ADD COLUMN IF NOT EXISTS diagnostic_assignment_hash TEXT,
+  ADD COLUMN IF NOT EXISTS diagnostic_only BOOLEAN NOT NULL DEFAULT TRUE,
+  ADD COLUMN IF NOT EXISTS budget_exhausted BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS unseated_unit_refs JSONB,
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ;
+
+CREATE TABLE IF NOT EXISTS cpsat_solver_counterfactuals (
+  id TEXT PRIMARY KEY,
+  run_id TEXT NOT NULL REFERENCES cpsat_solver_runs(id),
+  candidate_id TEXT NOT NULL,
+  event_id TEXT NOT NULL,
+  organisation_id TEXT NOT NULL,
+  guest_token TEXT NOT NULL,
+  unit_ref TEXT,
+  table_token TEXT NOT NULL,
+  actor_person_id TEXT NOT NULL,
+  actor_role TEXT NOT NULL,
+  result_code TEXT NOT NULL,
+  tier_deltas JSONB,
+  conflict_refs JSONB,
+  authority_layout_hash TEXT NOT NULL,
+  authority_rules_hash TEXT NOT NULL,
+  authority_guest_hash TEXT NOT NULL,
+  authority_objective_hash TEXT NOT NULL,
+  candidate_assignment_hash TEXT NOT NULL,
+  engine_build TEXT NOT NULL,
+  diagnostic_budget_edition TEXT NOT NULL,
+  cache_key TEXT NOT NULL,
+  request_hash TEXT,
+  response_hash TEXT,
+  stale BOOLEAN NOT NULL DEFAULT FALSE,
+  expires_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL,
+  diagnostic_only BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS cpsat_solver_counterfactuals_cache_uidx
+  ON cpsat_solver_counterfactuals (cache_key);
+
+CREATE INDEX IF NOT EXISTS cpsat_solver_counterfactuals_run_idx
+  ON cpsat_solver_counterfactuals (run_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS cpsat_solver_runs_stop_mode_idx
+  ON cpsat_solver_runs (status, stop_mode)
+  WHERE stop_mode IS NOT NULL;
 `;
