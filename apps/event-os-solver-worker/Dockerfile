@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
-# event-os-solver-worker — Milestone 5/5A hardened production image
-# No public domain, no listening port instruction, non-root, hash-pinned OR-Tools, no test fixtures.
+# event-os-solver-worker — Milestone 5/5A/5C hardened production image
+# Debian 13 Trixie base; no public domain; no listening port; non-root; hash-pinned OR-Tools; no test fixtures.
 #
 # Build from a clean worktree of the implementation commit (repository root):
 #   docker build --platform linux/amd64 \
@@ -11,7 +11,9 @@
 #     -t event-os-solver-worker:candidate-<shortSHA> \
 #     apps/event-os-solver-worker
 
-ARG PYTHON_IMAGE=python:3.12.14-slim-bookworm@sha256:9c47360a2a0355e2da18516d0b1c2126ec22c195d2185e97347c9d98398c5bef
+# Milestone 5C — Debian 13 Trixie base (digest-pinned linux/amd64 manifest).
+# Keeps Python 3.12.14; Node 20.19.0 and OR-Tools 9.15.6755 unchanged.
+ARG PYTHON_IMAGE=python:3.12.14-slim-trixie@sha256:2fe5997d249a808b8eeea52c58a1dbffbba28754dc11699ef5c029f2d818ce79
 ARG NODE_VERSION=20.19.0
 ARG NODE_TARBALL_SHA256=b4e336584d62abefad31baecff7af167268be9bb7dd11f1297112e6eed3ca0d5
 
