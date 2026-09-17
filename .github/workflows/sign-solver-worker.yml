@@ -1,27 +1,30 @@
 name: sign-solver-worker
 
-# Milestone 6A: sign an already-published GHCR digest only.
-# Must not build, rebuild, or push image layers.
+# M6A supply-chain proof: keyless-sign an already-published GHCR digest.
+# Must never build, rebuild, retag latest, or use interactive Cosign auth.
 
 on:
   workflow_dispatch:
     inputs:
       image:
-        description: GHCR image reference without digest
+        description: GHCR repository (no digest)
         required: true
         default: ghcr.io/kglaw-oluseyi/atelier-doclar-solver-worker
       digest:
-        description: Registry manifest digest (sha256:...)
+        description: Authoritative registry manifest digest (sha256:...)
         required: true
+        default: sha256:a41f51937a653ed4653bbc687addb3a8f2603799accfec8c0dac0f09aef86e92
       expected_revision:
         description: Exact org.opencontainers.image.revision label
         required: true
         default: bbec476f0ca9959d7145853fc45461d10879fc01
 
+# packages:write is required for Cosign to attach signature OCI artifacts to GHCR.
+# contents:read + id-token:write enable OIDC keyless signing without secrets.
 permissions:
-  id-token: write
-  packages: write
   contents: read
+  packages: write
+  id-token: write
 
 jobs:
   sign:
@@ -41,7 +44,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Verify published digest and revision label
+      - name: Verify digest exists and revision label
         env:
           IMAGE: ${{ inputs.image }}
           DIGEST: ${{ inputs.digest }}
@@ -54,14 +57,17 @@ jobs:
           esac
           REF="${IMAGE}@${DIGEST}"
           echo "Verifying ${REF}"
-          crane manifest "$REF" >/tmp/manifest.json
+          if ! crane manifest "$REF" >/tmp/manifest.json; then
+            echo "DIGEST_NOT_FOUND: ${REF}"
+            exit 1
+          fi
           python3 - <<'PY'
           import json, os, subprocess, sys
           image = os.environ["IMAGE"]
           expected = os.environ["EXPECTED_REVISION"]
+          digest = os.environ["DIGEST"]
           manifest = json.load(open("/tmp/manifest.json"))
           mt = manifest.get("mediaType", "")
-          config_ref = None
           if "index" in mt or "manifest.list" in mt:
               amd = None
               for m in manifest.get("manifests") or []:
@@ -72,28 +78,25 @@ jobs:
               if not amd:
                   print("no linux/amd64 platform in index", file=sys.stderr)
                   sys.exit(1)
-              child = amd["digest"]
-              print(f"index contains linux/amd64 child {child}")
-              config_ref = f"{image}@{child}"
+              config_ref = f"{image}@{amd['digest']}"
+              print(f"index={digest} linux/amd64_child={amd['digest']}")
           else:
-              config_ref = f"{image}@{os.environ['DIGEST']}"
+              config_ref = f"{image}@{digest}"
           cfg = json.loads(subprocess.check_output(["crane", "config", config_ref], text=True))
           labels = (cfg.get("config") or {}).get("Labels") or {}
           rev = labels.get("org.opencontainers.image.revision")
-          arch = cfg.get("architecture")
-          os_name = cfg.get("os")
-          print(f"os/arch={os_name}/{arch}")
+          print(f"os/arch={cfg.get('os')}/{cfg.get('architecture')}")
           print(f"revision={rev}")
           if rev != expected:
               print(f"revision mismatch: got {rev!r} expected {expected!r}", file=sys.stderr)
               sys.exit(1)
-          if os_name != "linux" or arch != "amd64":
-              print(f"platform mismatch: {os_name}/{arch}", file=sys.stderr)
+          if cfg.get("os") != "linux" or cfg.get("architecture") != "amd64":
+              print(f"platform mismatch: {cfg.get('os')}/{cfg.get('architecture')}", file=sys.stderr)
               sys.exit(1)
           print("DIGEST_IDENTITY_OK")
           PY
 
-      - name: Sign digest (keyless OIDC)
+      - name: Sign digest (Sigstore keyless OIDC)
         env:
           IMAGE: ${{ inputs.image }}
           DIGEST: ${{ inputs.digest }}
@@ -109,9 +112,23 @@ jobs:
         run: |
           set -euo pipefail
           REF="${IMAGE}@${DIGEST}"
+          IDENTITY_REGEXP="https://github.com/${{ github.repository }}/.github/workflows/sign-solver-worker.yml@.*"
+          ISSUER="https://token.actions.githubusercontent.com"
           cosign verify \
-            --certificate-identity-regexp "https://github.com/${{ github.repository }}/.github/workflows/sign-solver-worker.yml@.*" \
-            --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-            "$REF" | tee /tmp/cosign-verify.json
-          cosign tree "$REF" | tee /tmp/cosign-tree.txt
+            --certificate-identity-regexp "${IDENTITY_REGEXP}" \
+            --certificate-oidc-issuer "${ISSUER}" \
+            "$REF" | tee cosign-verify.json
+          cosign tree "$REF" | tee cosign-tree.txt
+          echo "expected_identity_regexp=${IDENTITY_REGEXP}" | tee cosign-identity.txt
+          echo "expected_issuer=${ISSUER}" | tee -a cosign-identity.txt
           echo "SIGNATURE_VERIFIED"
+
+      - name: Upload signature evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: m6a-signature-evidence
+          path: |
+            cosign-verify.json
+            cosign-tree.txt
+            cosign-identity.txt
+          if-no-files-found: error
