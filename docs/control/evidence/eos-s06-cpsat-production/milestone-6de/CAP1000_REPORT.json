@@ -1,0 +1,48 @@
+{
+  "scale": "CAP1000",
+  "disposition": "PASS",
+  "path": "durable-enqueue-frozen-B_TYPICAL",
+  "eventId": "add41e21-9618-44f9-896a-fecd54badca5",
+  "runId": "96aa065d-6318-44ea-87b0-60f33ada020b",
+  "corpusSeed": "eos-s06-cap-B-typical-1000-v2",
+  "corpusHash": "13125f90267e3a78207c02f292d3f948afe22b23e60b58b0ef474f5f2b3d0668",
+  "corpusLock": "13125f90267e3a78207c02f292d3f948afe22b23e60b58b0ef474f5f2b3d0668",
+  "typicalTargetMs": 30000,
+  "hardCeilingMs": 90000,
+  "wallStopLossMs": 90000,
+  "worker": {
+    "workerId": "worker:5ae954ed26b9:09cd436d",
+    "imageIdentity": "event-os-solver-worker:m6e-a2fix-737d932",
+    "qualifiedMaxGuests": 10000
+  },
+  "terminal": {
+    "status": "READY_FOR_REVIEW",
+    "productResult": "OPTIMAL",
+    "evidenceGrade": "OPTIMAL_PROOF",
+    "progressPhase": "sealed",
+    "faultCode": null,
+    "stopReason": "VERIFIED_SEALED",
+    "attemptCount": 1,
+    "childInvocationCount": 1,
+    "solutionsFound": 1
+  },
+  "correctness": {
+    "seated": 1000,
+    "uniqueGuests": 1000,
+    "uniquePositions": 1000,
+    "expectedSeated": 1000
+  },
+  "timings": {
+    "queueMs": 2838,
+    "solveWallMs": 4000,
+    "totalWallMs": 16873,
+    "withinTypicalTarget": true
+  },
+  "containment": {
+    "queueAndLeaseClear": true,
+    "notAdopted": true,
+    "baselineUnchanged": true
+  },
+  "note": "Product layout install on exact CAP1000 OOM'd locally; qualification uses locked corpus via durable worker enqueue (same CP-SAT child path).",
+  "at": "2026-09-17T19:47:16.371Z"
+}

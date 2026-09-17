@@ -1,0 +1,23 @@
+{"at":"2026-09-17T19:08:37.711Z","msg":"preflight OK corpus=13125f90267e worker=worker:5eb17996dfaa:de79e8f5","elapsedMs":940}
+{"at":"2026-09-17T19:08:38.848Z","msg":"admission OK","elapsedMs":2075}
+{"at":"2026-09-17T19:08:40.988Z","msg":"enqueued run=f421690b-d64e-453b-848b-05220459034f queueMs=2139","elapsedMs":4215}
+{"at":"2026-09-17T19:08:41.208Z","msg":"poll status=QUEUED phase=null product=-","elapsedMs":4434}
+{"at":"2026-09-17T19:08:43.430Z","msg":"poll status=QUEUED phase=null product=-","elapsedMs":6657}
+{"at":"2026-09-17T19:08:45.639Z","msg":"poll status=RUNNING phase=accepted product=-","elapsedMs":8866}
+{"at":"2026-09-17T19:08:47.869Z","msg":"poll status=RUNNING phase=search product=-","elapsedMs":11096}
+{"at":"2026-09-17T19:08:50.088Z","msg":"poll status=FAILED phase=fault product=SOLVER_FAULT","elapsedMs":13315}
+{"at":"2026-09-17T19:46:15Z","msg":"A2 polarity fix CAP1000 rerun start","image":"m6e-a2fix-737d932"}
+{"at":"2026-09-17T19:46:17.031Z","msg":"preflight OK corpus=13125f90267e worker=worker:5ae954ed26b9:09cd436d","elapsedMs":935}
+{"at":"2026-09-17T19:46:18.161Z","msg":"admission OK","elapsedMs":2061}
+{"at":"2026-09-17T19:46:19.711Z","msg":"enqueued run=f421690b-d64e-453b-848b-05220459034f queueMs=1549","elapsedMs":3611}
+{"at":"2026-09-17T19:46:19.933Z","msg":"poll status=FAILED phase=fault product=SOLVER_FAULT","elapsedMs":3834}
+{"at":"2026-09-17T19:46:58Z","msg":"A2 polarity fix CAP1000 fresh enqueue after idempotency release"}
+{"at":"2026-09-17T19:47:00.410Z","msg":"preflight OK corpus=13125f90267e worker=worker:5ae954ed26b9:09cd436d","elapsedMs":914}
+{"at":"2026-09-17T19:47:01.541Z","msg":"admission OK","elapsedMs":2043}
+{"at":"2026-09-17T19:47:04.380Z","msg":"enqueued run=96aa065d-6318-44ea-87b0-60f33ada020b queueMs=2838","elapsedMs":4881}
+{"at":"2026-09-17T19:47:04.591Z","msg":"poll status=QUEUED phase=null product=-","elapsedMs":5093}
+{"at":"2026-09-17T19:47:06.800Z","msg":"poll status=RUNNING phase=accepted product=-","elapsedMs":7302}
+{"at":"2026-09-17T19:47:09.021Z","msg":"poll status=RUNNING phase=search product=-","elapsedMs":9523}
+{"at":"2026-09-17T19:47:11.282Z","msg":"poll status=RUNNING phase=sealing candidate product=-","elapsedMs":11783}
+{"at":"2026-09-17T19:47:13.512Z","msg":"poll status=RUNNING phase=sealing candidate product=-","elapsedMs":14014}
+{"at":"2026-09-17T19:47:15.722Z","msg":"poll status=READY_FOR_REVIEW phase=sealed product=OPTIMAL","elapsedMs":16224}
