@@ -1,0 +1,13 @@
+uid=10001 user=solver
+os=Debian GNU/Linux 13 (trixie)
+Python 3.12.14
+v20.19.0
+ortools 9.15.6755
+ok_no_npm
+ok_no_npx
+ok_no_git
+ok_no_curl
+ok_no_wget
+ok_no_gcc
+ok_supervisor
+ok_child

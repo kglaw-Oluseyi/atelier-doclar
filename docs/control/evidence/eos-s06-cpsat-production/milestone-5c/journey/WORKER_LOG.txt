@@ -1,0 +1,2 @@
+{"service":"event-os-solver-worker","mode":"supervisor","ingress":"none","listenPort":null,"workerId":"m5c-candidate-worker","concurrency":1,"childScript":"/app/python/solver_child.py","python":"/usr/local/bin/python3","imageIdentity":"event-os-solver-worker:candidate-79bda9d","databaseHost":"m5c-pg:5432"}
+{"event":"job_finished","runId":"62a14523-6296-4d2a-8bcd-451f5621ebc9","workerId":"m5c-candidate-worker","outcome":"READY_FOR_REVIEW","settled":true,"childInvocations":1}

@@ -1,0 +1,4 @@
+      worker_id       | lifecycle
+----------------------+-----------
+ m5c-candidate-worker | DRAINING
+(1 row)
