@@ -1,0 +1,7 @@
+{"at":"2026-09-17T00:22:04.232Z","kind":"frame_roundtrip","ok":true,"bytes":74,"hash":"0841f81d06b541e269b45477e99499b20bd9b59421e7e2761d16322eb13780d6"}
+{"at":"2026-09-17T00:22:04.963Z","kind":"cold_child","elapsedMs":727,"exitCode":0,"finalOk":true,"result":"OPTIMAL","peakRssKbChild":{"peakRssKb":86672}}
+{"at":"2026-09-17T00:22:06.385Z","kind":"warm_child","samples":[280,281,282,289,289],"p50Ms":282,"maxMs":289}
+{"at":"2026-09-17T00:22:06.791Z","kind":"cancellation","elapsedMs":406,"exitCode":null,"signal":"SIGTERM","stoppedUnder2s":true}
+{"at":"2026-09-17T00:22:06.826Z","kind":"crash_containment","supervisorAlive":true,"childExit":99,"signal":null}
+{"at":"2026-09-17T00:22:06.831Z","kind":"supervisor_rss","rssKb":85712,"note":"supervisor process RSS during spike"}
+{"at":"2026-09-17T00:22:06.831Z","kind":"summary","python":"/Users/maisondoclar/Desktop/atelier-doclar/apps/event-os-solver-worker/.venv/bin/python","ortoolsPin":"9.15.6755","coldMs":727,"warmP50Ms":282,"cancelOk":true,"crashContained":true,"frameOk":true}

@@ -1,0 +1,15 @@
+# Production Python pins for event-os-solver-worker child.
+# Official Google OR-Tools CP-SAT only (Apache-2.0). No unofficial Node/WASM bindings.
+#
+# Pin: ortools==9.15.6755
+# Railway/linux x86_64 wheel (cp312):
+#   ortools-9.15.6755-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+#   sha256=033836c0eb33bc72697a299e0caedbb25fc9d1cee0b13832d69cb30405f57b3e
+# Local macOS arm64 wheel (cp312) used for Checkpoint 1 spike:
+#   ortools-9.15.6755-cp312-cp312-macosx_11_0_arm64.whl
+#   sha256=1e16686c2b457fa6242c474ab890ee1712347ab53678e0d2fab307ae03e97a4b
+#
+# Full transitive freeze is recorded in requirements.txt (spike venv).
+# Docker build installs ortools==9.15.6755 on python:3.12 slim.
+
+ortools==9.15.6755
