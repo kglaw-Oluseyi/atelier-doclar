@@ -1,0 +1,8 @@
+{"at":"2026-09-17T22:10:52.603Z","msg":"preflight OK seed=scale-2000 prefs=0 guests=2000 event=18d89806-b708-4459-827c-de544987d4a5 worker=worker:6515380f7ebc:1ec6b6ae","elapsedMs":1391}
+{"at":"2026-09-17T22:10:53.734Z","msg":"admission OK","elapsedMs":2521}
+{"at":"2026-09-17T22:10:59.706Z","msg":"enqueued run=1acbef3c-fe9e-4d02-9829-3a79fa964b0e application=APPLIED queueMs=5972","elapsedMs":8494}
+{"at":"2026-09-17T22:10:59.906Z","msg":"poll status=QUEUED phase=null product=-","elapsedMs":8694}
+{"at":"2026-09-17T22:11:03.145Z","msg":"poll status=RUNNING phase=accepted product=-","elapsedMs":11933}
+{"at":"2026-09-17T22:11:06.374Z","msg":"poll status=RUNNING phase=sealing candidate product=-","elapsedMs":15162}
+{"at":"2026-09-17T22:11:09.594Z","msg":"poll status=RUNNING phase=sealing candidate product=-","elapsedMs":18382}
+{"at":"2026-09-17T22:11:12.836Z","msg":"poll status=READY_FOR_REVIEW phase=sealed product=OPTIMAL","elapsedMs":21624}

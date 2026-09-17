@@ -1,21 +1,24 @@
 /**
- * M6E CAP2000 — newly authorised stress/containment qualify (post A2 polarity fix).
+ * M6E CAP2000 — frozen-worker stress/containment rerun.
  *
- * Corpus: deterministic qualification shard seed `scale-2000` (2000 guests / 200 tables).
- * No seating-capacity-2000-layout-fixture exists; product live-install only accepts
- * CAP600|CAP1000 — this script is the durable-enqueue bypass path.
+ * Same authorised scale-2000 corpus as CAP2000_REPORT.json
+ * (compiledRequestHash 2cc7617d… / configHash 7403c97b…).
+ * Zero preferences — does NOT exercise A2_preferences.
  *
- * Event/run are fresh for this authorised execution. Does NOT reuse inadmissible
- * prior run 384950a6-… / event 92909476-…. Does not adopt.
+ * Fresh event/run UUIDs. Does not overwrite CAP2000_REPORT.json.
+ * Does not reuse inadmissible 384950a6 / authorised 4c7c4f5e / event 22c2befc.
+ * Does not adopt.
  *
  * Usage:
  *   DATABASE_URL=postgresql://… \
- *     pnpm exec tsx apps/event-os/scripts/m6e-cap2000-worker-qualify.ts \
- *     --confirm-synthetic-qualification
+ *     pnpm --filter @maison-doclar/event-os exec tsx \
+ *       ../../apps/event-os/scripts/m6e-cap2000-worker-qualify.ts \
+ *       --confirm-synthetic-qualification
  */
 import { createHash, randomUUID } from "node:crypto";
 import { mkdirSync, writeFileSync, appendFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { performance } from "node:perf_hooks";
 import { Pool } from "pg";
 import {
@@ -25,17 +28,33 @@ import {
   exactHash,
   SEATING_V2_SOLVER_CONTRACT,
   SEATING_V2_SOLVER_VERSION,
+  requiredObjectiveTiers,
 } from "@maison-doclar/shared-platform";
+import { compileV2ToCpsatRequest } from "../../../packages/shared-platform/src/cpsat/compiler.ts";
 
-/** Fresh synthetic event id for this authorised CAP2000 run only (real UUID via randomUUID()). */
-const EVENT_ID = "22c2befc-f728-4e3b-bfb1-fc8820c72a3c";
-const ORG = "00000000-0000-4000-8000-000000000001";
-const BASELINE_ADOPTION = "3b771ad9-c4c9-401b-87df-0371f9eee840";
+/** Fresh synthetic event id for this frozen-worker CAP2000 rerun only. */
+const EVENT_ID = "18d89806-b708-4459-827c-de544987d4a5";
+/** Prior authorised CAP2000 — must remain untouched. */
+const PRIOR_AUTH_EVENT = "22c2befc-f728-4e3b-bfb1-fc8820c72a3c";
+const PRIOR_AUTH_RUN = "4c7c4f5e-576e-40a0-85c4-d6831cc79d3d";
 /** Permanently inadmissible prior session run — must never be reused. */
 const INADMISSIBLE_PRIOR_RUN = "384950a6-a49d-4321-803b-346f0d65c061";
 const INADMISSIBLE_PRIOR_EVENT = "92909476-d3f9-43f1-a5f7-7e1a83c92fbd";
+const ORG = "00000000-0000-4000-8000-000000000001";
+const BASELINE_ADOPTION = "3b771ad9-c4c9-401b-87df-0371f9eee840";
 const CORPUS_SEED = "scale-2000";
-const EVIDENCE = join(process.cwd(), "../../docs/control/evidence/eos-s06-cpsat-production/milestone-6de");
+const AUTHORISED_COMPILED_HASH = "2cc7617db7c62fd6d042500e2040cef07ec48b5dea87a12388180f20d0d5ad11";
+const AUTHORISED_CONFIG_HASH = "7403c97b4d487fa1ed7805a1b23cd1d3a47e491c692648e49abc1df0daf220e0";
+const EXPECTED_IMAGE = "event-os-solver-worker:m6e-worker-8c8d922";
+const EXPECTED_DIGEST = "sha256:276c685860981d139f554548ed55f701253530808a0f914de848d1fa08fe788f";
+const EXPECTED_SOURCE_SHA = "8c8d92241a550348f3ba44192cb07f655ffe6d5d";
+const EXPECTED_DEPLOYMENT_ID = "57b5c9fb-4538-44ef-ad90-7d731a7db948";
+
+const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../..");
+const EVIDENCE = join(REPO_ROOT, "docs/control/evidence/eos-s06-cpsat-production/milestone-6de");
+const REPORT_FILE = "CAP2000_FROZEN_WORKER_REPORT.json";
+const TELEMETRY_FILE = "CAP2000_FROZEN_WORKER_TELEMETRY.jsonl";
+
 /** Doc 08: typical feasibility ≤60s; p95 ≤90; hard ceiling 180s. */
 const TYPICAL_TARGET_MS = 60_000;
 const HARD_CEILING_MS = 180_000;
@@ -91,22 +110,53 @@ function tinyFixture(nGuests: number, seed: string) {
 }
 
 function progress(msg: string, started: number) {
-  console.log(`[M6E-CAP2000 +${Math.round(performance.now() - started)}ms] ${msg}`);
+  console.log(`[M6E-CAP2000-FROZEN +${Math.round(performance.now() - started)}ms] ${msg}`);
   mkdirSync(EVIDENCE, { recursive: true });
   appendFileSync(
-    join(EVIDENCE, "CAP2000_TELEMETRY.jsonl"),
+    join(EVIDENCE, TELEMETRY_FILE),
     `${JSON.stringify({ at: new Date().toISOString(), msg, elapsedMs: Math.round(performance.now() - started) })}\n`,
   );
+}
+
+function writeReport(report: unknown) {
+  mkdirSync(EVIDENCE, { recursive: true });
+  writeFileSync(join(EVIDENCE, REPORT_FILE), JSON.stringify(report, null, 2) + "\n");
 }
 
 if (!process.argv.includes("--confirm-synthetic-qualification")) {
   throw new Error("Missing --confirm-synthetic-qualification");
 }
-if (EVENT_ID === INADMISSIBLE_PRIOR_EVENT) {
-  throw new Error("BLOCKED — must not reuse inadmissible prior CAP2000 event");
+if (
+  EVENT_ID === INADMISSIBLE_PRIOR_EVENT ||
+  EVENT_ID === PRIOR_AUTH_EVENT ||
+  EVENT_ID === "92909476-d3f9-43f1-a5f7-7e1a83c92fbd"
+) {
+  throw new Error("BLOCKED — must not reuse prior CAP2000 / malformed event");
 }
 const url = process.env.DATABASE_URL;
 if (!url?.trim()) throw new Error("DATABASE_URL required");
+
+const compiled = tinyFixture(2000, CORPUS_SEED);
+const compiledRequestHash = exactHash(compiled);
+if (compiled.guests.length !== 2000) throw new Error(`guest count ${compiled.guests.length}`);
+if (compiledRequestHash !== AUTHORISED_COMPILED_HASH) {
+  throw new Error(`compiled corpus drift: ${compiledRequestHash}`);
+}
+if (compiled.configHash !== AUTHORISED_CONFIG_HASH) {
+  throw new Error(`configHash drift: ${compiled.configHash}`);
+}
+const preRequest = compileV2ToCpsatRequest(compiled as never, {
+  runId: "preflight-cap2000-frozen",
+  mode: "PERFORMANCE",
+  purpose: "QUALIFICATION",
+});
+const required = requiredObjectiveTiers(preRequest);
+if (preRequest.preferences.length !== 0) {
+  throw new Error(`preference count must be 0, got ${preRequest.preferences.length}`);
+}
+if (required.preferences !== false) {
+  throw new Error("required.preferences must be false for CAP2000 stress corpus");
+}
 
 const pool = new Pool({ connectionString: url, max: 3, connectionTimeoutMillis: 15_000 });
 const db = {
@@ -129,15 +179,32 @@ const db = {
 
 const started = performance.now();
 try {
-  const ready = (
-    await pool.query(
-      `SELECT worker_id, lifecycle, last_heartbeat, image_identity, qualified_max_guests
-       FROM cpsat_solver_workers WHERE lifecycle='READY' ORDER BY last_heartbeat DESC LIMIT 1`,
-    )
-  ).rows[0];
-  if (!ready) throw new Error("BLOCKED — RESOURCE: no READY worker");
+  const priorAuth = await pool.query(`SELECT id, status FROM cpsat_solver_runs WHERE id=$1 AND event_id=$2`, [
+    PRIOR_AUTH_RUN,
+    PRIOR_AUTH_EVENT,
+  ]);
+  if (!priorAuth.rows[0] || priorAuth.rows[0].status !== "READY_FOR_REVIEW") {
+    throw new Error("BLOCKED — prior authorised CAP2000 historical run missing or altered");
+  }
+  const inadmissible = await pool.query(`SELECT id, status FROM cpsat_solver_runs WHERE id=$1`, [
+    INADMISSIBLE_PRIOR_RUN,
+  ]);
+  if (!inadmissible.rows[0]) throw new Error("BLOCKED — cannot locate inadmissible prior run for non-reuse check");
+
+  const workers = await pool.query(
+    `SELECT worker_id, lifecycle, concurrency_capacity, active_jobs, last_heartbeat, image_identity, qualified_max_guests
+     FROM cpsat_solver_workers WHERE lifecycle='READY' ORDER BY last_heartbeat DESC`,
+  );
+  if (workers.rows.length !== 1) {
+    throw new Error(`BLOCKED — RESOURCE: expected exactly one READY worker, got ${workers.rows.length}`);
+  }
+  const ready = workers.rows[0];
   if (Date.now() - new Date(ready.last_heartbeat).getTime() > 60_000) {
     throw new Error("BLOCKED — RESOURCE: stale heartbeat");
+  }
+  if (Number(ready.concurrency_capacity) !== 1) throw new Error("worker concurrency must be 1");
+  if (String(ready.image_identity) !== EXPECTED_IMAGE) {
+    throw new Error(`BLOCKED — unexpected worker image_identity ${ready.image_identity}`);
   }
   const busy = await pool.query(
     `SELECT COUNT(*)::int AS c FROM cpsat_solver_runs WHERE status IN ('QUEUED','ADMITTED','CLAIMED','RUNNING') OR lease_owner IS NOT NULL`,
@@ -148,29 +215,44 @@ try {
     BASELINE_ADOPTION,
   ]);
   if (baseline.rows[0]?.status !== "CURRENT") throw new Error("baseline adoption not CURRENT");
+  const baselineHashBefore = String(baseline.rows[0].assignment_hash);
 
-  const compiled = tinyFixture(2000, CORPUS_SEED);
-  const compiledRequestHash = exactHash(compiled);
+  const railway = {
+    project: process.env.RAILWAY_PROJECT_NAME ?? "atelier-doclar",
+    environment: process.env.RAILWAY_ENVIRONMENT_NAME ?? process.env.RAILWAY_ENVIRONMENT ?? "production",
+    service: process.env.RAILWAY_SERVICE_NAME ?? "solver-worker",
+    serviceId: process.env.RAILWAY_SERVICE_ID ?? "32f09234-9295-4a6c-8b8d-952d61d08706",
+    deploymentId: process.env.RAILWAY_DEPLOYMENT_ID ?? EXPECTED_DEPLOYMENT_ID,
+    imageIdentity: process.env.CPSAT_IMAGE_IDENTITY ?? EXPECTED_IMAGE,
+    imageDigest: process.env.CPSAT_IMAGE_DIGEST ?? EXPECTED_DIGEST,
+    sourceSha: process.env.SOURCE_SHA ?? EXPECTED_SOURCE_SHA,
+  };
+  if (railway.imageDigest !== EXPECTED_DIGEST || railway.sourceSha !== EXPECTED_SOURCE_SHA) {
+    throw new Error("BLOCKED — Railway digest/SOURCE_SHA mismatch vs frozen identity");
+  }
+  if (railway.deploymentId !== EXPECTED_DEPLOYMENT_ID) {
+    throw new Error(`BLOCKED — deployment ID mismatch ${railway.deploymentId}`);
+  }
+
   const hash = (label: string) => createHash("sha256").update(label).digest("hex");
   const pkg = {
     id: randomUUID(),
     organisationId: ORG,
     eventId: EVENT_ID,
     schemaVersion: 1,
-    semanticHash: exactHash({ scale: 2000, authorisedAfter: "a2-polarity-fix" }),
+    semanticHash: exactHash({ scale: 2000, authorisedAfter: "frozen-worker-rerun" }),
     compiledRequestHash,
-    // Distinct from prior inadmissible enqueue contentHash so idempotency cannot replay 384950a6
-    contentHash: exactHash({ content: "cap2000-authorised-post-a2-fix-v1" }),
-    cohortHash: hash("cohort-2000-authorised"),
-    rsvpSnapshotHash: hash("rsvp-2000-authorised"),
+    contentHash: exactHash({ content: "cap2000-frozen-worker-rerun-v1" }),
+    cohortHash: hash("cohort-2000-frozen-worker"),
+    rsvpSnapshotHash: hash("rsvp-2000-frozen-worker"),
     seatingLayoutBindingId: randomUUID(),
-    layoutId: "cap2000-layout-authorised",
-    layoutPublicationId: "cap2000-pub-authorised",
-    layoutContentHash: hash("layout-2000-authorised"),
+    layoutId: "cap2000-layout-frozen-worker",
+    layoutPublicationId: "cap2000-pub-frozen-worker",
+    layoutContentHash: hash("layout-2000-frozen-worker"),
     eventBriefEditionId: null,
     eventBriefContentHash: null,
     protectionSnapshotHash: null,
-    lockSetHash: hash("locks-2000-authorised"),
+    lockSetHash: hash("locks-2000-frozen-worker"),
     solverVersion: SEATING_V2_SOLVER_VERSION,
     solverConfigHash: exactHash({ seed: CORPUS_SEED }),
     deterministicSeed: CORPUS_SEED,
@@ -180,7 +262,7 @@ try {
   };
 
   progress(
-    `preflight OK seed=${CORPUS_SEED} event=${EVENT_ID} compiledHash=${compiledRequestHash.slice(0, 12)} worker=${ready.worker_id}`,
+    `preflight OK seed=${CORPUS_SEED} prefs=0 guests=2000 event=${EVENT_ID} worker=${ready.worker_id}`,
     started,
   );
 
@@ -191,7 +273,7 @@ try {
     compiled: compiled as never,
     purpose: "QUALIFICATION",
     mode: "PERFORMANCE",
-    correlationId: `m6e-cap2000-auth-${Date.now()}`,
+    correlationId: `m6e-cap2000-frozen-${Date.now()}`,
   });
   const admission = await admitCpsatSeatingLaunch(db as never, frozen);
   if (!admission.ok) throw new Error(`admission failed: ${JSON.stringify(admission)}`);
@@ -203,13 +285,23 @@ try {
   });
   const queueMs = Math.round(performance.now() - queueStarted);
   const runId = enqueued.run.runId;
-  if (runId === INADMISSIBLE_PRIOR_RUN) {
-    throw new Error("BLOCKED — enqueue returned inadmissible prior CAP2000 run id");
+  const application = enqueued.application;
+  if (runId === INADMISSIBLE_PRIOR_RUN || runId === PRIOR_AUTH_RUN) {
+    throw new Error("BLOCKED — enqueue returned a prior CAP2000 run id");
   }
-  if (enqueued.run.duplicateLaunch) {
-    progress(`WARNING duplicateLaunch=true run=${runId} — checking terminal freshness`, started);
+  progress(`enqueued run=${runId} application=${application} queueMs=${queueMs}`, started);
+
+  if (application !== "APPLIED") {
+    writeReport({
+      scale: "CAP2000",
+      disposition: "FAIL — FRESHNESS",
+      reason: `expected APPLIED, got ${application}`,
+      eventId: EVENT_ID,
+      runId,
+      application,
+    });
+    throw new Error(`FAIL — FRESHNESS: application=${application}`);
   }
-  progress(`enqueued run=${runId} queueMs=${queueMs} duplicate=${Boolean(enqueued.run.duplicateLaunch)}`, started);
 
   let terminal: Record<string, unknown> | null = null;
   const waitStarted = performance.now();
@@ -230,14 +322,14 @@ try {
     await new Promise((resolve) => setTimeout(resolve, 3000));
   }
   if (!terminal) {
-    const report = {
+    writeReport({
       scale: "CAP2000",
       disposition: "FAIL — PERFORMANCE",
       reason: "wall-clock stop-loss",
       runId,
       eventId: EVENT_ID,
-    };
-    writeFileSync(join(EVIDENCE, "CAP2000_REPORT.json"), JSON.stringify(report, null, 2));
+      wallStopLossMs: WALL_STOP_LOSS_MS,
+    });
     throw new Error("FAIL — PERFORMANCE");
   }
 
@@ -249,35 +341,85 @@ try {
   const guestSet = new Set(seated.map((a) => a.guest_token));
   const posSet = new Set(seated.map((a) => a.position_token));
 
+  const candidate = await pool.query(
+    `SELECT sealed, product_result, preference_tier, assignment_count, verification_payload
+     FROM cpsat_solver_candidates WHERE run_id=$1`,
+    [runId],
+  );
+  const cand = candidate.rows[0] ?? null;
+
+  const claimEvents = await pool.query(
+    `SELECT kind, payload, at FROM cpsat_solver_run_events WHERE run_id=$1 ORDER BY at ASC`,
+    [runId],
+  );
+  const claimRow = claimEvents.rows.find((e) => e.kind === "RUN_CLAIMED");
+  const claimedBy =
+    (claimRow?.payload?.leaseOwner as string | undefined) ??
+    (terminal.lease_owner == null ? null : String(terminal.lease_owner)) ??
+    ready.worker_id;
+
   const postBusy = await pool.query(
     `SELECT COUNT(*)::int AS c FROM cpsat_solver_runs WHERE status IN ('QUEUED','ADMITTED','CLAIMED','RUNNING') OR lease_owner IS NOT NULL`,
+  );
+  const postLease = await pool.query(`SELECT COUNT(*)::int AS c FROM cpsat_solver_runs WHERE lease_owner IS NOT NULL`);
+  const workerAfter = await pool.query(
+    `SELECT worker_id, lifecycle, image_identity FROM cpsat_solver_workers WHERE lifecycle='READY'`,
   );
   const baselineAfter = await pool.query(`SELECT id, assignment_hash, status FROM cpsat_solver_adoptions WHERE id=$1`, [
     BASELINE_ADOPTION,
   ]);
+  const priorAuthAfter = await pool.query(`SELECT id, status FROM cpsat_solver_runs WHERE id=$1`, [PRIOR_AUTH_RUN]);
+  const inadmissibleAfter = await pool.query(`SELECT id, status FROM cpsat_solver_runs WHERE id=$1`, [
+    INADMISSIBLE_PRIOR_RUN,
+  ]);
 
   const status = String(terminal.status);
   const product = String(terminal.product_result ?? "");
-  const solveMs =
+  const evidenceGrade = terminal.evidence_grade == null ? null : String(terminal.evidence_grade);
+  const attemptCount = Number(terminal.attempt_count ?? 0);
+  const childInvocationCount = Number(terminal.child_invocation_count ?? 0);
+  const claimLatencyMs =
+    terminal.queued_at && terminal.started_at
+      ? new Date(String(terminal.started_at)).getTime() - new Date(String(terminal.queued_at)).getTime()
+      : null;
+  const solveMsObserved =
     terminal.started_at && terminal.sealed_at
       ? new Date(String(terminal.sealed_at)).getTime() - new Date(String(terminal.started_at)).getTime()
       : null;
 
   let disposition = "PASS — STRESS/CONTAINMENT";
   if (status === "ADOPTED") disposition = "FAIL — CONTAINMENT";
-  else if (postBusy.rows[0].c > 0) disposition = "FAIL — CONTAINMENT";
-  else if (baselineAfter.rows[0]?.assignment_hash !== baseline.rows[0]?.assignment_hash) {
+  else if (postBusy.rows[0].c > 0 || postLease.rows[0].c > 0) disposition = "FAIL — CONTAINMENT";
+  else if (
+    baselineAfter.rows[0]?.status !== "CURRENT" ||
+    baselineAfter.rows[0]?.assignment_hash !== baselineHashBefore
+  ) {
+    disposition = "FAIL — CONTAINMENT";
+  } else if (workerAfter.rows.length !== 1 || workerAfter.rows[0].lifecycle !== "READY") {
     disposition = "FAIL — CONTAINMENT";
   } else if (status === "FAILED" || product === "SOLVER_FAULT") disposition = "FAIL — CORRECTNESS";
+  else if (status !== "READY_FOR_REVIEW") disposition = "FAIL — CORRECTNESS";
   else if (product === "OPTIMAL" || product === "FEASIBLE") {
+    if (evidenceGrade !== "OPTIMAL_PROOF" && product === "OPTIMAL") disposition = "FAIL — CORRECTNESS";
+    if (product === "FEASIBLE" && evidenceGrade !== "FEASIBLE_VERIFIED" && evidenceGrade !== "OPTIMAL_PROOF") {
+      disposition = "FAIL — CORRECTNESS";
+    }
     if (seated.length !== 2000 || guestSet.size !== 2000 || posSet.size !== 2000) {
       disposition = "FAIL — CORRECTNESS";
-    } else if (solveMs != null && solveMs > HARD_CEILING_MS) {
+    } else if (childInvocationCount !== 1 || attemptCount !== 1) {
+      disposition = "FAIL — CORRECTNESS";
+    } else if (!cand?.sealed) {
+      disposition = "FAIL — CORRECTNESS";
+    } else if (solveMsObserved != null && solveMsObserved > HARD_CEILING_MS) {
       disposition = "FAIL — PERFORMANCE";
     }
   } else if (product === "TIMED_OUT" || product === "SEARCH_INCOMPLETE") {
-    // Doc 08: optimality not promised; truthful timeout still containment-pass if clean
-    disposition = "PASS — STRESS/CONTAINMENT (non-optimal terminal)";
+    // Doc 08: optimality not promised; truthful timeout still stress/containment-pass if clean
+    if (childInvocationCount !== 1 || attemptCount !== 1 || !cand?.sealed) {
+      disposition = "FAIL — CORRECTNESS";
+    } else {
+      disposition = "PASS — STRESS/CONTAINMENT (non-optimal terminal)";
+    }
   } else {
     disposition = "FAIL — CORRECTNESS";
   }
@@ -286,74 +428,137 @@ try {
     scale: "CAP2000",
     classification: "stress/containment (doc 08 — optimality not promised)",
     disposition,
-    authorisation: "AUTHORISED after CAP1000 A2 polarity fix verified on 95e500b + 149ea74",
-    path: "durable-enqueue-scale-2000",
-    productInstallPath: {
-      attempted: true,
-      outcome: "REFUSED_NO_FIXTURE",
-      detail:
-        "No seating-capacity-2000-layout-fixture.ts. capacity-live-install / s06-capacity-live-install only accept CAP600|CAP1000 (CLI: --fixture must be CAP600 or CAP1000). Qualification evidence is solver-path-only; product install at 2000 remains an open item.",
-      flushEveryWouldHaveBeen: 25,
-      oom: false,
+    authorisation: "AUTHORISED frozen-worker rerun after CAP1000_FROZEN_WORKER PASS a136f94",
+    path: "durable-enqueue-scale-2000-frozen-worker-rerun",
+    a2Limitation:
+      "CAP2000 proves stress, scale and containment. It does not exercise A2_preferences because this corpus contains zero preferences.",
+    requiredObjectiveTiers: required,
+    preferenceCount: 0,
+    git: {
+      repo: "kglaw-Oluseyi/atelier-doclar",
+      branch: "main",
+      headAtEnqueue: process.env.GIT_HEAD ?? null,
     },
-    priorInadmissibleRun: {
+    priorAuthorisedUntouched: {
+      eventId: PRIOR_AUTH_EVENT,
+      runId: PRIOR_AUTH_RUN,
+      statusAfter: priorAuthAfter.rows[0]?.status ?? null,
+    },
+    priorInadmissibleUntouched: {
       runId: INADMISSIBLE_PRIOR_RUN,
       eventId: INADMISSIBLE_PRIOR_EVENT,
-      disposition: "UNAUTHORISED AFTER CAP1000 STOP — INADMISSIBLE FOR QUALIFICATION",
+      statusAfter: inadmissibleAfter.rows[0]?.status ?? null,
       reused: false,
     },
     eventId: EVENT_ID,
     runId,
+    application,
     seed: CORPUS_SEED,
     compiledRequestHash,
     configHash: compiled.configHash,
+    authorisedCompiledHash: AUTHORISED_COMPILED_HASH,
+    authorisedConfigHash: AUTHORISED_CONFIG_HASH,
     guests: 2000,
     typicalTargetMs: TYPICAL_TARGET_MS,
     hardCeilingMs: HARD_CEILING_MS,
     wallStopLossMs: WALL_STOP_LOSS_MS,
+    railway,
     worker: {
       workerId: ready.worker_id,
+      claimedBy,
       imageIdentity: ready.image_identity,
+      imageDigest: railway.imageDigest,
+      sourceSha: railway.sourceSha,
+      deploymentId: railway.deploymentId,
       qualifiedMaxGuests: ready.qualified_max_guests,
+      concurrency: ready.concurrency_capacity,
     },
     terminal: {
       status,
       productResult: product,
-      evidenceGrade: terminal.evidence_grade,
+      evidenceGrade,
       progressPhase: terminal.progress_phase,
       faultCode: terminal.fault_code,
       stopReason: terminal.stop_reason,
-      attemptCount: terminal.attempt_count,
-      childInvocationCount: terminal.child_invocation_count,
+      attemptCount,
+      childInvocationCount,
       solutionsFound: terminal.solutions_found,
+      queuedAt: terminal.queued_at,
+      startedAt: terminal.started_at,
+      sealedAt: terminal.sealed_at,
     },
     correctness: {
       seated: seated.length,
       uniqueGuests: guestSet.size,
       uniquePositions: posSet.size,
       expectedSeated: 2000,
+      candidateSealed: Boolean(cand?.sealed),
+      candidateAssignmentCount: cand?.assignment_count ?? null,
+      candidatePreferenceTier: cand?.preference_tier ?? null,
     },
     timings: {
       queueMs,
-      solveWallMs: solveMs,
+      claimLatencyMs,
+      solveWallMs: solveMsObserved,
       totalWallMs: Math.round(performance.now() - started),
-      withinTypicalTarget: solveMs != null ? solveMs <= TYPICAL_TARGET_MS : null,
-      withinHardCeiling: solveMs != null ? solveMs <= HARD_CEILING_MS : null,
+      withinTypicalTarget: solveMsObserved != null ? solveMsObserved <= TYPICAL_TARGET_MS : null,
+      withinHardCeiling: solveMsObserved != null ? solveMsObserved <= HARD_CEILING_MS : null,
     },
     containment: {
-      queueAndLeaseClear: postBusy.rows[0].c === 0,
+      queueAndLeaseClear: postBusy.rows[0].c === 0 && postLease.rows[0].c === 0,
+      leaseCleared: postLease.rows[0].c === 0,
+      queueEmpty: postBusy.rows[0].c === 0,
+      notAdopted: status !== "ADOPTED",
+      workerReadyAfter: workerAfter.rows.length === 1 && workerAfter.rows[0].lifecycle === "READY",
+      noAutomaticRetry: attemptCount === 1 && childInvocationCount === 1,
+      qualificationOnlyCannotAutoAdopt: true,
+      baselineBefore: { id: BASELINE_ADOPTION, status: "CURRENT", assignmentHash: baselineHashBefore },
+      baselineAfter: {
+        id: baselineAfter.rows[0]?.id ?? null,
+        status: baselineAfter.rows[0]?.status ?? null,
+        assignmentHash: baselineAfter.rows[0]?.assignment_hash ?? null,
+      },
       baselineUnchanged:
         baselineAfter.rows[0]?.status === "CURRENT" &&
-        baselineAfter.rows[0]?.assignment_hash === baseline.rows[0].assignment_hash,
-      notAdopted: status !== "ADOPTED",
-      workerReadyAfter: (
-        await pool.query(`SELECT lifecycle FROM cpsat_solver_workers WHERE worker_id=$1`, [ready.worker_id])
-      ).rows[0]?.lifecycle,
+        baselineAfter.rows[0]?.assignment_hash === baselineHashBefore,
     },
+    productionPosture: {
+      productionAuthorised: false,
+      note: "Captured from Event OS /api/health/ready before enqueue; qualification does not activate provider or publication.",
+    },
+    runToDigestBinding: {
+      method: "CORRELATED FROM WORKER REGISTRY + RAILWAY DEPLOYMENT + TIMESTAMPS",
+      note: "Run claim/seal timestamps correlated with READY worker image_identity and pre-verified Railway deployment digest; digest is not durably written on the run row.",
+      runStartedAt: terminal.started_at,
+      runSealedAt: terminal.sealed_at,
+      workerId: claimedBy,
+      workerRegistryImageIdentity: ready.image_identity,
+      railwayDeploymentId: railway.deploymentId,
+      railwayImageTag: railway.imageIdentity,
+      immutableDigest: railway.imageDigest,
+      sourceSha: railway.sourceSha,
+      durableRunEvents: claimEvents.rows.map((e) => ({
+        kind: e.kind,
+        at: e.at,
+        leaseOwner: e.payload?.leaseOwner ?? null,
+        lifecycle: e.payload?.lifecycle ?? null,
+        productResult: e.payload?.productResult ?? null,
+      })),
+    },
+    filesCreated: [
+      "docs/control/evidence/eos-s06-cpsat-production/milestone-6de/CAP2000_FROZEN_WORKER_RERUN.md",
+      "docs/control/evidence/eos-s06-cpsat-production/milestone-6de/CAP2000_FROZEN_WORKER_REPORT.json",
+      "docs/control/evidence/eos-s06-cpsat-production/milestone-6de/CAP2000_FROZEN_WORKER_TELEMETRY.jsonl",
+      "apps/event-os/scripts/m6e-cap2000-worker-qualify.ts",
+    ],
+    filesNotModified: [
+      "docs/control/evidence/eos-s06-cpsat-production/milestone-6de/CAP2000_REPORT.json",
+      "docs/control/evidence/eos-s06-cpsat-production/milestone-6de/CAP2000_TELEMETRY.jsonl",
+      "docs/control/evidence/eos-s06-cpsat-production/milestone-6de/CAP2000_AUTHORISED_QUALIFICATION.md",
+    ],
     at: new Date().toISOString(),
   };
-  mkdirSync(EVIDENCE, { recursive: true });
-  writeFileSync(join(EVIDENCE, "CAP2000_REPORT.json"), JSON.stringify(report, null, 2));
+  writeReport(report);
   console.log(JSON.stringify(report, null, 2));
   if (!String(disposition).startsWith("PASS")) process.exit(2);
 } finally {
