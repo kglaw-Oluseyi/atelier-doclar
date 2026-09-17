@@ -55,10 +55,13 @@ export function recomputeObjectiveTiers(
     }
     if (a.table !== base.table || a.seat !== base.seat) movement += 1;
   }
+  // A2 matches Python stage_a preference_expr: sum of weights of VIOLATED
+  // preferences for seated guests (minimized penalty). Unseated guests contribute 0.
   let preference = 0;
   for (const pref of request.preferences) {
     const a = byGuest.get(pref.guest);
-    if (a && a.table === pref.table) preference += pref.weight;
+    if (!a) continue;
+    if (a.table !== pref.table) preference += pref.weight;
   }
   return { movement, preference };
 }
