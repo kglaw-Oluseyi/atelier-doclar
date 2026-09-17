@@ -986,6 +986,7 @@ export class PlatformService {
         onEffect: (effect) => {
           this.lastMutationEffect = effect;
         },
+        cpsatQueueClient: () => (postgres ? postgres.pgClient() : undefined),
       });
     }
     return this.seatingV2CommandService;

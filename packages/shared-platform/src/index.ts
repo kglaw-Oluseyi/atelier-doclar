@@ -749,13 +749,22 @@ export {
   productResultCopy,
   shortReasonText,
   EOS_S06_CPSAT_SOLVER_QUEUE_MIGRATION_ID,
+  EOS_S06_CPSAT_SOLVER_QUEUE_LAUNCH_MIGRATION_ID,
   CPSAT_SOLVER_QUEUE_POSTGRES_SCHEMA,
+  CPSAT_SOLVER_QUEUE_LAUNCH_POSTGRES_SCHEMA,
   CPSAT_CLAIM_SQL,
   CPSAT_FAIR_CLAIM_SQL,
   solveSeatingV2CompiledCpSat,
   solverRequestToV2Compiled,
   toCpsatWireSeed,
   SEED_OVERFLOW_DEFECT,
+  solverQueueEnabledNote,
+  freezeCpsatSeatingAuthority,
+  computeCpsatIdempotencyKey,
+  enqueueCpsatSeatingRun,
+  getCpsatSeatingRun,
+  listCpsatSeatingRuns,
+  requestCpsatRunCancellation,
 } from "./cpsat/index.js";
 export {
   SYNTHETIC_SEED_ID,
@@ -1176,7 +1185,7 @@ export {
   withSettlementTransaction,
 } from "./seating-settlement-trace.js";
 export type { SeatingSettlementStage, SeatingSettlementTrace } from "./seating-settlement-trace.js";
-export { requireSeatingV2Writable, seatingV2ReplacementEnabled } from "./seating-v2-flag.js";
+export { requireSeatingV2Writable, seatingV2ReplacementEnabled, isSolverQueueEnabled } from "./seating-v2-flag.js";
 export {
   LEGACY_DUPLICATE_RECONCILIATION_REASON,
   ruleLifecycleStamp,

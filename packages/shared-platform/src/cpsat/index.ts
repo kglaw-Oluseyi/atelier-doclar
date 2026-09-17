@@ -19,7 +19,9 @@ export { solveSeatingV2CompiledCpSat, type CpsatLocalSolveResult } from "./local
 export { solverRequestToV2Compiled } from "./corpus-bridge.js";
 export {
   EOS_S06_CPSAT_SOLVER_QUEUE_MIGRATION_ID,
+  EOS_S06_CPSAT_SOLVER_QUEUE_LAUNCH_MIGRATION_ID,
   CPSAT_SOLVER_QUEUE_POSTGRES_SCHEMA,
+  CPSAT_SOLVER_QUEUE_LAUNCH_POSTGRES_SCHEMA,
 } from "./postgres-schema.js";
 export {
   CPSAT_CLAIM_SQL,
@@ -31,6 +33,23 @@ export {
   CPSAT_PRIORITY_ORDER,
   type CpsatQueuePriority,
 } from "./queue.js";
+export {
+  solverQueueEnabledNote,
+  freezeCpsatSeatingAuthority,
+  computeCpsatIdempotencyKey,
+  enqueueCpsatSeatingRun,
+  getCpsatSeatingRun,
+  listCpsatSeatingRuns,
+  requestCpsatRunCancellation,
+  CPSAT_NO_BASELINE_SENTINEL,
+  CPSAT_ENGINE_EXPECTATION,
+  type CpsatFrozenAuthority,
+  type CpsatSeatingRunSummary,
+  type CpsatEnqueueResult,
+  type CpsatLaunchPurpose,
+  type CpsatLaunchMode,
+} from "./durable-launch.js";
+export { isSolverQueueEnabled } from "../seating-v2-flag.js";
 export { buildCpsatRunUiModel, productResultCopy, shortReasonText, type CpsatRunUiModel } from "./ui-model.js";
 export { buildExplanations, redactExplanationForOrdinaryRole, CPSAT_EXPLANATION_EDITION } from "./explanations.js";
 export {

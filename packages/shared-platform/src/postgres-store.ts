@@ -325,6 +325,11 @@ export class PostgresPlatformStore implements PlatformStore, StaffAuthCapableSto
 
   constructor(private readonly client: PgQueryable) {}
 
+  /** Raw PostgreSQL client for durable CP-SAT queue operations. */
+  pgClient(): PgQueryable {
+    return this.client;
+  }
+
   static async migrate(client: PgQueryable): Promise<void> {
     await runPlatformMigrations(client);
     await backfillNormalizedRiskTables(client);

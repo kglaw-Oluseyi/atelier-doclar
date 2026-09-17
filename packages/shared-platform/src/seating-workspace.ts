@@ -75,6 +75,14 @@ export type SeatingWorkspaceView = SeatingWorkspaceProjection & {
     startedAt?: string;
     /** Explicit when the durable run record does not retain an initiating actor. */
     initiatingActorLabel?: string;
+    /** Durable CP-SAT queue overlays (Milestone 1). */
+    cancelRequested?: boolean;
+    lifecycle?: string;
+    resultStatus?: string | null;
+    freshnessGrade?: string;
+    evidenceGrade?: string | null;
+    purpose?: string;
+    mode?: string;
   }>;
   reviews: Array<{ id: string; domain: string; decision: string; reviewerLabel: string; reason: string; createdAt: string }>;
   approvals: Array<{ id: string; decision: string; createdAt: string }>;

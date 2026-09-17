@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import {
   executeS06Evaluation,
   formDataToRecord,
+  isSolverQueueEnabled,
   PlatformError,
   requireSeatingV2Writable,
   safeAttemptedValues,
@@ -250,11 +251,18 @@ export async function cancelSeatingRunAction(
     formData,
     permission: "seating.run.execute",
     actionType: "seating.run.cancel",
-    execute: async () => {
+    execute: async ({ actor, envelope }) => {
       requireV2Mutation();
-      throw new PlatformError("CAPABILITY_NOT_ENABLED", "seating run cancel is not available on the V2 command path", {
-        publicMessage: "Seating run cancel is not available.",
-      });
+      if (!isSolverQueueEnabled()) {
+        throw new PlatformError("CAPABILITY_NOT_ENABLED", "seating run cancel is not available on the V2 command path", {
+          publicMessage: "Seating run cancel is not available.",
+        });
+      }
+      return asId(
+        await getRuntime().service.seatingV2Commands().requestCpsatCancellation(actor, envelope, {
+          runId: field(formData, "runId"),
+        }),
+      );
     },
   });
 }

@@ -10,6 +10,16 @@ import { seatingDisclosureForRole } from "./seating-workspace.js";
 import { buildSeatingV2Workspace } from "./seating-v2-workspace.js";
 import { emptySeatingV2State, SEATING_V2_WORKSPACE_COLLECTIONS, type SeatingV2State } from "./seating-v2-state.js";
 import type { SeatingWorkspaceView } from "./seating-workspace.js";
+import type { PgQueryable } from "./postgres-schema.js";
+import { isSolverQueueEnabled } from "./seating-v2-flag.js";
+import {
+  enqueueCpsatSeatingRun,
+  freezeCpsatSeatingAuthority,
+  getCpsatSeatingRun,
+  listCpsatSeatingRuns,
+  requestCpsatRunCancellation,
+  type CpsatSeatingRunSummary,
+} from "./cpsat/durable-launch.js";
 import {
   activeSeatingLayoutBindings,
   boundLayoutFromLoadedPublication,
@@ -174,6 +184,8 @@ type CommandDeps = {
   ) => Array<{ eventId: string; contentHash?: string }>;
   tokenPepper: () => string;
   onEffect?: (effect: DurableMutationEffect) => void;
+  /** PostgreSQL client for durable CP-SAT queue when SOLVER_QUEUE_ENABLED=1. */
+  cpsatQueueClient?: () => PgQueryable | undefined;
 };
 
 type WorkResult<T> = T | { replayed: true; value: T; reason?: "ALREADY_ACTIVE" | "DUPLICATE_ACTIVE" };
@@ -1216,6 +1228,68 @@ export class SeatingV2CommandService {
         value: prepared.value,
       }));
     }
+
+    if (isSolverQueueEnabled()) {
+      const queue = this.requireCpsatQueueClient();
+      const bindings = await this.repo.transaction(async (tx) =>
+        tx.list<SeatingV2LayoutBinding>("layoutBindings", canonical),
+      );
+      const activeBinding = activeSeatingLayoutBindings(bindings)[0];
+      const frozen = freezeCpsatSeatingAuthority({
+        organisationId: canonical.organisationId,
+        eventId: canonical.eventId,
+        correlationId: actor.correlationId,
+        package: prepared.pkg,
+        compiled: prepared.compiled.request,
+        activeLayoutContentHash: activeBinding?.layoutContentHash ?? prepared.pkg.layoutContentHash,
+        rulesHash: prepared.pkg.contentHash,
+        rulesEditionId: prepared.pkg.id,
+        objectiveEditionHash: prepared.pkg.solverConfigHash,
+        baselinePlanHash: null,
+      });
+      const enqueued = await enqueueCpsatSeatingRun(queue, frozen, { actorPersonId: actor.personId });
+      const now = nowOf(actor);
+      return this.mutate(actor, envelope, "seating.run.execute", "seatingV2.launchRun", async (tx) => {
+        const existingQueued = (await tx.list<SeatingV2Run>("runs", envelope)).find((item) => item.id === enqueued.run.runId);
+        if (existingQueued) return { replayed: true, value: existingQueued };
+        const run: SeatingV2Run = {
+          id: enqueued.run.runId,
+          organisationId: envelope.organisationId,
+          eventId: envelope.eventId,
+          schemaVersion: SEATING_V2_SCHEMA_VERSION,
+          packageId: prepared.pkg.id,
+          packageHash: prepared.identity.packageContentHash,
+          semanticHash: prepared.identity.semanticHash,
+          compiledRequestHash: prepared.identity.compiledRequestHash,
+          compilerVersion: prepared.identity.compilerVersion,
+          solverVersion: prepared.identity.solverVersion,
+          solverConfigHash: prepared.identity.solverConfigurationHash,
+          validatorVersion: prepared.identity.validatorVersion,
+          deterministicSeed: prepared.identity.seed,
+          status: "QUEUED",
+          solverClaim: null,
+          rawOutputHash: null,
+          assignmentsHash: null,
+          leaseOwner: null,
+          leaseUntil: null,
+          startedAt: null,
+          completedAt: null,
+          generatedAt: null,
+          createdAt: now,
+        };
+        await tx.insert("runs", run);
+        emitSettlementStage({
+          stage: "RUN_QUEUED",
+          runId: run.id,
+          commandType: "seating.run.launch",
+          eventId: envelope.eventId,
+          reasonClass: "QUEUED",
+          outcome: enqueued.application === "REPLAYED" ? "REPLAYED" : "APPLIED",
+        });
+        return enqueued.application === "REPLAYED" ? { replayed: true as const, value: run } : run;
+      });
+    }
+
     let solved;
     try {
       emitSettlementStage({ stage: "SOLVER_START", commandType: "seating.run.launch", eventId: canonical.eventId });
@@ -1840,7 +1914,94 @@ export class SeatingV2CommandService {
       return next as SeatingV2State;
     });
     const role = roleKeyForId(assignment.roleId);
-    return buildSeatingV2Workspace(this.deps.snapshot(), state, eventId, seatingDisclosureForRole(role));
+    const workspace = buildSeatingV2Workspace(this.deps.snapshot(), state, eventId, seatingDisclosureForRole(role));
+    if (!isSolverQueueEnabled()) return workspace;
+    const queue = this.deps.cpsatQueueClient?.();
+    if (!queue) return workspace;
+    try {
+      const listed = await listCpsatSeatingRuns(queue, eventId, { limit: 50 });
+      const byId = new Map(listed.runs.map((run) => [run.runId, run]));
+      return {
+        ...workspace,
+        runs: workspace.runs.map((run) => {
+          const cpsat = byId.get(run.id);
+          if (!cpsat) return run;
+          return {
+            ...run,
+            status: cpsat.lifecycle,
+            cancelRequested: cpsat.cancelRequested,
+            lifecycle: cpsat.lifecycle,
+            resultStatus: cpsat.resultStatus,
+            freshnessGrade: cpsat.freshness,
+            evidenceGrade: cpsat.evidenceGrade,
+            purpose: cpsat.purpose,
+            mode: cpsat.mode,
+            startedAt: cpsat.queuedAt ?? cpsat.createdAt,
+          };
+        }),
+      };
+    } catch {
+      return workspace;
+    }
+  }
+
+  async getCpsatRun(
+    actor: SeatingV2Actor,
+    eventId: string,
+    runId: string,
+  ): Promise<CpsatSeatingRunSummary> {
+    const people = this.deps.resolveActor(actor.personId);
+    const event = this.deps.loadEventById(eventId);
+    if (!event) throw new PlatformError("NOT_FOUND", "event was not found");
+    if (!canSeeEvent(people, event, nowOf(actor))) throw new PlatformError("NOT_FOUND", "event was not found");
+    const assignment = resolveTrustedSeatingAssignment(people, event, nowOf(actor));
+    this.guard(actor, "seating.view", { organisationId: event.organisationId, eventId }, assignment.id);
+    return getCpsatSeatingRun(this.requireCpsatQueueClient(), eventId, runId);
+  }
+
+  async listCpsatRuns(
+    actor: SeatingV2Actor,
+    eventId: string,
+    options?: { limit?: number; cursorCreatedAt?: string; cursorId?: string },
+  ): Promise<{ runs: CpsatSeatingRunSummary[]; nextCursor: { createdAt: string; id: string } | null }> {
+    const people = this.deps.resolveActor(actor.personId);
+    const event = this.deps.loadEventById(eventId);
+    if (!event) throw new PlatformError("NOT_FOUND", "event was not found");
+    if (!canSeeEvent(people, event, nowOf(actor))) throw new PlatformError("NOT_FOUND", "event was not found");
+    const assignment = resolveTrustedSeatingAssignment(people, event, nowOf(actor));
+    this.guard(actor, "seating.view", { organisationId: event.organisationId, eventId }, assignment.id);
+    return listCpsatSeatingRuns(this.requireCpsatQueueClient(), eventId, options);
+  }
+
+  async requestCpsatCancellation(
+    actor: SeatingV2Actor,
+    envelope: SeatingV2CommandEnvelope,
+    input: { runId: string },
+  ): Promise<SeatingV2CommandResult<{ id: string; cancelRequested: boolean; lifecycle: string }>> {
+    requireKey(envelope.idempotencyKey);
+    const trusted = this.trustedEnvelope(actor, envelope, "seating.run.execute");
+    const canonical = trusted.envelope;
+    const queue = this.requireCpsatQueueClient();
+    const summary = await requestCpsatRunCancellation(queue, {
+      eventId: canonical.eventId,
+      runId: input.runId,
+      actorPersonId: actor.personId,
+    });
+    return this.mutate(actor, canonical, "seating.run.execute", "seatingV2.requestCpsatCancellation", async () => ({
+      id: summary.runId,
+      cancelRequested: summary.cancelRequested,
+      lifecycle: summary.lifecycle,
+    }));
+  }
+
+  private requireCpsatQueueClient(): PgQueryable {
+    const client = this.deps.cpsatQueueClient?.();
+    if (!client) {
+      throw new PlatformError("CAPABILITY_NOT_ENABLED", "CP-SAT durable queue requires PostgreSQL", {
+        publicMessage: "Durable seating queue is unavailable without PostgreSQL.",
+      });
+    }
+    return client;
   }
 
   async retrieveExport(

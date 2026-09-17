@@ -38,9 +38,10 @@ import {
 } from "../../../../../server/seating-actions";
 import { switchSeatingVerifyAsAction } from "../../../../../server/seating-verify-as-action";
 import { eventOsVerifyAsAvailable } from "../../../../../server/seating-verify-as";
-import { emitSettlementStage, LEGACY_S06_PUBLICATION_LABEL, PlatformError, retryLockApplies, seatingV2ReplacementEnabled, buildCpsatRunUiModel } from "@maison-doclar/shared-platform";
+import { emitSettlementStage, LEGACY_S06_PUBLICATION_LABEL, PlatformError, retryLockApplies, seatingV2ReplacementEnabled, buildCpsatRunUiModel, isSolverQueueEnabled } from "@maison-doclar/shared-platform";
 import { activateSeatingRuleAction, withdrawSeatingRuleAction } from "../../../../../server/seating-actions";
 import { CpsatRunStatusPanel } from "../../../../../components/cpsat-run-status-panel";
+import { CpsatRunLifecyclePoller } from "../../../../../components/cpsat-run-lifecycle-poller";
 
 function visibleSeatingRuns<T extends { id: string }>(runs: T[], currentRunId: string | undefined, limit = 12): T[] {
   if (runs.length <= limit) return runs;
@@ -756,20 +757,52 @@ export default async function EventSeatingPage({
             <IdempotencyField />
             <fieldset>
               <legend>Launch a seating run</legend>
+              <p className="help">
+                Generate seating plan freezes the current governed layout, rules, guests and objectives
+                {isSolverQueueEnabled() ? ", then queues a durable CP-SAT run." : ", then solves with CP-SAT."}
+              </p>
               <label>
                 Deterministic seed
                 <input name="seed" defaultValue={`s06-${event.id.slice(-4)}`} readOnly />
               </label>
             </fieldset>
-            <button type="submit" className="button">
-              Launch seating run
+            <button type="submit" className="button" style={{ cursor: "pointer" }}>
+              Generate seating plan
             </button>
           </ProtectionMutationForm>
         ) : null}
+        {!workspace.runs.length ? (
+          <CpsatRunStatusPanel
+            model={buildCpsatRunUiModel({
+              operatorLifecycle: "NONE",
+              lifecycle: "NONE",
+              productResult: "",
+              resultStatus: null,
+              freshness: "CURRENT",
+              evidenceGrade: null,
+            })}
+          />
+        ) : null}
+        {(() => {
+          const pollTargets = workspace.runs.filter(
+            (run) =>
+              run.status === "QUEUED" ||
+              run.lifecycle === "QUEUED" ||
+              Boolean(run.cancelRequested),
+          );
+          return (
+            <CpsatRunLifecyclePoller
+              active={isSolverQueueEnabled() && pollTargets.length > 0}
+              intervalMs={5_000}
+            />
+          );
+        })()}
         <ul>
           {visibleSeatingRuns(workspace.runs, workspace.currentRunId).map((run) => {
             const isCurrent = run.id === workspace.currentRunId || Boolean(run.current);
-            const outcome = run.validatorVerdict ?? run.status;
+            const outcome = run.validatorVerdict ?? run.resultStatus ?? run.status;
+            const cancelRequested = Boolean(run.cancelRequested);
+            const queued = run.status === "QUEUED" || run.lifecycle === "QUEUED";
             return (
               <li key={run.id} data-testid={`seating-run-${run.status}`}>
                 <article
@@ -778,19 +811,34 @@ export default async function EventSeatingPage({
                   data-current={isCurrent ? "true" : "false"}
                   data-stale={run.stale ? "true" : "false"}
                   data-outcome={outcome}
+                  data-cancel-requested={cancelRequested ? "true" : "false"}
                 >
                   {isCurrent ? (
                     <CpsatRunStatusPanel
                       model={buildCpsatRunUiModel({
-                        productResult: String(outcome),
-                        phase: run.status === "RUNNING" ? "search" : run.status === "QUEUED" ? "queued" : "settled",
+                        productResult: String(outcome === "QUEUED" ? "" : outcome),
+                        lifecycle: run.lifecycle ?? run.status,
+                        resultStatus: run.resultStatus ?? (queued ? null : String(outcome)),
+                        phase: run.status === "RUNNING" ? "search" : queued ? "queued" : "settled",
                         elapsedMs: 0,
                         seated: run.seated ?? 0,
                         eligible: (run.seated ?? 0) + (run.unseated ?? 0),
                         occupiedTables: 0,
                         tableCapacity: 0,
-                        freshness: run.stale ? "STALE" : "FRESH",
+                        freshness: run.stale ? "STALE" : (run.freshnessGrade as "CURRENT" | "FRESH" | "STALE" | undefined) ?? "CURRENT",
+                        evidenceGrade: run.evidenceGrade ?? null,
+                        purpose: run.purpose,
+                        mode: run.mode,
+                        createdAt: run.startedAt,
+                        cancelRequested,
                         hasCompleteIncumbent: outcome === "FEASIBLE" || run.validatorVerdict === "FEASIBLE",
+                        operatorLifecycle: cancelRequested
+                          ? "CANCELLATION_REQUESTED"
+                          : queued
+                            ? "QUEUED"
+                            : run.status === "RUNNING"
+                              ? "RUNNING"
+                              : "SETTLED",
                       })}
                     />
                   ) : null}
@@ -799,7 +847,7 @@ export default async function EventSeatingPage({
                     {isCurrent ? " · Current" : " · Not current"}
                     {run.stale ? " · Stale" : " · Fresh"}
                     {" · "}
-                    {outcome}
+                    {cancelRequested ? "Cancellation requested" : outcome}
                   </p>
                   <CanonicalId id={run.id} label="Full immutable run ID" testId="seating-run-full-id" />
                   <div data-testid="seating-run-started">
@@ -831,14 +879,14 @@ export default async function EventSeatingPage({
                     <ProtectionMutationForm action={adoptSeatingRunAction.bind(null, event.id)} className="actions">
                       <Envelope fields={{ ...envelopeFields, runId: run.id }} />
                       <IdempotencyField />
-                      <button type="submit" className="button secondary">Adopt run</button>
+                      <button type="submit" className="button secondary" style={{ cursor: "pointer" }}>Adopt run</button>
                     </ProtectionMutationForm>
                   ) : null}
-                  {permissions.run && (run.status === "QUEUED" || run.status === "RUNNING") ? (
+                  {permissions.run && queued && !cancelRequested ? (
                     <ProtectionMutationForm action={cancelSeatingRunAction.bind(null, event.id)} className="actions">
                       <Envelope fields={{ ...envelopeFields, runId: run.id, expectedVersion: 0 }} />
                       <IdempotencyField />
-                      <button type="submit" className="button secondary">Cancel run</button>
+                      <button type="submit" className="button secondary" style={{ cursor: "pointer" }}>Cancel run</button>
                     </ProtectionMutationForm>
                   ) : null}
                 </article>

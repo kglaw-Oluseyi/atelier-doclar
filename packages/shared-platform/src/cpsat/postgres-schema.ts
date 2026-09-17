@@ -1,7 +1,9 @@
 /**
  * Durable CP-SAT solver queue / leases / evidence (Checkpoint 2 local product).
+ * Migration 011 is already registered; Milestone 1 authority/idempotency columns are additive 012.
  */
 export const EOS_S06_CPSAT_SOLVER_QUEUE_MIGRATION_ID = "011_cpsat_solver_queue" as const;
+export const EOS_S06_CPSAT_SOLVER_QUEUE_LAUNCH_MIGRATION_ID = "012_cpsat_solver_queue_launch" as const;
 
 export const CPSAT_SOLVER_QUEUE_POSTGRES_SCHEMA = `
 CREATE TABLE IF NOT EXISTS cpsat_solver_runs (
@@ -113,4 +115,29 @@ CREATE TABLE IF NOT EXISTS cpsat_solver_authority_pointers (
   holder_epoch BIGINT NOT NULL DEFAULT 0,
   updated_at TIMESTAMPTZ NOT NULL
 );
+`;
+
+/** Additive Milestone 1 launch columns — never rewrite applied 011. */
+export const CPSAT_SOLVER_QUEUE_LAUNCH_POSTGRES_SCHEMA = `
+ALTER TABLE cpsat_solver_runs
+  ADD COLUMN IF NOT EXISTS idempotency_key TEXT,
+  ADD COLUMN IF NOT EXISTS correlation_id TEXT,
+  ADD COLUMN IF NOT EXISTS layout_id TEXT,
+  ADD COLUMN IF NOT EXISTS layout_version TEXT,
+  ADD COLUMN IF NOT EXISTS layout_hash TEXT,
+  ADD COLUMN IF NOT EXISTS rules_edition_id TEXT,
+  ADD COLUMN IF NOT EXISTS rules_hash TEXT,
+  ADD COLUMN IF NOT EXISTS guest_edition_id TEXT,
+  ADD COLUMN IF NOT EXISTS guest_edition_hash TEXT,
+  ADD COLUMN IF NOT EXISTS objective_edition_id TEXT,
+  ADD COLUMN IF NOT EXISTS objective_edition_hash TEXT,
+  ADD COLUMN IF NOT EXISTS baseline_adoption_id TEXT,
+  ADD COLUMN IF NOT EXISTS baseline_plan_hash TEXT,
+  ADD COLUMN IF NOT EXISTS request_json JSONB,
+  ADD COLUMN IF NOT EXISTS queued_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS attempt_count INTEGER NOT NULL DEFAULT 0;
+
+CREATE UNIQUE INDEX IF NOT EXISTS cpsat_solver_runs_event_idempotency_uidx
+  ON cpsat_solver_runs (event_id, idempotency_key)
+  WHERE idempotency_key IS NOT NULL;
 `;

@@ -3,20 +3,42 @@
 import type { CpsatRunUiModel } from "@maison-doclar/shared-platform";
 
 /**
- * CP-SAT run status panel — Checkpoint 2 accessibility preparation.
- * Forbidden: percent complete, ETA to optimality, "almost done", "best possible" without OPTIMAL.
+ * CP-SAT run status panel — durable lifecycle (Milestone 1).
+ * Forbidden: percent-complete UI, ETA to optimality, "almost done", "best possible" without OPTIMAL.
  */
 export function CpsatRunStatusPanel({
   model,
   shortReasons,
+  onCancel,
+  cancelDisabled,
+  launching,
 }: {
   model: CpsatRunUiModel;
   shortReasons?: Array<{ guestToken: string; text: string }>;
+  onCancel?: () => void;
+  cancelDisabled?: boolean;
+  launching?: boolean;
 }) {
+  const lifecycleLabel =
+    model.operatorLifecycle === "CANCELLATION_REQUESTED"
+      ? "Cancellation requested"
+      : model.operatorLifecycle === "QUEUED"
+        ? "Queued"
+        : model.operatorLifecycle === "LAUNCHING"
+          ? "Launching"
+          : model.operatorLifecycle === "NONE"
+            ? "No run"
+            : model.lifecycle;
+
+  const assertiveFailure =
+    model.operatorLifecycle === "VALIDATION_FAILED" || Boolean(model.faultCode) || model.operatorLifecycle === "ACCESS_DENIED";
+
   return (
     <section
       aria-labelledby="cpsat-run-status-heading"
       className="cpsat-run-status"
+      data-testid="cpsat-run-status-panel"
+      data-operator-lifecycle={model.operatorLifecycle}
       style={{
         display: "grid",
         gap: "0.75rem",
@@ -27,6 +49,19 @@ export function CpsatRunStatusPanel({
       <h2 id="cpsat-run-status-heading" style={{ fontSize: "1.125rem", margin: 0 }}>
         Solver run
       </h2>
+      <p
+        data-testid="cpsat-run-primary-message"
+        role={assertiveFailure ? "alert" : "status"}
+        aria-live={assertiveFailure ? "assertive" : "polite"}
+        style={{ margin: 0, fontWeight: 600 }}
+      >
+        {launching ? "Preparing the governed seating request…" : model.primaryMessage}
+      </p>
+      <p data-testid="cpsat-run-supporting-message" style={{ margin: 0, fontSize: "0.95rem" }}>
+        {launching
+          ? "Authority is being frozen. Solving has not started."
+          : model.supportingMessage}
+      </p>
       <dl
         style={{
           display: "grid",
@@ -35,46 +70,49 @@ export function CpsatRunStatusPanel({
           margin: 0,
         }}
       >
+        <dt>Lifecycle</dt>
+        <dd style={{ margin: 0 }} data-testid="cpsat-run-lifecycle">
+          <span aria-hidden="true">● </span>
+          {lifecycleLabel}
+        </dd>
+        <dt>Result status</dt>
+        <dd style={{ margin: 0 }} data-testid="cpsat-run-result-status">
+          {model.resultStatus && model.resultStatus.length > 0 ? model.resultStatus : "None yet"}
+        </dd>
+        <dt>Freshness</dt>
+        <dd style={{ margin: 0 }} data-testid="cpsat-run-freshness">
+          {model.freshness === "STALE" ? "Stale authority" : "Current"}
+        </dd>
+        <dt>Evidence grade</dt>
+        <dd style={{ margin: 0 }} data-testid="cpsat-run-evidence">
+          {model.evidenceGrade ?? "Not applicable"}
+        </dd>
+        <dt>Purpose / mode</dt>
+        <dd style={{ margin: 0 }}>
+          {model.purposeLabel} · {model.modeLabel}
+        </dd>
+        <dt>Created</dt>
+        <dd style={{ margin: 0 }}>{model.createdAtLabel ?? "—"}</dd>
         <dt>Engine</dt>
         <dd style={{ margin: 0 }}>{model.engineLabel}</dd>
-        <dt>Phase</dt>
-        <dd style={{ margin: 0 }} role="status" aria-live="polite">
-          {model.phase}
-        </dd>
-        <dt>Elapsed</dt>
-        <dd style={{ margin: 0 }}>{(model.elapsedMs / 1000).toFixed(1)}s</dd>
-        <dt>Deterministic budget</dt>
-        <dd style={{ margin: 0 }}>
-          {model.deterministicBudgetSeconds == null ? "—" : `${model.deterministicBudgetSeconds}s consumed as limit`}
-        </dd>
-        <dt>First solution</dt>
-        <dd style={{ margin: 0 }}>{model.firstSolutionFound ? "Found" : "Not yet"}</dd>
-        <dt>Objective / bound</dt>
-        <dd style={{ margin: 0 }}>
-          {model.currentObjective ?? "—"}
-          {model.currentBound != null ? ` · bound ${model.currentBound}` : ""}
-        </dd>
-        <dt>Proof</dt>
-        <dd style={{ margin: 0 }}>{model.proofStatus}</dd>
-        <dt>Guests</dt>
-        <dd style={{ margin: 0 }}>
-          {model.guestTotals.seated}/{model.guestTotals.eligible} seated
-        </dd>
-        <dt>Tables</dt>
-        <dd style={{ margin: 0 }}>
-          {model.tableTotals.occupied} occupied · {model.tableTotals.capacity} capacity seats
-        </dd>
-        <dt>HARD result</dt>
-        <dd style={{ margin: 0 }}>{model.hardResult}</dd>
-        <dt>Movement</dt>
-        <dd style={{ margin: 0 }}>{model.movementResult ?? "—"}</dd>
-        <dt>Preferences</dt>
-        <dd style={{ margin: 0 }}>{model.preferenceResult ?? "—"}</dd>
-        <dt>Product result</dt>
-        <dd style={{ margin: 0 }} role="status" aria-live="polite">
-          <strong>{model.productResult}</strong>
-          {model.freshness === "STALE" ? " · stale authority" : ""}
-        </dd>
+        {model.operatorLifecycle === "SETTLED" || model.operatorLifecycle === "RUNNING" ? (
+          <>
+            <dt>Phase</dt>
+            <dd style={{ margin: 0 }} role="status" aria-live="polite">
+              {model.phase}
+            </dd>
+            <dt>Elapsed</dt>
+            <dd style={{ margin: 0 }}>{(model.elapsedMs / 1000).toFixed(1)}s</dd>
+            <dt>Guests</dt>
+            <dd style={{ margin: 0 }}>
+              {model.guestTotals.seated}/{model.guestTotals.eligible} seated
+            </dd>
+            <dt>Product result</dt>
+            <dd style={{ margin: 0 }} role="status" aria-live="polite">
+              <strong>{model.productResult || "—"}</strong>
+            </dd>
+          </>
+        ) : null}
         {model.faultCode ? (
           <>
             <dt>Fault</dt>
@@ -83,12 +121,40 @@ export function CpsatRunStatusPanel({
             </dd>
           </>
         ) : null}
+        {model.validationMessage ? (
+          <>
+            <dt>Next step</dt>
+            <dd style={{ margin: 0 }} role="alert" aria-live="assertive">
+              {model.validationMessage}
+            </dd>
+          </>
+        ) : null}
       </dl>
-      <p style={{ margin: 0, fontSize: "0.9rem" }}>
+      {/* showPercentComplete is always false — no fake completion meter */}
+      {model.showPercentComplete ? null : null}
+      <p style={{ margin: 0, fontSize: "0.9rem" }} data-testid="cpsat-run-leave-return">
         {model.safeToLeaveAndReturn
-          ? "Safe to leave and return — progress is durable on the run record."
+          ? "Safe to leave and return — this run is durable in PostgreSQL."
           : "Remain on this page until the run settles."}
       </p>
+      {model.cancelAllowed && onCancel && !model.cancelRequested ? (
+        <button
+          type="button"
+          className="button secondary cpsat-interactive"
+          data-testid="cpsat-cancel-run"
+          disabled={cancelDisabled || launching}
+          aria-disabled={cancelDisabled || launching}
+          onClick={onCancel}
+          style={{ cursor: cancelDisabled || launching ? "not-allowed" : "pointer" }}
+        >
+          Cancel run
+        </button>
+      ) : null}
+      {model.cancelRequested ? (
+        <p data-testid="cpsat-cancel-requested" style={{ margin: 0, fontSize: "0.9rem" }}>
+          Cancellation request is recorded. Do not treat the run as cancelled until the worker acknowledges it.
+        </p>
+      ) : null}
       {shortReasons && shortReasons.length > 0 ? (
         <div>
           <h3 style={{ fontSize: "1rem", margin: "0 0 0.5rem" }}>Guest reasons</h3>
@@ -103,8 +169,14 @@ export function CpsatRunStatusPanel({
         </div>
       ) : null}
       <style>{`
-        @media (max-width: 360px) {
+        @media (max-width: 390px) {
           .cpsat-run-status dl { grid-template-columns: 1fr; }
+        }
+        @media (min-width: 768px) {
+          .cpsat-run-status { max-width: 48rem; }
+        }
+        @media (min-width: 1440px) {
+          .cpsat-run-status { max-width: 56rem; }
         }
         .sr-only {
           position: absolute;
@@ -119,6 +191,14 @@ export function CpsatRunStatusPanel({
         .cpsat-run-status :focus-visible {
           outline: 2px solid currentColor;
           outline-offset: 2px;
+        }
+        .cpsat-interactive,
+        .cpsat-run-status button {
+          cursor: pointer;
+        }
+        .cpsat-run-status button:disabled {
+          cursor: not-allowed;
+          opacity: 0.65;
         }
       `}</style>
     </section>
