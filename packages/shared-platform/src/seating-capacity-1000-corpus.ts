@@ -438,6 +438,30 @@ export function capacity1000CorpusHash(scenario: Capacity1000ScenarioId): string
   return exactHash(buildCapacity1000Corpus(scenario));
 }
 
+function countByKind(constraints: SolverConstraint[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const constraint of constraints) {
+    counts[constraint.kind] = (counts[constraint.kind] ?? 0) + 1;
+  }
+  return counts;
+}
+
+export function capacity1000RuleProfile(scenario: Capacity1000ScenarioId) {
+  const request = buildCapacity1000Corpus(scenario);
+  const constraintCounts = countByKind(request.constraints);
+  return {
+    scenario,
+    seed: CAPACITY_1000_SCENARIO_SEEDS[scenario],
+    datasetHash: capacity1000CorpusHash(scenario),
+    expectedStatus: scenario === "D_INFEASIBLE" ? ("INFEASIBLE" as const) : ("FEASIBLE" as const),
+    constraintCounts,
+    reservationCount: request.reservations.length,
+    lockedOrReserved:
+      (constraintCounts.LOCK_ASSIGNMENT ?? 0) +
+      request.reservations.reduce((sum, item) => sum + item.eligibleGuestTokens.length, 0),
+  };
+}
+
 export function capacity1000CorpusManifest(): {
   edition: string;
   scenarios: Array<{
