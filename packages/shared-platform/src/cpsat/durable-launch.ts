@@ -44,6 +44,7 @@ export type CpsatFrozenAuthority = {
   engineExpectation: typeof CPSAT_ENGINE_EXPECTATION;
   seed: number;
   compiledRequest: CpsatSolveRequest;
+  authoredAuthority: SeatingV2CompiledRequest;
   canonicalRequestHash: string;
   closureHash: string;
   indexMapHash: string;
@@ -77,6 +78,11 @@ export type CpsatSeatingRunSummary = {
   baselinePlanHash: string | null;
   requestHash: string;
   duplicateLaunch: boolean;
+  progressPhase: string | null;
+  startedAt: string | null;
+  sealedAt: string | null;
+  childInvocationCount: number;
+  heartbeatAt: string | null;
 };
 
 export type CpsatEnqueueResult = {
@@ -259,6 +265,7 @@ export function freezeCpsatSeatingAuthority(input: {
     engineExpectation: CPSAT_ENGINE_EXPECTATION,
     seed: compiledRequest.seed,
     compiledRequest,
+    authoredAuthority: input.compiled,
     canonicalRequestHash,
     closureHash: compiledRequest.closureHash,
     indexMapHash: compiledRequest.indexMapHash,
@@ -294,6 +301,11 @@ function rowToSummary(row: Record<string, unknown>, duplicateLaunch = false): Cp
     baselinePlanHash: row.baseline_plan_hash == null ? null : String(row.baseline_plan_hash),
     requestHash: String(row.request_hash),
     duplicateLaunch,
+    progressPhase: row.progress_phase == null ? null : String(row.progress_phase),
+    startedAt: row.started_at == null ? null : String(row.started_at),
+    sealedAt: row.sealed_at == null ? null : String(row.sealed_at),
+    childInvocationCount: Number(row.child_invocation_count ?? 0),
+    heartbeatAt: row.heartbeat_at == null ? null : String(row.heartbeat_at),
   };
 }
 
@@ -380,7 +392,7 @@ export async function enqueueCpsatSeatingRun(
           guest_edition_id, guest_edition_hash,
           objective_edition_id, objective_edition_hash,
           baseline_adoption_id, baseline_plan_hash,
-          request_json, attempt_count
+          request_json, attempt_count, authored_authority_json
         ) VALUES (
           $1,$2,$3,$4,$5,'QUEUED',$6,$7,$8,
           $9,$10,$11,
@@ -395,7 +407,7 @@ export async function enqueueCpsatSeatingRun(
           $23,$24,
           $25,$26,
           $27,$28,
-          $29::jsonb,0
+          $29::jsonb,0,$30::jsonb
         )`,
         [
           runId,
@@ -427,6 +439,7 @@ export async function enqueueCpsatSeatingRun(
           frozen.baselineAdoptionId,
           frozen.baselinePlanHash,
           JSON.stringify(requestWithId),
+          JSON.stringify(frozen.authoredAuthority),
         ],
       );
     } catch (error) {
@@ -518,6 +531,8 @@ export async function listCpsatSeatingRuns(
   };
 }
 
+const ACTIVE_CANCELLABLE = new Set(["QUEUED", "CLAIMED", "RUNNING"]);
+
 export async function requestCpsatRunCancellation(
   client: PgQueryable,
   input: { eventId: string; runId: string; actorPersonId: string },
@@ -536,14 +551,14 @@ export async function requestCpsatRunCancellation(
     }
     const lifecycle = String(row.status);
     const product = row.product_result == null ? null : String(row.product_result);
-    if (TERMINAL_LIFECYCLES.has(lifecycle) || (product && TERMINAL_PRODUCT.has(product) && lifecycle !== "QUEUED")) {
+    if (TERMINAL_LIFECYCLES.has(lifecycle) || (product && TERMINAL_PRODUCT.has(product) && !ACTIVE_CANCELLABLE.has(lifecycle))) {
       throw new PlatformError("VALIDATION_FAILED", "terminal run cannot be cancelled", {
         publicMessage: "This seating run can no longer be cancelled.",
       });
     }
-    if (lifecycle !== "QUEUED") {
-      throw new PlatformError("VALIDATION_FAILED", "only queued runs accept operator cancel in milestone 1", {
-        publicMessage: "Cancellation is only available while the run is still queued.",
+    if (!ACTIVE_CANCELLABLE.has(lifecycle)) {
+      throw new PlatformError("VALIDATION_FAILED", "run is not cancellable in current lifecycle", {
+        publicMessage: "Cancellation is only available while the run is queued or executing.",
       });
     }
     if (Boolean(row.cancel_requested)) {
@@ -552,8 +567,8 @@ export async function requestCpsatRunCancellation(
     await tx.query(
       `UPDATE cpsat_solver_runs
        SET cancel_requested = TRUE, updated_at = $3
-       WHERE id = $1 AND event_id = $2 AND status = 'QUEUED'`,
-      [input.runId, input.eventId, now],
+       WHERE id = $1 AND event_id = $2 AND status = ANY($4::text[])`,
+      [input.runId, input.eventId, now, [...ACTIVE_CANCELLABLE]],
     );
     await insertRunEvent(
       tx,
@@ -564,7 +579,7 @@ export async function requestCpsatRunCancellation(
         eventId: input.eventId,
         runId: input.runId,
         action: "cpsat.run.cancel_requested",
-        lifecycle: "QUEUED",
+        lifecycle,
       },
       now,
     );

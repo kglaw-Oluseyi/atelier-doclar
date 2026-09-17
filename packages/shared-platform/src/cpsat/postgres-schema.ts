@@ -4,6 +4,7 @@
  */
 export const EOS_S06_CPSAT_SOLVER_QUEUE_MIGRATION_ID = "011_cpsat_solver_queue" as const;
 export const EOS_S06_CPSAT_SOLVER_QUEUE_LAUNCH_MIGRATION_ID = "012_cpsat_solver_queue_launch" as const;
+export const EOS_S06_CPSAT_SOLVER_QUEUE_WORKER_MIGRATION_ID = "013_cpsat_solver_queue_worker" as const;
 
 export const CPSAT_SOLVER_QUEUE_POSTGRES_SCHEMA = `
 CREATE TABLE IF NOT EXISTS cpsat_solver_runs (
@@ -140,4 +141,27 @@ ALTER TABLE cpsat_solver_runs
 CREATE UNIQUE INDEX IF NOT EXISTS cpsat_solver_runs_event_idempotency_uidx
   ON cpsat_solver_runs (event_id, idempotency_key)
   WHERE idempotency_key IS NOT NULL;
+`;
+
+/** Additive Milestone 2 worker progress / seal / authority snapshot columns. */
+export const CPSAT_SOLVER_QUEUE_WORKER_POSTGRES_SCHEMA = `
+ALTER TABLE cpsat_solver_runs
+  ADD COLUMN IF NOT EXISTS progress_phase TEXT,
+  ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS sealed_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS cancel_observed_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS child_invocation_count INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS authored_authority_json JSONB,
+  ADD COLUMN IF NOT EXISTS max_attempts INTEGER NOT NULL DEFAULT 2;
+
+ALTER TABLE cpsat_solver_candidates
+  ADD COLUMN IF NOT EXISTS sealed_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS product_result TEXT,
+  ADD COLUMN IF NOT EXISTS movement_tier INTEGER,
+  ADD COLUMN IF NOT EXISTS preference_tier INTEGER,
+  ADD COLUMN IF NOT EXISTS verification_payload JSONB;
+
+CREATE INDEX IF NOT EXISTS cpsat_solver_runs_lease_reaper_idx
+  ON cpsat_solver_runs (status, lease_until)
+  WHERE status IN ('CLAIMED', 'RUNNING') AND lease_until IS NOT NULL;
 `;

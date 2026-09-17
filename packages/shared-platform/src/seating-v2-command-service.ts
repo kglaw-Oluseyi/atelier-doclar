@@ -1936,7 +1936,11 @@ export class SeatingV2CommandService {
             evidenceGrade: cpsat.evidenceGrade,
             purpose: cpsat.purpose,
             mode: cpsat.mode,
-            startedAt: cpsat.queuedAt ?? cpsat.createdAt,
+            startedAt: cpsat.startedAt ?? cpsat.queuedAt ?? cpsat.createdAt,
+            completedAt: cpsat.sealedAt ?? run.completedAt,
+            progressPhase: cpsat.progressPhase,
+            assignmentsHash: run.assignmentsHash,
+            faultCode: null,
           };
         }),
       };

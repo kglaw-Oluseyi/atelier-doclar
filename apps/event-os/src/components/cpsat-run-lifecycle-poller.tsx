@@ -3,22 +3,37 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
+const ACTIVE_LIFECYCLES = new Set([
+  "QUEUED",
+  "CLAIMED",
+  "RUNNING",
+  "BUILDING",
+  "SEARCHING",
+  "VERIFYING",
+  "EXPLAINING",
+  "PERSISTING",
+]);
+
 /**
- * Modest server refresh while a durable CP-SAT run is queued or cancellation is pending.
- * Stops on unmount or when polling is disabled. Does not overlap refreshes.
+ * Modest server refresh while a durable CP-SAT run is active.
+ * Stops on terminal / READY_FOR_REVIEW. Does not overlap refreshes.
  */
 export function CpsatRunLifecyclePoller({
   active,
+  lifecycle,
   intervalMs = 5_000,
 }: {
   active: boolean;
+  lifecycle?: string | null;
   intervalMs?: number;
 }) {
   const router = useRouter();
   const inFlight = useRef(false);
+  const shouldPoll =
+    active && (!lifecycle || ACTIVE_LIFECYCLES.has(lifecycle) || lifecycle === "CANCELLATION_REQUESTED");
 
   useEffect(() => {
-    if (!active) return;
+    if (!shouldPoll) return;
     const id = window.setInterval(() => {
       if (inFlight.current) return;
       inFlight.current = true;
@@ -31,7 +46,7 @@ export function CpsatRunLifecyclePoller({
       }
     }, intervalMs);
     return () => window.clearInterval(id);
-  }, [active, intervalMs, router]);
+  }, [shouldPoll, intervalMs, router]);
 
   return <div data-testid="seating-run-poller" className="visually-hidden" aria-hidden="true" />;
 }

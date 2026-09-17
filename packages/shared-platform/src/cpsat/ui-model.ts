@@ -1,7 +1,7 @@
 /**
  * CP-SAT run status presentation helpers.
  * Never claims percentage-complete, ETA-to-optimality, or "best possible" without OPTIMAL.
- * Milestone 1 adds durable QUEUED / cancellation-requested operator lifecycle copy.
+ * Milestone 2 adds claim/running/verify/ready-for-review and fault wording.
  */
 import { CPSAT_ORTOOLS_VERSION, CPSAT_PYTHON_VERSION, CPSAT_SHORT_REASON_TEXT, type CpsatShortReasonCode } from "./contract.js";
 
@@ -9,8 +9,18 @@ export type CpsatOperatorLifecycle =
   | "NONE"
   | "LAUNCHING"
   | "QUEUED"
+  | "CLAIMED"
   | "CANCELLATION_REQUESTED"
   | "RUNNING"
+  | "VERIFYING"
+  | "EXPLAINING"
+  | "READY_FOR_REVIEW"
+  | "CANCELLED"
+  | "INFEASIBLE"
+  | "SEARCH_INCOMPLETE"
+  | "TIMED_OUT"
+  | "INVALID_INPUT"
+  | "SOLVER_FAULT"
   | "SETTLED"
   | "VALIDATION_FAILED"
   | "ACCESS_DENIED";
@@ -42,16 +52,21 @@ export type CpsatRunUiModel = {
   purposeLabel: string;
   modeLabel: string;
   createdAtLabel: string | null;
+  completedAtLabel: string | null;
   cancelRequested: boolean;
   faultCode: string | null;
   safeToLeaveAndReturn: boolean;
   cancelAllowed: boolean;
   stopAndKeepBestAllowed: boolean;
+  retrySafe: boolean;
+  assignmentHashShort: string | null;
+  reviewActionLabel: string | null;
   operatorLifecycle: CpsatOperatorLifecycle;
   primaryMessage: string;
   supportingMessage: string;
   validationMessage: string | null;
   showPercentComplete: false;
+  showHeuristicFallback: false;
 };
 
 function purposeLabel(purpose: string | undefined): string {
@@ -70,6 +85,41 @@ function purposeLabel(purpose: string | undefined): string {
 
 function modeLabel(mode: string | undefined): string {
   return mode === "PERFORMANCE" ? "Performance" : "Replay";
+}
+
+function deriveOperatorLifecycle(input: {
+  lifecycle: string;
+  productResult: string;
+  cancelRequested: boolean;
+  phase?: string;
+  operatorLifecycle?: CpsatOperatorLifecycle;
+}): CpsatOperatorLifecycle {
+  if (input.operatorLifecycle) return input.operatorLifecycle;
+  const lifecycle = input.lifecycle;
+  const product = input.productResult;
+  const phase = (input.phase ?? "").toLowerCase();
+
+  if (lifecycle === "QUEUED" || input.phase === "queued") {
+    return input.cancelRequested ? "CANCELLATION_REQUESTED" : "QUEUED";
+  }
+  if (lifecycle === "CLAIMED") return "CLAIMED";
+  if (lifecycle === "CANCELLED" || product === "CANCELLED") return "CANCELLED";
+  if (lifecycle === "READY_FOR_REVIEW") return "READY_FOR_REVIEW";
+  if (product === "INFEASIBLE" || lifecycle === "CLOSED_NO_PLAN" && product === "INFEASIBLE") return "INFEASIBLE";
+  if (product === "SEARCH_INCOMPLETE") return "SEARCH_INCOMPLETE";
+  if (product === "TIMED_OUT") return "TIMED_OUT";
+  if (product === "INVALID_INPUT") return "INVALID_INPUT";
+  if (product === "SOLVER_FAULT" || lifecycle === "FAILED") return "SOLVER_FAULT";
+  if (lifecycle === "RUNNING" || lifecycle === "BUILDING" || lifecycle === "SEARCHING") {
+    if (input.cancelRequested) return "CANCELLATION_REQUESTED";
+    if (phase.includes("verif")) return "VERIFYING";
+    if (phase.includes("explain") || phase.includes("preparing placement")) return "EXPLAINING";
+    return "RUNNING";
+  }
+  if (phase.includes("verif")) return "VERIFYING";
+  if (phase.includes("explain")) return "EXPLAINING";
+  if (product) return "SETTLED";
+  return "NONE";
 }
 
 export function buildCpsatRunUiModel(input: {
@@ -91,10 +141,12 @@ export function buildCpsatRunUiModel(input: {
   purpose?: string;
   mode?: string;
   createdAt?: string | null;
+  completedAt?: string | null;
   cancelRequested?: boolean;
   hasCompleteIncumbent?: boolean;
   operatorLifecycle?: CpsatOperatorLifecycle;
   validationMessage?: string | null;
+  assignmentHash?: string | null;
 }): CpsatRunUiModel {
   const tiers = input.tiers ?? [];
   const allProven = tiers.length > 0 && tiers.every((t) => t.proven);
@@ -108,20 +160,19 @@ export function buildCpsatRunUiModel(input: {
   const seated = input.seated ?? 0;
   const eligible = input.eligible ?? 0;
 
-  let operatorLifecycle: CpsatOperatorLifecycle =
-    input.operatorLifecycle ??
-    (lifecycle === "QUEUED" || input.phase === "queued"
-      ? cancelRequested
-        ? "CANCELLATION_REQUESTED"
-        : "QUEUED"
-      : lifecycle === "RUNNING" || input.phase === "search"
-        ? "RUNNING"
-        : productResult
-          ? "SETTLED"
-          : "NONE");
+  const operatorLifecycle = deriveOperatorLifecycle({
+    lifecycle,
+    productResult,
+    cancelRequested,
+    phase: input.phase,
+    operatorLifecycle: input.operatorLifecycle,
+  });
 
   let primaryMessage = "";
   let supportingMessage = "";
+  let retrySafe = false;
+  let reviewActionLabel: string | null = null;
+
   switch (operatorLifecycle) {
     case "NONE":
       primaryMessage = "Generate seating plan";
@@ -137,13 +188,67 @@ export function buildCpsatRunUiModel(input: {
       supportingMessage =
         "You may leave and return. Solving has not started; a worker will claim this run later.";
       break;
+    case "CLAIMED":
+      primaryMessage = "Generating seating plan";
+      supportingMessage = "A worker claimed this run and is preparing the solver child.";
+      break;
     case "CANCELLATION_REQUESTED":
       primaryMessage = "Cancellation requested";
       supportingMessage = "The worker will acknowledge this request. The run is not cancelled yet.";
       break;
+    case "RUNNING":
+      primaryMessage = "Generating seating plan";
+      supportingMessage = "Safe to leave and return — progress is durable on the run record.";
+      break;
+    case "VERIFYING":
+      primaryMessage = "Checking every placement and rule";
+      supportingMessage = "Independent verification is comparing the solver result to governed authority.";
+      break;
+    case "EXPLAINING":
+      primaryMessage = "Preparing placement reasons";
+      supportingMessage = "Short placement reasons are being built and checked before sealing.";
+      break;
+    case "READY_FOR_REVIEW":
+      primaryMessage = "Seating plan ready for review";
+      supportingMessage = "All eligible guests are seated under verified HARD rules. Adoption is not available yet.";
+      reviewActionLabel = "Review seating plan";
+      break;
+    case "CANCELLED":
+      primaryMessage = "Seating run cancelled";
+      supportingMessage = "No seating candidate was published. You can launch a new run when ready.";
+      retrySafe = true;
+      break;
+    case "INFEASIBLE":
+      primaryMessage = "No complete seating satisfies the mandatory rules";
+      supportingMessage = "This is a solver proof of impossibility — not a temporary search failure.";
+      retrySafe = false;
+      break;
+    case "SEARCH_INCOMPLETE":
+      primaryMessage = "Search finished without a complete plan";
+      supportingMessage = "This is not a proof of impossibility. Retrying with the same authority may help.";
+      retrySafe = true;
+      break;
+    case "TIMED_OUT":
+      primaryMessage = "Seating run stopped on the safety time limit";
+      supportingMessage = "No plan was sealed. Retry is safe with the same governed authority.";
+      retrySafe = true;
+      break;
+    case "INVALID_INPUT":
+      primaryMessage = "The seating request could not be accepted";
+      supportingMessage = "Correct the governed seating authority, then launch a new run.";
+      retrySafe = true;
+      break;
+    case "SOLVER_FAULT":
+      primaryMessage = "Solver fault — do not treat as infeasibility";
+      supportingMessage = input.faultCode
+        ? `A contained fault stopped publication (${input.faultCode}). Retry may be safe after review.`
+        : "A contained fault stopped publication. No candidate was sealed.";
+      retrySafe = true;
+      break;
     case "VALIDATION_FAILED":
       primaryMessage = "Launch could not proceed";
       supportingMessage = input.validationMessage ?? "Check seating authority and try again.";
+      retrySafe = true;
       break;
     case "ACCESS_DENIED":
       primaryMessage = "Not available";
@@ -153,6 +258,12 @@ export function buildCpsatRunUiModel(input: {
       primaryMessage = productResult || lifecycle;
       supportingMessage = "Safe to leave and return — progress is durable on the run record.";
   }
+
+  if (input.freshness === "STALE" && (operatorLifecycle === "READY_FOR_REVIEW" || operatorLifecycle === "SETTLED")) {
+    supportingMessage = `${supportingMessage} Authority is now stale; the sealed result status remains ${productResult || "unchanged"}.`;
+  }
+
+  const assignmentHashShort = input.assignmentHash ? input.assignmentHash.slice(0, 12) : null;
 
   return {
     engineLabel: `OR-Tools CP-SAT ${CPSAT_ORTOOLS_VERSION} · Python ${CPSAT_PYTHON_VERSION}`,
@@ -176,18 +287,27 @@ export function buildCpsatRunUiModel(input: {
     purposeLabel: purposeLabel(input.purpose),
     modeLabel: modeLabel(input.mode),
     createdAtLabel: input.createdAt ?? null,
+    completedAtLabel: input.completedAt ?? null,
     cancelRequested,
     faultCode: input.faultCode ?? null,
     safeToLeaveAndReturn: true,
     cancelAllowed:
       operatorLifecycle === "QUEUED" ||
-      (!cancelRequested && (lifecycle === "QUEUED" || ["QUEUED", "RUNNING", "SEARCH_INCOMPLETE"].includes(productResult))),
-    stopAndKeepBestAllowed: Boolean(input.hasCompleteIncumbent),
+      operatorLifecycle === "CLAIMED" ||
+      operatorLifecycle === "RUNNING" ||
+      operatorLifecycle === "VERIFYING" ||
+      operatorLifecycle === "EXPLAINING" ||
+      (!cancelRequested && lifecycle === "QUEUED"),
+    stopAndKeepBestAllowed: false,
+    retrySafe,
+    assignmentHashShort,
+    reviewActionLabel,
     operatorLifecycle,
     primaryMessage,
     supportingMessage,
     validationMessage: input.validationMessage ?? null,
     showPercentComplete: false,
+    showHeuristicFallback: false,
   };
 }
 
@@ -215,6 +335,8 @@ export function productResultCopy(result: string, proofStatus: CpsatRunUiModel["
       return "Solver fault — do not treat as infeasibility";
     case "CANCELLED":
       return "Cancelled";
+    case "INVALID_INPUT":
+      return "Invalid seating request";
     default:
       return result;
   }

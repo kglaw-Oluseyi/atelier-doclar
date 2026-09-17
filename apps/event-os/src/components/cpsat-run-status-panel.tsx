@@ -3,8 +3,9 @@
 import type { CpsatRunUiModel } from "@maison-doclar/shared-platform";
 
 /**
- * CP-SAT run status panel — durable lifecycle (Milestone 1).
- * Forbidden: percent-complete UI, ETA to optimality, "almost done", "best possible" without OPTIMAL.
+ * CP-SAT run status panel — durable lifecycle (Milestone 2).
+ * Forbidden: percent meters, ETA to optimality, "almost done", "best possible" without OPTIMAL,
+ * and offering the retired seating engine as an alternative.
  */
 export function CpsatRunStatusPanel({
   model,
@@ -12,26 +13,53 @@ export function CpsatRunStatusPanel({
   onCancel,
   cancelDisabled,
   launching,
+  onReview,
 }: {
   model: CpsatRunUiModel;
   shortReasons?: Array<{ guestToken: string; text: string }>;
   onCancel?: () => void;
   cancelDisabled?: boolean;
   launching?: boolean;
+  onReview?: () => void;
 }) {
   const lifecycleLabel =
     model.operatorLifecycle === "CANCELLATION_REQUESTED"
       ? "Cancellation requested"
       : model.operatorLifecycle === "QUEUED"
         ? "Queued"
-        : model.operatorLifecycle === "LAUNCHING"
-          ? "Launching"
-          : model.operatorLifecycle === "NONE"
-            ? "No run"
-            : model.lifecycle;
+        : model.operatorLifecycle === "CLAIMED"
+          ? "Claimed"
+          : model.operatorLifecycle === "LAUNCHING"
+            ? "Launching"
+            : model.operatorLifecycle === "READY_FOR_REVIEW"
+              ? "Ready for review"
+              : model.operatorLifecycle === "NONE"
+                ? "No run"
+                : model.operatorLifecycle === "VERIFYING"
+                  ? "Verifying"
+                  : model.operatorLifecycle === "EXPLAINING"
+                    ? "Preparing reasons"
+                    : model.lifecycle;
 
   const assertiveFailure =
-    model.operatorLifecycle === "VALIDATION_FAILED" || Boolean(model.faultCode) || model.operatorLifecycle === "ACCESS_DENIED";
+    model.operatorLifecycle === "VALIDATION_FAILED" ||
+    model.operatorLifecycle === "SOLVER_FAULT" ||
+    model.operatorLifecycle === "ACCESS_DENIED" ||
+    Boolean(model.faultCode);
+
+  const showDetail =
+    model.operatorLifecycle === "SETTLED" ||
+    model.operatorLifecycle === "RUNNING" ||
+    model.operatorLifecycle === "CLAIMED" ||
+    model.operatorLifecycle === "VERIFYING" ||
+    model.operatorLifecycle === "EXPLAINING" ||
+    model.operatorLifecycle === "READY_FOR_REVIEW" ||
+    model.operatorLifecycle === "INFEASIBLE" ||
+    model.operatorLifecycle === "SEARCH_INCOMPLETE" ||
+    model.operatorLifecycle === "TIMED_OUT" ||
+    model.operatorLifecycle === "INVALID_INPUT" ||
+    model.operatorLifecycle === "SOLVER_FAULT" ||
+    model.operatorLifecycle === "CANCELLED";
 
   return (
     <section
@@ -93,31 +121,55 @@ export function CpsatRunStatusPanel({
         </dd>
         <dt>Created</dt>
         <dd style={{ margin: 0 }}>{model.createdAtLabel ?? "—"}</dd>
+        {model.completedAtLabel ? (
+          <>
+            <dt>Completed</dt>
+            <dd style={{ margin: 0 }} data-testid="cpsat-run-completed">
+              {model.completedAtLabel}
+            </dd>
+          </>
+        ) : null}
         <dt>Engine</dt>
         <dd style={{ margin: 0 }}>{model.engineLabel}</dd>
-        {model.operatorLifecycle === "SETTLED" || model.operatorLifecycle === "RUNNING" ? (
+        {showDetail ? (
           <>
             <dt>Phase</dt>
-            <dd style={{ margin: 0 }} role="status" aria-live="polite">
+            <dd style={{ margin: 0 }} role="status" aria-live="polite" data-testid="cpsat-run-phase">
               {model.phase}
             </dd>
             <dt>Elapsed</dt>
             <dd style={{ margin: 0 }}>{(model.elapsedMs / 1000).toFixed(1)}s</dd>
             <dt>Guests</dt>
-            <dd style={{ margin: 0 }}>
+            <dd style={{ margin: 0 }} data-testid="cpsat-run-guests">
               {model.guestTotals.seated}/{model.guestTotals.eligible} seated
+            </dd>
+            <dt>HARD rules</dt>
+            <dd style={{ margin: 0 }} data-testid="cpsat-run-hard-result">
+              {model.hardResult}
             </dd>
             <dt>Product result</dt>
             <dd style={{ margin: 0 }} role="status" aria-live="polite">
               <strong>{model.productResult || "—"}</strong>
             </dd>
+            {model.assignmentHashShort ? (
+              <>
+                <dt>Assignment hash</dt>
+                <dd style={{ margin: 0 }} data-testid="cpsat-run-assignment-hash">
+                  {model.assignmentHashShort}…
+                </dd>
+              </>
+            ) : null}
           </>
         ) : null}
         {model.faultCode ? (
           <>
             <dt>Fault</dt>
-            <dd style={{ margin: 0 }} role="alert" aria-live="assertive">
+            <dd style={{ margin: 0 }} role="alert" aria-live="assertive" data-testid="cpsat-run-fault">
               {model.faultCode}
+            </dd>
+            <dt>Retry</dt>
+            <dd style={{ margin: 0 }} data-testid="cpsat-run-retry-safe">
+              {model.retrySafe ? "Retry is safe after review" : "Retry is not recommended without authority changes"}
             </dd>
           </>
         ) : null}
@@ -132,11 +184,23 @@ export function CpsatRunStatusPanel({
       </dl>
       {/* showPercentComplete is always false — no fake completion meter */}
       {model.showPercentComplete ? null : null}
+      {model.showHeuristicFallback ? null : null}
       <p style={{ margin: 0, fontSize: "0.9rem" }} data-testid="cpsat-run-leave-return">
         {model.safeToLeaveAndReturn
           ? "Safe to leave and return — this run is durable in PostgreSQL."
           : "Remain on this page until the run settles."}
       </p>
+      {model.operatorLifecycle === "READY_FOR_REVIEW" && model.reviewActionLabel ? (
+        <button
+          type="button"
+          className="button primary cpsat-interactive"
+          data-testid="cpsat-review-seating-plan"
+          onClick={onReview}
+          style={{ cursor: "pointer" }}
+        >
+          {model.reviewActionLabel}
+        </button>
+      ) : null}
       {model.cancelAllowed && onCancel && !model.cancelRequested ? (
         <button
           type="button"
@@ -150,7 +214,7 @@ export function CpsatRunStatusPanel({
           Cancel run
         </button>
       ) : null}
-      {model.cancelRequested ? (
+      {model.cancelRequested && model.operatorLifecycle !== "CANCELLED" ? (
         <p data-testid="cpsat-cancel-requested" style={{ margin: 0, fontSize: "0.9rem" }}>
           Cancellation request is recorded. Do not treat the run as cancelled until the worker acknowledges it.
         </p>

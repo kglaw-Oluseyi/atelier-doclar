@@ -3,7 +3,7 @@
  * reads framed responses from dedicated fd 3. No DB credentials in child env.
  */
 import { spawn, type ChildProcess } from "node:child_process";
-import { encodeFrame, FrameDecoder } from "./frame.js";
+import { encodeFrame, FrameDecoder, FRAME_MAX_BYTES } from "./frame.js";
 
 export type ChildMessage =
   | { type: "progress"; phase: string; detail?: string }
@@ -16,6 +16,11 @@ export interface SpawnChildOptions {
   request: Record<string, unknown>;
   wallMs?: number;
   cleanEnv?: boolean;
+  maxTotalResponseBytes?: number;
+  cancelGraceMs?: number;
+  onProgress?: (phase: string, detail?: string) => void | Promise<void>;
+  shouldCancel?: () => Promise<boolean>;
+  cancelPollMs?: number;
 }
 
 export interface ChildRunResult {
@@ -23,6 +28,11 @@ export interface ChildRunResult {
   exitCode: number | null;
   signal: NodeJS.Signals | null;
   elapsedMs: number;
+  timedOut?: boolean;
+  cancelled?: boolean;
+  truncated?: boolean;
+  oversized?: boolean;
+  childEnvKeys?: string[];
 }
 
 function buildCleanEnv(): NodeJS.ProcessEnv {
@@ -50,10 +60,18 @@ export async function runSolverChild(options: SpawnChildOptions): Promise<ChildR
   const started = Date.now();
   const messages: ChildMessage[] = [];
   const decoder = new FrameDecoder();
+  const cleanEnv = options.cleanEnv === false ? process.env : buildCleanEnv();
+  const childEnvKeys = Object.keys(cleanEnv);
+  let totalBytes = 0;
+  let truncated = false;
+  let oversized = false;
+  let timedOut = false;
+  let cancelled = false;
+  let settled = false;
 
   const child = spawn(options.pythonPath, [options.scriptPath], {
     stdio: ["pipe", "pipe", "pipe", "pipe"],
-    env: options.cleanEnv === false ? process.env : buildCleanEnv(),
+    env: cleanEnv,
     detached: true,
   });
 
@@ -62,9 +80,34 @@ export async function runSolverChild(options: SpawnChildOptions): Promise<ChildR
     throw new Error("child fd 3 pipe unavailable");
   }
 
+  const maxTotal = options.maxTotalResponseBytes ?? FRAME_MAX_BYTES * 4;
+
   (responseStream as NodeJS.ReadableStream).on("data", (chunk: Buffer) => {
-    for (const msg of decoder.push(chunk)) {
-      messages.push(msg as ChildMessage);
+    totalBytes += chunk.length;
+    if (totalBytes > maxTotal) {
+      oversized = true;
+      killProcessGroup(child, "SIGKILL");
+      return;
+    }
+    try {
+      for (const msg of decoder.push(chunk)) {
+        const typed = msg as ChildMessage;
+        if (!typed || typeof typed !== "object" || typeof (typed as { type?: unknown }).type !== "string") {
+          truncated = true;
+          continue;
+        }
+        if (!["progress", "final", "error"].includes(typed.type)) {
+          truncated = true;
+          messages.push({ type: "error", message: `unknown_frame:${typed.type}` });
+          continue;
+        }
+        messages.push(typed);
+        if (typed.type === "progress") {
+          void options.onProgress?.(typed.phase, typed.detail);
+        }
+      }
+    } catch {
+      truncated = true;
     }
   });
 
@@ -73,20 +116,58 @@ export async function runSolverChild(options: SpawnChildOptions): Promise<ChildR
   });
 
   child.stdin?.write(encodeFrame(options.request));
-  child.stdin?.end();
 
   const wallMs = options.wallMs ?? 30_000;
-  let timedOut = false;
+  const cancelGraceMs = options.cancelGraceMs ?? 1_500;
+  const cancelPollMs = options.cancelPollMs ?? 250;
+
   const killer = setTimeout(() => {
+    if (settled) return;
     timedOut = true;
     killProcessGroup(child, "SIGTERM");
-    setTimeout(() => killProcessGroup(child, "SIGKILL"), 1500);
+    setTimeout(() => killProcessGroup(child, "SIGKILL"), cancelGraceMs);
   }, wallMs);
+
+  let cancelTimer: NodeJS.Timeout | undefined;
+  if (options.shouldCancel) {
+    cancelTimer = setInterval(() => {
+      void (async () => {
+        if (settled || cancelled || timedOut) return;
+        const stop = await options.shouldCancel!();
+        if (!stop) return;
+        cancelled = true;
+        try {
+          child.stdin?.write(encodeFrame({ type: "stop" }));
+        } catch {
+          /* ignore */
+        }
+        setTimeout(() => {
+          if (settled) return;
+          killProcessGroup(child, "SIGTERM");
+          setTimeout(() => {
+            if (!settled) killProcessGroup(child, "SIGKILL");
+          }, cancelGraceMs);
+        }, cancelGraceMs);
+      })();
+    }, cancelPollMs);
+  }
+
+  // Keep stdin open briefly so stop frames can be written; then end if not cancelled.
+  setTimeout(() => {
+    if (!cancelled) child.stdin?.end();
+  }, 50);
 
   const exit = await new Promise<{ code: number | null; signal: NodeJS.Signals | null }>((resolve) => {
     child.on("exit", (code, signal) => resolve({ code, signal }));
   });
+  settled = true;
   clearTimeout(killer);
+  if (cancelTimer) clearInterval(cancelTimer);
+  try {
+    child.stdin?.end();
+  } catch {
+    /* ignore */
+  }
 
   if (timedOut && !messages.some((m) => m.type === "final")) {
     messages.push({ type: "error", message: "wall_clock_kill" });
@@ -97,6 +178,11 @@ export async function runSolverChild(options: SpawnChildOptions): Promise<ChildR
     exitCode: exit.code,
     signal: exit.signal,
     elapsedMs: Date.now() - started,
+    timedOut,
+    cancelled,
+    truncated,
+    oversized,
+    childEnvKeys,
   };
 }
 
@@ -106,47 +192,15 @@ export async function cancelSolverChild(
   request: Record<string, unknown>,
   cancelAfterMs: number,
 ): Promise<ChildRunResult> {
-  const started = Date.now();
-  const messages: ChildMessage[] = [];
-  const decoder = new FrameDecoder();
-
-  const child = spawn(pythonPath, [scriptPath], {
-    stdio: ["pipe", "pipe", "pipe", "pipe"],
-    env: buildCleanEnv(),
-    detached: true,
+  return runSolverChild({
+    pythonPath,
+    scriptPath,
+    request,
+    wallMs: cancelAfterMs + 5_000,
+    cancelGraceMs: 1_000,
+    shouldCancel: async () => true,
+    cancelPollMs: Math.max(10, Math.min(50, cancelAfterMs)),
   });
-
-  const responseStream = child.stdio[3] as NodeJS.ReadableStream;
-  responseStream.on("data", (chunk: Buffer) => {
-    for (const msg of decoder.push(chunk)) {
-      messages.push(msg as ChildMessage);
-    }
-  });
-
-  child.stdin?.write(encodeFrame(request));
-  setTimeout(() => {
-    try {
-      child.stdin?.write(encodeFrame({ type: "stop" }));
-    } catch {
-      /* ignore */
-    }
-  }, Math.min(50, cancelAfterMs));
-
-  setTimeout(() => {
-    killProcessGroup(child, "SIGTERM");
-    setTimeout(() => killProcessGroup(child, "SIGKILL"), 1000);
-  }, cancelAfterMs);
-
-  const exit = await new Promise<{ code: number | null; signal: NodeJS.Signals | null }>((resolve) => {
-    child.on("exit", (code, signal) => resolve({ code, signal }));
-  });
-
-  return {
-    messages,
-    exitCode: exit.code,
-    signal: exit.signal,
-    elapsedMs: Date.now() - started,
-  };
 }
 
 /** Force-crash containment: child hard-exit must not take supervisor down. */

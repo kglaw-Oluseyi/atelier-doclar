@@ -20,14 +20,19 @@ export { solverRequestToV2Compiled } from "./corpus-bridge.js";
 export {
   EOS_S06_CPSAT_SOLVER_QUEUE_MIGRATION_ID,
   EOS_S06_CPSAT_SOLVER_QUEUE_LAUNCH_MIGRATION_ID,
+  EOS_S06_CPSAT_SOLVER_QUEUE_WORKER_MIGRATION_ID,
   CPSAT_SOLVER_QUEUE_POSTGRES_SCHEMA,
   CPSAT_SOLVER_QUEUE_LAUNCH_POSTGRES_SCHEMA,
+  CPSAT_SOLVER_QUEUE_WORKER_POSTGRES_SCHEMA,
 } from "./postgres-schema.js";
 export {
   CPSAT_CLAIM_SQL,
   CPSAT_FAIR_CLAIM_SQL,
   CPSAT_HEARTBEAT_SQL,
   CPSAT_FENCED_SETTLE_SQL,
+  CPSAT_ACK_QUEUED_CANCEL_SQL,
+  CPSAT_REAPER_REQUEUE_SQL,
+  CPSAT_REAPER_FAULT_SQL,
   newWorkerLeaseOwner,
   fenceToken,
   CPSAT_PRIORITY_ORDER,
@@ -52,6 +57,34 @@ export {
 export { isSolverQueueEnabled } from "../seating-v2-flag.js";
 export { buildCpsatRunUiModel, productResultCopy, shortReasonText, type CpsatRunUiModel } from "./ui-model.js";
 export { buildExplanations, redactExplanationForOrdinaryRole, CPSAT_EXPLANATION_EDITION } from "./explanations.js";
+export { verifyExplanations } from "./explanation-verifier.js";
+export {
+  claimNextCpsatRun,
+  heartbeatCpsatRun,
+  markCpsatRunRunning,
+  fencedSettleCpsatRun,
+  acknowledgeQueuedCancellations,
+  reapExpiredCpsatLeases,
+  projectSeatingV2Lifecycle,
+  assertAuthorityProjectionAligned,
+  mapLifecycleToProjectionStatus,
+  loadClaimedRun,
+  observeCancellation,
+  incrementChildInvocation,
+  updateCpsatProgressPhase,
+} from "./worker-lifecycle.js";
+export {
+  validateChildResponse,
+  processVerifiedCandidate,
+  sealAndSettleCandidate,
+  settleFaultOrTerminal,
+  loadReviewableCandidate,
+  isCandidateReviewable,
+  prepareRunForExecution,
+} from "./worker-settlement.js";
+export { executeClaimedCpsatRun } from "./execute-claimed-run.js";
+export { canonicalizeSymmetricAssignments } from "./canonicalize.js";
+export { recomputeObjectiveTiers, tiersMatchChildReport } from "./tiers.js";
 export {
   toCpsatWireSeed,
   assertCpsatWireSeed,

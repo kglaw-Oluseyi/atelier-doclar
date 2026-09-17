@@ -784,15 +784,19 @@ export default async function EventSeatingPage({
           />
         ) : null}
         {(() => {
-          const pollTargets = workspace.runs.filter(
-            (run) =>
-              run.status === "QUEUED" ||
-              run.lifecycle === "QUEUED" ||
-              Boolean(run.cancelRequested),
-          );
+          const pollTargets = workspace.runs.filter((run) => {
+            const lifecycle = String(run.lifecycle ?? run.status ?? "");
+            return (
+              ["QUEUED", "CLAIMED", "RUNNING", "BUILDING", "SEARCHING", "VERIFYING", "EXPLAINING", "PERSISTING"].includes(
+                lifecycle,
+              ) || Boolean(run.cancelRequested && !["CANCELLED", "READY_FOR_REVIEW", "FAILED", "CLOSED_NO_PLAN"].includes(lifecycle))
+            );
+          });
+          const primary = pollTargets[0];
           return (
             <CpsatRunLifecyclePoller
               active={isSolverQueueEnabled() && pollTargets.length > 0}
+              lifecycle={primary ? String(primary.lifecycle ?? primary.status) : null}
               intervalMs={5_000}
             />
           );
@@ -803,6 +807,16 @@ export default async function EventSeatingPage({
             const outcome = run.validatorVerdict ?? run.resultStatus ?? run.status;
             const cancelRequested = Boolean(run.cancelRequested);
             const queued = run.status === "QUEUED" || run.lifecycle === "QUEUED";
+            const lifecycle = String(run.lifecycle ?? run.status);
+            const phase =
+              run.progressPhase ??
+              (lifecycle === "RUNNING"
+                ? "Generating seating plan"
+                : queued
+                  ? "queued"
+                  : lifecycle === "READY_FOR_REVIEW"
+                    ? "sealed"
+                    : "settled");
             return (
               <li key={run.id} data-testid={`seating-run-${run.status}`}>
                 <article
@@ -816,10 +830,10 @@ export default async function EventSeatingPage({
                   {isCurrent ? (
                     <CpsatRunStatusPanel
                       model={buildCpsatRunUiModel({
-                        productResult: String(outcome === "QUEUED" ? "" : outcome),
-                        lifecycle: run.lifecycle ?? run.status,
-                        resultStatus: run.resultStatus ?? (queued ? null : String(outcome)),
-                        phase: run.status === "RUNNING" ? "search" : queued ? "queued" : "settled",
+                        productResult: String(outcome === "QUEUED" || outcome === "CLAIMED" || outcome === "RUNNING" ? "" : outcome),
+                        lifecycle,
+                        resultStatus: run.resultStatus ?? (queued || lifecycle === "RUNNING" || lifecycle === "CLAIMED" ? null : String(outcome)),
+                        phase,
                         elapsedMs: 0,
                         seated: run.seated ?? 0,
                         eligible: (run.seated ?? 0) + (run.unseated ?? 0),
@@ -830,15 +844,11 @@ export default async function EventSeatingPage({
                         purpose: run.purpose,
                         mode: run.mode,
                         createdAt: run.startedAt,
+                        completedAt: run.completedAt ?? null,
                         cancelRequested,
-                        hasCompleteIncumbent: outcome === "FEASIBLE" || run.validatorVerdict === "FEASIBLE",
-                        operatorLifecycle: cancelRequested
-                          ? "CANCELLATION_REQUESTED"
-                          : queued
-                            ? "QUEUED"
-                            : run.status === "RUNNING"
-                              ? "RUNNING"
-                              : "SETTLED",
+                        assignmentHash: run.assignmentsHash ?? null,
+                        hasCompleteIncumbent: lifecycle === "READY_FOR_REVIEW" || outcome === "FEASIBLE" || outcome === "OPTIMAL",
+                        faultCode: run.faultCode ?? null,
                       })}
                     />
                   ) : null}
