@@ -51,6 +51,7 @@ function buildInstance(seed: number): { compiled: SeatingV2CompiledRequest; expe
     }
   }
   const rules = [];
+  let maxTogether = 1;
   if (nGuests >= 2 && rng() < 0.7) {
     rules.push({
       contentHash: exactHash({ seed, together: true }),
@@ -64,6 +65,7 @@ function buildInstance(seed: number): { compiled: SeatingV2CompiledRequest; expe
       capabilityCodes: [] as string[],
       positionToken: null,
     });
+    maxTogether = Math.max(maxTogether, 2);
   }
   if (nGuests >= 3 && rng() < 0.5) {
     rules.push({
@@ -79,8 +81,7 @@ function buildInstance(seed: number): { compiled: SeatingV2CompiledRequest; expe
       positionToken: null,
     });
   }
-  // Deliberate infeasible: together of 3 on seatsPer=1 tables only when forced
-  let expectedFeasible = positions.length >= nGuests;
+  // Deliberate infeasible: together of 3 when seatsPer < 3
   if (rng() < 0.15 && nGuests >= 3) {
     rules.push({
       contentHash: exactHash({ seed, big: true }),
@@ -94,8 +95,11 @@ function buildInstance(seed: number): { compiled: SeatingV2CompiledRequest; expe
       capabilityCodes: [],
       positionToken: null,
     });
-    if (seatsPer < 3) expectedFeasible = false;
+    maxTogether = Math.max(maxTogether, 3);
   }
+  const seatCount = positions.length;
+  let expectedFeasible = seatCount >= nGuests && seatsPer >= maxTogether;
+  // Apart + together can still be feasible when seatsPer >= maxTogether and enough tables
   return {
     expectedFeasible,
     compiled: {
