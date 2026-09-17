@@ -21,6 +21,31 @@ COPY --from=worker python/requirements.linux.hashes.txt ./requirements.txt
 RUN pip install --no-cache-dir --require-hashes -r requirements.txt \
   && python -c "import ortools,sys,platform; print(ortools.__version__, sys.version, platform.machine())"
 
+FROM ${PYTHON_IMAGE} AS node-bundle
+ARG NODE_VERSION
+ARG NODE_TARBALL_SHA256
+ENV NODE_VERSION=${NODE_VERSION}
+RUN set -eux; \
+  apt-get update; \
+  apt-get install -y --no-install-recommends ca-certificates curl xz-utils; \
+  curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" -o /tmp/node.tar.xz; \
+  echo "${NODE_TARBALL_SHA256}  /tmp/node.tar.xz" | sha256sum -c -; \
+  tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1; \
+  rm -f /tmp/node.tar.xz; \
+  apt-get purge -y curl xz-utils; \
+  apt-get autoremove -y; \
+  rm -rf /var/lib/apt/lists/*
+WORKDIR /bundle
+COPY --from=worker package.json tsconfig.json ./
+COPY --from=worker src ./src
+COPY --from=platform package.json /bundle/vendor/shared-platform/package.json
+COPY --from=platform src /bundle/vendor/shared-platform/src
+RUN node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('package.json','utf8')); p.dependencies['@maison-doclar/shared-platform']='file:./vendor/shared-platform'; fs.writeFileSync('package.json', JSON.stringify(p,null,2)+'\\n');" \
+  && npm install --no-fund --no-audit \
+  && npx esbuild src/supervisor.ts --bundle --platform=node --format=esm --outfile=dist/supervisor.js --external:pg \
+  && test -f dist/supervisor.js \
+  && node -e "const fs=require('fs'); fs.writeFileSync('package.runtime.json', JSON.stringify({name:'@maison-doclar/event-os-solver-worker',private:true,type:'module',dependencies:{pg:'^8.23.0'}},null,2)+'\\n');"
+
 FROM ${PYTHON_IMAGE} AS runtime
 ARG NODE_VERSION
 ARG NODE_TARBALL_SHA256
@@ -52,19 +77,14 @@ RUN set -eux; \
 COPY --from=python-deps /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 
 WORKDIR /app
-COPY --from=worker package.json tsconfig.json ./
-# Replace monorepo workspace protocol with a vendored file dependency for the image.
-COPY --from=platform package.json /app/vendor/shared-platform/package.json
-COPY --from=platform src /app/vendor/shared-platform/src
-RUN node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('package.json','utf8')); p.dependencies['@maison-doclar/shared-platform']='file:./vendor/shared-platform'; fs.writeFileSync('package.json', JSON.stringify(p,null,2)+'\\n');" \
-  && npm install --omit=dev --no-fund --no-audit \
+COPY --from=node-bundle /bundle/package.runtime.json ./package.json
+COPY --from=node-bundle /bundle/dist/supervisor.js ./dist/supervisor.js
+RUN npm install --omit=dev --no-fund --no-audit \
   && npm cache clean --force \
-  && test -d /app/node_modules/@maison-doclar/shared-platform \
   && test -d /app/node_modules/pg \
-  && test -d /app/node_modules/tsx \
-  && test -d /app/node_modules/zod
+  && test ! -d /app/node_modules/tsx \
+  && test ! -d /app/node_modules/esbuild
 
-COPY --from=worker src ./src
 COPY --from=worker python ./python
 COPY --from=worker schemas ./schemas
 
@@ -77,9 +97,10 @@ RUN useradd --create-home --uid 10001 --shell /usr/sbin/nologin solver \
   && test ! -f /app/test-only/keep_best_timing_child.py \
   && test ! -d /app/test \
   && test ! -d /app/scripts \
-  && if grep -R "CPSAT_ALLOW_TEST_HOOKS" /app/python /app/src /app/schemas /app/vendor; then exit 1; fi \
-  && if grep -R "continueAfterIncumbentMs" /app/python /app/src /app/schemas /app/vendor; then exit 1; fi \
-  && if grep -R "CPSAT_ALLOW_TEST_HOOKS" /app/node_modules/@maison-doclar/shared-platform 2>/dev/null; then exit 1; fi
+  && test ! -d /app/src \
+  && test ! -d /app/vendor \
+  && if grep -R "CPSAT_ALLOW_TEST_HOOKS" /app/python /app/schemas /app/dist; then exit 1; fi \
+  && if grep -R "continueAfterIncumbentMs" /app/python /app/schemas /app/dist; then exit 1; fi
 
 LABEL org.opencontainers.image.source="https://github.com/kglaw-Oluseyi/atelier-doclar" \
       org.opencontainers.image.revision="${SOURCE_SHA}" \
@@ -102,4 +123,4 @@ WORKDIR /app
 
 # Intentionally omits any listening-port instruction. Process liveness is the health mechanism; readiness is PostgreSQL.
 HEALTHCHECK NONE
-ENTRYPOINT ["npx", "tsx", "src/supervisor.ts"]
+ENTRYPOINT ["node", "dist/supervisor.js"]
