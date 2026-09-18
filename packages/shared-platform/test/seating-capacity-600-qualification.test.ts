@@ -311,7 +311,7 @@ describe("EOS-S06 600-guest capacity product integration", () => {
       reason: "Capacity concurrency planner grant on Beta",
       idempotencyKey: "cap600-grant-planner-b",
     });
-    service.grantAssignment(admin("cap600-grant-b-director"), {
+    service.grantAssignment(ceo("cap600-grant-b-director"), {
       organisationId: people.orgMaison,
       personId: people.personDirector,
       roleKey: "EVENT_DIRECTOR",

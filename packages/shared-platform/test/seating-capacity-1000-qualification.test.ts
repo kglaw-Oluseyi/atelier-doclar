@@ -70,7 +70,7 @@ describe("capacity 1000 corpus and layout", () => {
       reason: "CAP1000 layout test planner",
       idempotencyKey: "cap1k-test-grant-planner",
     });
-    const directorGrant = service.grantAssignment(admin, {
+    const directorGrant = service.grantAssignment(actor(people.personCeo, { now: NOW, correlationId: "cap1k-grant-director" }), {
       organisationId: people.orgMaison,
       personId: people.personDirector,
       roleKey: "EVENT_DIRECTOR",

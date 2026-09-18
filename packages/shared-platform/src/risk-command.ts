@@ -4,6 +4,7 @@ import { exactHash } from "./eec-hash.js";
 import { PlatformError } from "./errors.js";
 import { parseRiskSchema } from "./risk-form-contract.js";
 import { RiskCommandEnvelopeSchema } from "./risk-schemas.js";
+import { isCeoRole } from "./catalog.js";
 import type { PlatformSnapshot } from "./store.js";
 
 export function riskStamp(now: string, version = 1) {
@@ -107,19 +108,33 @@ export function assertIndependentChecker(input: {
   }
 }
 
-/** Resolve whether an actor snapshot holds organisation-wide CEO authority. */
+function activeOrganisationWideCeo(
+  assignment: { status: string; organisationId: string; roleId: string; clientId?: string; eventId?: string; startsAt?: string; endsAt?: string },
+  role: { id: string; key: string; organisationWide?: boolean; status?: string } | undefined,
+  organisationId: string | undefined,
+  now: string,
+): boolean {
+  if (!role || role.status === "DISABLED" || role.status === "RETIRED") return false;
+  if (assignment.status !== "ACTIVE") return false;
+  if (assignment.clientId || assignment.eventId) return false;
+  if (organisationId && assignment.organisationId !== organisationId) return false;
+  if (assignment.startsAt && Date.parse(assignment.startsAt) > Date.parse(now)) return false;
+  if (assignment.endsAt && Date.parse(assignment.endsAt) <= Date.parse(now)) return false;
+  return Boolean(isCeoRole(role.key) && role.organisationWide);
+}
+
+/** Resolve whether an actor snapshot holds an active organisation-wide CEO assignment. */
 export function actorHasCeoOrganisationWide(
   actor: {
-    assignments: ReadonlyArray<{ status: string; organisationId: string; roleId: string }>;
-    roles: ReadonlyArray<{ id: string; key: string; organisationWide?: boolean }>;
+    assignments: ReadonlyArray<{ status: string; organisationId: string; roleId: string; clientId?: string; eventId?: string; startsAt?: string; endsAt?: string }>;
+    roles: ReadonlyArray<{ id: string; key: string; organisationWide?: boolean; status?: string }>;
   },
   organisationId?: string,
+  now = new Date().toISOString(),
 ): boolean {
   return actor.assignments.some((assignment) => {
-    if (assignment.status !== "ACTIVE") return false;
-    if (organisationId && assignment.organisationId !== organisationId) return false;
     const role = actor.roles.find((item) => item.id === assignment.roleId);
-    return Boolean(role && role.key === "CEO" && role.organisationWide);
+    return activeOrganisationWideCeo(assignment, role, organisationId, now);
   });
 }
 
@@ -142,12 +157,12 @@ export function personHasCeoOrganisationWide(
   snap: PlatformSnapshot,
   personId: string,
   organisationId?: string,
+  now = new Date().toISOString(),
 ): boolean {
   return snap.assignments.some((assignment) => {
-    if (assignment.personId !== personId || assignment.status !== "ACTIVE") return false;
-    if (organisationId && assignment.organisationId !== organisationId) return false;
+    if (assignment.personId !== personId) return false;
     const role = snap.roles.find((item) => item.id === assignment.roleId);
-    return Boolean(role && role.key === "CEO" && role.organisationWide);
+    return activeOrganisationWideCeo(assignment, role, organisationId, now);
   });
 }
 

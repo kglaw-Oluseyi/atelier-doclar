@@ -704,7 +704,6 @@ const ROLE_PERMISSIONS: Record<(typeof SYSTEM_ROLE_KEYS)[number], readonly Permi
     "atelier.view",
     "atelier.audit.view",
     "language.preference.view",
-    "language.assembly.preview",
     "language.audit.view",
     "venue.registry.view",
     "layout.view",

@@ -435,9 +435,10 @@ describe("MD-PR-S033 export authority context", () => {
     const text = inspectLayoutExportPdfText(stored.bytes);
     assert.match(text, /PUBLISHED/);
     assert.match(text, new RegExp(published.contentHash));
-    const auditorJob = service.requestLayoutExport(auditor(), { ...cas(current(service, layout.id, auditor())), format: "PDF", reason: "Auditor export" });
-    assert.equal(auditorJob.projectionMasked, true);
-    assert.notEqual(auditorJob.id, published.id);
+    assert.throws(
+      () => service.requestLayoutExport(auditor(), { ...cas(current(service, layout.id, auditor())), format: "PDF", reason: "Auditor export" }),
+      (error: unknown) => error instanceof PlatformError && error.code === "FORBIDDEN",
+    );
     assert.throws(
       () => service.getStoredLayoutExport(auditor(), FIXTURE_IDS.orgMaison, FIXTURE_IDS.eventAlphaOne, layout.id, published.id),
       (error: unknown) => error instanceof PlatformError && error.code === "FORBIDDEN",

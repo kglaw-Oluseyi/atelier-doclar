@@ -17,6 +17,7 @@ export interface ProgrammeCapabilities {
   canManageVehicle: boolean;
   canPublishAccessPlan: boolean;
   canReviewException: boolean;
+  canConsumePackage: boolean;
 }
 
 export function programmePermissionAllowed(
@@ -32,6 +33,7 @@ export function programmePermissionAllowed(
     canManageVehicle: check("programme.vehicle.manage"),
     canPublishAccessPlan: check("programme.accessPlan.publish"),
     canReviewException: check("programme.exception.review"),
+    canConsumePackage: check("programme.checkpoint.manage"),
   };
 }
 

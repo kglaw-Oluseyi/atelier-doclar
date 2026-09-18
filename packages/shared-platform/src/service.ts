@@ -21,6 +21,8 @@ import { assertNamedHuman } from "./identity.js";
 import { lineageFixtureMark } from "./fixtures.js";
 import { emptyMasterEventFile } from "./mef.js";
 import { authorize, canSeeClient, canSeeEvent, singleCoveringRoleKey, type ActorSnapshot, type PolicyDecision } from "./policy.js";
+import { grantPermissionFor, revokePermissionFor } from "./access-grant-policy.js";
+import { actorHasCeoOrganisationWide } from "./risk-command.js";
 import { parseCanonicalCsv, rowToIntakeFields } from "./guest-intake.js";
 import {
   advanceGuestIntakePromotionCore,
@@ -1891,8 +1893,24 @@ export class PlatformService {
 
   grantAssignment(actor: ActorContext, raw: unknown): Assignment {
     const input = parseStrict<GrantAssignmentInput>(GrantAssignmentInputSchema, raw);
+    const actorSnap = this.actorSnapshot(actor);
+    const now = actor.now ?? new Date().toISOString();
+    let permission: PermissionKey = "platform.access.administer";
+    try {
+      permission = grantPermissionFor({
+        actor: actorSnap,
+        roleKey: input.roleKey,
+        organisationId: input.organisationId,
+        clientId: input.clientId,
+        eventId: input.eventId,
+        now,
+      });
+    } catch (error) {
+      if (!(error instanceof PlatformError)) throw error;
+      permission = "platform.access.administer";
+    }
     return this.mutate(actor, {
-      permission: "platform.access.administer",
+      permission,
       scope: { organisationId: input.organisationId, clientId: input.clientId, eventId: input.eventId },
       action: "assignment.granted",
       resourceType: "assignment",
@@ -1900,6 +1918,14 @@ export class PlatformService {
       idempotencyKey: input.idempotencyKey,
       payloadHash: stableHash(input),
       run: (snap, ctx) => {
+        grantPermissionFor({
+          actor: ctx.actor,
+          roleKey: input.roleKey,
+          organisationId: input.organisationId,
+          clientId: input.clientId,
+          eventId: input.eventId,
+          now: ctx.now,
+        });
         this.requireOrganisation(snap, input.organisationId);
         if (input.eventId) this.requireEvent(snap, input.organisationId, input.eventId);
         else if (input.clientId) this.requireClient(snap, input.organisationId, input.clientId);
@@ -1933,9 +1959,26 @@ export class PlatformService {
 
   revokeAssignment(actor: ActorContext, raw: unknown): Assignment {
     const input = parseStrict<RevokeAssignmentInput>(RevokeAssignmentInputSchema, raw);
+    const actorSnap = this.actorSnapshot(actor);
+    const now = actor.now ?? new Date().toISOString();
+    const existing = this.store.snapshot().assignments.find((item) => item.id === input.assignmentId);
+    const targetRole = existing ? roleKeyForId(existing.roleId) : undefined;
+    let permission: PermissionKey = "platform.access.administer";
+    try {
+      permission = revokePermissionFor({
+        actor: actorSnap,
+        targetRoleKey: targetRole,
+        targetEventId: existing?.eventId,
+        organisationId: input.organisationId,
+        now,
+      });
+    } catch (error) {
+      if (!(error instanceof PlatformError)) throw error;
+      permission = "platform.access.administer";
+    }
     return this.mutate(actor, {
-      permission: "platform.access.administer",
-      scope: { organisationId: input.organisationId },
+      permission,
+      scope: { organisationId: input.organisationId, eventId: existing?.eventId },
       action: "assignment.revoked",
       resourceType: "assignment",
       resourceId: input.assignmentId,
@@ -1947,6 +1990,13 @@ export class PlatformService {
         if (!record || record.organisationId !== input.organisationId) {
           throw new PlatformError("NOT_FOUND", "assignment was not found");
         }
+        revokePermissionFor({
+          actor: ctx.actor,
+          targetRoleKey: roleKeyForId(record.roleId),
+          targetEventId: record.eventId,
+          organisationId: input.organisationId,
+          now: ctx.now,
+        });
         this.assertVersion(record.version, input.expectedVersion);
         record.status = "REVOKED";
         record.version += 1;
@@ -2404,12 +2454,7 @@ export class PlatformService {
   approveGuestIntake(actor: ActorContext, raw: unknown): GuestIntakeJob {
     const actorSnap = this.actorSnapshot(actor);
     const input = raw as { organisationId?: string };
-    const ceoOverride = actorSnap.assignments.some((assignment) => {
-      if (assignment.status !== "ACTIVE") return false;
-      if (input.organisationId && assignment.organisationId !== input.organisationId) return false;
-      const role = actorSnap.roles.find((item) => item.id === assignment.roleId);
-      return Boolean(role?.key === "CEO" && role.organisationWide);
-    });
+    const ceoOverride = actorHasCeoOrganisationWide(actorSnap, input.organisationId, actor.now);
     return approveGuestIntakeCore(this.mutate.bind(this) as never, parseStrict as never, actor, raw, ceoOverride);
   }
 
@@ -2621,7 +2666,7 @@ export class PlatformService {
   consumeOfflineAccessPackage(actor: ActorContext, raw: unknown): OfflineAccessPackage {
     const input = parseStrict<ConsumeOfflinePackageInput>(ConsumeOfflinePackageInputSchema, raw);
     return this.mutate(actor, {
-      permission: "programme.view",
+      permission: "programme.checkpoint.manage",
       scope: { organisationId: input.organisationId, eventId: input.eventId },
       action: "programme.accessPlan.consumed",
       resourceType: "offline_access_package",
@@ -4311,11 +4356,7 @@ export class PlatformService {
             const role = ctx.actor.roles.find((item) => item.id === assignment.roleId);
             return Boolean(role && isSystemAdministratorRole(role.key) && assignment.status === "ACTIVE");
           }),
-          ctx.actor.assignments.some((assignment) => {
-            if (assignment.status !== "ACTIVE" || assignment.organisationId !== input.organisationId) return false;
-            const role = ctx.actor.roles.find((item) => item.id === assignment.roleId);
-            return Boolean(role?.key === "CEO" && role.organisationWide);
-          }),
+          actorHasCeoOrganisationWide(ctx.actor, input.organisationId, ctx.now),
         ),
     });
   }
@@ -4360,7 +4401,7 @@ export class PlatformService {
   requestLayoutExport(actor: ActorContext, raw: unknown): LayoutExportJob {
     const input = parseStrict(RequestLayoutExportInputSchema, raw);
     return this.mutate(actor, {
-      permission: "layout.publication.view",
+      permission: "layout.snapshot.manage",
       scope: { organisationId: input.organisationId, eventId: input.eventId },
       action: "layout.export.requested",
       resourceType: "layout_export_job",
@@ -4381,7 +4422,7 @@ export class PlatformService {
   completeLayoutExport(actor: ActorContext, raw: unknown): LayoutExportJob {
     const input = parseStrict(CompleteLayoutExportInputSchema, raw);
     return this.mutate(actor, {
-      permission: "layout.publication.view",
+      permission: "layout.publish",
       scope: { organisationId: input.organisationId, eventId: input.eventId },
       action: "layout.export.completed",
       resourceType: "layout_export_job",
@@ -6454,15 +6495,8 @@ export class PlatformService {
       run: (snap, ctx) => {
         const campaign = this.requireCampaign(snap, input.organisationId, input.eventId, input.campaignId);
         this.assertVersion(campaign.version, input.expectedVersion);
-        if (campaign.createdByPersonId && campaign.createdByPersonId === actor.personId) {
-          const ceo = ctx.actor.assignments.some((assignment) => {
-            if (assignment.status !== "ACTIVE" || assignment.organisationId !== input.organisationId) return false;
-            const role = ctx.actor.roles.find((item) => item.id === assignment.roleId);
-            return Boolean(role?.key === "CEO" && role.organisationWide);
-          });
-          if (!ceo) {
-            throw new PlatformError("FORBIDDEN", "approval requires a different named human");
-          }
+        if (campaign.createdByPersonId && campaign.createdByPersonId === actor.personId && !actorHasCeoOrganisationWide(ctx.actor, input.organisationId, ctx.now)) {
+          throw new PlatformError("FORBIDDEN", "approval requires a different named human");
         }
         return decideCampaignOnSnap(snap, campaign, {
           decision: input.decision,
@@ -6821,7 +6855,7 @@ export class PlatformService {
             },
           );
         }
-        if (correction.proposedByPersonId === actor.personId) {
+        if (correction.proposedByPersonId === actor.personId && !actorHasCeoOrganisationWide(ctx.actor, input.organisationId, ctx.now)) {
           throw new PlatformError("FORBIDDEN", "approval requires a different named human");
         }
         if (input.decision === "REJECTED") {
@@ -9199,12 +9233,16 @@ export class PlatformService {
     resource: { type: string; organisationId: string; clientId?: string; eventId?: string },
     actor: ActorContext,
   ): PolicyDecision {
+    const snap = this.store.snapshot();
+    const event = scope.eventId
+      ? snap.events.find((item) => item.id === scope.eventId && item.organisationId === scope.organisationId)
+      : undefined;
     return authorize({
       actor: actorSnap,
       permission,
       scope,
       resource,
-      context: { now: actor.now, actorKind: actor.actorKind, allowScaffoldedTransitions: actor.allowScaffoldedTransitions },
+      context: { now: actor.now, actorKind: actor.actorKind, allowScaffoldedTransitions: actor.allowScaffoldedTransitions, event },
     });
   }
 

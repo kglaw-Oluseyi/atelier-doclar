@@ -63,29 +63,34 @@ describe("MD-PR-S072 Access/Audit security hotfix", () => {
     const { service, store } = fixtureService();
     const before = store.snapshot().audit.length;
     forbidden(() => service.getAccessAdministration(director(), people.orgMaison));
-    const afterProjection = store.snapshot().audit.slice(before);
-    assert.ok(afterProjection.some((item) => item.action === "platform.access.administer" && item.outcome === "DENIED"));
     forbidden(() =>
       service.grantAssignment(director(), {
         organisationId: people.orgMaison,
         personId: people.personUnassigned,
-        roleKey: "PLANNER",
-        reason: "director forged grant",
+        roleKey: "CEO",
+        reason: "director forged ceo",
         eventId: people.eventAlphaOne,
-        clientId: people.clientAlpha,
       }),
     );
     forbidden(() =>
-      service.revokeAssignment(director(), {
-        assignmentId: people.assignPlanner,
+      service.grantAssignment(director(), {
         organisationId: people.orgMaison,
-        expectedVersion: 1,
-        reason: "director forged revoke",
+        personId: people.personUnassigned,
+        roleKey: "SYSTEM_ADMINISTRATOR",
+        reason: "director forged admin",
       }),
     );
+    const granted = service.grantAssignment(director(), {
+      organisationId: people.orgMaison,
+      personId: people.personUnassigned,
+      roleKey: "PLANNER",
+      reason: "director assigns planner",
+      eventId: people.eventAlphaOne,
+      clientId: people.clientAlpha,
+    });
+    assert.equal(granted.eventId, people.eventAlphaOne);
     const denied = store.snapshot().audit.slice(before).filter((item) => item.outcome === "DENIED");
-    assert.ok(denied.some((item) => item.action === "assignment.granted" && item.resourceId === undefined));
-    assert.ok(denied.some((item) => item.action === "assignment.revoked"));
+    assert.ok(denied.some((item) => item.action === "assignment.granted"));
   });
 
   it("denies Planner, Auditor and Risk Governance Reviewer access administration", () => {

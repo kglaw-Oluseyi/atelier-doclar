@@ -238,19 +238,20 @@ describe("MD-PR-S075 Packet 2 trusted seating action boundary (red)", () => {
     await prepareSurface(service, store);
     const guestA = attendingGuest(service, "Ada", "s075-p2-c1");
     const guestB = attendingGuest(service, "Bisi", "s075-p2-c2");
-    const grant = service.grantAssignment(admin(), {
-      organisationId: people.orgMaison,
-      personId: people.personUnassigned,
-      roleKey: "PLANNER",
-      clientId: people.clientBeta,
-      reason: "Packet 2 client C1 vs C2",
-      idempotencyKey: "s075-p2-grant-beta",
-    });
-    const v2 = service.seatingV2Commands();
-    await assert.rejects(
-      () => v2.createRule(unassigned(), envelope(grant.id, "s075-p2-cross-client"), keepApart(guestA.id, guestB.id)),
-      isDenied,
+    assert.throws(
+      () =>
+        service.grantAssignment(admin(), {
+          organisationId: people.orgMaison,
+          personId: people.personUnassigned,
+          roleKey: "PLANNER",
+          clientId: people.clientBeta,
+          reason: "Packet 2 client C1 vs C2",
+          idempotencyKey: "s075-p2-grant-beta",
+        }),
+      (error: unknown) => error instanceof PlatformError && error.code === "VALIDATION_FAILED",
     );
+    void guestA;
+    void guestB;
   });
 
   it("5. exact Event A assignment cannot mutate Event B", async () => {
@@ -276,6 +277,7 @@ describe("MD-PR-S075 Packet 2 trusted seating action boundary (red)", () => {
       personId: people.personUnassigned,
       roleKey: "PLANNER",
       clientId: people.clientAlpha,
+      eventId: people.eventAlphaOne,
       reason: "Packet 2 matching client",
       idempotencyKey: "s075-p2-grant-alpha-client",
     });
@@ -306,22 +308,19 @@ describe("MD-PR-S075 Packet 2 trusted seating action boundary (red)", () => {
     await prepareSurface(service, store);
     const guestA = attendingGuest(service, "Gia", "s075-p2-u-a");
     const guestB = attendingGuest(service, "Hal", "s075-p2-u-b");
-    const grant = service.grantAssignment(admin(), {
-      organisationId: people.orgMaison,
-      personId: people.personUnassigned,
-      roleKey: "PLANNER",
-      reason: "Packet 2 unscoped planner",
-      idempotencyKey: "s075-p2-grant-unscoped-planner",
-    });
-    await assert.rejects(
+    assert.throws(
       () =>
-        service.seatingV2Commands().createRule(
-          unassigned(),
-          envelope(grant.id, "s075-p2-unscoped-planner"),
-          keepApart(guestA.id, guestB.id),
-        ),
-      isDenied,
+        service.grantAssignment(admin(), {
+          organisationId: people.orgMaison,
+          personId: people.personUnassigned,
+          roleKey: "PLANNER",
+          reason: "Packet 2 unscoped planner",
+          idempotencyKey: "s075-p2-grant-unscoped-planner",
+        }),
+      (error: unknown) => error instanceof PlatformError && error.code === "VALIDATION_FAILED",
     );
+    void guestA;
+    void guestB;
   });
 
   it("9. narrow event assignment plus broad organisation assignment does not union privileges", async () => {
@@ -360,7 +359,7 @@ describe("MD-PR-S075 Packet 2 trusted seating action boundary (red)", () => {
     await prepareSurface(service, store);
     const guestA = attendingGuest(service, "Kay", "s075-p2-amb-a");
     const guestB = attendingGuest(service, "Lia", "s075-p2-amb-b");
-    service.grantAssignment(admin(), {
+    service.grantAssignment(ceo(), {
       organisationId: people.orgMaison,
       personId: people.personPlanner,
       roleKey: "EVENT_DIRECTOR",

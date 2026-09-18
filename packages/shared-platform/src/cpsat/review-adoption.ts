@@ -61,6 +61,8 @@ export type CpsatGovernanceActor = {
   personId: string;
   roleKey: string;
   permissions: readonly PermissionKey[] | readonly string[];
+  /** Set only from an active organisation-wide CEO assignment. Role name alone is not authority. */
+  organisationWideCeo?: boolean;
 };
 
 export type CpsatGovernedAuthoritySnapshot = {
@@ -495,7 +497,7 @@ export async function getCpsatCandidateReview(
     lifecycle === "PENDING_APPROVAL" &&
     prop != null &&
     String(prop.status) === "PENDING" &&
-    (String(prop.maker_actor) !== input.actor.personId || input.actor.roleKey === "CEO");
+    (String(prop.maker_actor) !== input.actor.personId || input.actor.organisationWideCeo === true);
   const canAdopt =
     hasPermission(input.actor, "seating.plan.publish") &&
     lifecycle === "APPROVED" &&
@@ -786,7 +788,7 @@ export async function decideCpsatCandidateApproval(
         publicMessage: "The approval request no longer matches the sealed seating candidate.",
       });
     }
-    if (String(prop.maker_actor) === input.actor.personId && input.actor.roleKey !== "CEO") {
+    if (String(prop.maker_actor) === input.actor.personId && input.actor.organisationWideCeo !== true) {
       throw new PlatformError("FORBIDDEN", "maker cannot approve own proposal", {
         publicMessage:
           "A different authorised person must approve this seating candidate, or organisation-wide CEO may complete maker/checker alone.",
@@ -962,7 +964,7 @@ export async function adoptApprovedCpsatCandidate(
         publicMessage: "The approval no longer matches the sealed seating candidate.",
       });
     }
-    if (String(prop.maker_actor) === String(prop.checker_actor) && input.actor.roleKey !== "CEO") {
+    if (String(prop.maker_actor) === String(prop.checker_actor) && input.actor.organisationWideCeo !== true) {
       throw new PlatformError("FORBIDDEN", "maker and checker must differ", {
         publicMessage: "Maker and checker must be different people, or organisation-wide CEO may complete both roles.",
       });

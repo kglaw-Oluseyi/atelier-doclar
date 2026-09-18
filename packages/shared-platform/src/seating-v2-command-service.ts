@@ -237,7 +237,7 @@ export class SeatingV2CommandService {
   }
 
   private ceoRelief(actor: SeatingV2Actor, organisationId: string): boolean {
-    return actorHasCeoOrganisationWide(this.deps.resolveActor(actor.personId), organisationId);
+    return actorHasCeoOrganisationWide(this.deps.resolveActor(actor.personId), organisationId, nowOf(actor));
   }
 
   private denied(): never {
@@ -992,7 +992,7 @@ export class SeatingV2CommandService {
     return this.mutate(actor, envelope, "seating.rule.activate", "seatingV2.activateLayoutBinding", async (tx) => {
       await tx.lockEventCurrent(envelope, "FOR_UPDATE");
       const binding = await this.requireOwned<SeatingV2LayoutBinding>(tx, "layoutBindings", input.bindingId, envelope, "seating layout binding");
-      if (binding.proposedByPersonId === actor.personId) {
+      if (binding.proposedByPersonId === actor.personId && !this.ceoRelief(actor, envelope.organisationId)) {
         throw new PlatformError("FORBIDDEN", "maker and checker must be different people", {
           publicMessage: "An independent checker must activate the seating layout binding.",
         });
@@ -1971,7 +1971,7 @@ export class SeatingV2CommandService {
   }
 
   private cpsatGovernanceActor(actor: SeatingV2Actor, eventId: string): {
-    actor: { personId: string; roleKey: string; permissions: readonly string[] };
+    actor: { personId: string; roleKey: string; permissions: readonly string[]; organisationWideCeo: boolean };
     organisationId: string;
     currentAuthority: CpsatGovernedAuthoritySnapshot;
   } {
@@ -1986,7 +1986,12 @@ export class SeatingV2CommandService {
         ? permissionsForRole(roleKey as (typeof SYSTEM_ROLE_KEYS)[number])
         : [];
     return {
-      actor: { personId: actor.personId, roleKey: roleKey ?? "PLANNER", permissions },
+      actor: {
+        personId: actor.personId,
+        roleKey: roleKey ?? "PLANNER",
+        permissions,
+        organisationWideCeo: actorHasCeoOrganisationWide(people, event.organisationId, nowOf(actor)),
+      },
       organisationId: event.organisationId,
       currentAuthority: {
         layoutHash: "",

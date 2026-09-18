@@ -279,14 +279,14 @@ describe("MD-PR-S034 export retrieval affordance", () => {
     service.publishLayout(director(), { ...cas(current(service, layout.id, director())), reason: "Publish export" });
     const published = service.requestLayoutExport(planner(), { ...cas(current(service, layout.id)), format: "PDF", reason: "Published privileged" });
     assert.equal(published.marking, "PUBLISHED");
-    const auditorMasked = service.requestLayoutExport(auditor(), { ...cas(current(service, layout.id, auditor())), format: "PDF", reason: "Auditor published" });
-    assert.equal(auditorMasked.projectionMasked, true);
+    assert.throws(
+      () => service.requestLayoutExport(auditor(), { ...cas(current(service, layout.id, auditor())), format: "PDF", reason: "Auditor published" }),
+      (error: unknown) => error instanceof PlatformError && error.code === "FORBIDDEN",
+    );
     const auditorWs = service.getLayoutSetupWorkspace(auditor(), FIXTURE_IDS.orgMaison, FIXTURE_IDS.eventAlphaOne, layout.id);
     assert.equal(auditorWs.assurance.exportJobs.find((item) => item.id === published.id)?.retrieveAllowed, false);
-    assert.equal(auditorWs.assurance.exportJobs.find((item) => item.id === auditorMasked.id)?.retrieveAllowed, true);
+    assert.equal(auditorWs.assurance.capabilities.canRequestExport, false);
     assert.doesNotMatch(JSON.stringify(auditorWs.assurance.exportJobs), /layout-exports\//);
-    const retrieved = service.getStoredLayoutExport(auditor(), FIXTURE_IDS.orgMaison, FIXTURE_IDS.eventAlphaOne, layout.id, auditorMasked.id);
-    assert.ok(retrieved.objectKey);
     assert.equal(published.marking, "PUBLISHED");
     assert.notEqual(published.id, draft.id);
   });
