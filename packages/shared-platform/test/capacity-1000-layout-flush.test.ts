@@ -39,7 +39,7 @@ describe("CAP1000 layout persistence flush callback", () => {
       reason: "flush test planner",
       idempotencyKey: "cap1k-flush-grant-planner",
     });
-    const directorGrant = service.grantAssignment(admin, {
+    const directorGrant = service.grantAssignment(actor(people.personCeo, { now: NOW, correlationId: "cap1k-flush-grant-director" }), {
       organisationId: people.orgMaison,
       personId: people.personDirector,
       roleKey: "EVENT_DIRECTOR",

@@ -693,6 +693,7 @@ export function LayoutAssuranceWorkspace({
             </PendingSubmit>
           </form>
         ) : null}
+        {assurance.capabilities.canRequestExport ? (
         <form action={requestLayoutExportAction} className="form programme-form">
           <CasFields workspace={workspace} eventId={eventId} />
           <label>
@@ -705,6 +706,7 @@ export function LayoutAssuranceWorkspace({
           <input type="hidden" name="reason" value="Request status-marked export" />
           <PendingSubmit locked={mutationLocked}>Request export</PendingSubmit>
         </form>
+        ) : null}
         <p>
           {assurance.pdfExportAvailable
             ? "PDF and PNG export is generated from the current publication hash when one exists, otherwise the approved or draft hash. Completion is recorded only after a private object exists."

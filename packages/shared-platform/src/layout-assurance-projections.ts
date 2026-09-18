@@ -62,6 +62,8 @@ export type LayoutAssuranceCapabilities = {
   canViewPublication: boolean;
   canReadDownstream: boolean;
   canOverrideConstraint: boolean;
+  canRequestExport: boolean;
+  canSettleExport: boolean;
 };
 
 export function layoutAssurancePermissionAllowed(keys: readonly PermissionKey[]): LayoutAssuranceCapabilities {
@@ -72,10 +74,12 @@ export function layoutAssurancePermissionAllowed(keys: readonly PermissionKey[])
     canManageSnapshot: keys.includes("layout.snapshot.manage"),
     canSubmitApproval: keys.includes("layout.approval.submit"),
     canDecideApproval: keys.includes("layout.approval.decide"),
-    canPublish: keys.includes("layout.publish"),
-    canViewPublication: keys.includes("layout.publication.view"),
-    canReadDownstream: keys.includes("layout.downstream.read"),
-    canOverrideConstraint: keys.includes("layout.constraint.override"),
+  canPublish: keys.includes("layout.publish"),
+  canViewPublication: keys.includes("layout.publication.view"),
+  canReadDownstream: keys.includes("layout.downstream.read"),
+  canOverrideConstraint: keys.includes("layout.constraint.override"),
+  canRequestExport: keys.includes("layout.snapshot.manage"),
+  canSettleExport: keys.includes("layout.publish"),
   };
 }
 

@@ -357,6 +357,8 @@ export function buildLayoutSetupWorkspace(
       canViewPublication: capabilities.canViewPublication,
       canReadDownstream: capabilities.canReadDownstream,
       canOverrideConstraint: capabilities.canOverrideConstraint,
+      canRequestExport: capabilities.canManageSnapshot,
+      canSettleExport: capabilities.canPublish,
     },
     { ...options, revealSensitive },
   );

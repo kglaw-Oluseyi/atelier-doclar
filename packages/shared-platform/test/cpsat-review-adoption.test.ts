@@ -76,6 +76,7 @@ function ceo(personId = "ceo-adopter-1") {
   return {
     personId,
     roleKey: "CEO",
+    organisationWideCeo: true,
     permissions: [
       "seating.view",
       "seating.plan.submit",

@@ -66,6 +66,7 @@ export async function fulfillLayoutExport(actor: ActorContext, job: LayoutExport
       idempotencyKey: `export-complete:${job.id}`,
     });
   } catch (error) {
+    if (error instanceof PlatformError && error.code === "FORBIDDEN") return job;
     const message = error instanceof PlatformError ? error.publicMessage : "Export storage or rendering failed. No success was recorded.";
     return service.failLayoutExport(actor, {
       organisationId: job.organisationId,

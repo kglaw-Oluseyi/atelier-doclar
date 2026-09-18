@@ -245,7 +245,7 @@ describe("CAP1000 installer-scoped Postgres hydrate", () => {
       reason: "scope flush planner",
       idempotencyKey: "cap1k-scope-flush-grant-planner",
     });
-    const directorGrant = service.grantAssignment(admin, {
+    const directorGrant = service.grantAssignment(actor(people.personCeo, { now: NOW, correlationId: "cap1k-scope-grant-director" }), {
       organisationId: people.orgMaison,
       personId: people.personDirector,
       roleKey: "EVENT_DIRECTOR",

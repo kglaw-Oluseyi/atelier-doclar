@@ -125,7 +125,7 @@ describe("EOS-S04A guest services", () => {
       organisationId: people.orgMaison,
       personId: people.personUnassigned,
       roleKey: "CLIENT_LEAD",
-      eventId: people.eventAlphaOne,
+      clientId: people.clientAlpha,
       reason: "client lead denial fixture",
     });
     const lead = actor(people.personUnassigned);

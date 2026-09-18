@@ -1,6 +1,7 @@
 import { CEO_RESERVED_ACTIONS, SYSTEM_ROLE_KEYS } from "./constants.js";
 import { isCeoRole, isSystemAdministratorRole, permissionsForRole } from "./catalog.js";
 import { PlatformError } from "./errors.js";
+import { permissionPolicy } from "./permission-registry.js";
 import type { Assignment, EventRecord, PermissionKey, Person, Role, SystemRoleKey } from "./schemas.js";
 
 function rolePermissionKeys(key: string): readonly PermissionKey[] {
@@ -20,6 +21,7 @@ export type DenyReason =
   | "DENY_OVERRIDE"
   | "SCOPE_MISMATCH"
   | "LINEAGE_UNVERIFIED"
+  | "DEPARTMENT_SCOPE_UNAVAILABLE"
   | "RESERVED_TO_CEO"
   | "IMPERSONATION_FORBIDDEN"
   | "AI_AUTHORITY_FORBIDDEN"
@@ -115,9 +117,20 @@ export function authorize(input: {
 
   const matchedRoleKeys: string[] = [];
   let denied = false;
+  let departmentBlocked = false;
+  let lineageDenied = false;
   for (const grant of covering) {
     const role = input.actor.roles.find((item) => item.id === grant.roleId);
     if (!role || role.status !== "ACTIVE") continue;
+    const keys = rolePermissionKeys(role.key);
+    if (role.key === "DEPARTMENT_LEAD") {
+      if (keys.includes(input.permission)) departmentBlocked = true;
+      continue;
+    }
+    if (!assignmentAuthorizesRole(role, grant, input.scope, input.context, input.permission)) {
+      if (role.key === "CLIENT_LEAD" && keys.includes(input.permission) && input.scope.eventId) lineageDenied = true;
+      continue;
+    }
     if (isSystemAdministratorRole(role.key) && CEO_RESERVED_ACTIONS.includes(input.permission)) {
       denied = true;
       continue;
@@ -125,15 +138,61 @@ export function authorize(input: {
     if (CEO_RESERVED_ACTIONS.includes(input.permission) && !isCeoRole(role.key)) {
       continue;
     }
-    const keys = rolePermissionKeys(role.key);
     if (keys.includes(input.permission)) {
       matchedRoleKeys.push(role.key);
     }
   }
 
   if (denied && matchedRoleKeys.length === 0) return { allow: false, reason: "RESERVED_TO_CEO" };
+  if (matchedRoleKeys.length === 0 && departmentBlocked) return { allow: false, reason: "DEPARTMENT_SCOPE_UNAVAILABLE" };
+  if (matchedRoleKeys.length === 0 && lineageDenied) return { allow: false, reason: "LINEAGE_UNVERIFIED" };
   if (matchedRoleKeys.length === 0) return { allow: false, reason: "PERMISSION_ABSENT" };
   return { allow: true, matchedRoleKeys };
+}
+
+function assignmentAuthorizesRole(
+  role: Role,
+  assignment: Assignment,
+  scope: PolicyScope,
+  context: PolicyContext | undefined,
+  permission: PermissionKey,
+): boolean {
+  if (isCeoRole(role.key)) {
+    return Boolean(role.organisationWide && !assignment.clientId && !assignment.eventId);
+  }
+  if (isSystemAdministratorRole(role.key) || role.key === "READ_ONLY_AUDITOR") {
+    return !assignment.clientId && !assignment.eventId;
+  }
+  if (role.key === "PLANNER" || role.key === "EVENT_DIRECTOR") {
+    if (!assignment.eventId) return false;
+    if (scope.eventId && assignment.eventId !== scope.eventId) return false;
+    const policy = permissionPolicy(permission);
+    if ((policy.requiredScope === "EVENT" || policy.requiredScope === "DEPARTMENT") && scope.eventId && assignment.eventId !== scope.eventId) {
+      return false;
+    }
+    return true;
+  }
+  if (role.key === "CLIENT_LEAD") {
+    if (!assignment.clientId || assignment.eventId) return false;
+    if (scope.clientId && assignment.clientId !== scope.clientId) return false;
+    if (scope.eventId) {
+      const event = context?.event;
+      if (!event || event.id !== scope.eventId || event.organisationId !== scope.organisationId) return false;
+      return event.clientId === assignment.clientId;
+    }
+    return true;
+  }
+  if (role.key === "RISK_GOVERNANCE_REVIEWER") {
+    if (!assignment.clientId && !assignment.eventId) return false;
+    if (assignment.eventId && scope.eventId && assignment.eventId !== scope.eventId) return false;
+    if (assignment.clientId && scope.clientId && assignment.clientId !== scope.clientId) return false;
+    if (scope.eventId && assignment.clientId && !assignment.eventId) {
+      const event = context?.event;
+      if (!event || event.id !== scope.eventId || event.clientId !== assignment.clientId) return false;
+    }
+    return true;
+  }
+  return false;
 }
 
 function isSystemRoleKey(key: string): key is SystemRoleKey {

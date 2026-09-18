@@ -354,7 +354,7 @@ export function ProgrammeWorkspace({
               <p>
                 Version {item.packageVersion} · {item.status} · {item.attendanceWriter.replaceAll("_", " ")}
               </p>
-              {capabilities.canView && item.status === "ACTIVE" ? (
+              {capabilities.canConsumePackage && item.status === "ACTIVE" ? (
                 <form action={consumeOfflinePackageAction}>
                   <input type="hidden" name="eventId" value={workspace.eventId} />
                   <input type="hidden" name="packageId" value={item.id} />
