@@ -456,11 +456,19 @@ export async function requestSeatingExportAction(
     actionType: "seating.export",
     execute: async ({ actor, envelope }) => {
       requireV2Mutation();
+      const publicationId = field(formData, "publicationId");
+      const editionId = field(formData, "editionId");
+      if (!publicationId && !editionId) {
+        throw new PlatformError("VALIDATION_FAILED", "no seating plan is available to export", {
+          publicMessage:
+            "No seating plan or publication exists to export yet. Generate and adopt a seating plan first — this is not an access denial.",
+        });
+      }
       const projection = field(formData, "projectionClass");
       return asId(
         await getRuntime().service.seatingV2Commands().requestExport(actor, envelope, {
-          sourceType: field(formData, "publicationId") ? "PUBLICATION" : "EDITION",
-          sourceId: field(formData, "publicationId") || field(formData, "editionId"),
+          sourceType: publicationId ? "PUBLICATION" : "EDITION",
+          sourceId: publicationId || editionId,
           format: field(formData, "format") as "PDF" | "PNG" | "JSON",
           projectionClass:
             projection === "AUDITOR" ? "PERMISSION_SAFE" : projection === "CEO" ? "FULL" : "OPERATIONAL",

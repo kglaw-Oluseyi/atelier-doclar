@@ -240,6 +240,9 @@ export async function approveHvIntakeAction(formData: FormData): Promise<void> {
         jobId,
         expectedVersion: Number(formData.get("expectedVersion")),
         reason: String(formData.get("reason") ?? "Approve intake promotion"),
+        ...(String(formData.get("governanceOverrideReason") ?? "").trim()
+          ? { governanceOverrideReason: String(formData.get("governanceOverrideReason")).trim() }
+          : {}),
         idempotencyKey: String(formData.get("idempotencyKey") ?? "") || undefined,
       });
       redirect(jobPath(eventId, jobId, "?ok=approved"));

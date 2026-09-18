@@ -391,6 +391,18 @@ export const StaffRsvpResponseInputSchema = z
   })
   .strict();
 
+export const MarkGuestsAttendingForSeatingInputSchema = z
+  .object({
+    organisationId: OrganisationIdSchema,
+    eventId: EventIdSchema,
+    reason: NonEmptySchema,
+    guestIds: z.array(UuidSchema).max(5000).optional(),
+    idempotencyKey: NonEmptySchema.optional(),
+  })
+  .strict();
+
+export type MarkGuestsAttendingForSeatingInput = z.infer<typeof MarkGuestsAttendingForSeatingInputSchema>;
+
 export const ReviewRsvpExceptionInputSchema = z
   .object({
     organisationId: OrganisationIdSchema,

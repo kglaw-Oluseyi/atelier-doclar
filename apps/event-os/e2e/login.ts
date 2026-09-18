@@ -22,7 +22,7 @@ export function staffNavIdentity(page: Page) {
   return page.getByRole("navigation", { name: "Staff" }).locator(".staff-identity");
 }
 
-export async function login(page: Page, email = STAFF_IDENTITIES.ceo.email): Promise<void> {
+export async function login(page: Page, email: string = STAFF_IDENTITIES.ceo.email): Promise<void> {
   const live = process.env.PLAYWRIGHT_LIVE === "1";
   const localToken = "event-os-access-token-not-for-production";
   // Live and CI supply EVENT_OS_ACCESS_TOKEN via the environment (railway run / workflow).

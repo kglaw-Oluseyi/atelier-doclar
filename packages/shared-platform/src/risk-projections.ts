@@ -2,7 +2,7 @@ import { PlatformError } from "./errors.js";
 import { selectEffectiveRiskAuthorities } from "./risk-authority.js";
 import {
   assertExpectedVersion,
-  assertMakerChecker,
+  assertMakerCheckerFor,
   assertProtectedHuman,
   bumpVersion,
   extractRiskEnvelope,
@@ -348,8 +348,10 @@ export function transitionDossierOnSnap(
     assertProtectedHuman(snap, input.assignmentId, actorPersonId, actorKind);
   }
   if (input.to === "APPROVED") {
-    assertMakerChecker(dossier.authorPersonId ?? dossier.submittedByPersonId, actorPersonId, "approve dossier");
-    if (dossier.submittedByPersonId) assertMakerChecker(dossier.submittedByPersonId, actorPersonId, "approve dossier");
+    assertMakerCheckerFor(snap, dossier.authorPersonId ?? dossier.submittedByPersonId, actorPersonId, "approve dossier", input.organisationId);
+    if (dossier.submittedByPersonId) {
+      assertMakerCheckerFor(snap, dossier.submittedByPersonId, actorPersonId, "approve dossier", input.organisationId);
+    }
   }
   if (input.to === "PUBLISHED") {
     publishDossierOnSnap(
@@ -365,7 +367,13 @@ export function transitionDossierOnSnap(
     );
     return snap.riskDossierEditions.find((item) => item.id === dossier.id) ?? dossier;
   }
-  Object.assign(dossier, decideDossierTransition(dossier, input, actorPersonId, now));
+  Object.assign(
+    dossier,
+    decideDossierTransition(dossier, input, actorPersonId, now, {
+      snap,
+      organisationId: input.organisationId,
+    }),
+  );
   return dossier;
 }
 
@@ -394,7 +402,7 @@ export function publishDossierOnSnap(
   if (!edition) throw new PlatformError("NOT_FOUND", "dossier edition not found");
   assertPublicationEligibility(edition);
   assertExactApprovedHash(edition, input.approvedHash);
-  assertPublicationActors(edition, actorPersonId);
+  assertPublicationActors(edition, actorPersonId, snap);
   assertProtectedHuman(snap, input.assignmentId, actorPersonId, actorKind);
   const snapshot = snap.riskApplicabilitySnapshots.find((item) => edition.componentHashes.includes(item.contentHash));
   const mandatoryIndeterminate = Boolean(

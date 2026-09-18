@@ -165,6 +165,13 @@ export function GuestImportForm({ eventId, state }: { eventId: string; state?: O
         Reason
         <input name="reason" required defaultValue="Canonical CSV intake" />
       </label>
+      <label className="guestbook-attention-filter">
+        <input type="checkbox" name="markAttendingForSeating" value="true" defaultChecked />
+        <span>Mark imported guests as attending so they are seating-eligible</span>
+      </label>
+      <p className="lede">
+        Without attendance intent, Seating Overview shows Eligible guests · 0 even when the directory is full.
+      </p>
       <PendingSubmit className="secondary" pendingLabel="Importing…">
         Import guest rows
       </PendingSubmit>

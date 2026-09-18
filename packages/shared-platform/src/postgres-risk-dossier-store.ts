@@ -219,7 +219,7 @@ export class PostgresRiskDossierTransaction implements RiskDossierTransaction {
       ["assignments", id],
     );
     const assignment = result.rows[0]
-      ? asBody<{ id: string; personId: string; organisationId: string; eventId?: string; status: string }>(result.rows[0].body)
+      ? asBody<{ id: string; personId: string; organisationId: string; eventId?: string; status: string; roleId: string }>(result.rows[0].body)
       : undefined;
     if (!assignment || assignment.organisationId !== scope.organisationId) return undefined;
     return assignment;

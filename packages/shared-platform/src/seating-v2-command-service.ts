@@ -3,6 +3,9 @@ import { exactHash } from "./eec-hash.js";
 import { appliedMutationEffect, notAppliedMutationEffect, replayedMutationEffect, type DurableMutationEffect } from "./durable-mutation-effect.js";
 import { PlatformError } from "./errors.js";
 import type { OperationalGuest } from "./guest-schemas.js";
+import {
+  actorHasCeoOrganisationWide,
+} from "./risk-command.js";
 import { authorize, canSeeEvent, type ActorSnapshot } from "./policy.js";
 import { resolveTrustedSeatingAssignment, seatingAssignmentAllowsPermission } from "./seating-v2-trusted-assignment.js";
 import { permissionsForRole, roleKeyForId } from "./catalog.js";
@@ -231,6 +234,10 @@ export class SeatingV2CommandService {
 
   get repository(): SeatingV2Repository {
     return this.repo;
+  }
+
+  private ceoRelief(actor: SeatingV2Actor, organisationId: string): boolean {
+    return actorHasCeoOrganisationWide(this.deps.resolveActor(actor.personId), organisationId);
   }
 
   private denied(): never {
@@ -462,7 +469,7 @@ export class SeatingV2CommandService {
         }
         if (draft.hardness === "HARD") {
           this.guard(actor, "seating.rule.activate", envelope, envelope.actorAssignmentId);
-          if (draft.createdByPersonId === actor.personId) {
+          if (draft.createdByPersonId === actor.personId && !this.ceoRelief(actor, envelope.organisationId)) {
             throw new PlatformError("FORBIDDEN", "HARD activation requires a different authorised person");
           }
         } else {
@@ -770,7 +777,7 @@ export class SeatingV2CommandService {
         throw new PlatformError("TRANSITION_INVALID", "only a DRAFT reservation may be activated");
       }
       this.guard(actor, "seating.rule.activate", envelope, envelope.actorAssignmentId);
-      if (draft.createdByPersonId === actor.personId) {
+      if (draft.createdByPersonId === actor.personId && !this.ceoRelief(actor, envelope.organisationId)) {
         throw new PlatformError("FORBIDDEN", "reservation activation requires a different authorised person");
       }
       return tx.updateLifecycle<SeatingV2ReservationEdition>("reservationEditions", draft.id, envelope, {
@@ -1595,7 +1602,7 @@ export class SeatingV2CommandService {
       const authors = (await tx.list<{ planEditionId: string; personId: string }>("planAuthors", envelope)).filter(
         (item) => item.planEditionId === edition.id,
       );
-      if (authors.some((item) => item.personId === actor.personId)) {
+      if (authors.some((item) => item.personId === actor.personId) && !this.ceoRelief(actor, envelope.organisationId)) {
         throw new PlatformError("FORBIDDEN", "material authors cannot review their own edition");
       }
       const implicated = await this.implicatedDomains(tx, envelope, edition.packageId);
@@ -1662,7 +1669,11 @@ export class SeatingV2CommandService {
       const reviews = (await tx.list<SeatingV2SpecialistReview>("specialistReviews", envelope)).filter(
         (item) => item.planEditionId === edition.id && item.planContentHash === edition.contentHash,
       );
-      if (authors.some((item) => item.personId === actor.personId) || reviews.some((item) => item.reviewerPersonId === actor.personId)) {
+      if (
+        (authors.some((item) => item.personId === actor.personId) ||
+          reviews.some((item) => item.reviewerPersonId === actor.personId)) &&
+        !this.ceoRelief(actor, envelope.organisationId)
+      ) {
         throw new PlatformError("FORBIDDEN", "approver must be distinct from material authors and reviewers");
       }
       await this.assertFreshFeasible(tx, envelope, edition, nowOf(actor));
@@ -1723,7 +1734,10 @@ export class SeatingV2CommandService {
         (item) => item.planEditionId === edition.id && item.planContentHash === edition.contentHash && item.decision === "APPROVED",
       );
       if (!approval) throw new PlatformError("TRANSITION_INVALID", "operational approval is required");
-      if (authors.some((item) => item.personId === actor.personId) || approval.approverPersonId === actor.personId) {
+      if (
+        (authors.some((item) => item.personId === actor.personId) || approval.approverPersonId === actor.personId) &&
+        !this.ceoRelief(actor, envelope.organisationId)
+      ) {
         throw new PlatformError("FORBIDDEN", "publisher must be distinct from authors and the operational approver");
       }
       await this.assertFreshFeasible(tx, envelope, edition, nowOf(actor));

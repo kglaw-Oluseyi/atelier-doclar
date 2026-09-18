@@ -11,7 +11,7 @@ import {
   assertDocumentTransition,
   assertExpectedVersion,
   assertIndependentChecker,
-  assertMakerChecker,
+  assertMakerCheckerFor,
   assertProtectedHuman,
   assertSameEvent,
   assertSameOrganisation,
@@ -120,6 +120,8 @@ export function approveSourceEditionOnSnap(
     authorPersonId: source.authorPersonId,
     submitterPersonId: source.submittedByPersonId,
     action: "approve",
+    snap,
+    organisationId: input.organisationId,
   });
   const nextReviewAt = input.nextReviewAt ?? source.nextReviewAt;
   assertAuthorisedFutureReview(nextReviewAt, now, now);
@@ -222,6 +224,8 @@ export function reviewRuleEditionOnSnap(
       authorPersonId: rule.createdByPersonId,
       submitterPersonId: rule.submittedByPersonId ?? rule.createdByPersonId,
       action: "approve",
+      snap,
+      organisationId: input.organisationId,
     });
   }
   if (input.status === "APPROVED") {
@@ -485,7 +489,7 @@ export function verifyPolicyEditionOnSnap(
   if (!edition) throw new PlatformError("NOT_FOUND", "policy edition not found");
   assertExpectedVersion(edition.version, input.expectedVersion, "policy edition");
   assertLegalTransition(POLICY_EVIDENCE_TRANSITIONS, edition.verificationState, input.decision, "policy evidence");
-  assertMakerChecker(edition.submittedByPersonId, actorPersonId, "verify");
+  assertMakerCheckerFor(snap, edition.submittedByPersonId, actorPersonId, "verify", input.organisationId);
   const document = snap.riskEvidenceDocuments.find((item) => item.id === edition.documentEditionId);
   if (!document) throw new PlatformError("NOT_FOUND", "cited document is inaccessible");
   if (document.state === "QUARANTINED") throw new PlatformError("VALIDATION_FAILED", "quarantined document cannot be verified");
@@ -734,7 +738,7 @@ export function decideResidualRiskOnSnap(
   const decision = snap.riskResidualDecisions.find((item) => item.id === input.decisionId && item.eventId === input.eventId);
   if (!decision) throw new PlatformError("NOT_FOUND", "residual-risk decision not found");
   assertExpectedVersion(decision.version, input.expectedVersion, "residual-risk decision");
-  assertMakerChecker(decision.submittedByPersonId, actorPersonId, "decide residual risk");
+  assertMakerCheckerFor(snap, decision.submittedByPersonId, actorPersonId, "decide residual risk", input.organisationId);
   Object.assign(
     decision,
     RiskResidualDecisionSchema.parse({

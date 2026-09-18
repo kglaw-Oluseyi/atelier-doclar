@@ -271,11 +271,8 @@ export const ForecastOverrideSchema = z
     ...versioned,
   })
   .strict()
-  .refine((value) => value.proposedLow <= value.proposedExpected && value.proposedExpected <= value.proposedHigh, "override range must satisfy low ≤ expected ≤ high")
-  .refine(
-    (value) => value.proposedByPersonId !== value.decidedByPersonId || value.status === "PROPOSED",
-    "proposer cannot be the checker on a decided override",
-  );
+  .refine((value) => value.proposedLow <= value.proposedExpected && value.proposedExpected <= value.proposedHigh, "override range must satisfy low ≤ expected ≤ high");
+  // Maker/checker same-person refusal is enforced in decideForecastOverrideOnSnap (CEO may self-check).
 
 export const OperationalProvisionRecommendationSchema = z
   .object({
@@ -299,11 +296,8 @@ export const OperationalProvisionRecommendationSchema = z
     product: z.literal("PROVISION"),
     ...versioned,
   })
-  .strict()
-  .refine(
-    (value) => value.proposedByPersonId !== value.decidedByPersonId || value.status === "PROPOSED",
-    "proposer cannot be the checker on a decided provision recommendation",
-  );
+  .strict();
+  // Maker/checker same-person refusal is enforced in decideProvisionOnSnap (CEO may self-check).
 
 export const CalibrationObservationSchema = z
   .object({

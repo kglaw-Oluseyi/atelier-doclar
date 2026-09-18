@@ -2,7 +2,7 @@ import { PlatformError } from "./errors.js";
 import {
   assertExpectedVersion,
   assertIndependentChecker,
-  assertMakerChecker,
+  assertMakerCheckerFor,
   assertProtectedHuman,
   assertSameEvent,
   assertSameOrganisation,
@@ -182,7 +182,7 @@ export function transitionIncidentOnSnap(
     if (openActions.length && !residual) {
       throw new PlatformError("VALIDATION_FAILED", "incident cannot close while critical actions remain open without an authorised residual-risk decision");
     }
-    assertMakerChecker(incident.reportedByPersonId, actorPersonId, "close incident");
+    assertMakerCheckerFor(snap, incident.reportedByPersonId, actorPersonId, "close incident", input.organisationId);
   }
   Object.assign(incident, RiskIncidentSchema.parse({ ...incident, state: input.to, ...bumpVersion(incident, now) }));
   return incident;
@@ -250,6 +250,8 @@ export function decideLearningOnSnap(
     authorPersonId: proposal.proposedByPersonId ?? proposal.createdByPersonId,
     submitterPersonId: proposal.createdByPersonId,
     action: "approve",
+    snap,
+    organisationId: input.organisationId,
   });
   const targetCountBefore = {
     rules: snap.riskRuleEditions.length,

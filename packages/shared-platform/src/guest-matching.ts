@@ -24,13 +24,31 @@ export function fieldValue(field: QualifiedField): string | undefined {
 
 export function operationalDisplayName(guest: Pick<OperationalGuest, "givenName" | "familyName" | "preferredName">): string {
   const preferred = fieldValue(guest.preferredName);
-  if (preferred) return preferred;
   const given = fieldValue(guest.givenName);
   const family = fieldValue(guest.familyName);
-  if (given && family) return `${given} ${family}`;
+  // Prefer given+family for disambiguation when both exist (common wedding collision case).
+  if (given && family) {
+    if (preferred && preferred.toLowerCase() !== given.toLowerCase() && !preferred.toLowerCase().includes(family.toLowerCase())) {
+      return `${preferred} ${family}`;
+    }
+    return `${given} ${family}`;
+  }
+  if (preferred) return preferred;
   if (family) return family;
   if (given) return given;
   return "Name not supplied";
+}
+
+/** Seating/rule pickers: always include family when present, plus a short id tip for collisions. */
+export function seatingGuestPickerLabel(
+  guest: Pick<OperationalGuest, "id" | "givenName" | "familyName" | "preferredName" | "householdId"> & {
+    householdKey?: string;
+  },
+): string {
+  const base = operationalDisplayName(guest);
+  const household = guest.householdKey?.trim();
+  if (household) return `${base} · ${household}`;
+  return base;
 }
 
 export const ATTENTION_FIELD_KEYS = [

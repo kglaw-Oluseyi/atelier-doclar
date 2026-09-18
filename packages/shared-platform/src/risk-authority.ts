@@ -427,6 +427,8 @@ export function recordRuleCurrentReviewOnSnap(
     authorPersonId: rule.createdByPersonId,
     submitterPersonId: rule.submittedByPersonId ?? rule.createdByPersonId,
     action: "approve",
+    snap,
+    organisationId: input.organisationId,
   });
   assertAuthorisedFutureReview(input.nextReviewAt, now, now);
   assertNoCompetingCurrentRule(snap, input.organisationId, rule.ruleKey, rule.id, rule.id);
@@ -486,6 +488,8 @@ export function recordSourceCurrentReviewOnSnap(
     authorPersonId: source.authorPersonId,
     submitterPersonId: source.submittedByPersonId,
     action: "approve",
+    snap,
+    organisationId: input.organisationId,
   });
   assertAuthorisedFutureReview(input.nextReviewAt, now, now);
   const contentHash = exactHash({ title: source.title, locator: source.locator, summary: source.summary });

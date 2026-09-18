@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { SCHEMA_VERSION } from "./constants.js";
 import { PlatformError } from "./errors.js";
+import { personHasCeoOrganisationWide } from "./risk-command.js";
 import { type BudgetExpr } from "./eec-budget-engine.js";
 import {
   assessChangeImpactDeepOnSnap,
@@ -173,7 +174,7 @@ export function decideBriefEditionOnSnap(
   if (input.expectedHash && input.expectedHash !== record.contentHash) {
     throw new PlatformError("VALIDATION_FAILED", "decision binds the exact submitted hash");
   }
-  if (record.submittedByPersonId === actorPersonId) {
+  if (record.submittedByPersonId === actorPersonId && !personHasCeoOrganisationWide(snap, actorPersonId, input.organisationId)) {
     throw new PlatformError("FORBIDDEN", "the submitting maker cannot decide this edition");
   }
   record.status = input.decision === "APPROVE" ? "APPROVED" : "REJECTED";
@@ -553,7 +554,7 @@ export function decideBudgetScenarioOnSnap(
   const record = snap.budgetScenarioEditions.find((item) => item.id === input.scenarioId && item.organisationId === input.organisationId);
   if (!record) throw new PlatformError("NOT_FOUND", "budget scenario was not found");
   if (record.version !== input.expectedVersion) throw new PlatformError("VERSION_CONFLICT", "stale budget scenario");
-  if (record.submittedByPersonId === actorPersonId) {
+  if (record.submittedByPersonId === actorPersonId && !personHasCeoOrganisationWide(snap, actorPersonId, input.organisationId)) {
     throw new PlatformError("FORBIDDEN", "the author cannot approve this scenario");
   }
   record.status = "APPROVED";
@@ -683,7 +684,7 @@ export function decideChangeOnSnap(
   const proposal = snap.changeProposals.find((item) => item.id === input.changeProposalId && item.organisationId === input.organisationId);
   if (!proposal) throw new PlatformError("NOT_FOUND", "change proposal was not found");
   if (proposal.version !== input.expectedVersion) throw new PlatformError("VERSION_CONFLICT", "stale change proposal");
-  if (proposal.submittedByPersonId === actorPersonId) {
+  if (proposal.submittedByPersonId === actorPersonId && !personHasCeoOrganisationWide(snap, actorPersonId, input.organisationId)) {
     throw new PlatformError("FORBIDDEN", "the detector cannot decide this change");
   }
   proposal.status = input.decision === "APPROVE" ? "APPROVED" : "REJECTED";

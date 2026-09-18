@@ -449,12 +449,12 @@ body.atelier {
 }
 
 .atelier-guestbook .guestbook-cell-clip {
-  display: block;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow-wrap: normal;
+  display: inline-block;
+  max-width: none;
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+  overflow-wrap: break-word;
   word-break: normal;
 }
 

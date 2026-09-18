@@ -48,7 +48,7 @@ export interface RiskDossierTransaction {
   loadAssignment(
     id: string,
     scope: RiskScope,
-  ): Promise<{ id: string; personId: string; organisationId: string; eventId?: string; status: string } | undefined>;
+  ): Promise<{ id: string; personId: string; organisationId: string; eventId?: string; status: string; roleId: string } | undefined>;
   insertEdition(record: RiskDossierEdition): Promise<void>;
   updateEdition(id: string, expectedVersion: number, patch: RiskSafePatch): Promise<void>;
   insertPublication(record: RiskDossierPublication): Promise<void>;

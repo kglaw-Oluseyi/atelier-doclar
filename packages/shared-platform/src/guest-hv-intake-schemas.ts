@@ -335,6 +335,8 @@ export const HvJobActionInputSchema = z
     jobId: UuidSchema,
     expectedVersion: z.number().int().positive(),
     reason: z.string().max(240).optional(),
+    /** CEO-only: allow the submitter to approve when no independent checker is available. */
+    governanceOverrideReason: z.string().min(8).max(400).optional(),
     idempotencyKey: z.string().uuid().optional(),
     maxChunks: z.number().int().positive().max(40).optional(),
   })

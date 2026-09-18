@@ -43,6 +43,7 @@ import { switchSeatingVerifyAsAction } from "../../../../../server/seating-verif
 import { eventOsVerifyAsAvailable } from "../../../../../server/seating-verify-as";
 import { emitSettlementStage, PlatformError, retryLockApplies, seatingV2ReplacementEnabled, buildCpsatRunUiModel, WORKER_UNAVAILABLE_PUBLIC_MESSAGE, QUEUE_BUSY_PUBLIC_MESSAGE, type CpsatCandidateReviewModel } from "@maison-doclar/shared-platform";
 import { activateSeatingRuleAction, withdrawSeatingRuleAction } from "../../../../../server/seating-actions";
+import { markGuestsAttendingForSeatingAction } from "../../../../../server/actions";
 import { CpsatRunStatusPanel } from "../../../../../components/cpsat-run-status-panel";
 import { CpsatRunLifecyclePoller } from "../../../../../components/cpsat-run-lifecycle-poller";
 import { CpsatCandidateReviewPanel } from "../../../../../components/cpsat-candidate-review-panel";
@@ -303,8 +304,11 @@ export default async function EventSeatingPage({
           <ProtectionMutationForm action={runS06EvaluationAction.bind(null, event.id)} className="actions" testId="seating-evaluate">
             <Envelope fields={envelopeFields} />
             <IdempotencyField />
-            <button type="submit" className="button">
-              Run seating evaluation
+            <p className="help">
+              Readiness check only — does not launch the CP-SAT solver. Use <strong>Generate seating plan</strong> under Runs to queue a solve.
+            </p>
+            <button type="submit" className="button secondary">
+              Run seating readiness check
             </button>
           </ProtectionMutationForm>
         ) : null}
@@ -350,6 +354,22 @@ export default async function EventSeatingPage({
         <article>
           <h3>Guest cohort</h3>
           <p>{workspace.guests.length} governed guests. Eligible {workspace.counts.eligibleGuests}.</p>
+          {workspace.guests.length > 0 && workspace.counts.eligibleGuests === 0 ? (
+            <div data-testid="seating-eligible-zero-help">
+              <p className="lede">
+                Eligible guests require RSVP attendance intent = ATTENDING. Imported guests without RSVP show as RSVP_UNKNOWN and cannot be seated.
+              </p>
+              <form action={markGuestsAttendingForSeatingAction} className="form">
+                <input type="hidden" name="eventId" value={event.id} />
+                <input type="hidden" name="returnTo" value={`/app/events/${event.id}/seating#inputs`} />
+                <input type="hidden" name="reason" value="Mark cohort attending for seating eligibility" />
+                <IdempotencyField />
+                <button type="submit" className="button">
+                  Mark all guests attending for seating
+                </button>
+              </form>
+            </div>
+          ) : null}
         </article>
         <article>
           <h3>RSVP truth</h3>
@@ -1314,6 +1334,7 @@ export default async function EventSeatingPage({
           </ProtectionMutationForm>
         ) : null}
         {permissions.exportJob ? (
+          publication || working ? (
           <ProtectionMutationForm
             key={`seating-export-${presented.correlationId ?? "idle"}`}
             action={requestSeatingExportAction.bind(null, event.id)}
@@ -1353,6 +1374,11 @@ export default async function EventSeatingPage({
             </fieldset>
             <button type="submit" className="button">Request export</button>
           </ProtectionMutationForm>
+          ) : (
+            <p className="lede" data-testid="seating-export-unavailable">
+              No seating plan exists to export yet. Generate and adopt a plan under Runs first — this is not an access problem.
+            </p>
+          )
         ) : null}
         <ul data-testid="seating-export-list">
           {workspace.exports.map((item) => (

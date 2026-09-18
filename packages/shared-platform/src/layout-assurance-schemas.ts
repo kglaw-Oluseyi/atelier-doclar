@@ -224,11 +224,16 @@ export const LayoutApprovalSchema = z
     materialDiffSummary: NonEmptySchema.max(800),
     capacityBasis: NonEmptySchema.max(400),
     downstreamImpact: NonEmptySchema.max(400),
+    /** Set when a CEO governance override was used to complete maker/checker alone. */
+    governanceOverrideReason: NonEmptySchema.max(400).optional(),
     ...versioned,
   })
   .strict()
   .refine(
-    (value) => !value.decidedByPersonId || value.decidedByPersonId !== value.submittedByPersonId,
+    (value) =>
+      !value.decidedByPersonId ||
+      value.decidedByPersonId !== value.submittedByPersonId ||
+      Boolean(value.governanceOverrideReason),
     "the author of a submitted hash cannot approve it",
   );
 
@@ -369,6 +374,8 @@ export const DecideLayoutApprovalInputSchema = z
     ...mutationBase,
     approvalId: UuidSchema,
     decision: z.enum(["APPROVED", "REJECTED", "REVOKED"]),
+    /** CEO-only: allow the submitter to decide when no independent checker is available. */
+    governanceOverrideReason: NonEmptySchema.max(400).optional(),
   })
   .strict();
 

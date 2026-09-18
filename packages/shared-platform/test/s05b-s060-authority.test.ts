@@ -146,7 +146,7 @@ describe("MD-PR-S060 dossier authority", () => {
     }
   });
 
-  it("denies source self-approval even for CEO and accepts a distinct reviewer", () => {
+  it("allows organisation-wide CEO to complete source maker/checker alone and still accepts a distinct reviewer path", () => {
     const { service } = env();
     const source = service.createRiskSource(actor(people.personCeo), {
       organisationId: people.orgMaison,
@@ -163,22 +163,36 @@ describe("MD-PR-S060 dossier authority", () => {
       lastVerifiedAt: "2026-09-10T09:00:00.000Z",
       nextReviewAt: "2026-12-10T09:00:00.000Z",
     });
-    assert.throws(
-      () =>
-        service.approveRiskSource(actor(people.personCeo), {
-          organisationId: people.orgMaison,
-          assignmentId: people.assignCeo,
-          sourceId: source.id,
-          expectedVersion: source.version,
-          idempotencyKey: "s060-source-self-approve",
-        }),
-      (error: unknown) => error instanceof PlatformError && error.code === "FORBIDDEN",
-    );
+    const ceoApproved = service.approveRiskSource(actor(people.personCeo), {
+      organisationId: people.orgMaison,
+      assignmentId: people.assignCeo,
+      sourceId: source.id,
+      expectedVersion: source.version,
+      idempotencyKey: "s060-source-self-approve",
+    });
+    assert.equal(ceoApproved.status, "APPROVED");
+    assert.equal(ceoApproved.approvedByPersonId, people.personCeo);
+
+    const source2 = service.createRiskSource(actor(people.personCeo), {
+      organisationId: people.orgMaison,
+      assignmentId: people.assignCeo,
+      expectedVersion: 0,
+      idempotencyKey: "s060-source-self-02",
+      title: "NSITF-B",
+      publisher: "NSITF",
+      locator: "https://nsitf.gov.ng/b",
+      authority: "REGULATOR",
+      jurisdiction: "NG",
+      summary: "Synthetic B",
+      retrievedAt: "2026-09-10T09:00:00.000Z",
+      lastVerifiedAt: "2026-09-10T09:00:00.000Z",
+      nextReviewAt: "2026-12-10T09:00:00.000Z",
+    });
     const approved = service.approveRiskSource(actor(people.personRiskReviewer), {
       organisationId: people.orgMaison,
       assignmentId: people.assignRiskReviewer,
-      sourceId: source.id,
-      expectedVersion: source.version,
+      sourceId: source2.id,
+      expectedVersion: source2.version,
       idempotencyKey: "s060-source-reviewer-approve",
     });
     assert.equal(approved.status, "APPROVED");

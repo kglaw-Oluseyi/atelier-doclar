@@ -252,10 +252,22 @@ export default async function GuestIntakeJobPage({
             <IdempotencyField />
             <fieldset>
               <legend>Checker approval</legend>
-              <p className="lede">You cannot approve an intake you submitted.</p>
+              <p className="lede">
+                Organisation-wide CEO may submit and approve alone. Other roles need a different authorised checker.
+              </p>
               <label>
                 Reason
                 <input name="reason" defaultValue="Approve promotion of frozen intake edition" required />
+              </label>
+              <label>
+                Optional note when completing maker/checker alone as CEO
+                <input
+                  name="governanceOverrideReason"
+                  minLength={8}
+                  maxLength={400}
+                  placeholder="Optional — defaults to CEO organisation-wide authority when you submitted this intake"
+                  data-testid="hv-intake-ceo-override-reason"
+                />
               </label>
               <PendingSubmit pendingLabel="Approving…">Approve promotion</PendingSubmit>
             </fieldset>

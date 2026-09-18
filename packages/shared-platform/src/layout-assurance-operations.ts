@@ -8,6 +8,7 @@ import {
   SCHEMA_VERSION,
 } from "./constants.js";
 import { PlatformError } from "./errors.js";
+import { CEO_MAKER_CHECKER_DEFAULT_REASON } from "./risk-command.js";
 import { assertNoAssetSecrets, inspectFloorPlanPayload, sanitiseFloorPlanFileName } from "./layout-assurance-assets.js";
 import { buildCapacityReport } from "./layout-assurance-capacity.js";
 import { diffLayoutObjects, summarizeDiff } from "./layout-assurance-diff.js";
@@ -715,6 +716,7 @@ export function decideLayoutApprovalOnSnap(
   actorPersonId: string,
   canDecide: boolean,
   isSystemAdministrator: boolean,
+  ceoGovernanceOverrideAllowed = false,
 ): LayoutApproval {
   const input = DecideLayoutApprovalInputSchema.parse(raw);
   if (!canDecide || isSystemAdministrator) {
@@ -726,12 +728,18 @@ export function decideLayoutApprovalOnSnap(
   assertLayoutVersion(layout, input.expectedVersion, input.expectedRevisionNumber);
   const approval = snap.layoutApprovals.find((item) => item.id === input.approvalId && item.layoutId === layout.id);
   if (!approval) throw new PlatformError("NOT_FOUND", "approval was not found");
+  const selfDecision = approval.submittedByPersonId === actorPersonId;
+  const overrideReason =
+    input.governanceOverrideReason?.trim() ||
+    (ceoGovernanceOverrideAllowed && selfDecision ? CEO_MAKER_CHECKER_DEFAULT_REASON : undefined);
+  const usingCeoOverride = Boolean(selfDecision && overrideReason && ceoGovernanceOverrideAllowed);
+  if (selfDecision && input.decision === "APPROVED" && !usingCeoOverride) {
+    throw new PlatformError("FORBIDDEN", "the author of a submitted hash cannot approve it", {
+      publicMessage:
+        "Maker/checker: the person who submitted this hash cannot approve it. Grant a Director assignment, or complete as organisation-wide CEO.",
+    });
+  }
   if (input.decision === "APPROVED") {
-    if (approval.submittedByPersonId === actorPersonId) {
-      throw new PlatformError("FORBIDDEN", "the author of a submitted hash cannot approve it", {
-        publicMessage: "Maker/checker: the person who submitted this hash cannot approve it.",
-      });
-    }
     if (approval.status !== "SUBMITTED") {
       throw new PlatformError("VALIDATION_FAILED", "only a submitted approval can be approved");
     }
@@ -740,6 +748,9 @@ export function decideLayoutApprovalOnSnap(
     }
     approval.status = "APPROVED";
     approval.decidedByPersonId = actorPersonId;
+    if (usingCeoOverride && overrideReason) {
+      approval.governanceOverrideReason = overrideReason;
+    }
   } else if (input.decision === "REJECTED") {
     if (approval.status !== "SUBMITTED") {
       throw new PlatformError("VALIDATION_FAILED", "only a submitted approval can be rejected");

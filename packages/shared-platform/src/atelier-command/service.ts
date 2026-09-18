@@ -2,7 +2,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import type { ActorSnapshot } from "../policy.js";
 import { PlatformError } from "../errors.js";
-import { assertMakerChecker } from "../risk-command.js";
+import { assertMakerChecker, ceoMakerCheckerRelief } from "../risk-command.js";
 import type { PlatformSnapshot } from "../store.js";
 import { simulateBrowserRun, DEFAULT_ALLOWED_DOMAINS } from "./browser.js";
 import { buildEventContextProjection } from "./context.js";
@@ -697,7 +697,12 @@ export function approvePlan(input: {
   }
   const instruction = ledger.instructions.find((i) => i.id === plan.instructionId);
   if (!instruction) throw new PlatformError("NOT_FOUND", "Instruction missing for plan");
-  assertMakerChecker(instruction.authorPersonId, input.actor.person.id, "approve");
+  assertMakerChecker(
+    instruction.authorPersonId,
+    input.actor.person.id,
+    "approve",
+    ceoMakerCheckerRelief(input.actor, input.organisationId),
+  );
   const now = nowIso(input.now);
   const approvalCorrelationId = randomUUID();
   plan.status = "APPROVED";

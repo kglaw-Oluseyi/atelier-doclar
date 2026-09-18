@@ -8,6 +8,7 @@ import {
   SCHEMA_VERSION,
 } from "./constants.js";
 import { PlatformError } from "./errors.js";
+import { personHasCeoOrganisationWide } from "./risk-command.js";
 import {
   AttendanceForecastRunSchema,
   CalibrationObservationSchema,
@@ -514,7 +515,7 @@ export function decideForecastOverrideOnSnap(
   if (record.status !== "PROPOSED") {
     throw new PlatformError("TRANSITION_INVALID", "only a proposed override can be decided");
   }
-  if (record.proposedByPersonId === actorPersonId) {
+  if (record.proposedByPersonId === actorPersonId && !personHasCeoOrganisationWide(snap, actorPersonId, input.organisationId)) {
     throw new PlatformError("FORBIDDEN", "the proposer cannot approve or reject the same override");
   }
   const run = snap.attendanceForecastRuns.find((item) => item.id === record.forecastRunId);
@@ -590,7 +591,7 @@ export function decideProvisionOnSnap(
   if (record.status !== "PROPOSED") {
     throw new PlatformError("TRANSITION_INVALID", "only a proposed provision can be decided");
   }
-  if (record.proposedByPersonId === actorPersonId) {
+  if (record.proposedByPersonId === actorPersonId && !personHasCeoOrganisationWide(snap, actorPersonId, input.organisationId)) {
     throw new PlatformError("FORBIDDEN", "the proposer cannot approve or reject the same provision recommendation");
   }
   const run = snap.attendanceForecastRuns.find((item) => item.id === record.forecastRunId);
@@ -627,7 +628,11 @@ export function approveHostProjectionOnSnap(
   if (run.status !== "SUCCEEDED") {
     throw new PlatformError("TRANSITION_INVALID", "only a current forecast can be released as a host projection");
   }
-  if (run.actorPersonId === actorPersonId && run.hostProjectionStatus === "DRAFT") {
+  if (
+    run.actorPersonId === actorPersonId &&
+    run.hostProjectionStatus === "DRAFT" &&
+    !personHasCeoOrganisationWide(snap, actorPersonId, input.organisationId)
+  ) {
     throw new PlatformError("FORBIDDEN", "the operator who ran the forecast cannot approve the same host projection");
   }
   run.hostProjectionStatus = "APPROVED";

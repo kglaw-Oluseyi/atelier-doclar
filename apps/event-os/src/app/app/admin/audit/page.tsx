@@ -69,9 +69,9 @@ export default async function AuditPage({
   try {
     const audit = runtime.service.searchAudit(actor, organisation.id);
     const labels = buildGovernanceLabelIndex(runtime.service, actor, organisation.id);
-    const filtered = filter
+      const filtered = filter
       ? audit.filter((item) => {
-          const blob = `${item.action} ${item.resourceType ?? ""} ${item.correlationId} ${item.reason ?? ""} ${item.resourceId ?? ""}`.toLowerCase();
+          const blob = `${item.action} ${item.resourceType ?? ""} ${item.correlationId} ${item.reason ?? ""} ${item.resourceId ?? ""} ${item.eventId ?? ""} ${item.clientId ?? ""} ${item.outcome ?? ""}`.toLowerCase();
           return blob.includes(filter);
         })
       : audit;
@@ -91,7 +91,7 @@ export default async function AuditPage({
               id="audit-q"
               name="q"
               defaultValue={typeof params.q === "string" ? params.q : ""}
-              placeholder="e.g. atelierCommand"
+              placeholder="Event ID, correlation ID, action…"
               data-testid="audit-filter"
             />
           </label>

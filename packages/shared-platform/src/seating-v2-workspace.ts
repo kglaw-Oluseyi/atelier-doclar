@@ -1,4 +1,4 @@
-import { operationalDisplayName } from "./guest-matching.js";
+import { seatingGuestPickerLabel } from "./guest-matching.js";
 import {
   S06_V1_STALE_REASON,
   S06_V2_EVALUATION_CORPUS_EDITION,
@@ -237,9 +237,20 @@ export function buildSeatingV2Workspace(
   const guests = cohort.guests.map((guest) => {
     const person = snap.operationalGuests.find((item) => item.id === guest.eventGuestId);
     const seated = assignments.find((item) => item.eventGuestId === guest.eventGuestId);
+    const household = person?.householdId
+      ? snap.guestHouseholds.find((item) => item.id === person.householdId)
+      : undefined;
     return {
       id: guest.eventGuestId,
-      label: disclosure === "AUDITOR" ? "Permission-safe guest" : person ? operationalDisplayName(person) : "Guest",
+      label:
+        disclosure === "AUDITOR"
+          ? "Permission-safe guest"
+          : person
+            ? seatingGuestPickerLabel({
+                ...person,
+                ...(household?.key ? { householdKey: household.key } : {}),
+              })
+            : "Guest",
       eligible: guest.eligible,
       eligibilityCode: guest.eligibilityCode,
       seated: seated?.state === "SEATED",

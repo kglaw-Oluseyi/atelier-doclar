@@ -5,9 +5,10 @@ import {
   replayedMutationEffect,
   type DurableMutationEffect,
 } from "./durable-mutation-effect.js";
+import { roleKeyForId } from "./catalog.js";
 import { PlatformError } from "./errors.js";
 import { redactValue, stableHash } from "./redaction.js";
-import { extractRiskEnvelope } from "./risk-command.js";
+import { CEO_MAKER_CHECKER_DEFAULT_REASON, extractRiskEnvelope, type MakerCheckerRelief } from "./risk-command.js";
 import {
   assertGrantUsable,
   buildDossierEdition,
@@ -89,7 +90,7 @@ async function assertHumanAssignment(
   actorPersonId: string,
   organisationId: string,
   actorKind?: string,
-): Promise<void> {
+): Promise<MakerCheckerRelief> {
   if (actorKind === "AI") {
     throw new PlatformError("AI_AUTHORITY_FORBIDDEN", "AI cannot approve a governing protection decision");
   }
@@ -97,6 +98,11 @@ async function assertHumanAssignment(
   if (!assignment || assignment.status !== "ACTIVE" || assignment.personId !== actorPersonId) {
     throw new PlatformError("FORBIDDEN", "current assignment is required");
   }
+  const roleKey = roleKeyForId(assignment.roleId);
+  if (roleKey === "CEO") {
+    return { ceoAuthority: true, overrideReason: CEO_MAKER_CHECKER_DEFAULT_REASON };
+  }
+  return {};
 }
 
 async function replayOrConsume(
@@ -254,10 +260,16 @@ export class RiskDossierCommandService {
       const replayed = await replayOrConsume(tx, input, action, input.idempotencyKey, payloadHash, (id) => tx.loadEdition(id, input));
       if (replayed) return this.finish(replayed as RiskDossierEdition, "REPLAYED", { editions: [replayed as RiskDossierEdition] });
       const scope = { organisationId: input.organisationId, eventId: input.eventId };
-      await assertHumanAssignment(tx, input.assignmentId, actor.personId, input.organisationId, actor.actorKind);
+      const relief = await assertHumanAssignment(tx, input.assignmentId, actor.personId, input.organisationId, actor.actorKind);
       const current = await tx.loadEdition(input.dossierId, scope, "FOR_UPDATE");
       if (!current) throw new PlatformError("NOT_FOUND", "dossier edition not found");
-      const next = decideDossierTransition(current, { to, expectedVersion: input.expectedVersion, approvedHash: input.approvedHash }, actor.personId, now);
+      const next = decideDossierTransition(
+        current,
+        { to, expectedVersion: input.expectedVersion, approvedHash: input.approvedHash },
+        actor.personId,
+        now,
+        relief,
+      );
       await tx.updateEdition(current.id, current.version, { ...next });
       await commitReceipt(tx, {
         actor,
@@ -298,7 +310,7 @@ export class RiskDossierCommandService {
       });
       if (replayed) return this.finish(replayed as RiskDossierPublication, "REPLAYED", { publications: [replayed as RiskDossierPublication] });
       const scope = { organisationId: input.organisationId, eventId: input.eventId };
-      await assertHumanAssignment(tx, input.assignmentId, actor.personId, input.organisationId, actor.actorKind);
+      const relief = await assertHumanAssignment(tx, input.assignmentId, actor.personId, input.organisationId, actor.actorKind);
       const edition = await tx.loadEdition(editionId, scope, "FOR_UPDATE");
       if (!edition) throw new PlatformError("NOT_FOUND", "dossier edition not found");
       const snapshot = await tx.loadApplicabilitySnapshot({ eventId: input.eventId, contentHash: edition.componentHashes[0] }, scope);
@@ -317,6 +329,7 @@ export class RiskDossierCommandService {
         now,
         snapshot,
         mandatoryIndeterminate,
+        relief,
       );
       if (decided.application === "REPLAYED") {
         await commitReceipt(tx, {

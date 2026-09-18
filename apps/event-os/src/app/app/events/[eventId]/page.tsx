@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { authorize } from "@maison-doclar/shared-platform";
 import { AtelierPageHeader } from "../../../../components/atelier-page-header";
+import { EventStaffAccessForm } from "../../../../components/event-staff-access-form";
 import { ForecastStrip } from "../../../../components/forecast-workspace";
 import { AppShell } from "../../../../components/shell";
 import { forecastPermissions } from "../../../../server/forecast-scope";
@@ -29,6 +31,18 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
   const forecastStrip = canViewForecast
     ? runtime.service.getForecastOverviewStrip(actor, organisation.id, event.id)
     : undefined;
+  const actorSnap = runtime.service.resolveActor(person.id);
+  const canAdministerAccess = authorize({
+    actor: actorSnap,
+    permission: "platform.access.administer",
+    scope: { organisationId: organisation.id },
+  }).allow;
+  const staffPeople = canAdministerAccess
+    ? runtime.service.listPersons(actor, organisation.id).map((item) => ({
+        id: item.id,
+        displayName: item.displayName,
+      }))
+    : [];
 
   return (
     <AppShell
@@ -90,6 +104,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ ev
         </Link>
       </p>
       {forecastStrip ? <ForecastStrip eventId={event.id} strip={forecastStrip} /> : null}
+      {canAdministerAccess ? (
+        <EventStaffAccessForm eventId={event.id} eventName={event.name} people={staffPeople} />
+      ) : null}
       <section className="atelier-panel">
         <h2>Master Event File</h2>
         <p>

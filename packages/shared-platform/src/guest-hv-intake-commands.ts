@@ -439,6 +439,7 @@ export function approveGuestIntakeCore(
   parseStrict: HvParseStrict,
   actor: { personId: string; correlationId: string; now?: string },
   raw: unknown,
+  ceoGovernanceOverrideAllowed = false,
 ): GuestIntakeJob {
   const input = parseStrict<HvJobActionInput>(HvJobActionInputSchema, raw);
   return mutate(actor, {
@@ -446,7 +447,9 @@ export function approveGuestIntakeCore(
     scope: { organisationId: input.organisationId, eventId: input.eventId },
     action: "guest.intake.approved",
     resourceType: "guest_intake_job",
-    reason: input.reason,
+    reason: input.governanceOverrideReason
+      ? `CEO_GOVERNANCE_OVERRIDE: ${input.governanceOverrideReason}${input.reason ? ` · ${input.reason}` : ""}`
+      : input.reason,
     idempotencyKey: input.idempotencyKey,
     payloadHash: stableHash({ jobId: input.jobId, expectedVersion: input.expectedVersion, op: "approve" }),
     run: (snap, ctx) => {
@@ -457,7 +460,20 @@ export function approveGuestIntakeCore(
       }
       if (job.status !== "SUBMITTED") throw new PlatformError("VALIDATION_FAILED", "intake must be submitted before approval");
       if (!job.submittedByPersonId) throw new PlatformError("VALIDATION_FAILED", "intake has no submitter");
-      assertMakerChecker(job.submittedByPersonId, actor.personId, "approve");
+      const selfApprove = job.submittedByPersonId === actor.personId;
+      const overrideReason =
+        input.governanceOverrideReason?.trim() ||
+        (ceoGovernanceOverrideAllowed && selfApprove ? "CEO organisation-wide authority self-check" : undefined);
+      if (selfApprove) {
+        if (!ceoGovernanceOverrideAllowed || !overrideReason) {
+          throw new PlatformError("FORBIDDEN", "maker cannot approve their own edition", {
+            publicMessage:
+              "Maker/checker: the person who submitted this intake cannot approve it. Grant a Director assignment, or complete as organisation-wide CEO.",
+          });
+        }
+      } else {
+        assertMakerChecker(job.submittedByPersonId, actor.personId, "approve");
+      }
       const candidates = snap.guestIntakeCandidates.filter((item) => item.jobId === job.id);
       const fingerprint = computeApprovalFingerprint({
         jobId: job.id,

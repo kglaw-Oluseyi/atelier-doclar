@@ -68,7 +68,7 @@ export default async function CampaignDetailPage({
       {campaign.status === "AWAITING_APPROVAL" ? (
         <section>
           <h2>Approval</h2>
-          <p>A different named human must approve. The author cannot approve their own campaign.</p>
+          <p>A different named human must approve, unless you are organisation-wide CEO completing maker/checker alone.</p>
         </section>
       ) : null}
       <CampaignLifecycleForms eventId={eventId} campaign={campaign} canApprove={loaded.permissions.msgApprove} />

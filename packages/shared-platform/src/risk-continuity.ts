@@ -2,7 +2,8 @@ import { exactHash } from "./eec-hash.js";
 import { PlatformError } from "./errors.js";
 import {
   assertExpectedVersion,
-  assertMakerChecker,
+  assertMakerCheckerFor,
+  personHasCeoOrganisationWide,
   assertProtectedHuman,
   assertSameEvent,
   assertSameOrganisation,
@@ -152,7 +153,7 @@ export function decideContinuityPlanOnSnap(
   assertExpectedVersion(plan.version, input.expectedVersion, "continuity plan");
   if (input.decision === "APPROVED") {
     assertProtectedHuman(snap, input.assignmentId, actorPersonId, actorKind, input.organisationId);
-    assertMakerChecker(plan.submittedByPersonId, actorPersonId, "approve continuity plan");
+    assertMakerCheckerFor(snap, plan.submittedByPersonId, actorPersonId, "approve continuity plan", input.organisationId);
   }
   Object.assign(
     plan,
@@ -399,8 +400,11 @@ export function transitionFallbackOnSnap(
   if (input.to === "AUTHORISED") {
     assertProtectedHuman(snap, input.assignmentId, actorPersonId, actorKind, input.organisationId);
     const plan = snap.riskContinuityPlans.find((item) => item.id === activation.planId);
-    if (plan) assertMakerChecker(plan.submittedByPersonId, actorPersonId, "authorise fallback");
-    if (activation.proposedByPersonId === actorPersonId) {
+    if (plan) assertMakerCheckerFor(snap, plan.submittedByPersonId, actorPersonId, "authorise fallback", input.organisationId);
+    if (
+      activation.proposedByPersonId === actorPersonId &&
+      !personHasCeoOrganisationWide(snap, actorPersonId, input.organisationId)
+    ) {
       throw new PlatformError("FORBIDDEN", "authoriser must differ from the plan proposer for consequential activation");
     }
   }

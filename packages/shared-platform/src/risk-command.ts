@@ -62,10 +62,29 @@ export function assertSameEvent(eventId: string | undefined, expected?: string):
   if (expected && eventId !== expected) throw new PlatformError("SCOPE_MISMATCH", "event scope does not match");
 }
 
-export function assertMakerChecker(makerPersonId: string, checkerPersonId: string, action: string): void {
-  if (makerPersonId === checkerPersonId) {
-    throw new PlatformError("FORBIDDEN", `maker cannot ${action} their own edition`);
-  }
+export type MakerCheckerRelief = {
+  /**
+   * Organisation-wide CEO may complete maker and checker alone anywhere in Event OS.
+   * Non-CEO roles remain strictly separated.
+   */
+  ceoAuthority?: boolean;
+  /** Optional audit note when CEO completes both roles. */
+  overrideReason?: string;
+};
+
+export const CEO_MAKER_CHECKER_DEFAULT_REASON = "CEO organisation-wide authority self-check" as const;
+
+export function assertMakerChecker(
+  makerPersonId: string,
+  checkerPersonId: string,
+  action: string,
+  relief?: MakerCheckerRelief,
+): void {
+  if (makerPersonId !== checkerPersonId) return;
+  if (relief?.ceoAuthority) return;
+  throw new PlatformError("FORBIDDEN", `maker cannot ${action} their own edition`, {
+    publicMessage: `Maker/checker: a different authorised person must ${action}. Organisation-wide CEO may complete both roles alone.`,
+  });
 }
 
 export function assertIndependentChecker(input: {
@@ -73,9 +92,90 @@ export function assertIndependentChecker(input: {
   authorPersonId?: string;
   submitterPersonId?: string;
   action: "approve";
+  relief?: MakerCheckerRelief;
+  snap?: PlatformSnapshot;
+  organisationId?: string;
 }): void {
-  if (input.authorPersonId) assertMakerChecker(input.authorPersonId, input.actorPersonId, input.action);
-  if (input.submitterPersonId) assertMakerChecker(input.submitterPersonId, input.actorPersonId, input.action);
+  const relief =
+    input.relief ??
+    (input.snap ? ceoMakerCheckerReliefFromSnap(input.snap, input.actorPersonId, input.organisationId) : undefined);
+  if (input.authorPersonId) {
+    assertMakerChecker(input.authorPersonId, input.actorPersonId, input.action, relief);
+  }
+  if (input.submitterPersonId) {
+    assertMakerChecker(input.submitterPersonId, input.actorPersonId, input.action, relief);
+  }
+}
+
+/** Resolve whether an actor snapshot holds organisation-wide CEO authority. */
+export function actorHasCeoOrganisationWide(
+  actor: {
+    assignments: ReadonlyArray<{ status: string; organisationId: string; roleId: string }>;
+    roles: ReadonlyArray<{ id: string; key: string; organisationWide?: boolean }>;
+  },
+  organisationId?: string,
+): boolean {
+  return actor.assignments.some((assignment) => {
+    if (assignment.status !== "ACTIVE") return false;
+    if (organisationId && assignment.organisationId !== organisationId) return false;
+    const role = actor.roles.find((item) => item.id === assignment.roleId);
+    return Boolean(role && role.key === "CEO" && role.organisationWide);
+  });
+}
+
+export function ceoMakerCheckerRelief(
+  actor: {
+    assignments: ReadonlyArray<{ status: string; organisationId: string; roleId: string }>;
+    roles: ReadonlyArray<{ id: string; key: string; organisationWide?: boolean }>;
+  },
+  organisationId?: string,
+  overrideReason?: string,
+): MakerCheckerRelief {
+  const ceoAuthority = actorHasCeoOrganisationWide(actor, organisationId);
+  if (!ceoAuthority) return {};
+  const reason = overrideReason?.trim() || CEO_MAKER_CHECKER_DEFAULT_REASON;
+  return { ceoAuthority: true, overrideReason: reason };
+}
+
+/** CEO authority from platform assignments (for OnSnap / command paths that only have personId). */
+export function personHasCeoOrganisationWide(
+  snap: PlatformSnapshot,
+  personId: string,
+  organisationId?: string,
+): boolean {
+  return snap.assignments.some((assignment) => {
+    if (assignment.personId !== personId || assignment.status !== "ACTIVE") return false;
+    if (organisationId && assignment.organisationId !== organisationId) return false;
+    const role = snap.roles.find((item) => item.id === assignment.roleId);
+    return Boolean(role && role.key === "CEO" && role.organisationWide);
+  });
+}
+
+export function ceoMakerCheckerReliefFromSnap(
+  snap: PlatformSnapshot,
+  personId: string,
+  organisationId?: string,
+  overrideReason?: string,
+): MakerCheckerRelief {
+  if (!personHasCeoOrganisationWide(snap, personId, organisationId)) return {};
+  const reason = overrideReason?.trim() || CEO_MAKER_CHECKER_DEFAULT_REASON;
+  return { ceoAuthority: true, overrideReason: reason };
+}
+
+/** Maker/checker with automatic CEO organisation-wide relief when the checker is CEO. */
+export function assertMakerCheckerFor(
+  snap: PlatformSnapshot,
+  makerPersonId: string,
+  checkerPersonId: string,
+  action: string,
+  organisationId?: string,
+): void {
+  assertMakerChecker(
+    makerPersonId,
+    checkerPersonId,
+    action,
+    ceoMakerCheckerReliefFromSnap(snap, checkerPersonId, organisationId),
+  );
 }
 
 export function assertHumanActor(actorKind: string | undefined): void {

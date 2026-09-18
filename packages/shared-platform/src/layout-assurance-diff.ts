@@ -103,7 +103,34 @@ export function diffLayoutObjects(
   return entries;
 }
 
-export function summarizeDiff(entries: readonly LayoutDiffEntry[]): string {
+const MATERIAL_DIFF_SUMMARY_MAX = 800;
+
+/** Compact, scale-safe summary for maker/checker — must stay within schema max length. */
+export function summarizeDiff(entries: readonly LayoutDiffEntry[], maxLength = MATERIAL_DIFF_SUMMARY_MAX): string {
   if (entries.length === 0) return "No material spatial or semantic changes.";
-  return entries.map((item) => item.summary).join(" ");
+  const counts = new Map<string, number>();
+  for (const entry of entries) {
+    const key = entry.kind;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  const tally = [...counts.entries()]
+    .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
+    .map(([kind, count]) => `${count} ${kind.toLowerCase().replaceAll("_", " ")}`)
+    .join("; ");
+  const headline = `${entries.length} material change${entries.length === 1 ? "" : "s"}: ${tally}.`;
+  const samples: string[] = [];
+  let remaining = Math.max(0, maxLength - headline.length - 1);
+  for (const entry of entries.slice(0, 12)) {
+    const piece = entry.summary.trim();
+    if (!piece) continue;
+    const cost = (samples.length ? 1 : 0) + piece.length;
+    if (cost > remaining) break;
+    samples.push(piece);
+    remaining -= cost;
+  }
+  const detail = samples.length ? ` ${samples.join(" ")}` : "";
+  const omitted = entries.length - samples.length;
+  const suffix = omitted > 0 && remaining > 24 ? ` (+${omitted} more)` : "";
+  const full = `${headline}${detail}${suffix}`;
+  return full.length <= maxLength ? full : `${full.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
 }

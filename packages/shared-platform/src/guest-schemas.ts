@@ -283,6 +283,8 @@ export const ImportGuestsInputSchema = z
     filename: NonEmptySchema.max(180),
     csv: NonEmptySchema.max(200_000),
     reason: NonEmptySchema,
+    /** When true, prepare RSVP and mark newly promoted guests ATTENDING for seating eligibility. */
+    markAttendingForSeating: z.boolean().optional(),
     idempotencyKey: NonEmptySchema.optional(),
   })
   .strict();

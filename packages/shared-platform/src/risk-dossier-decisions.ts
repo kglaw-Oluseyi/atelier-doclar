@@ -3,11 +3,16 @@ import { PlatformError } from "./errors.js";
 import {
   assertExpectedVersion,
   assertMakerChecker,
+  assertMakerCheckerFor,
+  ceoMakerCheckerReliefFromSnap,
+  personHasCeoOrganisationWide,
   bumpVersion,
   extractRiskEnvelope,
   newRiskId,
   riskStamp,
+  type MakerCheckerRelief,
 } from "./risk-command.js";
+import type { PlatformSnapshot } from "./store.js";
 import {
   RiskDossierAccessGrantSchema,
   RiskDossierEditionSchema,
@@ -119,12 +124,21 @@ export function decideDossierTransition(
   },
   actorPersonId: string,
   now: string,
+  relief?: MakerCheckerRelief | { snap?: PlatformSnapshot; organisationId?: string },
 ): RiskDossierEdition {
   assertExpectedVersion(current.version, command.expectedVersion, "dossier");
   assertLegalTransition(DOSSIER_TRANSITIONS, current.status, command.to, "dossier");
   if (command.to === "APPROVED") {
-    assertMakerChecker(current.authorPersonId ?? current.submittedByPersonId, actorPersonId, "approve dossier");
-    if (current.submittedByPersonId) assertMakerChecker(current.submittedByPersonId, actorPersonId, "approve dossier");
+    const resolved: MakerCheckerRelief =
+      relief && "ceoAuthority" in relief
+        ? relief
+        : relief && "snap" in relief && relief.snap
+          ? ceoMakerCheckerReliefFromSnap(relief.snap, actorPersonId, relief.organisationId ?? current.organisationId)
+          : {};
+    assertMakerChecker(current.authorPersonId ?? current.submittedByPersonId, actorPersonId, "approve dossier", resolved);
+    if (current.submittedByPersonId) {
+      assertMakerChecker(current.submittedByPersonId, actorPersonId, "approve dossier", resolved);
+    }
   }
   if (command.to === "SUBMITTED") {
     return RiskDossierEditionSchema.parse({
@@ -160,8 +174,27 @@ export function assertPublicationEligibility(edition: RiskDossierEdition): void 
   }
 }
 
-export function assertPublicationActors(edition: RiskDossierEdition, actorPersonId: string): void {
+export function assertPublicationActors(
+  edition: RiskDossierEdition,
+  actorPersonId: string,
+  snap?: PlatformSnapshot,
+): void {
   const authorPersonId = edition.authorPersonId ?? edition.submittedByPersonId;
+  const orgId = edition.organisationId;
+  if (snap) {
+    assertMakerCheckerFor(snap, authorPersonId, actorPersonId, "publish dossier", orgId);
+    if (edition.submittedByPersonId) {
+      assertMakerCheckerFor(snap, edition.submittedByPersonId, actorPersonId, "publish dossier", orgId);
+    }
+    if (
+      edition.approvedByPersonId &&
+      edition.approvedByPersonId === actorPersonId &&
+      !personHasCeoOrganisationWide(snap, actorPersonId, orgId)
+    ) {
+      throw new PlatformError("FORBIDDEN", "approver cannot publish; a distinct publishing authority is required");
+    }
+    return;
+  }
   assertMakerChecker(authorPersonId, actorPersonId, "publish dossier");
   if (edition.submittedByPersonId) assertMakerChecker(edition.submittedByPersonId, actorPersonId, "publish dossier");
   if (edition.approvedByPersonId && edition.approvedByPersonId === actorPersonId) {
@@ -201,12 +234,19 @@ export function decideDossierPublication(
   now: string,
   snapshot: Pick<RiskApplicabilitySnapshot, "overall"> | undefined,
   mandatoryIndeterminate: boolean,
+  snapOrRelief?: PlatformSnapshot | MakerCheckerRelief,
 ):
   | { application: "APPLIED"; publication: RiskDossierPublication; editionPatch: RiskDossierEdition; priorPatch?: RiskDossierPublication }
   | { application: "REPLAYED"; publication: RiskDossierPublication } {
   assertPublicationEligibility(edition);
   assertExactApprovedHash(edition, command.approvedHash);
-  assertPublicationActors(edition, actorPersonId);
+  if (snapOrRelief && "assignments" in snapOrRelief) {
+    assertPublicationActors(edition, actorPersonId, snapOrRelief);
+  } else if (snapOrRelief && "ceoAuthority" in snapOrRelief && snapOrRelief.ceoAuthority) {
+    // CEO organisation-wide may publish their own approved edition.
+  } else {
+    assertPublicationActors(edition, actorPersonId);
+  }
   if (priorPublication && publicationIsReplay(priorPublication, edition)) {
     return { application: "REPLAYED", publication: priorPublication };
   }

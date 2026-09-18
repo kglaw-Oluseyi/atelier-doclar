@@ -293,7 +293,7 @@ describe("EOS-S06 V2 command path", () => {
     assert.equal(assigned.application, "APPLIED");
   });
 
-  it("blocks CEO maker/checker bypass and serves permission-safe export to Auditor", async () => {
+  it("allows CEO maker/checker completion and serves permission-safe export to Auditor", async () => {
     const { service, store } = fixtureService();
     await prepareSurface(service, store);
     const guestA = attendingGuest(service, "Efe", "s072-sep-a");
@@ -305,33 +305,25 @@ describe("EOS-S06 V2 command path", () => {
     const run = await v2.launchRun(planner(), envelope(people.assignPlanner, "s072-sep-run-01"), { packageId: frozen.value.id });
     const adopted = await v2.adoptRun(ceo(), envelope(people.assignCeo, "s072-sep-adopt-01"), { runId: run.value.id });
     const submitted = await v2.submitPlan(planner(), cas(people.assignPlanner, "s072-sep-submit-01", adopted.value), { editionId: adopted.value.id });
-    await assert.rejects(
-      () =>
-        v2.approvePlan(ceo(), cas(people.assignCeo, "s072-sep-ceo-approve-01", submitted.value), {
-          editionId: submitted.value.id,
-          editionHash: submitted.value.contentHash,
-          decision: "APPROVED",
-          reason: "author cannot approve",
-        }),
-      (error: unknown) => error instanceof PlatformError && error.code === "FORBIDDEN",
-    );
-    const approved = await v2.approvePlan(director(), cas(people.assignDirector, "s072-sep-approve-01", submitted.value), {
+    const approved = await v2.approvePlan(ceo(), cas(people.assignCeo, "s072-sep-ceo-approve-01", submitted.value), {
       editionId: submitted.value.id,
       editionHash: submitted.value.contentHash,
       decision: "APPROVED",
-      reason: "director approval",
+      reason: "CEO organisation-wide approval",
     });
-    await assert.rejects(
-      () =>
-        v2.publishPlan(ceo(), cas(people.assignCeo, "s072-sep-ceo-pub-01", {
-          contentHash: submitted.value.contentHash,
-          version: submitted.value.version + 1,
-        }), {
-          editionId: submitted.value.id,
-          editionHash: submitted.value.contentHash,
-        }),
-      (error: unknown) => error instanceof PlatformError && error.code === "FORBIDDEN",
+    assert.equal(approved.application, "APPLIED");
+    const published = await v2.publishPlan(
+      ceo(),
+      cas(people.assignCeo, "s072-sep-ceo-pub-01", {
+        contentHash: submitted.value.contentHash,
+        version: submitted.value.version + 1,
+      }),
+      {
+        editionId: submitted.value.id,
+        editionHash: submitted.value.contentHash,
+      },
     );
+    assert.equal(published.application, "APPLIED");
     const job = await v2.requestExport(ceo(), envelope(people.assignCeo, "s072-sep-export-01"), {
       sourceType: "EDITION",
       sourceId: submitted.value.id,

@@ -201,6 +201,7 @@ export {
 } from "./addressing.js";
 export {
   operationalDisplayName,
+  seatingGuestPickerLabel,
   normalizeEmail,
   normalizePhone,
   findDuplicateMatches,

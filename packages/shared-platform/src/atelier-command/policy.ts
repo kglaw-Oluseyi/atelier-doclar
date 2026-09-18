@@ -2,7 +2,7 @@
 import { authorize, type ActorSnapshot } from "../policy.js";
 import type { PermissionKey } from "../schemas.js";
 import { PlatformError } from "../errors.js";
-import { assertMakerChecker } from "../risk-command.js";
+import { assertMakerChecker, actorHasCeoOrganisationWide } from "../risk-command.js";
 import type {
   AtelierCommandRiskTier,
   AtelierExecutionMode,
@@ -145,7 +145,14 @@ export function decidePolicy(input: {
     }
     if (input.makerPersonId && input.checkerPersonId) {
       try {
-        assertMakerChecker(input.makerPersonId, input.checkerPersonId, "approve");
+        assertMakerChecker(
+          input.makerPersonId,
+          input.checkerPersonId,
+          "approve",
+          actorHasCeoOrganisationWide(input.actor, input.organisationId)
+            ? { ceoAuthority: true }
+            : undefined,
+        );
       } catch {
         return { decision: "REFUSE", reasonCode: "MAKER_CHECKER_SEPARATION" };
       }

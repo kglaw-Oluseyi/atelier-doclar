@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { SCHEMA_VERSION } from "./constants.js";
 import { PlatformError } from "./errors.js";
+import { personHasCeoOrganisationWide } from "./risk-command.js";
 import {
   atelierTokenPrefix,
   generateAtelierLinkToken,
@@ -514,7 +515,10 @@ export function reviewHostDecisionOnSnap(
   const receipt = snap.hostDecisionReceipts.find((item) => item.id === input.receiptId);
   if (!request || !receipt) throw new PlatformError("NOT_FOUND", "decision review target was not found");
   assertVersion(request.version, input.expectedVersion);
-  if (receipt.submittedByPersonId === actorPersonId || request.publishedByPersonId === actorPersonId) {
+  if (
+    (receipt.submittedByPersonId === actorPersonId || request.publishedByPersonId === actorPersonId) &&
+    !personHasCeoOrganisationWide(snap, actorPersonId, input.organisationId ?? request.organisationId)
+  ) {
     throw new PlatformError("FORBIDDEN", "maker cannot check this decision");
   }
   if (receipt.reviewStatus !== "PENDING") {

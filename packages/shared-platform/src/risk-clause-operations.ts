@@ -3,7 +3,7 @@ import { PlatformError } from "./errors.js";
 import {
   assertExpectedVersion,
   assertProtectedHuman,
-  assertMakerChecker,
+  assertMakerCheckerFor,
   assertSameEvent,
   assertSameOrganisation,
   bumpVersion,
@@ -142,7 +142,7 @@ export function reviewClauseEditionOnSnap(
   const edition = snap.riskClauseEditions.find((item) => item.id === input.editionId && item.organisationId === input.organisationId);
   if (!edition) throw new PlatformError("NOT_FOUND", "clause edition not found");
   assertExpectedVersion(edition.version, input.expectedVersion, "clause edition");
-  assertMakerChecker(edition.submittedByPersonId, actorPersonId, "approve clause");
+  assertMakerCheckerFor(snap, edition.submittedByPersonId, actorPersonId, "approve clause", input.organisationId);
   const next =
     input.gate === "LEGAL"
       ? {

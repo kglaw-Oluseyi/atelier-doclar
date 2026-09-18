@@ -538,6 +538,7 @@ import {
   GuestAssistanceInputSchema,
   GuestRsvpSaveInputSchema,
   IssueRsvpInvitationInputSchema,
+  MarkGuestsAttendingForSeatingInputSchema,
   PrepareEventRsvpInputSchema,
   PublishRsvpQuestionnaireInputSchema,
   ReviewRsvpExceptionInputSchema,
@@ -1757,6 +1758,48 @@ export class PlatformService {
           changedAt: ctx.now,
           schemaVersion: SCHEMA_VERSION,
         });
+        // Creators (Planner/Director) must be able to open the event they just created.
+        // Organisation-wide roles already see every event; skip redundant grants for them.
+        const alreadyVisible = canSeeEvent(ctx.actor, record, ctx.now);
+        const hasExactGrant = snap.assignments.some(
+          (item) =>
+            item.personId === actor.personId &&
+            item.organisationId === record.organisationId &&
+            item.eventId === record.id &&
+            item.status === "ACTIVE",
+        );
+        if (!alreadyVisible && !hasExactGrant) {
+          const orgAssignments = ctx.actor.assignments.filter(
+            (item) => item.organisationId === record.organisationId && item.status === "ACTIVE",
+          );
+          const preferred =
+            orgAssignments.find((item) => {
+              const role = ctx.actor.roles.find((entry) => entry.id === item.roleId);
+              return role?.key === "EVENT_DIRECTOR" || role?.key === "PLANNER";
+            }) ??
+            orgAssignments.find((item) => {
+              const role = ctx.actor.roles.find((entry) => entry.id === item.roleId);
+              return role?.key === "CEO";
+            }) ??
+            orgAssignments[0];
+          if (preferred) {
+            snap.assignments.push({
+              id: randomUUID(),
+              organisationId: record.organisationId,
+              clientId: record.clientId,
+              eventId: record.id,
+              personId: actor.personId,
+              roleId: preferred.roleId,
+              status: "ACTIVE",
+              grantedByPersonId: actor.personId,
+              reason: "Auto-granted to event creator",
+              schemaVersion: SCHEMA_VERSION,
+              version: 1,
+              createdAt: ctx.now,
+              updatedAt: ctx.now,
+            });
+          }
+        }
         return record;
       },
     });
@@ -2287,6 +2330,36 @@ export class PlatformService {
         }
         batch.status = batch.rowCount === 0 ? "FAILED" : batch.invalidCount === batch.rowCount ? "FAILED" : "PROMOTED";
         batch.updatedAt = ctx.now;
+        if (input.markAttendingForSeating && batch.promotedCount > 0) {
+          const prepared = this.ensureEventRsvpSurfaceOnSnap(snap, event, ctx.now);
+          const promotedIds = new Set(
+            snap.guestIntakeRows
+              .filter((row) => row.batchId === batch.id && row.promotedGuestId)
+              .map((row) => row.promotedGuestId as string),
+          );
+          for (const guest of snap.operationalGuests) {
+            if (!promotedIds.has(guest.id)) continue;
+            const response = ensureResponse({
+              snap,
+              guest,
+              questionnaireId: prepared.questionnaire.id,
+              now: ctx.now,
+            });
+            applyResponseAnswers({
+              snap,
+              guest,
+              response,
+              answers: { attendanceIntent: "ATTENDING", sensitiveConsent: true },
+              provenance: "STAFF_ENTERED",
+              questionnaire: prepared.questionnaire,
+              policy: prepared.policy,
+              submit: true,
+              now: ctx.now,
+              actorPersonId: actor.personId,
+            });
+          }
+          reconcileEventProjection(snap, event, ctx.now);
+        }
         return batch;
       },
     });
@@ -2329,7 +2402,15 @@ export class PlatformService {
   }
 
   approveGuestIntake(actor: ActorContext, raw: unknown): GuestIntakeJob {
-    return approveGuestIntakeCore(this.mutate.bind(this) as never, parseStrict as never, actor, raw);
+    const actorSnap = this.actorSnapshot(actor);
+    const input = raw as { organisationId?: string };
+    const ceoOverride = actorSnap.assignments.some((assignment) => {
+      if (assignment.status !== "ACTIVE") return false;
+      if (input.organisationId && assignment.organisationId !== input.organisationId) return false;
+      const role = actorSnap.roles.find((item) => item.id === assignment.roleId);
+      return Boolean(role?.key === "CEO" && role.organisationWide);
+    });
+    return approveGuestIntakeCore(this.mutate.bind(this) as never, parseStrict as never, actor, raw, ceoOverride);
   }
 
   advanceGuestIntakePromotion(actor: ActorContext, raw: unknown): { job: GuestIntakeJob; receipt?: GuestIntakeReceipt } {
@@ -4230,6 +4311,11 @@ export class PlatformService {
             const role = ctx.actor.roles.find((item) => item.id === assignment.roleId);
             return Boolean(role && isSystemAdministratorRole(role.key) && assignment.status === "ACTIVE");
           }),
+          ctx.actor.assignments.some((assignment) => {
+            if (assignment.status !== "ACTIVE" || assignment.organisationId !== input.organisationId) return false;
+            const role = ctx.actor.roles.find((item) => item.id === assignment.roleId);
+            return Boolean(role?.key === "CEO" && role.organisationWide);
+          }),
         ),
     });
   }
@@ -5050,41 +5136,117 @@ export class PlatformService {
       payloadHash: stableHash(input),
       run: (snap, ctx) => {
         const event = this.requireEvent(snap, input.organisationId, input.eventId);
-        ensureRsvpKeyRing(snap, event.organisationId, this.rsvpAccessConfig().currentKeyId, ctx.now);
-        let policy = eventPolicy(snap, event.id);
-        if (!policy) {
-          policy = defaultRsvpPolicy({
-            organisationId: event.organisationId,
-            clientId: event.clientId,
-            eventId: event.id,
-            hostDisplayName: input.hostDisplayName ?? "Maison Doclar",
-            eventDisplayName: input.eventDisplayName ?? event.name,
-            now: ctx.now,
-          });
-          snap.rsvpPolicies.push(policy);
-        }
-        let questionnaire = publishedQuestionnaire(snap, event.id);
-        if (!questionnaire) {
-          questionnaire = {
-            id: randomUUID(),
-            organisationId: event.organisationId,
-            clientId: event.clientId,
-            eventId: event.id,
-            status: "PUBLISHED",
-            versionNumber: 1,
-            sections: canonicalQuestionnaireSections(),
-            publishedAt: ctx.now,
-            schemaVersion: SCHEMA_VERSION,
-            version: 1,
-            createdAt: ctx.now,
-            updatedAt: ctx.now,
-          };
-          snap.rsvpQuestionnaires.push(questionnaire);
-        }
+        const prepared = this.ensureEventRsvpSurfaceOnSnap(
+          snap,
+          event,
+          ctx.now,
+          input.hostDisplayName ?? "Maison Doclar",
+          input.eventDisplayName ?? event.name,
+        );
         reconcileEventProjection(snap, event, ctx.now);
-        return { id: policy.id, policy, questionnaire };
+        return { id: prepared.policy.id, ...prepared };
       },
     });
+  }
+
+  /**
+   * Mark all governed guests for an event as ATTENDING so they become seating-eligible.
+   * Prepares the RSVP surface when missing. Used after CSV import and from Seating Inputs.
+   */
+  markGuestsAttendingForSeating(
+    actor: ActorContext,
+    raw: unknown,
+  ): { id: string; markedCount: number; alreadyAttending: number } {
+    const input = parseStrict(MarkGuestsAttendingForSeatingInputSchema, raw);
+    return this.mutate(actor, {
+      permission: "rsvp.response.amend",
+      scope: { organisationId: input.organisationId, eventId: input.eventId },
+      action: "rsvp.cohort.marked_attending_for_seating",
+      resourceType: "rsvp_response",
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey,
+      payloadHash: stableHash(input),
+      run: (snap, ctx) => {
+        const event = this.requireEvent(snap, input.organisationId, input.eventId);
+        const prepared = this.ensureEventRsvpSurfaceOnSnap(snap, event, ctx.now);
+        const guests = snap.operationalGuests.filter((guest) => {
+          if (guest.organisationId !== event.organisationId || guest.eventId !== event.id) return false;
+          if (input.guestIds?.length) return input.guestIds.includes(guest.id);
+          return true;
+        });
+        let markedCount = 0;
+        let alreadyAttending = 0;
+        for (const guest of guests) {
+          const existing = responseForGuest(snap, guest.id);
+          if (existing?.attendanceIntent === "ATTENDING") {
+            alreadyAttending += 1;
+            continue;
+          }
+          const response = ensureResponse({
+            snap,
+            guest,
+            questionnaireId: prepared.questionnaire.id,
+            now: ctx.now,
+          });
+          applyResponseAnswers({
+            snap,
+            guest,
+            response,
+            answers: { attendanceIntent: "ATTENDING", sensitiveConsent: true },
+            provenance: "STAFF_ENTERED",
+            questionnaire: prepared.questionnaire,
+            policy: prepared.policy,
+            submit: true,
+            now: ctx.now,
+            actorPersonId: actor.personId,
+          });
+          markedCount += 1;
+        }
+        reconcileEventProjection(snap, event, ctx.now);
+        return { id: event.id, markedCount, alreadyAttending };
+      },
+    });
+  }
+
+  private ensureEventRsvpSurfaceOnSnap(
+    snap: PlatformSnapshot,
+    event: EventRecord,
+    now: string,
+    hostDisplayName = "Maison Doclar",
+    eventDisplayName?: string,
+  ): { policy: RsvpPolicy; questionnaire: RsvpQuestionnaire } {
+    ensureRsvpKeyRing(snap, event.organisationId, this.rsvpAccessConfig().currentKeyId, now);
+    let policy = eventPolicy(snap, event.id);
+    if (!policy) {
+      policy = defaultRsvpPolicy({
+        organisationId: event.organisationId,
+        clientId: event.clientId,
+        eventId: event.id,
+        hostDisplayName,
+        eventDisplayName: eventDisplayName ?? event.name,
+        now,
+      });
+      snap.rsvpPolicies.push(policy);
+    }
+    let questionnaire = publishedQuestionnaire(snap, event.id);
+    if (!questionnaire) {
+      questionnaire = {
+        id: randomUUID(),
+        organisationId: event.organisationId,
+        clientId: event.clientId,
+        eventId: event.id,
+        status: "PUBLISHED",
+        versionNumber: 1,
+        sections: canonicalQuestionnaireSections(),
+        publishedAt: now,
+        schemaVersion: SCHEMA_VERSION,
+        version: 1,
+        createdAt: now,
+        updatedAt: now,
+      };
+      snap.rsvpQuestionnaires.push(questionnaire);
+    }
+    return { policy, questionnaire };
   }
 
   upsertRsvpPolicy(actor: ActorContext, raw: unknown): RsvpPolicy {
@@ -5905,9 +6067,29 @@ export class PlatformService {
       { type: "audit", organisationId },
       actor,
     );
+    const mergeSeatingV2 = (rows: AuditEvent[]): AuditEvent[] => {
+      const seatingRepo =
+        this.seatingV2MemoryRepository ??
+        (this.options.seatingV2Repository instanceof MemorySeatingV2Repository
+          ? this.options.seatingV2Repository
+          : undefined);
+      const seatingAudit = seatingRepo
+        ? seatingRepo.backingStore.audit.filter((item) => item.organisationId === organisationId)
+        : [];
+      if (!seatingAudit.length) return rows;
+      const seen = new Set(rows.map((item) => item.id));
+      const merged = [...rows];
+      for (const item of seatingAudit) {
+        if (!seen.has(item.id)) {
+          seen.add(item.id);
+          merged.push(item);
+        }
+      }
+      return merged.sort((left, right) => right.occurredAt.localeCompare(left.occurredAt));
+    };
     if (readAll.allow) {
       const { snap } = this.authorizeQuery(actor, "platform.audit.read_all", { organisationId });
-      return snap.audit.filter((item) => item.organisationId === organisationId);
+      return mergeSeatingV2(snap.audit.filter((item) => item.organisationId === organisationId));
     }
     const operational = this.decide(
       actorSnap,
@@ -5918,7 +6100,7 @@ export class PlatformService {
     );
     if (operational.allow) {
       const { snap, ctx } = this.authorizeQuery(actor, "platform.audit.read_operational", { organisationId });
-      return projectOperationalAudit(snap, ctx.actor, organisationId, ctx.now);
+      return mergeSeatingV2(projectOperationalAudit(snap, ctx.actor, organisationId, ctx.now));
     }
     this.authorizeQuery(actor, "platform.audit.read_all", { organisationId });
     return [];
@@ -6273,7 +6455,14 @@ export class PlatformService {
         const campaign = this.requireCampaign(snap, input.organisationId, input.eventId, input.campaignId);
         this.assertVersion(campaign.version, input.expectedVersion);
         if (campaign.createdByPersonId && campaign.createdByPersonId === actor.personId) {
-          throw new PlatformError("FORBIDDEN", "approval requires a different named human");
+          const ceo = ctx.actor.assignments.some((assignment) => {
+            if (assignment.status !== "ACTIVE" || assignment.organisationId !== input.organisationId) return false;
+            const role = ctx.actor.roles.find((item) => item.id === assignment.roleId);
+            return Boolean(role?.key === "CEO" && role.organisationWide);
+          });
+          if (!ceo) {
+            throw new PlatformError("FORBIDDEN", "approval requires a different named human");
+          }
         }
         return decideCampaignOnSnap(snap, campaign, {
           decision: input.decision,
@@ -8863,7 +9052,10 @@ export class PlatformService {
         actorPersonId: actor.personId,
         organisationId: input.scope.organisationId,
         clientId: input.scope.clientId ?? (result as { clientId?: string }).clientId,
-        eventId: input.scope.eventId ?? (result as { eventId?: string }).eventId,
+        eventId:
+          input.scope.eventId ??
+          (result as { eventId?: string }).eventId ??
+          (input.resourceType === "event" ? result.id : undefined),
         resourceType: input.resourceType,
         resourceId: result.id ?? input.resourceId,
         correlationId: actor.correlationId,

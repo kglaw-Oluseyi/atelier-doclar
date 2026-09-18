@@ -7,6 +7,7 @@ import {
   SCHEMA_VERSION,
 } from "./constants.js";
 import { PlatformError } from "./errors.js";
+import { personHasCeoOrganisationWide } from "./risk-command.js";
 import { requireScopedGuest } from "./addressing-operations.js";
 import { requireScopedEvent } from "./programme-operations.js";
 import { accentInsensitiveSearchKey, canonicalDisplayText } from "./language-unicode.js";
@@ -249,7 +250,7 @@ export function decideCulturalTextOnSnap(
   const record = snap.culturalSourceTexts.find((item) => item.id === input.culturalSourceTextId);
   if (!record || record.eventId !== event.id) throw new PlatformError("NOT_FOUND", "cultural source text was not found");
   assertVersion(record.version, input.expectedVersion);
-  if (record.authorPersonId === actorPersonId) {
+  if (record.authorPersonId === actorPersonId && !personHasCeoOrganisationWide(snap, actorPersonId, input.organisationId)) {
     throw new PlatformError("FORBIDDEN", "the cultural-text author cannot approve the same text");
   }
   if (record.status === "APPROVED" && input.decision === "APPROVED") {
@@ -446,7 +447,7 @@ export function decideTranslationOnSnap(
   if (edition.kind === "PRIMARY") {
     throw new PlatformError("TRANSITION_INVALID", "primary editions are approved at creation and are not re-approved here");
   }
-  if (edition.authorPersonId === actorPersonId) {
+  if (edition.authorPersonId === actorPersonId && !personHasCeoOrganisationWide(snap, actorPersonId, input.organisationId)) {
     throw new PlatformError("FORBIDDEN", "the translator cannot approve the same translation");
   }
   if (edition.status === "APPROVED") {
@@ -688,7 +689,7 @@ export function decideSourceEditionOnSnap(
   if (revision.status === "SUPERSEDED" || revision.status === "WITHDRAWN") {
     throw new PlatformError("TRANSITION_INVALID", "withdrawn or superseded source editions cannot be approved");
   }
-  if (revision.authorPersonId === actorPersonId) {
+  if (revision.authorPersonId === actorPersonId && !personHasCeoOrganisationWide(snap, actorPersonId, input.organisationId)) {
     throw new PlatformError("FORBIDDEN", "the author cannot approve the same source edition");
   }
   if (input.decision === "APPROVED" && revision.status !== "IN_REVIEW") {

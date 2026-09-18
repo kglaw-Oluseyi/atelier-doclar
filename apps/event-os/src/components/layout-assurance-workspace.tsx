@@ -572,7 +572,10 @@ export function LayoutAssuranceWorkspace({
 
       <section className="atelier-panel" data-testid="layout-approval">
         <h2>Maker/checker approval</h2>
-        <p>The author of a submitted hash cannot approve it. System administration does not grant operational approval. A material change invalidates approval.</p>
+        <p>
+          Organisation-wide CEO may submit and approve alone. Other roles need a different authorised checker.
+          System administration does not grant operational approval. A material change invalidates approval.
+        </p>
         {assurance.capabilities.canSubmitApproval ? (
           <form action={submitLayoutApprovalAction} className="form programme-form">
             <CasFields workspace={workspace} eventId={eventId} />
@@ -613,6 +616,16 @@ export function LayoutAssuranceWorkspace({
                     </select>
                   </label>
                   <input type="hidden" name="reason" value="Maker/checker decision" />
+                  <label>
+                    Optional note when completing maker/checker alone as CEO
+                    <input
+                      name="governanceOverrideReason"
+                      minLength={8}
+                      maxLength={400}
+                      placeholder="Optional — defaults to CEO organisation-wide authority when you submitted this hash"
+                      data-testid="layout-ceo-override-reason"
+                    />
+                  </label>
                   <p className="lede">{decideReadiness.reason}</p>
                   <PendingSubmit locked={mutationLocked} blocked={!decideReadiness.ready} blockedLabel="Decision unavailable">
                     Record decision

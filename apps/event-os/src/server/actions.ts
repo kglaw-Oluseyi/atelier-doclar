@@ -299,16 +299,17 @@ export async function grantAssignmentAction(formData: FormData): Promise<void> {
   const { actor } = await requireActor();
   const runtime = getRuntime();
   const organisation = runtime.service.listOrganisations(actor)[0];
-  if (!organisation) {
-    redirect("/app/admin/access?error=No+organisation+assignment+is+available.");
-  }
   const eventId = String(formData.get("eventId") ?? "") || undefined;
+  const returnPath = eventId ? `/app/events/${eventId}` : "/app/admin/access";
+  if (!organisation) {
+    redirect(`${returnPath}?error=${encodeURIComponent("No organisation assignment is available.")}`);
+  }
   let clientId: string | undefined;
   if (eventId) {
     try {
       clientId = runtime.service.getEvent(actor, organisation.id, eventId).clientId;
     } catch (error) {
-      redirect(`/app/admin/access?error=${encodeURIComponent(actionError(error))}`);
+      redirect(`${returnPath}?error=${encodeURIComponent(actionError(error))}`);
     }
   }
   try {
@@ -321,9 +322,9 @@ export async function grantAssignmentAction(formData: FormData): Promise<void> {
       ...(clientId ? { clientId } : {}),
     });
   } catch (error) {
-    await finishAction(actorBind(actor, "/app/admin/access", "access.manage"), { error });
+    await finishAction(actorBind(actor, returnPath, "access.manage"), { error });
   }
-  await finishAction(actorBind(actor, "/app/admin/access", "access.manage"), { ok: "access-granted" });
+  await finishAction(actorBind(actor, returnPath, "access.manage"), { ok: "access-granted" });
   });
 }
 
@@ -454,11 +455,37 @@ export async function importGuestsAction(formData: FormData): Promise<void> {
       filename: String(formData.get("filename") ?? ""),
       csv: String(formData.get("csv") ?? ""),
       reason: String(formData.get("reason") ?? ""),
+      markAttendingForSeating: String(formData.get("markAttendingForSeating") ?? "") === "true",
     });
   } catch (error) {
     redirect(`${fail}${encodeURIComponent(actionError(error))}`);
   }
   redirect(`/app/events/${eventId}/guests`);
+  });
+}
+
+export async function markGuestsAttendingForSeatingAction(formData: FormData): Promise<void> {
+  return await withDurable(async () => {
+    const { actor } = await requireActor();
+    const runtime = getRuntime();
+    const eventId = String(formData.get("eventId") ?? "");
+    const returnTo = String(formData.get("returnTo") ?? `/app/events/${eventId}/seating`);
+    const fail = `${returnTo}${returnTo.includes("?") ? "&" : "?"}error=`;
+    const organisation = runtime.service.listOrganisations(actor)[0];
+    if (!organisation) {
+      redirect(`${fail}${encodeURIComponent("No organisation assignment is available.")}`);
+    }
+    try {
+      runtime.service.markGuestsAttendingForSeating(actor, {
+        organisationId: organisation.id,
+        eventId,
+        reason: String(formData.get("reason") ?? "Mark guests attending for seating eligibility"),
+        idempotencyKey: optionalFormValue(formData, "idempotencyKey"),
+      });
+    } catch (error) {
+      redirect(`${fail}${encodeURIComponent(actionError(error))}`);
+    }
+    redirect(returnTo);
   });
 }
 
@@ -3670,13 +3697,17 @@ export async function submitLayoutApprovalAction(formData: FormData): Promise<vo
 
 export async function decideLayoutApprovalAction(formData: FormData): Promise<void> {
   return withLayoutMutation(formData, "layout.approval.decide", ({ actor, organisationId, eventId, layoutId, formData: data }) => {
+    const override = String(data.get("governanceOverrideReason") ?? "").trim();
+    const cas = layoutCas(data);
     getRuntime().service.decideLayoutApproval(actor, {
       organisationId,
       eventId,
       layoutId,
-      ...layoutCas(data),
+      ...cas,
+      reason: override ? `CEO_GOVERNANCE_OVERRIDE: ${override}` : cas.reason,
       approvalId: String(data.get("approvalId") ?? ""),
       decision: String(data.get("decision") ?? "REJECTED"),
+      ...(override ? { governanceOverrideReason: override } : {}),
     });
   });
 }

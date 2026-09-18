@@ -263,8 +263,8 @@ export const ReviewAssignmentSchema = z
     notes: OptionalCanonicalTextSchema.optional(),
     ...versioned,
   })
-  .strict()
-  .refine((value) => value.reviewerPersonId !== value.proposerPersonId, "maker cannot check the same review");
+  .strict();
+  // Same-person refusal is enforced in language decide* operations (CEO may self-check).
 
 export const RecipientEditionRuleSchema = z
   .object({

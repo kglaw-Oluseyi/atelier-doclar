@@ -171,6 +171,10 @@ export function LayoutStudioWorkspace({
   function submit(command: unknown, reason: string, mode: Persistence = "saving") {
     if (!commandRef.current || !reasonRef.current || !formRef.current) return;
     if (readOnly && mode !== "retrying") return;
+    if (isPending && mode !== "retrying") {
+      setPersist("saving");
+      return;
+    }
     if (!online) {
       setPersist("offline");
       stash(command, reason);
@@ -184,6 +188,19 @@ export function LayoutStudioWorkspace({
     startTransition(() => {
       formRef.current?.requestSubmit();
     });
+  }
+
+  function nextPaletteGeometry(item: (typeof PALETTE)[number]): SpatialObject["geometry"] {
+    if (item.objectType !== "TABLE" || item.geometry.kind !== "RECTANGLE") return item.geometry;
+    const tables = workspace.objects.filter((object) => object.objectType === "TABLE" && !object.tombstoned);
+    const index = tables.length;
+    const col = index % 6;
+    const row = Math.floor(index / 6);
+    return {
+      ...item.geometry,
+      xMm: item.geometry.xMm + col * 2200,
+      yMm: item.geometry.yMm + row * 2200,
+    };
   }
 
   function replayPending() {
@@ -338,15 +355,22 @@ export function LayoutStudioWorkspace({
                 <button
                   type="button"
                   className="button secondary"
-                  disabled={readOnly}
+                  disabled={readOnly || isPending}
+                  aria-busy={isPending}
                   onClick={() =>
                     submit(
-                      { kind: "CREATE_OBJECT", objectType: item.objectType, label: item.label, geometry: item.geometry, subtype: item.subtype },
+                      {
+                        kind: "CREATE_OBJECT",
+                        objectType: item.objectType,
+                        label: item.label,
+                        geometry: nextPaletteGeometry(item),
+                        subtype: item.subtype,
+                      },
                       `Create ${item.label}`,
                     )
                   }
                 >
-                  Add {item.label}
+                  {isPending ? "Saving…" : `Add ${item.label}`}
                 </button>
               </li>
             ))}
