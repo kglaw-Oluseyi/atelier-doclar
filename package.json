@@ -1,0 +1,27 @@
+{
+  "name": "atelier-doclar",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . && node scripts/static-gates.mjs",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm --filter @maison-doclar/foundation test && pnpm --filter @maison-doclar/event-os test",
+    "test:e2e": "pnpm --filter @maison-doclar/event-os test:e2e",
+    "build": "pnpm --filter @maison-doclar/event-os build",
+    "migrate": "pnpm --filter @maison-doclar/foundation migrate",
+    "secret-scan": "node scripts/secret-scan.mjs",
+    "verify:contract": "pnpm --filter @maison-doclar/foundation exec tsx ../../scripts/verify-slice-contract.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.19.0"
+  }
+}

@@ -6,6 +6,6 @@ The previous implementation is preserved at `legacy/event-os-s01-s06a-pre-rebuil
 
 No legacy implementation code is approved for reuse by default. Any future reuse requires explicit requirement-level verification against the approved specification.
 
-S01 is the first rebuild milestone.
+S01 is the first rebuild milestone. The executable contract is `docs/rebuild/eos-s01/EOS_S01_EXECUTABLE_CONTRACT.md`. Local setup is in `docs/runbooks/s01.md`.
 
 Deployed production effects remain unauthorized. `productionAuthorised` stays false until the CEO changes it.

@@ -3,3 +3,10 @@
 .env.*
 *.pem
 *.key
+node_modules
+.next
+dist
+coverage
+test-results
+playwright-report
+*.tsbuildinfo
