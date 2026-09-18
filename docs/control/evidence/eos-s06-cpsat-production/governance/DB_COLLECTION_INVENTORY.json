@@ -1,0 +1,4836 @@
+{
+  "recordedAt": "2026-09-18T04:40:05.857Z",
+  "method": "read-only SQL COUNT+pg_column_size via event-os \u2192 postgres.railway.internal",
+  "readOnly": true,
+  "platform_documents_by_collection": [
+    {
+      "collection": "operationalGuests",
+      "row_count": 3995,
+      "body_bytes": 5156589,
+      "approx_row_bytes": 5835739,
+      "body_mib": 4.918,
+      "approx_mib": 5.565
+    },
+    {
+      "collection": "guestIntakeCandidates",
+      "row_count": 2150,
+      "body_bytes": 2474609,
+      "approx_row_bytes": 2777759,
+      "body_mib": 2.36,
+      "approx_mib": 2.649
+    },
+    {
+      "collection": "rsvpResponses",
+      "row_count": 1858,
+      "body_bytes": 1452165,
+      "approx_row_bytes": 1760593,
+      "body_mib": 1.385,
+      "approx_mib": 1.679
+    },
+    {
+      "collection": "rsvpReceipts",
+      "row_count": 1852,
+      "body_bytes": 1061196,
+      "approx_row_bytes": 1366776,
+      "body_mib": 1.012,
+      "approx_mib": 1.303
+    },
+    {
+      "collection": "layoutRevisions",
+      "row_count": 505,
+      "body_bytes": 1166338,
+      "approx_row_bytes": 1250753,
+      "body_mib": 1.112,
+      "approx_mib": 1.193
+    },
+    {
+      "collection": "staffSessions",
+      "row_count": 1987,
+      "body_bytes": 921455,
+      "approx_row_bytes": 1054584,
+      "body_mib": 0.879,
+      "approx_mib": 1.006
+    },
+    {
+      "collection": "budgetLines",
+      "row_count": 427,
+      "body_bytes": 413040,
+      "approx_row_bytes": 454886,
+      "body_mib": 0.394,
+      "approx_mib": 0.434
+    },
+    {
+      "collection": "layoutCommands",
+      "row_count": 395,
+      "body_bytes": 303216,
+      "approx_row_bytes": 369181,
+      "body_mib": 0.289,
+      "approx_mib": 0.352
+    },
+    {
+      "collection": "aiEvaluationCaseResults",
+      "row_count": 201,
+      "body_bytes": 294036,
+      "approx_row_bytes": 316146,
+      "body_mib": 0.28,
+      "approx_mib": 0.302
+    },
+    {
+      "collection": "guestHouseholds",
+      "row_count": 526,
+      "body_bytes": 203228,
+      "approx_row_bytes": 291596,
+      "body_mib": 0.194,
+      "approx_mib": 0.278
+    },
+    {
+      "collection": "coverageAssessments",
+      "row_count": 426,
+      "body_bytes": 228564,
+      "approx_row_bytes": 273720,
+      "body_mib": 0.218,
+      "approx_mib": 0.261
+    },
+    {
+      "collection": "layoutValidationFindings",
+      "row_count": 188,
+      "body_bytes": 231005,
+      "approx_row_bytes": 264281,
+      "body_mib": 0.22,
+      "approx_mib": 0.252
+    },
+    {
+      "collection": "atelierCommandLedgers",
+      "row_count": 1,
+      "body_bytes": 235756,
+      "approx_row_bytes": 235826,
+      "body_mib": 0.225,
+      "approx_mib": 0.225
+    },
+    {
+      "collection": "budgetScenarioEditions",
+      "row_count": 62,
+      "body_bytes": 182621,
+      "approx_row_bytes": 189544,
+      "body_mib": 0.174,
+      "approx_mib": 0.181
+    },
+    {
+      "collection": "assignments",
+      "row_count": 238,
+      "body_bytes": 140440,
+      "approx_row_bytes": 178944,
+      "body_mib": 0.134,
+      "approx_mib": 0.171
+    },
+    {
+      "collection": "masterEventFiles",
+      "row_count": 91,
+      "body_bytes": 158424,
+      "approx_row_bytes": 173803,
+      "body_mib": 0.151,
+      "approx_mib": 0.166
+    },
+    {
+      "collection": "layouts",
+      "row_count": 97,
+      "body_bytes": 118096,
+      "approx_row_bytes": 133616,
+      "body_mib": 0.113,
+      "approx_mib": 0.127
+    },
+    {
+      "collection": "eventVenueFacts",
+      "row_count": 121,
+      "body_bytes": 99358,
+      "approx_row_bytes": 119686,
+      "body_mib": 0.095,
+      "approx_mib": 0.114
+    },
+    {
+      "collection": "layoutApprovals",
+      "row_count": 87,
+      "body_bytes": 98106,
+      "approx_row_bytes": 112722,
+      "body_mib": 0.094,
+      "approx_mib": 0.108
+    },
+    {
+      "collection": "layoutValidationRuns",
+      "row_count": 99,
+      "body_bytes": 93742,
+      "approx_row_bytes": 110869,
+      "body_mib": 0.089,
+      "approx_mib": 0.106
+    },
+    {
+      "collection": "discoveryConsentRecords",
+      "row_count": 147,
+      "body_bytes": 81292,
+      "approx_row_bytes": 97462,
+      "body_mib": 0.078,
+      "approx_mib": 0.093
+    },
+    {
+      "collection": "rsvpQuestionnaires",
+      "row_count": 63,
+      "body_bytes": 72974,
+      "approx_row_bytes": 83747,
+      "body_mib": 0.07,
+      "approx_mib": 0.08
+    },
+    {
+      "collection": "budgetBomSnapshots",
+      "row_count": 61,
+      "body_bytes": 70760,
+      "approx_row_bytes": 77165,
+      "body_mib": 0.067,
+      "approx_mib": 0.074
+    },
+    {
+      "collection": "programmePhases",
+      "row_count": 93,
+      "body_bytes": 61149,
+      "approx_row_bytes": 76773,
+      "body_mib": 0.058,
+      "approx_mib": 0.073
+    },
+    {
+      "collection": "sensitivityRuns",
+      "row_count": 61,
+      "body_bytes": 69460,
+      "approx_row_bytes": 75682,
+      "body_mib": 0.066,
+      "approx_mib": 0.072
+    },
+    {
+      "collection": "candidateAssertions",
+      "row_count": 70,
+      "body_bytes": 67294,
+      "approx_row_bytes": 74714,
+      "body_mib": 0.064,
+      "approx_mib": 0.071
+    },
+    {
+      "collection": "layoutEditorLeases",
+      "row_count": 98,
+      "body_bytes": 55272,
+      "approx_row_bytes": 72030,
+      "body_mib": 0.053,
+      "approx_mib": 0.069
+    },
+    {
+      "collection": "permissions",
+      "row_count": 243,
+      "body_bytes": 55552,
+      "approx_row_bytes": 71347,
+      "body_mib": 0.053,
+      "approx_mib": 0.068
+    },
+    {
+      "collection": "layoutPublications",
+      "row_count": 74,
+      "body_bytes": 58152,
+      "approx_row_bytes": 70806,
+      "body_mib": 0.055,
+      "approx_mib": 0.068
+    },
+    {
+      "collection": "layoutDraftCursors",
+      "row_count": 88,
+      "body_bytes": 55488,
+      "approx_row_bytes": 70536,
+      "body_mib": 0.053,
+      "approx_mib": 0.067
+    },
+    {
+      "collection": "events",
+      "row_count": 91,
+      "body_bytes": 55544,
+      "approx_row_bytes": 67010,
+      "body_mib": 0.053,
+      "approx_mib": 0.064
+    },
+    {
+      "collection": "sourceSegments",
+      "row_count": 92,
+      "body_bytes": 52468,
+      "approx_row_bytes": 61760,
+      "body_mib": 0.05,
+      "approx_mib": 0.059
+    },
+    {
+      "collection": "rolePermissions",
+      "row_count": 220,
+      "body_bytes": 38280,
+      "approx_row_bytes": 61600,
+      "body_mib": 0.037,
+      "approx_mib": 0.059
+    },
+    {
+      "collection": "extractionOutcomes",
+      "row_count": 55,
+      "body_bytes": 50586,
+      "approx_row_bytes": 56361,
+      "body_mib": 0.048,
+      "approx_mib": 0.054
+    },
+    {
+      "collection": "budgetAssumptions",
+      "row_count": 67,
+      "body_bytes": 48849,
+      "approx_row_bytes": 56147,
+      "body_mib": 0.047,
+      "approx_mib": 0.054
+    },
+    {
+      "collection": "rsvpPolicies",
+      "row_count": 63,
+      "body_bytes": 45298,
+      "approx_row_bytes": 55693,
+      "body_mib": 0.043,
+      "approx_mib": 0.053
+    },
+    {
+      "collection": "eventVenues",
+      "row_count": 65,
+      "body_bytes": 41860,
+      "approx_row_bytes": 52520,
+      "body_mib": 0.04,
+      "approx_mib": 0.05
+    },
+    {
+      "collection": "sourceArtefacts",
+      "row_count": 92,
+      "body_bytes": 42661,
+      "approx_row_bytes": 52045,
+      "body_mib": 0.041,
+      "approx_mib": 0.05
+    },
+    {
+      "collection": "costRuleEditions",
+      "row_count": 84,
+      "body_bytes": 41200,
+      "approx_row_bytes": 49852,
+      "body_mib": 0.039,
+      "approx_mib": 0.048
+    },
+    {
+      "collection": "phaseHistory",
+      "row_count": 88,
+      "body_bytes": 34912,
+      "approx_row_bytes": 49432,
+      "body_mib": 0.033,
+      "approx_mib": 0.047
+    },
+    {
+      "collection": "rsvpEventProjections",
+      "row_count": 63,
+      "body_bytes": 36666,
+      "approx_row_bytes": 47565,
+      "body_mib": 0.035,
+      "approx_mib": 0.045
+    },
+    {
+      "collection": "uncertaintyDrivers",
+      "row_count": 50,
+      "body_bytes": 33032,
+      "approx_row_bytes": 41582,
+      "body_mib": 0.032,
+      "approx_mib": 0.04
+    },
+    {
+      "collection": "vendorPriceCardEditions",
+      "row_count": 42,
+      "body_bytes": 36680,
+      "approx_row_bytes": 41300,
+      "body_mib": 0.035,
+      "approx_mib": 0.039
+    },
+    {
+      "collection": "discoveryEngagements",
+      "row_count": 71,
+      "body_bytes": 32032,
+      "approx_row_bytes": 39629,
+      "body_mib": 0.031,
+      "approx_mib": 0.038
+    },
+    {
+      "collection": "eventBriefEditions",
+      "row_count": 44,
+      "body_bytes": 33208,
+      "approx_row_bytes": 37828,
+      "body_mib": 0.032,
+      "approx_mib": 0.036
+    },
+    {
+      "collection": "engagementOpportunities",
+      "row_count": 71,
+      "body_bytes": 29193,
+      "approx_row_bytes": 37003,
+      "body_mib": 0.028,
+      "approx_mib": 0.035
+    },
+    {
+      "collection": "priceEvidenceRecords",
+      "row_count": 42,
+      "body_bytes": 31464,
+      "approx_row_bytes": 35958,
+      "body_mib": 0.03,
+      "approx_mib": 0.034
+    },
+    {
+      "collection": "layoutCapacityStatements",
+      "row_count": 36,
+      "body_bytes": 27980,
+      "approx_row_bytes": 34352,
+      "body_mib": 0.027,
+      "approx_mib": 0.033
+    },
+    {
+      "collection": "forecastEstimates",
+      "row_count": 30,
+      "body_bytes": 25620,
+      "approx_row_bytes": 30720,
+      "body_mib": 0.024,
+      "approx_mib": 0.029
+    },
+    {
+      "collection": "forecastPopulationMembers",
+      "row_count": 30,
+      "body_bytes": 23120,
+      "approx_row_bytes": 28460,
+      "body_mib": 0.022,
+      "approx_mib": 0.027
+    },
+    {
+      "collection": "eventBriefDrafts",
+      "row_count": 44,
+      "body_bytes": 23506,
+      "approx_row_bytes": 28302,
+      "body_mib": 0.022,
+      "approx_mib": 0.027
+    },
+    {
+      "collection": "confidenceAssessments",
+      "row_count": 30,
+      "body_bytes": 22550,
+      "approx_row_bytes": 27770,
+      "body_mib": 0.022,
+      "approx_mib": 0.026
+    },
+    {
+      "collection": "costItemDefinitions",
+      "row_count": 42,
+      "body_bytes": 21666,
+      "approx_row_bytes": 26118,
+      "body_mib": 0.021,
+      "approx_mib": 0.025
+    },
+    {
+      "collection": "roadmapMilestones",
+      "row_count": 30,
+      "body_bytes": 22914,
+      "approx_row_bytes": 26034,
+      "body_mib": 0.022,
+      "approx_mib": 0.025
+    },
+    {
+      "collection": "layoutExportJobs",
+      "row_count": 18,
+      "body_bytes": 21924,
+      "approx_row_bytes": 24966,
+      "body_mib": 0.021,
+      "approx_mib": 0.024
+    },
+    {
+      "collection": "vendorPriceCards",
+      "row_count": 42,
+      "body_bytes": 18220,
+      "approx_row_bytes": 22546,
+      "body_mib": 0.017,
+      "approx_mib": 0.022
+    },
+    {
+      "collection": "layoutSnapshots",
+      "row_count": 10,
+      "body_bytes": 18229,
+      "approx_row_bytes": 19909,
+      "body_mib": 0.017,
+      "approx_mib": 0.019
+    },
+    {
+      "collection": "conversationTurns",
+      "row_count": 17,
+      "body_bytes": 14172,
+      "approx_row_bytes": 15940,
+      "body_mib": 0.014,
+      "approx_mib": 0.015
+    },
+    {
+      "collection": "budgetTemplateEditions",
+      "row_count": 10,
+      "body_bytes": 14456,
+      "approx_row_bytes": 15546,
+      "body_mib": 0.014,
+      "approx_mib": 0.015
+    },
+    {
+      "collection": "assertionConflicts",
+      "row_count": 12,
+      "body_bytes": 13860,
+      "approx_row_bytes": 15120,
+      "body_mib": 0.013,
+      "approx_mib": 0.014
+    },
+    {
+      "collection": "impactAssessments",
+      "row_count": 9,
+      "body_bytes": 11588,
+      "approx_row_bytes": 12524,
+      "body_mib": 0.011,
+      "approx_mib": 0.012
+    },
+    {
+      "collection": "coverageRequirements",
+      "row_count": 12,
+      "body_bytes": 11204,
+      "approx_row_bytes": 12488,
+      "body_mib": 0.011,
+      "approx_mib": 0.012
+    },
+    {
+      "collection": "riskEvaluationCaseResults",
+      "row_count": 16,
+      "body_bytes": 10605,
+      "approx_row_bytes": 12397,
+      "body_mib": 0.01,
+      "approx_mib": 0.012
+    },
+    {
+      "collection": "contentEditions",
+      "row_count": 12,
+      "body_bytes": 10055,
+      "approx_row_bytes": 12071,
+      "body_mib": 0.01,
+      "approx_mib": 0.012
+    },
+    {
+      "collection": "guestIntakeJobs",
+      "row_count": 8,
+      "body_bytes": 10697,
+      "approx_row_bytes": 12041,
+      "body_mib": 0.01,
+      "approx_mib": 0.011
+    },
+    {
+      "collection": "contentBlocks",
+      "row_count": 13,
+      "body_bytes": 9535,
+      "approx_row_bytes": 11693,
+      "body_mib": 0.009,
+      "approx_mib": 0.011
+    },
+    {
+      "collection": "roadmapDependencies",
+      "row_count": 20,
+      "body_bytes": 8880,
+      "approx_row_bytes": 11000,
+      "body_mib": 0.008,
+      "approx_mib": 0.01
+    },
+    {
+      "collection": "roadmapScheduleResults",
+      "row_count": 9,
+      "body_bytes": 9342,
+      "approx_row_bytes": 10323,
+      "body_mib": 0.009,
+      "approx_mib": 0.01
+    },
+    {
+      "collection": "attendanceForecastRuns",
+      "row_count": 5,
+      "body_bytes": 9344,
+      "approx_row_bytes": 10082,
+      "body_mib": 0.009,
+      "approx_mib": 0.01
+    },
+    {
+      "collection": "guestMappingEditions",
+      "row_count": 7,
+      "body_bytes": 8884,
+      "approx_row_bytes": 9864,
+      "body_mib": 0.008,
+      "approx_mib": 0.009
+    },
+    {
+      "collection": "discoveryParticipants",
+      "row_count": 19,
+      "body_bytes": 7523,
+      "approx_row_bytes": 9575,
+      "body_mib": 0.007,
+      "approx_mib": 0.009
+    },
+    {
+      "collection": "recipientAssemblies",
+      "row_count": 6,
+      "body_bytes": 8399,
+      "approx_row_bytes": 9431,
+      "body_mib": 0.008,
+      "approx_mib": 0.009
+    },
+    {
+      "collection": "translationLinks",
+      "row_count": 8,
+      "body_bytes": 7908,
+      "approx_row_bytes": 9260,
+      "body_mib": 0.008,
+      "approx_mib": 0.009
+    },
+    {
+      "collection": "guestIntakeSources",
+      "row_count": 7,
+      "body_bytes": 7810,
+      "approx_row_bytes": 9007,
+      "body_mib": 0.007,
+      "approx_mib": 0.009
+    },
+    {
+      "collection": "roadmapTemplateEditions",
+      "row_count": 6,
+      "body_bytes": 8024,
+      "approx_row_bytes": 8684,
+      "body_mib": 0.008,
+      "approx_mib": 0.008
+    },
+    {
+      "collection": "discoveryClientAccess",
+      "row_count": 13,
+      "body_bytes": 6884,
+      "approx_row_bytes": 8288,
+      "body_mib": 0.007,
+      "approx_mib": 0.008
+    },
+    {
+      "collection": "guestPromotionChunks",
+      "row_count": 10,
+      "body_bytes": 6740,
+      "approx_row_bytes": 8140,
+      "body_mib": 0.006,
+      "approx_mib": 0.008
+    },
+    {
+      "collection": "merchandiseFulfilments",
+      "row_count": 9,
+      "body_bytes": 6544,
+      "approx_row_bytes": 8119,
+      "body_mib": 0.006,
+      "approx_mib": 0.008
+    },
+    {
+      "collection": "merchandiseGuestGrants",
+      "row_count": 9,
+      "body_bytes": 6454,
+      "approx_row_bytes": 8029,
+      "body_mib": 0.006,
+      "approx_mib": 0.008
+    },
+    {
+      "collection": "guestOffers",
+      "row_count": 9,
+      "body_bytes": 6456,
+      "approx_row_bytes": 7932,
+      "body_mib": 0.006,
+      "approx_mib": 0.008
+    },
+    {
+      "collection": "roadmapEditions",
+      "row_count": 10,
+      "body_bytes": 6868,
+      "approx_row_bytes": 7888,
+      "body_mib": 0.007,
+      "approx_mib": 0.008
+    },
+    {
+      "collection": "clientReviewEditions",
+      "row_count": 7,
+      "body_bytes": 7088,
+      "approx_row_bytes": 7837,
+      "body_mib": 0.007,
+      "approx_mib": 0.007
+    },
+    {
+      "collection": "eventNarrativeEditions",
+      "row_count": 5,
+      "body_bytes": 6380,
+      "approx_row_bytes": 7255,
+      "body_mib": 0.006,
+      "approx_mib": 0.007
+    },
+    {
+      "collection": "aiEvaluationRuns",
+      "row_count": 5,
+      "body_bytes": 6525,
+      "approx_row_bytes": 7040,
+      "body_mib": 0.006,
+      "approx_mib": 0.007
+    },
+    {
+      "collection": "layoutFloorPlanAssets",
+      "row_count": 5,
+      "body_bytes": 6103,
+      "approx_row_bytes": 6973,
+      "body_mib": 0.006,
+      "approx_mib": 0.007
+    },
+    {
+      "collection": "phaseEntitlements",
+      "row_count": 8,
+      "body_bytes": 5576,
+      "approx_row_bytes": 6936,
+      "body_mib": 0.005,
+      "approx_mib": 0.007
+    },
+    {
+      "collection": "atelierChapters",
+      "row_count": 9,
+      "body_bytes": 4953,
+      "approx_row_bytes": 6465,
+      "body_mib": 0.005,
+      "approx_mib": 0.006
+    },
+    {
+      "collection": "conversionReceipts",
+      "row_count": 8,
+      "body_bytes": 4960,
+      "approx_row_bytes": 6328,
+      "body_mib": 0.005,
+      "approx_mib": 0.006
+    },
+    {
+      "collection": "persons",
+      "row_count": 14,
+      "body_bytes": 5355,
+      "approx_row_bytes": 6209,
+      "body_mib": 0.005,
+      "approx_mib": 0.006
+    },
+    {
+      "collection": "reviewAssignments",
+      "row_count": 7,
+      "body_bytes": 4716,
+      "approx_row_bytes": 5906,
+      "body_mib": 0.004,
+      "approx_mib": 0.006
+    },
+    {
+      "collection": "changeProposals",
+      "row_count": 9,
+      "body_bytes": 4896,
+      "approx_row_bytes": 5814,
+      "body_mib": 0.005,
+      "approx_mib": 0.006
+    },
+    {
+      "collection": "culturalSourceTexts",
+      "row_count": 4,
+      "body_bytes": 4609,
+      "approx_row_bytes": 5297,
+      "body_mib": 0.004,
+      "approx_mib": 0.005
+    },
+    {
+      "collection": "hostOfferRules",
+      "row_count": 6,
+      "body_bytes": 4292,
+      "approx_row_bytes": 5294,
+      "body_mib": 0.004,
+      "approx_mib": 0.005
+    },
+    {
+      "collection": "layoutValidationOverrides",
+      "row_count": 4,
+      "body_bytes": 4420,
+      "approx_row_bytes": 5132,
+      "body_mib": 0.004,
+      "approx_mib": 0.005
+    },
+    {
+      "collection": "guestPartyMembers",
+      "row_count": 7,
+      "body_bytes": 3836,
+      "approx_row_bytes": 5026,
+      "body_mib": 0.004,
+      "approx_mib": 0.005
+    },
+    {
+      "collection": "clients",
+      "row_count": 11,
+      "body_bytes": 3736,
+      "approx_row_bytes": 4770,
+      "body_mib": 0.004,
+      "approx_mib": 0.005
+    },
+    {
+      "collection": "riskDossierEditions",
+      "row_count": 4,
+      "body_bytes": 3916,
+      "approx_row_bytes": 4472,
+      "body_mib": 0.004,
+      "approx_mib": 0.004
+    },
+    {
+      "collection": "venues",
+      "row_count": 6,
+      "body_bytes": 3556,
+      "approx_row_bytes": 4114,
+      "body_mib": 0.003,
+      "approx_mib": 0.004
+    },
+    {
+      "collection": "merchandiseCohortMembers",
+      "row_count": 6,
+      "body_bytes": 2880,
+      "approx_row_bytes": 3942,
+      "body_mib": 0.003,
+      "approx_mib": 0.004
+    },
+    {
+      "collection": "merchandiseItems",
+      "row_count": 5,
+      "body_bytes": 3052,
+      "approx_row_bytes": 3897,
+      "body_mib": 0.003,
+      "approx_mib": 0.004
+    },
+    {
+      "collection": "s05aIntelligenceReceipts",
+      "row_count": 4,
+      "body_bytes": 3307,
+      "approx_row_bytes": 3751,
+      "body_mib": 0.003,
+      "approx_mib": 0.004
+    },
+    {
+      "collection": "guestIntakeReceipts",
+      "row_count": 4,
+      "body_bytes": 3088,
+      "approx_row_bytes": 3644,
+      "body_mib": 0.003,
+      "approx_mib": 0.003
+    },
+    {
+      "collection": "languageProfiles",
+      "row_count": 4,
+      "body_bytes": 2893,
+      "approx_row_bytes": 3569,
+      "body_mib": 0.003,
+      "approx_mib": 0.003
+    },
+    {
+      "collection": "memberships",
+      "row_count": 8,
+      "body_bytes": 2784,
+      "approx_row_bytes": 3568,
+      "body_mib": 0.003,
+      "approx_mib": 0.003
+    },
+    {
+      "collection": "languagePreferenceHistories",
+      "row_count": 4,
+      "body_bytes": 2760,
+      "approx_row_bytes": 3480,
+      "body_mib": 0.003,
+      "approx_mib": 0.003
+    },
+    {
+      "collection": "operationalProvisionRecommendations",
+      "row_count": 3,
+      "body_bytes": 2880,
+      "approx_row_bytes": 3444,
+      "body_mib": 0.003,
+      "approx_mib": 0.003
+    },
+    {
+      "collection": "vendorAssignments",
+      "row_count": 3,
+      "body_bytes": 2754,
+      "approx_row_bytes": 3264,
+      "body_mib": 0.003,
+      "approx_mib": 0.003
+    },
+    {
+      "collection": "roles",
+      "row_count": 8,
+      "body_bytes": 2784,
+      "approx_row_bytes": 3256,
+      "body_mib": 0.003,
+      "approx_mib": 0.003
+    },
+    {
+      "collection": "merchandiseItemVariants",
+      "row_count": 5,
+      "body_bytes": 2312,
+      "approx_row_bytes": 3192,
+      "body_mib": 0.002,
+      "approx_mib": 0.003
+    },
+    {
+      "collection": "aiEvaluationRunLeases",
+      "row_count": 5,
+      "body_bytes": 2620,
+      "approx_row_bytes": 3160,
+      "body_mib": 0.002,
+      "approx_mib": 0.003
+    },
+    {
+      "collection": "atelierAccessGrants",
+      "row_count": 3,
+      "body_bytes": 2418,
+      "approx_row_bytes": 2934,
+      "body_mib": 0.002,
+      "approx_mib": 0.003
+    },
+    {
+      "collection": "atelierSessions",
+      "row_count": 3,
+      "body_bytes": 2420,
+      "approx_row_bytes": 2924,
+      "body_mib": 0.002,
+      "approx_mib": 0.003
+    },
+    {
+      "collection": "responsibleAdultLinks",
+      "row_count": 4,
+      "body_bytes": 2216,
+      "approx_row_bytes": 2912,
+      "body_mib": 0.002,
+      "approx_mib": 0.003
+    },
+    {
+      "collection": "perimeterCheckpoints",
+      "row_count": 4,
+      "body_bytes": 2192,
+      "approx_row_bytes": 2884,
+      "body_mib": 0.002,
+      "approx_mib": 0.003
+    },
+    {
+      "collection": "guestDuplicateCandidates",
+      "row_count": 4,
+      "body_bytes": 2016,
+      "approx_row_bytes": 2724,
+      "body_mib": 0.002,
+      "approx_mib": 0.003
+    },
+    {
+      "collection": "magicLinkChallenges",
+      "row_count": 3,
+      "body_bytes": 2208,
+      "approx_row_bytes": 2724,
+      "body_mib": 0.002,
+      "approx_mib": 0.003
+    },
+    {
+      "collection": "forecastOverrides",
+      "row_count": 2,
+      "body_bytes": 2312,
+      "approx_row_bytes": 2652,
+      "body_mib": 0.002,
+      "approx_mib": 0.003
+    },
+    {
+      "collection": "modelParameterSets",
+      "row_count": 2,
+      "body_bytes": 2276,
+      "approx_row_bytes": 2519,
+      "body_mib": 0.002,
+      "approx_mib": 0.002
+    },
+    {
+      "collection": "hostDecisionRequests",
+      "row_count": 2,
+      "body_bytes": 1992,
+      "approx_row_bytes": 2338,
+      "body_mib": 0.002,
+      "approx_mib": 0.002
+    },
+    {
+      "collection": "s05MigrationReceipts",
+      "row_count": 4,
+      "body_bytes": 2012,
+      "approx_row_bytes": 2308,
+      "body_mib": 0.002,
+      "approx_mib": 0.002
+    },
+    {
+      "collection": "riskApplicabilitySnapshots",
+      "row_count": 3,
+      "body_bytes": 1836,
+      "approx_row_bytes": 2274,
+      "body_mib": 0.002,
+      "approx_mib": 0.002
+    },
+    {
+      "collection": "guestIntakeOutboxEvents",
+      "row_count": 4,
+      "body_bytes": 1680,
+      "approx_row_bytes": 2252,
+      "body_mib": 0.002,
+      "approx_mib": 0.002
+    },
+    {
+      "collection": "guestParticipations",
+      "row_count": 3,
+      "body_bytes": 1724,
+      "approx_row_bytes": 2240,
+      "body_mib": 0.002,
+      "approx_mib": 0.002
+    },
+    {
+      "collection": "companionNominations",
+      "row_count": 3,
+      "body_bytes": 1637,
+      "approx_row_bytes": 2156,
+      "body_mib": 0.002,
+      "approx_mib": 0.002
+    },
+    {
+      "collection": "merchandiseGuestSessions",
+      "row_count": 3,
+      "body_bytes": 1572,
+      "approx_row_bytes": 2004,
+      "body_mib": 0.001,
+      "approx_mib": 0.002
+    },
+    {
+      "collection": "riskCheckpointInstances",
+      "row_count": 3,
+      "body_bytes": 1572,
+      "approx_row_bytes": 2001,
+      "body_mib": 0.001,
+      "approx_mib": 0.002
+    },
+    {
+      "collection": "riskCheckpointTemplates",
+      "row_count": 3,
+      "body_bytes": 1629,
+      "approx_row_bytes": 1959,
+      "body_mib": 0.002,
+      "approx_mib": 0.002
+    },
+    {
+      "collection": "vendorSessions",
+      "row_count": 3,
+      "body_bytes": 1548,
+      "approx_row_bytes": 1950,
+      "body_mib": 0.001,
+      "approx_mib": 0.002
+    },
+    {
+      "collection": "guestParties",
+      "row_count": 3,
+      "body_bytes": 1428,
+      "approx_row_bytes": 1923,
+      "body_mib": 0.001,
+      "approx_mib": 0.002
+    },
+    {
+      "collection": "merchandiseCohorts",
+      "row_count": 3,
+      "body_bytes": 1304,
+      "approx_row_bytes": 1817,
+      "body_mib": 0.001,
+      "approx_mib": 0.002
+    },
+    {
+      "collection": "riskContinuityPlans",
+      "row_count": 2,
+      "body_bytes": 1520,
+      "approx_row_bytes": 1798,
+      "body_mib": 0.001,
+      "approx_mib": 0.002
+    },
+    {
+      "collection": "arrivalRoutes",
+      "row_count": 2,
+      "body_bytes": 1413,
+      "approx_row_bytes": 1745,
+      "body_mib": 0.001,
+      "approx_mib": 0.002
+    },
+    {
+      "collection": "contentWorks",
+      "row_count": 2,
+      "body_bytes": 1412,
+      "approx_row_bytes": 1742,
+      "body_mib": 0.001,
+      "approx_mib": 0.002
+    },
+    {
+      "collection": "layoutAssetCalibrations",
+      "row_count": 2,
+      "body_bytes": 1356,
+      "approx_row_bytes": 1708,
+      "body_mib": 0.001,
+      "approx_mib": 0.002
+    },
+    {
+      "collection": "credentialProjections",
+      "row_count": 2,
+      "body_bytes": 1353,
+      "approx_row_bytes": 1701,
+      "body_mib": 0.001,
+      "approx_mib": 0.002
+    },
+    {
+      "collection": "recipientEditionRules",
+      "row_count": 2,
+      "body_bytes": 1258,
+      "approx_row_bytes": 1606,
+      "body_mib": 0.001,
+      "approx_mib": 0.002
+    },
+    {
+      "collection": "calendarDefinitions",
+      "row_count": 2,
+      "body_bytes": 1392,
+      "approx_row_bytes": 1604,
+      "body_mib": 0.001,
+      "approx_mib": 0.002
+    },
+    {
+      "collection": "interviewSessions",
+      "row_count": 3,
+      "body_bytes": 1264,
+      "approx_row_bytes": 1576,
+      "body_mib": 0.001,
+      "approx_mib": 0.002
+    },
+    {
+      "collection": "merchandiseCollections",
+      "row_count": 2,
+      "body_bytes": 1222,
+      "approx_row_bytes": 1572,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "venueFacts",
+      "row_count": 2,
+      "body_bytes": 1375,
+      "approx_row_bytes": 1569,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "offlineAccessPackages",
+      "row_count": 1,
+      "body_bytes": 1224,
+      "approx_row_bytes": 1398,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "marketIndexObservations",
+      "row_count": 2,
+      "body_bytes": 1152,
+      "approx_row_bytes": 1372,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "eventCalendarOverlays",
+      "row_count": 2,
+      "body_bytes": 1110,
+      "approx_row_bytes": 1326,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "fxObservations",
+      "row_count": 2,
+      "body_bytes": 1120,
+      "approx_row_bytes": 1322,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "contingencyRuleEditions",
+      "row_count": 2,
+      "body_bytes": 960,
+      "approx_row_bytes": 1180,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "locationFactorEditions",
+      "row_count": 2,
+      "body_bytes": 960,
+      "approx_row_bytes": 1178,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "s05aMigrationReceipts",
+      "row_count": 1,
+      "body_bytes": 1088,
+      "approx_row_bytes": 1163,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "s04cMigrationReceipts",
+      "row_count": 2,
+      "body_bytes": 1012,
+      "approx_row_bytes": 1162,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "riskBudgetProjections",
+      "row_count": 1,
+      "body_bytes": 1012,
+      "approx_row_bytes": 1153,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "s04bMigrationReceipts",
+      "row_count": 1,
+      "body_bytes": 1075,
+      "approx_row_bytes": 1150,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "hostDecisionReceipts",
+      "row_count": 1,
+      "body_bytes": 964,
+      "approx_row_bytes": 1137,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "riskPolicies",
+      "row_count": 2,
+      "body_bytes": 936,
+      "approx_row_bytes": 1134,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "seasonWindowEditions",
+      "row_count": 2,
+      "body_bytes": 904,
+      "approx_row_bytes": 1118,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "riskEvaluationRuns",
+      "row_count": 1,
+      "body_bytes": 990,
+      "approx_row_bytes": 1095,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "calibrationObservations",
+      "row_count": 1,
+      "body_bytes": 892,
+      "approx_row_bytes": 1068,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "coverageCatalogueEditions",
+      "row_count": 2,
+      "body_bytes": 832,
+      "approx_row_bytes": 1056,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "languageCoverageSnapshots",
+      "row_count": 1,
+      "body_bytes": 874,
+      "approx_row_bytes": 1052,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "locationCostZones",
+      "row_count": 2,
+      "body_bytes": 800,
+      "approx_row_bytes": 1008,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "budgetTaxonomyEditions",
+      "row_count": 2,
+      "body_bytes": 752,
+      "approx_row_bytes": 970,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "marketIndexDefinitions",
+      "row_count": 2,
+      "body_bytes": 736,
+      "approx_row_bytes": 954,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "guestJourneyProjections",
+      "row_count": 1,
+      "body_bytes": 771,
+      "approx_row_bytes": 947,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "eventAteliers",
+      "row_count": 1,
+      "body_bytes": 781,
+      "approx_row_bytes": 947,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "blueprintGenesises",
+      "row_count": 1,
+      "body_bytes": 763,
+      "approx_row_bytes": 934,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "curatedMediaSets",
+      "row_count": 1,
+      "body_bytes": 765,
+      "approx_row_bytes": 934,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "capMeasurements",
+      "row_count": 1,
+      "body_bytes": 726,
+      "approx_row_bytes": 894,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "terminologyEntries",
+      "row_count": 1,
+      "body_bytes": 711,
+      "approx_row_bytes": 882,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "curatedUpdates",
+      "row_count": 1,
+      "body_bytes": 713,
+      "approx_row_bytes": 880,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "companionEntitlements",
+      "row_count": 1,
+      "body_bytes": 704,
+      "approx_row_bytes": 878,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "hostMilestoneProjections",
+      "row_count": 1,
+      "body_bytes": 700,
+      "approx_row_bytes": 877,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "merchandiseExceptions",
+      "row_count": 1,
+      "body_bytes": 694,
+      "approx_row_bytes": 868,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "organisations",
+      "row_count": 2,
+      "body_bytes": 732,
+      "approx_row_bytes": 866,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "contingencyAssuranceProjections",
+      "row_count": 1,
+      "body_bytes": 637,
+      "approx_row_bytes": 821,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "s04dMigrationReceipts",
+      "row_count": 1,
+      "body_bytes": 726,
+      "approx_row_bytes": 801,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "riskFallbackActivations",
+      "row_count": 1,
+      "body_bytes": 648,
+      "approx_row_bytes": 791,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "vehicleAssociations",
+      "row_count": 1,
+      "body_bytes": 616,
+      "approx_row_bytes": 788,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "vendorUpdates",
+      "row_count": 1,
+      "body_bytes": 621,
+      "approx_row_bytes": 787,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "vendorEnsembleProjections",
+      "row_count": 1,
+      "body_bytes": 601,
+      "approx_row_bytes": 779,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "externalContactLinks",
+      "row_count": 1,
+      "body_bytes": 604,
+      "approx_row_bytes": 777,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "guestRelationships",
+      "row_count": 1,
+      "body_bytes": 604,
+      "approx_row_bytes": 775,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "operationalVehicles",
+      "row_count": 1,
+      "body_bytes": 600,
+      "approx_row_bytes": 772,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "approvedAssetEditions",
+      "row_count": 1,
+      "body_bytes": 597,
+      "approx_row_bytes": 771,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "forecastPolicies",
+      "row_count": 1,
+      "body_bytes": 664,
+      "approx_row_bytes": 767,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "rsvpEntitlements",
+      "row_count": 1,
+      "body_bytes": 576,
+      "approx_row_bytes": 745,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "budgetAssuranceProjections",
+      "row_count": 1,
+      "body_bytes": 529,
+      "approx_row_bytes": 708,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "riskEvaluationRunLeases",
+      "row_count": 1,
+      "body_bytes": 524,
+      "approx_row_bytes": 634,
+      "body_mib": 0,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "clientReviewActions",
+      "row_count": 1,
+      "body_bytes": 524,
+      "approx_row_bytes": 630,
+      "body_mib": 0,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "clientBriefDecisions",
+      "row_count": 1,
+      "body_bytes": 486,
+      "approx_row_bytes": 593,
+      "body_mib": 0,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "s05bMigrationReceipts",
+      "row_count": 1,
+      "body_bytes": 484,
+      "approx_row_bytes": 592,
+      "body_mib": 0,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "s04fMigrationReceipts",
+      "row_count": 1,
+      "body_bytes": 500,
+      "approx_row_bytes": 575,
+      "body_mib": 0,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "s04eMigrationReceipts",
+      "row_count": 1,
+      "body_bytes": 500,
+      "approx_row_bytes": 575,
+      "body_mib": 0,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "s05aEvaluationMigrationReceipts",
+      "row_count": 1,
+      "body_bytes": 452,
+      "approx_row_bytes": 570,
+      "body_mib": 0,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "clientInvestmentActions",
+      "row_count": 1,
+      "body_bytes": 460,
+      "approx_row_bytes": 570,
+      "body_mib": 0,
+      "approx_mib": 0.001
+    },
+    {
+      "collection": "rsvpKeyRings",
+      "row_count": 1,
+      "body_bytes": 384,
+      "approx_row_bytes": 483,
+      "body_mib": 0,
+      "approx_mib": 0
+    }
+  ],
+  "platform_documents_totals": {
+    "row_count": 18499,
+    "body_bytes": 17021649,
+    "approx_row_bytes": 19664548,
+    "body_mib": 16.233,
+    "approx_mib": 18.754
+  },
+  "platform_audit_totals": {
+    "row_count": 14499,
+    "body_bytes": 10885168,
+    "approx_row_bytes": 13252175,
+    "oldest": "2026-09-06T18:39:55.075Z",
+    "newest": "2026-09-18T03:38:22.005Z",
+    "body_mib": 10.381,
+    "approx_mib": 12.638
+  },
+  "platform_audit_by_action": [
+    {
+      "action": "guest.intake.created",
+      "row_count": 3711,
+      "body_bytes": 3093858,
+      "body_mib": 2.951
+    },
+    {
+      "action": "rsvp.response.staff_amended",
+      "row_count": 3677,
+      "body_bytes": 3054867,
+      "body_mib": 2.913
+    },
+    {
+      "action": "auth.session.issued",
+      "row_count": 1987,
+      "body_bytes": 969656,
+      "body_mib": 0.925
+    },
+    {
+      "action": "layout.command.create_object",
+      "row_count": 845,
+      "body_bytes": 706224,
+      "body_mib": 0.674
+    },
+    {
+      "action": "assignment.granted",
+      "row_count": 262,
+      "body_bytes": 212576,
+      "body_mib": 0.203
+    },
+    {
+      "action": "seatingV2.createRule",
+      "row_count": 153,
+      "body_bytes": 97308,
+      "body_mib": 0.093
+    },
+    {
+      "action": "seatingV2.freezePackage",
+      "row_count": 152,
+      "body_bytes": 97229,
+      "body_mib": 0.093
+    },
+    {
+      "action": "consent.recorded",
+      "row_count": 147,
+      "body_bytes": 102504,
+      "body_mib": 0.098
+    },
+    {
+      "action": "seatingV2.activateRule",
+      "row_count": 140,
+      "body_bytes": 92968,
+      "body_mib": 0.089
+    },
+    {
+      "action": "seatingV2.launchRun",
+      "row_count": 136,
+      "body_bytes": 86436,
+      "body_mib": 0.082
+    },
+    {
+      "action": "auth.session.revoked",
+      "row_count": 135,
+      "body_bytes": 68580,
+      "body_mib": 0.065
+    },
+    {
+      "action": "event.list",
+      "row_count": 123,
+      "body_bytes": 61992,
+      "body_mib": 0.059
+    },
+    {
+      "action": "layout.validation.ran",
+      "row_count": 115,
+      "body_bytes": 95196,
+      "body_mib": 0.091
+    },
+    {
+      "action": "layout.approval.submitted",
+      "row_count": 103,
+      "body_bytes": 85032,
+      "body_mib": 0.081
+    },
+    {
+      "action": "layout.approval.approved",
+      "row_count": 102,
+      "body_bytes": 91628,
+      "body_mib": 0.087
+    },
+    {
+      "action": "layout.created",
+      "row_count": 102,
+      "body_bytes": 82911,
+      "body_mib": 0.079
+    },
+    {
+      "action": "discovery.source.recorded",
+      "row_count": 92,
+      "body_bytes": 66664,
+      "body_mib": 0.064
+    },
+    {
+      "action": "event.created",
+      "row_count": 90,
+      "body_bytes": 59416,
+      "body_mib": 0.057
+    },
+    {
+      "action": "layout.published",
+      "row_count": 89,
+      "body_bytes": 72968,
+      "body_mib": 0.07
+    },
+    {
+      "action": "seatingV2.withdrawRule",
+      "row_count": 78,
+      "body_bytes": 49920,
+      "body_mib": 0.048
+    },
+    {
+      "action": "assertion.proposed",
+      "row_count": 76,
+      "body_bytes": 55936,
+      "body_mib": 0.053
+    },
+    {
+      "action": "layout.command.generate_seats",
+      "row_count": 74,
+      "body_bytes": 67192,
+      "body_mib": 0.064
+    },
+    {
+      "action": "discovery.engagement.started",
+      "row_count": 71,
+      "body_bytes": 53818,
+      "body_mib": 0.051
+    },
+    {
+      "action": "engagement.created",
+      "row_count": 71,
+      "body_bytes": 52112,
+      "body_mib": 0.05
+    },
+    {
+      "action": "rsvp.surface.prepared",
+      "row_count": 70,
+      "body_bytes": 51311,
+      "body_mib": 0.049
+    },
+    {
+      "action": "venue.adopted",
+      "row_count": 70,
+      "body_bytes": 56937,
+      "body_mib": 0.054
+    },
+    {
+      "action": "atelierCommand.execute",
+      "row_count": 69,
+      "body_bytes": 53724,
+      "body_mib": 0.051
+    },
+    {
+      "action": "atelierCommand.instruct",
+      "row_count": 66,
+      "body_bytes": 47160,
+      "body_mib": 0.045
+    },
+    {
+      "action": "budget.calculated",
+      "row_count": 62,
+      "body_bytes": 43184,
+      "body_mib": 0.041
+    },
+    {
+      "action": "seatingV2.proposeLayoutBinding",
+      "row_count": 62,
+      "body_bytes": 40145,
+      "body_mib": 0.038
+    },
+    {
+      "action": "risk.dossier.assemble",
+      "row_count": 60,
+      "body_bytes": 40028,
+      "body_mib": 0.038
+    },
+    {
+      "action": "seatingV2.adoptRun",
+      "row_count": 59,
+      "body_bytes": 37524,
+      "body_mib": 0.036
+    },
+    {
+      "action": "seatingV2.activateLayoutBinding",
+      "row_count": 50,
+      "body_bytes": 32404,
+      "body_mib": 0.031
+    },
+    {
+      "action": "risk.event.evaluate",
+      "row_count": 49,
+      "body_bytes": 36652,
+      "body_mib": 0.035
+    },
+    {
+      "action": "risk.dossier.publish",
+      "row_count": 49,
+      "body_bytes": 32700,
+      "body_mib": 0.031
+    },
+    {
+      "action": "brief.drafted",
+      "row_count": 44,
+      "body_bytes": 31504,
+      "body_mib": 0.03
+    },
+    {
+      "action": "brief.submitted",
+      "row_count": 44,
+      "body_bytes": 31328,
+      "body_mib": 0.03
+    },
+    {
+      "action": "assertion.reviewed",
+      "row_count": 43,
+      "body_bytes": 35260,
+      "body_mib": 0.034
+    },
+    {
+      "action": "client.list",
+      "row_count": 42,
+      "body_bytes": 21336,
+      "body_mib": 0.02
+    },
+    {
+      "action": "brief.decided",
+      "row_count": 38,
+      "body_bytes": 30096,
+      "body_mib": 0.029
+    },
+    {
+      "action": "layout.capacity.recorded",
+      "row_count": 36,
+      "body_bytes": 30528,
+      "body_mib": 0.029
+    },
+    {
+      "action": "atelierCommand.task",
+      "row_count": 35,
+      "body_bytes": 25540,
+      "body_mib": 0.024
+    },
+    {
+      "action": "risk.dossier.submit",
+      "row_count": 31,
+      "body_bytes": 20788,
+      "body_mib": 0.02
+    },
+    {
+      "action": "risk.dossier.approve",
+      "row_count": 30,
+      "body_bytes": 20128,
+      "body_mib": 0.019
+    },
+    {
+      "action": "seatingV2.requestExport",
+      "row_count": 30,
+      "body_bytes": 19200,
+      "body_mib": 0.018
+    },
+    {
+      "action": "seatingV2.applyManual",
+      "row_count": 29,
+      "body_bytes": 18444,
+      "body_mib": 0.018
+    },
+    {
+      "action": "atelier.narrative.revision_started",
+      "row_count": 24,
+      "body_bytes": 20064,
+      "body_mib": 0.019
+    },
+    {
+      "action": "guest.addressing.updated",
+      "row_count": 22,
+      "body_bytes": 17196,
+      "body_mib": 0.016
+    },
+    {
+      "action": "event.view",
+      "row_count": 21,
+      "body_bytes": 10584,
+      "body_mib": 0.01
+    },
+    {
+      "action": "seatingV2.submitPlan",
+      "row_count": 21,
+      "body_bytes": 13356,
+      "body_mib": 0.013
+    },
+    {
+      "action": "layout.export.requested",
+      "row_count": 21,
+      "body_bytes": 17640,
+      "body_mib": 0.017
+    },
+    {
+      "action": "platform.access.administer",
+      "row_count": 20,
+      "body_bytes": 10400,
+      "body_mib": 0.01
+    },
+    {
+      "action": "seatingV2.reconcileLegacyDuplicateRules",
+      "row_count": 19,
+      "body_bytes": 16340,
+      "body_mib": 0.016
+    },
+    {
+      "action": "risk.fact.record",
+      "row_count": 19,
+      "body_bytes": 13984,
+      "body_mib": 0.013
+    },
+    {
+      "action": "discovery.participant.added",
+      "row_count": 19,
+      "body_bytes": 14136,
+      "body_mib": 0.013
+    },
+    {
+      "action": "layout.export.completed",
+      "row_count": 17,
+      "body_bytes": 15912,
+      "body_mib": 0.015
+    },
+    {
+      "action": "layout.command.update_properties",
+      "row_count": 17,
+      "body_bytes": 15172,
+      "body_mib": 0.014
+    },
+    {
+      "action": "assignment.manage",
+      "row_count": 17,
+      "body_bytes": 8772,
+      "body_mib": 0.008
+    },
+    {
+      "action": "risk.dossier.client_access.issue",
+      "row_count": 15,
+      "body_bytes": 10200,
+      "body_mib": 0.01
+    },
+    {
+      "action": "seatingV2.publishPlan",
+      "row_count": 15,
+      "body_bytes": 9540,
+      "body_mib": 0.009
+    },
+    {
+      "action": "auth.session.denied",
+      "row_count": 15,
+      "body_bytes": 6204,
+      "body_mib": 0.006
+    },
+    {
+      "action": "executiveCommand.evaluate",
+      "row_count": 15,
+      "body_bytes": 7920,
+      "body_mib": 0.008
+    },
+    {
+      "action": "layout.updated",
+      "row_count": 14,
+      "body_bytes": 10884,
+      "body_mib": 0.01
+    },
+    {
+      "action": "risk.rule.create",
+      "row_count": 13,
+      "body_bytes": 8944,
+      "body_mib": 0.009
+    },
+    {
+      "action": "budget.decided",
+      "row_count": 13,
+      "body_bytes": 9032,
+      "body_mib": 0.009
+    },
+    {
+      "action": "risk.dossier.client_access.revoke",
+      "row_count": 13,
+      "body_bytes": 8840,
+      "body_mib": 0.008
+    },
+    {
+      "action": "discovery.client_access.issued",
+      "row_count": 13,
+      "body_bytes": 9672,
+      "body_mib": 0.009
+    },
+    {
+      "action": "createSeatingConstraint",
+      "row_count": 12,
+      "body_bytes": 7440,
+      "body_mib": 0.007
+    },
+    {
+      "action": "risk.source.create",
+      "row_count": 12,
+      "body_bytes": 8256,
+      "body_mib": 0.008
+    },
+    {
+      "action": "seatingV2.approvePlan",
+      "row_count": 12,
+      "body_bytes": 7632,
+      "body_mib": 0.007
+    },
+    {
+      "action": "risk.source.approve",
+      "row_count": 11,
+      "body_bytes": 8492,
+      "body_mib": 0.008
+    },
+    {
+      "action": "launchSeatingRun",
+      "row_count": 11,
+      "body_bytes": 6732,
+      "body_mib": 0.006
+    },
+    {
+      "action": "layout.snapshot.created",
+      "row_count": 10,
+      "body_bytes": 8400,
+      "body_mib": 0.008
+    },
+    {
+      "action": "risk.rule.withdraw",
+      "row_count": 10,
+      "body_bytes": 7112,
+      "body_mib": 0.007
+    },
+    {
+      "action": "roadmap.instantiated",
+      "row_count": 10,
+      "body_bytes": 7200,
+      "body_mib": 0.007
+    },
+    {
+      "action": "seatingV2.runEvaluation",
+      "row_count": 10,
+      "body_bytes": 6720,
+      "body_mib": 0.006
+    },
+    {
+      "action": "merch.guestAccess.renewed",
+      "row_count": 10,
+      "body_bytes": 8316,
+      "body_mib": 0.008
+    },
+    {
+      "action": "brief.published",
+      "row_count": 9,
+      "body_bytes": 7164,
+      "body_mib": 0.007
+    },
+    {
+      "action": "change.detected",
+      "row_count": 9,
+      "body_bytes": 6372,
+      "body_mib": 0.006
+    },
+    {
+      "action": "guest.intake.job.created",
+      "row_count": 9,
+      "body_bytes": 6992,
+      "body_mib": 0.007
+    },
+    {
+      "action": "change.assessed",
+      "row_count": 9,
+      "body_bytes": 6408,
+      "body_mib": 0.006
+    },
+    {
+      "action": "assertion.conflict.resolved",
+      "row_count": 9,
+      "body_bytes": 7600,
+      "body_mib": 0.007
+    },
+    {
+      "action": "engagement.converted",
+      "row_count": 8,
+      "body_bytes": 6688,
+      "body_mib": 0.006
+    },
+    {
+      "action": "risk.rule.review",
+      "row_count": 8,
+      "body_bytes": 6144,
+      "body_mib": 0.006
+    },
+    {
+      "action": "risk.dossier.transition",
+      "row_count": 8,
+      "body_bytes": 5404,
+      "body_mib": 0.005
+    },
+    {
+      "action": "guest.intake.promotion.advanced",
+      "row_count": 8,
+      "body_bytes": 5080,
+      "body_mib": 0.005
+    },
+    {
+      "action": "seatingV2.createReservation",
+      "row_count": 8,
+      "body_bytes": 5152,
+      "body_mib": 0.005
+    },
+    {
+      "action": "seatingV2.recordSpecialistReview",
+      "row_count": 8,
+      "body_bytes": 5184,
+      "body_mib": 0.005
+    },
+    {
+      "action": "seatingV2.activateReservation",
+      "row_count": 7,
+      "body_bytes": 4508,
+      "body_mib": 0.004
+    },
+    {
+      "action": "guest.intake.source.uploaded",
+      "row_count": 7,
+      "body_bytes": 4496,
+      "body_mib": 0.004
+    },
+    {
+      "action": "layout.command.move",
+      "row_count": 7,
+      "body_bytes": 6272,
+      "body_mib": 0.006
+    },
+    {
+      "action": "discovery.client_access.revoked",
+      "row_count": 7,
+      "body_bytes": 5852,
+      "body_mib": 0.006
+    },
+    {
+      "action": "guest.entitlement.administered",
+      "row_count": 7,
+      "body_bytes": 5964,
+      "body_mib": 0.006
+    },
+    {
+      "action": "adoptSeatingRun",
+      "row_count": 7,
+      "body_bytes": 4284,
+      "body_mib": 0.004
+    },
+    {
+      "action": "risk.budget.project",
+      "row_count": 7,
+      "body_bytes": 5208,
+      "body_mib": 0.005
+    },
+    {
+      "action": "risk.fixture.classify",
+      "row_count": 7,
+      "body_bytes": 4956,
+      "body_mib": 0.005
+    },
+    {
+      "action": "guest.intake.approved",
+      "row_count": 6,
+      "body_bytes": 4488,
+      "body_mib": 0.004
+    },
+    {
+      "action": "seatingV2.withdrawReservation",
+      "row_count": 6,
+      "body_bytes": 3864,
+      "body_mib": 0.004
+    },
+    {
+      "action": "guest.record.amended",
+      "row_count": 6,
+      "body_bytes": 4448,
+      "body_mib": 0.004
+    },
+    {
+      "action": "risk.continuity.create",
+      "row_count": 6,
+      "body_bytes": 4464,
+      "body_mib": 0.004
+    },
+    {
+      "action": "discovery.source.manage",
+      "row_count": 5,
+      "body_bytes": 2620,
+      "body_mib": 0.002
+    },
+    {
+      "action": "language.assembly.previewed",
+      "row_count": 5,
+      "body_bytes": 4200,
+      "body_mib": 0.004
+    },
+    {
+      "action": "submitSeatingPlan",
+      "row_count": 5,
+      "body_bytes": 3060,
+      "body_mib": 0.003
+    },
+    {
+      "action": "risk.evaluation.run",
+      "row_count": 5,
+      "body_bytes": 3640,
+      "body_mib": 0.003
+    },
+    {
+      "action": "guest.intake.submitted",
+      "row_count": 5,
+      "body_bytes": 3904,
+      "body_mib": 0.004
+    },
+    {
+      "action": "venue.created",
+      "row_count": 5,
+      "body_bytes": 3620,
+      "body_mib": 0.003
+    },
+    {
+      "action": "runS06Evaluation",
+      "row_count": 5,
+      "body_bytes": 3060,
+      "body_mib": 0.003
+    },
+    {
+      "action": "ai.evaluation.completed",
+      "row_count": 5,
+      "body_bytes": 2940,
+      "body_mib": 0.003
+    },
+    {
+      "action": "forecast.run.created",
+      "row_count": 5,
+      "body_bytes": 4416,
+      "body_mib": 0.004
+    },
+    {
+      "action": "guest.intake.validated",
+      "row_count": 5,
+      "body_bytes": 3652,
+      "body_mib": 0.003
+    },
+    {
+      "action": "interview.started",
+      "row_count": 5,
+      "body_bytes": 3788,
+      "body_mib": 0.004
+    },
+    {
+      "action": "ai.evaluation.requested",
+      "row_count": 5,
+      "body_bytes": 3640,
+      "body_mib": 0.003
+    },
+    {
+      "action": "risk.source.review.record",
+      "row_count": 4,
+      "body_bytes": 3104,
+      "body_mib": 0.003
+    },
+    {
+      "action": "layout.finding.overridden",
+      "row_count": 4,
+      "body_bytes": 3408,
+      "body_mib": 0.003
+    },
+    {
+      "action": "merch.vendorAssignment.renewed",
+      "row_count": 4,
+      "body_bytes": 3376,
+      "body_mib": 0.003
+    },
+    {
+      "action": "risk.roster.assign",
+      "row_count": 4,
+      "body_bytes": 2808,
+      "body_mib": 0.003
+    },
+    {
+      "action": "budget.calculation.replayed",
+      "row_count": 4,
+      "body_bytes": 2688,
+      "body_mib": 0.003
+    },
+    {
+      "action": "publishSeatingPlan",
+      "row_count": 4,
+      "body_bytes": 2464,
+      "body_mib": 0.002
+    },
+    {
+      "action": "risk.policy.create",
+      "row_count": 4,
+      "body_bytes": 2720,
+      "body_mib": 0.003
+    },
+    {
+      "action": "seatingV2.recallPlan",
+      "row_count": 4,
+      "body_bytes": 2544,
+      "body_mib": 0.002
+    },
+    {
+      "action": "guest.addressing.confirmed",
+      "row_count": 4,
+      "body_bytes": 3256,
+      "body_mib": 0.003
+    },
+    {
+      "action": "seatingV2.reconcileVerificationHardRuleConflicts",
+      "row_count": 4,
+      "body_bytes": 3768,
+      "body_mib": 0.004
+    },
+    {
+      "action": "risk.checkpoint.generate",
+      "row_count": 4,
+      "body_bytes": 2992,
+      "body_mib": 0.003
+    },
+    {
+      "action": "freezeSeatingInputs",
+      "row_count": 4,
+      "body_bytes": 2464,
+      "body_mib": 0.002
+    },
+    {
+      "action": "decideSeatingApproval",
+      "row_count": 4,
+      "body_bytes": 2464,
+      "body_mib": 0.002
+    },
+    {
+      "action": "layout.snapshot.restored",
+      "row_count": 4,
+      "body_bytes": 3680,
+      "body_mib": 0.004
+    },
+    {
+      "action": "risk.rule.withdraw.batch",
+      "row_count": 3,
+      "body_bytes": 2228,
+      "body_mib": 0.002
+    },
+    {
+      "action": "atelierCommand.approve",
+      "row_count": 3,
+      "body_bytes": 3344,
+      "body_mib": 0.003
+    },
+    {
+      "action": "merch.vendor.access.denied",
+      "row_count": 3,
+      "body_bytes": 1800,
+      "body_mib": 0.002
+    },
+    {
+      "action": "merch.vendor.access.exchanged",
+      "row_count": 3,
+      "body_bytes": 1632,
+      "body_mib": 0.002
+    },
+    {
+      "action": "guest.entitlement.nominated",
+      "row_count": 3,
+      "body_bytes": 2760,
+      "body_mib": 0.003
+    },
+    {
+      "action": "language.translation.created",
+      "row_count": 3,
+      "body_bytes": 2484,
+      "body_mib": 0.002
+    },
+    {
+      "action": "language.cultural.created",
+      "row_count": 3,
+      "body_bytes": 2520,
+      "body_mib": 0.002
+    },
+    {
+      "action": "merch.guestAccess.exchanged",
+      "row_count": 3,
+      "body_bytes": 1656,
+      "body_mib": 0.002
+    },
+    {
+      "action": "risk.clause.template.create",
+      "row_count": 3,
+      "body_bytes": 2088,
+      "body_mib": 0.002
+    },
+    {
+      "action": "guest.party.member.added",
+      "row_count": 3,
+      "body_bytes": 2628,
+      "body_mib": 0.003
+    },
+    {
+      "action": "atelier.access.exchanged",
+      "row_count": 3,
+      "body_bytes": 1620,
+      "body_mib": 0.002
+    },
+    {
+      "action": "language.preference.recorded",
+      "row_count": 3,
+      "body_bytes": 2624,
+      "body_mib": 0.003
+    },
+    {
+      "action": "layout.asset.stored",
+      "row_count": 3,
+      "body_bytes": 2496,
+      "body_mib": 0.002
+    },
+    {
+      "action": "merch.guestAccess.issued",
+      "row_count": 3,
+      "body_bytes": 2556,
+      "body_mib": 0.002
+    },
+    {
+      "action": "risk.incident.report",
+      "row_count": 3,
+      "body_bytes": 2208,
+      "body_mib": 0.002
+    },
+    {
+      "action": "provision.proposed",
+      "row_count": 3,
+      "body_bytes": 2556,
+      "body_mib": 0.002
+    },
+    {
+      "action": "createReservationBlock",
+      "row_count": 3,
+      "body_bytes": 1860,
+      "body_mib": 0.002
+    },
+    {
+      "action": "provision.approved",
+      "row_count": 2,
+      "body_bytes": 1864,
+      "body_mib": 0.002
+    },
+    {
+      "action": "language.translation.decided",
+      "row_count": 2,
+      "body_bytes": 1824,
+      "body_mib": 0.002
+    },
+    {
+      "action": "assignment.revoked",
+      "row_count": 2,
+      "body_bytes": 1860,
+      "body_mib": 0.002
+    },
+    {
+      "action": "assertion.extract.replayed",
+      "row_count": 2,
+      "body_bytes": 1368,
+      "body_mib": 0.001
+    },
+    {
+      "action": "atelier.access.issued",
+      "row_count": 2,
+      "body_bytes": 1664,
+      "body_mib": 0.002
+    },
+    {
+      "action": "atelier.narrative.published",
+      "row_count": 2,
+      "body_bytes": 1688,
+      "body_mib": 0.002
+    },
+    {
+      "action": "venue.fact.recorded",
+      "row_count": 2,
+      "body_bytes": 1448,
+      "body_mib": 0.001
+    },
+    {
+      "action": "forecast.override.proposed",
+      "row_count": 2,
+      "body_bytes": 1788,
+      "body_mib": 0.002
+    },
+    {
+      "action": "merch.vendorAssignment.revoked",
+      "row_count": 2,
+      "body_bytes": 1840,
+      "body_mib": 0.002
+    },
+    {
+      "action": "risk.fallback.authorise",
+      "row_count": 2,
+      "body_bytes": 1420,
+      "body_mib": 0.001
+    },
+    {
+      "action": "layout.asset.intent.recorded",
+      "row_count": 2,
+      "body_bytes": 1688,
+      "body_mib": 0.002
+    },
+    {
+      "action": "atelier.access.denied",
+      "row_count": 2,
+      "body_bytes": 1012,
+      "body_mib": 0.001
+    },
+    {
+      "action": "guest.party.created",
+      "row_count": 2,
+      "body_bytes": 1648,
+      "body_mib": 0.002
+    },
+    {
+      "action": "applySeatingChange",
+      "row_count": 2,
+      "body_bytes": 1232,
+      "body_mib": 0.001
+    },
+    {
+      "action": "risk.fallback.propose",
+      "row_count": 2,
+      "body_bytes": 1496,
+      "body_mib": 0.001
+    },
+    {
+      "action": "layout.asset.calibrated",
+      "row_count": 2,
+      "body_bytes": 1680,
+      "body_mib": 0.002
+    },
+    {
+      "action": "guest.child.responsibleAdult.linked",
+      "row_count": 2,
+      "body_bytes": 1704,
+      "body_mib": 0.002
+    },
+    {
+      "action": "language.cultural.decided",
+      "row_count": 2,
+      "body_bytes": 1840,
+      "body_mib": 0.002
+    },
+    {
+      "action": "programme.entitlement.assigned",
+      "row_count": 2,
+      "body_bytes": 1404,
+      "body_mib": 0.001
+    },
+    {
+      "action": "merch.participation.recorded",
+      "row_count": 1,
+      "body_bytes": 872,
+      "body_mib": 0.001
+    },
+    {
+      "action": "merch.guestAccess.revoked",
+      "row_count": 1,
+      "body_bytes": 936,
+      "body_mib": 0.001
+    },
+    {
+      "action": "atelier.decision.submitted",
+      "row_count": 1,
+      "body_bytes": 620,
+      "body_mib": 0.001
+    },
+    {
+      "action": "decideSeatingReview",
+      "row_count": 1,
+      "body_bytes": 616,
+      "body_mib": 0.001
+    },
+    {
+      "action": "atelier.decision.published",
+      "row_count": 1,
+      "body_bytes": 848,
+      "body_mib": 0.001
+    },
+    {
+      "action": "atelier.decision.reviewed",
+      "row_count": 1,
+      "body_bytes": 860,
+      "body_mib": 0.001
+    },
+    {
+      "action": "guest.relationship.amended",
+      "row_count": 1,
+      "body_bytes": 924,
+      "body_mib": 0.001
+    },
+    {
+      "action": "risk.learning.propose",
+      "row_count": 1,
+      "body_bytes": 748,
+      "body_mib": 0.001
+    },
+    {
+      "action": "releaseReservationBlock",
+      "row_count": 1,
+      "body_bytes": 620,
+      "body_mib": 0.001
+    },
+    {
+      "action": "merch.vendorAssignment.created",
+      "row_count": 1,
+      "body_bytes": 852,
+      "body_mib": 0.001
+    },
+    {
+      "action": "requestSeatingExport",
+      "row_count": 1,
+      "body_bytes": 616,
+      "body_mib": 0.001
+    },
+    {
+      "action": "atelier.access.revoked",
+      "row_count": 1,
+      "body_bytes": 860,
+      "body_mib": 0.001
+    },
+    {
+      "action": "merch.capMeasurement.guest.withdrawn",
+      "row_count": 1,
+      "body_bytes": 568,
+      "body_mib": 0.001
+    },
+    {
+      "action": "seatingV2.submitCpsatCandidate",
+      "row_count": 1,
+      "body_bytes": 648,
+      "body_mib": 0.001
+    },
+    {
+      "action": "seatingV2.reconcileObsoletePendingLayoutBindingDrafts",
+      "row_count": 1,
+      "body_bytes": 788,
+      "body_mib": 0.001
+    },
+    {
+      "action": "merch.collection.created",
+      "row_count": 1,
+      "body_bytes": 872,
+      "body_mib": 0.001
+    },
+    {
+      "action": "forecast.parameters.created",
+      "row_count": 1,
+      "body_bytes": 856,
+      "body_mib": 0.001
+    },
+    {
+      "action": "client.view",
+      "row_count": 1,
+      "body_bytes": 508,
+      "body_mib": 0
+    },
+    {
+      "action": "atelier.published",
+      "row_count": 1,
+      "body_bytes": 828,
+      "body_mib": 0.001
+    },
+    {
+      "action": "provision.rejected",
+      "row_count": 1,
+      "body_bytes": 596,
+      "body_mib": 0.001
+    },
+    {
+      "action": "merch.offer.withdrawn",
+      "row_count": 1,
+      "body_bytes": 908,
+      "body_mib": 0.001
+    },
+    {
+      "action": "layout.command.resize",
+      "row_count": 1,
+      "body_bytes": 900,
+      "body_mib": 0.001
+    },
+    {
+      "action": "guest.child.responsibleAdult.ended",
+      "row_count": 1,
+      "body_bytes": 932,
+      "body_mib": 0.001
+    },
+    {
+      "action": "language.source.revised",
+      "row_count": 1,
+      "body_bytes": 920,
+      "body_mib": 0.001
+    },
+    {
+      "action": "merch.vendorUpdate.submitted",
+      "row_count": 1,
+      "body_bytes": 560,
+      "body_mib": 0.001
+    },
+    {
+      "action": "merch.collection.updated",
+      "row_count": 1,
+      "body_bytes": 932,
+      "body_mib": 0.001
+    },
+    {
+      "action": "seatingV2.decideCpsatCandidate",
+      "row_count": 1,
+      "body_bytes": 648,
+      "body_mib": 0.001
+    },
+    {
+      "action": "forecast.hostProjection.approved",
+      "row_count": 1,
+      "body_bytes": 936,
+      "body_mib": 0.001
+    },
+    {
+      "action": "budget.submitted",
+      "row_count": 1,
+      "body_bytes": 800,
+      "body_mib": 0.001
+    },
+    {
+      "action": "seatingV2.adoptCpsatCandidate",
+      "row_count": 1,
+      "body_bytes": 644,
+      "body_mib": 0.001
+    },
+    {
+      "action": "venue.event.override.recorded",
+      "row_count": 1,
+      "body_bytes": 840,
+      "body_mib": 0.001
+    },
+    {
+      "action": "event.updated",
+      "row_count": 1,
+      "body_bytes": 892,
+      "body_mib": 0.001
+    },
+    {
+      "action": "atelierCommand.confirm",
+      "row_count": 1,
+      "body_bytes": 988,
+      "body_mib": 0.001
+    },
+    {
+      "action": "risk.residual.decide",
+      "row_count": 1,
+      "body_bytes": 828,
+      "body_mib": 0.001
+    },
+    {
+      "action": "atelier.access.renewed",
+      "row_count": 1,
+      "body_bytes": 928,
+      "body_mib": 0.001
+    },
+    {
+      "action": "layout.command.rotate",
+      "row_count": 1,
+      "body_bytes": 900,
+      "body_mib": 0.001
+    },
+    {
+      "action": "merch.item.created",
+      "row_count": 1,
+      "body_bytes": 832,
+      "body_mib": 0.001
+    },
+    {
+      "action": "programme.checkpoint.created",
+      "row_count": 1,
+      "body_bytes": 844,
+      "body_mib": 0.001
+    },
+    {
+      "action": "layout.command.undo",
+      "row_count": 1,
+      "body_bytes": 908,
+      "body_mib": 0.001
+    },
+    {
+      "action": "merch.capMeasurement.guest.captured",
+      "row_count": 1,
+      "body_bytes": 568,
+      "body_mib": 0.001
+    },
+    {
+      "action": "guest.relationship.created",
+      "row_count": 1,
+      "body_bytes": 832,
+      "body_mib": 0.001
+    },
+    {
+      "action": "venue.fact.verified",
+      "row_count": 1,
+      "body_bytes": 804,
+      "body_mib": 0.001
+    },
+    {
+      "action": "forecast.override.approved",
+      "row_count": 1,
+      "body_bytes": 920,
+      "body_mib": 0.001
+    },
+    {
+      "action": "merch.offer.rule.created",
+      "row_count": 1,
+      "body_bytes": 840,
+      "body_mib": 0.001
+    },
+    {
+      "action": "guest.directory.view",
+      "row_count": 1,
+      "body_bytes": 564,
+      "body_mib": 0.001
+    },
+    {
+      "action": "risk.residual.submit",
+      "row_count": 1,
+      "body_bytes": 744,
+      "body_mib": 0.001
+    },
+    {
+      "action": "forecast.calibration.recorded",
+      "row_count": 1,
+      "body_bytes": 844,
+      "body_mib": 0.001
+    },
+    {
+      "action": "risk.vendor.assess",
+      "row_count": 1,
+      "body_bytes": 692,
+      "body_mib": 0.001
+    },
+    {
+      "action": "merch.participation.guest.recorded",
+      "row_count": 1,
+      "body_bytes": 572,
+      "body_mib": 0.001
+    },
+    {
+      "action": "language.source.decided",
+      "row_count": 1,
+      "body_bytes": 912,
+      "body_mib": 0.001
+    },
+    {
+      "action": "layout.command.redo",
+      "row_count": 1,
+      "body_bytes": 900,
+      "body_mib": 0.001
+    }
+  ],
+  "platform_audit_by_outcome": [
+    {
+      "outcome": "SUCCESS",
+      "row_count": "14143"
+    },
+    {
+      "outcome": "DENIED",
+      "row_count": "309"
+    },
+    {
+      "outcome": "FAILED",
+      "row_count": "47"
+    }
+  ],
+  "platform_audit_body_keys": [
+    "actorPersonId",
+    "reason",
+    "clientId",
+    "beforeHash",
+    "action",
+    "service",
+    "actorType",
+    "outcome",
+    "occurredAt",
+    "organisationId",
+    "correlationId",
+    "afterHash",
+    "resourceType",
+    "metadata",
+    "id",
+    "schemaVersion",
+    "resourceId",
+    "idempotencyKey",
+    "eventId"
+  ],
+  "platform_audit_actor_type": [
+    {
+      "actor_type": "USER",
+      "row_count": "14480"
+    },
+    {
+      "actor_type": "VENDOR_CAPABILITY",
+      "row_count": "7"
+    },
+    {
+      "actor_type": "GUEST_CAPABILITY",
+      "row_count": "6"
+    },
+    {
+      "actor_type": "HOST_CAPABILITY",
+      "row_count": "6"
+    }
+  ],
+  "platform_audit_actor_person": [
+    {
+      "actor_person_id": "00000000-0000-4000-8000-000000000042",
+      "row_count": "7920"
+    },
+    {
+      "actor_person_id": "00000000-0000-4000-8000-000000000043",
+      "row_count": "3616"
+    },
+    {
+      "actor_person_id": "00000000-0000-4000-8000-000000000041",
+      "row_count": "2299"
+    },
+    {
+      "actor_person_id": "00000000-0000-4000-8000-000000000044",
+      "row_count": "236"
+    },
+    {
+      "actor_person_id": "00000000-0000-4000-8000-000000000048",
+      "row_count": "204"
+    },
+    {
+      "actor_person_id": "00000000-0000-4000-8000-000000000045",
+      "row_count": "166"
+    },
+    {
+      "actor_person_id": "(null)",
+      "row_count": "57"
+    },
+    {
+      "actor_person_id": "00000000-0000-4000-8000-0000000000f0",
+      "row_count": "1"
+    }
+  ],
+  "platform_audit_null_event": [
+    {
+      "event_id_null": false,
+      "row_count": "11096",
+      "body_bytes": "8981638"
+    },
+    {
+      "event_id_null": true,
+      "row_count": "3403",
+      "body_bytes": "1903530"
+    }
+  ],
+  "platform_idempotency_totals": {
+    "row_count": 5590,
+    "body_bytes": 1505633,
+    "approx_row_bytes": 2502576,
+    "oldest": "2026-09-06T20:00:12.308Z",
+    "newest": "2026-09-18T03:38:22.005Z",
+    "body_mib": 1.436,
+    "approx_mib": 2.387
+  },
+  "platform_idempotency_by_prefix": [
+    {
+      "key_prefix": "(bare-uuid)",
+      "row_count": 2284,
+      "body_bytes": 592953,
+      "approx_row_bytes": 978062,
+      "body_mib": 0.565,
+      "approx_mib": 0.933
+    },
+    {
+      "key_prefix": "cap1000-live",
+      "row_count": 2007,
+      "body_bytes": 582735,
+      "approx_row_bytes": 982833,
+      "body_mib": 0.556,
+      "approx_mib": 0.937
+    },
+    {
+      "key_prefix": "(no-uuid-in-key)",
+      "row_count": 1218,
+      "body_bytes": 307212,
+      "approx_row_bytes": 503586,
+      "body_mib": 0.293,
+      "approx_mib": 0.48
+    },
+    {
+      "key_prefix": "export-complete:",
+      "row_count": 17,
+      "body_bytes": 4726,
+      "approx_row_bytes": 7905,
+      "body_mib": 0.005,
+      "approx_mib": 0.008
+    },
+    {
+      "key_prefix": "m6d-ux-READ_ONLY_AUDITOR",
+      "row_count": 7,
+      "body_bytes": 1974,
+      "approx_row_bytes": 3311,
+      "body_mib": 0.002,
+      "approx_mib": 0.003
+    },
+    {
+      "key_prefix": "m6d-ux-PLANNER",
+      "row_count": 7,
+      "body_bytes": 1904,
+      "approx_row_bytes": 3171,
+      "body_mib": 0.002,
+      "approx_mib": 0.003
+    },
+    {
+      "key_prefix": "m6d-ux-EVENT_DIRECTOR",
+      "row_count": 7,
+      "body_bytes": 1953,
+      "approx_row_bytes": 3269,
+      "body_mib": 0.002,
+      "approx_mib": 0.003
+    },
+    {
+      "key_prefix": "s06c-live-grant-PLANNER",
+      "row_count": 5,
+      "body_bytes": 1405,
+      "approx_row_bytes": 2355,
+      "body_mib": 0.001,
+      "approx_mib": 0.002
+    },
+    {
+      "key_prefix": "s06c-live-grant-READ_ONLY_AUDITOR",
+      "row_count": 5,
+      "body_bytes": 1455,
+      "approx_row_bytes": 2455,
+      "body_mib": 0.001,
+      "approx_mib": 0.002
+    },
+    {
+      "key_prefix": "s06c-live-grant-EVENT_DIRECTOR",
+      "row_count": 5,
+      "body_bytes": 1440,
+      "approx_row_bytes": 2425,
+      "body_mib": 0.001,
+      "approx_mib": 0.002
+    },
+    {
+      "key_prefix": "s06c-live-grant-CEO",
+      "row_count": 5,
+      "body_bytes": 1385,
+      "approx_row_bytes": 2315,
+      "body_mib": 0.001,
+      "approx_mib": 0.002
+    },
+    {
+      "key_prefix": "m6b-live-PLANNER",
+      "row_count": 3,
+      "body_bytes": 822,
+      "approx_row_bytes": 1371,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "key_prefix": "m6b-live-READ_ONLY_AUDITOR",
+      "row_count": 3,
+      "body_bytes": 852,
+      "approx_row_bytes": 1431,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "key_prefix": "m6b-live-EVENT_DIRECTOR",
+      "row_count": 3,
+      "body_bytes": 843,
+      "approx_row_bytes": 1413,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "key_prefix": "s06c-live-READ_ONLY_AUDITOR",
+      "row_count": 2,
+      "body_bytes": 570,
+      "approx_row_bytes": 958,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "key_prefix": "s06c-live-EVENT_DIRECTOR",
+      "row_count": 2,
+      "body_bytes": 564,
+      "approx_row_bytes": 946,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "key_prefix": "s06c-live-PLANNER",
+      "row_count": 2,
+      "body_bytes": 550,
+      "approx_row_bytes": 918,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "key_prefix": "P8-7-070290-revoke",
+      "row_count": 2,
+      "body_bytes": 558,
+      "approx_row_bytes": 934,
+      "body_mib": 0.001,
+      "approx_mib": 0.001
+    },
+    {
+      "key_prefix": "s06c-exact-cap1000-grant-READ_ONLY_AUDITOR",
+      "row_count": 1,
+      "body_bytes": 300,
+      "approx_row_bytes": 509,
+      "body_mib": 0,
+      "approx_mib": 0
+    },
+    {
+      "key_prefix": "s06c-exact-cap1000-grant-EVENT_DIRECTOR",
+      "row_count": 1,
+      "body_bytes": 297,
+      "approx_row_bytes": 503,
+      "body_mib": 0,
+      "approx_mib": 0
+    },
+    {
+      "key_prefix": "s06c-exact-cap1000-grant-PLANNER",
+      "row_count": 1,
+      "body_bytes": 290,
+      "approx_row_bytes": 489,
+      "body_mib": 0,
+      "approx_mib": 0
+    },
+    {
+      "key_prefix": "m6b-cancel-PLANNER",
+      "row_count": 1,
+      "body_bytes": 276,
+      "approx_row_bytes": 461,
+      "body_mib": 0,
+      "approx_mib": 0
+    },
+    {
+      "key_prefix": "m6b-cancel-EVENT_DIRECTOR",
+      "row_count": 1,
+      "body_bytes": 283,
+      "approx_row_bytes": 475,
+      "body_mib": 0,
+      "approx_mib": 0
+    },
+    {
+      "key_prefix": "s06c-exact-cap1000-grant-CEO",
+      "row_count": 1,
+      "body_bytes": 286,
+      "approx_row_bytes": 481,
+      "body_mib": 0,
+      "approx_mib": 0
+    }
+  ],
+  "platform_idempotency_by_action": [
+    {
+      "action": "guest.intake.created",
+      "row_count": "1870"
+    },
+    {
+      "action": "rsvp.response.staff_amended",
+      "row_count": "1600"
+    },
+    {
+      "action": "consent.recorded",
+      "row_count": "147"
+    },
+    {
+      "action": "layout.command.create_object",
+      "row_count": "108"
+    },
+    {
+      "action": "discovery.source.recorded",
+      "row_count": "92"
+    },
+    {
+      "action": "layout.created",
+      "row_count": "91"
+    },
+    {
+      "action": "layout.validation.ran",
+      "row_count": "90"
+    },
+    {
+      "action": "layout.approval.submitted",
+      "row_count": "78"
+    },
+    {
+      "action": "assertion.proposed",
+      "row_count": "76"
+    },
+    {
+      "action": "layout.command.generate_seats",
+      "row_count": "74"
+    },
+    {
+      "action": "assignment.granted",
+      "row_count": "73"
+    },
+    {
+      "action": "layout.approval.approved",
+      "row_count": "71"
+    },
+    {
+      "action": "engagement.created",
+      "row_count": "71"
+    },
+    {
+      "action": "discovery.engagement.started",
+      "row_count": "71"
+    },
+    {
+      "action": "layout.published",
+      "row_count": "65"
+    },
+    {
+      "action": "risk.dossier.assemble",
+      "row_count": "58"
+    },
+    {
+      "action": "budget.calculated",
+      "row_count": "57"
+    },
+    {
+      "action": "venue.adopted",
+      "row_count": "56"
+    },
+    {
+      "action": "risk.event.evaluate",
+      "row_count": "49"
+    },
+    {
+      "action": "risk.dossier.publish",
+      "row_count": "49"
+    },
+    {
+      "action": "brief.submitted",
+      "row_count": "44"
+    },
+    {
+      "action": "brief.drafted",
+      "row_count": "44"
+    },
+    {
+      "action": "assertion.reviewed",
+      "row_count": "43"
+    },
+    {
+      "action": "brief.decided",
+      "row_count": "38"
+    },
+    {
+      "action": "layout.capacity.recorded",
+      "row_count": "36"
+    },
+    {
+      "action": "risk.dossier.submit",
+      "row_count": "31"
+    },
+    {
+      "action": "risk.dossier.approve",
+      "row_count": "30"
+    },
+    {
+      "action": "layout.export.requested",
+      "row_count": "21"
+    },
+    {
+      "action": "risk.fact.record",
+      "row_count": "19"
+    },
+    {
+      "action": "discovery.participant.added",
+      "row_count": "19"
+    },
+    {
+      "action": "layout.export.completed",
+      "row_count": "17"
+    },
+    {
+      "action": "layout.command.update_properties",
+      "row_count": "16"
+    },
+    {
+      "action": "risk.dossier.client_access.issue",
+      "row_count": "15"
+    },
+    {
+      "action": "risk.dossier.client_access.revoke",
+      "row_count": "13"
+    },
+    {
+      "action": "risk.rule.create",
+      "row_count": "13"
+    },
+    {
+      "action": "discovery.client_access.issued",
+      "row_count": "13"
+    },
+    {
+      "action": "risk.source.create",
+      "row_count": "12"
+    },
+    {
+      "action": "guest.addressing.updated",
+      "row_count": "12"
+    },
+    {
+      "action": "risk.source.approve",
+      "row_count": "11"
+    },
+    {
+      "action": "roadmap.instantiated",
+      "row_count": "10"
+    },
+    {
+      "action": "layout.snapshot.created",
+      "row_count": "10"
+    },
+    {
+      "action": "brief.published",
+      "row_count": "9"
+    },
+    {
+      "action": "change.assessed",
+      "row_count": "9"
+    },
+    {
+      "action": "layout.updated",
+      "row_count": "9"
+    },
+    {
+      "action": "assertion.conflict.resolved",
+      "row_count": "9"
+    },
+    {
+      "action": "change.detected",
+      "row_count": "9"
+    },
+    {
+      "action": "risk.rule.review",
+      "row_count": "8"
+    },
+    {
+      "action": "engagement.converted",
+      "row_count": "8"
+    },
+    {
+      "action": "risk.budget.project",
+      "row_count": "7"
+    },
+    {
+      "action": "risk.fixture.classify",
+      "row_count": "7"
+    },
+    {
+      "action": "layout.command.move",
+      "row_count": "7"
+    },
+    {
+      "action": "discovery.client_access.revoked",
+      "row_count": "7"
+    },
+    {
+      "action": "guest.entitlement.administered",
+      "row_count": "7"
+    },
+    {
+      "action": "merch.guestAccess.renewed",
+      "row_count": "7"
+    },
+    {
+      "action": "budget.decided",
+      "row_count": "7"
+    },
+    {
+      "action": "risk.continuity.create",
+      "row_count": "6"
+    },
+    {
+      "action": "venue.created",
+      "row_count": "5"
+    },
+    {
+      "action": "ai.evaluation.requested",
+      "row_count": "5"
+    },
+    {
+      "action": "interview.started",
+      "row_count": "5"
+    },
+    {
+      "action": "forecast.run.created",
+      "row_count": "5"
+    },
+    {
+      "action": "risk.evaluation.run",
+      "row_count": "5"
+    },
+    {
+      "action": "language.assembly.previewed",
+      "row_count": "5"
+    },
+    {
+      "action": "risk.source.review.record",
+      "row_count": "4"
+    },
+    {
+      "action": "layout.snapshot.restored",
+      "row_count": "4"
+    },
+    {
+      "action": "layout.finding.overridden",
+      "row_count": "4"
+    },
+    {
+      "action": "risk.policy.create",
+      "row_count": "4"
+    },
+    {
+      "action": "risk.checkpoint.generate",
+      "row_count": "4"
+    },
+    {
+      "action": "language.translation.created",
+      "row_count": "3"
+    },
+    {
+      "action": "guest.addressing.confirmed",
+      "row_count": "3"
+    },
+    {
+      "action": "layout.asset.stored",
+      "row_count": "3"
+    },
+    {
+      "action": "provision.proposed",
+      "row_count": "3"
+    },
+    {
+      "action": "language.preference.recorded",
+      "row_count": "3"
+    },
+    {
+      "action": "merch.vendorAssignment.renewed",
+      "row_count": "3"
+    },
+    {
+      "action": "risk.roster.assign",
+      "row_count": "3"
+    },
+    {
+      "action": "merch.guestAccess.issued",
+      "row_count": "3"
+    },
+    {
+      "action": "risk.dossier.transition",
+      "row_count": "3"
+    },
+    {
+      "action": "risk.incident.report",
+      "row_count": "3"
+    },
+    {
+      "action": "risk.rule.withdraw.batch",
+      "row_count": "3"
+    },
+    {
+      "action": "guest.entitlement.nominated",
+      "row_count": "3"
+    },
+    {
+      "action": "rsvp.surface.prepared",
+      "row_count": "3"
+    },
+    {
+      "action": "language.cultural.created",
+      "row_count": "3"
+    },
+    {
+      "action": "risk.clause.template.create",
+      "row_count": "3"
+    },
+    {
+      "action": "venue.fact.recorded",
+      "row_count": "2"
+    },
+    {
+      "action": "language.translation.decided",
+      "row_count": "2"
+    },
+    {
+      "action": "guest.child.responsibleAdult.linked",
+      "row_count": "2"
+    },
+    {
+      "action": "layout.asset.intent.recorded",
+      "row_count": "2"
+    },
+    {
+      "action": "layout.asset.calibrated",
+      "row_count": "2"
+    },
+    {
+      "action": "risk.fallback.propose",
+      "row_count": "2"
+    },
+    {
+      "action": "provision.approved",
+      "row_count": "2"
+    },
+    {
+      "action": "atelier.access.issued",
+      "row_count": "2"
+    },
+    {
+      "action": "language.cultural.decided",
+      "row_count": "2"
+    },
+    {
+      "action": "guest.party.created",
+      "row_count": "2"
+    },
+    {
+      "action": "forecast.override.proposed",
+      "row_count": "2"
+    },
+    {
+      "action": "atelier.narrative.published",
+      "row_count": "2"
+    },
+    {
+      "action": "guest.intake.job.created",
+      "row_count": "2"
+    },
+    {
+      "action": "assignment.revoked",
+      "row_count": "2"
+    },
+    {
+      "action": "merch.vendorAssignment.revoked",
+      "row_count": "2"
+    },
+    {
+      "action": "merch.offer.rule.created",
+      "row_count": "1"
+    },
+    {
+      "action": "forecast.calibration.recorded",
+      "row_count": "1"
+    },
+    {
+      "action": "risk.vendor.assess",
+      "row_count": "1"
+    },
+    {
+      "action": "language.source.decided",
+      "row_count": "1"
+    },
+    {
+      "action": "layout.command.redo",
+      "row_count": "1"
+    },
+    {
+      "action": "merch.participation.recorded",
+      "row_count": "1"
+    },
+    {
+      "action": "merch.guestAccess.revoked",
+      "row_count": "1"
+    },
+    {
+      "action": "budget.submitted",
+      "row_count": "1"
+    },
+    {
+      "action": "forecast.parameters.created",
+      "row_count": "1"
+    },
+    {
+      "action": "guest.relationship.amended",
+      "row_count": "1"
+    },
+    {
+      "action": "atelier.decision.published",
+      "row_count": "1"
+    },
+    {
+      "action": "risk.learning.propose",
+      "row_count": "1"
+    },
+    {
+      "action": "merch.vendorAssignment.created",
+      "row_count": "1"
+    },
+    {
+      "action": "guest.party.member.added",
+      "row_count": "1"
+    },
+    {
+      "action": "layout.command.resize",
+      "row_count": "1"
+    },
+    {
+      "action": "venue.event.override.recorded",
+      "row_count": "1"
+    },
+    {
+      "action": "merch.item.created",
+      "row_count": "1"
+    },
+    {
+      "action": "merch.offer.withdrawn",
+      "row_count": "1"
+    },
+    {
+      "action": "guest.child.responsibleAdult.ended",
+      "row_count": "1"
+    },
+    {
+      "action": "atelier.published",
+      "row_count": "1"
+    },
+    {
+      "action": "risk.fallback.authorise",
+      "row_count": "1"
+    },
+    {
+      "action": "merch.collection.updated",
+      "row_count": "1"
+    },
+    {
+      "action": "forecast.hostProjection.approved",
+      "row_count": "1"
+    },
+    {
+      "action": "language.source.revised",
+      "row_count": "1"
+    },
+    {
+      "action": "risk.residual.decide",
+      "row_count": "1"
+    },
+    {
+      "action": "atelier.access.renewed",
+      "row_count": "1"
+    },
+    {
+      "action": "layout.command.rotate",
+      "row_count": "1"
+    },
+    {
+      "action": "layout.command.undo",
+      "row_count": "1"
+    },
+    {
+      "action": "venue.fact.verified",
+      "row_count": "1"
+    },
+    {
+      "action": "programme.checkpoint.created",
+      "row_count": "1"
+    },
+    {
+      "action": "guest.record.amended",
+      "row_count": "1"
+    },
+    {
+      "action": "guest.relationship.created",
+      "row_count": "1"
+    },
+    {
+      "action": "merch.collection.created",
+      "row_count": "1"
+    },
+    {
+      "action": "risk.residual.submit",
+      "row_count": "1"
+    },
+    {
+      "action": "forecast.override.approved",
+      "row_count": "1"
+    },
+    {
+      "action": "programme.entitlement.assigned",
+      "row_count": "1"
+    }
+  ],
+  "platform_audit_weekly": [
+    {
+      "week_start_utc": "2026-08-31T00:00:00.000Z",
+      "row_count": "68"
+    },
+    {
+      "week_start_utc": "2026-09-07T00:00:00.000Z",
+      "row_count": "4582"
+    },
+    {
+      "week_start_utc": "2026-09-14T00:00:00.000Z",
+      "row_count": "9849"
+    }
+  ],
+  "platform_idempotency_weekly": [
+    {
+      "week_start_utc": "2026-08-31T00:00:00.000Z",
+      "row_count": "24"
+    },
+    {
+      "week_start_utc": "2026-09-07T00:00:00.000Z",
+      "row_count": "1811"
+    },
+    {
+      "week_start_utc": "2026-09-14T00:00:00.000Z",
+      "row_count": "3755"
+    }
+  ],
+  "events_by_code": [
+    {
+      "code": "A1",
+      "name": "Alpha One",
+      "event_id": "00000000-0000-4000-8000-000000000021",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "A2",
+      "name": "Alpha Two",
+      "event_id": "00000000-0000-4000-8000-000000000022",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "CAP1000",
+      "name": "[SYNTHETIC STRETCH QUALIFICATION] Capacity Stretch 1000",
+      "event_id": "29567b2d-fc51-41cc-acb8-4acb726fed17",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "CAP600",
+      "name": "[SYNTHETIC QUALIFICATION] Capacity Qualification 600",
+      "event_id": "053fa686-124e-49b3-b8a8-d0497c0a1668",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "CLAUDE-S05-20260908-1400",
+      "name": "CLAUDE-S05-20260908-1400 Synthetic Verification Event",
+      "event_id": "d83c31ee-f1a7-49bf-b271-37f8b8918727",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "M6BCMU5NFVT8",
+      "name": "[SYNTHETIC M6B] Cancel Path 2026-09-17T14-53-03-308Z",
+      "event_id": "93113015-5097-4c83-a0fd-5724a835f27b",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "M6BMU5MDDZ6",
+      "name": "[SYNTHETIC M6B] CP-SAT Journey 2026-09-17T14-23-07-262Z",
+      "event_id": "d9fac094-c7bd-4fb4-aafc-44519cfe045b",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "M6BMU5MGCAZ",
+      "name": "[SYNTHETIC M6B] CP-SAT Journey 2026-09-17T14-25-25-064Z",
+      "event_id": "bf37367a-31f0-4f1d-817f-cb17c60f07e0",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "M6BMU5MLZFS",
+      "name": "[SYNTHETIC M6B] CP-SAT Journey 2026-09-17T14-29-48-325Z",
+      "event_id": "92909476-d3f9-43f1-a5f7-7e1a83c92fbd",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "M6DUXMU5VI47",
+      "name": "M6D Claude Seating UX Verification 2026-09-17T18-38-44-440Z",
+      "event_id": "1e3cba63-c6ad-42b7-afca-357100c668ec",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "M6DUXMU5VOIM",
+      "name": "M6D Claude Seating UX Verification 2026-09-17T18-43-43-032Z",
+      "event_id": "63f69730-c5e3-48f7-9c71-1e423eb4f4c2",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "M6DUXMU5VTO4",
+      "name": "M6D Claude Seating UX Verification 2026-09-17T18-47-43-469Z",
+      "event_id": "7d9ecd34-7d83-4c23-a903-8d7ad6d8f624",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "M6DUXMU5W5T2",
+      "name": "M6D Claude Seating UX Verification 2026-09-17T18-57-09-745Z",
+      "event_id": "f2b2cf9f-8af8-46f0-ad63-2d31634fda8a",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "M6DUXMU5WBU9",
+      "name": "M6D Claude Seating UX Verification 2026-09-17T19-01-51-233Z",
+      "event_id": "77603bb0-ccdd-4de3-a3d0-ca963dc182ac",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "M6DUXMU5WK1R",
+      "name": "M6D Claude Seating UX Verification 2026-09-17T19-08-14-184Z",
+      "event_id": "7b230271-179a-4e1b-9c82-d76d701254a7",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "M6DUXMU5WRFF",
+      "name": "M6D Claude Seating UX Verification 2026-09-17T19-13-58-506Z",
+      "event_id": "89ada708-10f7-4106-9438-411179685b01",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "O1",
+      "name": "Other Event",
+      "event_id": "00000000-0000-4000-8000-000000000023",
+      "organisation_id": "00000000-0000-4000-8000-000000000002",
+      "client_id": "00000000-0000-4000-8000-000000000013"
+    },
+    {
+      "code": "P83039329",
+      "name": "P8-3 Beta P83039329",
+      "event_id": "ba39bb90-f4d0-4ce0-9d0b-f209fcee0bee",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000012"
+    },
+    {
+      "code": "P83909929",
+      "name": "P8-3 Beta P83909929",
+      "event_id": "0bcacd0d-9e88-4aa8-9716-201d93b0c6db",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000012"
+    },
+    {
+      "code": "S06C1KMU4LD5",
+      "name": "[SYNTHETIC QUALIFICATION] EOS-S06C Exact CAP1000 2026-09-16",
+      "event_id": "add41e21-9618-44f9-896a-fecd54badca5",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S06CMU4JQL2Q",
+      "name": "[SYNTHETIC QUALIFICATION] EOS-S06C High-Volume Intake 2026-09-16T20-21-37-967Z",
+      "event_id": "c305fba5-6bc2-480f-bda5-4d34ca5fe491",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S06CMU4K1WP9",
+      "name": "[SYNTHETIC QUALIFICATION] EOS-S06C High-Volume Intake 2026-09-16T20-30-26-250Z",
+      "event_id": "75ef849a-38d0-432e-b33c-f30975349d95",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S06C-MU4KE30E",
+      "name": "[SYNTHETIC QUALIFICATION] EOS-S06C High-Volume Intake 2026-09-16",
+      "event_id": "3d19354f-2c44-4f12-8240-c2d6506653f1",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S06C-MU4KFFRO",
+      "name": "[SYNTHETIC QUALIFICATION] EOS-S06C High-Volume Intake 2026-09-16",
+      "event_id": "7d6f04b6-21a4-4ad3-8bb1-85666d78e8b1",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S06C-MU4KOYBD",
+      "name": "[SYNTHETIC QUALIFICATION] EOS-S06C High-Volume Intake 2026-09-16",
+      "event_id": "3528b2c0-ce51-4578-a88d-1e0e0a207fe6",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S06C-MU4KW05K",
+      "name": "[SYNTHETIC QUALIFICATION] EOS-S06C High-Volume Intake 2026-09-16",
+      "event_id": "49898f5d-5fb2-4b89-a8f9-4720f91feabd",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S06C-MU4KWRF6",
+      "name": "[SYNTHETIC QUALIFICATION] EOS-S06C MIXED INTAKE 50+1000 \u2014 NOT EXACT CAP1000",
+      "event_id": "af4a6b7e-0424-46d5-b9e5-d0a26845173e",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73032438",
+      "name": "S075S13T-20260913T182712 Seating",
+      "event_id": "170c9a2f-5c64-4ca9-8963-1b3040907169",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73096274",
+      "name": "S075S13-20260913T175456 Seating",
+      "event_id": "53552bf2-84bc-4ea9-b4f9-0e618deef521",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73101550",
+      "name": "S075S13T-20260913T184501 Seating",
+      "event_id": "6cccd547-5684-4ead-8d29-a93b50371274",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73151017",
+      "name": "S075S13-20260914T153551 Seating",
+      "event_id": "3614c5e4-d9ce-49de-8bde-6a6df51336ba",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73161321",
+      "name": "S075S13-20260914T141241 Seating",
+      "event_id": "edb42a79-754a-40ec-9862-d10cb9be2aa5",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73173000",
+      "name": "S075S13-20260914T144613 Seating",
+      "event_id": "b4b6fb4f-3555-4467-8e6a-f7aac06c1ac4",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73176693",
+      "name": "S075S13T-20260913T182936 Seating",
+      "event_id": "fcb3c1f2-fc20-49de-99ad-60f938daf680",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73204782",
+      "name": "S075S13-20260914T150324 Seating",
+      "event_id": "eb30cd1c-c448-4135-b1e8-a1500de4a15f",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73276848",
+      "name": "S075S13-20260913T175756 Seating",
+      "event_id": "d225b7bd-2a8d-468d-ab39-8413d88f5307",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S7329382",
+      "name": "S073-20260912T2340 Seating",
+      "event_id": "b5151d2b-12ac-4652-a1fc-55ae0825be2b",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73347776",
+      "name": "S075S13-20260914T141547 Seating",
+      "event_id": "73ccbbdd-d62f-44e9-8afd-a2d0c347ff89",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73386294",
+      "name": "S075S13-20260914T152306 Seating",
+      "event_id": "b56e3ea6-7a63-487d-b066-e0ac51201e1d",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73395959",
+      "name": "S073-20260913T001315 Seating",
+      "event_id": "fe232e05-ef84-4373-82a9-16977684cf2a",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73407711",
+      "name": "S075S13T-20260913T181647 Seating",
+      "event_id": "42cb8503-4ee6-444d-b349-b5ee9e5a8db9",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73459318",
+      "name": "S075S13-20260914T143419 Seating",
+      "event_id": "72ae7caf-d120-4c77-9eab-f85a0918d217",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73465569",
+      "name": "S073-20260912T234105 Seating",
+      "event_id": "ee4dd1e1-339f-417e-9fe5-780d1d167adf",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73474324",
+      "name": "S075S13-20260913T180114 Seating",
+      "event_id": "f7f2b7f8-5049-42bf-9cfd-d4452321bbe5",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S7347673",
+      "name": "S073-20260912T2340 Seating",
+      "event_id": "2a5728a4-57c1-494b-87bf-1cc075fdf5c3",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73486218",
+      "name": "S073-20260913T165446 Seating",
+      "event_id": "e965b1fd-9aa7-43c3-a9df-2249370a8e59",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73488463",
+      "name": "S073-20260913T001448 Seating",
+      "event_id": "6f88bc98-18c8-4379-bff4-ac8041d0043b",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73520455",
+      "name": "S075S13-20260914T145200 Seating",
+      "event_id": "aabc7ef1-a9d3-4569-8c45-ddb444d1f5e4",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73535610",
+      "name": "S073-20260912T234215 Seating",
+      "event_id": "e1c2c63c-6015-4d55-8a34-1eb94eb1ce2b",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73558419",
+      "name": "S075S13-20260914T141918 Seating",
+      "event_id": "560ed363-7dc8-41b9-92f3-0b20390cafa8",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73602054",
+      "name": "S075S13-20260913T174642 Seating",
+      "event_id": "111a66f0-84f2-4052-b703-3b4dadd3f253",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73609970",
+      "name": "S075S13-20260914T152649 Seating",
+      "event_id": "da623474-e438-4eaf-ab00-e07bb054cdb6",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73712065",
+      "name": "S075S13-20260914T143832 Seating",
+      "event_id": "e8a75c91-f85b-4b04-a6bc-7f7bfd54445b",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73716318",
+      "name": "S075S13-20260914T145516 Seating",
+      "event_id": "5fa0ec87-09d1-4b27-9ca8-8cc09de4aef1",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73734846",
+      "name": "S075S13-20260913T174854 Seating",
+      "event_id": "5440a28b-ad08-4c44-8a18-f381c0090c29",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73875458",
+      "name": "S075S13-20260913T175115 Seating",
+      "event_id": "39612e1b-5a14-49f5-a604-93615090ef2f",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73891876",
+      "name": "S075S13-20260914T153131 Seating",
+      "event_id": "0819da38-9370-402c-a1ff-481922e2e6ae",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73909398",
+      "name": "S075S13-20260914T144149 Seating",
+      "event_id": "a0f844ce-89cd-46a5-9dd9-66ebb3fc3149",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73941100",
+      "name": "EOS-S06-CUR-20260915T173901 Seating",
+      "event_id": "c188d79b-4c1a-4734-9da2-6296324958d0",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S73990134",
+      "name": "S075S13-20260914T145950 Seating",
+      "event_id": "24a49065-dc2d-4605-a5fb-597207e65213",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S75012601",
+      "name": "S075-20260913T131012-WIT Seating",
+      "event_id": "5078cd94-89cf-4f39-a9bb-f46a1101d43e",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S75052898",
+      "name": "S075-20260913T134412-CAP Seating",
+      "event_id": "5f9b5c18-2ea6-4743-852a-e87da04205cb",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S75125545",
+      "name": "S075-20260913T134525-FOR Seating",
+      "event_id": "cf16dda9-57de-4b8f-95b9-8ae5a94201de",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S75155472",
+      "name": "S075G-20260914T115915 Binding",
+      "event_id": "142ea5e6-a906-4306-8421-470c127c6934",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S75158011",
+      "name": "S075G-20260914T121558 Binding",
+      "event_id": "e5d114aa-c56a-4c80-872b-fdffa4759cc5",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S75197849",
+      "name": "S075G-20260917T140957 Binding",
+      "event_id": "2aa00512-6821-4e82-879d-a583e0a6b09f",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S75199094",
+      "name": "S075-20260913T134639-APT Seating",
+      "event_id": "40d5c0c4-4090-4204-bcd6-2dbff8b5eff0",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S75210323",
+      "name": "S075-20260913T131330-CAPACI Seating",
+      "event_id": "7946808b-11c8-4add-9572-5b660633c754",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S75281520",
+      "name": "S075-20260913T134801-TOG Seating",
+      "event_id": "71689afa-a919-43e5-b26a-5ef8556605b0",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S75331711",
+      "name": "S075G-20260914T120211 Binding",
+      "event_id": "0d267e2e-c105-4544-ac2b-96d53c017407",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S75355075",
+      "name": "S075G-20260914T121915 Binding",
+      "event_id": "29afe207-489c-4f1c-b442-4e3aed2d302d",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S75373039",
+      "name": "S075-20260913T134933-MM Seating",
+      "event_id": "8526cb63-c574-402f-a841-ef453dfbca06",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S75507902",
+      "name": "S075-20260913T130147-WIT Seating",
+      "event_id": "bb957e67-febf-448c-86e0-9ab1388845a8",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S75545101",
+      "name": "S075G-20260914T122225 Binding",
+      "event_id": "d0dd466a-0680-411c-9968-8358577df856",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S75612428",
+      "name": "S075G-20260913T165652 Binding",
+      "event_id": "6555c734-6f72-465d-861f-3660d8000289",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S75612519",
+      "name": "S075-20260913T132012-CAPACI Seating",
+      "event_id": "01a33a38-993f-4951-9b1d-ec693e598fb7",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S75625622",
+      "name": "S075-20260913T130345-WIT Seating",
+      "event_id": "4028b603-4db7-4bcf-8086-0ecc15f0fbfd",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S75691822",
+      "name": "S075G-20260913T165811 Binding",
+      "event_id": "a065c313-3486-4177-bc53-1b10e1334f4f",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S75692821",
+      "name": "S075-20260913T132132-CAPACI Seating",
+      "event_id": "88e3618a-d845-440e-a46a-6373d2da1c9f",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S75700692",
+      "name": "S075-20260913T133820-CAP Seating",
+      "event_id": "b7a63e40-ef17-4cf3-a5e3-1bcd64d2c2e9",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S75864964",
+      "name": "S075-20260913T134104-CAP Seating",
+      "event_id": "dc75bafb-de55-4803-8004-917121c55785",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S75869131",
+      "name": "S075G-20260914T135109 Binding",
+      "event_id": "44e22325-543d-4b5f-bc2d-d41eefedec5c",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "S75935435",
+      "name": "S075-20260913T134215-FOR Seating",
+      "event_id": "4a4ca181-65f5-4e4f-818e-b958e90ea948",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00000000-0000-4000-8000-000000000011"
+    },
+    {
+      "code": "WED-01",
+      "name": "Ad\u00e9w\u00e1l\u00e9 celebration",
+      "event_id": "03e107b4-25cf-4a22-8c6a-e55b6afb1eaf",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "a8c0f0a9-c854-42eb-9490-532f403f8801"
+    },
+    {
+      "code": "WED-01",
+      "name": "Ad\u00e9w\u00e1l\u00e9 celebration",
+      "event_id": "2f65da77-c03e-4b3c-89e5-40844b00558f",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "c73d85c3-24d2-420b-91b4-48411403e2df"
+    },
+    {
+      "code": "WED-01",
+      "name": "Ad\u00e9w\u00e1l\u00e9 celebration",
+      "event_id": "3f048843-603f-4bec-812c-dac7777e843a",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "a457af3f-932f-4273-9da4-7e5e5f43f766"
+    },
+    {
+      "code": "WED-01",
+      "name": "Ad\u00e9w\u00e1l\u00e9 celebration",
+      "event_id": "5b53b052-0fda-4cf6-b3ad-6010a00de493",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "00e8727c-03dd-4b5b-9831-963f5f38b702"
+    },
+    {
+      "code": "WED-01",
+      "name": "Ad\u00e9w\u00e1l\u00e9 celebration",
+      "event_id": "da73bc8f-37d0-4eda-ac23-fc38bf813bcb",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "9c1efd38-6133-46ef-8199-99e0583d0191"
+    },
+    {
+      "code": "WED-01",
+      "name": "Ad\u00e9w\u00e1l\u00e9 celebration",
+      "event_id": "fad5c1fb-d1f2-41e6-bbe8-a81d1936b93f",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "104b52a3-1308-4d2d-a1cc-1fdfa6f31927"
+    },
+    {
+      "code": "WED-01",
+      "name": "Ad\u00e9w\u00e1l\u00e9 celebration",
+      "event_id": "fe0f7cb1-d416-4022-b700-be9cd358eccb",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "fdddd07c-9097-4d9b-adbc-08d21cf4815c"
+    },
+    {
+      "code": "WED-S05A-B",
+      "name": "CLAUDE-S05A-20260909-DISC-B Wedding (Synthetic)",
+      "event_id": "1b20defb-e979-48bd-b279-3469da057d25",
+      "organisation_id": "00000000-0000-4000-8000-000000000001",
+      "client_id": "de607297-9e65-4b23-8446-ac3253eabb1e"
+    }
+  ],
+  "qualification_event_ids": [
+    {
+      "id": "29567b2d-fc51-41cc-acb8-4acb726fed17",
+      "code": "CAP1000",
+      "name": "[SYNTHETIC STRETCH QUALIFICATION] Capacity Stretch 1000"
+    },
+    {
+      "id": "053fa686-124e-49b3-b8a8-d0497c0a1668",
+      "code": "CAP600",
+      "name": "[SYNTHETIC QUALIFICATION] Capacity Qualification 600"
+    },
+    {
+      "id": "d83c31ee-f1a7-49bf-b271-37f8b8918727",
+      "code": "CLAUDE-S05-20260908-1400",
+      "name": "CLAUDE-S05-20260908-1400 Synthetic Verification Event"
+    },
+    {
+      "id": "93113015-5097-4c83-a0fd-5724a835f27b",
+      "code": "M6BCMU5NFVT8",
+      "name": "[SYNTHETIC M6B] Cancel Path 2026-09-17T14-53-03-308Z"
+    },
+    {
+      "id": "d9fac094-c7bd-4fb4-aafc-44519cfe045b",
+      "code": "M6BMU5MDDZ6",
+      "name": "[SYNTHETIC M6B] CP-SAT Journey 2026-09-17T14-23-07-262Z"
+    },
+    {
+      "id": "bf37367a-31f0-4f1d-817f-cb17c60f07e0",
+      "code": "M6BMU5MGCAZ",
+      "name": "[SYNTHETIC M6B] CP-SAT Journey 2026-09-17T14-25-25-064Z"
+    },
+    {
+      "id": "92909476-d3f9-43f1-a5f7-7e1a83c92fbd",
+      "code": "M6BMU5MLZFS",
+      "name": "[SYNTHETIC M6B] CP-SAT Journey 2026-09-17T14-29-48-325Z"
+    },
+    {
+      "id": "add41e21-9618-44f9-896a-fecd54badca5",
+      "code": "S06C1KMU4LD5",
+      "name": "[SYNTHETIC QUALIFICATION] EOS-S06C Exact CAP1000 2026-09-16"
+    },
+    {
+      "id": "c305fba5-6bc2-480f-bda5-4d34ca5fe491",
+      "code": "S06CMU4JQL2Q",
+      "name": "[SYNTHETIC QUALIFICATION] EOS-S06C High-Volume Intake 2026-09-16T20-21-37-967Z"
+    },
+    {
+      "id": "75ef849a-38d0-432e-b33c-f30975349d95",
+      "code": "S06CMU4K1WP9",
+      "name": "[SYNTHETIC QUALIFICATION] EOS-S06C High-Volume Intake 2026-09-16T20-30-26-250Z"
+    },
+    {
+      "id": "3d19354f-2c44-4f12-8240-c2d6506653f1",
+      "code": "S06C-MU4KE30E",
+      "name": "[SYNTHETIC QUALIFICATION] EOS-S06C High-Volume Intake 2026-09-16"
+    },
+    {
+      "id": "7d6f04b6-21a4-4ad3-8bb1-85666d78e8b1",
+      "code": "S06C-MU4KFFRO",
+      "name": "[SYNTHETIC QUALIFICATION] EOS-S06C High-Volume Intake 2026-09-16"
+    },
+    {
+      "id": "3528b2c0-ce51-4578-a88d-1e0e0a207fe6",
+      "code": "S06C-MU4KOYBD",
+      "name": "[SYNTHETIC QUALIFICATION] EOS-S06C High-Volume Intake 2026-09-16"
+    },
+    {
+      "id": "49898f5d-5fb2-4b89-a8f9-4720f91feabd",
+      "code": "S06C-MU4KW05K",
+      "name": "[SYNTHETIC QUALIFICATION] EOS-S06C High-Volume Intake 2026-09-16"
+    },
+    {
+      "id": "af4a6b7e-0424-46d5-b9e5-d0a26845173e",
+      "code": "S06C-MU4KWRF6",
+      "name": "[SYNTHETIC QUALIFICATION] EOS-S06C MIXED INTAKE 50+1000 \u2014 NOT EXACT CAP1000"
+    },
+    {
+      "id": "1b20defb-e979-48bd-b279-3469da057d25",
+      "code": "WED-S05A-B",
+      "name": "CLAUDE-S05A-20260909-DISC-B Wedding (Synthetic)"
+    }
+  ],
+  "synthetic_event_id_list": [
+    "af4a6b7e-0424-46d5-b9e5-d0a26845173e",
+    "c305fba5-6bc2-480f-bda5-4d34ca5fe491",
+    "add41e21-9618-44f9-896a-fecd54badca5",
+    "053fa686-124e-49b3-b8a8-d0497c0a1668",
+    "29567b2d-fc51-41cc-acb8-4acb726fed17",
+    "75ef849a-38d0-432e-b33c-f30975349d95",
+    "3d19354f-2c44-4f12-8240-c2d6506653f1",
+    "7d6f04b6-21a4-4ad3-8bb1-85666d78e8b1",
+    "3528b2c0-ce51-4578-a88d-1e0e0a207fe6",
+    "49898f5d-5fb2-4b89-a8f9-4720f91feabd",
+    "93113015-5097-4c83-a0fd-5724a835f27b",
+    "d9fac094-c7bd-4fb4-aafc-44519cfe045b",
+    "bf37367a-31f0-4f1d-817f-cb17c60f07e0",
+    "92909476-d3f9-43f1-a5f7-7e1a83c92fbd"
+  ],
+  "synthetic_event_count": 14,
+  "platform_documents_synthetic_vs_other": [
+    {
+      "class": "null_event_id",
+      "row_count": 5085,
+      "body_bytes": 3374631,
+      "approx_row_bytes": 3823180,
+      "body_mib": 3.218,
+      "approx_mib": 3.646
+    },
+    {
+      "class": "other_or_real_event_scoped",
+      "row_count": 3238,
+      "body_bytes": 2920662,
+      "approx_row_bytes": 3465112,
+      "body_mib": 2.785,
+      "approx_mib": 3.305
+    },
+    {
+      "class": "synthetic_event_scoped",
+      "row_count": 10176,
+      "body_bytes": 10726356,
+      "approx_row_bytes": 12376256,
+      "body_mib": 10.229,
+      "approx_mib": 11.803
+    }
+  ],
+  "platform_audit_by_synth_event": [
+    {
+      "class": "null_event_id",
+      "row_count": 3403,
+      "body_bytes": 1903530,
+      "approx_row_bytes": 2235557,
+      "body_mib": 1.815,
+      "approx_mib": 2.132
+    },
+    {
+      "class": "other_or_real_event_scoped",
+      "row_count": 7527,
+      "body_bytes": 6040235,
+      "approx_row_bytes": 7403805,
+      "body_mib": 5.76,
+      "approx_mib": 7.061
+    },
+    {
+      "class": "synthetic_event_scoped",
+      "row_count": 3569,
+      "body_bytes": 2941403,
+      "approx_row_bytes": 3612813,
+      "body_mib": 2.805,
+      "approx_mib": 3.445
+    }
+  ],
+  "platform_idempotency_synth_signal": [
+    {
+      "class": "capacity_live_prefix",
+      "row_count": 3214,
+      "body_bytes": 887204,
+      "approx_row_bytes": 1481934,
+      "body_mib": 0.846,
+      "approx_mib": 1.413
+    },
+    {
+      "class": "no_capacity_prefix",
+      "row_count": 2370,
+      "body_bytes": 616924,
+      "approx_row_bytes": 1018178,
+      "body_mib": 0.588,
+      "approx_mib": 0.971
+    },
+    {
+      "class": "other_cap_prefix",
+      "row_count": 6,
+      "body_bytes": 1505,
+      "approx_row_bytes": 2464,
+      "body_mib": 0.001,
+      "approx_mib": 0.002
+    }
+  ],
+  "operational_guests_email_domains": [
+    {
+      "email_class": "other.example.test",
+      "row_count": "2103"
+    },
+    {
+      "email_class": "cap1000.example.test",
+      "row_count": "1000"
+    },
+    {
+      "email_class": "cap600.example.test",
+      "row_count": "600"
+    },
+    {
+      "email_class": "other_or_real_domain",
+      "row_count": "268"
+    },
+    {
+      "email_class": "(empty)",
+      "row_count": "24"
+    }
+  ],
+  "platform_cleanup_audit_exists": true,
+  "platform_cleanup_audit_columns": [
+    {
+      "column_name": "id",
+      "data_type": "text"
+    },
+    {
+      "column_name": "occurred_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "column_name": "mode",
+      "data_type": "text"
+    },
+    {
+      "column_name": "seed_id",
+      "data_type": "text"
+    },
+    {
+      "column_name": "collections",
+      "data_type": "jsonb"
+    },
+    {
+      "column_name": "confirmed",
+      "data_type": "boolean"
+    }
+  ],
+  "platform_cleanup_audit_rows": [
+    {
+      "id": "68bdc248-60c3-4f63-b10c-6fe01ad04d49",
+      "occurred_at": "2026-09-06T19:13:58.261Z",
+      "mode": "PREVIEW",
+      "seed_id": "event-os-synthetic-v1",
+      "collections": [
+        {
+          "count": 2,
+          "collection": "organisations"
+        },
+        {
+          "count": 3,
+          "collection": "clients"
+        },
+        {
+          "count": 3,
+          "collection": "events"
+        },
+        {
+          "count": 7,
+          "collection": "persons"
+        },
+        {
+          "count": 6,
+          "collection": "memberships"
+        },
+        {
+          "count": 6,
+          "collection": "assignments"
+        },
+        {
+          "count": 3,
+          "collection": "masterEventFiles"
+        },
+        {
+          "count": 5,
+          "collection": "operationalGuests"
+        },
+        {
+          "count": 1,
+          "collection": "guestHouseholds"
+        },
+        {
+          "count": 1,
+          "collection": "guestParties"
+        },
+        {
+          "count": 4,
+          "collection": "guestPartyMembers"
+        },
+        {
+          "count": 1,
+          "collection": "companionEntitlements"
+        },
+        {
+          "count": 2,
+          "collection": "responsibleAdultLinks"
+        },
+        {
+          "count": 1,
+          "collection": "rsvpEntitlements"
+        }
+      ],
+      "confirmed": false
+    }
+  ],
+  "platform_cleanup_audit_count": 1,
+  "platform_idempotency_sample_keys": [
+    "m6d-ux-READ_ONLY_AUDITOR-89ada708-10f7-4106-9438-411179685b01",
+    "m6d-ux-EVENT_DIRECTOR-89ada708-10f7-4106-9438-411179685b01",
+    "m6d-ux-PLANNER-89ada708-10f7-4106-9438-411179685b01",
+    "397571ac-68f0-406d-9c60-b3140beda51a",
+    "5ff86337-7318-4fa8-a9b9-86871bbab51b",
+    "f004616a-f5a5-4eac-a530-34234a67162d",
+    "d2e2fcc4-c1d9-487a-bf42-514e5729cfcd",
+    "1e08c557-f0c9-46f2-881b-102101a08376",
+    "74e4a632-c00f-437a-96a5-b8961a4332b3",
+    "5ab18c1c-0fe9-4dba-8120-b71999308148",
+    "45e43e12-d34e-479e-bba2-2b83940e2306",
+    "e7668920-0aad-41d7-b556-0804f516d97d",
+    "bdc6ac15-ce13-476a-9637-ebbe115e766e",
+    "03e4705a-8feb-4b09-aa4a-b7048d6b78a2",
+    "9c4bfa20-9104-4e95-be01-8dda424995d2",
+    "00d7da66-f0df-463c-8da8-26bd21e3e602",
+    "3718297d-beb2-461f-b6f1-f59649305c70",
+    "d9987608-d33f-417e-90a9-c89a3a186ccd",
+    "2cad66cf-e47b-4e3c-9781-520c41d8fbf5",
+    "359f46a4-cd6d-4f3e-895d-41df8448f40e",
+    "6f2482ed-087c-4452-bf29-4efb529663a5",
+    "91210282-1215-43df-8258-c0597ebb3c7c",
+    "07b701f8-f453-45f3-986b-c9edcf1f633f",
+    "0a35b36f-eda2-47ff-a5e1-5fdfd07e40ed",
+    "4cf0cfda-c3c1-4d24-9d5c-a0a7a88936d6"
+  ],
+  "platform_idempotency_capacity_sample_keys": [
+    "cap1000-live-29567b2d-fc51-41cc-acb8-4acb726fed17-guest-3-in",
+    "cap1000-live-29567b2d-fc51-41cc-acb8-4acb726fed17-guest-6-attend",
+    "cap1000-live-29567b2d-fc51-41cc-acb8-4acb726fed17-guest-1-in",
+    "cap1000-live-29567b2d-fc51-41cc-acb8-4acb726fed17-guest-2-attend",
+    "cap1000-live-29567b2d-fc51-41cc-acb8-4acb726fed17-guest-4-attend",
+    "cap1000-live-29567b2d-fc51-41cc-acb8-4acb726fed17-guest-6-in",
+    "cap1000-live-29567b2d-fc51-41cc-acb8-4acb726fed17-guest-0-in",
+    "cap1000-live-29567b2d-fc51-41cc-acb8-4acb726fed17-guest-0-attend",
+    "cap1000-live-29567b2d-fc51-41cc-acb8-4acb726fed17-guest-1-attend",
+    "cap1000-live-29567b2d-fc51-41cc-acb8-4acb726fed17-guest-2-in",
+    "cap1000-live-29567b2d-fc51-41cc-acb8-4acb726fed17-guest-3-attend",
+    "cap1000-live-29567b2d-fc51-41cc-acb8-4acb726fed17-guest-4-in",
+    "cap1000-live-29567b2d-fc51-41cc-acb8-4acb726fed17-guest-5-in",
+    "cap1000-live-29567b2d-fc51-41cc-acb8-4acb726fed17-guest-5-attend",
+    "cap1000-live-29567b2d-fc51-41cc-acb8-4acb726fed17-guest-7-in"
+  ],
+  "documents_per_qualification_event": [
+    {
+      "event_id": "29567b2d-fc51-41cc-acb8-4acb726fed17",
+      "code": "CAP1000",
+      "name": "[SYNTHETIC STRETCH QUALIFICATION] Capacity Stretch 1000",
+      "doc_rows": 3250,
+      "body_bytes": 3205848,
+      "body_mib": 3.057
+    },
+    {
+      "event_id": "af4a6b7e-0424-46d5-b9e5-d0a26845173e",
+      "code": "S06C-MU4KWRF6",
+      "name": "[SYNTHETIC QUALIFICATION] EOS-S06C MIXED INTAKE 50+1000 \u2014 NOT EXACT CAP1000",
+      "doc_rows": 2372,
+      "body_bytes": 2749023,
+      "body_mib": 2.622
+    },
+    {
+      "event_id": "add41e21-9618-44f9-896a-fecd54badca5",
+      "code": "S06C1KMU4LD5",
+      "name": "[SYNTHETIC QUALIFICATION] EOS-S06C Exact CAP1000 2026-09-16",
+      "doc_rows": 2283,
+      "body_bytes": 2655644,
+      "body_mib": 2.533
+    },
+    {
+      "event_id": "053fa686-124e-49b3-b8a8-d0497c0a1668",
+      "code": "CAP600",
+      "name": "[SYNTHETIC QUALIFICATION] Capacity Qualification 600",
+      "doc_rows": 1951,
+      "body_bytes": 1803453,
+      "body_mib": 1.72
+    },
+    {
+      "event_id": "49898f5d-5fb2-4b89-a8f9-4720f91feabd",
+      "code": "S06C-MU4KW05K",
+      "name": "[SYNTHETIC QUALIFICATION] EOS-S06C High-Volume Intake 2026-09-16",
+      "doc_rows": 138,
+      "body_bytes": 142311,
+      "body_mib": 0.136
+    },
+    {
+      "event_id": "3528b2c0-ce51-4578-a88d-1e0e0a207fe6",
+      "code": "S06C-MU4KOYBD",
+      "name": "[SYNTHETIC QUALIFICATION] EOS-S06C High-Volume Intake 2026-09-16",
+      "doc_rows": 60,
+      "body_bytes": 62415,
+      "body_mib": 0.06
+    },
+    {
+      "event_id": "92909476-d3f9-43f1-a5f7-7e1a83c92fbd",
+      "code": "M6BMU5MLZFS",
+      "name": "[SYNTHETIC M6B] CP-SAT Journey 2026-09-17T14-29-48-325Z",
+      "doc_rows": 37,
+      "body_bytes": 32430,
+      "body_mib": 0.031
+    },
+    {
+      "event_id": "bf37367a-31f0-4f1d-817f-cb17c60f07e0",
+      "code": "M6BMU5MGCAZ",
+      "name": "[SYNTHETIC M6B] CP-SAT Journey 2026-09-17T14-25-25-064Z",
+      "doc_rows": 37,
+      "body_bytes": 32436,
+      "body_mib": 0.031
+    },
+    {
+      "event_id": "d9fac094-c7bd-4fb4-aafc-44519cfe045b",
+      "code": "M6BMU5MDDZ6",
+      "name": "[SYNTHETIC M6B] CP-SAT Journey 2026-09-17T14-23-07-262Z",
+      "doc_rows": 10,
+      "body_bytes": 9384,
+      "body_mib": 0.009
+    },
+    {
+      "event_id": "7d6f04b6-21a4-4ad3-8bb1-85666d78e8b1",
+      "code": "S06C-MU4KFFRO",
+      "name": "[SYNTHETIC QUALIFICATION] EOS-S06C High-Volume Intake 2026-09-16",
+      "doc_rows": 10,
+      "body_bytes": 9619,
+      "body_mib": 0.009
+    },
+    {
+      "event_id": "75ef849a-38d0-432e-b33c-f30975349d95",
+      "code": "S06CMU4K1WP9",
+      "name": "[SYNTHETIC QUALIFICATION] EOS-S06C High-Volume Intake 2026-09-16T20-30-26-250Z",
+      "doc_rows": 9,
+      "body_bytes": 8961,
+      "body_mib": 0.009
+    },
+    {
+      "event_id": "3d19354f-2c44-4f12-8240-c2d6506653f1",
+      "code": "S06C-MU4KE30E",
+      "name": "[SYNTHETIC QUALIFICATION] EOS-S06C High-Volume Intake 2026-09-16",
+      "doc_rows": 7,
+      "body_bytes": 5176,
+      "body_mib": 0.005
+    },
+    {
+      "event_id": "c305fba5-6bc2-480f-bda5-4d34ca5fe491",
+      "code": "S06CMU4JQL2Q",
+      "name": "[SYNTHETIC QUALIFICATION] EOS-S06C High-Volume Intake 2026-09-16T20-21-37-967Z",
+      "doc_rows": 7,
+      "body_bytes": 5724,
+      "body_mib": 0.005
+    },
+    {
+      "event_id": "93113015-5097-4c83-a0fd-5724a835f27b",
+      "code": "M6BCMU5NFVT8",
+      "name": "[SYNTHETIC M6B] Cancel Path 2026-09-17T14-53-03-308Z",
+      "doc_rows": 5,
+      "body_bytes": 3932,
+      "body_mib": 0.004
+    }
+  ],
+  "orphan_audit_for_known_cleaned_events": [
+    {
+      "event_id": "5fc07db4-96c8-4d1a-840f-4534672789d6",
+      "row_count": 2131,
+      "body_bytes": 1791709,
+      "body_mib": 1.709
+    },
+    {
+      "event_id": "05b8f727-99bc-4cda-a791-cf180ac62aa1",
+      "row_count": 988,
+      "body_bytes": 829303,
+      "body_mib": 0.791
+    },
+    {
+      "event_id": "1cfd0884-e87d-452c-acdd-bff2d8aa6af4",
+      "row_count": 561,
+      "body_bytes": 469769,
+      "body_mib": 0.448
+    },
+    {
+      "event_id": "3d212906-529e-4bd8-b13f-b0c2a24e5fba",
+      "row_count": 381,
+      "body_bytes": 318394,
+      "body_mib": 0.304
+    },
+    {
+      "event_id": "2a103d69-5fcd-4792-b2f2-8d8266c40322",
+      "row_count": 246,
+      "body_bytes": 204624,
+      "body_mib": 0.195
+    }
+  ],
+  "orphan_docs_for_known_cleaned_events": [],
+  "orphan_idem_for_known_cleaned_events": []
+}

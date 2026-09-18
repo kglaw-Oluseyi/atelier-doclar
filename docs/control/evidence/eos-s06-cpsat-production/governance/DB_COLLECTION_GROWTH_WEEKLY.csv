@@ -1,0 +1,7 @@
+table,week_start_utc,row_count
+platform_audit,2026-08-31T00:00:00.000Z,68
+platform_audit,2026-09-07T00:00:00.000Z,4582
+platform_audit,2026-09-14T00:00:00.000Z,9849
+platform_idempotency,2026-08-31T00:00:00.000Z,24
+platform_idempotency,2026-09-07T00:00:00.000Z,1811
+platform_idempotency,2026-09-14T00:00:00.000Z,3755
