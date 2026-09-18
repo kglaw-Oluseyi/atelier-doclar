@@ -1,0 +1,53 @@
+{
+  "eventId": "5fc07db4-96c8-4d1a-840f-4534672789d6",
+  "code": "CAP1000",
+  "name": "[SYNTHETIC STRETCH QUALIFICATION] Capacity Stretch 1000",
+  "disposition": "DELETED",
+  "reason": "Removed to free the single CAP1000 slot before on-box guest-flush-every=5 rerun (Item 2).",
+  "cleanedAt": "2026-09-18T03:38:17Z",
+  "cleanedAtProvenance": {
+    "shellStartedAt": "2026-09-18T03:38:14.211Z",
+    "memoryCeilingWrittenAt": "2026-09-18T03:38:14.550763Z",
+    "note": "Delete script did not emit its own ISO timestamp. cleanedAt is the wall-clock of the DELETED log line printed immediately after railway ssh connect and before CLEAN_OK / flush-5 install start (agent terminal 85071; local tee /tmp/cap1000-flush5-full.log)."
+  },
+  "deletionPath": "AD_HOC_ON_BOX_SQL_NOT_GOVERNED_SYNTHETIC_CLEANUP",
+  "deletionPathDetail": "Deleted inside the Item-2 flush-5 prep wrapper via railway ssh event-os + node/pg (BEGIN; provenance gates; DELETE platform_documents by event_id + events row by id; DELETE platform_idempotency WHERE key LIKE 'cap1000-live-<eventId>-%'; optional seating_v2_idempotency_receipts). Did NOT call apps/event-os/scripts/synthetic-cleanup.ts / applySyntheticCleanup / --confirm SYNTHETIC_CLEANUP_CONFIRMED.",
+  "preDeletePresence": {
+    "artifact": "CAP1000_PRODUCT_INSTALL_COLLECTION_COSTS_NOW.json",
+    "recordedAt": "2026-09-18T03:37:10.881Z",
+    "platformDocumentsForEvent": 3251,
+    "cap1000EventCountAtThatTime": 1
+  },
+  "provenanceGates": {
+    "codeCap1000": true,
+    "syntheticNamePrefix": true,
+    "guestEmailsCap1000Domain": true,
+    "noAdoption": true,
+    "noSolverRuns": "NOT_CHECKED_IN_THIS_PATH",
+    "note": "Gates enforced by the ad-hoc script before DELETE (throw on failure). noSolverRuns was not part of this wrapper; prior flush-25 PASS evidence recorded solverRunsForEvent=0 for this id."
+  },
+  "deleted": {
+    "platform_documents": 3251,
+    "platform_idempotency": 2007,
+    "source": "Live DELETED receipt printed by the delete script (rowCount from DELETE statements): docs=3251, idem=2007, eventId=5fc07db4-96c8-4d1a-840f-4534672789d6"
+  },
+  "preserved": {
+    "platform_audit": "NOT deleted (append-only / no repo delete path in this action)",
+    "baselineAdoption": "3b771ad9-c4c9-401b-87df-0371f9eee840",
+    "otherEvents": "Only rows scoped to this event id / its cap1000-live- idempotency prefix were targeted"
+  },
+  "verificationQueryAt": "2026-09-18T04:22:22.236Z",
+  "verification": {
+    "eventRowSql": "SELECT id, body->>'code' AS code, body->>'name' AS name FROM platform_documents WHERE collection='events' AND id=$1",
+    "eventRowCount": 0,
+    "platformDocumentsScopedSql": "SELECT COUNT(*)::int AS n FROM platform_documents WHERE event_id=$1 OR (collection='events' AND id=$1)",
+    "platformDocumentsScopedCount": 0,
+    "idempotencySql": "SELECT COUNT(*)::int AS n FROM platform_idempotency WHERE key LIKE $1",
+    "idempotencyPattern": "cap1000-live-5fc07db4-96c8-4d1a-840f-4534672789d6-%",
+    "idempotencyCount": 0,
+    "allCap1000EventsSql": "SELECT id FROM platform_documents WHERE collection='events' AND body->>'code'='CAP1000'",
+    "allCap1000EventIds": ["29567b2d-fc51-41cc-acb8-4acb726fed17"],
+    "cap1000EventCountNow": 1
+  },
+  "note": "This manifest backfills missing provenance for a deletion that already occurred. It does not claim the governed synthetic-cleanup mechanism was used."
+}

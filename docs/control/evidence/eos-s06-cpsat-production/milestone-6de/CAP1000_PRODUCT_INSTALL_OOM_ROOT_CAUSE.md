@@ -6,6 +6,12 @@
 **Prior PASS event (flush-25):** `5fc07db4-96c8-4d1a-840f-4534672789d6` (cleaned before flush-5 rerun)  
 **Install path:** event-os container → `postgres.railway.internal`
 
+### Cleanup provenance gap (closed 2026-09-18T04:25Z)
+
+Flush-25 event `5fc07db4…` is **gone** from production (verified 2026-09-18T04:22:22Z: events row 0; scoped `platform_documents` 0; `cap1000-live-5fc07db4…-%` idempotency 0). Sole CAP1000 remains `29567b2d…`.
+
+It was deleted **2026-09-18T03:38:17Z** (ad-hoc on-box SQL in the flush-5 prep wrapper — **not** `synthetic-cleanup.ts`), after gates (code CAP1000, synthetic name prefix, `@cap1000.example.test` guests, no adoption), removing **3251** `platform_documents` + **2007** idempotency keys. Pre-delete presence at 03:37:10Z is in `CAP1000_PRODUCT_INSTALL_COLLECTION_COSTS_NOW.json`. Manifest: [`CAP1000_PRODUCT_INSTALL_CLEANUP_MANIFEST_5fc07db4-96c8-4d1a-840f-4534672789d6.json`](./CAP1000_PRODUCT_INSTALL_CLEANUP_MANIFEST_5fc07db4-96c8-4d1a-840f-4534672789d6.json). `cap1000EventCount=1` in the reconciliation REPORT is the post-flush5 count and stands.
+
 ## Phase 0 — Ambiguous 3GB abort
 
 Artifact: [`CAP1000_PRODUCT_INSTALL_PHASE0_ABORT.json`](./CAP1000_PRODUCT_INSTALL_PHASE0_ABORT.json)

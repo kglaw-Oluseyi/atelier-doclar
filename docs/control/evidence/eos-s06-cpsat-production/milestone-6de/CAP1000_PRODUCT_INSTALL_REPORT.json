@@ -58,7 +58,18 @@
       "peakHeapMiB": 1675.2,
       "eventId": "5fc07db4-96c8-4d1a-840f-4534672789d6",
       "disposition": "PASS_THEN_CLEANED_FOR_FLUSH5_RERUN",
-      "telemetry": "CAP1000_PRODUCT_INSTALL_LIVE_SCOPED.jsonl"
+      "telemetry": "CAP1000_PRODUCT_INSTALL_LIVE_SCOPED.jsonl",
+      "cleanupManifest": "CAP1000_PRODUCT_INSTALL_CLEANUP_MANIFEST_5fc07db4-96c8-4d1a-840f-4534672789d6.json",
+      "cleanupGapClosed": {
+        "recordedAt": "2026-09-18T04:25:00.000Z",
+        "stillPresentAtVerification": false,
+        "verifiedGoneAt": "2026-09-18T04:22:22.236Z",
+        "deletedAt": "2026-09-18T03:38:17Z",
+        "deletedCounts": { "platform_documents": 3251, "platform_idempotency": 2007 },
+        "path": "AD_HOC_ON_BOX_SQL_NOT_GOVERNED_SYNTHETIC_CLEANUP",
+        "cap1000EventCountAtReconciliationRemainsValid": true,
+        "note": "0dd02f6 claimed cleaned-before-flush5 without a manifest. Event is gone; manifest now attached. Collection costs at 03:37:10Z still saw this id (3251 docs) one minute before the ad-hoc delete. cap1000EventCount=1 in this REPORT refers to post-flush5 sole survivor 29567b2d… and does not need correction."
+      }
     },
     "onBoxFlush5": {
       "guestFlushEvery": 5,
