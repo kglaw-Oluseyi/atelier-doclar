@@ -1,0 +1,9 @@
+=== rollback target (pre Phase 2; no deploy performed) ===
+deploymentId=4083bd05-6a51-4572-ba61-35ccd8f05f5e
+commit=737d9327955a114a90609a450cc0b5fbbc24eb65
+
+=== intended deploy tip (origin/main at checklist time) ===
+7c26f82e17ef547bad70a4ba79950c71da164a26
+7c26f82 docs(governance): reconcile live Event OS deployed SHA vs admin page
+
+=== railway status (solver-worker must remain frozen) ===

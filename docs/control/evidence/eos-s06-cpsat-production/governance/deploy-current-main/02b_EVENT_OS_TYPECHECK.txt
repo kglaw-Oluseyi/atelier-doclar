@@ -1,0 +1,49 @@
+
+> @maison-doclar/event-os@0.1.0 typecheck /Users/maisondoclar/Desktop/atelier-doclar/apps/event-os
+> tsc --noEmit
+
+e2e/login.ts(62,21): error TS2345: Argument of type '"ceo@maison-doclar.test" | "director@maison-doclar.test" | "planner@maison-doclar.test" | "admin@maison-doclar.test" | "auditor@maison-doclar.test" | "reviewer@maison-doclar.test"' is not assignable to parameter of type '"ceo@maison-doclar.test" | undefined'.
+  Type '"director@maison-doclar.test"' is not assignable to type '"ceo@maison-doclar.test"'.
+scripts/m6d-rich-ux-fixture-install.ts(135,9): error TS6133: 'applyCapacity600SeatingLayout' is declared but its value is never read.
+scripts/m6d-rich-ux-fixture-install.ts(137,26): error TS2339: Property 'createLayout' does not exist on type 'PlatformService'.
+scripts/m6d-rich-ux-fixture-install.ts(147,25): error TS2551: Property 'acquireLayoutEditorLease' does not exist on type 'PlatformService'. Did you mean 'acquireLayoutLease'?
+scripts/m6d-rich-ux-fixture-install.ts(199,11): error TS2551: Property 'recordLayoutOperationalCapacity' does not exist on type 'PlatformService'. Did you mean 'recordOperationalCapacity'?
+scripts/m6d-rich-ux-fixture-install.ts(220,11): error TS2551: Property 'submitLayoutForApproval' does not exist on type 'PlatformService'. Did you mean 'submitLayoutApproval'?
+scripts/m6d-rich-ux-fixture-install.ts(229,11): error TS2339: Property 'recordLayoutApprovalDecision' does not exist on type 'PlatformService'.
+scripts/m6d-rich-ux-fixture-install.ts(297,98): error TS2345: Argument of type '{ layoutPublicationId: string; }' is not assignable to parameter of type '{ layoutPublicationId: string; reason: string; layoutId?: string | undefined; layoutContentHash?: string | undefined; }'.
+  Property 'reason' is missing in type '{ layoutPublicationId: string; }' but required in type '{ layoutPublicationId: string; reason: string; layoutId?: string | undefined; layoutContentHash?: string | undefined; }'.
+scripts/m6d-rich-ux-fixture-install.ts(301,102): error TS2345: Argument of type '{}' is not assignable to parameter of type '{ bindingId: string; expectedVersion: number; layoutPublicationId?: string | undefined; layoutContentHash?: string | undefined; }'.
+  Type '{}' is missing the following properties from type '{ bindingId: string; expectedVersion: number; layoutPublicationId?: string | undefined; layoutContentHash?: string | undefined; }': bindingId, expectedVersion
+scripts/m6d-rich-ux-fixture-install.ts(306,24): error TS2367: This comparison appears to be unintentional because the types '{ quality: "UNVERIFIED" | "VERIFIED" | "CONFLICTING" | "MISSING" | "NOT_SUPPLIED" | "NOT_APPLICABLE" | "PENDING_VERIFICATION"; value?: string | undefined; }' and 'string' have no overlap.
+scripts/m6d-rich-ux-fixture-install.ts(306,49): error TS2367: This comparison appears to be unintentional because the types '{ quality: "UNVERIFIED" | "VERIFIED" | "CONFLICTING" | "MISSING" | "NOT_SUPPLIED" | "NOT_APPLICABLE" | "PENDING_VERIFICATION"; value?: string | undefined; }' and 'string' have no overlap.
+scripts/m6d-rich-ux-fixture-install.ts(329,7): error TS2322: Type '"HARD" | "SOFT"' is not assignable to type '"KEEP_TOGETHER" | "KEEP_APART" | "REQUIRE_TABLE" | "FORBID_TABLE" | "REQUIRE_ZONE" | "FORBID_ZONE" | "REQUIRE_POSITION_CAPABILITY" | "RESERVE_CAPACITY" | "LOCK_ASSIGNMENT" | ... 4 more ... | "MINIMIZE_CHANGE"'.
+  Type '"HARD"' is not assignable to type '"KEEP_TOGETHER" | "KEEP_APART" | "REQUIRE_TABLE" | "FORBID_TABLE" | "REQUIRE_ZONE" | "FORBID_ZONE" | "REQUIRE_POSITION_CAPABILITY" | "RESERVE_CAPACITY" | "LOCK_ASSIGNMENT" | ... 4 more ... | "MINIMIZE_CHANGE"'.
+scripts/m6d-rich-ux-fixture-install.ts(335,7): error TS2353: Object literal may only specify known properties, and 'ruleId' does not exist in type '{ editionId: string; }'.
+scripts/m6e-cap1000-worker-qualify.ts(37,41): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+scripts/m6e-cap1000-worker-qualify.ts(78,5): error TS2367: This comparison appears to be unintentional because the types '"e1376606-8c7e-4891-9fc4-28ad2c67eb12"' and '"add41e21-9618-44f9-896a-fecd54badca5"' have no overlap.
+scripts/m6e-cap1000-worker-qualify.ts(113,38): error TS7006: Parameter 't' implicitly has an 'any' type.
+scripts/m6e-cap1000-worker-qualify.ts(113,41): error TS7006: Parameter 'v' implicitly has an 'any' type.
+scripts/m6e-cap1000-worker-qualify.ts(113,47): error TS2322: Type 'Promise<QueryArrayResult<any[]>>' is not assignable to type 'void | T | Promise<QueryResult<R>> | Promise<QueryArrayResult<R>> | Promise<QueryResult<R>>'.
+  Type 'Promise<QueryArrayResult<any[]>>' is not assignable to type 'Promise<QueryResult<R>>'.
+    Type 'QueryArrayResult<any[]>' is not assignable to type 'QueryResult<R>'.
+      Types of property 'rows' are incompatible.
+        Type 'any[][]' is not assignable to type 'R[]'.
+          Type 'any[]' is not assignable to type 'R'.
+            'any[]' is assignable to the constraint of type 'R', but 'R' could be instantiated with a different subtype of constraint 'QueryResultRow'.
+scripts/m6e-cap1000-worker-qualify.ts(384,12): error TS2367: This comparison appears to be unintentional because the types '"READY_FOR_REVIEW"' and '"ADOPTED"' have no overlap.
+scripts/m6e-cap2000-worker-qualify.ts(33,41): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+scripts/m6e-cap2000-worker-qualify.ts(130,3): error TS2367: This comparison appears to be unintentional because the types '"18d89806-b708-4459-827c-de544987d4a5"' and '"92909476-d3f9-43f1-a5f7-7e1a83c92fbd"' have no overlap.
+scripts/m6e-cap2000-worker-qualify.ts(131,3): error TS2367: This comparison appears to be unintentional because the types '"18d89806-b708-4459-827c-de544987d4a5"' and '"22c2befc-f728-4e3b-bfb1-fc8820c72a3c"' have no overlap.
+scripts/m6e-cap2000-worker-qualify.ts(132,3): error TS2367: This comparison appears to be unintentional because the types '"18d89806-b708-4459-827c-de544987d4a5"' and '"92909476-d3f9-43f1-a5f7-7e1a83c92fbd"' have no overlap.
+scripts/m6e-cap2000-worker-qualify.ts(168,38): error TS7006: Parameter 't' implicitly has an 'any' type.
+scripts/m6e-cap2000-worker-qualify.ts(168,41): error TS7006: Parameter 'v' implicitly has an 'any' type.
+scripts/m6e-cap2000-worker-qualify.ts(168,47): error TS2322: Type 'Promise<QueryArrayResult<any[]>>' is not assignable to type 'void | T | Promise<QueryResult<R>> | Promise<QueryArrayResult<R>> | Promise<QueryResult<R>>'.
+  Type 'Promise<QueryArrayResult<any[]>>' is not assignable to type 'Promise<QueryResult<R>>'.
+    Type 'QueryArrayResult<any[]>' is not assignable to type 'QueryResult<R>'.
+      Types of property 'rows' are incompatible.
+        Type 'any[][]' is not assignable to type 'R[]'.
+          Type 'any[]' is not assignable to type 'R'.
+            'any[]' is assignable to the constraint of type 'R', but 'R' could be instantiated with a different subtype of constraint 'QueryResultRow'.
+/Users/maisondoclar/Desktop/atelier-doclar/apps/event-os:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @maison-doclar/event-os@0.1.0 typecheck: `tsc --noEmit`
+Exit status 2
