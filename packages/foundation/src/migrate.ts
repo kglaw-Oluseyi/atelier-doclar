@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { getPool } from "./db";
 import { seedFoundation } from "./seed";
 
 const MIGRATION_ID = "001_foundation";
@@ -39,10 +40,12 @@ export async function migrate(connectionString = process.env.DATABASE_URL): Prom
 
 if (process.argv[1] && process.argv[1].endsWith("migrate.ts")) {
   migrate()
-    .then(() => {
+    .then(async () => {
       console.log(
         JSON.stringify({ migration: MIGRATION_ID, schema: "eos_s01", result: "APPLIED" }),
       );
+      await getPool().end();
+      process.exit(0);
     })
     .catch((error: unknown) => {
       console.error(error);
