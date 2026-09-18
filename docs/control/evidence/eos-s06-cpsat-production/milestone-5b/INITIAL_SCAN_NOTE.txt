@@ -1,6 +1,0 @@
-Initial scan target (pre-remediation):
-  tag: event-os-solver-worker:candidate-4caaa44
-  digest: sha256:8ce066bcf1987f648b2263f069062ec37e0538ad7f7d2adc3f8968a91a73ff16
-  source: 4caaa44eb0be2c2eeb7a7d63ccb23bcedbcc0df3
-  scanUtc: 2026-09-17T10:30:35Z .. 2026-09-17T10:30:45Z
-  reports: TRIVY_VULN_FULL.json, TRIVY_HIGH_CRITICAL.*, TRIVY_SECRET_*, ANALYSIS_COUNTS.json

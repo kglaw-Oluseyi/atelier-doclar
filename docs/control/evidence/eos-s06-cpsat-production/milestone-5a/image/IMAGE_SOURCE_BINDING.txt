@@ -1,8 +1,0 @@
-base_python=python:3.12.14-slim-bookworm@sha256:9c47360a2a0355e2da18516d0b1c2126ec22c195d2185e97347c9d98398c5bef
-final_image_id=sha256:8ce066bcf1987f648b2263f069062ec37e0538ad7f7d2adc3f8968a91a73ff16
-source_sha=4caaa44eb0be2c2eeb7a7d63ccb23bcedbcc0df3
-tag=event-os-solver-worker:candidate-4caaa44
-model=cpsat-model-v1
-dependency=ortools-9.15.6755
-node=20.19.0
-python=3.12.14

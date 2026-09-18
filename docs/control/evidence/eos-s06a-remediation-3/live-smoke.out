@@ -1,5 +1,0 @@
-
-Running 1 test using 1 worker
-
-[1/1] [chromium] › e2e/_eos-s06a-rem3-live-smoke.spec.ts:10:1 › rem3 live smoke: NEW-1/2/3 + R4 + intelligence
-  1 passed (54.2s)

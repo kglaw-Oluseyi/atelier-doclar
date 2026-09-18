@@ -1,9 +1,0 @@
-# apps/event-os-solver-worker/.gitignore
-.venv/
-node_modules/
-dist/
-spike/out/
-*.pyc
-__pycache__/
-.DS_Store
-spike/out/

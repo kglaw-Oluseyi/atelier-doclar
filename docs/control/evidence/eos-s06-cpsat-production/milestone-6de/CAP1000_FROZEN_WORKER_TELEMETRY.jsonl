@@ -1,9 +1,0 @@
-{"at":"2026-09-17T22:04:48.179Z","msg":"preflight OK corpus=13125f90267e prefs=24 worker=worker:6515380f7ebc:1ec6b6ae event=e1376606-8c7e-4891-9fc4-28ad2c67eb12","elapsedMs":1177}
-{"at":"2026-09-17T22:04:49.322Z","msg":"admission OK","elapsedMs":2312}
-{"at":"2026-09-17T22:04:52.141Z","msg":"enqueued run=35e40c93-cc74-483b-8c57-dc02846d288b application=APPLIED queueMs=2819","elapsedMs":5131}
-{"at":"2026-09-17T22:04:52.503Z","msg":"poll status=QUEUED phase=null product=-","elapsedMs":5493}
-{"at":"2026-09-17T22:04:54.940Z","msg":"poll status=RUNNING phase=accepted product=-","elapsedMs":7931}
-{"at":"2026-09-17T22:04:57.319Z","msg":"poll status=RUNNING phase=search product=-","elapsedMs":10310}
-{"at":"2026-09-17T22:04:59.760Z","msg":"poll status=RUNNING phase=sealing candidate product=-","elapsedMs":12751}
-{"at":"2026-09-17T22:05:02.730Z","msg":"poll status=RUNNING phase=sealing candidate product=-","elapsedMs":15721}
-{"at":"2026-09-17T22:05:05.151Z","msg":"poll status=READY_FOR_REVIEW phase=sealed product=OPTIMAL","elapsedMs":18142}

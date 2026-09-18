@@ -1,2 +1,0 @@
-UID                 USER                PID                 CMD
-10001               10001               125045              /usr/bin/qemu-x86_64 /usr/local/bin/node node dist/supervisor.js

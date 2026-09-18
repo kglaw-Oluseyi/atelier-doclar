@@ -1,2 +1,0 @@
-{"event":"job_finished","runId":"62a14523-6296-4d2a-8bcd-451f5621ebc9","workerId":"m5c-candidate-worker","outcome":"READY_FOR_REVIEW","settled":true,"childInvocations":1}
-{"event":"supervisor_drain_begin","workerId":"m5c-candidate-worker"}

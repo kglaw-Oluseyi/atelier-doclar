@@ -1,1 +1,0 @@
-{"test":"two-event-isolation","result":"PASS","note":"listGuestIntakeJobs filtered by eventId; identical names allowed across events; covered in guest-hv-intake.test.ts"}

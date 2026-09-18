@@ -1,6 +1,0 @@
-id: PH-FOUNDATION
-order: 0
-title: Shared Foundation
-products: [FOUNDATION]
-intent: Repository boundary, programme model, Control Tower planning and later Control Tower implementation.
-executiveCriticalPath: true

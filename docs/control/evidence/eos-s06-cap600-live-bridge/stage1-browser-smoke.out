@@ -1,7 +1,0 @@
-
-Running 3 tests using 1 worker
-
-[1/3] [chromium] › e2e/_cap600-stage1-live-smoke.spec.ts:20:1 › CEO finds CAP600, opens seating, Cap043, layout/rules/runs
-[2/3] [chromium] › e2e/_cap600-stage1-live-smoke.spec.ts:56:1 › System Health shows EOS-S06A ACCEPTED under MD-PR-S079
-[3/3] [chromium] › e2e/_cap600-stage1-live-smoke.spec.ts:71:1 › Read-Only Auditor cannot mutate seating; Planner lacks director-only activate
-  3 passed (1.6m)

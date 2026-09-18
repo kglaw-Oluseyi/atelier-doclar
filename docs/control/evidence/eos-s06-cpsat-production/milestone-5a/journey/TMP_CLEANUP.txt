@@ -1,3 +1,0 @@
-total 8
-drwxr-xr-x 2 solver solver 4096 Sep 17 10:20 .
-drwxrwxrwt 1 root   root   4096 Sep 17 10:20 ..

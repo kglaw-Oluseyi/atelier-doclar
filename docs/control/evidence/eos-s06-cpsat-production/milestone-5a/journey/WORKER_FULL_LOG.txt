@@ -1,3 +1,0 @@
-{"service":"event-os-solver-worker","mode":"supervisor","ingress":"none","listenPort":null,"workerId":"m5a-candidate-worker","concurrency":1,"childScript":"/app/python/solver_child.py","python":"/usr/local/bin/python3","imageIdentity":"event-os-solver-worker:candidate-4caaa44","databaseHost":"m5a-pg:5432"}
-{"event":"job_finished","runId":"a871187c-0ba7-49f5-a18b-f1d5ca8b089c","workerId":"m5a-candidate-worker","outcome":"READY_FOR_REVIEW","settled":true,"childInvocations":1}
-{"event":"supervisor_drain_begin","workerId":"m5a-candidate-worker"}

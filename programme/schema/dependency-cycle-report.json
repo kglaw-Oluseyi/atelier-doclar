@@ -1,8 +1,0 @@
-{
-  "nodes": 84,
-  "edges": 91,
-  "unknown_dependencies": [],
-  "cycles": [],
-  "cycle_count": 0,
-  "verdict": "NO_CYCLES"
-}

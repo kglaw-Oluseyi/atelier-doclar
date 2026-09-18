@@ -1,6 +1,0 @@
-id: PH-INTEGRATION
-order: 8
-title: Cross-system integration
-products: [INTEGRATION]
-intent: Shared contracts and change propagation across products.
-executiveCriticalPath: true
