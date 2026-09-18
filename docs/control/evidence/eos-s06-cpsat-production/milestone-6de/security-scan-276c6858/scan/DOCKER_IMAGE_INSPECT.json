@@ -1,0 +1,95 @@
+[
+    {
+        "Id": "sha256:276c685860981d139f554548ed55f701253530808a0f914de848d1fa08fe788f",
+        "RepoTags": [
+            "event-os-solver-worker:m6e-worker-8c8d922",
+            "ghcr.io/kglaw-oluseyi/atelier-doclar-solver-worker:m6e-worker-8c8d922"
+        ],
+        "RepoDigests": [
+            "event-os-solver-worker@sha256:276c685860981d139f554548ed55f701253530808a0f914de848d1fa08fe788f",
+            "ghcr.io/kglaw-oluseyi/atelier-doclar-solver-worker@sha256:276c685860981d139f554548ed55f701253530808a0f914de848d1fa08fe788f"
+        ],
+        "Comment": "buildkit.dockerfile.v0",
+        "Created": "2026-09-17T22:32:43.086728938+01:00",
+        "Config": {
+            "User": "solver",
+            "Env": [
+                "PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "LANG=C.UTF-8",
+                "GPG_KEY=7169605F62C751356D054A26A821E680E5FA6305",
+                "PYTHON_VERSION=3.12.14",
+                "PYTHON_SHA256=5c8462af5790baf43a321a1559dbe0db06d1be4300fb85fb53c40060668e548a",
+                "NODE_VERSION=20.19.0",
+                "NODE_ENV=production",
+                "PYTHONUNBUFFERED=1",
+                "PYTHONDONTWRITEBYTECODE=1",
+                "SOLVER_PYTHON=/usr/local/bin/python3",
+                "SOLVER_CHILD_SCRIPT=/app/python/solver_child.py",
+                "SOLVER_INGRESS=none",
+                "SOLVER_TMP=/tmp/solver",
+                "HOME=/home/solver",
+                "CPSAT_ALLOW_SYNTHETIC_WORKER=0"
+            ],
+            "Entrypoint": [
+                "node",
+                "dist/supervisor.js"
+            ],
+            "WorkingDir": "/app",
+            "Labels": {
+                "md.solver.dependency": "ortools-9.15.6755",
+                "md.solver.ingress": "none",
+                "md.solver.model": "cpsat-model-v1",
+                "org.opencontainers.image.revision": "8c8d92241a550348f3ba44192cb07f655ffe6d5d",
+                "org.opencontainers.image.source": "https://github.com/kglaw-Oluseyi/atelier-doclar"
+            },
+            "Healthcheck": {
+                "Test": [
+                    "NONE"
+                ]
+            }
+        },
+        "Architecture": "amd64",
+        "Os": "linux",
+        "Size": 174720300,
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:411a86676185cb54d695a805b238194a64e9b77e0c723f3802fbb87d333ea0b3",
+                "sha256:3070bb8623db07ca38569112f9b296043371a00bfb3ee4d9f8f63ddfd2f2efca",
+                "sha256:3d664d274420a79749a26f9e5115b2120d46037264011773ca4c52e22780b2ca",
+                "sha256:24257af4ce5bde01d3c7ebd6d366ec4a298ed27c794bbd6832ef5ce934a66170",
+                "sha256:e2731c19aaa5b35e7566f39f06f272878c5c9e1047fb9352187549148617082d",
+                "sha256:0c2694d65f8550fac7957c39b492d32858dd8d07f72670a1ff83944ad921ce48",
+                "sha256:19b394fabadf46d94ab506a81e4fd28c5fd2a3e40069cecaf335b4d997e87b67",
+                "sha256:cfb69145a26c407d7a4a71d5596d271cc9ed3c5f142fd9d0413d3dc1f2df0c61",
+                "sha256:bcd0dc2b0bd7f2976b9d73d9ed7cabcc1ba5009233320e28dc4d889e6e55d9a4",
+                "sha256:838494b7306b435b7ec2c6c61bed0661dfbd225d62c948ca029305de16470096",
+                "sha256:3cd543f088a6b98c76064771c87bda2fcd4ce3a3f911340ae8146d7937b3bf10",
+                "sha256:d542919aa5ae034eeb920ac652b9e556415d7e5333e4fb73115125512293ff94",
+                "sha256:6586b541702e852e7c0c409e1dddc8d25945a45e81f453419e22838353db33ad",
+                "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"
+            ]
+        },
+        "Metadata": {
+            "LastTagTime": "2026-09-17T21:32:50.362074827Z"
+        },
+        "Descriptor": {
+            "mediaType": "application/vnd.oci.image.index.v1+json",
+            "digest": "sha256:276c685860981d139f554548ed55f701253530808a0f914de848d1fa08fe788f",
+            "size": 856
+        },
+        "Identity": {
+            "Pull": [
+                {
+                    "Repository": "ghcr.io/kglaw-oluseyi/atelier-doclar-solver-worker"
+                }
+            ],
+            "Build": [
+                {
+                    "Ref": "ejceq8nwgsuqb55w7umx0i9e4",
+                    "CreatedAt": "2026-09-17T22:32:50.366949747+01:00"
+                }
+            ]
+        }
+    }
+]
