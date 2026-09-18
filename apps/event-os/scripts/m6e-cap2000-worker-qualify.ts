@@ -30,7 +30,7 @@ import {
   SEATING_V2_SOLVER_VERSION,
   requiredObjectiveTiers,
 } from "@maison-doclar/shared-platform";
-import { compileV2ToCpsatRequest } from "../../../packages/shared-platform/src/cpsat/compiler.ts";
+import { compileV2ToCpsatRequest } from "../../../packages/shared-platform/src/cpsat/compiler.js";
 
 /** Fresh synthetic event id for this frozen-worker CAP2000 rerun only. */
 const EVENT_ID = "18d89806-b708-4459-827c-de544987d4a5";

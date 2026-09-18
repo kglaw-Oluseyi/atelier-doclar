@@ -34,7 +34,7 @@ import {
   recomputeObjectiveTiers,
   requiredObjectiveTiers,
 } from "@maison-doclar/shared-platform";
-import { compileV2ToCpsatRequest } from "../../../packages/shared-platform/src/cpsat/compiler.ts";
+import { compileV2ToCpsatRequest } from "../../../packages/shared-platform/src/cpsat/compiler.js";
 
 /** Fresh synthetic UUID for this frozen-worker rerun only. */
 const EVENT_ID = "e1376606-8c7e-4891-9fc4-28ad2c67eb12";
