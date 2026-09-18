@@ -4,16 +4,18 @@
  * Default mode is preview / dry-run. Destructive execution requires
  * --execute --confirm SYNTHETIC_CLEANUP_CONFIRMED and the atelier-doclar
  * Railway project identity.
+ *
+ * --execute runs risk purge + synthetic document deletion + EXECUTED audit
+ * receipt inside one database transaction (see executeSyntheticCleanupAtomically).
  */
 import { Pool } from "pg";
 import {
   PostgresPlatformStore,
   SYNTHETIC_CLEANUP_CONFIRMATION,
-  applySyntheticCleanup,
-  purgeNormalizedRiskTables,
   assertCleanupConfirmation,
   assertCleanupProjectScope,
   classifySyntheticCleanupAttribution,
+  executeSyntheticCleanupAtomically,
   previewSyntheticCleanup,
   recordCleanupAudit,
   type PgQueryable,
@@ -112,10 +114,7 @@ try {
     process.exit(0);
   }
   assertCleanupConfirmation(confirmation ?? "");
-  await purgeNormalizedRiskTables(client);
-  store.replace(applySyntheticCleanup(store.snapshot()));
-  await store.flush();
-  await recordCleanupAudit(client, { ...preview, mode: "EXECUTED" }, { mode: "EXECUTED", confirmed: true });
+  await executeSyntheticCleanupAtomically(store, preview);
   console.log(JSON.stringify({ mode: "EXECUTED", destructive: true, removed: preview.total }, null, 2));
 } finally {
   await pool.end();

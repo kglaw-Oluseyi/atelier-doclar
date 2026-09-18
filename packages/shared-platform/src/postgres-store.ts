@@ -697,44 +697,63 @@ export class PostgresPlatformStore implements PlatformStore, StaffAuthCapableSto
     await this.flush();
   }
 
+  /**
+   * Synthetic-cleanup script only (see `executeSyntheticCleanupAtomically`).
+   * Persists a snapshot replacement inside ONE `client.transaction()`, running
+   * optional companions on the same tx so risk purge + document deletes +
+   * EXECUTED audit receipt are all-or-nothing.
+   * Default `replace()` / `flush()` / `persistTransactional` behaviour is unchanged.
+   */
+  async replaceAndPersistForSyntheticCleanup(
+    next: PlatformSnapshot,
+    companions: {
+      beforePersist?: (tx: PgQueryable) => Promise<void>;
+      afterPersist?: (tx: PgQueryable) => Promise<void>;
+    } = {},
+  ): Promise<void> {
+    if (!hasTransaction(this.client)) {
+      throw new Error("replaceAndPersistForSyntheticCleanup requires a transactional Pg client");
+    }
+    await this.flush();
+    const normalised = structuredClone(normalizeSnapshot(next));
+    const previous = this.state;
+    this.state = normalised;
+    try {
+      await this.client.transaction(async (tx) => {
+        if (companions.beforePersist) await companions.beforePersist(tx);
+        await this.persistDiff(tx, previous, normalised);
+        if (companions.afterPersist) await companions.afterPersist(tx);
+      });
+    } catch (error) {
+      await this.hydrate();
+      throw error;
+    }
+  }
+
   private async persistTransactional(previous: PlatformSnapshot, normalised: PlatformSnapshot): Promise<void> {
-    const run = async (tx: PgQueryable) => {
-      for (const collection of COLLECTIONS) {
-        if (this.riskNormalized && S05B_PERSISTED_COLLECTIONS.has(collection)) continue;
-        const previousById = new Map(
-          (previous[collection] as Array<Record<string, unknown>>).map((item) => [idOf(collection, item), item]),
-        );
-        const remaining = new Set<string>();
-        for (const record of normalised[collection] as Array<Record<string, unknown>>) {
-          const id = idOf(collection, record);
-          remaining.add(id);
-          const existed = previousById.get(id);
-          const incomingVersion = Number(record.version ?? 1);
-          if (!existed) {
-            await tx.query(
-              "INSERT INTO platform_documents (collection, id, organisation_id, client_id, event_id, version, body) VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)",
-              [
-                collection,
-                id,
-                record.organisationId ?? null,
-                record.clientId ?? null,
-                record.eventId ?? null,
-                incomingVersion,
-                JSON.stringify(record),
-              ],
-            );
-            continue;
-          }
-          const persistedVersion = Number(existed.version ?? 1);
-          const sameBody = JSON.stringify(existed) === JSON.stringify(record);
-          if (incomingVersion < persistedVersion || (incomingVersion === persistedVersion && !sameBody)) {
-            throw new PlatformError("VERSION_CONFLICT", "persisted version conflict", {
-              publicMessage: "This record changed while you were editing. Reload before saving.",
-            });
-          }
-          if (sameBody) continue;
-          const result = await tx.query(
-            "UPDATE platform_documents SET organisation_id=$3, client_id=$4, event_id=$5, version=$6, body=$7::jsonb WHERE collection=$1 AND id=$2 AND version=$8",
+    const run = async (tx: PgQueryable) => this.persistDiff(tx, previous, normalised);
+    if (hasTransaction(this.client)) {
+      await this.client.transaction(run);
+      return;
+    }
+    await run(this.client);
+  }
+
+  private async persistDiff(tx: PgQueryable, previous: PlatformSnapshot, normalised: PlatformSnapshot): Promise<void> {
+    for (const collection of COLLECTIONS) {
+      if (this.riskNormalized && S05B_PERSISTED_COLLECTIONS.has(collection)) continue;
+      const previousById = new Map(
+        (previous[collection] as Array<Record<string, unknown>>).map((item) => [idOf(collection, item), item]),
+      );
+      const remaining = new Set<string>();
+      for (const record of normalised[collection] as Array<Record<string, unknown>>) {
+        const id = idOf(collection, record);
+        remaining.add(id);
+        const existed = previousById.get(id);
+        const incomingVersion = Number(record.version ?? 1);
+        if (!existed) {
+          await tx.query(
+            "INSERT INTO platform_documents (collection, id, organisation_id, client_id, event_id, version, body) VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)",
             [
               collection,
               id,
@@ -743,75 +762,91 @@ export class PostgresPlatformStore implements PlatformStore, StaffAuthCapableSto
               record.eventId ?? null,
               incomingVersion,
               JSON.stringify(record),
-              persistedVersion,
             ],
           );
-          if ((result.rowCount ?? 0) === 0) {
-            throw new PlatformError("VERSION_CONFLICT", "persisted version conflict", {
-              publicMessage: "This record changed while you were editing. Reload before saving.",
-            });
-          }
+          continue;
         }
-        for (const [id, existed] of previousById) {
-          if (remaining.has(id)) continue;
-          const persistedVersion = Number(existed.version ?? 1);
-          const result = await tx.query(
-            "DELETE FROM platform_documents WHERE collection=$1 AND id=$2 AND version=$3",
-            [collection, id, persistedVersion],
-          );
-          if ((result.rowCount ?? 0) > 0) continue;
-          const existing = await tx.query<{ version: number }>(
-            "SELECT version FROM platform_documents WHERE collection=$1 AND id=$2",
-            [collection, id],
-          );
-          if ((existing.rowCount ?? 0) > 0) {
-            throw new PlatformError("VERSION_CONFLICT", "persisted version conflict", {
-              publicMessage: "This record changed while you were editing. Reload before saving.",
-            });
-          }
-          // Concurrent delete/delete: a versioned DELETE that matches no row, and
-          // the durable key is already absent, is an idempotent success. The
-          // second writer does not receive VERSION_CONFLICT. If the row still
-          // exists at another version, that is a stale delete and conflicts.
+        const persistedVersion = Number(existed.version ?? 1);
+        const sameBody = JSON.stringify(existed) === JSON.stringify(record);
+        if (incomingVersion < persistedVersion || (incomingVersion === persistedVersion && !sameBody)) {
+          throw new PlatformError("VERSION_CONFLICT", "persisted version conflict", {
+            publicMessage: "This record changed while you were editing. Reload before saving.",
+          });
         }
-      }
-      const riskTx = new PostgresRiskTransaction(tx);
-      if (this.riskNormalized) {
-        await writeRiskSnapshotDelta(riskTx, previous, normalised);
-      }
-      const previousAuditIds = new Set(previous.audit.map((item) => item.id));
-      for (const entry of normalised.audit) {
-        if (previousAuditIds.has(entry.id)) continue;
-        await riskTx.appendAudit(entry);
-      }
-      const previousIdempotencyKeys = new Set(previous.idempotency.map((item) => item.key));
-      for (const entry of normalised.idempotency) {
-        if (!previousIdempotencyKeys.has(entry.key)) {
-          await tx.query(
-            "INSERT INTO platform_idempotency (key, action, hash, result_ref, created_at, body) VALUES ($1, $2, $3, $4, $5, $6::jsonb)",
-            [entry.key, entry.action, entry.hash, entry.resultRef, entry.createdAt, JSON.stringify(entry)],
-          );
-          if (entry.action.startsWith("risk.")) {
-            const audit = normalised.audit.find((item) => item.idempotencyKey === entry.key && item.organisationId);
-            if (audit?.organisationId) {
-              await riskTx.insertIdempotency({
-                organisationId: audit.organisationId,
-                action: entry.action,
-                idempotencyKey: entry.key,
-                resultRef: entry.resultRef,
-                hash: entry.hash,
-                createdAt: entry.createdAt,
-              });
-            }
-          }
+        if (sameBody) continue;
+        const result = await tx.query(
+          "UPDATE platform_documents SET organisation_id=$3, client_id=$4, event_id=$5, version=$6, body=$7::jsonb WHERE collection=$1 AND id=$2 AND version=$8",
+          [
+            collection,
+            id,
+            record.organisationId ?? null,
+            record.clientId ?? null,
+            record.eventId ?? null,
+            incomingVersion,
+            JSON.stringify(record),
+            persistedVersion,
+          ],
+        );
+        if ((result.rowCount ?? 0) === 0) {
+          throw new PlatformError("VERSION_CONFLICT", "persisted version conflict", {
+            publicMessage: "This record changed while you were editing. Reload before saving.",
+          });
         }
       }
-    };
-    if (hasTransaction(this.client)) {
-      await this.client.transaction(run);
-      return;
+      for (const [id, existed] of previousById) {
+        if (remaining.has(id)) continue;
+        const persistedVersion = Number(existed.version ?? 1);
+        const result = await tx.query(
+          "DELETE FROM platform_documents WHERE collection=$1 AND id=$2 AND version=$3",
+          [collection, id, persistedVersion],
+        );
+        if ((result.rowCount ?? 0) > 0) continue;
+        const existing = await tx.query<{ version: number }>(
+          "SELECT version FROM platform_documents WHERE collection=$1 AND id=$2",
+          [collection, id],
+        );
+        if ((existing.rowCount ?? 0) > 0) {
+          throw new PlatformError("VERSION_CONFLICT", "persisted version conflict", {
+            publicMessage: "This record changed while you were editing. Reload before saving.",
+          });
+        }
+        // Concurrent delete/delete: a versioned DELETE that matches no row, and
+        // the durable key is already absent, is an idempotent success. The
+        // second writer does not receive VERSION_CONFLICT. If the row still
+        // exists at another version, that is a stale delete and conflicts.
+      }
     }
-    await run(this.client);
+    const riskTx = new PostgresRiskTransaction(tx);
+    if (this.riskNormalized) {
+      await writeRiskSnapshotDelta(riskTx, previous, normalised);
+    }
+    const previousAuditIds = new Set(previous.audit.map((item) => item.id));
+    for (const entry of normalised.audit) {
+      if (previousAuditIds.has(entry.id)) continue;
+      await riskTx.appendAudit(entry);
+    }
+    const previousIdempotencyKeys = new Set(previous.idempotency.map((item) => item.key));
+    for (const entry of normalised.idempotency) {
+      if (!previousIdempotencyKeys.has(entry.key)) {
+        await tx.query(
+          "INSERT INTO platform_idempotency (key, action, hash, result_ref, created_at, body) VALUES ($1, $2, $3, $4, $5, $6::jsonb)",
+          [entry.key, entry.action, entry.hash, entry.resultRef, entry.createdAt, JSON.stringify(entry)],
+        );
+        if (entry.action.startsWith("risk.")) {
+          const audit = normalised.audit.find((item) => item.idempotencyKey === entry.key && item.organisationId);
+          if (audit?.organisationId) {
+            await riskTx.insertIdempotency({
+              organisationId: audit.organisationId,
+              action: entry.action,
+              idempotencyKey: entry.key,
+              resultRef: entry.resultRef,
+              hash: entry.hash,
+              createdAt: entry.createdAt,
+            });
+          }
+        }
+      }
+    }
   }
 
   private async hydrate(): Promise<void> {

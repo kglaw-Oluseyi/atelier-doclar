@@ -10,11 +10,10 @@ import {
   EVENT_OS_CLEANUP_PROJECT_ID,
   EVENT_OS_CLEANUP_PROJECT_NAME,
   SYNTHETIC_CLEANUP_CONFIRMATION,
-  applySyntheticCleanup,
-  purgeNormalizedRiskTables,
   assertCleanupConfirmation,
   assertCleanupProjectScope,
   classifySyntheticCleanupAttribution,
+  executeSyntheticCleanupAtomically,
   previewSyntheticCleanup,
   recordCleanupAudit,
 } from "../src/synthetic-cleanup.js";
@@ -168,13 +167,7 @@ describe("platform persistence integration", () => {
     assert.equal(store.snapshot().organisations.length, before.organisations.length);
     assert.throws(() => assertCleanupConfirmation("no"), /explicit confirmation/);
     assertCleanupConfirmation(SYNTHETIC_CLEANUP_CONFIRMATION);
-    const cleaned = applySyntheticCleanup(before);
-    const afterPreview = previewSyntheticCleanup(cleaned);
-    assert.equal(afterPreview.total, 0);
-    await purgeNormalizedRiskTables(db);
-    store.replace(cleaned);
-    await store.flush();
-    await recordCleanupAudit(db, { ...preview, mode: "EXECUTED" }, { mode: "EXECUTED", confirmed: true });
+    await executeSyntheticCleanupAtomically(store, preview);
     const reopened = await PostgresPlatformStore.open(db);
     assert.equal(previewSyntheticCleanup(reopened.snapshot()).total, 0);
     assert.equal(db.cleanup.some((row) => row.mode === "PREVIEW" && row.confirmed === false), true);

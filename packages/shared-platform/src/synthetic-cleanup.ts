@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { PgQueryable } from "./postgres-schema.js";
+import type { PostgresPlatformStore } from "./postgres-store.js";
 import { RISK_SQL_TABLES } from "./risk-postgres-schema.js";
 import { SYNTHETIC_SEED_ID } from "./synthetic-seed.js";
 import { emptySnapshot, type PlatformSnapshot } from "./store.js";
@@ -203,4 +204,22 @@ export async function recordCleanupAudit(
       input.confirmed,
     ],
   );
+}
+
+/**
+ * Single-transaction EXECUTE path for `apps/event-os/scripts/synthetic-cleanup.ts`.
+ * Risk purge + synthetic document deletion + EXECUTED cleanup audit either all
+ * commit or all roll back. Does not weaken confirmation/scope/provenance gates —
+ * callers must still assert those before invoking.
+ */
+export async function executeSyntheticCleanupAtomically(
+  store: PostgresPlatformStore,
+  preview: SyntheticCleanupPreview,
+): Promise<void> {
+  const cleaned = applySyntheticCleanup(store.snapshot());
+  await store.replaceAndPersistForSyntheticCleanup(cleaned, {
+    beforePersist: (tx) => purgeNormalizedRiskTables(tx),
+    afterPersist: (tx) =>
+      recordCleanupAudit(tx, { ...preview, mode: "EXECUTED" }, { mode: "EXECUTED", confirmed: true }),
+  });
 }

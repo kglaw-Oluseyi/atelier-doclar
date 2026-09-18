@@ -849,6 +849,7 @@ export {
   previewSyntheticCleanup,
   recordCleanupAudit,
   cleanupAccessLifecycleProbe,
+  executeSyntheticCleanupAtomically,
 } from "./synthetic-cleanup.js";
 export {
   PlatformService,
