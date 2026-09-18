@@ -1,25 +1,23 @@
 {
-  "recordedAt": "2026-09-18T01:05:30.000Z",
+  "recordedAt": "2026-09-18T03:54:00.000Z",
   "disposition": "PASS",
   "task": "CAP1000_PRODUCT_INSTALL_OOM",
+  "reconciliation": "items_1_4_closed",
   "gitBaselineAtStart": "7ddb971a7f66b531b0f67215819fd79dfcf60571",
+  "productCommit": "6ea43e4a390bb8022b0eae64b9ceb6c205499eb4",
+  "priorEvidenceCommit": "9d903f9a1d989337c458400aece9febb4cf1a200",
   "phase0": {
     "artifact": "CAP1000_PRODUCT_INSTALL_PHASE0_ABORT.json",
-    "live1024": {
-      "classification": "OOM_KILL_HEAP_LIMIT",
-      "exitCode": 134
-    },
-    "combined3GBRetry": {
-      "classification": "UNDETERMINED",
-      "exitCode": null
-    }
+    "live1024": { "classification": "OOM_KILL_HEAP_LIMIT", "exitCode": 134 },
+    "combined3GBRetry": { "classification": "UNDETERMINED", "exitCode": null }
   },
   "phase1": {
     "artifact": "CAP1000_PRODUCT_INSTALL_COLLECTION_COSTS.json",
+    "refreshedArtifact": "CAP1000_PRODUCT_INSTALL_COLLECTION_COSTS_NOW.json",
     "singleLargestSource": "platform_audit",
-    "auditSharePct": 25.01,
-    "idempotencySharePct": 6.56,
-    "documentsSharePct": 68.43,
+    "documentsShareDominantAggregate": true,
+    "operationalGuestsNow": { "rowCount": 3995, "approxMiB": 5.565 },
+    "grandSerializedMiBNow": 29.756,
     "documentScopingImplemented": false
   },
   "phase2": {
@@ -33,49 +31,95 @@
       "omitHistoricalAudit": true,
       "idempotencyKeyLike": "cap1000-live-%",
       "platformDocuments": "unchanged",
-      "entryPoints": [
-        "packages/shared-platform/src/capacity-install-postgres-store.ts",
-        "PostgresPlatformStore.openForCapacityInstall",
-        "apps/event-os/scripts/s06-capacity-live-install.ts (CAP1000 only)"
-      ],
       "cap600UsesDefaultOpen": true
-    },
-    "liveGuestFlushEvery": 25
+    }
   },
-  "memory": {
-    "ephemeralBeforePeakRssMiB": 901.4,
-    "ephemeralAfterFlushPeakRssMiB": 495.5,
-    "liveOom1024": true,
-    "liveScopedOnBoxPeakRssMiB": 2539.6,
-    "liveScopedOnBoxPeakHeapMiB": 1675.2,
-    "liveTelemetry": "CAP1000_PRODUCT_INSTALL_LIVE_SCOPED.jsonl"
+  "item1": {
+    "artifact": "CAP1000_PRODUCT_INSTALL_ITEM1_GAP_ANALYSIS.json",
+    "ephemeralAfterPeakRssMiB": 495.5,
+    "liveFlush25PeakRssMiB": 2539.6,
+    "dominantCause": "unscoped_platform_documents_production_corpus_plus_mutate_replace_clone_retention",
+    "rawSqlGrandMiBInsufficientAlone": 29.756,
+    "liveAfterSeedRssMiB": 823.1,
+    "ephemeralAfterSeedRssMiB": 170.7,
+    "growthAcrossInstall": "before.guests 596.7 MiB → guest25 flush.before 2022.3 MiB → peak 2539.6 MiB @ guest 525",
+    "furtherDocumentScopingProposed": false,
+    "proposedCollectionsIfAuthorised": ["operationalGuests", "guestIntakeCandidates"]
+  },
+  "item2": {
+    "tunnelFlush5": {
+      "completed": false,
+      "reason": "SSH tunnel Connection terminated unexpectedly ~215/1000 guests; peak ~612 MB RSS — not OOM",
+      "artifactPartial": "CAP1000_PRODUCT_INSTALL_LIVE_SCOPED.jsonl.attempt2-tunnel-drop.jsonl"
+    },
+    "onBoxFlush25": {
+      "guestFlushEvery": 25,
+      "peakRssMiB": 2539.6,
+      "peakHeapMiB": 1675.2,
+      "eventId": "5fc07db4-96c8-4d1a-840f-4534672789d6",
+      "disposition": "PASS_THEN_CLEANED_FOR_FLUSH5_RERUN",
+      "telemetry": "CAP1000_PRODUCT_INSTALL_LIVE_SCOPED.jsonl"
+    },
+    "onBoxFlush5": {
+      "guestFlushEvery": 5,
+      "peakRssMiB": 1506.4,
+      "peakHeapMiB": 1259.0,
+      "peakStage": "flush.after",
+      "peakGuestCount": 970,
+      "eventId": "29567b2d-fc51-41cc-acb8-4acb726fed17",
+      "disposition": "PASS",
+      "telemetry": "CAP1000_PRODUCT_INSTALL_LIVE_FLUSH5.jsonl",
+      "manifest": "CAP1000_PRODUCT_INSTALL_LIVE_FLUSH5_MANIFEST.json",
+      "vsFlush25DeltaRssMiB": 1033.2,
+      "vsFlush25ReductionPct": 40.7,
+      "layerAStillMeaningfulLever": true,
+      "closesGapToEphemeral": false
+    }
+  },
+  "item3": {
+    "artifact": "CAP1000_PRODUCT_INSTALL_MEMORY_CEILING.json",
+    "serviceName": "event-os",
+    "serviceId": "31c25514-ef57-43c6-97ff-49fc6dd367c5",
+    "ceilingMiB": 24576.0,
+    "ceilingSource": "railway metrics -s event-os --memory --json limit_mb",
+    "cgroupMemoryMaxBytes": 24000000000,
+    "cgroupMemoryMaxMiB": 22888.2,
+    "comparedPeakRssMiB": 1506.4,
+    "comparedPeakSource": "onBoxFlush5",
+    "headroomMiB": 23069.6,
+    "headroomPctOfCeiling": 93.87
+  },
+  "item4": {
+    "legacyField": "duplicateFixtureCount",
+    "legacyValue": 1,
+    "correctedField": "cap1000EventCount",
+    "meaning": "Total rows in platform_documents where collection='events' AND body->>'code'='CAP1000'. Value 1 means exactly one CAP1000 fixture exists (no duplicate), NOT that one duplicate was found.",
+    "query": "SELECT id FROM platform_documents WHERE collection='events' AND body->>'code'='CAP1000'",
+    "cap1000EventCount": 1,
+    "eventIdsAtReportTime": ["29567b2d-fc51-41cc-acb8-4acb726fed17"]
   },
   "liveInstall": {
-    "eventId": "5fc07db4-96c8-4d1a-840f-4534672789d6",
+    "eventId": "29567b2d-fc51-41cc-acb8-4acb726fed17",
     "guestCount": 1000,
     "tableCount": 110,
     "seatCount": 1000,
     "edition": "eos-s06-capacity-1000-v1",
     "corpusHash": "57d5398b933e2fc4cfde85ffe70d1e0b7e03be00ddde8cb7511c1518bf57c1cc",
-    "executionHost": "railway ssh event-os \u2192 postgres.railway.internal",
-    "verifyOnly": {
-      "ok": true,
-      "replay": true
-    },
-    "replayInstall": {
-      "ok": true,
-      "replay": true
-    },
-    "duplicateFixtureCount": 1,
+    "executionHost": "railway ssh event-os → postgres.railway.internal",
+    "guestFlushEvery": 5,
+    "cap1000EventCount": 1,
+    "cap1000EventCountComment": "Count of CAP1000-coded events; 1 = single fixture present (no duplicates).",
     "solverRunsForEvent": 0,
-    "layoutPublications": {
-      "current": 1,
-      "superseded": 2
-    },
-    "layoutApprovals": 3,
     "baselineAdoptionId": "3b771ad9-c4c9-401b-87df-0371f9eee840",
-    "baselineAdoptionStatus": "CURRENT",
-    "baselineAdoptionUnchanged": true
+    "baselineAdoptionStatus": "CURRENT"
+  },
+  "memory": {
+    "ephemeralAfterFlushPeakRssMiB": 495.5,
+    "liveScopedOnBoxFlush25PeakRssMiB": 2539.6,
+    "liveScopedOnBoxFlush25PeakHeapMiB": 1675.2,
+    "liveScopedOnBoxFlush5PeakRssMiB": 1506.4,
+    "liveScopedOnBoxFlush5PeakHeapMiB": 1259.0,
+    "liveFlush5Telemetry": "CAP1000_PRODUCT_INSTALL_LIVE_FLUSH5.jsonl"
   },
   "frozenWorker": {
     "serviceId": "32f09234-9295-4a6c-8b8d-952d61d08706",
@@ -95,6 +139,5 @@
     "eventOsDeployed": false,
     "workerRedeployed": false,
     "railwayConfigChanged": false
-  },
-  "productCommit": "6ea43e4a390bb8022b0eae64b9ceb6c205499eb4"
+  }
 }
