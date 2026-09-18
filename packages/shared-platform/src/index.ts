@@ -1180,6 +1180,21 @@ export {
   type CapacityLiveInstallOptions,
   type CapacityLiveInstallResult,
 } from "./capacity-live-install.js";
+export {
+  createCapacityInstallMemoryRecorder,
+  collectionCountsFromView,
+  measurePlatformCollectionCosts,
+  writePlatformCollectionCostsArtifact,
+  type CapacityInstallMemoryRecorder,
+  type CapacityInstallMemorySample,
+  type PlatformCollectionCostRow,
+} from "./capacity-install-memory.js";
+export {
+  openCapacityInstallPostgresStore,
+  CAP1000_LIVE_IDEMPOTENCY_KEY_LIKE,
+  type CapacityInstallHydrateScope,
+} from "./capacity-install-postgres-store.js";
+export type { CapacityInstallHydrateOptions } from "./postgres-store.js";
 export { EOS_S06_SEATING_MIGRATION_ID, EOS_S06_SEATING_RECEIPT_ID, SEATING_SQL_TABLES } from "./seating-postgres-schema.js";
 export { emptySeatingState, SEATING_COLLECTIONS } from "./seating-schemas.js";
 export {

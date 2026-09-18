@@ -14,9 +14,14 @@ import { join } from "node:path";
 import { Pool } from "pg";
 import {
   ACCEPTED_CAP600_CORPUS_HASHES,
+  CAP1000_LIVE_IDEMPOTENCY_KEY_LIKE,
   PostgresPlatformStore,
   applySyntheticSeedIfNeeded,
+  createCapacityInstallMemoryRecorder,
   installCapacityLiveFixture,
+  measurePlatformCollectionCosts,
+  openCapacityInstallPostgresStore,
+  writePlatformCollectionCostsArtifact,
   type CapacityLiveFixtureCode,
   type PgQueryable,
 } from "@maison-doclar/shared-platform";
@@ -28,6 +33,7 @@ function parseArgs(argv: string[]) {
     dryRun: boolean;
     verifyOnly: boolean;
     manifestDir?: string;
+    guestFlushEvery?: number;
   } = { confirm: false, dryRun: false, verifyOnly: false };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index]!;
@@ -43,8 +49,14 @@ function parseArgs(argv: string[]) {
       out.verifyOnly = true;
     } else if (arg === "--manifest-dir") {
       out.manifestDir = argv[++index];
+    } else if (arg === "--guest-flush-every") {
+      const value = Number(argv[++index]);
+      if (!Number.isInteger(value) || value < 1) throw new Error("--guest-flush-every must be a positive integer");
+      out.guestFlushEvery = value;
     } else if (arg === "--help" || arg === "-h") {
-      console.log(`s06-capacity-live-install --fixture CAP600|CAP1000 --confirm-synthetic-qualification [--dry-run|--verify-only]`);
+      console.log(
+        `s06-capacity-live-install --fixture CAP600|CAP1000 --confirm-synthetic-qualification [--dry-run|--verify-only] [--guest-flush-every N]`,
+      );
       process.exit(0);
     }
   }
@@ -86,12 +98,59 @@ if (!args.confirm) throw new Error("Missing --confirm-synthetic-qualification");
 const url = process.env.DATABASE_URL;
 if (!url?.trim()) throw new Error("DATABASE_URL is required");
 
-const pool = new Pool({ connectionString: url, max: 2, connectionTimeoutMillis: 12_000 });
+const pool = new Pool({
+  connectionString: url,
+  max: 2,
+  connectionTimeoutMillis: 12_000,
+  keepAlive: true,
+  idleTimeoutMillis: 0,
+});
+pool.on("error", (error) => {
+  console.error(`pg pool error (non-fatal for idle clients): ${error.message}`);
+});
 try {
+  const telemetryPath =
+    process.env.CAP1000_INSTALL_TELEMETRY ??
+    `/tmp/s06-capacity-live-${args.fixture.toLowerCase()}-memory.jsonl`;
+  const memory = createCapacityInstallMemoryRecorder(telemetryPath);
+  memory.mark("process.start");
+  memory.mark("before.storeOpen");
   const client = adapt(pool);
-  const store = await PostgresPlatformStore.open(client);
+  // CAP1000 only: installer-scoped hydrate (omit historical audit; prefix-filter idempotency).
+  // CAP600 keeps default PostgresPlatformStore.open() — scoped mode is opt-in.
+  const store =
+    args.fixture === "CAP1000"
+      ? await openCapacityInstallPostgresStore(client, {
+          idempotencyKeyLike: CAP1000_LIVE_IDEMPOTENCY_KEY_LIKE,
+          omitHistoricalAudit: true,
+        })
+      : await PostgresPlatformStore.open(client);
+  memory.mark("after.storeOpen");
+  if (args.fixture === "CAP1000") {
+    const costs = await measurePlatformCollectionCosts(client);
+    const mem = process.memoryUsage();
+    const costsPath =
+      process.env.CAP1000_COLLECTION_COSTS_PATH ??
+      join(
+        process.cwd(),
+        "docs/control/evidence/eos-s06-cpsat-production/milestone-6de/CAP1000_PRODUCT_INSTALL_COLLECTION_COSTS_AT_HYDRATE.jsonl",
+      );
+    writePlatformCollectionCostsArtifact(costsPath, {
+      at: costs.at,
+      stage: "after.storeOpen",
+      rows: costs.rows,
+      rss: mem.rss,
+      heapUsed: mem.heapUsed,
+    });
+    memory.mark("after.collectionCosts", {
+      collectionCounts: Object.fromEntries(
+        costs.rows.slice(0, 8).map((row) => [`${row.source}:${row.key}`, row.rowCount]),
+      ),
+    });
+  }
   const seeded = await applySyntheticSeedIfNeeded(store, client, {});
   await store.flush();
+  memory.mark("after.seed");
 
   const result = await installCapacityLiveFixture(seeded.service, store, {
     fixture: args.fixture,
@@ -104,14 +163,34 @@ try {
     communicationsInactive: true,
     realDataMode: false,
     expectedCorpusHash: args.fixture === "CAP600" ? ACCEPTED_CAP600_CORPUS_HASHES.B_TYPICAL : undefined,
+    guestFlushEvery: args.guestFlushEvery,
+    memory,
     onProgress: (message) => process.stdout.write(`${message}\n`),
   });
+  memory.mark("process.complete");
+  if (args.fixture === "CAP1000") {
+    const costs = await measurePlatformCollectionCosts(client);
+    const mem = process.memoryUsage();
+    const costsPath =
+      process.env.CAP1000_COLLECTION_COSTS_PEAK_PATH ??
+      join(
+        process.cwd(),
+        "docs/control/evidence/eos-s06-cpsat-production/milestone-6de/CAP1000_PRODUCT_INSTALL_COLLECTION_COSTS_AT_COMPLETE.jsonl",
+      );
+    writePlatformCollectionCostsArtifact(costsPath, {
+      at: costs.at,
+      stage: "process.complete",
+      rows: costs.rows,
+      rss: mem.rss,
+      heapUsed: mem.heapUsed,
+    });
+  }
 
   const manifestDir = args.manifestDir ?? `/tmp/s06-capacity-live-${args.fixture.toLowerCase()}`;
   mkdirSync(manifestDir, { recursive: true });
   const manifestPath = join(manifestDir, "manifest.json");
-  writeFileSync(manifestPath, JSON.stringify({ ...result, manifestPath }, null, 2));
-  console.log(JSON.stringify({ ok: true, manifest: manifestPath, result }, null, 2));
+  writeFileSync(manifestPath, JSON.stringify({ ...result, manifestPath, telemetryPath }, null, 2));
+  console.log(JSON.stringify({ ok: true, manifest: manifestPath, telemetryPath, result }, null, 2));
 } finally {
   await pool.end();
 }

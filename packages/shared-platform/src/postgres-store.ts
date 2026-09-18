@@ -316,12 +316,21 @@ function hasTransaction(client: PgQueryable): client is PgTransactor {
   return typeof (client as PgTransactor).transaction === "function";
 }
 
+export type CapacityInstallHydrateOptions = {
+  /** SQL LIKE pattern for platform_idempotency.key (installer-owned keys only). */
+  idempotencyKeyLike: string;
+  /** When true, skip loading historical platform_audit into memory. */
+  omitHistoricalAudit: true;
+};
+
 export class PostgresPlatformStore implements PlatformStore, StaffAuthCapableStore {
   readonly productionStatus: StoreProductionStatus = PRODUCTION_STORE_STATUS;
   private state: PlatformSnapshot = emptySnapshot();
   private pending: Promise<void> = Promise.resolve();
   private riskNormalized = false;
   private readonly authPerfMarks: StaffAuthPerfMark[] = [];
+  /** Installer-only hydrate scope; undefined preserves full-store open behaviour. */
+  private capacityInstallHydrate?: CapacityInstallHydrateOptions;
 
   constructor(private readonly client: PgQueryable) {}
 
@@ -338,6 +347,21 @@ export class PostgresPlatformStore implements PlatformStore, StaffAuthCapableSto
   static async open(client: PgQueryable): Promise<PostgresPlatformStore> {
     await PostgresPlatformStore.migrate(client);
     const store = new PostgresPlatformStore(client);
+    await store.hydrate();
+    return store;
+  }
+
+  /**
+   * Installer-only open path. Default `open()` remains full hydrate for Event OS.
+   * Re-hydrate-on-error keeps the same installer scope (does not widen to full tables).
+   */
+  static async openForCapacityInstall(
+    client: PgQueryable,
+    scope: CapacityInstallHydrateOptions,
+  ): Promise<PostgresPlatformStore> {
+    await PostgresPlatformStore.migrate(client);
+    const store = new PostgresPlatformStore(client);
+    store.capacityInstallHydrate = scope;
     await store.hydrate();
     return store;
   }
@@ -806,10 +830,23 @@ export class PostgresPlatformStore implements PlatformStore, StaffAuthCapableSto
     if (this.riskNormalized) {
       overlayRiskState(next, await riskStore.loadAll());
     }
-    const audit = await this.client.query<{ body: unknown }>("SELECT body FROM platform_audit");
-    next.audit = audit.rows.map((row) => structuredClone(asBody<AuditEvent>(row.body)));
-    const idem = await this.client.query<{ body: unknown }>("SELECT body FROM platform_idempotency");
-    next.idempotency = idem.rows.map((row) => structuredClone(asBody<IdempotencyRecord>(row.body)));
+    const installScope = this.capacityInstallHydrate;
+    if (installScope?.omitHistoricalAudit) {
+      next.audit = [];
+    } else {
+      const audit = await this.client.query<{ body: unknown }>("SELECT body FROM platform_audit");
+      next.audit = audit.rows.map((row) => structuredClone(asBody<AuditEvent>(row.body)));
+    }
+    if (installScope?.idempotencyKeyLike) {
+      const idem = await this.client.query<{ body: unknown }>(
+        "SELECT body FROM platform_idempotency WHERE key LIKE $1",
+        [installScope.idempotencyKeyLike],
+      );
+      next.idempotency = idem.rows.map((row) => structuredClone(asBody<IdempotencyRecord>(row.body)));
+    } else {
+      const idem = await this.client.query<{ body: unknown }>("SELECT body FROM platform_idempotency");
+      next.idempotency = idem.rows.map((row) => structuredClone(asBody<IdempotencyRecord>(row.body)));
+    }
     const normalised = normalizeSnapshot(next);
     validateS04APersistedCollections(normalised);
     validateS04BPersistedCollections(normalised);
@@ -982,6 +1019,12 @@ export class MemoryPlatformPg implements PgTransactor {
     if (sql.startsWith("CREATE TABLE")) return { rows: [], rowCount: 0 };
     if (sql.startsWith("CREATE INDEX") || sql.startsWith("CREATE UNIQUE INDEX")) return { rows: [], rowCount: 0 };
     if (sql.startsWith("ALTER TABLE") || sql.startsWith("DROP INDEX")) return { rows: [], rowCount: 0 };
+    if (sql.startsWith("COMMENT ON")) return { rows: [], rowCount: 0 };
+    // Naive ';' splitter breaks quoted COMMENT / DO bodies that contain semicolons.
+    // Absorb leftover fragments that are not a recognisable SQL statement.
+    if (!/^(SELECT|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|BEGIN|COMMIT|ROLLBACK|TRUNCATE|WITH|COMMENT)\b/i.test(sql)) {
+      return { rows: [], rowCount: 0 };
+    }
     const seatingHandled = this.execSeatingSql<T>(sql, values);
     if (seatingHandled) return seatingHandled;
     const riskHandled = this.execRiskSql<T>(sql, values);
@@ -1047,6 +1090,12 @@ export class MemoryPlatformPg implements PgTransactor {
     }
     if (sql.startsWith("SELECT body FROM platform_audit")) {
       return { rows: this.audit.map((body) => ({ body })) as T[], rowCount: this.audit.length };
+    }
+    if (sql.startsWith("SELECT body FROM platform_idempotency WHERE key LIKE")) {
+      const pattern = String(values?.[0] ?? "%");
+      const likeRegex = new RegExp(`^${pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/%/g, ".*")}$`);
+      const rows = this.idempotency.filter((row) => likeRegex.test(row.key));
+      return { rows: rows.map((row) => ({ body: row.body })) as T[], rowCount: rows.length };
     }
     if (sql.startsWith("SELECT body FROM platform_idempotency")) {
       return { rows: this.idempotency.map((row) => ({ body: row.body })) as T[], rowCount: this.idempotency.length };

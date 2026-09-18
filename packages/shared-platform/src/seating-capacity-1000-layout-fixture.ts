@@ -63,14 +63,15 @@ function cas(eventId: string, layout: { id: string; version: number; currentRevi
   };
 }
 
-function addTables(
+async function addTables(
   service: PlatformService,
   plannerActor: ActorContext,
   eventId: string,
   layout: { id: string; version: number; currentRevisionNumber: number },
   specs: readonly Capacity1000TableSpec[],
   startIndex: number,
-): { id: string; version: number; currentRevisionNumber: number } {
+  flush?: () => Promise<void>,
+): Promise<{ id: string; version: number; currentRevisionNumber: number }> {
   let current = layout;
   for (const [offset, table] of specs.entries()) {
     const index = startIndex + offset;
@@ -91,6 +92,8 @@ function addTables(
         subtype: { shape: "RECTANGLE", declaredCapacity: table.declaredCapacity },
       },
     });
+    // Bound PostgresPlatformStore.replace() retention on large hydrated production snapshots.
+    if (flush) await flush();
   }
   return { id: current.id, version: current.version, currentRevisionNumber: current.currentRevisionNumber };
 }
@@ -130,6 +133,14 @@ function asLayoutRef(layout: { id: string; version: number; currentRevisionNumbe
   return { id: layout.id, version: layout.version, currentRevisionNumber: layout.currentRevisionNumber };
 }
 
+export type ApplyCapacity1000SeatingLayoutOptions = {
+  plannerAssignmentId?: string;
+  directorAssignmentId?: string;
+  /** Persist queued PostgresPlatformStore.replace() work after each published batch. */
+  flush?: () => Promise<void>;
+  onProgress?: (message: string, detail?: { layoutBatch: number; tableCount: number }) => void;
+};
+
 export async function applyCapacity1000SeatingLayout(
   service: PlatformService,
   store: PlatformStore,
@@ -137,11 +148,11 @@ export async function applyCapacity1000SeatingLayout(
   plannerActor: ActorContext,
   directorActor: ActorContext,
   prefix: string,
-  assignmentIds?: { plannerAssignmentId?: string; directorAssignmentId?: string },
+  assignmentIds?: ApplyCapacity1000SeatingLayoutOptions,
 ) {
-  const snap = store.snapshot();
+  const view = store.viewSnapshot();
   const venue =
-    snap.venues.find((item) => item.organisationId === people.orgMaison && item.status === "ACTIVE") ??
+    view.venues.find((item) => item.organisationId === people.orgMaison && item.status === "ACTIVE") ??
     service.createVenue(directorActor, {
       organisationId: people.orgMaison,
       displayName: `${prefix} stretch pavilion`,
@@ -174,7 +185,11 @@ export async function applyCapacity1000SeatingLayout(
 
   let startIndex = 0;
   for (const [batchIndex, batch] of batches.entries()) {
-    layout = addTables(service, plannerActor, eventId, layout, batch, startIndex);
+    assignmentIds?.onProgress?.(`${prefix} layout batch ${batchIndex + 1} tables…`, {
+      layoutBatch: batchIndex + 1,
+      tableCount: batch.length,
+    });
+    layout = await addTables(service, plannerActor, eventId, layout, batch, startIndex, assignmentIds?.flush);
     const published = publishCurrent(
       service,
       plannerActor,
@@ -190,9 +205,18 @@ export async function applyCapacity1000SeatingLayout(
       materialDiffSummaryLength: published.materialDiffSummaryLength,
     });
     startIndex += batch.length;
+    if (assignmentIds?.flush) {
+      assignmentIds.onProgress?.(`${prefix} layout batch ${batchIndex + 1} flush…`, {
+        layoutBatch: batchIndex + 1,
+        tableCount: batch.length,
+      });
+      await assignmentIds.flush();
+    }
   }
 
-  const publication = store.snapshot().layoutPublications.find((item) => item.layoutId === layout.id && item.status === "CURRENT");
+  const publication = store
+    .viewSnapshot()
+    .layoutPublications.find((item) => item.layoutId === layout.id && item.status === "CURRENT");
   assert.ok(publication);
   const workspace = service.getLayoutSetupWorkspace(directorActor, people.orgMaison, eventId, layout.id);
   const tables = workspace.objects.filter((item) => item.objectType === "TABLE" && !item.tombstoned);

@@ -22,12 +22,19 @@ import {
 } from "./seating-capacity-1000-corpus.js";
 import type { ActorContext, PlatformService } from "./service.js";
 import type { PlatformStore } from "./store.js";
+import type { CapacityInstallMemoryRecorder } from "./capacity-install-memory.js";
+import { collectionCountsFromView } from "./capacity-install-memory.js";
 
 /** Memory store has no flush; Postgres store does. */
 type FlushableStore = PlatformStore & { flush?: () => Promise<void> };
 
 async function flushStore(store: FlushableStore) {
   if (typeof store.flush === "function") await store.flush();
+}
+
+/** Read-only helper: prefer viewSnapshot when available; never mutate the result. */
+function readView(store: PlatformStore) {
+  return store.viewSnapshot();
 }
 
 export type CapacityLiveInstallOptions = {
@@ -44,7 +51,10 @@ export type CapacityLiveInstallOptions = {
   authorityPersonId?: string;
   now?: string;
   guestFlushEvery?: number;
+  /** Diagnostic: skip per-batch layout flush (reproduces pre-fix memory retention). */
+  skipLayoutBatchFlush?: boolean;
   onProgress?: (message: string) => void;
+  memory?: CapacityInstallMemoryRecorder;
 };
 
 export type CapacityLiveInstallResult = {
@@ -70,7 +80,7 @@ export type CapacityLiveInstallResult = {
 };
 
 function findFixtureEvent(store: PlatformStore, code: string) {
-  return store.snapshot().events.find((item) => item.organisationId === people.orgMaison && item.code === code);
+  return readView(store).events.find((item) => item.organisationId === people.orgMaison && item.code === code);
 }
 
 function layoutTotals(
@@ -79,7 +89,7 @@ function layoutTotals(
   director: ActorContext,
   eventId: string,
 ): { tableCount: number; seatCount: number; layoutId?: string } {
-  const layouts = store.snapshot().layouts.filter((item) => item.eventId === eventId);
+  const layouts = readView(store).layouts.filter((item) => item.eventId === eventId);
   const current = layouts.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];
   if (!current) return { tableCount: 0, seatCount: 0 };
   const workspace = service.getLayoutSetupWorkspace(director, people.orgMaison, eventId, current.id);
@@ -150,6 +160,13 @@ export async function installCapacityLiveFixture(
     options.fixture === "CAP600" ? CAPACITY_SCENARIO_SEEDS.B_TYPICAL : CAPACITY_1000_SCENARIO_SEEDS.B_TYPICAL;
   const corpusHash = options.fixture === "CAP1000" ? capacity1000CorpusHash("B_TYPICAL") : options.expectedCorpusHash;
   const progress = options.onProgress ?? (() => undefined);
+  const memory = options.memory;
+  const mark = (stage: string, extra?: Parameters<NonNullable<CapacityLiveInstallOptions["memory"]>["mark"]>[1]) => {
+    memory?.mark(stage, {
+      collectionCounts: collectionCountsFromView(readView(store)),
+      ...extra,
+    });
+  };
 
   const ceo = { personId: people.personCeo, correlationId: `${prefix}-ceo`, now: NOW, actorKind: "HUMAN" as const };
   const planner = { personId: people.personPlanner, correlationId: `${prefix}-planner`, now: NOW, actorKind: "HUMAN" as const };
@@ -161,6 +178,7 @@ export async function installCapacityLiveFixture(
   };
   const admin = { personId: people.personAdmin, correlationId: `${prefix}-admin`, now: NOW, actorKind: "HUMAN" as const };
 
+  mark("install.start");
   const existing = findFixtureEvent(store, code);
   if (existing) {
     const guestCount = store.listOperationalGuestsByEventId(people.orgMaison, existing.id).length;
@@ -212,6 +230,7 @@ export async function installCapacityLiveFixture(
   }
 
   progress(`Creating ${code} event…`);
+  mark("before.eventCreate");
   const event = service.createEvent(ceo, {
     organisationId: people.orgMaison,
     clientId: people.clientAlpha,
@@ -221,8 +240,16 @@ export async function installCapacityLiveFixture(
     endsAt: options.fixture === "CAP600" ? "2026-12-20T22:00:00.000Z" : "2026-12-21T22:00:00.000Z",
     timezone: "Africa/Lagos",
   });
-  await flushStore(store);
+  {
+    const flushStarted = performance.now();
+    mark("flush.before");
+    await flushStore(store);
+    mark("flush.after", { flushDurationMs: Math.round(performance.now() - flushStarted) });
+  }
+  mark("after.eventCreate");
+  const scopedPrefix = `${prefix}-${event.id}`;
 
+  mark("before.grants");
   const plannerGrant = service.grantAssignment(admin, {
     organisationId: people.orgMaison,
     personId: people.personPlanner,
@@ -230,7 +257,7 @@ export async function installCapacityLiveFixture(
     clientId: people.clientAlpha,
     eventId: event.id,
     reason: `${code} live verification planner grant`,
-    idempotencyKey: `${prefix}-grant-planner`,
+    idempotencyKey: `${scopedPrefix}-grant-planner`,
   });
   const directorGrant = service.grantAssignment(admin, {
     organisationId: people.orgMaison,
@@ -239,7 +266,7 @@ export async function installCapacityLiveFixture(
     clientId: people.clientAlpha,
     eventId: event.id,
     reason: `${code} live verification director grant`,
-    idempotencyKey: `${prefix}-grant-director`,
+    idempotencyKey: `${scopedPrefix}-grant-director`,
   });
   const ceoGrant = service.grantAssignment(admin, {
     organisationId: people.orgMaison,
@@ -248,7 +275,7 @@ export async function installCapacityLiveFixture(
     clientId: people.clientAlpha,
     eventId: event.id,
     reason: `${code} live verification CEO event-scoped grant`,
-    idempotencyKey: `${prefix}-grant-ceo`,
+    idempotencyKey: `${scopedPrefix}-grant-ceo`,
   });
   const auditorGrant = service.grantAssignment(admin, {
     organisationId: people.orgMaison,
@@ -257,38 +284,74 @@ export async function installCapacityLiveFixture(
     clientId: people.clientAlpha,
     eventId: event.id,
     reason: `${code} live verification read-only auditor grant`,
-    idempotencyKey: `${prefix}-grant-auditor`,
+    idempotencyKey: `${scopedPrefix}-grant-auditor`,
   });
-  await flushStore(store);
+  {
+    const flushStarted = performance.now();
+    mark("flush.before");
+    await flushStore(store);
+    mark("flush.after", { flushDurationMs: Math.round(performance.now() - flushStarted) });
+  }
+  mark("after.grants");
 
+  mark("before.rsvpPrepare");
   service.prepareEventRsvp(director, {
     organisationId: people.orgMaison,
     eventId: event.id,
     hostDisplayName: "Maison Doclar",
     eventDisplayName: name,
     reason: `${code} live qualification RSVP`,
-    idempotencyKey: `${prefix}-rsvp`,
+    idempotencyKey: `${scopedPrefix}-rsvp`,
   });
-  await flushStore(store);
+  {
+    const flushStarted = performance.now();
+    mark("flush.before");
+    await flushStore(store);
+    mark("flush.after", { flushDurationMs: Math.round(performance.now() - flushStarted) });
+  }
+  mark("after.rsvpPrepare");
 
   progress(`Publishing ${code} layout…`);
+  mark("before.layout");
   if (options.fixture === "CAP600") {
-    await applyCapacity600SeatingLayout(service, store, event.id, planner, director, prefix, {
+    await applyCapacity600SeatingLayout(service, store, event.id, planner, director, scopedPrefix, {
       plannerAssignmentId: plannerGrant.id,
       directorAssignmentId: directorGrant.id,
     });
   } else {
-    await applyCapacity1000SeatingLayout(service, store, event.id, planner, director, prefix, {
+    const layoutFlush = options.skipLayoutBatchFlush
+      ? undefined
+      : async () => {
+          const flushStarted = performance.now();
+          mark("flush.before");
+          await flushStore(store);
+          mark("flush.after", { flushDurationMs: Math.round(performance.now() - flushStarted) });
+        };
+    await applyCapacity1000SeatingLayout(service, store, event.id, planner, director, scopedPrefix, {
       plannerAssignmentId: plannerGrant.id,
       directorAssignmentId: directorGrant.id,
+      flush: layoutFlush,
+      onProgress: (message, detail) => {
+        progress(message);
+        if (detail) mark("layout.batch", { layoutBatch: detail.layoutBatch, tableCount: detail.tableCount });
+      },
     });
   }
-  await flushStore(store);
+  {
+    const flushStarted = performance.now();
+    mark("flush.before");
+    await flushStore(store);
+    mark("flush.after", { flushDurationMs: Math.round(performance.now() - flushStarted) });
+  }
+  mark("after.layout", { tableCount: expected.tables });
 
   const guestNames =
     options.fixture === "CAP600" ? capacityBrowserGuestNames() : capacity1000BrowserGuestNames();
-  const flushEvery = options.guestFlushEvery ?? 25;
+  // CAP1000: bounded guest window. Prefer 10; production-sized hydrate needs ≤10
+  // (2 commands/guest). Diagnostic before/after used 10 successfully on ephemeral Postgres.
+  const flushEvery = options.guestFlushEvery ?? (options.fixture === "CAP1000" ? 5 : 25);
   const emailDomain = options.fixture === "CAP600" ? "cap600.example.test" : "cap1000.example.test";
+  mark("before.guests", { guestCount: 0 });
   for (let index = 0; index < expected.guests; index += 1) {
     const guestName = guestNames[index]!;
     const guest = service.intakeGuest(director, {
@@ -298,7 +361,7 @@ export async function installCapacityLiveFixture(
       familyName: guestName.familyName,
       email: `${guestName.givenName.toLowerCase()}.${guestName.familyName.toLowerCase()}@${emailDomain}`,
       reason: `${code} synthetic guest`,
-      idempotencyKey: `${prefix}-guest-${index}-in`,
+      idempotencyKey: `${scopedPrefix}-guest-${index}-in`,
     });
     service.staffEnterRsvp(director, {
       organisationId: people.orgMaison,
@@ -307,18 +370,37 @@ export async function installCapacityLiveFixture(
       attendanceIntent: "ATTENDING",
       answers: { attendanceIntent: "ATTENDING", sensitiveConsent: true },
       reason: `${code} attending`,
-      idempotencyKey: `${prefix}-guest-${index}-attend`,
+      idempotencyKey: `${scopedPrefix}-guest-${index}-attend`,
     });
     if ((index + 1) % flushEvery === 0) {
+      const flushStarted = performance.now();
+      mark("flush.before", { guestCount: index + 1, guestsSinceFlush: flushEvery });
       await flushStore(store);
+      mark("flush.after", {
+        guestCount: index + 1,
+        guestsSinceFlush: 0,
+        flushDurationMs: Math.round(performance.now() - flushStarted),
+      });
       progress(`${code} guests flushed ${index + 1}/${expected.guests}`);
     }
   }
-  await flushStore(store);
+  {
+    const flushStarted = performance.now();
+    mark("flush.before", { guestCount: expected.guests });
+    await flushStore(store);
+    mark("flush.after", {
+      guestCount: expected.guests,
+      flushDurationMs: Math.round(performance.now() - flushStarted),
+    });
+  }
+  mark("after.guests", { guestCount: expected.guests });
 
+  mark("before.verify");
   const guestCount = store.listOperationalGuestsByEventId(people.orgMaison, event.id).length;
   const totals = layoutTotals(store, service, director, event.id);
   assertMatchingFixture(options.fixture, guestCount, totals.tableCount, totals.seatCount, name);
+  mark("after.verify", { guestCount, tableCount: totals.tableCount });
+  mark("install.complete", { guestCount, tableCount: totals.tableCount });
 
   // Silence unused if tree-shaken oddly
   void ceoGrant;
@@ -346,3 +428,4 @@ export async function installCapacityLiveFixture(
     installedAt: NOW,
   };
 }
+
