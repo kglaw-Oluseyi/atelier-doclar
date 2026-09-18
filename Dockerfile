@@ -10,4 +10,4 @@ RUN node packages/foundation/node_modules/tsx/dist/cli.mjs --version
 RUN pnpm --filter @maison-doclar/event-os build
 ENV NODE_ENV=production
 EXPOSE 3000
-CMD ["sh", "-c", "node packages/foundation/node_modules/tsx/dist/cli.mjs packages/foundation/src/migrate.ts && pnpm --filter @maison-doclar/event-os start"]
+CMD ["sh", "scripts/start-event-os.sh"]
