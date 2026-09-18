@@ -2,6 +2,8 @@ import { listClients, createClient } from "@maison-doclar/foundation";
 import { NextResponse } from "next/server";
 import { requireApiActor } from "@/server/api";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   const gate = await requireApiActor(request);
   if ("error" in gate && gate.error) return gate.error;
