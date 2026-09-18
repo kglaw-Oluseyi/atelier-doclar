@@ -1,0 +1,54 @@
+{
+  "recordedAt": "2026-09-17T23:11:23.590151Z",
+  "subject": "Ambiguous abort of combined flush-test + 3GB live CAP1000 retry",
+  "findings": [
+    {
+      "attempt": "live-railway-CAP1000-first",
+      "whenArtifactMtime": "2026-09-17T22:54:34.710672Z",
+      "NODE_OPTIONS": "--max-old-space-size=1024",
+      "artifact": "/tmp/cap1000-live-install.log",
+      "artifactSha256": "a9d2c34c7bb85781a0af606b927036e3d2504d41688403b13843937946b79f09",
+      "exitCode": 134,
+      "signalInterpretation": "Node/V8 aborted with FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory; pnpm reported exit code 134 (128+SIGABRT).",
+      "classification": "OOM_KILL_HEAP_LIMIT",
+      "telemetryLastStage": {
+        "at": "2026-09-17T22:54:24.236Z",
+        "stage": "layout.batch",
+        "rss": 306348032,
+        "heapUsed": 202514832,
+        "layoutBatch": 1
+      },
+      "telemetryPeakRss": {
+        "at": "2026-09-17T22:54:14.276Z",
+        "elapsedMs": 23202,
+        "stage": "flush.before",
+        "rss": 513441792,
+        "heapUsed": 424382592,
+        "heapTotal": 460013568,
+        "external": 3815560,
+        "arrayBuffers": 82693,
+        "collectionCounts": {
+          "events": 91,
+          "operationalGuests": 2995,
+          "layouts": 96,
+          "layoutPublications": 71,
+          "layoutCommands": 285,
+          "layoutRevisions": 394,
+          "assignments": 234
+        }
+      }
+    },
+    {
+      "attempt": "combined-flush-test-then-live-retry-3GB",
+      "whenArtifactMtime": "2026-09-17T22:56:28.829496Z",
+      "intendedNODE_OPTIONS": "--max-old-space-size=3072",
+      "artifact": "/tmp/flush-test2.log",
+      "artifactBytes": 15,
+      "artifactContent": "TAP version 13\n",
+      "exitCode": null,
+      "signal": null,
+      "classification": "UNDETERMINED",
+      "rationale": "No terminal session file records this spawn's exit_code/signal. /tmp/flush-test2.log contains only the TAP header ('TAP version 13') and was truncated at 15 bytes \u2014 the focused unit test never finished writing results, and no LIVE_EXIT / heap OOM / process-manager timeout line exists for the 3GB live half. Conversation continuity was lost mid-spawn ('spawn aborted'). Therefore this abort cannot be classified as OOM-kill, process-manager timeout, or successful completion; it is an undetermined agent/tool spawn interruption before independently verifiable process exit evidence."
+    }
+  ]
+}

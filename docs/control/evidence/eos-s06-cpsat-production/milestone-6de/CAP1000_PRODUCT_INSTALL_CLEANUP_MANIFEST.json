@@ -1,0 +1,26 @@
+{
+  "eventId": "3d212906-529e-4bd8-b13f-b0c2a24e5fba",
+  "code": "CAP1000",
+  "name": "[SYNTHETIC STRETCH QUALIFICATION] Capacity Stretch 1000",
+  "disposition": "DELETED",
+  "provenanceGates": {
+    "codeCap1000": true,
+    "syntheticNamePrefix": true,
+    "guestEmailsCap1000Domain": true,
+    "noAdoption": true,
+    "noSolverRuns": true,
+    "notBaselineEvent": true
+  },
+  "deleted": {
+    "platform_documents": 626,
+    "platform_idempotency": 257,
+    "note": "Exact counts captured in transaction SELECT cleanup_counts before DELETE"
+  },
+  "preserved": {
+    "baselineAdoption": "3b771ad9-c4c9-401b-87df-0371f9eee840",
+    "solverQualificationEvents": [
+      "add41e21-9618-44f9-896a-fecd54badca5",
+      "053fa686-124e-49b3-b8a8-d0497c0a1668"
+    ]
+  }
+}

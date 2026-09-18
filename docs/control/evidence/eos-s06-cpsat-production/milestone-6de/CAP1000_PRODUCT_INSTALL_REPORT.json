@@ -1,0 +1,100 @@
+{
+  "recordedAt": "2026-09-18T01:05:30.000Z",
+  "disposition": "PASS",
+  "task": "CAP1000_PRODUCT_INSTALL_OOM",
+  "gitBaselineAtStart": "7ddb971a7f66b531b0f67215819fd79dfcf60571",
+  "phase0": {
+    "artifact": "CAP1000_PRODUCT_INSTALL_PHASE0_ABORT.json",
+    "live1024": {
+      "classification": "OOM_KILL_HEAP_LIMIT",
+      "exitCode": 134
+    },
+    "combined3GBRetry": {
+      "classification": "UNDETERMINED",
+      "exitCode": null
+    }
+  },
+  "phase1": {
+    "artifact": "CAP1000_PRODUCT_INSTALL_COLLECTION_COSTS.json",
+    "singleLargestSource": "platform_audit",
+    "auditSharePct": 25.01,
+    "idempotencySharePct": 6.56,
+    "documentsSharePct": 68.43,
+    "documentScopingImplemented": false
+  },
+  "phase2": {
+    "artifact": "CAP1000_PRODUCT_INSTALL_PHASE2_AUDIT_READ_SAFETY.json",
+    "conclusion": "SAFE_TO_SCOPE",
+    "stopConditionTriggered": false
+  },
+  "fix": {
+    "flushCadenceKept": true,
+    "scopedHydrate": {
+      "omitHistoricalAudit": true,
+      "idempotencyKeyLike": "cap1000-live-%",
+      "platformDocuments": "unchanged",
+      "entryPoints": [
+        "packages/shared-platform/src/capacity-install-postgres-store.ts",
+        "PostgresPlatformStore.openForCapacityInstall",
+        "apps/event-os/scripts/s06-capacity-live-install.ts (CAP1000 only)"
+      ],
+      "cap600UsesDefaultOpen": true
+    },
+    "liveGuestFlushEvery": 25
+  },
+  "memory": {
+    "ephemeralBeforePeakRssMiB": 901.4,
+    "ephemeralAfterFlushPeakRssMiB": 495.5,
+    "liveOom1024": true,
+    "liveScopedOnBoxPeakRssMiB": 2539.6,
+    "liveScopedOnBoxPeakHeapMiB": 1675.2,
+    "liveTelemetry": "CAP1000_PRODUCT_INSTALL_LIVE_SCOPED.jsonl"
+  },
+  "liveInstall": {
+    "eventId": "5fc07db4-96c8-4d1a-840f-4534672789d6",
+    "guestCount": 1000,
+    "tableCount": 110,
+    "seatCount": 1000,
+    "edition": "eos-s06-capacity-1000-v1",
+    "corpusHash": "57d5398b933e2fc4cfde85ffe70d1e0b7e03be00ddde8cb7511c1518bf57c1cc",
+    "executionHost": "railway ssh event-os \u2192 postgres.railway.internal",
+    "verifyOnly": {
+      "ok": true,
+      "replay": true
+    },
+    "replayInstall": {
+      "ok": true,
+      "replay": true
+    },
+    "duplicateFixtureCount": 1,
+    "solverRunsForEvent": 0,
+    "layoutPublications": {
+      "current": 1,
+      "superseded": 2
+    },
+    "layoutApprovals": 3,
+    "baselineAdoptionId": "3b771ad9-c4c9-401b-87df-0371f9eee840",
+    "baselineAdoptionStatus": "CURRENT",
+    "baselineAdoptionUnchanged": true
+  },
+  "frozenWorker": {
+    "serviceId": "32f09234-9295-4a6c-8b8d-952d61d08706",
+    "deploymentId": "57b5c9fb-4538-44ef-ad90-7d731a7db948",
+    "imageIdentity": "event-os-solver-worker:m6e-worker-8c8d922",
+    "digest": "sha256:276c685860981d139f554548ed55f701253530808a0f914de848d1fa08fe788f",
+    "untouched": true
+  },
+  "openUnfixed": {
+    "platform_audit_platform_idempotency_permanent_growth": {
+      "status": "OPEN",
+      "requires": "governance/retention decision",
+      "resolvedByThisTask": false
+    }
+  },
+  "deployments": {
+    "eventOsDeployed": false,
+    "workerRedeployed": false,
+    "railwayConfigChanged": false
+  },
+  "productCommit": "6ea43e4a390bb8022b0eae64b9ceb6c205499eb4"
+}

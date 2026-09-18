@@ -1,0 +1,28 @@
+{
+  "mode": "before",
+  "ok": true,
+  "result": {
+    "fixture": "CAP1000",
+    "dryRun": false,
+    "verifyOnly": false,
+    "replay": false,
+    "eventId": "73766c19-a60b-4634-996a-1fdcd3bb5ca8",
+    "eventCode": "CAP1000",
+    "eventName": "[SYNTHETIC STRETCH QUALIFICATION] Capacity Stretch 1000",
+    "edition": "eos-s06-capacity-1000-v1",
+    "guestCount": 1000,
+    "tableCount": 110,
+    "seatCount": 1000,
+    "plannerAssignmentId": "c0db259c-da86-495c-91ab-af60394f7c21",
+    "directorAssignmentId": "cdcdb31a-ffdc-4c43-b686-f57eaca7c48f",
+    "auditorAssignmentId": "f36ce6e2-0d5c-4a49-accb-cecd978b3aff",
+    "ceoEventAssignmentId": "71568708-c947-4c15-acaa-30429c233883",
+    "corpusSeed": "eos-s06-cap-B-typical-1000-v1",
+    "corpusHash": "57d5398b933e2fc4cfde85ffe70d1e0b7e03be00ddde8cb7511c1518bf57c1cc",
+    "installedAt": "2026-09-17T22:35:53.852Z"
+  },
+  "peakRss": 945176576,
+  "peakHeapUsed": 660503512,
+  "peakStage": "flush.before",
+  "telemetryPath": "/Users/maisondoclar/Desktop/atelier-doclar/docs/control/evidence/eos-s06-cpsat-production/milestone-6de/CAP1000_PRODUCT_INSTALL_BEFORE.jsonl"
+}

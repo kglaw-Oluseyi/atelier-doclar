@@ -1,0 +1,11 @@
+{
+  "eventId": "1cfd0884-e87d-452c-acdd-bff2d8aa6af4",
+  "disposition": "DELETED",
+  "reason": "tunnel drop ~215 guests; peak RSS~612MB not OOM",
+  "deleted": {
+    "docs": 896,
+    "idem": 437,
+    "guestsAtFail": 215
+  },
+  "cleanedAt": "2026-09-18T00:11:04.379356Z"
+}

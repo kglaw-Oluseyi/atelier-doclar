@@ -1,0 +1,1918 @@
+{
+  "recordedAt": "2026-09-17T23:12:06.160049Z",
+  "method": "read-only SQL COUNT(*) + SUM(pg_column_size(...)) against Railway production Postgres via local tunnel :15432; no in-memory PlatformSnapshot clone",
+  "database": "railway@127.0.0.1:15432",
+  "relationSizes": [
+    {
+      "relation": "platform_documents",
+      "totalRelationBytes": 21061632,
+      "nLiveTup": 15248,
+      "totalMiB": 20.087
+    },
+    {
+      "relation": "platform_audit",
+      "totalRelationBytes": 8355840,
+      "nLiveTup": 8437,
+      "totalMiB": 7.969
+    },
+    {
+      "relation": "platform_idempotency",
+      "totalRelationBytes": 2220032,
+      "nLiveTup": 3583,
+      "totalMiB": 2.117
+    }
+  ],
+  "collections": [
+    {
+      "source": "platform_audit",
+      "key": "(all)",
+      "rowCount": 8437,
+      "bodyBytes": 5794834,
+      "approxSerializedBytes": 5794834,
+      "bodyMiB": 5.526,
+      "approxMiB": 5.526
+    },
+    {
+      "source": "platform_documents",
+      "key": "operationalGuests",
+      "rowCount": 2995,
+      "bodyBytes": 3946389,
+      "approxSerializedBytes": 4455539,
+      "bodyMiB": 3.764,
+      "approxMiB": 4.249
+    },
+    {
+      "source": "platform_documents",
+      "key": "guestIntakeCandidates",
+      "rowCount": 2150,
+      "bodyBytes": 2474609,
+      "approxSerializedBytes": 2769159,
+      "bodyMiB": 2.36,
+      "approxMiB": 2.641
+    },
+    {
+      "source": "platform_idempotency",
+      "key": "(all)",
+      "rowCount": 3583,
+      "bodyBytes": 922898,
+      "approxSerializedBytes": 1519743,
+      "bodyMiB": 0.88,
+      "approxMiB": 1.449
+    },
+    {
+      "source": "platform_documents",
+      "key": "staffSessions",
+      "rowCount": 1987,
+      "bodyBytes": 921455,
+      "approxSerializedBytes": 1030740,
+      "bodyMiB": 0.879,
+      "approxMiB": 0.983
+    },
+    {
+      "source": "platform_documents",
+      "key": "rsvpResponses",
+      "rowCount": 858,
+      "bodyBytes": 667165,
+      "approxSerializedBytes": 809593,
+      "bodyMiB": 0.636,
+      "approxMiB": 0.772
+    },
+    {
+      "source": "platform_documents",
+      "key": "layoutRevisions",
+      "rowCount": 394,
+      "bodyBytes": 641685,
+      "approxSerializedBytes": 707498,
+      "bodyMiB": 0.612,
+      "approxMiB": 0.675
+    },
+    {
+      "source": "platform_documents",
+      "key": "rsvpReceipts",
+      "rowCount": 852,
+      "bodyBytes": 488196,
+      "approxSerializedBytes": 628776,
+      "bodyMiB": 0.466,
+      "approxMiB": 0.6
+    },
+    {
+      "source": "platform_documents",
+      "key": "budgetLines",
+      "rowCount": 427,
+      "bodyBytes": 413040,
+      "approxSerializedBytes": 451470,
+      "bodyMiB": 0.394,
+      "approxMiB": 0.431
+    },
+    {
+      "source": "platform_documents",
+      "key": "aiEvaluationCaseResults",
+      "rowCount": 201,
+      "bodyBytes": 294036,
+      "approxSerializedBytes": 314538,
+      "bodyMiB": 0.28,
+      "approxMiB": 0.3
+    },
+    {
+      "source": "platform_documents",
+      "key": "guestHouseholds",
+      "rowCount": 526,
+      "bodyBytes": 203228,
+      "approxSerializedBytes": 291596,
+      "bodyMiB": 0.194,
+      "approxMiB": 0.278
+    },
+    {
+      "source": "platform_documents",
+      "key": "layoutCommands",
+      "rowCount": 285,
+      "bodyBytes": 223136,
+      "approxSerializedBytes": 270731,
+      "bodyMiB": 0.213,
+      "approxMiB": 0.258
+    },
+    {
+      "source": "platform_documents",
+      "key": "coverageAssessments",
+      "rowCount": 426,
+      "bodyBytes": 228564,
+      "approxSerializedBytes": 270312,
+      "bodyMiB": 0.218,
+      "approxMiB": 0.258
+    },
+    {
+      "source": "platform_documents",
+      "key": "layoutValidationFindings",
+      "rowCount": 182,
+      "bodyBytes": 223664,
+      "approxSerializedBytes": 255878,
+      "bodyMiB": 0.213,
+      "approxMiB": 0.244
+    },
+    {
+      "source": "platform_documents",
+      "key": "atelierCommandLedgers",
+      "rowCount": 1,
+      "bodyBytes": 235756,
+      "approxSerializedBytes": 235814,
+      "bodyMiB": 0.225,
+      "approxMiB": 0.225
+    },
+    {
+      "source": "platform_documents",
+      "key": "budgetScenarioEditions",
+      "rowCount": 62,
+      "bodyBytes": 182621,
+      "approxSerializedBytes": 189068,
+      "bodyMiB": 0.174,
+      "approxMiB": 0.18
+    },
+    {
+      "source": "platform_documents",
+      "key": "assignments",
+      "rowCount": 234,
+      "bodyBytes": 138072,
+      "approxSerializedBytes": 175856,
+      "bodyMiB": 0.132,
+      "approxMiB": 0.168
+    },
+    {
+      "source": "platform_documents",
+      "key": "masterEventFiles",
+      "rowCount": 90,
+      "bodyBytes": 156684,
+      "approxSerializedBytes": 171894,
+      "bodyMiB": 0.149,
+      "approxMiB": 0.164
+    },
+    {
+      "source": "platform_documents",
+      "key": "layouts",
+      "rowCount": 96,
+      "bodyBytes": 116852,
+      "approxSerializedBytes": 132212,
+      "bodyMiB": 0.111,
+      "approxMiB": 0.126
+    },
+    {
+      "source": "platform_documents",
+      "key": "eventVenueFacts",
+      "rowCount": 121,
+      "bodyBytes": 99358,
+      "approxSerializedBytes": 119686,
+      "bodyMiB": 0.095,
+      "approxMiB": 0.114
+    },
+    {
+      "source": "platform_documents",
+      "key": "layoutValidationRuns",
+      "rowCount": 96,
+      "bodyBytes": 90868,
+      "approxSerializedBytes": 107476,
+      "bodyMiB": 0.087,
+      "approxMiB": 0.102
+    },
+    {
+      "source": "platform_documents",
+      "key": "layoutApprovals",
+      "rowCount": 84,
+      "bodyBytes": 92837,
+      "approxSerializedBytes": 106949,
+      "bodyMiB": 0.089,
+      "approxMiB": 0.102
+    },
+    {
+      "source": "platform_documents",
+      "key": "discoveryConsentRecords",
+      "rowCount": 147,
+      "bodyBytes": 81292,
+      "approxSerializedBytes": 96286,
+      "bodyMiB": 0.078,
+      "approxMiB": 0.092
+    },
+    {
+      "source": "platform_documents",
+      "key": "rsvpQuestionnaires",
+      "rowCount": 62,
+      "bodyBytes": 71815,
+      "approxSerializedBytes": 82417,
+      "bodyMiB": 0.068,
+      "approxMiB": 0.079
+    },
+    {
+      "source": "platform_documents",
+      "key": "budgetBomSnapshots",
+      "rowCount": 61,
+      "bodyBytes": 70760,
+      "approxSerializedBytes": 76677,
+      "bodyMiB": 0.067,
+      "approxMiB": 0.073
+    },
+    {
+      "source": "platform_documents",
+      "key": "programmePhases",
+      "rowCount": 92,
+      "bodyBytes": 60485,
+      "approxSerializedBytes": 75941,
+      "bodyMiB": 0.058,
+      "approxMiB": 0.072
+    },
+    {
+      "source": "platform_documents",
+      "key": "sensitivityRuns",
+      "rowCount": 61,
+      "bodyBytes": 69460,
+      "approxSerializedBytes": 75194,
+      "bodyMiB": 0.066,
+      "approxMiB": 0.072
+    },
+    {
+      "source": "platform_documents",
+      "key": "candidateAssertions",
+      "rowCount": 70,
+      "bodyBytes": 67294,
+      "approxSerializedBytes": 74154,
+      "bodyMiB": 0.064,
+      "approxMiB": 0.071
+    },
+    {
+      "source": "platform_documents",
+      "key": "layoutEditorLeases",
+      "rowCount": 97,
+      "bodyBytes": 54708,
+      "approxSerializedBytes": 71295,
+      "bodyMiB": 0.052,
+      "approxMiB": 0.068
+    },
+    {
+      "source": "platform_documents",
+      "key": "permissions",
+      "rowCount": 243,
+      "bodyBytes": 55552,
+      "approxSerializedBytes": 68431,
+      "bodyMiB": 0.053,
+      "approxMiB": 0.065
+    },
+    {
+      "source": "platform_documents",
+      "key": "layoutPublications",
+      "rowCount": 71,
+      "bodyBytes": 55668,
+      "approxSerializedBytes": 67809,
+      "bodyMiB": 0.053,
+      "approxMiB": 0.065
+    },
+    {
+      "source": "platform_documents",
+      "key": "events",
+      "rowCount": 90,
+      "bodyBytes": 54952,
+      "approxSerializedBytes": 65932,
+      "bodyMiB": 0.052,
+      "approxMiB": 0.063
+    },
+    {
+      "source": "platform_documents",
+      "key": "layoutDraftCursors",
+      "rowCount": 87,
+      "bodyBytes": 50640,
+      "approxSerializedBytes": 65517,
+      "bodyMiB": 0.048,
+      "approxMiB": 0.062
+    },
+    {
+      "source": "platform_documents",
+      "key": "sourceSegments",
+      "rowCount": 92,
+      "bodyBytes": 52468,
+      "approxSerializedBytes": 61024,
+      "bodyMiB": 0.05,
+      "approxMiB": 0.058
+    },
+    {
+      "source": "platform_documents",
+      "key": "rolePermissions",
+      "rowCount": 220,
+      "bodyBytes": 38280,
+      "approxSerializedBytes": 58960,
+      "bodyMiB": 0.037,
+      "approxMiB": 0.056
+    },
+    {
+      "source": "platform_documents",
+      "key": "extractionOutcomes",
+      "rowCount": 55,
+      "bodyBytes": 50586,
+      "approxSerializedBytes": 55921,
+      "bodyMiB": 0.048,
+      "approxMiB": 0.053
+    },
+    {
+      "source": "platform_documents",
+      "key": "budgetAssumptions",
+      "rowCount": 67,
+      "bodyBytes": 48849,
+      "approxSerializedBytes": 55651,
+      "bodyMiB": 0.047,
+      "approxMiB": 0.053
+    },
+    {
+      "source": "platform_documents",
+      "key": "rsvpPolicies",
+      "rowCount": 62,
+      "bodyBytes": 44560,
+      "approxSerializedBytes": 54790,
+      "bodyMiB": 0.042,
+      "approxMiB": 0.052
+    },
+    {
+      "source": "platform_documents",
+      "key": "eventVenues",
+      "rowCount": 64,
+      "bodyBytes": 41216,
+      "approxSerializedBytes": 51712,
+      "bodyMiB": 0.039,
+      "approxMiB": 0.049
+    },
+    {
+      "source": "platform_documents",
+      "key": "sourceArtefacts",
+      "rowCount": 92,
+      "bodyBytes": 42661,
+      "approxSerializedBytes": 51309,
+      "bodyMiB": 0.041,
+      "approxMiB": 0.049
+    },
+    {
+      "source": "platform_documents",
+      "key": "costRuleEditions",
+      "rowCount": 84,
+      "bodyBytes": 41200,
+      "approxSerializedBytes": 49180,
+      "bodyMiB": 0.039,
+      "approxMiB": 0.047
+    },
+    {
+      "source": "platform_documents",
+      "key": "phaseHistory",
+      "rowCount": 87,
+      "bodyBytes": 34516,
+      "approxSerializedBytes": 48871,
+      "bodyMiB": 0.033,
+      "approxMiB": 0.047
+    },
+    {
+      "source": "platform_documents",
+      "key": "rsvpEventProjections",
+      "rowCount": 62,
+      "bodyBytes": 36084,
+      "approxSerializedBytes": 46810,
+      "bodyMiB": 0.034,
+      "approxMiB": 0.045
+    },
+    {
+      "source": "platform_documents",
+      "key": "uncertaintyDrivers",
+      "rowCount": 50,
+      "bodyBytes": 33032,
+      "approxSerializedBytes": 41582,
+      "bodyMiB": 0.032,
+      "approxMiB": 0.04
+    },
+    {
+      "source": "platform_documents",
+      "key": "vendorPriceCardEditions",
+      "rowCount": 42,
+      "bodyBytes": 36680,
+      "approxSerializedBytes": 40964,
+      "bodyMiB": 0.035,
+      "approxMiB": 0.039
+    },
+    {
+      "source": "platform_documents",
+      "key": "discoveryEngagements",
+      "rowCount": 71,
+      "bodyBytes": 32032,
+      "approxSerializedBytes": 39061,
+      "bodyMiB": 0.031,
+      "approxMiB": 0.037
+    },
+    {
+      "source": "platform_documents",
+      "key": "eventBriefEditions",
+      "rowCount": 44,
+      "bodyBytes": 33208,
+      "approxSerializedBytes": 37476,
+      "bodyMiB": 0.032,
+      "approxMiB": 0.036
+    },
+    {
+      "source": "platform_documents",
+      "key": "engagementOpportunities",
+      "rowCount": 71,
+      "bodyBytes": 29193,
+      "approxSerializedBytes": 36435,
+      "bodyMiB": 0.028,
+      "approxMiB": 0.035
+    },
+    {
+      "source": "platform_documents",
+      "key": "priceEvidenceRecords",
+      "rowCount": 42,
+      "bodyBytes": 31464,
+      "approxSerializedBytes": 35622,
+      "bodyMiB": 0.03,
+      "approxMiB": 0.034
+    },
+    {
+      "source": "platform_documents",
+      "key": "layoutCapacityStatements",
+      "rowCount": 36,
+      "bodyBytes": 27980,
+      "approxSerializedBytes": 34352,
+      "bodyMiB": 0.027,
+      "approxMiB": 0.033
+    },
+    {
+      "source": "platform_documents",
+      "key": "forecastEstimates",
+      "rowCount": 30,
+      "bodyBytes": 25620,
+      "approxSerializedBytes": 30720,
+      "bodyMiB": 0.024,
+      "approxMiB": 0.029
+    },
+    {
+      "source": "platform_documents",
+      "key": "forecastPopulationMembers",
+      "rowCount": 30,
+      "bodyBytes": 23120,
+      "approxSerializedBytes": 28460,
+      "bodyMiB": 0.022,
+      "approxMiB": 0.027
+    },
+    {
+      "source": "platform_documents",
+      "key": "eventBriefDrafts",
+      "rowCount": 44,
+      "bodyBytes": 23506,
+      "approxSerializedBytes": 27982,
+      "bodyMiB": 0.022,
+      "approxMiB": 0.027
+    },
+    {
+      "source": "platform_documents",
+      "key": "confidenceAssessments",
+      "rowCount": 30,
+      "bodyBytes": 22550,
+      "approxSerializedBytes": 27770,
+      "bodyMiB": 0.022,
+      "approxMiB": 0.026
+    },
+    {
+      "source": "platform_documents",
+      "key": "roadmapMilestones",
+      "rowCount": 30,
+      "bodyBytes": 22914,
+      "approxSerializedBytes": 25794,
+      "bodyMiB": 0.022,
+      "approxMiB": 0.025
+    },
+    {
+      "source": "platform_documents",
+      "key": "costItemDefinitions",
+      "rowCount": 42,
+      "bodyBytes": 21666,
+      "approxSerializedBytes": 25782,
+      "bodyMiB": 0.021,
+      "approxMiB": 0.025
+    },
+    {
+      "source": "platform_documents",
+      "key": "layoutExportJobs",
+      "rowCount": 18,
+      "bodyBytes": 21924,
+      "approxSerializedBytes": 24966,
+      "bodyMiB": 0.021,
+      "approxMiB": 0.024
+    },
+    {
+      "source": "platform_documents",
+      "key": "vendorPriceCards",
+      "rowCount": 42,
+      "bodyBytes": 18220,
+      "approxSerializedBytes": 22210,
+      "bodyMiB": 0.017,
+      "approxMiB": 0.021
+    },
+    {
+      "source": "platform_documents",
+      "key": "layoutSnapshots",
+      "rowCount": 10,
+      "bodyBytes": 18229,
+      "approxSerializedBytes": 19909,
+      "bodyMiB": 0.017,
+      "approxMiB": 0.019
+    },
+    {
+      "source": "platform_documents",
+      "key": "conversationTurns",
+      "rowCount": 17,
+      "bodyBytes": 14172,
+      "approxSerializedBytes": 15804,
+      "bodyMiB": 0.014,
+      "approxMiB": 0.015
+    },
+    {
+      "source": "platform_documents",
+      "key": "budgetTemplateEditions",
+      "rowCount": 10,
+      "bodyBytes": 14456,
+      "approxSerializedBytes": 15466,
+      "bodyMiB": 0.014,
+      "approxMiB": 0.015
+    },
+    {
+      "source": "platform_documents",
+      "key": "assertionConflicts",
+      "rowCount": 12,
+      "bodyBytes": 13860,
+      "approxSerializedBytes": 15024,
+      "bodyMiB": 0.013,
+      "approxMiB": 0.014
+    },
+    {
+      "source": "platform_documents",
+      "key": "impactAssessments",
+      "rowCount": 9,
+      "bodyBytes": 11588,
+      "approxSerializedBytes": 12452,
+      "bodyMiB": 0.011,
+      "approxMiB": 0.012
+    },
+    {
+      "source": "platform_documents",
+      "key": "coverageRequirements",
+      "rowCount": 12,
+      "bodyBytes": 11204,
+      "approxSerializedBytes": 12392,
+      "bodyMiB": 0.011,
+      "approxMiB": 0.012
+    },
+    {
+      "source": "platform_documents",
+      "key": "riskEvaluationCaseResults",
+      "rowCount": 16,
+      "bodyBytes": 10605,
+      "approxSerializedBytes": 12269,
+      "bodyMiB": 0.01,
+      "approxMiB": 0.012
+    },
+    {
+      "source": "platform_documents",
+      "key": "contentEditions",
+      "rowCount": 12,
+      "bodyBytes": 10055,
+      "approxSerializedBytes": 12071,
+      "bodyMiB": 0.01,
+      "approxMiB": 0.012
+    },
+    {
+      "source": "platform_documents",
+      "key": "guestIntakeJobs",
+      "rowCount": 8,
+      "bodyBytes": 10697,
+      "approxSerializedBytes": 12041,
+      "bodyMiB": 0.01,
+      "approxMiB": 0.011
+    },
+    {
+      "source": "platform_documents",
+      "key": "contentBlocks",
+      "rowCount": 13,
+      "bodyBytes": 9535,
+      "approxSerializedBytes": 11693,
+      "bodyMiB": 0.009,
+      "approxMiB": 0.011
+    },
+    {
+      "source": "platform_documents",
+      "key": "roadmapDependencies",
+      "rowCount": 20,
+      "bodyBytes": 8880,
+      "approxSerializedBytes": 10840,
+      "bodyMiB": 0.008,
+      "approxMiB": 0.01
+    },
+    {
+      "source": "platform_documents",
+      "key": "roadmapScheduleResults",
+      "rowCount": 9,
+      "bodyBytes": 9342,
+      "approxSerializedBytes": 10251,
+      "bodyMiB": 0.009,
+      "approxMiB": 0.01
+    },
+    {
+      "source": "platform_documents",
+      "key": "attendanceForecastRuns",
+      "rowCount": 5,
+      "bodyBytes": 9344,
+      "approxSerializedBytes": 10082,
+      "bodyMiB": 0.009,
+      "approxMiB": 0.01
+    },
+    {
+      "source": "platform_documents",
+      "key": "guestMappingEditions",
+      "rowCount": 7,
+      "bodyBytes": 8884,
+      "approxSerializedBytes": 9836,
+      "bodyMiB": 0.008,
+      "approxMiB": 0.009
+    },
+    {
+      "source": "platform_documents",
+      "key": "recipientAssemblies",
+      "rowCount": 6,
+      "bodyBytes": 8399,
+      "approxSerializedBytes": 9431,
+      "bodyMiB": 0.008,
+      "approxMiB": 0.009
+    },
+    {
+      "source": "platform_documents",
+      "key": "discoveryParticipants",
+      "rowCount": 19,
+      "bodyBytes": 7523,
+      "approxSerializedBytes": 9423,
+      "bodyMiB": 0.007,
+      "approxMiB": 0.009
+    },
+    {
+      "source": "platform_documents",
+      "key": "translationLinks",
+      "rowCount": 8,
+      "bodyBytes": 7908,
+      "approxSerializedBytes": 9260,
+      "bodyMiB": 0.008,
+      "approxMiB": 0.009
+    },
+    {
+      "source": "platform_documents",
+      "key": "guestIntakeSources",
+      "rowCount": 7,
+      "bodyBytes": 7810,
+      "approxSerializedBytes": 9007,
+      "bodyMiB": 0.007,
+      "approxMiB": 0.009
+    },
+    {
+      "source": "platform_documents",
+      "key": "roadmapTemplateEditions",
+      "rowCount": 6,
+      "bodyBytes": 8024,
+      "approxSerializedBytes": 8636,
+      "bodyMiB": 0.008,
+      "approxMiB": 0.008
+    },
+    {
+      "source": "platform_documents",
+      "key": "discoveryClientAccess",
+      "rowCount": 13,
+      "bodyBytes": 6884,
+      "approxSerializedBytes": 8184,
+      "bodyMiB": 0.007,
+      "approxMiB": 0.008
+    },
+    {
+      "source": "platform_documents",
+      "key": "merchandiseFulfilments",
+      "rowCount": 9,
+      "bodyBytes": 6544,
+      "approxSerializedBytes": 8119,
+      "bodyMiB": 0.006,
+      "approxMiB": 0.008
+    },
+    {
+      "source": "platform_documents",
+      "key": "guestPromotionChunks",
+      "rowCount": 10,
+      "bodyBytes": 6740,
+      "approxSerializedBytes": 8100,
+      "bodyMiB": 0.006,
+      "approxMiB": 0.008
+    },
+    {
+      "source": "platform_documents",
+      "key": "merchandiseGuestGrants",
+      "rowCount": 9,
+      "bodyBytes": 6454,
+      "approxSerializedBytes": 8029,
+      "bodyMiB": 0.006,
+      "approxMiB": 0.008
+    },
+    {
+      "source": "platform_documents",
+      "key": "guestOffers",
+      "rowCount": 9,
+      "bodyBytes": 6456,
+      "approxSerializedBytes": 7932,
+      "bodyMiB": 0.006,
+      "approxMiB": 0.008
+    },
+    {
+      "source": "platform_documents",
+      "key": "roadmapEditions",
+      "rowCount": 10,
+      "bodyBytes": 6868,
+      "approxSerializedBytes": 7808,
+      "bodyMiB": 0.007,
+      "approxMiB": 0.007
+    },
+    {
+      "source": "platform_documents",
+      "key": "clientReviewEditions",
+      "rowCount": 7,
+      "bodyBytes": 7088,
+      "approxSerializedBytes": 7781,
+      "bodyMiB": 0.007,
+      "approxMiB": 0.007
+    },
+    {
+      "source": "platform_documents",
+      "key": "eventNarrativeEditions",
+      "rowCount": 5,
+      "bodyBytes": 6380,
+      "approxSerializedBytes": 7255,
+      "bodyMiB": 0.006,
+      "approxMiB": 0.007
+    },
+    {
+      "source": "platform_documents",
+      "key": "aiEvaluationRuns",
+      "rowCount": 5,
+      "bodyBytes": 6525,
+      "approxSerializedBytes": 7000,
+      "bodyMiB": 0.006,
+      "approxMiB": 0.007
+    },
+    {
+      "source": "platform_documents",
+      "key": "layoutFloorPlanAssets",
+      "rowCount": 5,
+      "bodyBytes": 6103,
+      "approxSerializedBytes": 6973,
+      "bodyMiB": 0.006,
+      "approxMiB": 0.007
+    },
+    {
+      "source": "platform_documents",
+      "key": "phaseEntitlements",
+      "rowCount": 8,
+      "bodyBytes": 5576,
+      "approxSerializedBytes": 6936,
+      "bodyMiB": 0.005,
+      "approxMiB": 0.007
+    },
+    {
+      "source": "platform_documents",
+      "key": "atelierChapters",
+      "rowCount": 9,
+      "bodyBytes": 4953,
+      "approxSerializedBytes": 6465,
+      "bodyMiB": 0.005,
+      "approxMiB": 0.006
+    },
+    {
+      "source": "platform_documents",
+      "key": "conversionReceipts",
+      "rowCount": 8,
+      "bodyBytes": 4960,
+      "approxSerializedBytes": 6328,
+      "bodyMiB": 0.005,
+      "approxMiB": 0.006
+    },
+    {
+      "source": "platform_documents",
+      "key": "persons",
+      "rowCount": 14,
+      "bodyBytes": 5355,
+      "approxSerializedBytes": 6041,
+      "bodyMiB": 0.005,
+      "approxMiB": 0.006
+    },
+    {
+      "source": "platform_documents",
+      "key": "reviewAssignments",
+      "rowCount": 7,
+      "bodyBytes": 4716,
+      "approxSerializedBytes": 5906,
+      "bodyMiB": 0.004,
+      "approxMiB": 0.006
+    },
+    {
+      "source": "platform_documents",
+      "key": "changeProposals",
+      "rowCount": 9,
+      "bodyBytes": 4896,
+      "approxSerializedBytes": 5742,
+      "bodyMiB": 0.005,
+      "approxMiB": 0.005
+    },
+    {
+      "source": "platform_documents",
+      "key": "culturalSourceTexts",
+      "rowCount": 4,
+      "bodyBytes": 4609,
+      "approxSerializedBytes": 5297,
+      "bodyMiB": 0.004,
+      "approxMiB": 0.005
+    },
+    {
+      "source": "platform_documents",
+      "key": "hostOfferRules",
+      "rowCount": 6,
+      "bodyBytes": 4292,
+      "approxSerializedBytes": 5294,
+      "bodyMiB": 0.004,
+      "approxMiB": 0.005
+    },
+    {
+      "source": "platform_documents",
+      "key": "layoutValidationOverrides",
+      "rowCount": 4,
+      "bodyBytes": 4420,
+      "approxSerializedBytes": 5132,
+      "bodyMiB": 0.004,
+      "approxMiB": 0.005
+    },
+    {
+      "source": "platform_documents",
+      "key": "guestPartyMembers",
+      "rowCount": 7,
+      "bodyBytes": 3836,
+      "approxSerializedBytes": 5026,
+      "bodyMiB": 0.004,
+      "approxMiB": 0.005
+    },
+    {
+      "source": "platform_documents",
+      "key": "clients",
+      "rowCount": 11,
+      "bodyBytes": 3736,
+      "approxSerializedBytes": 4682,
+      "bodyMiB": 0.004,
+      "approxMiB": 0.004
+    },
+    {
+      "source": "platform_documents",
+      "key": "riskDossierEditions",
+      "rowCount": 4,
+      "bodyBytes": 3916,
+      "approxSerializedBytes": 4456,
+      "bodyMiB": 0.004,
+      "approxMiB": 0.004
+    },
+    {
+      "source": "platform_documents",
+      "key": "venues",
+      "rowCount": 6,
+      "bodyBytes": 3556,
+      "approxSerializedBytes": 4066,
+      "bodyMiB": 0.003,
+      "approxMiB": 0.004
+    },
+    {
+      "source": "platform_documents",
+      "key": "merchandiseCohortMembers",
+      "rowCount": 6,
+      "bodyBytes": 2880,
+      "approxSerializedBytes": 3942,
+      "bodyMiB": 0.003,
+      "approxMiB": 0.004
+    },
+    {
+      "source": "platform_documents",
+      "key": "merchandiseItems",
+      "rowCount": 5,
+      "bodyBytes": 3052,
+      "approxSerializedBytes": 3897,
+      "bodyMiB": 0.003,
+      "approxMiB": 0.004
+    },
+    {
+      "source": "platform_documents",
+      "key": "s05aIntelligenceReceipts",
+      "rowCount": 4,
+      "bodyBytes": 3307,
+      "approxSerializedBytes": 3719,
+      "bodyMiB": 0.003,
+      "approxMiB": 0.004
+    },
+    {
+      "source": "platform_documents",
+      "key": "guestIntakeReceipts",
+      "rowCount": 4,
+      "bodyBytes": 3088,
+      "approxSerializedBytes": 3628,
+      "bodyMiB": 0.003,
+      "approxMiB": 0.003
+    },
+    {
+      "source": "platform_documents",
+      "key": "languageProfiles",
+      "rowCount": 4,
+      "bodyBytes": 2893,
+      "approxSerializedBytes": 3569,
+      "bodyMiB": 0.003,
+      "approxMiB": 0.003
+    },
+    {
+      "source": "platform_documents",
+      "key": "memberships",
+      "rowCount": 8,
+      "bodyBytes": 2784,
+      "approxSerializedBytes": 3504,
+      "bodyMiB": 0.003,
+      "approxMiB": 0.003
+    },
+    {
+      "source": "platform_documents",
+      "key": "languagePreferenceHistories",
+      "rowCount": 4,
+      "bodyBytes": 2760,
+      "approxSerializedBytes": 3480,
+      "bodyMiB": 0.003,
+      "approxMiB": 0.003
+    },
+    {
+      "source": "platform_documents",
+      "key": "operationalProvisionRecommendations",
+      "rowCount": 3,
+      "bodyBytes": 2880,
+      "approxSerializedBytes": 3444,
+      "bodyMiB": 0.003,
+      "approxMiB": 0.003
+    },
+    {
+      "source": "platform_documents",
+      "key": "vendorAssignments",
+      "rowCount": 3,
+      "bodyBytes": 2754,
+      "approxSerializedBytes": 3264,
+      "bodyMiB": 0.003,
+      "approxMiB": 0.003
+    },
+    {
+      "source": "platform_documents",
+      "key": "merchandiseItemVariants",
+      "rowCount": 5,
+      "bodyBytes": 2312,
+      "approxSerializedBytes": 3192,
+      "bodyMiB": 0.002,
+      "approxMiB": 0.003
+    },
+    {
+      "source": "platform_documents",
+      "key": "roles",
+      "rowCount": 8,
+      "bodyBytes": 2784,
+      "approxSerializedBytes": 3160,
+      "bodyMiB": 0.003,
+      "approxMiB": 0.003
+    },
+    {
+      "source": "platform_documents",
+      "key": "aiEvaluationRunLeases",
+      "rowCount": 5,
+      "bodyBytes": 2620,
+      "approxSerializedBytes": 3120,
+      "bodyMiB": 0.002,
+      "approxMiB": 0.003
+    },
+    {
+      "source": "platform_documents",
+      "key": "atelierAccessGrants",
+      "rowCount": 3,
+      "bodyBytes": 2418,
+      "approxSerializedBytes": 2934,
+      "bodyMiB": 0.002,
+      "approxMiB": 0.003
+    },
+    {
+      "source": "platform_documents",
+      "key": "atelierSessions",
+      "rowCount": 3,
+      "bodyBytes": 2420,
+      "approxSerializedBytes": 2924,
+      "bodyMiB": 0.002,
+      "approxMiB": 0.003
+    },
+    {
+      "source": "platform_documents",
+      "key": "responsibleAdultLinks",
+      "rowCount": 4,
+      "bodyBytes": 2216,
+      "approxSerializedBytes": 2912,
+      "bodyMiB": 0.002,
+      "approxMiB": 0.003
+    },
+    {
+      "source": "platform_documents",
+      "key": "perimeterCheckpoints",
+      "rowCount": 4,
+      "bodyBytes": 2192,
+      "approxSerializedBytes": 2884,
+      "bodyMiB": 0.002,
+      "approxMiB": 0.003
+    },
+    {
+      "source": "platform_documents",
+      "key": "magicLinkChallenges",
+      "rowCount": 3,
+      "bodyBytes": 2208,
+      "approxSerializedBytes": 2724,
+      "bodyMiB": 0.002,
+      "approxMiB": 0.003
+    },
+    {
+      "source": "platform_documents",
+      "key": "guestDuplicateCandidates",
+      "rowCount": 4,
+      "bodyBytes": 2016,
+      "approxSerializedBytes": 2724,
+      "bodyMiB": 0.002,
+      "approxMiB": 0.003
+    },
+    {
+      "source": "platform_documents",
+      "key": "forecastOverrides",
+      "rowCount": 2,
+      "bodyBytes": 2312,
+      "approxSerializedBytes": 2652,
+      "bodyMiB": 0.002,
+      "approxMiB": 0.003
+    },
+    {
+      "source": "platform_documents",
+      "key": "modelParameterSets",
+      "rowCount": 2,
+      "bodyBytes": 2276,
+      "approxSerializedBytes": 2507,
+      "bodyMiB": 0.002,
+      "approxMiB": 0.002
+    },
+    {
+      "source": "platform_documents",
+      "key": "hostDecisionRequests",
+      "rowCount": 2,
+      "bodyBytes": 1992,
+      "approxSerializedBytes": 2338,
+      "bodyMiB": 0.002,
+      "approxMiB": 0.002
+    },
+    {
+      "source": "platform_documents",
+      "key": "riskApplicabilitySnapshots",
+      "rowCount": 3,
+      "bodyBytes": 1836,
+      "approxSerializedBytes": 2262,
+      "bodyMiB": 0.002,
+      "approxMiB": 0.002
+    },
+    {
+      "source": "platform_documents",
+      "key": "s05MigrationReceipts",
+      "rowCount": 4,
+      "bodyBytes": 2012,
+      "approxSerializedBytes": 2260,
+      "bodyMiB": 0.002,
+      "approxMiB": 0.002
+    },
+    {
+      "source": "platform_documents",
+      "key": "guestParticipations",
+      "rowCount": 3,
+      "bodyBytes": 1724,
+      "approxSerializedBytes": 2240,
+      "bodyMiB": 0.002,
+      "approxMiB": 0.002
+    },
+    {
+      "source": "platform_documents",
+      "key": "guestIntakeOutboxEvents",
+      "rowCount": 4,
+      "bodyBytes": 1680,
+      "approxSerializedBytes": 2236,
+      "bodyMiB": 0.002,
+      "approxMiB": 0.002
+    },
+    {
+      "source": "platform_documents",
+      "key": "companionNominations",
+      "rowCount": 3,
+      "bodyBytes": 1637,
+      "approxSerializedBytes": 2156,
+      "bodyMiB": 0.002,
+      "approxMiB": 0.002
+    },
+    {
+      "source": "platform_documents",
+      "key": "merchandiseGuestSessions",
+      "rowCount": 3,
+      "bodyBytes": 1572,
+      "approxSerializedBytes": 1992,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.002
+    },
+    {
+      "source": "platform_documents",
+      "key": "riskCheckpointInstances",
+      "rowCount": 3,
+      "bodyBytes": 1572,
+      "approxSerializedBytes": 1989,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.002
+    },
+    {
+      "source": "platform_documents",
+      "key": "vendorSessions",
+      "rowCount": 3,
+      "bodyBytes": 1548,
+      "approxSerializedBytes": 1938,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.002
+    },
+    {
+      "source": "platform_documents",
+      "key": "riskCheckpointTemplates",
+      "rowCount": 3,
+      "bodyBytes": 1629,
+      "approxSerializedBytes": 1935,
+      "bodyMiB": 0.002,
+      "approxMiB": 0.002
+    },
+    {
+      "source": "platform_documents",
+      "key": "guestParties",
+      "rowCount": 3,
+      "bodyBytes": 1428,
+      "approxSerializedBytes": 1923,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.002
+    },
+    {
+      "source": "platform_documents",
+      "key": "merchandiseCohorts",
+      "rowCount": 3,
+      "bodyBytes": 1304,
+      "approxSerializedBytes": 1817,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.002
+    },
+    {
+      "source": "platform_documents",
+      "key": "riskContinuityPlans",
+      "rowCount": 2,
+      "bodyBytes": 1520,
+      "approxSerializedBytes": 1790,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.002
+    },
+    {
+      "source": "platform_documents",
+      "key": "arrivalRoutes",
+      "rowCount": 2,
+      "bodyBytes": 1413,
+      "approxSerializedBytes": 1745,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.002
+    },
+    {
+      "source": "platform_documents",
+      "key": "contentWorks",
+      "rowCount": 2,
+      "bodyBytes": 1412,
+      "approxSerializedBytes": 1742,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.002
+    },
+    {
+      "source": "platform_documents",
+      "key": "layoutAssetCalibrations",
+      "rowCount": 2,
+      "bodyBytes": 1356,
+      "approxSerializedBytes": 1708,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.002
+    },
+    {
+      "source": "platform_documents",
+      "key": "credentialProjections",
+      "rowCount": 2,
+      "bodyBytes": 1353,
+      "approxSerializedBytes": 1701,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.002
+    },
+    {
+      "source": "platform_documents",
+      "key": "recipientEditionRules",
+      "rowCount": 2,
+      "bodyBytes": 1258,
+      "approxSerializedBytes": 1606,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.002
+    },
+    {
+      "source": "platform_documents",
+      "key": "calendarDefinitions",
+      "rowCount": 2,
+      "bodyBytes": 1392,
+      "approxSerializedBytes": 1588,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.002
+    },
+    {
+      "source": "platform_documents",
+      "key": "merchandiseCollections",
+      "rowCount": 2,
+      "bodyBytes": 1222,
+      "approxSerializedBytes": 1572,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "venueFacts",
+      "rowCount": 2,
+      "bodyBytes": 1375,
+      "approxSerializedBytes": 1553,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "interviewSessions",
+      "rowCount": 3,
+      "bodyBytes": 1264,
+      "approxSerializedBytes": 1552,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "offlineAccessPackages",
+      "rowCount": 1,
+      "bodyBytes": 1224,
+      "approxSerializedBytes": 1398,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "marketIndexObservations",
+      "rowCount": 2,
+      "bodyBytes": 1152,
+      "approxSerializedBytes": 1356,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "eventCalendarOverlays",
+      "rowCount": 2,
+      "bodyBytes": 1110,
+      "approxSerializedBytes": 1310,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "fxObservations",
+      "rowCount": 2,
+      "bodyBytes": 1120,
+      "approxSerializedBytes": 1306,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "contingencyRuleEditions",
+      "rowCount": 2,
+      "bodyBytes": 960,
+      "approxSerializedBytes": 1164,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "locationFactorEditions",
+      "rowCount": 2,
+      "bodyBytes": 960,
+      "approxSerializedBytes": 1162,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "s05aMigrationReceipts",
+      "rowCount": 1,
+      "bodyBytes": 1088,
+      "approxSerializedBytes": 1151,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "riskBudgetProjections",
+      "rowCount": 1,
+      "bodyBytes": 1012,
+      "approxSerializedBytes": 1149,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "s04bMigrationReceipts",
+      "rowCount": 1,
+      "bodyBytes": 1075,
+      "approxSerializedBytes": 1138,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "s04cMigrationReceipts",
+      "rowCount": 2,
+      "bodyBytes": 1012,
+      "approxSerializedBytes": 1138,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "hostDecisionReceipts",
+      "rowCount": 1,
+      "bodyBytes": 964,
+      "approxSerializedBytes": 1137,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "riskPolicies",
+      "rowCount": 2,
+      "bodyBytes": 936,
+      "approxSerializedBytes": 1118,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "seasonWindowEditions",
+      "rowCount": 2,
+      "bodyBytes": 904,
+      "approxSerializedBytes": 1102,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "riskEvaluationRuns",
+      "rowCount": 1,
+      "bodyBytes": 990,
+      "approxSerializedBytes": 1087,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "calibrationObservations",
+      "rowCount": 1,
+      "bodyBytes": 892,
+      "approxSerializedBytes": 1068,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "languageCoverageSnapshots",
+      "rowCount": 1,
+      "bodyBytes": 874,
+      "approxSerializedBytes": 1052,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "coverageCatalogueEditions",
+      "rowCount": 2,
+      "bodyBytes": 832,
+      "approxSerializedBytes": 1040,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "locationCostZones",
+      "rowCount": 2,
+      "bodyBytes": 800,
+      "approxSerializedBytes": 992,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "budgetTaxonomyEditions",
+      "rowCount": 2,
+      "bodyBytes": 752,
+      "approxSerializedBytes": 954,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "eventAteliers",
+      "rowCount": 1,
+      "bodyBytes": 781,
+      "approxSerializedBytes": 947,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "guestJourneyProjections",
+      "rowCount": 1,
+      "bodyBytes": 771,
+      "approxSerializedBytes": 947,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "marketIndexDefinitions",
+      "rowCount": 2,
+      "bodyBytes": 736,
+      "approxSerializedBytes": 938,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "curatedMediaSets",
+      "rowCount": 1,
+      "bodyBytes": 765,
+      "approxSerializedBytes": 934,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "blueprintGenesises",
+      "rowCount": 1,
+      "bodyBytes": 763,
+      "approxSerializedBytes": 934,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "capMeasurements",
+      "rowCount": 1,
+      "bodyBytes": 726,
+      "approxSerializedBytes": 894,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "terminologyEntries",
+      "rowCount": 1,
+      "bodyBytes": 711,
+      "approxSerializedBytes": 882,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "curatedUpdates",
+      "rowCount": 1,
+      "bodyBytes": 713,
+      "approxSerializedBytes": 880,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "companionEntitlements",
+      "rowCount": 1,
+      "bodyBytes": 704,
+      "approxSerializedBytes": 878,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "hostMilestoneProjections",
+      "rowCount": 1,
+      "bodyBytes": 700,
+      "approxSerializedBytes": 877,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "merchandiseExceptions",
+      "rowCount": 1,
+      "bodyBytes": 694,
+      "approxSerializedBytes": 868,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "organisations",
+      "rowCount": 2,
+      "bodyBytes": 732,
+      "approxSerializedBytes": 842,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "contingencyAssuranceProjections",
+      "rowCount": 1,
+      "bodyBytes": 637,
+      "approxSerializedBytes": 821,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "s04dMigrationReceipts",
+      "rowCount": 1,
+      "bodyBytes": 726,
+      "approxSerializedBytes": 789,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "vehicleAssociations",
+      "rowCount": 1,
+      "bodyBytes": 616,
+      "approxSerializedBytes": 788,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "riskFallbackActivations",
+      "rowCount": 1,
+      "bodyBytes": 648,
+      "approxSerializedBytes": 787,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "vendorUpdates",
+      "rowCount": 1,
+      "bodyBytes": 621,
+      "approxSerializedBytes": 787,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "vendorEnsembleProjections",
+      "rowCount": 1,
+      "bodyBytes": 601,
+      "approxSerializedBytes": 779,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "externalContactLinks",
+      "rowCount": 1,
+      "bodyBytes": 604,
+      "approxSerializedBytes": 777,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "guestRelationships",
+      "rowCount": 1,
+      "bodyBytes": 604,
+      "approxSerializedBytes": 775,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "operationalVehicles",
+      "rowCount": 1,
+      "bodyBytes": 600,
+      "approxSerializedBytes": 772,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "approvedAssetEditions",
+      "rowCount": 1,
+      "bodyBytes": 597,
+      "approxSerializedBytes": 771,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "forecastPolicies",
+      "rowCount": 1,
+      "bodyBytes": 664,
+      "approxSerializedBytes": 759,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "rsvpEntitlements",
+      "rowCount": 1,
+      "bodyBytes": 576,
+      "approxSerializedBytes": 745,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "budgetAssuranceProjections",
+      "rowCount": 1,
+      "bodyBytes": 529,
+      "approxSerializedBytes": 708,
+      "bodyMiB": 0.001,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "riskEvaluationRunLeases",
+      "rowCount": 1,
+      "bodyBytes": 524,
+      "approxSerializedBytes": 626,
+      "bodyMiB": 0.0,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "clientReviewActions",
+      "rowCount": 1,
+      "bodyBytes": 524,
+      "approxSerializedBytes": 622,
+      "bodyMiB": 0.0,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "clientBriefDecisions",
+      "rowCount": 1,
+      "bodyBytes": 486,
+      "approxSerializedBytes": 585,
+      "bodyMiB": 0.0,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "s05bMigrationReceipts",
+      "rowCount": 1,
+      "bodyBytes": 484,
+      "approxSerializedBytes": 584,
+      "bodyMiB": 0.0,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "s04eMigrationReceipts",
+      "rowCount": 1,
+      "bodyBytes": 500,
+      "approxSerializedBytes": 563,
+      "bodyMiB": 0.0,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "s04fMigrationReceipts",
+      "rowCount": 1,
+      "bodyBytes": 500,
+      "approxSerializedBytes": 563,
+      "bodyMiB": 0.0,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "clientInvestmentActions",
+      "rowCount": 1,
+      "bodyBytes": 460,
+      "approxSerializedBytes": 562,
+      "bodyMiB": 0.0,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "s05aEvaluationMigrationReceipts",
+      "rowCount": 1,
+      "bodyBytes": 452,
+      "approxSerializedBytes": 562,
+      "bodyMiB": 0.0,
+      "approxMiB": 0.001
+    },
+    {
+      "source": "platform_documents",
+      "key": "rsvpKeyRings",
+      "rowCount": 1,
+      "bodyBytes": 384,
+      "approxSerializedBytes": 475,
+      "bodyMiB": 0.0,
+      "approxMiB": 0.0
+    }
+  ],
+  "totals": {
+    "platform_documentsApproxBytes": 15855947,
+    "platform_auditApproxBytes": 5794834,
+    "platform_idempotencyApproxBytes": 1519743,
+    "grandApproxBytes": 23170524,
+    "platform_documentsSharePct": 68.43,
+    "platform_auditSharePct": 25.01,
+    "platform_idempotencySharePct": 6.56
+  },
+  "top10": [
+    {
+      "source": "platform_audit",
+      "key": "(all)",
+      "rowCount": 8437,
+      "bodyBytes": 5794834,
+      "approxSerializedBytes": 5794834,
+      "bodyMiB": 5.526,
+      "approxMiB": 5.526,
+      "shareOfGrandPct": 25.01
+    },
+    {
+      "source": "platform_documents",
+      "key": "operationalGuests",
+      "rowCount": 2995,
+      "bodyBytes": 3946389,
+      "approxSerializedBytes": 4455539,
+      "bodyMiB": 3.764,
+      "approxMiB": 4.249,
+      "shareOfGrandPct": 19.23
+    },
+    {
+      "source": "platform_documents",
+      "key": "guestIntakeCandidates",
+      "rowCount": 2150,
+      "bodyBytes": 2474609,
+      "approxSerializedBytes": 2769159,
+      "bodyMiB": 2.36,
+      "approxMiB": 2.641,
+      "shareOfGrandPct": 11.95
+    },
+    {
+      "source": "platform_idempotency",
+      "key": "(all)",
+      "rowCount": 3583,
+      "bodyBytes": 922898,
+      "approxSerializedBytes": 1519743,
+      "bodyMiB": 0.88,
+      "approxMiB": 1.449,
+      "shareOfGrandPct": 6.56
+    },
+    {
+      "source": "platform_documents",
+      "key": "staffSessions",
+      "rowCount": 1987,
+      "bodyBytes": 921455,
+      "approxSerializedBytes": 1030740,
+      "bodyMiB": 0.879,
+      "approxMiB": 0.983,
+      "shareOfGrandPct": 4.45
+    },
+    {
+      "source": "platform_documents",
+      "key": "rsvpResponses",
+      "rowCount": 858,
+      "bodyBytes": 667165,
+      "approxSerializedBytes": 809593,
+      "bodyMiB": 0.636,
+      "approxMiB": 0.772,
+      "shareOfGrandPct": 3.49
+    },
+    {
+      "source": "platform_documents",
+      "key": "layoutRevisions",
+      "rowCount": 394,
+      "bodyBytes": 641685,
+      "approxSerializedBytes": 707498,
+      "bodyMiB": 0.612,
+      "approxMiB": 0.675,
+      "shareOfGrandPct": 3.05
+    },
+    {
+      "source": "platform_documents",
+      "key": "rsvpReceipts",
+      "rowCount": 852,
+      "bodyBytes": 488196,
+      "approxSerializedBytes": 628776,
+      "bodyMiB": 0.466,
+      "approxMiB": 0.6,
+      "shareOfGrandPct": 2.71
+    },
+    {
+      "source": "platform_documents",
+      "key": "budgetLines",
+      "rowCount": 427,
+      "bodyBytes": 413040,
+      "approxSerializedBytes": 451470,
+      "bodyMiB": 0.394,
+      "approxMiB": 0.431,
+      "shareOfGrandPct": 1.95
+    },
+    {
+      "source": "platform_documents",
+      "key": "aiEvaluationCaseResults",
+      "rowCount": 201,
+      "bodyBytes": 294036,
+      "approxSerializedBytes": 314538,
+      "bodyMiB": 0.28,
+      "approxMiB": 0.3,
+      "shareOfGrandPct": 1.36
+    }
+  ],
+  "dominance": {
+    "largestSource": "platform_audit",
+    "auditPlusIdempotencySharePct": 31.57,
+    "largestDocumentCollection": {
+      "source": "platform_documents",
+      "key": "operationalGuests",
+      "rowCount": 2995,
+      "bodyBytes": 3946389,
+      "approxSerializedBytes": 4455539,
+      "bodyMiB": 3.764,
+      "approxMiB": 4.249
+    }
+  },
+  "phase1Conclusion": {
+    "singleLargestSource": "platform_audit",
+    "auditSharePct": 25.01,
+    "idempotencySharePct": 6.56,
+    "documentsSharePct": 68.43,
+    "auditPlusIdempotencySharePct": 31.57,
+    "documentScoping": "NOT implemented. Aggregate platform_documents dominates (68%), but the single largest source is platform_audit (25%). Per task rule: leave documents as-is unless a document collection \u2014 not audit/idempotency \u2014 is the dominant cost. Largest document collection is operationalGuests at 19% (< audit). Propose org/event-filtered load for operationalGuests + guestIntakeCandidates only if scoped audit/idempotency live proof still OOMs.",
+    "supportedScope": [
+      "omitHistoricalAudit",
+      "idempotencyKeyLike cap1000-live-%"
+    ]
+  }
+}
