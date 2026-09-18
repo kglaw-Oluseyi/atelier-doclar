@@ -2,6 +2,7 @@
 
 **Purpose:** Scan data and runtime verification for the image currently frozen in production.  
 **Not included:** CTO disposition, expiry, ACCEPT/REJECT — reserved for human/CTO review.
+Disposition: see CTO_SECURITY_DISPOSITION.md (ratified 2026-09-18).
 
 ## Identity
 
